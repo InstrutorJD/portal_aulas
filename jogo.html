@@ -183,6 +183,7 @@
   
   let isConnected = false;
   let activeTargetIp = null;
+  window.sessionIp = null;
   let isShieldActive = false;
   let canUseShield = true;
   let shieldSecondsLeft = 120;
@@ -206,6 +207,7 @@
       ignoredFolders: [],
       isShielded: false,
       isOnline: false,
+      currentIp: null,
       folders: { fotos: [], whatsapp: [], instagram: [], tiktok: [], jdcoin: [{"name": "extrato_detalhado.pdf", "content": `[DOC] Saldo total acumulado: ${window.userSaldo.toFixed(2)} JDCoins.`}] }
     };
   } else {
@@ -217,28 +219,70 @@
     updateUI();
   }
 
-  function updateOnlineState(statusBool) {
-    isConnected = statusBool;
-    if (window.gameNodes[window.userIp]) {
-      window.gameNodes[window.userIp].isOnline = statusBool;
-    }
+  async function connectToNetwork() {
+    isConnected = true;
+    let assignedIp = window.userIp;
+
     if (sbClient && window.userIp) {
-      sbClient.from('network_nodes').upsert({
-        ip_address: window.userIp,
-        email: window.username,
-        is_online: statusBool
-      }, { onConflict: 'ip_address' }).then(() => {
-        fetchNodesFromSupabase();
-      });
+      try {
+        const { data, error } = await sbClient.rpc('assign_session_ip', { p_ip_address: window.userIp });
+        if (!error && data) {
+          assignedIp = data;
+        }
+      } catch (e) {
+        console.error('Falha ao sortear IP de sessão, usando IP fixo como fallback:', e);
+      }
+    }
+
+    window.sessionIp = assignedIp;
+    if (window.gameNodes[window.userIp]) {
+      window.gameNodes[window.userIp].isOnline = true;
+      window.gameNodes[window.userIp].currentIp = assignedIp;
+    }
+
+    if (sbClient) await fetchNodesFromSupabase();
+    return assignedIp;
+  }
+
+  async function disconnectFromNetwork() {
+    isConnected = false;
+    window.sessionIp = null;
+    if (window.gameNodes[window.userIp]) {
+      window.gameNodes[window.userIp].isOnline = false;
+      window.gameNodes[window.userIp].currentIp = null;
+    }
+
+    if (sbClient && window.userIp) {
+      try {
+        await sbClient.rpc('release_session_ip', { p_ip_address: window.userIp });
+      } catch (e) {
+        console.error('Falha ao liberar IP de sessão:', e);
+      }
+      await fetchNodesFromSupabase();
     }
   }
 
+  function resolveIdentityByCurrentIp(typedIp) {
+    if (!typedIp) return null;
+    const found = Object.keys(window.gameNodes).find(ip =>
+      window.gameNodes[ip].isOnline === true && window.gameNodes[ip].currentIp === typedIp
+    );
+    return found || null;
+  }
+
+  function displayIpFor(identityIp) {
+    const node = window.gameNodes[identityIp];
+    return (node && node.currentIp) ? node.currentIp : identityIp;
+  }
+
   window.addEventListener('beforeunload', () => {
-    updateOnlineState(false);
+    disconnectFromNetwork();
   });
 
   async function fetchNodesFromSupabase() {
     if (!sbClient) return;
+
+    try {
 
     const { data: nodes } = await sbClient.from('network_nodes').select('*');
     if (nodes) {
@@ -247,6 +291,7 @@
         window.gameNodes[n.ip_address].email = n.email;
         window.gameNodes[n.ip_address].jdcoin = parseFloat(n.jdcoin_balance);
         window.gameNodes[n.ip_address].isOnline = (n.is_online === true);
+        window.gameNodes[n.ip_address].currentIp = n.current_ip || null;
         window.gameNodes[n.ip_address].folders = n.folders || {};
       });
     }
@@ -275,6 +320,9 @@
     }
 
     updateUI();
+    } catch (e) {
+      console.error('Falha ao sincronizar dados da rede com o Supabase:', e);
+    }
   }
 
   function setupRealtimeListener() {
@@ -378,17 +426,17 @@
 
     if (mainCmd === 'ip') {
       if (subCmd === 'connect') {
-        updateOnlineState(true);
+        const assignedIp = await connectToNetwork();
         document.getElementById('statusDot').classList.add('online');
-        document.getElementById('topIp').textContent = window.userIp;
+        document.getElementById('topIp').textContent = assignedIp;
         document.getElementById('netStatusLbl').textContent = 'ONLINE';
         document.getElementById('netStatusLbl').style.color = 'var(--green)';
         document.getElementById('termNetStatus').textContent = 'REDE: CONECTADO [192.168.1.0/24]';
         document.getElementById('termNetStatus').style.color = 'var(--green)';
-        
-        response.innerHTML = `Conectado à interface ${window.userIp}. Status de rede: ONLINE.`;
+
+        response.innerHTML = `Conectado à interface ${assignedIp}. Status de rede: ONLINE.`;
       } else if (subCmd === 'disconnect') {
-        updateOnlineState(false);
+        await disconnectFromNetwork();
         activeTargetIp = null;
         document.getElementById('statusDot').classList.remove('online');
         document.getElementById('topIp').textContent = '---.---.---.---';
@@ -528,7 +576,7 @@
           }
 
           if (!subCmd) {
-            let lsOutput = `<span style="color:var(--yellow)">Conteúdo do Nó [${targetNodeIp}]:</span><br>`;
+            let lsOutput = `<span style="color:var(--yellow)">Conteúdo do Nó [${displayIpFor(targetNodeIp)}]:</span><br>`;
             ['fotos', 'whatsapp', 'instagram', 'tiktok', 'jdcoin'].forEach(f => {
               const isLocked = currentNode.lockedFolders && currentNode.lockedFolders.includes(f);
               const isIgnored = currentNode.ignoredFolders && currentNode.ignoredFolders.includes(f);
@@ -580,14 +628,15 @@
             Object.keys(window.gameNodes).forEach(ip => {
               if (ip !== window.userIp) {
                 const node = window.gameNodes[ip];
-                let displayIp = ip;
+                const isOnline = node.isOnline === true;
+                let displayIp = isOnline ? (node.currentIp || ip) : '---.---.---.---';
 
-                if (node.isShielded === true) {
-                  const ipParts = ip.split('.');
+                if (isOnline && node.isShielded === true) {
+                  const ipParts = displayIp.split('.');
                   displayIp = `${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.XX`;
                 }
 
-                if (node.isOnline === true) {
+                if (isOnline) {
                   tableHtml += `<span style="color:var(--green)">${displayIp.padEnd(15)} | ONLINE  | git://${displayIp}/main.git</span><br>`;
                 } else {
                   tableHtml += `<span style="color:var(--ink-dim)">${displayIp.padEnd(15)} | OFFLINE | git://${displayIp}/main.git</span><br>`;
@@ -716,26 +765,30 @@
           } else {
             const gitSub = parts[1] ? parts[1].toLowerCase() : '';
             if (gitSub === 'clone') {
-              const targetIp = parts[2];
-              
-              if (!targetIp) {
+              const typedIp = parts[2];
+              const targetIp = resolveIdentityByCurrentIp(typedIp);
+
+              if (!typedIp) {
                 response.style.color = 'var(--blood-bright)';
                 response.textContent = 'Erro: Informe o IP alvo. Exemplo: git clone 192.168.1.11';
-              } else if (targetIp.endsWith('.XX')) {
+              } else if (typedIp.endsWith('.XX')) {
                 response.style.color = 'var(--blood-bright)';
                 response.textContent = 'Acesso Negado: Endereço IP blindado por Antivírus. Impossível localizar o host.';
-              } else if (!window.gameNodes[targetIp]) {
+              } else if (!targetIp) {
                 response.style.color = 'var(--blood-bright)';
-                response.textContent = 'Erro: IP de alvo inválido ou não encontrado na rede.';
+                response.textContent = 'Erro: IP de alvo inválido ou não encontrado na rede. Faça um netscan para ver os endereços ativos.';
+              } else if (window.gameNodes[targetIp].isOnline !== true) {
+                response.style.color = 'var(--blood-bright)';
+                response.textContent = 'Erro: Host offline. IP inalcançável na rede.';
               } else if (window.gameNodes[targetIp].isShielded === true && window.userRole !== 'professor' && window.userRole !== 'admin') {
                 response.style.color = 'var(--blood-bright)';
                 response.textContent = 'Acesso Negado: O nó de destino está sob proteção de Antivírus Ativo.';
               } else if (activeTargetIp && activeTargetIp !== targetIp) {
                 response.style.color = 'var(--blood-bright)';
-                response.textContent = `Atenção: Apenas um nó por vez. Ativo no momento: ${activeTargetIp}.`;
+                response.textContent = `Atenção: Apenas um nó por vez. Ativo no momento: ${displayIpFor(activeTargetIp)}.`;
               } else {
                 activeTargetIp = targetIp;
-                response.innerHTML = `<span style="color:var(--yellow)">[SESSÃO ATIVA] Repositório do nó ${targetIp} clonado com sucesso.</span>`;
+                response.innerHTML = `<span style="color:var(--yellow)">[SESSÃO ATIVA] Repositório do nó ${typedIp} clonado com sucesso.</span>`;
               }
             } else if (gitSub === 'log') {
               if (!activeTargetIp) {
@@ -744,9 +797,9 @@
               } else {
                 const targetNode = window.gameNodes[activeTargetIp];
                 const ignored = targetNode.ignoredFolders || [];
-                
+
                 let logDetails = `
-                  <span style="color:var(--yellow)">--- LOGS DE COMMITS DE ${activeTargetIp} ---</span><br>
+                  <span style="color:var(--yellow)">--- LOGS DE COMMITS DE ${displayIpFor(activeTargetIp)} ---</span><br>
                   commit 8a2f1c (HEAD -> main)<br>
                   Autor: ${targetNode.email}<br>
                 `;
@@ -770,11 +823,15 @@
             response.textContent = 'Erro: Requer git clone [IP] em um nó ativo antes de atacar.';
           } else {
             const hackAction = parts[1] ? parts[1].toLowerCase() : '';
-            const targetIp = parts[2];
+            const typedIp = parts[2];
+            const targetIp = resolveIdentityByCurrentIp(typedIp);
 
-            if (targetIp !== activeTargetIp) {
+            if (!targetIp || targetIp !== activeTargetIp) {
               response.style.color = 'var(--blood-bright)';
-              response.textContent = `Erro: O IP informado não bate com a sessão ativa (${activeTargetIp}).`;
+              response.textContent = `Erro: O IP informado não bate com a sessão ativa. Se o endereço mudou, refaça o netscan e o git clone.`;
+            } else if (window.gameNodes[targetIp] && window.gameNodes[targetIp].isOnline !== true) {
+              response.style.color = 'var(--blood-bright)';
+              response.textContent = 'Falha no ataque: Host ficou offline durante a sessão.';
             } else if (window.gameNodes[targetIp] && window.gameNodes[targetIp].isShielded === true && window.userRole !== 'professor' && window.userRole !== 'admin') {
               response.style.color = 'var(--blood-bright)';
               response.textContent = 'Falha no ataque: O nó de destino ativou o Antivírus.';
@@ -820,7 +877,7 @@
                   updateUI();
                   saveState();
 
-                  response.innerHTML = `<span style="color:var(--green)">[INVASÃO CONCLUÍDA] 50% do saldo (${data.stolen} JDC) foi transferido do nó ${targetIp}.</span>`;
+                  response.innerHTML = `<span style="color:var(--green)">[INVASÃO CONCLUÍDA] 50% do saldo (${data.stolen} JDC) foi transferido do nó ${typedIp}.</span>`;
                 }
               }
             } else if (hackAction === 'lock') {
@@ -842,7 +899,7 @@
                   }, { onConflict: 'ip_address,folder_name' });
                 }
 
-                response.innerHTML = `<span style="color:var(--blood-bright)">[SEQUESTRO CONCLUÍDO] Pasta /${folderToLock} de ${targetIp} criptografada e bloqueada.</span>`;
+                response.innerHTML = `<span style="color:var(--blood-bright)">[SEQUESTRO CONCLUÍDO] Pasta /${folderToLock} de ${typedIp} criptografada e bloqueada.</span>`;
               }
             } else {
               response.style.color = 'var(--blood-bright)';
@@ -890,6 +947,18 @@
   window.ACTIVITY_LABEL = 'GitHack OS — Terminal de Cibersegurança';
 </script>
 <script src="activity-tracker.js"></script>
+
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper>
+    <div class="vw-plugin-top-wrapper"></div>
+  </div>
+</div>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+  new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
 
 </body>
 </html>
