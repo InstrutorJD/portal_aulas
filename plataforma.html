@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Plataforma de Ensino</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+    --user-font: 'JetBrains Mono', monospace;
+    --user-font-scale: 1;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 3px),
+      radial-gradient(ellipse at 50% -10%, #14201233, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--user-font);
+    font-size:calc(15px * var(--user-font-scale));
+    display:flex; flex-direction:column;
+  }
+
+  .a11y-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:6px 20px; border-bottom:1px solid var(--line); background:var(--panel2); flex-wrap:wrap; z-index:10;
+  }
+  .a11y-bar .label{ font-size:10.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; }
+  .a11y-bar button{
+    font-size:11px; padding:4px 10px; background:transparent; color:var(--ink-dim);
+    border:1px solid var(--line); cursor:pointer;
+  }
+  .a11y-bar button.on{ background:var(--green); color:#04220a; border-color:var(--green); }
+  #btnLibras.on{ background:#3a8bd8; color:#04150c; border-color:#3a8bd8; }
+
+  .app-container{ flex:1; display:flex; flex-direction:column; max-width:1280px; width:100%; margin:0 auto; padding:10px 20px; overflow:hidden; }
+
+  header{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:10px; flex-wrap:wrap; gap:8px;
+  }
+  header h1{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:calc(28px * var(--user-font-scale)); letter-spacing:1px; color:var(--green); margin:0;
+    text-shadow:0 0 8px rgba(124,255,63,.35);
+  }
+  header .sub{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; }
+
+  .statusbar{
+    display:flex; align-items:center; justify-content:space-between; gap:18px;
+    border:1px solid var(--line); background:var(--panel); padding:8px 14px; margin-bottom:10px; flex-wrap:wrap;
+  }
+  .user-info{ font-size:12px; color:var(--yellow); }
+
+  .tabs{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .tab-btn{
+    font-family:inherit; font-weight:800; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+    background:transparent; color:var(--ink-dim); border:1px solid var(--line); padding:8px 16px; cursor:pointer; border-radius:2px;
+  }
+  .tab-btn:hover{ color:var(--ink); border-color:var(--ink-dim); }
+  .tab-btn.active{ background:var(--green); color:#04220a; border-color:var(--green); }
+  .tab-btn.disabled{ opacity:0.3; cursor:not-allowed; border-color:var(--line) !important; color:var(--ink-dim) !important; background:transparent !important; }
+
+  .subtabs{ display:flex; align-items:center; gap:6px; padding-left:14px; margin-bottom:14px; border-left:2px solid var(--line); flex-wrap:wrap; }
+  .subtabs .subtab-label{ font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-right:2px; }
+  .subtab-btn{
+    font-family:inherit; font-weight:700; font-size:10px; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--ink-dim); border:1px solid var(--line); padding:5px 12px; cursor:pointer; border-radius:2px;
+  }
+  .subtab-btn:hover{ color:var(--ink); border-color:var(--ink-dim); }
+  .subtab-btn.active{ background:var(--green-dim); color:#04220a; border-color:var(--green-dim); }
+
+  .viewport-content{ flex:1; position:relative; overflow-y:auto; }
+  .tab-page{ height:100%; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px; margin-bottom:14px; }
+  .card h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:calc(24px * var(--user-font-scale)); color:var(--green); margin:0 0 10px; }
+
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:8px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn-danger{ background:var(--blood); color:#fff; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .audit-table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  .audit-table th{ text-align:left; color:var(--ink-dim); border-bottom:1px solid var(--line); padding:8px 6px; text-transform:uppercase; }
+  .audit-table td{ padding:8px 6px; border-bottom:1px solid #1a221a; }
+  .log-box{ background:#060806; border:1px solid var(--line); padding:10px; font-size:11px; height:140px; overflow-y:auto; font-family:'JetBrains Mono', monospace; }
+  .log-entry{ margin-bottom:4px; color:var(--ink-dim); }
+  .log-entry .time{ color:var(--yellow); }
+
+  .game-frame-wrapper{ width:100%; height:100%; border:1px solid var(--line); background:#000; }
+  iframe{ width:100%; height:100%; border:none; display:block; }
+</style>
+<script src="supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="a11y-bar">
+  <div>
+    <span class="label">Acessibilidade: </span>
+    <button id="btnFontStyle">Fonte: pixelada</button>
+    <button id="btnFontSmaller">A−</button>
+    <button id="btnFontBigger">A+</button>
+    <button id="btnLibras">Libras</button>
+  </div>
+  <div id="sessionControl">
+    <span id="sessionUser" class="label" style="color:var(--yellow)"></span>
+    <button id="btnLogout" class="btn-danger" style="padding:4px 8px; font-size:10px;">Sair</button>
+  </div>
+</div>
+
+<div class="app-container">
+  <header>
+    <h1>PIXELFORGE STUDIOS — PLATAFORMA DE ENSINO</h1>
+    <div class="sub">Sistema de Gestão de Aprendizagem & Auditoria</div>
+  </header>
+
+  <div class="statusbar">
+    <div class="user-info">
+      Usuário: <b id="txtUserNom">--</b> | Turma: <b id="txtUserTurma">--</b>
+    </div>
+    <div id="studentUnlockStatus" style="font-size:11px; color:var(--ink-dim);">
+      Status Jogos: <span id="lblGamesUnlock" style="color:var(--blood-bright)">BLOQUEADO</span>
+    </div>
+  </div>
+
+  <div class="tabs" id="mainNavTabs">
+    <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
+    <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
+    <button class="tab-btn" id="tabBtnProf" data-tab="professor" style="display:none;">Painel do Professor 🛠️</button>
+  </div>
+
+  <div class="viewport-content">
+    
+    <div id="tabContentAulas" class="tab-page">
+      <div class="subtabs" id="aulasSubTabs">
+        <span class="subtab-label">↳ Conteúdo:</span>
+        <button class="subtab-btn active" data-subtab="js">JavaScript</button>
+        <button class="subtab-btn" data-subtab="csharp">C#</button>
+      </div>
+
+      <div id="subTabContentJs" class="subtab-page">
+        <div id="jsModuleSelector" class="card" style="padding:16px;">
+          <h2 style="margin:0 0 4px;">Trilha JavaScript</h2>
+          <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Escolha um módulo de desafios para praticar.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
+            <div class="game-card" style="border:1px solid var(--line); background:var(--panel2); padding:14px; text-align:center; cursor:pointer;" onclick="openJsModule('basico')">
+              <div style="font-size:32px; margin-bottom:8px;">🟨</div>
+              <h3 style="color:var(--yellow); margin:0 0 6px;">Básico</h3>
+              <p style="font-size:11px; color:var(--ink-dim); margin:0;">Duelos de código: variáveis, soma, subtração, multiplicação e divisão.</p>
+            </div>
+            <div class="game-card" style="border:1px solid var(--line); background:var(--panel2); padding:14px; text-align:center; cursor:pointer;" onclick="openJsModule('intermediario')">
+              <div style="font-size:32px; margin-bottom:8px;">🟧</div>
+              <h3 style="color:var(--yellow); margin:0 0 6px;">Intermediário</h3>
+              <p style="font-size:11px; color:var(--ink-dim); margin:0;">Duelos de código: condições, arrays, laços e lógica combinada.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="jsModuleFrameArea" style="display:none;">
+          <div class="card" style="margin-bottom:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div>
+              <h2 id="jsModuleFrameTitle" style="margin:0; font-size:18px;">--</h2>
+              <p id="jsModuleFrameDesc" style="font-size:11px; color:var(--ink-dim); margin:4px 0 0 0;"></p>
+            </div>
+            <button class="btn btn-secondary" onclick="closeJsModule()">← Voltar</button>
+          </div>
+          <div class="game-frame-wrapper" style="height:560px; border:1px solid var(--green-dim);">
+            <iframe id="jsModuleFrame" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="subTabContentCsharp" class="subtab-page" style="display:none;">
+        <div id="csharpModuleSelector" class="card" style="padding:16px;">
+          <h2 style="margin:0 0 4px;">Trilha C#</h2>
+          <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Escolha um módulo para começar.</p>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px;">
+            <div class="game-card" style="border:1px solid var(--line); background:var(--panel2); padding:14px; text-align:center; cursor:pointer;" onclick="openCsharpModule('basico')">
+              <div style="font-size:32px; margin-bottom:8px;">🦈</div>
+              <h3 style="color:var(--yellow); margin:0 0 6px;">Básico</h3>
+              <p style="font-size:11px; color:var(--ink-dim); margin:0;">A Jornada do Eri — primeiro contato com C#, em forma de história.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="csharpModuleFrameArea" style="display:none;">
+          <div class="card" style="margin-bottom:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div>
+              <h2 id="csharpModuleFrameTitle" style="margin:0; font-size:18px;">--</h2>
+              <p id="csharpModuleFrameDesc" style="font-size:11px; color:var(--ink-dim); margin:4px 0 0 0;"></p>
+            </div>
+            <button class="btn btn-secondary" onclick="closeCsharpModule()">← Voltar</button>
+          </div>
+          <div class="game-frame-wrapper" style="height:560px; border:1px solid var(--green-dim);">
+            <iframe id="csharpModuleFrame" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tabContentJogos" class="tab-page" style="display:none;">
+  <div id="gameSelector" class="card" style="padding:16px;">
+    <h2 style="margin:0 0 4px;">Escolha um Jogo</h2>
+    <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Selecione uma atividade para praticar.</p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px;">
+      <div class="game-card" style="border:1px solid var(--line); background:var(--panel2); padding:14px; text-align:center; cursor:pointer;" onclick="openGame('hacker')">
+        <div style="font-size:32px; margin-bottom:8px;">🕹️</div>
+        <h3 style="color:var(--yellow); margin:0 0 6px;">Hacker</h3>
+        <p style="font-size:11px; color:var(--ink-dim); margin:0;">GitHack OS — Terminal de Cibersegurança e Git.</p>
+      </div>
+      <div class="game-card" style="border:1px solid var(--line); background:var(--panel2); padding:14px; text-align:center; cursor:pointer;" onclick="openGame('digitacao')">
+        <div style="font-size:32px; margin-bottom:8px;">⌨️</div>
+        <h3 style="color:var(--yellow); margin:0 0 6px;">Digitação</h3>
+        <p style="font-size:11px; color:var(--ink-dim); margin:0;">Pratique velocidade e precisão de digitação.</p>
+      </div>
+      <div class="game-card" style="border:1px solid var(--line); background:var(--panel2); padding:14px; text-align:center; cursor:pointer;" onclick="openGame('campominado')">
+        <div style="font-size:32px; margin-bottom:8px;">💣</div>
+        <h3 style="color:var(--yellow); margin:0 0 6px;">Campo Minado</h3>
+        <p style="font-size:11px; color:var(--ink-dim); margin:0;">Programe o robô em JavaScript para desviar das minas.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameFrameArea" style="display:none; height:100%; flex-direction:column;">
+    <div class="card" style="margin-bottom:10px; padding:12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0;">
+      <div>
+        <h2 id="gameFrameTitle" style="margin:0; font-size:18px;">--</h2>
+        <p id="gameFrameDesc" style="font-size:11px; color:var(--ink-dim); margin:4px 0 0 0;"></p>
+      </div>
+      <button class="btn btn-secondary" onclick="closeGame()">← Voltar</button>
+    </div>
+
+    <div class="game-frame-wrapper" style="flex:1; min-height:0; border:1px solid var(--green-dim);">
+      <iframe id="gameFrame" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+  </div>
+</div>
+
+    <div id="tabContentProfessor" class="tab-page" style="display:none;">
+      <div class="card">
+        <h2>Gerenciamento de Turmas & Liberações</h2>
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+          <button class="btn" id="btnUnlockGamesGlobal">Liberar Jogos (Todos)</button>
+          <button class="btn btn-danger" id="btnLockGamesGlobal">Bloquear Jogos (Todos)</button>
+        </div>
+
+        <h3>Status dos Alunos (Jogos Digitais)</h3>
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Turma</th>
+              <th>Progresso Hoje</th>
+              <th>Acesso Jogos</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tblStudentsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Atividade em Tempo Real</h2>
+        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno está agora — atualiza sozinho.</p>
+        <table class="audit-table">
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Turma</th>
+              <th>Onde está</th>
+              <th>Status</th>
+              <th>Última atualização</th>
+            </tr>
+          </thead>
+          <tbody id="tblActivityBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2>Monitoramento e Logs em Tempo Real (Auditoria)</h2>
+        <div class="log-box" id="auditLogBox"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper>
+    <div class="vw-plugin-top-wrapper"></div>
+  </div>
+</div>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+  new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const paramUser = urlParams.get('user') || 'breno.silva80';
+const paramIp = urlParams.get('ip') || '192.168.1.10';
+const paramSaldo = urlParams.get('saldo') || '1234.80';
+
+const USERS_JSON = [
+  {"email": "breno.silva80", "senha": "silva2026", "nome": "Breno Silva", "role": "aluno", "turma": "jogos"},
+  {"email": "edward.guzman", "senha": "guzman2026", "nome": "Edward Guzman", "role": "aluno", "turma": "jogos"},
+  {"email": "engel.fraga", "senha": "fraga2026", "nome": "Engel Fraga", "role": "aluno", "turma": "jogos"},
+  {"email": "gabriella.borges5", "senha": "borges2026", "nome": "Gabriella Borges", "role": "aluno", "turma": "jogos"},
+  {"email": "iago.moreira", "senha": "carvalho2026", "nome": "Iago Moreira", "role": "aluno", "turma": "jogos"},
+  {"email": "joao.schneider", "senha": "schneider2026", "nome": "João Schneider", "role": "aluno", "turma": "jogos"},
+  {"email": "jose.lima8", "senha": "lima2026", "nome": "José Lima", "role": "aluno", "turma": "jogos"},
+  {"email": "jose.rodrigues6", "senha": "rodrigues2026", "nome": "José Rodrigues", "role": "aluno", "turma": "jogos"},
+  {"email": "josuel.santos", "senha": "santos2026", "nome": "Josuel Santos", "role": "aluno", "turma": "jogos"},
+  {"email": "juliano.alves", "senha": "ferreira2026", "nome": "Juliano Alves", "role": "aluno", "turma": "jogos"},
+  {"email": "leon.kacki", "senha": "kacki2026", "nome": "Leon Kacki", "role": "aluno", "turma": "jogos"},
+  {"email": "maria.moura85", "senha": "moura2026", "nome": "Maria Moura", "role": "aluno", "turma": "jogos"},
+  {"email": "maycongabriel.moreira", "senha": "moreira2026", "nome": "Maycon Gabriel Moreira", "role": "aluno", "turma": "jogos"},
+  {"email": "miguelmendonca.martins", "senha": "martins2026", "nome": "Miguel Mendonça Martins", "role": "aluno", "turma": "jogos"},
+  {"email": "murillo.lima", "senha": "lima2026", "nome": "Murillo Lima", "role": "aluno", "turma": "jogos"},
+  {"email": "tiago.dias1", "senha": "dias2026", "nome": "Tiago Dias", "role": "aluno", "turma": "jogos"},
+  {"email": "yasmim.rezende4", "senha": "rezende2026", "nome": "Yasmim Rezende", "role": "aluno", "turma": "jogos"},
+  {"email": "admin", "senha": "jd4532", "nome": "Instrutor / Professor", "role": "professor", "turma": "all"}
+];
+
+const DB = {
+  users: {}
+};
+
+USERS_JSON.forEach(u => {
+  DB.users[u.email] = {
+    ...u,
+    progress: 0
+  };
+});
+
+let currentUser = DB.users[paramUser] || {
+  email: paramUser,
+  nome: paramUser,
+  role: (paramUser === 'admin' ? 'professor' : 'aluno'),
+  turma: (paramUser === 'admin' ? 'all' : 'jogos'),
+  progress: 0
+};
+
+let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
+
+const SUPABASE_URL = window.SUPABASE_URL;
+const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
+const sbClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+let teacherUnlockOverride = false;
+
+async function fetchTeacherOverride() {
+  if (!sbClient) return;
+  const { data } = await sbClient
+    .from('student_overrides')
+    .select('games_unlocked')
+    .eq('student_email', paramUser)
+    .maybeSingle();
+  teacherUnlockOverride = !!(data && data.games_unlocked);
+  checkGamesUnlock();
+}
+
+function setupOverrideRealtime() {
+  if (!sbClient) return;
+  sbClient.channel('realtime_student_override_' + paramUser)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'student_overrides', filter: `student_email=eq.${paramUser}` }, () => fetchTeacherOverride())
+    .subscribe();
+}
+
+function getLogs() {
+  return JSON.parse(localStorage.getItem('pf_audit_logs') || '[]');
+}
+
+function logAction(action, targetUser = null) {
+  const logs = getLogs();
+  const u = targetUser || (currentUser ? currentUser.nome : 'Sistema');
+  const entry = { time: new Date().toLocaleTimeString(), user: u, action: action };
+  logs.unshift(entry);
+  if(logs.length > 50) logs.pop();
+  localStorage.setItem('pf_audit_logs', JSON.stringify(logs));
+  renderLogs();
+}
+
+function renderLogs() {
+  const box = document.getElementById('auditLogBox');
+  if(!box) return;
+  box.innerHTML = getLogs().map(l => `<div class="log-entry"><span class="time">[${l.time}]</span> <b>${l.user}</b>: ${l.action}</div>`).join('');
+}
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  if(currentUser) logAction('Efetuou logout', currentUser.nome);
+  sessionStorage.clear();
+  window.location.href = 'index.html';
+});
+
+function setupRBAC() {
+  document.getElementById('sessionUser').textContent = currentUser.nome;
+  document.getElementById('txtUserNom').textContent = currentUser.nome;
+  document.getElementById('txtUserTurma').textContent = currentUser.turma === 'jogos' ? 'Jogos Digitais' : 'Corpo Docente';
+
+  const tabProf = document.getElementById('tabBtnProf');
+  tabProf.style.display = (currentUser.role === 'professor') ? 'inline-block' : 'none';
+
+  if (currentUser.role === 'aluno') {
+    fetchTeacherOverride();
+    setupOverrideRealtime();
+  }
+
+  checkGamesUnlock();
+  switchTab('aulas');
+  switchAulasSubTab('js');
+}
+
+function switchAulasSubTab(sub) {
+  document.querySelectorAll('#aulasSubTabs .subtab-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-subtab') === sub);
+  });
+  document.getElementById('subTabContentJs').style.display = (sub === 'js') ? 'block' : 'none';
+  document.getElementById('subTabContentCsharp').style.display = (sub === 'csharp') ? 'block' : 'none';
+
+  const jsModuleOpen = document.getElementById('jsModuleFrameArea').style.display !== 'none';
+  const csharpModuleOpen = document.getElementById('csharpModuleFrameArea').style.display !== 'none';
+
+  if (typeof window.reportActivity === 'function') {
+    if (sub === 'js' && !jsModuleOpen) {
+      window.reportActivity('aulas_js', 'JavaScript — Escolhendo módulo');
+    } else if (sub === 'csharp' && !csharpModuleOpen) {
+      window.reportActivity('aulas_csharp', 'C# — Escolhendo módulo');
+    }
+  }
+}
+
+document.querySelectorAll('#aulasSubTabs .subtab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    switchAulasSubTab(e.target.getAttribute('data-subtab'));
+  });
+});
+
+const JS_BASICO_TOTAL_CHALLENGES = 5; // deve bater com CHALLENGES.length em js-basico.html
+const JS_INTERMEDIARIO_TOTAL_CHALLENGES = 7; // deve bater com CHALLENGES.length em js-intermediario.html
+
+function isModuleComplete(progressKeyPrefix, total) {
+  try {
+    const data = JSON.parse(localStorage.getItem(`${progressKeyPrefix}${paramUser}`) || '[]');
+    return Array.isArray(data) && data.length >= total;
+  } catch (e) {
+    return false;
+  }
+}
+
+function isJsActivitiesComplete() {
+  return isModuleComplete('js_basico_progress_', JS_BASICO_TOTAL_CHALLENGES)
+    && isModuleComplete('js_intermediario_progress_', JS_INTERMEDIARIO_TOTAL_CHALLENGES);
+}
+
+const CSHARP_BASICO_TOTAL_STEPS = 11; // deve bater com STEPS.length em csharp-basico.html
+
+function isCsharpActivitiesComplete() {
+  try {
+    const data = JSON.parse(localStorage.getItem(`csharp_basico_progress_${paramUser}`) || 'null');
+    return !!(data && data.completed);
+  } catch (e) {
+    return false;
+  }
+}
+
+function checkGamesUnlock() {
+  const isUnlocked = (isJsActivitiesComplete() && isCsharpActivitiesComplete()) || teacherUnlockOverride || (currentUser.role === 'professor');
+  const btnJogos = document.getElementById('tabBtnJogos');
+  const lblStatus = document.getElementById('lblGamesUnlock');
+
+  if(isUnlocked) {
+    btnJogos.classList.remove('disabled');
+    btnJogos.textContent = 'Jogos 🎮';
+    lblStatus.textContent = 'LIBERADO';
+    lblStatus.style.color = 'var(--green)';
+  } else {
+    btnJogos.classList.add('disabled');
+    btnJogos.textContent = 'Jogos 🔒';
+    lblStatus.textContent = 'BLOQUEADO (Conclua as atividades de JavaScript e C#)';
+    lblStatus.style.color = 'var(--blood-bright)';
+  }
+}
+
+document.querySelectorAll('#mainNavTabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    const tabTarget = e.target.getAttribute('data-tab');
+    if(tabTarget === 'jogos' && e.target.classList.contains('disabled')) {
+      alert('A aba de jogos está bloqueada! Conclua 100% das suas tarefas do dia ou aguarde a liberação do professor.');
+      return;
+    }
+    switchTab(tabTarget);
+  });
+});
+
+function switchTab(tabName) {
+  checkGamesUnlock();
+
+  document.querySelectorAll('#mainNavTabs .tab-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-tab') === tabName);
+  });
+
+  document.getElementById('tabContentAulas').style.display = (tabName === 'aulas') ? 'block' : 'none';
+  document.getElementById('tabContentJogos').style.display = (tabName === 'jogos') ? 'block' : 'none';
+  document.getElementById('tabContentProfessor').style.display = (tabName === 'professor') ? 'block' : 'none';
+
+  if(currentUser) {
+    logAction(`Acessou a aba: ${tabName.toUpperCase()}`);
+  }
+
+  if(tabName === 'jogos') {
+    document.getElementById('gameSelector').style.display = currentGameKey ? 'none' : 'block';
+    document.getElementById('gameFrameArea').style.display = currentGameKey ? 'flex' : 'none';
+    if (!currentGameKey && typeof window.resumeActivityHeartbeat === 'function') {
+      window.resumeActivityHeartbeat('jogos_selecao', 'Jogos — Escolhendo um jogo');
+    }
+  }
+
+  if(tabName === 'aulas') {
+    const jsModuleOpen = document.getElementById('jsModuleFrameArea').style.display !== 'none';
+    const csharpModuleOpen = document.getElementById('csharpModuleFrameArea').style.display !== 'none';
+    if (!jsModuleOpen && !csharpModuleOpen && typeof window.resumeActivityHeartbeat === 'function') {
+      const activeSub = document.querySelector('#aulasSubTabs .subtab-btn.active')?.getAttribute('data-subtab') || 'js';
+      if (activeSub === 'js') {
+        window.resumeActivityHeartbeat('aulas_js', 'JavaScript — Escolhendo módulo');
+      } else {
+        window.resumeActivityHeartbeat('aulas_csharp', 'C# — Escolhendo módulo');
+      }
+    }
+  }
+
+  if(tabName === 'professor') {
+    renderTeacherPanel();
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('professor', 'Painel do Professor');
+    }
+  }
+}
+
+const GAMES = {
+  hacker: {
+    title: 'GitHack OS — Terminal de Cibersegurança',
+    desc: 'Ambiente de simulação sandbox. Conecte-se à subnet para realizar ataques e defesas.',
+    src: 'jogo.html'
+  },
+  digitacao: {
+    title: 'Digitação — Treino de Velocidade',
+    desc: 'Pratique velocidade e precisão de digitação.',
+    src: 'digitacao.html'
+  },
+  campominado: {
+    title: 'Campo Minado — Lógica com JavaScript',
+    desc: 'Programe o robô em JavaScript para desviar das minas e chegar à bandeira.',
+    src: 'campo-minado.html'
+  }
+};
+
+let currentGameKey = null;
+
+function openGame(key) {
+  const game = GAMES[key];
+  if(!game) return;
+
+  currentGameKey = key;
+  document.getElementById('gameSelector').style.display = 'none';
+  document.getElementById('gameFrameArea').style.display = 'flex';
+  document.getElementById('gameFrameTitle').textContent = game.title;
+  document.getElementById('gameFrameDesc').textContent = game.desc;
+
+  const frame = document.getElementById('gameFrame');
+  frame.src = `${game.src}?user=${encodeURIComponent(paramUser)}&ip=${encodeURIComponent(paramIp)}&saldo=${encodeURIComponent(paramSaldo)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
+
+  if (typeof window.pauseActivityHeartbeat === 'function') {
+    window.pauseActivityHeartbeat();
+  }
+
+  logAction(`Abriu o jogo: ${game.title}`);
+}
+
+function closeGame() {
+  currentGameKey = null;
+  document.getElementById('gameFrameArea').style.display = 'none';
+  document.getElementById('gameSelector').style.display = 'block';
+  document.getElementById('gameFrame').src = 'about:blank';
+
+  if (typeof window.resumeActivityHeartbeat === 'function') {
+    window.resumeActivityHeartbeat('jogos_selecao', 'Jogos — Escolhendo um jogo');
+  }
+}
+
+const JS_MODULES = {
+  basico: {
+    title: 'Básico — Desafios de JavaScript',
+    desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
+    src: 'js-basico.html'
+  },
+  intermediario: {
+    title: 'Intermediário — Desafios de JavaScript',
+    desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
+    src: 'js-intermediario.html'
+  }
+};
+
+function openJsModule(key) {
+  const mod = JS_MODULES[key];
+  if (!mod) return;
+
+  document.getElementById('jsModuleSelector').style.display = 'none';
+  document.getElementById('jsModuleFrameArea').style.display = 'block';
+  document.getElementById('jsModuleFrameTitle').textContent = mod.title;
+  document.getElementById('jsModuleFrameDesc').textContent = mod.desc;
+
+  const frame = document.getElementById('jsModuleFrame');
+  frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
+
+  if (typeof window.pauseActivityHeartbeat === 'function') {
+    window.pauseActivityHeartbeat();
+  }
+
+  logAction(`Abriu o módulo JavaScript: ${mod.title}`);
+}
+
+function closeJsModule() {
+  document.getElementById('jsModuleFrameArea').style.display = 'none';
+  document.getElementById('jsModuleSelector').style.display = 'block';
+  document.getElementById('jsModuleFrame').src = 'about:blank';
+  checkGamesUnlock();
+
+  if (typeof window.resumeActivityHeartbeat === 'function') {
+    window.resumeActivityHeartbeat('aulas_js', 'JavaScript — Escolhendo módulo');
+  }
+}
+
+const CSHARP_MODULES = {
+  basico: {
+    title: 'Básico — A Jornada do Eri',
+    desc: 'Primeiro contato com C#, contado em forma de história. Responda cada pergunta para avançar.',
+    src: 'csharp-basico.html'
+  }
+};
+
+function openCsharpModule(key) {
+  const mod = CSHARP_MODULES[key];
+  if (!mod) return;
+
+  document.getElementById('csharpModuleSelector').style.display = 'none';
+  document.getElementById('csharpModuleFrameArea').style.display = 'block';
+  document.getElementById('csharpModuleFrameTitle').textContent = mod.title;
+  document.getElementById('csharpModuleFrameDesc').textContent = mod.desc;
+
+  const frame = document.getElementById('csharpModuleFrame');
+  frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
+
+  if (typeof window.pauseActivityHeartbeat === 'function') {
+    window.pauseActivityHeartbeat();
+  }
+
+  logAction(`Abriu o módulo C#: ${mod.title}`);
+}
+
+function closeCsharpModule() {
+  document.getElementById('csharpModuleFrameArea').style.display = 'none';
+  document.getElementById('csharpModuleSelector').style.display = 'block';
+  document.getElementById('csharpModuleFrame').src = 'about:blank';
+  checkGamesUnlock();
+
+  if (typeof window.resumeActivityHeartbeat === 'function') {
+    window.resumeActivityHeartbeat('aulas_csharp', 'C# — Escolhendo módulo');
+  }
+}
+
+let overridesCache = {};
+
+async function fetchAllOverrides() {
+  if (!sbClient) return;
+  const { data, error } = await sbClient.from('student_overrides').select('*');
+  if (error) return;
+  overridesCache = {};
+  (data || []).forEach(r => { overridesCache[r.student_email] = r.games_unlocked; });
+}
+
+async function renderTeacherPanel() {
+  await fetchAllOverrides();
+
+  const tbody = document.getElementById('tblStudentsBody');
+  tbody.innerHTML = '';
+
+  Object.keys(DB.users).forEach(k => {
+    const u = DB.users[k];
+    if(u.role === 'aluno') {
+      const isUnl = u.progress >= 100 || !!overridesCache[k];
+      tbody.innerHTML += `
+        <tr>
+          <td><b>${u.nome}</b> (${u.email})</td>
+          <td>${u.turma.toUpperCase()}</td>
+          <td>${u.progress}%</td>
+          <td><span style="color:${isUnl ? 'var(--green)':'var(--blood-bright)'}">${isUnl ? 'LIBERADO':'BLOQUEADO'}</span></td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="toggleStudentGames('${k}')">
+              ${overridesCache[k] ? 'Revogar Acesso' : 'Liberar Jogos'}
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+  });
+
+  renderLogs();
+  setupActivityMonitoring();
+}
+
+const ACTIVITY_OFFLINE_THRESHOLD_MS = 45000;
+let activityRealtimeStarted = false;
+let activityPollStarted = false;
+
+function computeDisplayStatus(row) {
+  const updatedAt = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+  if (!updatedAt || (Date.now() - updatedAt) > ACTIVITY_OFFLINE_THRESHOLD_MS) return 'offline';
+  return row.status || 'offline';
+}
+
+async function fetchStudentActivity() {
+  if (!sbClient) return [];
+  const { data, error } = await sbClient
+    .from('student_activity')
+    .select('*')
+    .order('student_name', { ascending: true });
+  if (error) return [];
+  return data || [];
+}
+
+async function renderActivityPanel() {
+  const tbody = document.getElementById('tblActivityBody');
+  if (!tbody) return;
+
+  const rows = await fetchStudentActivity();
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum registro de atividade ainda.</td></tr>`;
+    return;
+  }
+
+  const statusMeta = {
+    active: { color: 'var(--green)', label: '🟢 Ativo' },
+    idle: { color: 'var(--yellow)', label: '🟡 Inativo' },
+    offline: { color: 'var(--ink-dim)', label: '⚫ Offline' }
+  };
+
+  tbody.innerHTML = rows.map(r => {
+    const displayStatus = computeDisplayStatus(r);
+    const meta = statusMeta[displayStatus] || statusMeta.offline;
+    const lastUpdate = r.updated_at ? new Date(r.updated_at).toLocaleTimeString() : '--';
+    return `
+      <tr>
+        <td><b>${r.student_name || r.student_email}</b></td>
+        <td>${(r.turma || '--').toUpperCase()}</td>
+        <td>${r.location_label || r.location || '--'}</td>
+        <td><span style="color:${meta.color}">${meta.label}</span></td>
+        <td>${lastUpdate}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function setupActivityMonitoring() {
+  if (!sbClient) return;
+
+  renderActivityPanel();
+
+  if (!activityRealtimeStarted) {
+    activityRealtimeStarted = true;
+    sbClient.channel('realtime_student_activity')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_activity' }, () => renderActivityPanel())
+      .subscribe();
+  }
+
+  if (!activityPollStarted) {
+    activityPollStarted = true;
+    setInterval(renderActivityPanel, 15000);
+  }
+}
+
+async function toggleStudentGames(userKey) {
+  if (!sbClient) return;
+  const u = DB.users[userKey];
+  const newValue = !overridesCache[userKey];
+
+  await sbClient.from('student_overrides').upsert({
+    student_email: userKey,
+    games_unlocked: newValue,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'student_email' });
+
+  logAction(`Alterou permissão de jogos de ${u.nome} para: ${newValue ? 'LIBERADO' : 'PADRÃO'}`);
+  renderTeacherPanel();
+}
+
+document.getElementById('btnUnlockGamesGlobal').addEventListener('click', async () => {
+  if (!sbClient) return;
+  const rows = Object.keys(DB.users)
+    .filter(k => DB.users[k].role === 'aluno')
+    .map(k => ({ student_email: k, games_unlocked: true, updated_at: new Date().toISOString() }));
+  await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+  logAction('Liberou acesso aos jogos para TODOS os alunos');
+  renderTeacherPanel();
+});
+
+document.getElementById('btnLockGamesGlobal').addEventListener('click', async () => {
+  if (!sbClient) return;
+  const rows = Object.keys(DB.users)
+    .filter(k => DB.users[k].role === 'aluno')
+    .map(k => ({ student_email: k, games_unlocked: false, updated_at: new Date().toISOString() }));
+  await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+  logAction('Bloqueou acesso aos jogos para TODOS os alunos');
+  renderTeacherPanel();
+});
+
+function applyA11y(){
+  const root = document.documentElement;
+  if (a11y.fontMode === 'traditional'){
+    root.style.setProperty('--user-font', 'system-ui, -apple-system, sans-serif');
+    root.style.setProperty('--user-font-display', 'system-ui, -apple-system, sans-serif');
+    document.getElementById('btnFontStyle').textContent = 'Fonte: tradicional';
+    document.getElementById('btnFontStyle').classList.add('on');
+  } else {
+    root.style.setProperty('--user-font', "'JetBrains Mono', monospace");
+    root.style.setProperty('--user-font-display', "'VT323', monospace");
+    document.getElementById('btnFontStyle').textContent = 'Fonte: pixelada';
+    document.getElementById('btnFontStyle').classList.remove('on');
+  }
+  root.style.setProperty('--user-font-scale', a11y.fontScale);
+
+  const vw = document.querySelector('div[vw]');
+  if (vw) vw.style.display = a11y.libras ? '' : 'none';
+  document.getElementById('btnLibras').classList.toggle('on', a11y.libras);
+}
+
+document.getElementById('btnFontStyle').addEventListener('click', () => {
+  a11y.fontMode = a11y.fontMode === 'pixel' ? 'traditional' : 'pixel';
+  applyA11y();
+});
+document.getElementById('btnFontBigger').addEventListener('click', () => {
+  a11y.fontScale = Math.min(1.6, Math.round((a11y.fontScale + 0.1) * 10) / 10);
+  applyA11y();
+});
+document.getElementById('btnFontSmaller').addEventListener('click', () => {
+  a11y.fontScale = Math.max(0.85, Math.round((a11y.fontScale - 0.1) * 10) / 10);
+  applyA11y();
+});
+document.getElementById('btnLibras').addEventListener('click', () => {
+  a11y.libras = !a11y.libras;
+  applyA11y();
+});
+
+setupRBAC();
+applyA11y();
+</script>
+
+<script>
+  window.ACTIVITY_STUDENT_NAME = currentUser.nome;
+  window.ACTIVITY_STUDENT_TURMA = currentUser.turma;
+  window.ACTIVITY_STUDENT_ROLE = currentUser.role;
+  window.ACTIVITY_LOCATION = 'aulas_js';
+  window.ACTIVITY_LABEL = 'JavaScript — Escolhendo módulo';
+</script>
+<script src="activity-tracker.js"></script>
+</body>
+</html>

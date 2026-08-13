@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root {
+    --bg: #0a0d0a; --panel: #10140f; --panel2: #0d110c; --line: #223022;
+    --green: #7cff3f; --green-dim: #4a9a2a; --blood-bright: #ff3b30;
+    --yellow: #d4c86a; --ink: #d9e6d2; --ink-dim: #6f8368;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0; height: 100vh;
+    background: var(--bg); color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-card {
+    width: 100%; max-width: 420px; background: var(--panel);
+    border: 2px solid var(--green-dim); padding: 24px;
+    box-shadow: 0 0 20px rgba(124, 255, 63, 0.15);
+  }
+  .login-card h1 {
+    font-family: 'VT323', monospace; font-size: 32px; color: var(--green);
+    margin: 0 0 4px; text-align: center; letter-spacing: 2px;
+  }
+  .login-card .subtitle {
+    font-size: 11px; color: var(--ink-dim); text-transform: uppercase;
+    text-align: center; margin-bottom: 24px; letter-spacing: 1px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 11px; color: var(--yellow);
+    text-transform: uppercase; margin-bottom: 6px; font-weight: bold;
+  }
+  .form-group input {
+    width: 100%; background: var(--panel2); border: 1px solid var(--line);
+    color: var(--ink); font-size: 13px; padding: 10px; outline: none;
+    font-family: inherit; transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--green); }
+  .btn-submit {
+    width: 100%; background: var(--green); color: #04220a; border: none;
+    font-weight: 800; font-size: 12px; text-transform: uppercase;
+    padding: 12px; cursor: pointer; margin-top: 8px; font-family: inherit;
+  }
+  .error-msg {
+    color: var(--blood-bright); font-size: 11px; margin-top: 12px;
+    text-align: center; display: none; font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <h1>GIT_HACK OS</h1>
+  <div class="subtitle">PixelForge Studios — Autenticação</div>
+
+  <form id="loginForm" onsubmit="return handleLogin(event)">
+    <div class="form-group">
+      <label for="txtUser">Usuário / E-mail</label>
+      <input type="text" id="txtUser" placeholder="usuario.aluno" required autofocus autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label for="txtPass">Senha de Acesso</label>
+      <input type="password" id="txtPass" placeholder="••••••••" required>
+    </div>
+
+    <button type="submit" class="btn-submit">Entrar no Sistema</button>
+    <div class="error-msg" id="errMsg">Usuário ou senha incorretos!</div>
+  </form>
+</div>
+
+<script>
+const USERS_DB = [
+  {"email": "breno.silva80", "senha": "silva2026", "nome": "Breno Silva", "role": "aluno", "turma": "jogos", "ip": "192.168.1.10", "saldo": "1234.80"},
+  {"email": "edward.guzman", "senha": "guzman2026", "nome": "Edward Guzman", "role": "aluno", "turma": "jogos", "ip": "192.168.1.11", "saldo": "1580.11"},
+  {"email": "engel.fraga", "senha": "fraga2026", "nome": "Engel Fraga", "role": "aluno", "turma": "jogos", "ip": "192.168.1.12", "saldo": "2100.12"},
+  {"email": "gabriella.borges5", "senha": "borges2026", "nome": "Gabriella Borges", "role": "aluno", "turma": "jogos", "ip": "192.168.1.13", "saldo": "1420.13"},
+  {"email": "iago.moreira", "senha": "carvalho2026", "nome": "Iago Moreira", "role": "aluno", "turma": "jogos", "ip": "192.168.1.14", "saldo": "3050.14"},
+  {"email": "joao.schneider", "senha": "schneider2026", "nome": "João Schneider", "role": "aluno", "turma": "jogos", "ip": "192.168.1.15", "saldo": "1890.15"},
+  {"email": "jose.lima8", "senha": "lima2026", "nome": "José Lima", "role": "aluno", "turma": "jogos", "ip": "192.168.1.16", "saldo": "1234.16"},
+  {"email": "jose.rodrigues6", "senha": "rodrigues2026", "nome": "José Rodrigues", "role": "aluno", "turma": "jogos", "ip": "192.168.1.17", "saldo": "2740.17"},
+  {"email": "josuel.santos", "senha": "santos2026", "nome": "Josuel Santos", "role": "aluno", "turma": "jogos", "ip": "192.168.1.18", "saldo": "1310.18"},
+  {"email": "juliano.alves", "senha": "ferreira2026", "nome": "Juliano Alves", "role": "aluno", "turma": "jogos", "ip": "192.168.1.19", "saldo": "4200.19"},
+  {"email": "leon.kacki", "senha": "kacki2026", "nome": "Leon Kacki", "role": "aluno", "turma": "jogos", "ip": "192.168.1.20", "saldo": "1950.20"},
+  {"email": "maria.moura85", "senha": "moura2026", "nome": "Maria Moura", "role": "aluno", "turma": "jogos", "ip": "192.168.1.21", "saldo": "1670.21"},
+  {"email": "maycongabriel.moreira", "senha": "moreira2026", "nome": "Maycon Gabriel Moreira", "role": "aluno", "turma": "jogos", "ip": "192.168.1.22", "saldo": "2300.22"},
+  {"email": "miguelmendonca.martins", "senha": "martins2026", "nome": "Miguel Mendonça Martins", "role": "aluno", "turma": "jogos", "ip": "192.168.1.23", "saldo": "1234.23"},
+  {"email": "murillo.lima", "senha": "lima2026", "nome": "Murillo Lima", "role": "aluno", "turma": "jogos", "ip": "192.168.1.24", "saldo": "1780.24"},
+  {"email": "tiago.dias1", "senha": "dias2026", "nome": "Tiago Dias", "role": "aluno", "turma": "jogos", "ip": "192.168.1.25", "saldo": "2900.25"},
+  {"email": "yasmim.rezende4", "senha": "rezende2026", "nome": "Yasmim Rezende", "role": "aluno", "turma": "jogos", "ip": "192.168.1.26", "saldo": "1490.26"},
+  {"email": "admin", "senha": "jd4532", "nome": "Instrutor / Professor", "role": "professor", "turma": "all", "ip": "192.168.1.254", "saldo": "9999.00"}
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+  sessionStorage.removeItem('githack_authenticated');
+  sessionStorage.removeItem('githack_current_user');
+});
+
+function handleLogin(e) {
+  e.preventDefault();
+  const uVal = document.getElementById('txtUser').value.trim().toLowerCase();
+  const pVal = document.getElementById('txtPass').value.trim();
+  const err = document.getElementById('errMsg');
+
+  const match = USERS_DB.find(u => u.email.toLowerCase() === uVal && u.senha === pVal);
+
+  if (match) {
+    err.style.display = 'none';
+    sessionStorage.setItem('githack_authenticated', 'true');
+    sessionStorage.setItem('githack_current_user', JSON.stringify(match));
+
+    // REDIRECIONA PRIMEIRO PARA A PLATAFORMA DE ATIVIDADES
+    window.location.href = `plataforma.html?user=${encodeURIComponent(match.email)}&ip=${encodeURIComponent(match.ip)}&saldo=${encodeURIComponent(match.saldo)}&role=${encodeURIComponent(match.role)}`;
+  } else {
+    err.style.display = 'block';
+  }
+  return false;
+}
+</script>
+
+</body>
+</html>
