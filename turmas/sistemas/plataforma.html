@@ -21,19 +21,34 @@
 <script src="../../shared/users-db.js"></script>
 <script src="../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../shared/clipboard-guard.js"></script>
 </head>
 <body>
 
 <div id="app"></div>
 
 <script>
-  // Turma nova ainda sem trilhas cadastradas. Para adicionar a primeira,
-  // basta preencher este array com o mesmo formato usado em
-  // turmas/jogos/plataforma.html — nenhum outro arquivo precisa mudar.
+  // Pra adicionar uma trilha nova nesta turma, basta um novo item aqui
+  // (mesmo formato usado em turmas/jogos/plataforma.html) — nenhum outro
+  // arquivo precisa mudar.
   window.TURMA_CONFIG = {
     id: 'sistemas',
     label: 'Sistemas',
-    trilhas: []
+    trilhas: [
+      {
+        key: 'sql',
+        label: 'SQL',
+        desc: 'Escolha um módulo de chamados pra praticar.',
+        modules: [
+          {
+            key: 'basico', title: 'Básico — Central de Dados',
+            desc: 'Resolva chamados escrevendo consultas SQL de verdade contra um banco de exemplo, direto no navegador.',
+            icon: '🗄️', src: 'atividades/sql-basico.html',
+            progressKey: 'sql_basico_progress_', progressTotal: 8
+          }
+        ]
+      }
+    ]
   };
 </script>
 <script src="../../shared/platform-core.js"></script>

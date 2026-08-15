@@ -47,6 +47,15 @@
     </div>
 
     <div class="card">
+      <h2>Restrições</h2>
+      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+        Vale pras duas turmas. É um desincentivo dentro do portal, não uma trava de verdade —
+        um aluno pode contornar pelo DevTools do navegador.
+      </p>
+      <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar (Todos)</button>
+    </div>
+
+    <div class="card">
       <h2>Gerenciamento de Turmas & Liberações</h2>
       <div style="display:flex; gap:10px; margin-bottom:12px;">
         <button class="btn" id="btnUnlockGamesGlobal">Liberar Jogos (Todos)</button>
@@ -261,6 +270,44 @@ document.getElementById('btnLockGamesGlobal').addEventListener('click', async ()
 });
 
 renderTeacherPanel();
+
+// ---------- Restrições (bloqueio global de copiar/colar) ----------
+let clipboardBlocked = false;
+
+function renderClipboardButton() {
+  const btn = document.getElementById('btnToggleClipboard');
+  if (clipboardBlocked) {
+    btn.textContent = 'Copiar/Colar BLOQUEADO — Clique para liberar';
+    btn.classList.add('btn-danger');
+  } else {
+    btn.textContent = 'Bloquear Copiar/Colar (Todos)';
+    btn.classList.remove('btn-danger');
+  }
+}
+
+async function fetchClipboardState() {
+  if (!sbClient) return;
+  const { data } = await sbClient
+    .from('classroom_settings')
+    .select('clipboard_blocked')
+    .eq('id', 'global')
+    .maybeSingle();
+  clipboardBlocked = !!(data && data.clipboard_blocked);
+  renderClipboardButton();
+}
+
+document.getElementById('btnToggleClipboard').addEventListener('click', async () => {
+  if (!sbClient) return;
+  clipboardBlocked = !clipboardBlocked;
+  await sbClient.from('classroom_settings').upsert({
+    id: 'global',
+    clipboard_blocked: clipboardBlocked,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'id' });
+  renderClipboardButton();
+});
+
+fetchClipboardState();
 </script>
 
 </body>

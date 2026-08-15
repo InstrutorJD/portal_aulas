@@ -30,12 +30,12 @@
           error: null,
         });
       },
-      upsert(payload) {
+      upsert(payload, opts) {
         const rows = Array.isArray(payload) ? payload : [payload];
         const t = table(name);
+        const conflictCol = (opts && opts.onConflict) || (rows[0] && (rows[0].id !== undefined ? 'id' : rows[0].ip_address !== undefined ? 'ip_address' : rows[0].student_email !== undefined ? 'student_email' : null));
         rows.forEach(row => {
-          const key = row.ip_address ? 'ip_address' : (row.student_email ? 'student_email' : null);
-          const idx = key ? t.findIndex(r => r[key] === row[key]) : -1;
+          const idx = conflictCol ? t.findIndex(r => r[conflictCol] === row[conflictCol]) : -1;
           if (idx >= 0) t[idx] = Object.assign({}, t[idx], row);
           else t.push(row);
         });

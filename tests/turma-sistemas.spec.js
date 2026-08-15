@@ -19,14 +19,13 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(green).not.toBe('#7cff3f'); // não é o verde da turma Jogos
   });
 
-  test('mostra estado vazio (sem trilhas cadastradas ainda)', async ({ page }) => {
+  test('mostra a trilha SQL cadastrada pra essa turma', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('#aulasSubTabPages .empty-state')).toContainText('Nenhuma trilha cadastrada');
-    // sem subtabs de trilha nenhuma renderizada
-    await expect(page.locator('.subtab-btn')).toHaveCount(0);
+    await expect(page.locator('.subtab-btn[data-subtab="sql"]')).toHaveClass(/active/);
+    await expect(page.locator('#moduleSelector_sql')).toContainText('Básico — Central de Dados');
   });
 
-  test('jogos continuam bloqueados por padrão (sem trilha pra completar)', async ({ page }) => {
+  test('jogos ficam bloqueados até completar a trilha SQL', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#tabBtnJogos')).toHaveClass(/disabled/);
     await expect(page.locator('#lblGamesUnlock')).toHaveText(/BLOQUEADO/);
