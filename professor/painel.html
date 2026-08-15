@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Painel do Professor</title>
+
+<!-- Painel único do professor: mesma tela para as duas turmas (Jogos e
+     Sistemas), lendo shared/users-db.js para enxergar todos os alunos. -->
+<style>
+  :root{
+    --bg:#0b0b0d; --panel:#141417; --panel2:#101012; --line:#2a2a30;
+    --green:#e0a83a; --green-dim:#a67b2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#e0a83a; --ink:#e7e6e2; --ink-dim:#8a8a90;
+  }
+  .quicklinks{ display:flex; gap:8px; flex-wrap:wrap; }
+</style>
+<link rel="stylesheet" href="../shared/platform-core.css">
+
+<script src="../shared/users-db.js"></script>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="a11y-bar">
+  <div class="label">Corpo Docente</div>
+  <div>
+    <span id="sessionUser" class="label" style="color:var(--yellow)"></span>
+    <button id="btnLogout" class="btn-danger" style="padding:4px 8px; font-size:10px; margin-left:8px;">Sair</button>
+  </div>
+</div>
+
+<div class="app-container">
+  <header>
+    <h1>PIXELFORGE STUDIOS — PAINEL DO PROFESSOR</h1>
+    <div class="sub">Gestão das turmas Jogos Digitais e Sistemas</div>
+  </header>
+
+  <div class="viewport-content">
+    <div class="card">
+      <h2>Visualizar Portais</h2>
+      <div class="quicklinks">
+        <a class="btn btn-secondary" href="../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor" target="_blank">Portal — Jogos Digitais</a>
+        <a class="btn btn-secondary" href="../turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor" target="_blank">Portal — Sistemas</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Gerenciamento de Turmas & Liberações</h2>
+      <div style="display:flex; gap:10px; margin-bottom:12px;">
+        <button class="btn" id="btnUnlockGamesGlobal">Liberar Jogos (Todos)</button>
+        <button class="btn btn-danger" id="btnLockGamesGlobal">Bloquear Jogos (Todos)</button>
+      </div>
+
+      <h3 style="font-size:13px; color:var(--ink-dim); text-transform:uppercase;">Status dos Alunos</h3>
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Turma</th>
+            <th>Progresso Hoje</th>
+            <th>Acesso Jogos</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tblStudentsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Atividade em Tempo Real</h2>
+      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno está agora — atualiza sozinho.</p>
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Aluno</th>
+            <th>Turma</th>
+            <th>Onde está</th>
+            <th>Status</th>
+            <th>Última atualização</th>
+          </tr>
+        </thead>
+        <tbody id="tblActivityBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Monitoramento e Logs em Tempo Real (Auditoria)</h2>
+      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Registros gerados neste navegador (login, troca de aba, jogos abertos).</p>
+      <div class="log-box" id="auditLogBox"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const paramUser = urlParams.get('user') || 'admin';
+
+const DB = { users: {} };
+(window.USERS_DB || []).forEach(u => { DB.users[u.email] = { ...u, progress: 0 }; });
+
+const currentUser = DB.users[paramUser] || { email: paramUser, nome: paramUser, role: 'professor', turma: 'all' };
+document.getElementById('sessionUser').textContent = currentUser.nome;
+
+const SUPABASE_URL = window.SUPABASE_URL;
+const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
+const sbClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  sessionStorage.clear();
+  window.location.href = '../index.html';
+});
+
+function getLogs() {
+  return JSON.parse(localStorage.getItem('pf_audit_logs') || '[]');
+}
+function renderLogs() {
+  const box = document.getElementById('auditLogBox');
+  box.innerHTML = getLogs().map(l => `<div class="log-entry"><span class="time">[${l.time}]</span> <b>${l.user}</b>: ${l.action}</div>`).join('');
+}
+
+let overridesCache = {};
+
+async function fetchAllOverrides() {
+  if (!sbClient) return;
+  const { data, error } = await sbClient.from('student_overrides').select('*');
+  if (error) return;
+  overridesCache = {};
+  (data || []).forEach(r => { overridesCache[r.student_email] = r.games_unlocked; });
+}
+
+async function renderTeacherPanel() {
+  await fetchAllOverrides();
+
+  const tbody = document.getElementById('tblStudentsBody');
+  tbody.innerHTML = '';
+
+  Object.keys(DB.users).forEach(k => {
+    const u = DB.users[k];
+    if (u.role === 'aluno') {
+      const isUnl = u.progress >= 100 || !!overridesCache[k];
+      tbody.innerHTML += `
+        <tr>
+          <td><b>${u.nome}</b> (${u.email})</td>
+          <td>${u.turma.toUpperCase()}</td>
+          <td>${u.progress}%</td>
+          <td><span style="color:${isUnl ? 'var(--green)' : 'var(--blood-bright)'}">${isUnl ? 'LIBERADO' : 'BLOQUEADO'}</span></td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="toggleStudentGames('${k}')">
+              ${overridesCache[k] ? 'Revogar Acesso' : 'Liberar Jogos'}
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+  });
+
+  renderLogs();
+  setupActivityMonitoring();
+}
+
+const ACTIVITY_OFFLINE_THRESHOLD_MS = 45000;
+let activityRealtimeStarted = false;
+let activityPollStarted = false;
+
+function computeDisplayStatus(row) {
+  const updatedAt = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+  if (!updatedAt || (Date.now() - updatedAt) > ACTIVITY_OFFLINE_THRESHOLD_MS) return 'offline';
+  return row.status || 'offline';
+}
+
+async function fetchStudentActivity() {
+  if (!sbClient) return [];
+  const { data, error } = await sbClient.from('student_activity').select('*').order('student_name', { ascending: true });
+  if (error) return [];
+  return data || [];
+}
+
+async function renderActivityPanel() {
+  const tbody = document.getElementById('tblActivityBody');
+  if (!tbody) return;
+
+  const rows = await fetchStudentActivity();
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum registro de atividade ainda.</td></tr>`;
+    return;
+  }
+
+  const statusMeta = {
+    active: { color: 'var(--green)', label: '🟢 Ativo' },
+    idle: { color: 'var(--yellow)', label: '🟡 Inativo' },
+    offline: { color: 'var(--ink-dim)', label: '⚫ Offline' }
+  };
+
+  tbody.innerHTML = rows.map(r => {
+    const displayStatus = computeDisplayStatus(r);
+    const meta = statusMeta[displayStatus] || statusMeta.offline;
+    const lastUpdate = r.updated_at ? new Date(r.updated_at).toLocaleTimeString() : '--';
+    return `
+      <tr>
+        <td><b>${r.student_name || r.student_email}</b></td>
+        <td>${(r.turma || '--').toUpperCase()}</td>
+        <td>${r.location_label || r.location || '--'}</td>
+        <td><span style="color:${meta.color}">${meta.label}</span></td>
+        <td>${lastUpdate}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function setupActivityMonitoring() {
+  if (!sbClient) return;
+
+  renderActivityPanel();
+
+  if (!activityRealtimeStarted) {
+    activityRealtimeStarted = true;
+    sbClient.channel('realtime_student_activity')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_activity' }, () => renderActivityPanel())
+      .subscribe();
+  }
+
+  if (!activityPollStarted) {
+    activityPollStarted = true;
+    setInterval(renderActivityPanel, 15000);
+  }
+}
+
+async function toggleStudentGames(userKey) {
+  if (!sbClient) return;
+  const u = DB.users[userKey];
+  const newValue = !overridesCache[userKey];
+
+  await sbClient.from('student_overrides').upsert({
+    student_email: userKey,
+    games_unlocked: newValue,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'student_email' });
+
+  renderTeacherPanel();
+}
+
+document.getElementById('btnUnlockGamesGlobal').addEventListener('click', async () => {
+  if (!sbClient) return;
+  const rows = Object.keys(DB.users)
+    .filter(k => DB.users[k].role === 'aluno')
+    .map(k => ({ student_email: k, games_unlocked: true, updated_at: new Date().toISOString() }));
+  await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+  renderTeacherPanel();
+});
+
+document.getElementById('btnLockGamesGlobal').addEventListener('click', async () => {
+  if (!sbClient) return;
+  const rows = Object.keys(DB.users)
+    .filter(k => DB.users[k].role === 'aluno')
+    .map(k => ({ student_email: k, games_unlocked: false, updated_at: new Date().toISOString() }));
+  await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+  renderTeacherPanel();
+});
+
+renderTeacherPanel();
+</script>
+
+</body>
+</html>

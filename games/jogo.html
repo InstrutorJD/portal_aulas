@@ -94,7 +94,7 @@
   }
   .modal-body{ padding:16px; font-size:12px; color:var(--ink); min-height:120px; word-break:break-all; }
 </style>
-<script src="supabase-config.js"></script>
+<script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="mock-data.js"></script>
 </head>
@@ -135,7 +135,7 @@
 
   <div class="terminal-section">
     <div class="terminal-header">
-      <span>Terminal Bash Virtual — Git Shell <b id="shieldBadge" style="color:var(--green); display:none; margin-left:10px;">[🛡️ ANTIVÍRUS ATIVO: <span id="shieldTimerLbl">120</span>s]</b></span>
+      <span>Terminal Bash Virtual — Git Shell <b id="shieldBadge" style="color:var(--green); display:none; margin-left:10px;">[🛡️ ANTIVÍRUS ATIVO: <span id="shieldTimerLbl">120</span>s]</b><b id="shieldCooldownBadge" style="color:var(--blood-bright); display:none; margin-left:10px;">[⏳ ANTIVÍRUS EM RECARGA: <span id="shieldCooldownTimerLbl">120</span>s]</b><b id="walletBadge" style="color:var(--yellow); display:none; margin-left:10px;">[🔐 CARTEIRA CRIPTOGRAFADA: <span id="walletTimerLbl">120</span>s]</b></span>
       <span id="termNetStatus" style="color:var(--blood-bright)">STATUS: OFFLINE</span>
     </div>
     <div class="terminal-body" id="termOutput"></div>
@@ -169,7 +169,7 @@
   const ipParam = urlParams.get('ip');
 
   if (!isAuthenticated || !userParam || !ipParam) {
-    window.location.href = 'index.html';
+    window.location.href = '../index.html';
   }
 
   const SUPABASE_URL = window.SUPABASE_URL;
@@ -180,6 +180,7 @@
   window.userIp = ipParam;
   window.userSaldo = parseFloat(urlParams.get('saldo')) || 1234.80;
   window.userRole = urlParams.get('role') || 'aluno';
+  window.userTurma = urlParams.get('turma') || 'jogos';
   
   let isConnected = false;
   let activeTargetIp = null;
@@ -188,7 +189,13 @@
   let canUseShield = true;
   let shieldSecondsLeft = 120;
   let shieldInterval = null;
+  let shieldCooldownSecondsLeft = 120;
+  let shieldCooldownInterval = null;
   const gitignoreCooldowns = {};
+
+  let isWalletEncrypted = false;
+  let walletSecondsLeft = 120;
+  let walletInterval = null;
 
   const defaultMock = {
     "192.168.1.10": { email: "breno.silva80", jdcoin: 1234.80, lockedFolders: [], ignoredFolders: [], isShielded: false, isOnline: false },
@@ -196,8 +203,16 @@
     "192.168.1.12": { email: "engel.fraga", jdcoin: 2100.12, lockedFolders: [], ignoredFolders: [], isShielded: false, isOnline: false }
   };
 
-  const baseNodes = (typeof MOCK_NODES !== 'undefined') ? MOCK_NODES : defaultMock;
-  window.gameNodes = JSON.parse(localStorage.getItem('githack_nodes')) || baseNodes;
+  // MOCK_NODES é conteúdo de exemplo só da turma Jogos; outras turmas começam
+  // sem nós de exemplo e dependem do Supabase (network_nodes) pra ver colegas.
+  const baseNodes = (window.userTurma === 'jogos')
+    ? ((typeof MOCK_NODES !== 'undefined') ? MOCK_NODES : defaultMock)
+    : {};
+
+  // Cache local isolado por turma: evita que um navegador que já visitou o
+  // portal de uma turma "vaze" nós dela pro portal de outra turma.
+  const NODES_CACHE_KEY = `githack_nodes_${window.userTurma}`;
+  window.gameNodes = JSON.parse(localStorage.getItem(NODES_CACHE_KEY)) || baseNodes;
 
   if (!window.gameNodes[window.userIp]) {
     window.gameNodes[window.userIp] = {
@@ -215,7 +230,7 @@
   }
 
   function saveState() {
-    localStorage.setItem('githack_nodes', JSON.stringify(window.gameNodes));
+    localStorage.setItem(NODES_CACHE_KEY, JSON.stringify(window.gameNodes));
     updateUI();
   }
 
@@ -284,7 +299,9 @@
 
     try {
 
-    const { data: nodes } = await sbClient.from('network_nodes').select('*');
+    // Só traz nós da própria turma: é isso que faz um aluno não enxergar
+    // (nem conseguir atacar) colegas de outra turma no netscan/git clone.
+    const { data: nodes } = await sbClient.from('network_nodes').select('*').eq('turma', window.userTurma);
     if (nodes) {
       nodes.forEach(n => {
         if (!window.gameNodes[n.ip_address]) window.gameNodes[n.ip_address] = {};
@@ -485,6 +502,11 @@
                 <td style="padding:2px 4px; color:var(--yellow)">antivirus</td>
               </tr>
               <tr>
+                <td style="padding:2px 4px; color:var(--green)"><b>encrypt jdcoin [senha]</b></td>
+                <td style="padding:2px 4px">Protege sua carteira por 2m com senha de 1 caractere (letra ou número, sem símbolos).</td>
+                <td style="padding:2px 4px; color:var(--yellow)">encrypt jdcoin K</td>
+              </tr>
+              <tr>
                 <td style="padding:2px 4px; color:var(--green)"><b>git clone [IP]</b></td>
                 <td style="padding:2px 4px">Clona o repositório público do IP alvo informado.</td>
                 <td style="padding:2px 4px; color:var(--yellow)">git clone 192.168.1.11</td>
@@ -503,6 +525,11 @@
                 <td style="padding:2px 4px; color:var(--green)"><b>hack lock [IP] [pasta]</b></td>
                 <td style="padding:2px 4px">Criptografa e bloqueia uma pasta do nó clonado.</td>
                 <td style="padding:2px 4px; color:var(--yellow)">hack lock 192.168.1.11 whatsapp</td>
+              </tr>
+              <tr>
+                <td style="padding:2px 4px; color:var(--green)"><b>hack crack [IP]</b></td>
+                <td style="padding:2px 4px">Tenta 10 combinações por força bruta para quebrar a senha da carteira do nó clonado.</td>
+                <td style="padding:2px 4px; color:var(--yellow)">hack crack 192.168.1.11</td>
               </tr>`;
 
           if (window.userRole === 'professor' || window.userRole === 'admin') {
@@ -575,12 +602,20 @@
             break;
           }
 
+          let walletLocked = false;
+          if (targetNodeIp !== window.userIp && sbClient) {
+            const { data: walletStatus } = await sbClient.rpc('wallet_lock_status', { p_ip_address: targetNodeIp });
+            walletLocked = !!(walletStatus && walletStatus.locked);
+          }
+
           if (!subCmd) {
             let lsOutput = `<span style="color:var(--yellow)">Conteúdo do Nó [${displayIpFor(targetNodeIp)}]:</span><br>`;
             ['fotos', 'whatsapp', 'instagram', 'tiktok', 'jdcoin'].forEach(f => {
               const isLocked = currentNode.lockedFolders && currentNode.lockedFolders.includes(f);
               const isIgnored = currentNode.ignoredFolders && currentNode.ignoredFolders.includes(f);
-              if (isLocked) {
+              if (f === 'jdcoin' && walletLocked) {
+                lsOutput += `📁 /${f} <span style="color:var(--yellow)">[🔐 CRIPTOGRAFADO POR SENHA]</span><br>`;
+              } else if (isLocked) {
                 lsOutput += `📁 /${f} <span style="color:var(--blood-bright)">[CRIPTOGRAFADO/BLOQUEADO]</span><br>`;
               } else if (isIgnored) {
                 lsOutput += `📁 /${f} <span style="color:var(--yellow)">[.GITIGNORE ATIVO]</span><br>`;
@@ -593,6 +628,9 @@
             if (!['fotos', 'whatsapp', 'instagram', 'tiktok', 'jdcoin'].includes(subCmd)) {
               response.style.color = 'var(--blood-bright)';
               response.textContent = `Diretório '/${subCmd}' não encontrado. Opções: fotos, whatsapp, instagram, tiktok, jdcoin`;
+            } else if (subCmd === 'jdcoin' && walletLocked) {
+              response.style.color = 'var(--blood-bright)';
+              response.textContent = `Acesso Negado: A carteira /jdcoin está criptografada por senha. Use 'hack crack ${displayIpFor(targetNodeIp)}' para tentar quebrá-la.`;
             } else if (currentNode.lockedFolders && currentNode.lockedFolders.includes(subCmd)) {
               response.style.color = 'var(--blood-bright)';
               response.textContent = `Acesso Negado: A pasta /${subCmd} foi sequestrada e criptografada!`;
@@ -621,7 +659,8 @@
           } else {
             await fetchNodesFromSupabase();
             
-            let tableHtml = `<br><span style="color:var(--yellow)">--- SUBNET LOCAL (192.168.1.0/24) ---</span><br>`;
+            const subnetPrefix = window.userIp.split('.').slice(0, 3).join('.');
+            let tableHtml = `<br><span style="color:var(--yellow)">--- SUBNET LOCAL (${subnetPrefix}.0/24) ---</span><br>`;
             tableHtml += `IP TARGET       | STATUS  | REPOSITÓRIO GIT<br>`;
             tableHtml += `----------------|---------|------------------------<br>`;
 
@@ -651,7 +690,7 @@
         case 'antivirus':
           if (!canUseShield) {
             response.style.color = 'var(--blood-bright)';
-            response.textContent = 'Antivírus em recarga (Cooldown ativo). Aguarde para acionar novamente.';
+            response.textContent = `Antivírus em recarga (Cooldown ativo). Faltam ${shieldCooldownSecondsLeft}s para acionar novamente.`;
           } else if (isShieldActive) {
             response.style.color = 'var(--yellow)';
             response.textContent = 'Antivírus já está em execução no seu nó.';
@@ -695,18 +734,85 @@
                 termOutput.appendChild(alertDiv);
                 termOutput.scrollTop = termOutput.scrollHeight;
 
-                setTimeout(() => {
-                  canUseShield = true;
-                  const readyDiv = document.createElement('div');
-                  readyDiv.style.color = 'var(--green)';
-                  readyDiv.textContent = '[ANTIVÍRUS PRONTO] O sistema de blindagem pode ser ativado novamente.';
-                  termOutput.appendChild(readyDiv);
-                  termOutput.scrollTop = termOutput.scrollHeight;
-                }, 120000);
+                shieldCooldownSecondsLeft = 120;
+                document.getElementById('shieldCooldownBadge').style.display = 'inline';
+                document.getElementById('shieldCooldownTimerLbl').textContent = shieldCooldownSecondsLeft;
+
+                shieldCooldownInterval = setInterval(() => {
+                  shieldCooldownSecondsLeft--;
+                  const lbl = document.getElementById('shieldCooldownTimerLbl');
+                  if (lbl) lbl.textContent = shieldCooldownSecondsLeft;
+
+                  if (shieldCooldownSecondsLeft <= 0) {
+                    clearInterval(shieldCooldownInterval);
+                    canUseShield = true;
+                    document.getElementById('shieldCooldownBadge').style.display = 'none';
+
+                    const readyDiv = document.createElement('div');
+                    readyDiv.style.color = 'var(--green)';
+                    readyDiv.textContent = '[ANTIVÍRUS PRONTO] O sistema de blindagem pode ser ativado novamente.';
+                    termOutput.appendChild(readyDiv);
+                    termOutput.scrollTop = termOutput.scrollHeight;
+                  }
+                }, 1000);
               }
             }, 1000);
 
             response.innerHTML = `<span style="color:var(--green)">[ANTIVÍRUS ATIVADO] Nó blindado por 2 minutos. Os 2 últimos dígitos do seu IP foram ocultados na rede como .XX.</span>`;
+          }
+          break;
+
+        case 'encrypt':
+          if (subCmd !== 'jdcoin') {
+            response.style.color = 'var(--blood-bright)';
+            response.textContent = 'Sintaxe: encrypt jdcoin [senha]. Ex: encrypt jdcoin K';
+          } else {
+            const walletPassword = parts[2];
+            if (!walletPassword || !/^[A-Za-z0-9]$/.test(walletPassword)) {
+              response.style.color = 'var(--blood-bright)';
+              response.textContent = 'Senha inválida: use exatamente 1 caractere, letra (a-z/A-Z) ou número (0-9), sem símbolos.';
+            } else if (!sbClient) {
+              response.style.color = 'var(--blood-bright)';
+              response.textContent = 'Erro: Supabase não conectado.';
+            } else if (isWalletEncrypted) {
+              response.style.color = 'var(--yellow)';
+              response.textContent = 'Sua carteira já está criptografada.';
+            } else {
+              const { data, error } = await sbClient.rpc('set_wallet_password', {
+                p_ip_address: window.userIp,
+                p_password: walletPassword
+              });
+
+              if (error || !data || !data.success) {
+                response.style.color = 'var(--blood-bright)';
+                response.textContent = (data && data.message) ? data.message : 'Falha ao criptografar a carteira.';
+              } else {
+                isWalletEncrypted = true;
+                walletSecondsLeft = 120;
+                document.getElementById('walletBadge').style.display = 'inline';
+                document.getElementById('walletTimerLbl').textContent = walletSecondsLeft;
+
+                walletInterval = setInterval(() => {
+                  walletSecondsLeft--;
+                  const lbl = document.getElementById('walletTimerLbl');
+                  if (lbl) lbl.textContent = walletSecondsLeft;
+
+                  if (walletSecondsLeft <= 0) {
+                    clearInterval(walletInterval);
+                    isWalletEncrypted = false;
+                    document.getElementById('walletBadge').style.display = 'none';
+
+                    const expDiv = document.createElement('div');
+                    expDiv.style.color = 'var(--yellow)';
+                    expDiv.textContent = '[CRIPTOGRAFIA EXPIRADA] A senha da carteira JDCoin não é mais válida.';
+                    termOutput.appendChild(expDiv);
+                    termOutput.scrollTop = termOutput.scrollHeight;
+                  }
+                }, 1000);
+
+                response.innerHTML = `<span style="color:var(--green)">[CARTEIRA CRIPTOGRAFADA] Senha "${walletPassword}" definida. Proteção ativa por 2 minutos.</span>`;
+              }
+            }
           }
           break;
 
@@ -883,13 +989,16 @@
             } else if (hackAction === 'lock') {
               const folderToLock = parts[3] ? parts[3].toLowerCase().replace('/', '') : '';
               const targetNode = window.gameNodes[targetIp];
-              
+
               if (!['fotos', 'whatsapp', 'instagram', 'tiktok', 'jdcoin'].includes(folderToLock)) {
                 response.style.color = 'var(--blood-bright)';
                 response.textContent = 'Pasta inválida. Opções: fotos, whatsapp, instagram, tiktok, jdcoin';
               } else if (targetNode.ignoredFolders && targetNode.ignoredFolders.includes(folderToLock) && window.userRole !== 'professor' && window.userRole !== 'admin') {
                 response.style.color = 'var(--blood-bright)';
                 response.textContent = `Falha no ataque: A pasta /${folderToLock} está no .gitignore do alvo e não foi localizada.`;
+              } else if (folderToLock === 'jdcoin' && sbClient && (await sbClient.rpc('wallet_lock_status', { p_ip_address: targetIp })).data?.locked && window.userRole !== 'professor' && window.userRole !== 'admin') {
+                response.style.color = 'var(--blood-bright)';
+                response.textContent = `Falha no ataque: A carteira /jdcoin está criptografada. Use 'hack crack ${typedIp}' para quebrar a senha antes.`;
               } else {
                 if (sbClient) {
                   await sbClient.from('node_permissions').upsert({
@@ -900,6 +1009,28 @@
                 }
 
                 response.innerHTML = `<span style="color:var(--blood-bright)">[SEQUESTRO CONCLUÍDO] Pasta /${folderToLock} de ${typedIp} criptografada e bloqueada.</span>`;
+              }
+            } else if (hackAction === 'crack') {
+              if (!sbClient) {
+                response.style.color = 'var(--blood-bright)';
+                response.textContent = 'Erro: Supabase não conectado.';
+              } else {
+                const { data, error } = await sbClient.rpc('attempt_wallet_bruteforce', {
+                  p_ip_address: targetIp
+                });
+
+                if (error || !data) {
+                  response.style.color = 'var(--blood-bright)';
+                  response.textContent = 'Falha ao executar força bruta no banco.';
+                } else if (!data.locked) {
+                  response.style.color = 'var(--yellow)';
+                  response.textContent = data.message || 'A carteira do alvo não está criptografada.';
+                } else if (data.cracked) {
+                  response.innerHTML = `<span style="color:var(--green)">[FORÇA BRUTA] ${data.message} Tentativas: ${data.attempts.join(', ')}. Use 'hack transfer ${typedIp}' agora.</span>`;
+                } else {
+                  response.style.color = 'var(--blood-bright)';
+                  response.textContent = `[FORÇA BRUTA] ${data.message} Tentativas: ${data.attempts.join(', ')}.`;
+                }
               }
             } else {
               response.style.color = 'var(--blood-bright)';
@@ -946,7 +1077,7 @@
   window.ACTIVITY_LOCATION = 'jogos_hacker';
   window.ACTIVITY_LABEL = 'GitHack OS — Terminal de Cibersegurança';
 </script>
-<script src="activity-tracker.js"></script>
+<script src="../shared/activity-tracker.js"></script>
 
 <div vw class="enabled">
   <div vw-access-button class="active"></div>
