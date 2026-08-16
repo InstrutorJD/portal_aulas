@@ -32,7 +32,7 @@ const MOCK_NODES = {
       whatsapp: [{ name: "conversas.txt", content: "Engel: Mudei meu IP para o final .12, ninguém vai me achar aqui." }],
       instagram: [{ name: "session.json", content: '{"token": "ig_live_fraga_8821"}' }],
       tiktok: [{ name: "cache.tmp", content: "cache_videos_reels.tmp" }],
-      jdcoin: [{ name: "wallet_backup.dat", content: 'SEED: "pixel forge studio senaigoias 2026"' }]
+      jdcoin: [{ name: "wallet_backup.dat", content: 'SEED: "pixel forge studio dev team 2026"' }]
     }
   },
   "192.168.1.13": {
