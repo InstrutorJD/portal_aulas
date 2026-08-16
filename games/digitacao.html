@@ -74,6 +74,20 @@
   }
   button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
 
+  .btn-ranking{
+    font-family:inherit; font-weight:800; font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--yellow); padding:4px 10px; cursor:pointer; border-radius:2px;
+  }
+  .btn-ranking:hover{ background:rgba(212,200,106,0.12); }
+
+  .stats .streak-box b{ transition:color .15s ease, transform .15s ease; }
+  .stats .streak-box.on-fire b{ color:var(--blood-bright); transform:scale(1.15); text-shadow:0 0 10px rgba(255,59,48,.6); }
+
+  @keyframes popCorrect{ 0%{ transform:scale(1); } 40%{ transform:scale(1.35); } 100%{ transform:scale(1); } }
+  @keyframes shakeWrong{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+  .word.pop-correct{ animation:popCorrect .22s ease; }
+  .word.pop-wrong{ animation:shakeWrong .22s ease; }
+
   .results{
     display:none; width:100%; max-width:720px; background:var(--panel); border:1px solid var(--green);
     padding:22px; text-align:center;
@@ -87,13 +101,17 @@
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/clipboard-guard.js"></script>
+<script src="../shared/game-leaderboard.js"></script>
 </head>
 <body>
 
 <div class="env">
   <div class="topbar">
     <div>DIGITAÇÃO — TREINO DE VELOCIDADE</div>
-    <div>DESAFIO: 30S</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="btn-ranking" id="btnRanking">🏆 Ranking da Turma</button>
+      <span>DESAFIO: 30S</span>
+    </div>
   </div>
 
   <div class="stage">
@@ -104,6 +122,7 @@
       <div class="timer-box"><b id="lblTimer">30</b><span>Segundos</span></div>
       <div><b id="lblWpm">0</b><span>PPM</span></div>
       <div><b id="lblAccuracy">100%</b><span>Precisão</span></div>
+      <div class="streak-box" id="streakBox"><b id="lblStreak">0</b><span>🔥 Sequência</span></div>
       <div><b id="lblBest" style="color:var(--green)">0</b><span>Recorde PPM</span></div>
     </div>
 
@@ -126,9 +145,13 @@
         <div><b id="resAccuracy">0%</b><span>Precisão</span></div>
         <div><b id="resWords">0</b><span>Palavras certas</span></div>
         <div><b id="resErrors">0</b><span>Erros</span></div>
+        <div><b id="resMaxStreak" style="color:var(--blood-bright)">0</b><span>Melhor sequência</span></div>
         <div><b id="resBest" style="color:var(--green)">0</b><span>Recorde PPM</span></div>
       </div>
-      <button class="btn" id="btnPlayAgain">Jogar Novamente</button>
+      <div class="actions" style="justify-content:center; margin-bottom:0;">
+        <button class="btn" id="btnPlayAgain">Jogar Novamente</button>
+        <button class="btn btn-secondary" id="btnRankingResults">🏆 Ver Ranking da Turma</button>
+      </div>
     </div>
   </div>
 </div>
@@ -169,10 +192,27 @@
   const lblBest = document.getElementById('lblBest');
   const resBest = document.getElementById('resBest');
   const newRecordBadge = document.getElementById('newRecordBadge');
+  const lblStreak = document.getElementById('lblStreak');
+  const streakBox = document.getElementById('streakBox');
+  const resMaxStreak = document.getElementById('resMaxStreak');
+  const btnRanking = document.getElementById('btnRanking');
+  const btnRankingResults = document.getElementById('btnRankingResults');
 
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
+  const displayName = urlParams.get('name') || username;
+  const turma = urlParams.get('turma') || '';
   const BEST_PPM_KEY = `digitacao_best_ppm_${username}`;
+
+  function openRanking() {
+    window.GameLeaderboard.showPanel({
+      game: 'digitacao', turma, email: username,
+      title: 'Ranking — Digitação', formatScore: s => `${s} PPM`
+    });
+  }
+  btnRanking.addEventListener('click', openRanking);
+  btnRankingResults.addEventListener('click', openRanking);
+  if (!window.GameLeaderboard.enabled) { btnRanking.style.display = 'none'; btnRankingResults.style.display = 'none'; }
 
   function getBestPpm() {
     return parseInt(localStorage.getItem(BEST_PPM_KEY) || '0', 10);
@@ -193,6 +233,8 @@
   let correctChars = 0;
   let incorrectChars = 0;
   let correctWords = 0;
+  let streak = 0;
+  let maxStreak = 0;
 
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -290,14 +332,25 @@
     if (typedVal.length > target.length) {
       incorrectChars += (typedVal.length - target.length);
     }
-    if (typedVal === target) correctWords++;
+    const hit = typedVal === target;
+    if (hit) {
+      correctWords++;
+      streak++;
+      if (streak > maxStreak) maxStreak = streak;
+    } else {
+      streak = 0;
+    }
+    lblStreak.textContent = streak;
+    streakBox.classList.toggle('on-fire', streak > 0 && streak % 5 === 0);
+    return hit;
   }
 
   function submitCurrentWord(typedVal) {
     const data = wordsData[currentWordIndex];
     if (data) {
       colorCurrentWord(typedVal);
-      tallyWord(data, typedVal);
+      const hit = tallyWord(data, typedVal);
+      data.el.classList.add(hit ? 'pop-correct' : 'pop-wrong');
     }
     currentWordIndex++;
     if (currentWordIndex >= wordsData.length - REFILL_THRESHOLD) extendWords();
@@ -366,6 +419,9 @@
     resAccuracy.textContent = accuracy + '%';
     resWords.textContent = correctWords;
     resErrors.textContent = incorrectChars;
+    resMaxStreak.textContent = maxStreak;
+
+    window.GameLeaderboard.submitScore({ game: 'digitacao', turma, email: username, name: displayName, score: wpm });
 
     if (wpm > bestPpm) {
       bestPpm = wpm;
@@ -389,10 +445,14 @@
     incorrectChars = 0;
     correctWords = 0;
     currentWordIndex = 0;
+    streak = 0;
+    maxStreak = 0;
 
     lblTimer.textContent = timer;
     lblWpm.textContent = 0;
     lblAccuracy.textContent = '100%';
+    lblStreak.textContent = 0;
+    streakBox.classList.remove('on-fire');
     resultsPanel.style.display = 'none';
 
     inputEl.disabled = false;

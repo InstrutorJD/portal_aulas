@@ -20,10 +20,13 @@
 
   function makeQuery(name) {
     const filters = [];
+    let orderBy = null;
+    let limitN = null;
     const api = {
       select() { return api; },
       eq(col, val) { filters.push([col, val]); return api; },
-      order() { return api; },
+      order(col, opts) { orderBy = { col, ascending: !(opts && opts.ascending === false) }; return api; },
+      limit(n) { limitN = n; return api; },
       maybeSingle() {
         return Promise.resolve({
           data: table(name).filter(r => matches(r, filters))[0] || null,
@@ -62,10 +65,17 @@
         };
       },
       then(resolve, reject) {
-        return Promise.resolve({
-          data: table(name).filter(r => matches(r, filters)),
-          error: null,
-        }).then(resolve, reject);
+        let rows = table(name).filter(r => matches(r, filters));
+        if (orderBy) {
+          rows = rows.slice().sort((a, b) => {
+            const av = a[orderBy.col], bv = b[orderBy.col];
+            if (av === bv) return 0;
+            const cmp = av > bv ? 1 : -1;
+            return orderBy.ascending ? cmp : -cmp;
+          });
+        }
+        if (limitN != null) rows = rows.slice(0, limitN);
+        return Promise.resolve({ data: rows, error: null }).then(resolve, reject);
       },
     };
     return api;
@@ -78,6 +88,7 @@
         const chan = { on() { return chan; }, subscribe() { return chan; } };
         return chan;
       },
+      removeChannel() {},
       rpc(_name, _params) {
         return Promise.resolve({ data: null, error: null });
       },

@@ -11,6 +11,7 @@
 --   7. supabase-sistemas-network-nodes.sql
 --   8. supabase-chamada-notas.sql
 --   9. supabase-trilha-overrides.sql
+--  10. supabase-game-scores.sql
 -- (Esses arquivos continuam no repositório como histórico/referência
 -- de cada mudança isolada — não precisa apagá-los.)
 --
@@ -18,8 +19,9 @@
 -- liberação manual de jogos (painel do professor), o jogo GitHack OS
 -- (IP de sessão, criptografia de carteira, isolamento por turma no
 -- hack transfer), o cadastro de rede da turma Sistemas, chamada /
--- notas / progresso de trilha (relatórios da aba Gestão), e bloqueio
--- manual de trilha inteira pelo professor.
+-- notas / progresso de trilha (relatórios da aba Gestão), bloqueio
+-- manual de trilha inteira pelo professor, e o placar competitivo dos
+-- minigames (Digitação, Campo Minado) por turma.
 --
 -- PRÉ-REQUISITO: as tabelas network_nodes, node_permissions e
 -- node_shields precisam já existir no seu projeto Supabase (foram
@@ -678,8 +680,58 @@ begin
 end $$;
 
 -- ============================================================
+-- BLOCO 9 — Placar dos minigames (Digitação, Campo Minado) por turma.
+-- Cada aluno guarda o MELHOR resultado dele em cada jogo; o jogo
+-- mostra um top 10 da própria turma. Diferente do ranking de
+-- progresso (student_module_progress, que só mostra a posição do
+-- próprio aluno), aqui nomes e posições dos colegas aparecem de
+-- propósito — é um placar de jogo, não dado acadêmico.
+-- ============================================================
+
+create table if not exists public.game_scores (
+  student_email text not null,
+  student_name text not null,
+  turma text not null,
+  game text not null,
+  score numeric not null default 0,
+  updated_at timestamptz not null default now(),
+  primary key (student_email, game)
+);
+
+create index if not exists idx_game_scores_turma_game on public.game_scores (turma, game, score desc);
+
+alter table public.game_scores enable row level security;
+
+drop policy if exists "game_scores_select_all" on public.game_scores;
+create policy "game_scores_select_all"
+  on public.game_scores for select
+  using (true);
+
+drop policy if exists "game_scores_insert_all" on public.game_scores;
+create policy "game_scores_insert_all"
+  on public.game_scores for insert
+  with check (true);
+
+drop policy if exists "game_scores_update_all" on public.game_scores;
+create policy "game_scores_update_all"
+  on public.game_scores for update
+  using (true)
+  with check (true);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'game_scores'
+  ) then
+    alter publication supabase_realtime add table public.game_scores;
+  end if;
+end $$;
+
+-- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se attendance,
 -- grades, student_module_progress, classroom_settings,
--- student_activity, student_overrides e trilha_overrides foram
--- criadas, e se network_nodes ganhou as colunas current_ip e turma.
+-- student_activity, student_overrides, trilha_overrides e
+-- game_scores foram criadas, e se network_nodes ganhou as colunas
+-- current_ip e turma.
 -- ============================================================
