@@ -47,7 +47,6 @@ window.USERS_DB = [
   {"email": "jordanna.rocha", "senha": "rocha2026", "nome": "Jordanna Rocha", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.19", "saldo": "1139.50"},
   {"email": "kaila.jesus", "senha": "jesus2026", "nome": "Kaila Jesus", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.20", "saldo": "1323.00"},
   {"email": "kauan.sousa60", "senha": "sousa2026", "nome": "Kauan Sousa", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.21", "saldo": "1433.00"},
-  {"email": "lara.silva48", "senha": "silva2026", "nome": "Lara Silva", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.22", "saldo": "1616.50"},
   {"email": "lauan.souza", "senha": "souza2026", "nome": "Lauan Souza", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.23", "saldo": "1800.00"},
   {"email": "luana.victoria", "senha": "ribeiro2026", "nome": "Luana Victoria", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.24", "saldo": "1983.50"},
   {"email": "moises.barros", "senha": "barros2026", "nome": "Moisés Barros", "role": "aluno", "turma": "sistemas", "ip": "192.168.2.25", "saldo": "2167.00"},

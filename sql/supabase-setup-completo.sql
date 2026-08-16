@@ -474,7 +474,7 @@ grant execute on function public.execute_hack_transfer(text, text) to anon, auth
 
 
 -- ============================================================
--- BLOCO 6 — Cadastra os nós de rede (jogo GitHack OS) para os 28
+-- BLOCO 6 — Cadastra os nós de rede (jogo GitHack OS) para os 27
 -- alunos da turma Sistemas. Sem isso, tentar hackear esses alunos
 -- falha com "Nó de destino não encontrado", porque
 -- execute_hack_transfer() só enxerga IPs que existem aqui.
@@ -503,7 +503,6 @@ values
   ('192.168.2.19', 'jordanna.rocha', 1139.50, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.20', 'kaila.jesus', 1323.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.21', 'kauan.sousa60', 1433.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
-  ('192.168.2.22', 'lara.silva48', 1616.50, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.23', 'lauan.souza', 1800.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.24', 'luana.victoria', 1983.50, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.25', 'moises.barros', 2167.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
