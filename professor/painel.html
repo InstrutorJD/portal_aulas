@@ -18,6 +18,7 @@
   .turma-card:hover{ border-color:var(--green); }
   .turma-card .icon{ font-size:44px; margin-bottom:10px; }
   .turma-card h3{ color:var(--ink); font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; letter-spacing:1px; margin:0; }
+  .card-grid.turma-grid{ grid-template-columns:repeat(auto-fit, 220px); justify-content:center; }
 </style>
 <link rel="stylesheet" href="../shared/platform-core.css">
 
@@ -40,7 +41,7 @@
       <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 16px;">
         Chamada, notas, liberação de jogos e bloqueio de Ctrl+C/V ficam dentro do portal de cada turma, na aba "Gestão 🛠️".
       </p>
-      <div class="card-grid">
+      <div class="card-grid turma-grid">
         <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
           <div class="icon">🎮</div>
           <h3>Jogos Digitais</h3>

@@ -5,16 +5,20 @@
 // lista de aulas com geração de slides (campo hasSlides).
 //
 // Só dentro de uma matéria é que as trilhas aparecem (ver renderMaterias/
-// openMateria em shared/platform-core.js). Por enquanto só a Matéria 1 tem
-// conteúdo de verdade — as demais são placeholders prontos pra receber
-// trilhas quando o currículo de cada uma for definido.
+// openMateria em shared/platform-core.js). Por enquanto só Fundamentos de
+// Programação tem conteúdo de verdade — as demais são placeholders prontos
+// pra receber trilhas quando o currículo de cada uma for definido.
 window.TURMA_CONFIG_JOGOS = {
   id: 'jogos',
   label: 'Jogos Digitais',
   materias: [
+    { key: 'projeto-vida', label: 'Projeto de Vida', trilhas: [] },
+    { key: 'mundo-trabalho', label: 'Mundo do Trabalho', trilhas: [] },
+    { key: 'intro-dev-projetos', label: 'Introdução de Desenvolvimento de Projetos', trilhas: [] },
+    { key: 'codificacao-jogos', label: 'Codificação de Sistemas de Jogos', trilhas: [] },
     {
-      key: 'materia1',
-      label: 'Matéria 1',
+      key: 'fundamentos-programacao',
+      label: 'Fundamentos de Programação',
       trilhas: [
         {
           key: 'js',
@@ -52,10 +56,6 @@ window.TURMA_CONFIG_JOGOS = {
         }
       ]
     },
-    { key: 'materia2', label: 'Matéria 2', trilhas: [] },
-    { key: 'materia3', label: 'Matéria 3', trilhas: [] },
-    { key: 'materia4', label: 'Matéria 4', trilhas: [] },
-    { key: 'materia5', label: 'Matéria 5', trilhas: [] },
-    { key: 'materia6', label: 'Matéria 6', trilhas: [] }
+    { key: 'testes-jogos', label: 'Testes de Jogos Digitais', trilhas: [] }
   ]
 };

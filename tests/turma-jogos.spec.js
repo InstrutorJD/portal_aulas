@@ -4,10 +4,10 @@ const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno';
 
-// As trilhas de verdade (JS/C#) ficam dentro da Matéria 1 — as demais 5
-// matérias de Jogos Digitais são placeholders vazios por enquanto.
+// As trilhas de verdade (JS/C#) ficam dentro de Fundamentos de Programação —
+// as demais 5 matérias de Jogos Digitais são placeholders vazios por enquanto.
 async function openMateria1(page) {
-  await page.click('.game-card:has-text("Matéria 1")');
+  await page.click('.game-card:has-text("Fundamentos de Programação")');
 }
 
 test.describe('turmas/jogos/plataforma.html', () => {
@@ -18,13 +18,13 @@ test.describe('turmas/jogos/plataforma.html', () => {
   test('mostra os cards das 6 matérias de Jogos Digitais', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(6);
-    await expect(page.locator('#materiaCardGrid')).toContainText('Matéria 1');
-    await expect(page.locator('#materiaCardGrid')).toContainText('Matéria 6');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Fundamentos de Programação');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Testes de Jogos Digitais');
     // matéria vazia ganha o selo "Em breve"
-    await expect(page.locator('.game-card:has-text("Matéria 2")')).toContainText('Em breve');
+    await expect(page.locator('.game-card:has-text("Mundo do Trabalho")')).toContainText('Em breve');
   });
 
-  test('carrega tema, usuário e trilhas JS/C# dentro da Matéria 1', async ({ page }) => {
+  test('carrega tema, usuário e trilhas JS/C# dentro de Fundamentos de Programação', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#txtUserNom')).toHaveText('Breno Silva');
     await expect(page.locator('#txtUserTurma')).toHaveText('Jogos Digitais');

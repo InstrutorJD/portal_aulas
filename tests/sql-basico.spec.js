@@ -79,17 +79,28 @@ test.describe('turmas/sistemas/atividades/sql-basico.html', () => {
 });
 
 test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos', () => {
-  test('completar o módulo SQL básico libera a aba Jogos', async ({ page }) => {
+  test('completar todos os módulos de Banco de Dados e Redes de Computadores libera a aba Jogos', async ({ page }) => {
     await stubSupabaseDisabled(page);
     await page.addInitScript(user => {
       localStorage.setItem(`sql_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8]));
       localStorage.setItem(`sql_basico_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`sql_join_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`sql_agregacao_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`sql_comentarios_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`redes_conexao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`redes_conexao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`redes_resolucao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`redes_resolucao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`redes_servicos_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`redes_servicos_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`redes_armazenamento_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`redes_armazenamento_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
     }, 'alexandre.natal');
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
 
-    // A trilha SQL fica dentro da Matéria 1; dentro dela, só 1 trilha, então não existe seletor.
-    await page.click('.game-card:has-text("Matéria 1")');
+    // A trilha SQL fica dentro de Banco de Dados; ela é a primeira das 2 trilhas da matéria (select já começa nela).
+    await page.click('.game-card:has-text("Banco de Dados")');
     await expect(page.locator('#moduleSelector_sql')).toBeVisible();
     const tabJogos = page.locator('#tabBtnJogos');
     await expect(tabJogos).not.toHaveClass(/disabled/);

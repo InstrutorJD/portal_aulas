@@ -5,7 +5,7 @@
 // lista de aulas com geração de slides (campo hasSlides).
 //
 // Só dentro de uma matéria é que as trilhas aparecem (ver renderMaterias/
-// openMateria em shared/platform-core.js). Por enquanto só a Matéria 1 tem
+// openMateria em shared/platform-core.js). Por enquanto só Banco de Dados tem
 // conteúdo de verdade — as demais são placeholders prontos pra receber
 // trilhas quando o currículo de cada uma for definido.
 //
@@ -17,18 +17,18 @@ window.TURMA_CONFIG_SISTEMAS = {
   label: 'Sistemas',
   materias: [
     {
-      key: 'materia1',
-      label: 'Matéria 1',
+      key: 'banco-dados',
+      label: 'Banco de Dados',
       trilhas: [
         {
           key: 'sql',
           label: 'SQL',
           desc: 'Aprenda a teoria e depois pratique resolvendo chamados de verdade.',
-          capacidade: 'Utilizar comandos SQL básicos (SELECT, WHERE, ORDER BY, INSERT, UPDATE, DELETE) para consultar e manipular dados em um banco relacional.',
+          capacidade: 'Aplicar linguagem para consulta, manipulação e controle do banco de dados.',
           modules: [
             {
-              key: 'teoria', title: 'Teoria — Fundamentos de SQL',
-              desc: 'Entenda tabelas, colunas, chave primária e os comandos SELECT, WHERE, ORDER BY, INSERT, UPDATE e DELETE antes de praticar.',
+              key: 'teoria', title: 'Teoria — Fundamentos de SQL e PL/SQL',
+              desc: 'Tabelas, colunas, chave primária, SELECT/WHERE/ORDER BY/INSERT/UPDATE/DELETE, JOIN entre tabelas, agregação com GROUP BY e os fundamentos de PL/SQL.',
               icon: '📖', src: 'atividades/sql-basico-teoria.html',
               progressKey: 'sql_basico_teoria_progress_', progressMode: 'flag',
               hasSlides: true
@@ -39,18 +39,140 @@ window.TURMA_CONFIG_SISTEMAS = {
               icon: '🗄️', src: 'atividades/sql-basico.html',
               progressKey: 'sql_basico_progress_', progressTotal: 8,
               requires: 'teoria'
+            },
+            {
+              key: 'join', title: 'Prática — Central de Dados: Relatórios (JOIN)',
+              desc: 'Cruze dados de funcionários e departamentos com JOIN pra montar relatórios de verdade.',
+              icon: '🔗', src: 'atividades/sql-join.html',
+              progressKey: 'sql_join_progress_', progressTotal: 5,
+              requires: 'basico'
+            },
+            {
+              key: 'agregacao', title: 'Prática — Central de Dados: Estatísticas (GROUP BY)',
+              desc: 'Some, conte e tire médias com funções de agregação e GROUP BY.',
+              icon: '📊', src: 'atividades/sql-agregacao.html',
+              progressKey: 'sql_agregacao_progress_', progressTotal: 5,
+              requires: 'join'
+            }
+          ]
+        },
+        {
+          key: 'sql-comentarios',
+          label: 'Documentação de Código',
+          desc: 'Aprenda a documentar consultas e blocos PL/SQL com comentários claros.',
+          capacidade: 'Empregar comentários para documentação do código fonte.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Comentários em SQL e PL/SQL',
+              desc: 'Sintaxe de comentários de uma linha e de bloco, e onde/por que comentar código SQL e PL/SQL.',
+              icon: '📝', src: 'atividades/sql-comentarios-teoria.html',
+              progressKey: 'sql_comentarios_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
             }
           ]
         }
       ]
     },
-    { key: 'materia2', label: 'Matéria 2', trilhas: [] },
-    { key: 'materia3', label: 'Matéria 3', trilhas: [] },
-    { key: 'materia4', label: 'Matéria 4', trilhas: [] },
-    { key: 'materia5', label: 'Matéria 5', trilhas: [] },
-    { key: 'materia6', label: 'Matéria 6', trilhas: [] },
-    { key: 'materia7', label: 'Matéria 7', trilhas: [] },
-    { key: 'materia8', label: 'Matéria 8', trilhas: [] },
-    { key: 'materia9', label: 'Matéria 9', trilhas: [] }
+    { key: 'dev-sistemas-1', label: 'Desenvolvimento de Sistemas 1', trilhas: [] },
+    {
+      key: 'redes-computadores',
+      label: 'Redes de Computadores',
+      trilhas: [
+        {
+          key: 'redes-conexao',
+          label: 'Conexão e Endereçamento IP',
+          desc: 'Aprenda a teoria e depois resolva chamados sobre topologias, meios físicos e endereçamento IP.',
+          capacidade: 'Identificar tipos e tecnologias de conexão a redes de computadores.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Conexão e Endereçamento IP',
+              desc: 'Topologias físicas, meios de cabeamento, interfaces Ethernet/Wireless/Bluetooth, gateway, IPv4/IPv6, máscara de sub-rede, ping e tracert.',
+              icon: '📡', src: 'atividades/redes-conexao-teoria.html',
+              progressKey: 'redes_conexao_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Redes: Conexões',
+              desc: 'Resolva chamados escolhendo o meio físico, dispositivo ou comando certo pra cada cenário.',
+              icon: '🔌', src: 'atividades/redes-conexao-pratica.html',
+              progressKey: 'redes_conexao_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        },
+        {
+          key: 'redes-resolucao-problemas',
+          label: 'Resolução de Problemas de Rede',
+          desc: 'Aprenda o método de diagnóstico e depois pratique identificando a causa de falhas reais.',
+          capacidade: 'Resolução de problemas complexos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Diagnóstico de Problemas de Rede',
+              desc: 'Metodologia de diagnóstico por camadas, falhas físicas, conflito de IP, máscara de sub-rede errada e isolamento de causa.',
+              icon: '🩺', src: 'atividades/redes-resolucao-teoria.html',
+              progressKey: 'redes_resolucao_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Redes: Diagnóstico',
+              desc: 'Analise sintomas reais e aponte a causa mais provável de cada chamado.',
+              icon: '🔍', src: 'atividades/redes-resolucao-pratica.html',
+              progressKey: 'redes_resolucao_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        },
+        {
+          key: 'redes-servicos-modelos',
+          label: 'Serviços de Internet e Modelos',
+          desc: 'Aprenda a teoria e depois pratique reconhecendo serviços, portas e camadas de rede.',
+          capacidade: 'Reconhecer tipos e características (classificação, estrutura e modelos).',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Serviços de Internet e Modelos OSI/TCP-IP',
+              desc: 'DHCP, Web, E-mail, FTP, acesso remoto, comunicação em tempo real, portas padrão e as camadas dos modelos OSI e TCP/IP.',
+              icon: '🌐', src: 'atividades/redes-servicos-teoria.html',
+              progressKey: 'redes_servicos_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Redes: Serviços',
+              desc: 'Associe cada chamado ao serviço, porta ou camada de rede correta.',
+              icon: '🛰️', src: 'atividades/redes-servicos-pratica.html',
+              progressKey: 'redes_servicos_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        },
+        {
+          key: 'redes-armazenamento',
+          label: 'Armazenamento e Ativos de Rede',
+          desc: 'Aprenda a teoria e depois pratique reconhecendo ativos de rede e unidades de medida.',
+          capacidade: 'Reconhecer componentes e ativos de redes / Reconhecer unidades de medida empregadas na transmissão e armazenamento de dados.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Armazenamento e Ativos de Rede',
+              desc: 'Local x rede x nuvem, switch/roteador/access point, bit x byte, Mbps x MB/s, redundância e políticas de backup.',
+              icon: '💾', src: 'atividades/redes-armazenamento-teoria.html',
+              progressKey: 'redes_armazenamento_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Redes: Armazenamento',
+              desc: 'Resolva chamados sobre ativos de rede, unidades de medida, redundância e backup.',
+              icon: '🗃️', src: 'atividades/redes-armazenamento-pratica.html',
+              progressKey: 'redes_armazenamento_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        }
+      ]
+    },
+    { key: 'internet-das-coisas', label: 'Internet das Coisas', trilhas: [] },
+    { key: 'intro-dev-projetos', label: 'Introdução de Desenvolvimento de Projetos', trilhas: [] },
+    { key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1', trilhas: [] },
+    { key: 'mundo-trabalho', label: 'Mundo do Trabalho', trilhas: [] },
+    { key: 'projeto-vida', label: 'Projeto de Vida', trilhas: [] },
+    { key: 'prog-aplicativos', label: 'Programação de Aplicativos', trilhas: [] }
   ]
 };

@@ -100,7 +100,9 @@ test.describe('Notas — dentro do portal da turma', () => {
       ],
       student_module_progress: [
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
-        { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 4, progress_total: 8, completed: false },
+        { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 8, progress_total: 8, completed: true },
+        { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'join', progress_current: 5, progress_total: 5, completed: true },
+        // módulo "agregacao" nunca aberto — sem linha, conta como 0% na média da trilha.
       ],
     });
     await expandGestaoSection(page, 'Relatório de Notas');
@@ -112,6 +114,6 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(row).toContainText('10.00'); // média B1
     await expect(row).toContainText('8.00');  // média B2
     await expect(row).toContainText('9.00');  // média geral (10 e 8, sem B3/B4)
-    await expect(row).toContainText('75%');   // trilha SQL: teoria 100% + básico 4/8=50% => média 75%
+    await expect(row).toContainText('75%');   // trilha SQL: teoria 100% + básico 100% + join 100% + agregação 0% (não aberta) => média 75%
   });
 });

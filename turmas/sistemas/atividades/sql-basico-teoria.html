@@ -251,12 +251,121 @@
       }
     },
     {
-      story: 'Por fim, quando um registro precisa sumir de vez — tipo um funcionário que saiu da empresa — usamos <b>DELETE FROM</b>. O mesmo alerta vale aqui: sem <code>WHERE</code>, ele apaga a tabela inteira!<pre>DELETE FROM departamentos WHERE id = 3;</pre>Com isso você já tem o básico pra encarar os chamados de verdade na Central de Dados.',
+      story: 'Por fim, quando um registro precisa sumir de vez — tipo um funcionário que saiu da empresa — usamos <b>DELETE FROM</b>. O mesmo alerta vale aqui: sem <code>WHERE</code>, ele apaga a tabela inteira!<pre>DELETE FROM departamentos WHERE id = 3;</pre>Com isso você já tem o básico pra encarar os primeiros chamados de verdade na Central de Dados.',
       question: {
         prompt: 'Qual comando REMOVE uma linha de uma tabela?',
         options: ['DELETE FROM', 'DROP TABLE', 'REMOVE ROW', 'CLEAR'],
         correctIndex: 0,
         explanation: 'Isso mesmo! DELETE FROM remove linhas — sempre acompanhado de WHERE para não apagar tudo.'
+      }
+    },
+    {
+      story: 'Beleza, você já sabe mexer numa tabela sozinha. Mas o próximo chamado pede um <b>relatório cruzando duas tabelas</b>: quem trabalha em qual departamento. Pra combinar linhas de tabelas diferentes que se relacionam, usamos o <b>JOIN</b>.',
+      question: {
+        prompt: 'Qual comando é usado para COMBINAR linhas de duas tabelas relacionadas numa consulta só?',
+        options: ['JOIN', 'WHERE', 'GROUP BY', 'ORDER BY'],
+        correctIndex: 0,
+        explanation: 'Isso! JOIN junta linhas de tabelas diferentes com base numa condição de relacionamento.'
+      }
+    },
+    {
+      story: 'O JOIN precisa saber COMO as tabelas se relacionam. Isso vem depois do <code>ON</code>: normalmente comparando a chave estrangeira de uma tabela com a chave primária da outra.<pre>SELECT * FROM funcionarios\nJOIN departamentos ON funcionarios.departamento_id = departamentos.id;</pre>Aqui, <code>departamento_id</code> (em funcionarios) aponta pro <code>id</code> de departamentos — essa é a "chave estrangeira".',
+      question: {
+        prompt: 'Na cláusula ON de um JOIN, o que normalmente se compara?',
+        options: [
+          'A chave estrangeira de uma tabela com a chave primária da outra',
+          'O nome das duas tabelas',
+          'A quantidade de linhas de cada tabela',
+          'O tipo de dado das colunas'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! O ON conecta as tabelas pela coluna que faz o relacionamento entre elas — geralmente uma chave estrangeira apontando pra uma chave primária.'
+      }
+    },
+    {
+      story: 'Repara: as duas tabelas têm uma coluna <code>nome</code> (nome do funcionário e nome do departamento). Se você escrever só <code>nome</code> num JOIN, o banco não sabe de qual tabela! Por isso usamos o prefixo <code>tabela.coluna</code> pra desempatar.<pre>SELECT funcionarios.nome, departamentos.nome\nFROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id;</pre>',
+      question: {
+        prompt: 'Duas tabelas num JOIN têm uma coluna com o MESMO nome. Como você indica de qual tabela quer aquela coluna?',
+        options: ['Prefixando com tabela.coluna', 'Repetindo a coluna duas vezes', 'Não tem como, dá sempre erro', 'Usando WHERE'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! O prefixo tabela.coluna resolve a ambiguidade quando duas tabelas compartilham um nome de coluna.'
+      }
+    },
+    {
+      story: 'JOIN combina normalmente com tudo que você já sabe: WHERE pra filtrar, ORDER BY pra ordenar. E pra não escrever o nome inteiro da tabela toda hora, dá pra dar um apelido curto (alias):<pre>SELECT f.nome, d.nome FROM funcionarios f\nJOIN departamentos d ON f.departamento_id = d.id\nWHERE d.nome = "Suporte";</pre>',
+      question: {
+        prompt: 'No exemplo acima, "f" e "d" são:',
+        options: ['Apelidos (aliases) das tabelas funcionarios e departamentos', 'Nomes de colunas novas', 'Comandos SQL', 'Valores de filtro'],
+        correctIndex: 0,
+        explanation: 'Isso! f e d são aliases — nomes curtos pra tabela, que deixam a consulta mais enxuta de escrever.'
+      }
+    },
+    {
+      story: 'Chegou outro tipo de chamado: "quantos funcionários tem no total?" e "qual a média salarial?". Pra isso existem as <b>funções de agregação</b> — elas resumem várias linhas num valor só. As mais usadas: <code>COUNT</code> (conta), <code>SUM</code> (soma) e <code>AVG</code> (média).<pre>SELECT COUNT(*) FROM funcionarios;</pre>',
+      question: {
+        prompt: 'Qual função de agregação CONTA quantas linhas existem?',
+        options: ['COUNT', 'SUM', 'AVG', 'ORDER BY'],
+        correctIndex: 0,
+        explanation: 'Isso! COUNT(*) conta o total de linhas retornadas pela consulta.'
+      }
+    },
+    {
+      story: '<code>SUM</code> soma valores numéricos de uma coluna, e <code>AVG</code> calcula a média.<pre>SELECT SUM(salario) FROM funcionarios;\nSELECT AVG(salario) FROM funcionarios;</pre>Repare que essas funções não retornam uma linha por funcionário — retornam UM valor só, resumindo a tabela inteira.',
+      question: {
+        prompt: 'Qual função calcula a MÉDIA de uma coluna numérica?',
+        options: ['AVG', 'SUM', 'COUNT', 'MAX'],
+        correctIndex: 0,
+        explanation: 'Correto! AVG (average) calcula a média dos valores da coluna.'
+      }
+    },
+    {
+      story: 'E se o chamado pedir a média POR departamento, não da empresa toda? Aí entra o <code>GROUP BY</code>: ele agrupa as linhas que têm o mesmo valor numa coluna, e a função de agregação calcula um resultado PRA CADA grupo.<pre>SELECT departamento_id, AVG(salario)\nFROM funcionarios\nGROUP BY departamento_id;</pre>Isso traz uma linha por departamento, com a média salarial daquele grupo.',
+      question: {
+        prompt: 'Para calcular uma estatística (como AVG) SEPARADA para cada departamento, qual cláusula agrupa as linhas por departamento?',
+        options: ['GROUP BY', 'ORDER BY', 'WHERE', 'JOIN'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! GROUP BY separa as linhas em grupos, e a função de agregação calcula um valor por grupo.'
+      }
+    },
+    {
+      story: 'Última parte: além de SQL puro, o banco Oracle usa uma linguagem procedural chamada <b>PL/SQL</b>, que permite escrever lógica com variáveis, condições e laços — parecido com uma linguagem de programação de verdade. Todo código PL/SQL fica dentro de um <b>bloco anônimo</b>: <code>DECLARE</code> (opcional, pra variáveis), <code>BEGIN</code> (onde o código roda) e <code>END;</code>.<pre>DECLARE\n  -- variáveis aqui\nBEGIN\n  -- comandos aqui\nEND;</pre>',
+      question: {
+        prompt: 'Qual das palavras-chave marca o INÍCIO do código que efetivamente roda num bloco PL/SQL?',
+        options: ['BEGIN', 'DECLARE', 'END', 'START'],
+        correctIndex: 0,
+        explanation: 'Isso! BEGIN abre a parte executável do bloco — DECLARE (opcional) vem antes, só para variáveis.'
+      }
+    },
+    {
+      story: 'Dentro do DECLARE, você cria variáveis dando um nome e um tipo de dado — igual declarar uma variável em qualquer linguagem.<pre>DECLARE\n  v_salario NUMBER(10,2);\n  v_nome VARCHAR2(50);\nBEGIN\n  v_salario := 3000;\nEND;</pre>Repare no <code>:=</code> — é o operador de atribuição do PL/SQL (diferente do <code>=</code> de comparação).',
+      question: {
+        prompt: 'Em PL/SQL, qual operador é usado para ATRIBUIR um valor a uma variável?',
+        options: [':=', '=', '==', '<-'],
+        correctIndex: 0,
+        explanation: 'Correto! := atribui um valor. O = sozinho é usado para comparação (como em WHERE ou IF).'
+      }
+    },
+    {
+      story: 'PL/SQL também tem estruturas de controle de fluxo, como em qualquer linguagem: <code>IF ... THEN ... ELSE ... END IF;</code> pra decisões, e <code>LOOP ... END LOOP;</code> pra repetições (geralmente com <code>EXIT WHEN condição;</code> pra parar).<pre>IF v_salario > 3000 THEN\n  v_nome := "Alto";\nELSE\n  v_nome := "Padrão";\nEND IF;</pre>',
+      question: {
+        prompt: 'Qual estrutura permite executar um bloco de código só quando uma condição é verdadeira (com alternativa caso não seja)?',
+        options: ['IF / THEN / ELSE / END IF', 'LOOP / END LOOP', 'DECLARE / BEGIN', 'GROUP BY'],
+        correctIndex: 0,
+        explanation: 'Isso! IF/THEN/ELSE/END IF é a estrutura condicional do PL/SQL, igual em outras linguagens de programação.'
+      }
+    },
+    {
+      story: 'Última dica: assim como em qualquer linguagem, escreva blocos PL/SQL com <b>identação clara</b> e nomes de variável que se entendam (tipo <code>v_salario</code>, e não <code>x</code>) — isso facilita muito quando outra pessoa (ou você mesmo, meses depois) precisar ler o código. Com isso, você já tem o panorama completo da capacidade: consultar, cruzar (JOIN), resumir (agregação) e programar lógica (PL/SQL) no banco de dados!',
+      question: {
+        prompt: 'Por que usar nomes de variável descritivos (como v_salario) em vez de nomes curtos (como x) em PL/SQL?',
+        options: [
+          'Facilita a leitura e manutenção do código por qualquer pessoa',
+          'O banco de dados roda mais rápido',
+          'É obrigatório pela sintaxe do PL/SQL',
+          'Reduz o tamanho do arquivo'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Nomes descritivos tornam o código mais legível e fácil de manter — uma boa prática em qualquer linguagem.'
       }
     }
   ];
@@ -266,13 +375,13 @@
   // sem o professor precisar abrir o módulo pra achar o botão.
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'SQL Básico — Fundamentos',
+      title: 'SQL e PL/SQL — Fundamentos, JOIN, Agregação e Blocos',
       subtitle: 'Aula Teórica · Trilha SQL · Turma Sistemas',
-      capacidade: 'Utilizar comandos SQL básicos (SELECT, WHERE, ORDER BY, INSERT, UPDATE, DELETE) para consultar e manipular dados em um banco relacional.',
+      capacidade: 'Aplicar linguagem para consulta, manipulação e controle do banco de dados.',
       steps: STEPS,
       fileName: 'sql-basico-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central de Dados" no Portal de Aulas para os alunos aplicarem SQL de verdade.'
+      closingText: 'Abra os módulos de prática da trilha SQL no Portal de Aulas para os alunos aplicarem SQL, JOIN, agregação e PL/SQL de verdade.'
     });
   };
 
@@ -436,10 +545,10 @@
     storyWrap.innerHTML = `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Fundamentos de SQL concluídos!</h2>
-        <p>Você já conhece tabelas, colunas, chave primária e os comandos SELECT, WHERE, ORDER BY, INSERT, UPDATE e DELETE.</p>
+        <h2>Fundamentos de SQL e PL/SQL concluídos!</h2>
+        <p>Você já conhece tabelas, colunas, chave primária, os comandos SELECT, WHERE, ORDER BY, INSERT, UPDATE e DELETE, JOIN entre tabelas, agregação com GROUP BY e os fundamentos de PL/SQL.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas.</div>
-        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Dados.</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra os módulos de prática da Central de Dados.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>
