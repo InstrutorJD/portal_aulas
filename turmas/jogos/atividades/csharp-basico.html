@@ -236,8 +236,24 @@
     }
   ];
 
-  // Só o professor vê o botão de gerar slides — é material de apoio pra ele
-  // apresentar em aula, não faz parte da jornada do aluno.
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // sem o professor precisar abrir o módulo pra achar o botão.
+  window.generateSlidesForGestao = function () {
+    return window.PortalSlides.generate({
+      title: 'C# Básico — A Jornada do Eri',
+      subtitle: 'Aula Teórica · Trilha C# · Turma Jogos Digitais',
+      capacidade: 'Reconhecer a origem, o propósito e a sintaxe básica da linguagem C# (variáveis, tipos de dados, comandos de saída e comentários).',
+      steps: STEPS,
+      fileName: 'csharp-basico-slides.pptx',
+      closingTitle: 'Hora da prática!',
+      closingText: 'Em breve, novos desafios práticos de código vão esperar os alunos no Portal de Aulas.'
+    });
+  };
+
+  // Só o professor vê o botão de gerar slides aqui dentro do módulo — é
+  // material de apoio pra ele apresentar em aula, não faz parte da jornada
+  // do aluno.
   const role = urlParams.get('role') || 'aluno';
   const btnGenSlides = document.getElementById('btnGenSlides');
   if (role === 'professor') {
@@ -246,15 +262,7 @@
       btnGenSlides.disabled = true;
       btnGenSlides.textContent = '⏳ Gerando...';
       setTimeout(() => {
-        window.PortalSlides.generate({
-          title: 'C# Básico — A Jornada do Eri',
-          subtitle: 'Aula Teórica · Trilha C# · Turma Jogos Digitais',
-          capacidade: 'Reconhecer a origem, o propósito e a sintaxe básica da linguagem C# (variáveis, tipos de dados, comandos de saída e comentários).',
-          steps: STEPS,
-          fileName: 'csharp-basico-slides.pptx',
-          closingTitle: 'Hora da prática!',
-          closingText: 'Em breve, novos desafios práticos de código vão esperar os alunos no Portal de Aulas.'
-        });
+        window.generateSlidesForGestao();
         btnGenSlides.disabled = false;
         btnGenSlides.textContent = '🖨️ Gerar Slides (PPTX)';
       }, 50);

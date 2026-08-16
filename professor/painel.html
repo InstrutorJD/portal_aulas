@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PixelForge Studios — Painel do Professor</title>
 
-<!-- Painel único do professor: mesma tela para as duas turmas (Jogos e
-     Sistemas), lendo shared/users-db.js para enxergar todos os alunos. -->
+<!-- Launcher do professor: só escolhe a turma. Chamada, notas, liberação de
+     jogos e bloqueio de Ctrl+C/V vivem dentro do portal de cada turma
+     (aba "Gestão", só visível pro professor) — ver shared/platform-core.js. -->
 <style>
   :root{
     --bg:#0b0d11; --panel:#141821; --panel2:#10131a; --line:#262b36;
@@ -17,25 +18,10 @@
   .turma-card:hover{ border-color:var(--green); }
   .turma-card .icon{ font-size:44px; margin-bottom:10px; }
   .turma-card h3{ color:var(--ink); font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; letter-spacing:1px; margin:0; }
-
-  .field-label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
-  select, input[type="date"], input[type="number"]{
-    background:var(--panel2); color:var(--ink); border:1px solid var(--line);
-    padding:7px 10px; font-family:inherit; font-size:12px; border-radius:2px;
-  }
-  input[type="number"]{ width:70px; }
-  input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--green); cursor:pointer; }
-  .media-cell{ color:var(--yellow); font-weight:700; }
-  .field-row{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }
-  .status-msg{ font-size:11px; color:var(--ink-dim); }
 </style>
 <link rel="stylesheet" href="../shared/platform-core.css">
 
 <script src="../shared/users-db.js"></script>
-<script src="../shared/supabase-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../turmas/jogos/config.js"></script>
-<script src="../turmas/sistemas/config.js"></script>
 </head>
 <body>
 
@@ -53,132 +39,23 @@
     <div class="sub">Gestão das turmas Jogos Digitais e Sistemas</div>
   </header>
 
-  <div class="tabs" id="painelTabs">
-    <button class="tab-btn active" data-tab="turmas">Turmas</button>
-    <button class="tab-btn" data-tab="chamada">Chamada</button>
-    <button class="tab-btn" data-tab="notas">Notas</button>
-  </div>
-
   <div class="viewport-content">
-
-    <div id="tabPage-turmas" class="painel-tab-page">
-      <div class="card">
-        <h2>Escolha uma turma</h2>
-        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 16px;">
-          Liberar jogos, bloquear/liberar Ctrl+C/V, status e atividade dos alunos ficam dentro do portal de cada turma, na aba "Gestão 🛠️".
-        </p>
-        <div class="card-grid">
-          <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
-            <div class="icon">🎮</div>
-            <h3>Jogos Digitais</h3>
-          </div>
-          <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
-            <div class="icon">🖥️</div>
-            <h3>Desenvolvimento de Sistemas</h3>
-          </div>
+    <div class="card">
+      <h2>Escolha uma turma</h2>
+      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 16px;">
+        Chamada, notas, liberação de jogos e bloqueio de Ctrl+C/V ficam dentro do portal de cada turma, na aba "Gestão 🛠️".
+      </p>
+      <div class="card-grid">
+        <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
+          <div class="icon">🎮</div>
+          <h3>Jogos Digitais</h3>
+        </div>
+        <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
+          <div class="icon">🖥️</div>
+          <h3>Desenvolvimento de Sistemas</h3>
         </div>
       </div>
     </div>
-
-    <div id="tabPage-chamada" class="painel-tab-page" style="display:none;">
-      <div class="card">
-        <h2>Chamada</h2>
-        <div class="field-row">
-          <div>
-            <label class="field-label" for="chamadaTurma">Turma</label>
-            <select id="chamadaTurma">
-              <option value="jogos">Jogos Digitais</option>
-              <option value="sistemas">Sistemas</option>
-            </select>
-          </div>
-          <div>
-            <label class="field-label" for="chamadaData">Data</label>
-            <input type="date" id="chamadaData">
-          </div>
-        </div>
-        <table class="audit-table">
-          <thead><tr><th>Aluno</th><th style="width:110px; text-align:center;">Faltou</th></tr></thead>
-          <tbody id="chamadaBody"></tbody>
-        </table>
-        <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-          <button class="btn" id="btnFinalizarChamada">Finalizar Chamada</button>
-          <span class="status-msg" id="chamadaStatus"></span>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Relatório de Presença</h2>
-        <div class="field-row">
-          <div>
-            <label class="field-label" for="presencaTurma">Turma</label>
-            <select id="presencaTurma">
-              <option value="jogos">Jogos Digitais</option>
-              <option value="sistemas">Sistemas</option>
-            </select>
-          </div>
-        </div>
-        <table class="audit-table">
-          <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
-          <tbody id="presencaBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="tabPage-notas" class="painel-tab-page" style="display:none;">
-      <div class="card">
-        <h2>Lançar Notas</h2>
-        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
-        <div class="field-row">
-          <div>
-            <label class="field-label" for="notasTurma">Turma</label>
-            <select id="notasTurma">
-              <option value="jogos">Jogos Digitais</option>
-              <option value="sistemas">Sistemas</option>
-            </select>
-          </div>
-          <div>
-            <label class="field-label" for="notasBimestre">Bimestre</label>
-            <select id="notasBimestre">
-              <option value="1">1º Bimestre</option>
-              <option value="2">2º Bimestre</option>
-              <option value="3">3º Bimestre</option>
-              <option value="4">4º Bimestre</option>
-            </select>
-          </div>
-        </div>
-        <div style="overflow-x:auto;">
-          <table class="audit-table">
-            <thead><tr><th>Aluno</th><th>Nota 1</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
-            <tbody id="notasBody"></tbody>
-          </table>
-        </div>
-        <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-          <button class="btn" id="btnSalvarNotas">Salvar Notas</button>
-          <span class="status-msg" id="notasStatus"></span>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Relatório de Notas</h2>
-        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Lançar Notas".</p>
-        <div class="field-row">
-          <div>
-            <label class="field-label" for="relatorioNotasTurma">Turma</label>
-            <select id="relatorioNotasTurma">
-              <option value="jogos">Jogos Digitais</option>
-              <option value="sistemas">Sistemas</option>
-            </select>
-          </div>
-        </div>
-        <div style="overflow-x:auto;">
-          <table class="audit-table">
-            <thead><tr id="relatorioNotasHead"></tr></thead>
-            <tbody id="relatorioNotasBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -192,289 +69,10 @@ const DB = { users: {} };
 const currentUser = DB.users[paramUser] || { email: paramUser, nome: paramUser, role: 'professor', turma: 'all' };
 document.getElementById('sessionUser').textContent = currentUser.nome;
 
-const SUPABASE_URL = window.SUPABASE_URL;
-const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
-const sbClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
 document.getElementById('btnLogout').addEventListener('click', () => {
   sessionStorage.clear();
   window.location.href = '../index.html';
 });
-
-// ---------- Abas do painel ----------
-function switchPainelTab(tab) {
-  document.querySelectorAll('#painelTabs .tab-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tab));
-  document.querySelectorAll('.painel-tab-page').forEach(p => { p.style.display = (p.id === `tabPage-${tab}`) ? 'block' : 'none'; });
-  if (tab === 'chamada') { loadChamada(); loadRelatorioPresenca(); }
-  if (tab === 'notas') { loadNotas(); loadRelatorioNotas(); }
-}
-document.querySelectorAll('#painelTabs .tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchPainelTab(btn.getAttribute('data-tab')));
-});
-
-function studentsOfTurma(turma) {
-  return Object.values(DB.users)
-    .filter(u => u.role === 'aluno' && u.turma === turma)
-    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-}
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function noSupabaseRow(colspan, id) {
-  return `<tr id="${id || ''}"><td colspan="${colspan}" style="color:var(--ink-dim); text-align:center; padding:14px;">Configure o Supabase (shared/supabase-config.js) para usar esta tela.</td></tr>`;
-}
-
-// ---------- Chamada ----------
-async function loadChamada() {
-  const tbody = document.getElementById('chamadaBody');
-  const dataInput = document.getElementById('chamadaData');
-  if (!dataInput.value) dataInput.value = todayStr();
-
-  if (!sbClient) { tbody.innerHTML = noSupabaseRow(2); return; }
-
-  const turma = document.getElementById('chamadaTurma').value;
-  const data = dataInput.value;
-  const students = studentsOfTurma(turma);
-
-  if (students.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="2" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
-    return;
-  }
-
-  const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', turma).eq('data', data);
-  const existing = {};
-  (rows || []).forEach(r => { existing[r.student_email] = r; });
-
-  tbody.innerHTML = students.map(u => {
-    const row = existing[u.email];
-    const faltou = row ? !row.presente : false;
-    return `
-      <tr>
-        <td>${u.nome}</td>
-        <td style="text-align:center;"><input type="checkbox" data-email="${u.email}" ${faltou ? 'checked' : ''}></td>
-      </tr>
-    `;
-  }).join('');
-  document.getElementById('chamadaStatus').textContent = '';
-}
-document.getElementById('chamadaTurma').addEventListener('change', loadChamada);
-document.getElementById('chamadaData').addEventListener('change', loadChamada);
-
-document.getElementById('btnFinalizarChamada').addEventListener('click', async () => {
-  if (!sbClient) return;
-  const turma = document.getElementById('chamadaTurma').value;
-  const data = document.getElementById('chamadaData').value || todayStr();
-  const students = studentsOfTurma(turma);
-  const now = new Date().toISOString();
-
-  const rows = students.map(u => {
-    const checkbox = document.querySelector(`#chamadaBody input[data-email="${u.email}"]`);
-    const faltou = !!(checkbox && checkbox.checked);
-    return {
-      turma, data,
-      student_email: u.email,
-      student_name: u.nome,
-      presente: !faltou,
-      finalizada_em: now,
-      updated_at: now
-    };
-  });
-
-  if (rows.length === 0) return;
-  await sbClient.from('attendance').upsert(rows, { onConflict: 'turma,data,student_email' });
-  document.getElementById('chamadaStatus').textContent = `Chamada registrada às ${new Date().toLocaleTimeString('pt-BR')}.`;
-  loadRelatorioPresenca();
-});
-
-// ---------- Relatório de Presença ----------
-async function loadRelatorioPresenca() {
-  const tbody = document.getElementById('presencaBody');
-  if (!sbClient) { tbody.innerHTML = noSupabaseRow(4); return; }
-
-  const turma = document.getElementById('presencaTurma').value;
-  const students = studentsOfTurma(turma);
-
-  if (students.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
-    return;
-  }
-
-  const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', turma);
-  const byStudent = {};
-  (rows || []).forEach(r => {
-    byStudent[r.student_email] = byStudent[r.student_email] || { dias: 0, faltas: 0 };
-    byStudent[r.student_email].dias += 1;
-    if (!r.presente) byStudent[r.student_email].faltas += 1;
-  });
-
-  tbody.innerHTML = students.map(u => {
-    const s = byStudent[u.email] || { dias: 0, faltas: 0 };
-    const pct = s.dias > 0 ? Math.round(((s.dias - s.faltas) / s.dias) * 100) : null;
-    return `
-      <tr>
-        <td>${u.nome}</td>
-        <td>${s.dias}</td>
-        <td>${s.faltas}</td>
-        <td>${pct === null ? '—' : pct + '%'}</td>
-      </tr>
-    `;
-  }).join('');
-}
-document.getElementById('presencaTurma').addEventListener('change', loadRelatorioPresenca);
-
-// ---------- Notas ----------
-function calcMedia(n1, n2, n3, n4) {
-  const vals = [n1, n2, n3, n4].map(v => (v === '' || v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
-  return Math.round(((vals[0] + vals[1] + vals[2] + vals[3]) / 4) * 100) / 100;
-}
-
-async function loadNotas() {
-  const tbody = document.getElementById('notasBody');
-  if (!sbClient) { tbody.innerHTML = noSupabaseRow(6); return; }
-
-  const turma = document.getElementById('notasTurma').value;
-  const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
-  const students = studentsOfTurma(turma);
-
-  if (students.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
-    return;
-  }
-
-  const { data: rows } = await sbClient.from('grades').select('*').eq('turma', turma).eq('bimestre', bimestre);
-  const byStudent = {};
-  (rows || []).forEach(r => { byStudent[r.student_email] = r; });
-
-  tbody.innerHTML = students.map(u => {
-    const g = byStudent[u.email] || {};
-    const n1 = g.nota1 ?? '', n2 = g.nota2 ?? '', n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
-    return `
-      <tr data-email="${u.email}">
-        <td>${u.nome}</td>
-        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota1" value="${n1}"></td>
-        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota2" value="${n2}"></td>
-        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
-        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
-        <td class="media-cell">${calcMedia(n1, n2, n3, n4).toFixed(2)}</td>
-      </tr>
-    `;
-  }).join('');
-
-  tbody.querySelectorAll('tr[data-email]').forEach(tr => {
-    const inputs = tr.querySelectorAll('.nota-input');
-    const mediaCell = tr.querySelector('.media-cell');
-    inputs.forEach(inp => {
-      inp.addEventListener('input', () => {
-        const vals = Array.from(inputs).map(i => i.value);
-        mediaCell.textContent = calcMedia(vals[0], vals[1], vals[2], vals[3]).toFixed(2);
-      });
-    });
-  });
-
-  document.getElementById('notasStatus').textContent = '';
-}
-document.getElementById('notasTurma').addEventListener('change', loadNotas);
-document.getElementById('notasBimestre').addEventListener('change', loadNotas);
-
-document.getElementById('btnSalvarNotas').addEventListener('click', async () => {
-  if (!sbClient) return;
-  const turma = document.getElementById('notasTurma').value;
-  const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
-  const now = new Date().toISOString();
-
-  const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
-    const email = tr.getAttribute('data-email');
-    const u = DB.users[email];
-    const get = campo => {
-      const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
-      const v = inp ? inp.value : '';
-      return v === '' ? null : parseFloat(v);
-    };
-    return {
-      student_email: email,
-      student_name: u ? u.nome : email,
-      turma, bimestre,
-      nota1: get('nota1'), nota2: get('nota2'), nota3: get('nota3'), nota4: get('nota4'),
-      updated_at: now
-    };
-  });
-
-  if (rows.length === 0) return;
-  await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
-  document.getElementById('notasStatus').textContent = `Notas salvas às ${new Date().toLocaleTimeString('pt-BR')}.`;
-  loadRelatorioNotas();
-});
-
-// ---------- Relatório de Notas ----------
-function getTurmaConfig(turma) {
-  return turma === 'jogos' ? window.TURMA_CONFIG_JOGOS : window.TURMA_CONFIG_SISTEMAS;
-}
-
-function trilhaPercentForStudent(trilha, progressRows) {
-  const modules = trilha.modules || [];
-  if (modules.length === 0) return null;
-  let sum = 0;
-  modules.forEach(m => {
-    const row = progressRows.find(r => r.trilha_key === trilha.key && r.module_key === m.key);
-    if (!row) return;
-    const total = row.progress_total || 1;
-    sum += Math.min((row.progress_current || 0) / total, 1);
-  });
-  return Math.round((sum / modules.length) * 100);
-}
-
-async function loadRelatorioNotas() {
-  const turma = document.getElementById('relatorioNotasTurma').value;
-  const cfg = getTurmaConfig(turma);
-  const trilhas = (cfg && cfg.trilhas) || [];
-  const students = studentsOfTurma(turma);
-
-  const theadRow = document.getElementById('relatorioNotasHead');
-  const tbody = document.getElementById('relatorioNotasBody');
-  const totalCols = 6 + trilhas.length;
-
-  theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th>${trilhas.map(t => `<th>${t.label}</th>`).join('')}`;
-
-  if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
-  if (students.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="${totalCols}" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
-    return;
-  }
-
-  const [gradesRes, progressRes] = await Promise.all([
-    sbClient.from('grades').select('*').eq('turma', turma),
-    sbClient.from('student_module_progress').select('*').eq('turma', turma)
-  ]);
-
-  const gradesByStudent = {};
-  (gradesRes.data || []).forEach(r => {
-    gradesByStudent[r.student_email] = gradesByStudent[r.student_email] || {};
-    gradesByStudent[r.student_email][r.bimestre] = r.media;
-  });
-  const progressByStudent = {};
-  (progressRes.data || []).forEach(r => {
-    progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
-    progressByStudent[r.student_email].push(r);
-  });
-
-  tbody.innerHTML = students.map(u => {
-    const bims = gradesByStudent[u.email] || {};
-    const bimCells = [1, 2, 3, 4].map(b => `<td>${bims[b] !== undefined && bims[b] !== null ? Number(bims[b]).toFixed(2) : '—'}</td>`).join('');
-    const lancadas = [1, 2, 3, 4].map(b => bims[b]).filter(v => v !== undefined && v !== null);
-    const mediaGeral = lancadas.length ? (lancadas.reduce((a, b) => a + Number(b), 0) / lancadas.length).toFixed(2) : '—';
-
-    const pRows = progressByStudent[u.email] || [];
-    const trilhaCells = trilhas.map(t => {
-      const pct = trilhaPercentForStudent(t, pRows);
-      return `<td>${pct === null ? '—' : pct + '%'}</td>`;
-    }).join('');
-
-    return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${trilhaCells}</tr>`;
-  }).join('');
-}
-document.getElementById('relatorioNotasTurma').addEventListener('change', loadRelatorioNotas);
 </script>
 
 </body>

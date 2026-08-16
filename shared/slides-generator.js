@@ -189,7 +189,7 @@
 
     buildClosingSlide(pptx, config);
 
-    pptx.writeFile({ fileName: config.fileName || 'aula-slides.pptx' });
+    return pptx.writeFile({ fileName: config.fileName || 'aula-slides.pptx' });
   }
 
   window.PortalSlides = { generate };

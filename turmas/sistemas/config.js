@@ -1,7 +1,8 @@
 // Trilhas/módulos da turma Sistemas.
-// Consumido por plataforma.html (via window.TURMA_CONFIG) e por
-// professor/painel.html (via window.TURMA_CONFIG_SISTEMAS, só leitura,
-// pra montar as colunas de desempenho por trilha no relatório de notas).
+// Consumido por plataforma.html (via window.TURMA_CONFIG) — inclusive pela
+// aba "Gestão" do próprio portal (shared/platform-core.js), que lê isso
+// pra montar as colunas de desempenho por trilha do relatório de notas e a
+// lista de aulas com geração de slides (campo hasSlides).
 //
 // Pra adicionar uma trilha nova nesta turma, basta um novo item aqui
 // (mesmo formato usado em turmas/jogos/config.js) — nenhum outro
@@ -20,7 +21,8 @@ window.TURMA_CONFIG_SISTEMAS = {
           key: 'teoria', title: 'Teoria — Fundamentos de SQL',
           desc: 'Entenda tabelas, colunas, chave primária e os comandos SELECT, WHERE, ORDER BY, INSERT, UPDATE e DELETE antes de praticar.',
           icon: '📖', src: 'atividades/sql-basico-teoria.html',
-          progressKey: 'sql_basico_teoria_progress_', progressMode: 'flag'
+          progressKey: 'sql_basico_teoria_progress_', progressMode: 'flag',
+          hasSlides: true
         },
         {
           key: 'basico', title: 'Prática — Central de Dados',

@@ -1,7 +1,8 @@
 // Trilhas/módulos da turma Jogos Digitais.
-// Consumido por plataforma.html (via window.TURMA_CONFIG) e por
-// professor/painel.html (via window.TURMA_CONFIG_JOGOS, só leitura,
-// pra montar as colunas de desempenho por trilha no relatório de notas).
+// Consumido por plataforma.html (via window.TURMA_CONFIG) — inclusive pela
+// aba "Gestão" do próprio portal (shared/platform-core.js), que lê isso
+// pra montar as colunas de desempenho por trilha do relatório de notas e a
+// lista de aulas com geração de slides (campo hasSlides).
 window.TURMA_CONFIG_JOGOS = {
   id: 'jogos',
   label: 'Jogos Digitais',
@@ -35,7 +36,8 @@ window.TURMA_CONFIG_JOGOS = {
           key: 'basico', title: 'Básico — A Jornada do Eri',
           desc: 'Primeiro contato com C#, contado em forma de história. Responda cada pergunta para avançar.',
           icon: '🦈', src: 'atividades/csharp-basico.html',
-          progressKey: 'csharp_basico_progress_', progressMode: 'flag'
+          progressKey: 'csharp_basico_progress_', progressMode: 'flag',
+          hasSlides: true
         }
       ]
     }

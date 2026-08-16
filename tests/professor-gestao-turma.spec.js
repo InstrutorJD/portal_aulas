@@ -66,6 +66,26 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     expect(rows[0]).toMatchObject({ id: 'jogos', clipboard_blocked: true });
   });
 
+  test('Apresentações (Slides) lista a aula teórica e gera o .pptx com um clique, sem abrir o módulo', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+
+    await expect(page.locator('#gestaoSlidesList')).toContainText('Básico — A Jornada do Eri');
+
+    // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
+    await expect(page.locator('#tabContentAulas')).toBeHidden();
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 15000 }),
+      page.click('#gestaoSlidesList [data-slide-mod]'),
+    ]);
+    expect(download.suggestedFilename()).toBe('csharp-basico-slides.pptx');
+
+    await expect(page.locator('#tabContentAulas')).toBeHidden();
+  });
+
   test('atividade em tempo real mostra só alunos desta turma', async ({ page }) => {
     await stubSupabaseFake(page, {
       student_activity: [

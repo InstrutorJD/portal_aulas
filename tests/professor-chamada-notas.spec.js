@@ -1,18 +1,24 @@
 // @ts-check
+// Chamada e notas agora vivem dentro da aba "Gestão" do portal de cada
+// turma (shared/platform-core.js), não mais num painel central — por isso
+// não existe mais seletor de turma aqui: a turma já é a do portal aberto.
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const URL = '/professor/painel.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor';
+const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
+const SISTEMAS_URL = '/turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=sistemas';
 const today = new Date().toISOString().slice(0, 10);
 
-test.describe('professor/painel.html — Chamada', () => {
-  test('marcar falta e finalizar salva presente=false só pro aluno marcado', async ({ page }) => {
-    await stubSupabaseFake(page, { attendance: [] });
-    await page.goto(URL);
-    await page.click('#painelTabs .tab-btn[data-tab="chamada"]');
+async function openGestao(page, url, seed) {
+  await stubSupabaseFake(page, seed);
+  await page.goto(url);
+  await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+  await page.waitForTimeout(200);
+}
 
-    await page.selectOption('#chamadaTurma', 'jogos');
-    await page.waitForTimeout(200);
+test.describe('Chamada — dentro do portal da turma', () => {
+  test('marcar falta e finalizar salva presente=false só pro aluno marcado', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, { attendance: [] });
 
     await page.check('#chamadaBody input[data-email="breno.silva80"]');
     await page.click('#btnFinalizarChamada');
@@ -30,21 +36,17 @@ test.describe('professor/painel.html — Chamada', () => {
   });
 
   test('reabrir a mesma data pré-marca quem já tinha sido registrado como falta', async ({ page }) => {
-    await stubSupabaseFake(page, {
+    await openGestao(page, JOGOS_URL, {
       attendance: [
         { turma: 'jogos', data: today, student_email: 'breno.silva80', student_name: 'Breno Silva', presente: false },
       ],
     });
-    await page.goto(URL);
-    await page.click('#painelTabs .tab-btn[data-tab="chamada"]');
-    await page.selectOption('#chamadaTurma', 'jogos');
-    await page.waitForTimeout(200);
 
     await expect(page.locator('#chamadaBody input[data-email="breno.silva80"]')).toBeChecked();
   });
 
   test('relatório de presença calcula % corretamente a partir do histórico', async ({ page }) => {
-    await stubSupabaseFake(page, {
+    await openGestao(page, JOGOS_URL, {
       attendance: [
         { turma: 'jogos', data: '2026-03-01', student_email: 'breno.silva80', presente: true },
         { turma: 'jogos', data: '2026-03-02', student_email: 'breno.silva80', presente: false },
@@ -52,10 +54,6 @@ test.describe('professor/painel.html — Chamada', () => {
         { turma: 'jogos', data: '2026-03-04', student_email: 'breno.silva80', presente: true },
       ],
     });
-    await page.goto(URL);
-    await page.click('#painelTabs .tab-btn[data-tab="chamada"]');
-    await page.selectOption('#presencaTurma', 'jogos');
-    await page.waitForTimeout(200);
 
     const row = page.locator('#presencaBody tr', { hasText: 'Breno Silva' });
     await expect(row).toContainText('4'); // dias com chamada
@@ -64,14 +62,9 @@ test.describe('professor/painel.html — Chamada', () => {
   });
 });
 
-test.describe('professor/painel.html — Notas', () => {
+test.describe('Notas — dentro do portal da turma', () => {
   test('média recalcula ao vivo enquanto digita e salvar grava as 4 notas', async ({ page }) => {
-    await stubSupabaseFake(page, { grades: [] });
-    await page.goto(URL);
-    await page.click('#painelTabs .tab-btn[data-tab="notas"]');
-    await page.selectOption('#notasTurma', 'jogos');
-    await page.selectOption('#notasBimestre', '1');
-    await page.waitForTimeout(200);
+    await openGestao(page, JOGOS_URL, { grades: [] });
 
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
     await row.locator('[data-campo="nota1"]').fill('10');
@@ -91,7 +84,7 @@ test.describe('professor/painel.html — Notas', () => {
   });
 
   test('relatório de notas mostra só médias e o % de desempenho por trilha', async ({ page }) => {
-    await stubSupabaseFake(page, {
+    await openGestao(page, SISTEMAS_URL, {
       grades: [
         { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', bimestre: 1, nota1: 10, nota2: 10, nota3: 10, nota4: 10, media: 10 },
         { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', bimestre: 2, nota1: 8, nota2: 8, nota3: 8, nota4: 8, media: 8 },
@@ -101,10 +94,6 @@ test.describe('professor/painel.html — Notas', () => {
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 4, progress_total: 8, completed: false },
       ],
     });
-    await page.goto(URL);
-    await page.click('#painelTabs .tab-btn[data-tab="notas"]');
-    await page.selectOption('#relatorioNotasTurma', 'sistemas');
-    await page.waitForTimeout(200);
 
     // Só a média aparece no relatório — nunca os 4 campos de nota.
     await expect(page.locator('#relatorioNotasBody')).not.toContainText('nota1');

@@ -251,8 +251,24 @@
     }
   ];
 
-  // Só o professor vê o botão de gerar slides — é material de apoio pra ele
-  // apresentar em aula, não faz parte da jornada do aluno.
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // sem o professor precisar abrir o módulo pra achar o botão.
+  window.generateSlidesForGestao = function () {
+    return window.PortalSlides.generate({
+      title: 'SQL Básico — Fundamentos',
+      subtitle: 'Aula Teórica · Trilha SQL · Turma Sistemas',
+      capacidade: 'Utilizar comandos SQL básicos (SELECT, WHERE, ORDER BY, INSERT, UPDATE, DELETE) para consultar e manipular dados em um banco relacional.',
+      steps: STEPS,
+      fileName: 'sql-basico-teoria-slides.pptx',
+      closingTitle: 'Hora da prática!',
+      closingText: 'Abra o módulo "Prática — Central de Dados" no Portal de Aulas para os alunos aplicarem SQL de verdade.'
+    });
+  };
+
+  // Só o professor vê o botão de gerar slides aqui dentro do módulo — é
+  // material de apoio pra ele apresentar em aula, não faz parte da jornada
+  // do aluno.
   const role = urlParams.get('role') || 'aluno';
   const btnGenSlides = document.getElementById('btnGenSlides');
   if (role === 'professor') {
@@ -261,15 +277,7 @@
       btnGenSlides.disabled = true;
       btnGenSlides.textContent = '⏳ Gerando...';
       setTimeout(() => {
-        window.PortalSlides.generate({
-          title: 'SQL Básico — Fundamentos',
-          subtitle: 'Aula Teórica · Trilha SQL · Turma Sistemas',
-          capacidade: 'Utilizar comandos SQL básicos (SELECT, WHERE, ORDER BY, INSERT, UPDATE, DELETE) para consultar e manipular dados em um banco relacional.',
-          steps: STEPS,
-          fileName: 'sql-basico-teoria-slides.pptx',
-          closingTitle: 'Hora da prática!',
-          closingText: 'Abra o módulo "Prática — Central de Dados" no Portal de Aulas para os alunos aplicarem SQL de verdade.'
-        });
+        window.generateSlidesForGestao();
         btnGenSlides.disabled = false;
         btnGenSlides.textContent = '🖨️ Gerar Slides (PPTX)';
       }, 50);

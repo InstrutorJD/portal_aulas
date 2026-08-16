@@ -129,6 +129,77 @@
             </div>
 
             <div class="card">
+              <h2>Apresentações (Slides)</h2>
+              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                Gera um .pptx pronto pra apresentar em aula, a partir de cada aula teórica — sem precisar abrir o módulo pra achar o botão.
+              </p>
+              <div id="gestaoSlidesList"></div>
+            </div>
+
+            <div class="card">
+              <h2>Chamada — ${cfg.label}</h2>
+              <div class="field-row">
+                <div>
+                  <label class="field-label" for="chamadaData">Data</label>
+                  <input type="date" id="chamadaData">
+                </div>
+              </div>
+              <table class="audit-table">
+                <thead><tr><th>Aluno</th><th style="width:110px; text-align:center;">Faltou</th></tr></thead>
+                <tbody id="chamadaBody"></tbody>
+              </table>
+              <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+                <button class="btn" id="btnFinalizarChamada">Finalizar Chamada</button>
+                <span class="status-msg" id="chamadaStatus"></span>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Relatório de Presença</h2>
+              <table class="audit-table">
+                <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
+                <tbody id="presencaBody"></tbody>
+              </table>
+            </div>
+
+            <div class="card">
+              <h2>Lançar Notas</h2>
+              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
+              <div class="field-row">
+                <div>
+                  <label class="field-label" for="notasBimestre">Bimestre</label>
+                  <select id="notasBimestre">
+                    <option value="1">1º Bimestre</option>
+                    <option value="2">2º Bimestre</option>
+                    <option value="3">3º Bimestre</option>
+                    <option value="4">4º Bimestre</option>
+                  </select>
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Nota 1</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
+                  <tbody id="notasBody"></tbody>
+                </table>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+                <button class="btn" id="btnSalvarNotas">Salvar Notas</button>
+                <span class="status-msg" id="notasStatus"></span>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Relatório de Notas</h2>
+              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Lançar Notas".</p>
+              <div style="overflow-x:auto;">
+                <table class="audit-table">
+                  <thead><tr id="relatorioNotasHead"></tr></thead>
+                  <tbody id="relatorioNotasBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
               <h2>Atividade em Tempo Real</h2>
               <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
               <table class="audit-table">
@@ -457,10 +528,294 @@
     box.innerHTML = logs.map(l => `<div class="log-entry"><span class="time">[${l.time}]</span> <b>${l.user}</b>: ${l.action}</div>`).join('');
   }
 
+  // ---------- Chamada / Notas (dentro da aba Gestão, já sabe a turma) ----------
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function noSupabaseRow(colspan) {
+    return `<tr><td colspan="${colspan}" style="color:var(--ink-dim); text-align:center; padding:14px;">Configure o Supabase (shared/supabase-config.js) para usar esta tela.</td></tr>`;
+  }
+
+  function noStudentsRow(colspan) {
+    return `<tr><td colspan="${colspan}" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
+  }
+
+  async function loadChamada() {
+    const tbody = document.getElementById('chamadaBody');
+    const dataInput = document.getElementById('chamadaData');
+    if (!dataInput.value) dataInput.value = todayStr();
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(2); return; }
+
+    const students = turmaStudents();
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(2); return; }
+
+    const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', cfg.id).eq('data', dataInput.value);
+    const existing = {};
+    (rows || []).forEach(r => { existing[r.student_email] = r; });
+
+    tbody.innerHTML = students.map(u => {
+      const row = existing[u.email];
+      const faltou = row ? !row.presente : false;
+      return `
+        <tr>
+          <td>${u.nome}</td>
+          <td style="text-align:center;"><input type="checkbox" data-email="${u.email}" ${faltou ? 'checked' : ''}></td>
+        </tr>
+      `;
+    }).join('');
+    document.getElementById('chamadaStatus').textContent = '';
+  }
+
+  async function finalizarChamada() {
+    if (!sbClient) return;
+    const data = document.getElementById('chamadaData').value || todayStr();
+    const students = turmaStudents();
+    const now = new Date().toISOString();
+
+    const rows = students.map(u => {
+      const checkbox = document.querySelector(`#chamadaBody input[data-email="${u.email}"]`);
+      const faltou = !!(checkbox && checkbox.checked);
+      return {
+        turma: cfg.id, data,
+        student_email: u.email,
+        student_name: u.nome,
+        presente: !faltou,
+        finalizada_em: now,
+        updated_at: now
+      };
+    });
+
+    if (rows.length === 0) return;
+    await sbClient.from('attendance').upsert(rows, { onConflict: 'turma,data,student_email' });
+    document.getElementById('chamadaStatus').textContent = `Chamada registrada às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    renderRelatorioPresenca();
+  }
+
+  async function renderRelatorioPresenca() {
+    const tbody = document.getElementById('presencaBody');
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(4); return; }
+
+    const students = turmaStudents();
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(4); return; }
+
+    const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', cfg.id);
+    const byStudent = {};
+    (rows || []).forEach(r => {
+      byStudent[r.student_email] = byStudent[r.student_email] || { dias: 0, faltas: 0 };
+      byStudent[r.student_email].dias += 1;
+      if (!r.presente) byStudent[r.student_email].faltas += 1;
+    });
+
+    tbody.innerHTML = students.map(u => {
+      const s = byStudent[u.email] || { dias: 0, faltas: 0 };
+      const pct = s.dias > 0 ? Math.round(((s.dias - s.faltas) / s.dias) * 100) : null;
+      return `<tr><td>${u.nome}</td><td>${s.dias}</td><td>${s.faltas}</td><td>${pct === null ? '—' : pct + '%'}</td></tr>`;
+    }).join('');
+  }
+
+  function calcMedia(n1, n2, n3, n4) {
+    const vals = [n1, n2, n3, n4].map(v => (v === '' || v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
+    return Math.round(((vals[0] + vals[1] + vals[2] + vals[3]) / 4) * 100) / 100;
+  }
+
+  async function loadNotas() {
+    const tbody = document.getElementById('notasBody');
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(6); return; }
+
+    const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+    const students = turmaStudents();
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(6); return; }
+
+    const { data: rows } = await sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre);
+    const byStudent = {};
+    (rows || []).forEach(r => { byStudent[r.student_email] = r; });
+
+    tbody.innerHTML = students.map(u => {
+      const g = byStudent[u.email] || {};
+      const n1 = g.nota1 ?? '', n2 = g.nota2 ?? '', n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
+      return `
+        <tr data-email="${u.email}">
+          <td>${u.nome}</td>
+          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota1" value="${n1}"></td>
+          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota2" value="${n2}"></td>
+          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
+          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
+          <td class="media-cell">${calcMedia(n1, n2, n3, n4).toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('tr[data-email]').forEach(tr => {
+      const inputs = tr.querySelectorAll('.nota-input');
+      const mediaCell = tr.querySelector('.media-cell');
+      inputs.forEach(inp => {
+        inp.addEventListener('input', () => {
+          const vals = Array.from(inputs).map(i => i.value);
+          mediaCell.textContent = calcMedia(vals[0], vals[1], vals[2], vals[3]).toFixed(2);
+        });
+      });
+    });
+
+    document.getElementById('notasStatus').textContent = '';
+  }
+
+  async function salvarNotas() {
+    if (!sbClient) return;
+    const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+    const now = new Date().toISOString();
+
+    const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
+      const email = tr.getAttribute('data-email');
+      const u = DB.users[email];
+      const get = campo => {
+        const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
+        const v = inp ? inp.value : '';
+        return v === '' ? null : parseFloat(v);
+      };
+      return {
+        student_email: email,
+        student_name: u ? u.nome : email,
+        turma: cfg.id, bimestre,
+        nota1: get('nota1'), nota2: get('nota2'), nota3: get('nota3'), nota4: get('nota4'),
+        updated_at: now
+      };
+    });
+
+    if (rows.length === 0) return;
+    await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
+    document.getElementById('notasStatus').textContent = `Notas salvas às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    renderRelatorioNotas();
+  }
+
+  function trilhaPercentForStudent(trilha, progressRows) {
+    const modules = trilha.modules || [];
+    if (modules.length === 0) return null;
+    let sum = 0;
+    modules.forEach(m => {
+      const row = progressRows.find(r => r.trilha_key === trilha.key && r.module_key === m.key);
+      if (!row) return;
+      const total = row.progress_total || 1;
+      sum += Math.min((row.progress_current || 0) / total, 1);
+    });
+    return Math.round((sum / modules.length) * 100);
+  }
+
+  async function renderRelatorioNotas() {
+    const trilhas = cfg.trilhas || [];
+    const students = turmaStudents();
+    const theadRow = document.getElementById('relatorioNotasHead');
+    const tbody = document.getElementById('relatorioNotasBody');
+    const totalCols = 6 + trilhas.length;
+
+    theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th>${trilhas.map(t => `<th>${t.label}</th>`).join('')}`;
+
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
+
+    const [gradesRes, progressRes] = await Promise.all([
+      sbClient.from('grades').select('*').eq('turma', cfg.id),
+      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id)
+    ]);
+
+    const gradesByStudent = {};
+    (gradesRes.data || []).forEach(r => {
+      gradesByStudent[r.student_email] = gradesByStudent[r.student_email] || {};
+      gradesByStudent[r.student_email][r.bimestre] = r.media;
+    });
+    const progressByStudent = {};
+    (progressRes.data || []).forEach(r => {
+      progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
+      progressByStudent[r.student_email].push(r);
+    });
+
+    tbody.innerHTML = students.map(u => {
+      const bims = gradesByStudent[u.email] || {};
+      const bimCells = [1, 2, 3, 4].map(b => `<td>${bims[b] !== undefined && bims[b] !== null ? Number(bims[b]).toFixed(2) : '—'}</td>`).join('');
+      const lancadas = [1, 2, 3, 4].map(b => bims[b]).filter(v => v !== undefined && v !== null);
+      const mediaGeral = lancadas.length ? (lancadas.reduce((a, b) => a + Number(b), 0) / lancadas.length).toFixed(2) : '—';
+
+      const pRows = progressByStudent[u.email] || [];
+      const trilhaCells = trilhas.map(t => {
+        const pct = trilhaPercentForStudent(t, pRows);
+        return `<td>${pct === null ? '—' : pct + '%'}</td>`;
+      }).join('');
+
+      return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${trilhaCells}</tr>`;
+    }).join('');
+  }
+
+  // Carrega o módulo (aula teórica) num iframe escondido só pra rodar a
+  // geração de slides dele — o professor não precisa abrir o módulo na
+  // aba "Aulas & Atividades" nem achar o botão lá dentro pra gerar o .pptx.
+  function generateSlidesFor(mod) {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
+      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
+
+      const cleanup = () => { iframe.remove(); resolve(); };
+      iframe.onload = async () => {
+        try {
+          const win = iframe.contentWindow;
+          if (win && typeof win.generateSlidesForGestao === 'function') {
+            await win.generateSlidesForGestao();
+          }
+        } catch (e) {
+          // best-effort: se der erro, só limpa o iframe e segue
+        }
+        setTimeout(cleanup, 400);
+      };
+      iframe.onerror = cleanup;
+      document.body.appendChild(iframe);
+    });
+  }
+
+  function renderGestaoSlidesList() {
+    const container = document.getElementById('gestaoSlidesList');
+    if (!container) return;
+
+    const slideModules = [];
+    (cfg.trilhas || []).forEach(trilha => {
+      (trilha.modules || []).forEach(mod => {
+        if (mod.hasSlides) slideModules.push(mod);
+      });
+    });
+
+    if (slideModules.length === 0) {
+      container.innerHTML = `<div class="empty-state">Nenhuma aula teórica com geração de slides nesta turma ainda.</div>`;
+      return;
+    }
+
+    container.innerHTML = slideModules.map((mod, i) => `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);">
+        <span>${mod.title}</span>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" data-slide-mod="${i}">🖨️ Gerar Slides</button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-slide-mod]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const mod = slideModules[parseInt(btn.getAttribute('data-slide-mod'), 10)];
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Gerando...';
+        await generateSlidesFor(mod);
+        btn.disabled = false;
+        btn.textContent = original;
+      });
+    });
+  }
+
   function renderGestaoTab() {
     renderGestaoStudents();
     renderGestaoLogs();
     fetchClipboardStateGestao();
+    renderGestaoSlidesList();
+    loadChamada();
+    renderRelatorioPresenca();
+    loadNotas();
+    renderRelatorioNotas();
 
     if (!sbClient) return;
     renderGestaoActivity();
@@ -499,6 +854,11 @@
       }, { onConflict: 'id' });
       renderClipboardButtonGestao();
     });
+
+    document.getElementById('chamadaData').addEventListener('change', loadChamada);
+    document.getElementById('btnFinalizarChamada').addEventListener('click', finalizarChamada);
+    document.getElementById('notasBimestre').addEventListener('change', loadNotas);
+    document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
   }
 
   // ---------- Tabs principais ----------

@@ -9,20 +9,19 @@ test.describe('professor/painel.html', () => {
     await stubSupabaseDisabled(page);
   });
 
-  test('mostra só os dois cards de turma na aba inicial', async ({ page }) => {
+  test('mostra só os dois cards de turma', async ({ page }) => {
     await page.goto(URL);
 
     await expect(page.locator('#sessionUser')).toHaveText('Instrutor / Professor');
-    await expect(page.locator('#painelTabs .tab-btn[data-tab="turmas"]')).toHaveClass(/active/);
 
-    const cards = page.locator('#tabPage-turmas .turma-card');
+    const cards = page.locator('.turma-card');
     await expect(cards).toHaveCount(2);
     await expect(cards.nth(0)).toContainText('Jogos Digitais');
     await expect(cards.nth(1)).toContainText('Desenvolvimento de Sistemas');
 
     // não mistura mais alunos das duas turmas numa lista central
-    await expect(page.locator('#tabPage-turmas')).not.toContainText('Breno Silva');
-    await expect(page.locator('#tabPage-turmas')).not.toContainText('Alexandre Natal');
+    await expect(page.locator('.app-container')).not.toContainText('Breno Silva');
+    await expect(page.locator('.app-container')).not.toContainText('Alexandre Natal');
   });
 
   test('clicar num card abre o portal da respectiva turma', async ({ page }) => {
