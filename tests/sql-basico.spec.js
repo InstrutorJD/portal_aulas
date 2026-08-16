@@ -88,7 +88,8 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
 
-    await expect(page.locator('.subtab-btn[data-subtab="sql"]')).toBeVisible();
+    // Sistemas só tem 1 trilha, então não existe seletor — o conteúdo aparece direto.
+    await expect(page.locator('#moduleSelector_sql')).toBeVisible();
     const tabJogos = page.locator('#tabBtnJogos');
     await expect(tabJogos).not.toHaveClass(/disabled/);
     await expect(page.locator('#lblGamesUnlock')).toHaveText('LIBERADO');

@@ -21,7 +21,9 @@ test.describe('turmas/sistemas/plataforma.html', () => {
 
   test('mostra a trilha SQL cadastrada pra essa turma, com teoria e prática', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('.subtab-btn[data-subtab="sql"]')).toHaveClass(/active/);
+    // Só 1 trilha nessa turma — nenhum seletor de trilha aparece, o conteúdo já vem direto.
+    await expect(page.locator('#trilhaSelect')).toHaveCount(0);
+    await expect(page.locator('#moduleSelector_sql')).toBeVisible();
     await expect(page.locator('#moduleSelector_sql')).toContainText('Teoria — Fundamentos de SQL');
     await expect(page.locator('#moduleSelector_sql')).toContainText('Prática — Central de Dados');
   });

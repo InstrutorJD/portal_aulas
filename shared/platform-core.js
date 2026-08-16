@@ -63,11 +63,6 @@
       </div>
 
       <div class="app-container">
-        <header>
-          <h1>PIXELFORGE STUDIOS — PLATAFORMA DE ENSINO</h1>
-          <div class="sub">Sistema de Gestão de Aprendizagem & Auditoria</div>
-        </header>
-
         <div class="statusbar">
           <div class="user-info">Usuário: <b id="txtUserNom">--</b> | Turma: <b id="txtUserTurma">--</b></div>
           <div style="font-size:11px; color:var(--ink-dim);">
@@ -83,7 +78,7 @@
 
         <div class="viewport-content">
           <div id="tabContentAulas" class="tab-page">
-            <div class="subtabs" id="aulasSubTabs"><span class="subtab-label">↳ Conteúdo:</span></div>
+            <div class="subtabs" id="aulasSubTabs"><span class="subtab-label">Trilha:</span></div>
             <div id="aulasSubTabPages"></div>
           </div>
 
@@ -109,18 +104,18 @@
 
           <div id="tabContentGestao" class="tab-page" style="display:none;">
             <div class="card">
-              <h2>Restrições — ${cfg.label}</h2>
+              <h2>Restrições</h2>
               <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
                 É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.
               </p>
-              <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar (${cfg.label})</button>
+              <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar</button>
             </div>
 
             <div class="card">
-              <h2>Liberação de Jogos — ${cfg.label}</h2>
+              <h2>Liberação de Jogos</h2>
               <div style="display:flex; gap:10px; margin-bottom:12px;">
-                <button class="btn" id="btnUnlockGamesTurma">Liberar Jogos (Todos)</button>
-                <button class="btn btn-danger" id="btnLockGamesTurma">Bloquear Jogos (Todos)</button>
+                <button class="btn" id="btnUnlockGamesTurma">Liberar Todos</button>
+                <button class="btn btn-danger" id="btnLockGamesTurma">Bloquear Todos</button>
               </div>
               <table class="audit-table">
                 <thead><tr><th>Aluno</th><th>Acesso Jogos</th><th>Ações</th></tr></thead>
@@ -137,7 +132,7 @@
             </div>
 
             <div class="card">
-              <h2>Chamada — ${cfg.label}</h2>
+              <h2>Chamada</h2>
               <div class="field-row">
                 <div>
                   <label class="field-label" for="chamadaData">Data</label>
@@ -149,7 +144,7 @@
                 <tbody id="chamadaBody"></tbody>
               </table>
               <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                <button class="btn" id="btnFinalizarChamada">Finalizar Chamada</button>
+                <button class="btn" id="btnFinalizarChamada">Finalizar</button>
                 <span class="status-msg" id="chamadaStatus"></span>
               </div>
             </div>
@@ -183,7 +178,7 @@
                 </table>
               </div>
               <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                <button class="btn" id="btnSalvarNotas">Salvar Notas</button>
+                <button class="btn" id="btnSalvarNotas">Salvar</button>
                 <span class="status-msg" id="notasStatus"></span>
               </div>
             </div>
@@ -209,7 +204,7 @@
             </div>
 
             <div class="card">
-              <h2>Monitoramento e Logs (Auditoria)</h2>
+              <h2>Auditoria</h2>
               <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Registros gerados neste navegador (login, troca de aba, módulos abertos).</p>
               <div class="log-box" id="gestaoAuditLogBox"></div>
             </div>
@@ -234,14 +229,21 @@
       return;
     }
 
-    trilhas.forEach((trilha, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'subtab-btn' + (idx === 0 ? ' active' : '');
-      btn.setAttribute('data-subtab', trilha.key);
-      btn.textContent = trilha.label;
-      btn.addEventListener('click', () => switchAulasSubTab(trilha.key));
-      tabsEl.appendChild(btn);
+    // Só faz sentido pedir pra escolher quando há mais de uma trilha. Com 2+,
+    // um <select> é mais conciso que uma fileira de botões (1 linha, tátil
+    // no celular) — sem precisar de sidebar/hambúrguer pra 2-4 itens.
+    if (trilhas.length > 1) {
+      tabsEl.style.display = '';
+      const select = document.createElement('select');
+      select.id = 'trilhaSelect';
+      select.innerHTML = trilhas.map(t => `<option value="${t.key}">${t.label}</option>`).join('');
+      select.addEventListener('change', () => switchAulasSubTab(select.value));
+      tabsEl.appendChild(select);
+    } else {
+      tabsEl.style.display = 'none';
+    }
 
+    trilhas.forEach((trilha, idx) => {
       const page = document.createElement('div');
       page.className = 'subtab-page';
       page.id = `subTabContent_${trilha.key}`;
@@ -262,7 +264,7 @@
             </div>
             <button class="btn btn-secondary" onclick="PortalCore.closeModule('${trilha.key}')">← Voltar</button>
           </div>
-          <div class="game-frame-wrapper" style="height:560px; border:1px solid var(--green-dim);">
+          <div class="game-frame-wrapper" style="height:min(560px, 70vh); border:1px solid var(--green-dim);">
             <iframe id="moduleFrame_${trilha.key}" src="about:blank"></iframe>
           </div>
         </div>
@@ -272,9 +274,8 @@
   }
 
   function switchAulasSubTab(key) {
-    document.querySelectorAll('#aulasSubTabs .subtab-btn').forEach(b => {
-      b.classList.toggle('active', b.getAttribute('data-subtab') === key);
-    });
+    const select = document.getElementById('trilhaSelect');
+    if (select && select.value !== key) select.value = key;
     document.querySelectorAll('#aulasSubTabPages .subtab-page').forEach(p => {
       p.style.display = (p.id === `subTabContent_${key}`) ? 'block' : 'none';
     });
@@ -456,7 +457,7 @@
         <tr>
           <td>${u.nome}</td>
           <td><span style="color:${isUnl ? 'var(--green)' : 'var(--blood-bright)'}">${isUnl ? 'LIBERADO' : 'BLOQUEADO'}</span></td>
-          <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.toggleStudentGamesTurma('${u.email}')">${isUnl ? 'Revogar Acesso' : 'Liberar Jogos'}</button></td>
+          <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.toggleStudentGamesTurma('${u.email}')">${isUnl ? 'Revogar' : 'Liberar'}</button></td>
         </tr>
       `;
     }).join('');
@@ -475,10 +476,10 @@
     const btn = document.getElementById('btnToggleClipboard');
     if (!btn) return;
     if (gestaoClipboardBlocked) {
-      btn.textContent = `Copiar/Colar BLOQUEADO (${cfg.label}) — Clique para liberar`;
+      btn.textContent = 'Copiar/Colar BLOQUEADO — Clique para liberar';
       btn.classList.add('btn-danger');
     } else {
-      btn.textContent = `Bloquear Copiar/Colar (${cfg.label})`;
+      btn.textContent = 'Bloquear Copiar/Colar';
       btn.classList.remove('btn-danger');
     }
   }
@@ -885,7 +886,8 @@
     }
 
     if (tabName === 'aulas') {
-      const activeSub = document.querySelector('#aulasSubTabs .subtab-btn.active')?.getAttribute('data-subtab');
+      const select = document.getElementById('trilhaSelect');
+      const activeSub = select ? select.value : (cfg.trilhas && cfg.trilhas[0] && cfg.trilhas[0].key);
       const trilha = (cfg.trilhas || []).find(t => t.key === activeSub);
       if (trilha && !openModuleFrame[activeSub] && typeof window.resumeActivityHeartbeat === 'function') {
         window.resumeActivityHeartbeat(`aulas_${activeSub}`, `${trilha.label} — Escolhendo módulo`);

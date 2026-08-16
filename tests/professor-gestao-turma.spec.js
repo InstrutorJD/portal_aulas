@@ -82,7 +82,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
 
-    await expect(page.locator('#btnToggleClipboard')).toContainText('Bloquear Copiar/Colar (Jogos Digitais)');
+    await expect(page.locator('#btnToggleClipboard')).toContainText('Bloquear Copiar/Colar');
     await page.click('#btnToggleClipboard');
     await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
 

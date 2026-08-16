@@ -14,8 +14,9 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await expect(page.locator('#txtUserNom')).toHaveText('Breno Silva');
     await expect(page.locator('#txtUserTurma')).toHaveText('Jogos Digitais');
 
-    await expect(page.locator('.subtab-btn[data-subtab="js"]')).toHaveClass(/active/);
-    await expect(page.locator('.subtab-btn[data-subtab="csharp"]')).toBeVisible();
+    // 2 trilhas nessa turma (JS/C#) — vira um <select> só, começando em "js".
+    await expect(page.locator('#trilhaSelect')).toHaveValue('js');
+    await expect(page.locator('#trilhaSelect option[value="csharp"]')).toHaveCount(1);
 
     // tema "hacker": --green deve ser o verde original, não o azul de Sistemas
     const green = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--green').trim());
@@ -37,7 +38,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
   test('abrir e fechar um módulo de trilha troca a área visível', async ({ page }) => {
     await page.goto(URL);
-    await page.click('.subtab-btn[data-subtab="csharp"]');
+    await page.selectOption('#trilhaSelect', 'csharp');
     await expect(page.locator('#subTabContent_csharp')).toBeVisible();
 
     await page.click('#moduleSelector_csharp .game-card');
@@ -79,7 +80,7 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
     }, 'breno.silva80');
 
     await page.goto(URL);
-    await page.click('.subtab-btn[data-subtab="csharp"]');
+    await page.selectOption('#trilhaSelect', 'csharp');
     await page.click('#moduleSelector_csharp .game-card');
     await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();
 
