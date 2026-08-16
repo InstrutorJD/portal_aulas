@@ -4,6 +4,12 @@ const { stubSupabaseDisabled } = require('./helpers');
 
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno';
 
+// A trilha de verdade (SQL) fica dentro da Matéria 1 — as demais 8 matérias
+// de Sistemas são placeholders vazios por enquanto.
+async function openMateria1(page) {
+  await page.click('.game-card:has-text("Matéria 1")');
+}
+
 test.describe('turmas/sistemas/plataforma.html', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseDisabled(page);
@@ -19,9 +25,16 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(green).not.toBe('#7cff3f'); // não é o verde da turma Jogos
   });
 
-  test('mostra a trilha SQL cadastrada pra essa turma, com teoria e prática', async ({ page }) => {
+  test('mostra os cards das 9 matérias de Sistemas', async ({ page }) => {
     await page.goto(URL);
-    // Só 1 trilha nessa turma — nenhum seletor de trilha aparece, o conteúdo já vem direto.
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(9);
+    await expect(page.locator('.game-card:has-text("Matéria 3")')).toContainText('Em breve');
+  });
+
+  test('mostra a trilha SQL dentro da Matéria 1, com teoria e prática', async ({ page }) => {
+    await page.goto(URL);
+    await openMateria1(page);
+    // Só 1 trilha nessa matéria — nenhum seletor de trilha aparece, o conteúdo já vem direto.
     await expect(page.locator('#trilhaSelect')).toHaveCount(0);
     await expect(page.locator('#moduleSelector_sql')).toBeVisible();
     await expect(page.locator('#moduleSelector_sql')).toContainText('Teoria — Fundamentos de SQL');
@@ -30,6 +43,7 @@ test.describe('turmas/sistemas/plataforma.html', () => {
 
   test('prática do SQL fica bloqueada até a teoria ser concluída', async ({ page }) => {
     await page.goto(URL);
+    await openMateria1(page);
     const praticaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Prática — Central de Dados' });
     await expect(praticaCard).toHaveClass(/locked/);
     await expect(praticaCard).toContainText('Bloqueado');
@@ -37,7 +51,8 @@ test.describe('turmas/sistemas/plataforma.html', () => {
 
   test('jogos ficam bloqueados até completar a trilha SQL', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('#tabBtnJogos')).toHaveClass(/disabled/);
-    await expect(page.locator('#lblGamesUnlock')).toHaveText(/BLOQUEADO/);
+    const tabJogos = page.locator('#tabBtnJogos');
+    await expect(tabJogos).toHaveClass(/disabled/);
+    await expect(tabJogos).toContainText('🔒');
   });
 });

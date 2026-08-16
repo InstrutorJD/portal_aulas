@@ -4,17 +4,34 @@ const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno';
 
+// As trilhas de verdade (JS/C#) ficam dentro da Matéria 1 — as demais 5
+// matérias de Jogos Digitais são placeholders vazios por enquanto.
+async function openMateria1(page) {
+  await page.click('.game-card:has-text("Matéria 1")');
+}
+
 test.describe('turmas/jogos/plataforma.html', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseDisabled(page);
   });
 
-  test('carrega tema, usuário e trilhas JS/C#', async ({ page }) => {
+  test('mostra os cards das 6 matérias de Jogos Digitais', async ({ page }) => {
+    await page.goto(URL);
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(6);
+    await expect(page.locator('#materiaCardGrid')).toContainText('Matéria 1');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Matéria 6');
+    // matéria vazia ganha o selo "Em breve"
+    await expect(page.locator('.game-card:has-text("Matéria 2")')).toContainText('Em breve');
+  });
+
+  test('carrega tema, usuário e trilhas JS/C# dentro da Matéria 1', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#txtUserNom')).toHaveText('Breno Silva');
     await expect(page.locator('#txtUserTurma')).toHaveText('Jogos Digitais');
 
-    // 2 trilhas nessa turma (JS/C#) — vira um <select> só, começando em "js".
+    await openMateria1(page);
+
+    // 2 trilhas nessa matéria (JS/C#) — vira um <select> só, começando em "js".
     await expect(page.locator('#trilhaSelect')).toHaveValue('js');
     await expect(page.locator('#trilhaSelect option[value="csharp"]')).toHaveCount(1);
 
@@ -28,7 +45,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
     const tabJogos = page.locator('#tabBtnJogos');
     await expect(tabJogos).toHaveClass(/disabled/);
     await expect(tabJogos).toContainText('🔒');
-    await expect(page.locator('#lblGamesUnlock')).toHaveText(/BLOQUEADO/);
+    await expect(tabJogos).toHaveAttribute('title', /Bloqueado/);
 
     // clicar numa aba bloqueada não deve abrir os jogos
     page.once('dialog', d => d.accept());
@@ -38,6 +55,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
   test('abrir e fechar um módulo de trilha troca a área visível', async ({ page }) => {
     await page.goto(URL);
+    await openMateria1(page);
     await page.selectOption('#trilhaSelect', 'csharp');
     await expect(page.locator('#subTabContent_csharp')).toBeVisible();
 
@@ -64,7 +82,6 @@ test.describe('turmas/jogos/plataforma.html', () => {
     const tabJogos = page.locator('#tabBtnJogos');
     await expect(tabJogos).not.toHaveClass(/disabled/);
     await expect(tabJogos).toContainText('🎮');
-    await expect(page.locator('#lblGamesUnlock')).toHaveText('LIBERADO');
 
     await tabJogos.click();
     await expect(page.locator('#tabContentJogos')).toBeVisible();
@@ -80,6 +97,7 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
     }, 'breno.silva80');
 
     await page.goto(URL);
+    await openMateria1(page);
     await page.selectOption('#trilhaSelect', 'csharp');
     await page.click('#moduleSelector_csharp .game-card');
     await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();

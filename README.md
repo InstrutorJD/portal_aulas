@@ -11,16 +11,22 @@ As dicas dos exercícios (`turmas/*/atividades/*.html`, campo `hint` de cada ite
 - Prefira perguntas norteadoras ou pistas ("qual operador faz X?", "existe uma função pronta pra isso no objeto Y") que exigem o aluno pensar/escrever a solução.
 - O campo separado de solução/verificação (ex.: `solutionSql`, testes em `tests`) já guarda a resposta para validação — não duplique isso no `hint`.
 
-### Trilha por capacidade (MSEP)
-A MSEP do SENAI organiza o currículo em torno de **capacidades** a serem desenvolvidas e verificadas. No portal, cada capacidade vira uma trilha:
+### Hierarquia Matéria → Trilha → Módulo
+"Aulas & Atividades" tem 3 níveis: **matéria** (o currículo real da turma — Jogos Digitais tem 6, Sistemas tem 9) → **trilha** (uma capacidade dentro da matéria) → **módulo** (teoria/prática dentro da trilha). Só dentro de uma matéria as trilhas aparecem.
 
-- Declare a capacidade no campo `capacidade` da trilha, em `window.TURMA_CONFIG_<TURMA>.trilhas[]` (dentro de `turmas/<turma>/config.js`). É um texto livre, exibido no topo da trilha para o aluno.
+- Em `window.TURMA_CONFIG_<TURMA>.materias[]` (dentro de `turmas/<turma>/config.js`), cada matéria é `{ key, label, trilhas: [...] }`. Hoje só a Matéria 1 de cada turma tem trilhas de verdade — as demais são placeholders (`trilhas: []`) esperando currículo. Card de matéria vazia ganha o selo "Em breve" automaticamente (`renderMaterias`, `shared/platform-core.js`).
+- **Navegação**: `renderMaterias()` desenha o grid de cards de matéria (tela padrão da aba Aulas); `openMateria(key)`/`closeMateria()` (expostas em `window.PortalCore`) entram/saem do detalhe de uma matéria. Dentro do detalhe, `renderTrilhasFor(materia)` monta a mesma sub-navegação de trilha de sempre — um único `<select id="trilhaSelect">` quando a matéria tem 2+ trilhas (mais conciso que uma fileira de botões, usa o seletor nativo do celular), ou nada quando tem 1 só (não faz sentido escolher entre uma opção). Sidebar foi cogitada e descartada aqui: pra 2-4 itens, um painel deslizante (hambúrguer/overlay) seria complexidade desproporcional ao ganho.
+- **Fora da navegação** (progresso, gate de jogos, abrir/fechar módulo, relatório de notas, geração de slides), tudo lê `allTrilhas()` — uma função que achata `materias[].trilhas[]` numa lista só. Como as `key` de trilha são únicas na turma inteira, isso se comporta exatamente como o antigo `cfg.trilhas` de antes de existir o nível de matéria; só a camada de navegação precisou de lógica nova.
+
+### Trilha por capacidade (MSEP)
+A MSEP do SENAI organiza o currículo em torno de **capacidades** a serem desenvolvidas e verificadas. No portal, cada capacidade vira uma trilha (dentro de uma matéria — ver seção acima):
+
+- Declare a capacidade no campo `capacidade` da trilha. É um texto livre, exibido no topo da trilha para o aluno.
 - Padrão recomendado por trilha: **1 módulo de teoria** seguido de **1+ módulos de prática**.
   - Teoria: formato "história + quiz" (narrador/mascote apresenta o conceito, depois uma pergunta de múltipla escolha), `progressMode: 'flag'`. Ver `turmas/jogos/atividades/csharp-basico.html` e `turmas/sistemas/atividades/sql-basico-teoria.html` como referência.
   - Prática: formato "desafios" (`CHALLENGES` com `tests`/`solutionSql`, ver seção de dicas acima), `progressTotal: <quantidade de desafios>`.
 - Para travar um módulo até outro ser concluído (ex.: prática só libera depois da teoria), adicione `requires: '<key do módulo pré-requisito>'` no módulo dependente. O motor (`shared/platform-core.js`) cuida do bloqueio/desbloqueio visual (cadeado no card) automaticamente — nenhuma outra mudança é necessária.
 - Professores (`role === 'professor'`) sempre veem todos os módulos destravados, para poder revisar o conteúdo sem precisar completar os pré-requisitos.
-- **Navegação entre trilhas**: com 2+ trilhas na turma, `renderTrilhas()` (`shared/platform-core.js`) mostra um único `<select id="trilhaSelect">` em vez de uma fileira de botões — mais conciso e usa o seletor nativo do celular. Com 1 trilha só (ex.: Sistemas hoje), nenhum seletor aparece — o conteúdo já vem direto, já que não faz sentido escolher entre uma opção. Decisão deliberada de não usar sidebar aqui: pra só 2-4 itens, um painel deslizante (hambúrguer/overlay) seria complexidade desproporcional ao ganho.
 
 ### Gerar Slides (PPTX) a partir de uma aula teórica
 Qualquer aula teórica no formato "história + quiz" (`STEPS = [{ story, question }]`, ver seção acima) pode gerar uma apresentação `.pptx` pronta pro professor apresentar em aula — inclusive sem internet no dia, já que a geração roda 100% no navegador, sem IA nem CDN. Serve como plano B quando falta computador/internet: o professor gera o arquivo com antecedência (quando tem os dois) e leva pronto.

@@ -50,14 +50,12 @@
     mount.innerHTML = `
       <div class="a11y-bar">
         <div>
-          <span class="label">Acessibilidade: </span>
-          <button id="btnFontStyle">Fonte: pixelada</button>
-          <button id="btnFontSmaller">A−</button>
-          <button id="btnFontBigger">A+</button>
-          <button id="btnLibras">Libras</button>
+          <button id="btnFontStyle" title="Alternar estilo da fonte" aria-label="Alternar estilo da fonte">🔤</button>
+          <button id="btnFontSmaller" title="Diminuir fonte" aria-label="Diminuir fonte">A−</button>
+          <button id="btnFontBigger" title="Aumentar fonte" aria-label="Aumentar fonte">A+</button>
+          <button id="btnLibras" title="Ativar Libras (VLibras)" aria-label="Ativar Libras">🤟</button>
         </div>
         <div id="sessionControl">
-          <span id="sessionUser" class="label" style="color:var(--yellow)"></span>
           <button id="btnLogout" class="btn-danger" style="padding:4px 8px; font-size:10px;">Sair</button>
         </div>
       </div>
@@ -65,9 +63,6 @@
       <div class="app-container">
         <div class="statusbar">
           <div class="user-info">Usuário: <b id="txtUserNom">--</b> | Turma: <b id="txtUserTurma">--</b></div>
-          <div style="font-size:11px; color:var(--ink-dim);">
-            Status Jogos: <span id="lblGamesUnlock" style="color:var(--blood-bright)">BLOQUEADO</span>
-          </div>
         </div>
 
         <div class="tabs" id="mainNavTabs">
@@ -78,8 +73,24 @@
 
         <div class="viewport-content">
           <div id="tabContentAulas" class="tab-page">
-            <div class="subtabs" id="aulasSubTabs"><span class="subtab-label">Trilha:</span></div>
-            <div id="aulasSubTabPages"></div>
+            <div id="materiaSelectorArea">
+              <div class="card">
+                <h2 style="margin:0 0 4px;">Matérias</h2>
+                <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Escolha uma matéria para ver as trilhas dela.</p>
+                <div class="card-grid" id="materiaCardGrid"></div>
+              </div>
+            </div>
+
+            <div id="materiaDetailArea" style="display:none;">
+              <div class="card module-frame-header">
+                <div>
+                  <h2 id="materiaDetailTitle" style="margin:0; font-size:18px;">--</h2>
+                </div>
+                <button class="btn btn-secondary" onclick="PortalCore.closeMateria()">← Voltar</button>
+              </div>
+              <div class="subtabs" id="aulasSubTabs"><span class="subtab-label">Trilha:</span></div>
+              <div id="aulasSubTabPages"></div>
+            </div>
           </div>
 
           <div id="tabContentJogos" class="tab-page" style="display:none;">
@@ -219,13 +230,62 @@
     `;
   }
 
-  function renderTrilhas() {
+  // Lista achatada de todas as trilhas da turma, não importa em qual matéria
+  // estejam — usada por tudo que não é a navegação em si (progresso, gate
+  // de jogos, abrir/fechar módulo, relatório de notas, geração de slides).
+  // Trilha keys são únicas na turma inteira, então isso equivale ao antigo
+  // cfg.trilhas de antes de existir o nível de matéria.
+  function allTrilhas() {
+    return (cfg.materias || []).flatMap(m => m.trilhas || []);
+  }
+
+  function renderMaterias() {
+    const grid = document.getElementById('materiaCardGrid');
+    const materias = cfg.materias || [];
+    if (materias.length === 0) {
+      grid.innerHTML = `<div class="empty-state">Nenhuma matéria cadastrada ainda para esta turma.</div>`;
+      return;
+    }
+    grid.innerHTML = materias.map(m => {
+      const vazia = (m.trilhas || []).length === 0;
+      return `
+        <div class="game-card" onclick="PortalCore.openMateria('${m.key}')">
+          <div class="icon">📚</div>
+          <h3>${m.label}</h3>
+          ${vazia ? '<div class="card-status">Em breve</div>' : ''}
+        </div>`;
+    }).join('');
+  }
+
+  function openMateria(key) {
+    const materia = (cfg.materias || []).find(m => m.key === key);
+    if (!materia) return;
+    document.getElementById('materiaSelectorArea').style.display = 'none';
+    document.getElementById('materiaDetailArea').style.display = 'block';
+    document.getElementById('materiaDetailTitle').textContent = materia.label;
+    renderTrilhasFor(materia);
+    if ((materia.trilhas || []).length > 0) switchAulasSubTab(materia.trilhas[0].key);
+    logAction(`Abriu a matéria: ${materia.label}`);
+  }
+
+  function closeMateria() {
+    document.getElementById('materiaDetailArea').style.display = 'none';
+    document.getElementById('materiaSelectorArea').style.display = 'block';
+    if (typeof window.resumeActivityHeartbeat === 'function') {
+      window.resumeActivityHeartbeat('aulas_materias', 'Aulas & Atividades — Escolhendo matéria');
+    }
+  }
+
+  function renderTrilhasFor(materia) {
     const tabsEl = document.getElementById('aulasSubTabs');
     const pagesEl = document.getElementById('aulasSubTabPages');
-    const trilhas = cfg.trilhas || [];
+    const trilhas = materia.trilhas || [];
+    pagesEl.innerHTML = '';
+    tabsEl.querySelectorAll('select').forEach(s => s.remove());
 
     if (trilhas.length === 0) {
-      pagesEl.innerHTML = `<div class="empty-state">Nenhuma trilha cadastrada ainda para esta turma. O professor pode liberar os jogos manualmente enquanto isso.</div>`;
+      tabsEl.style.display = 'none';
+      pagesEl.innerHTML = `<div class="empty-state">Nenhuma trilha cadastrada ainda nesta matéria.</div>`;
       return;
     }
 
@@ -280,7 +340,7 @@
       p.style.display = (p.id === `subTabContent_${key}`) ? 'block' : 'none';
     });
 
-    const trilha = (cfg.trilhas || []).find(t => t.key === key);
+    const trilha = allTrilhas().find(t => t.key === key);
     if (trilha && !openModuleFrame[key] && typeof window.reportActivity === 'function') {
       window.reportActivity(`aulas_${key}`, `${trilha.label} — Escolhendo módulo`);
     }
@@ -288,7 +348,7 @@
 
   // ---------- Progresso / desbloqueio de jogos ----------
   function findModule(trilhaKey, modKey) {
-    const trilha = (cfg.trilhas || []).find(t => t.key === trilhaKey);
+    const trilha = allTrilhas().find(t => t.key === trilhaKey);
     return trilha ? (trilha.modules || []).find(m => m.key === modKey) : null;
   }
 
@@ -338,7 +398,7 @@
   }
 
   function syncAllModulesProgress() {
-    (cfg.trilhas || []).forEach(trilha => {
+    allTrilhas().forEach(trilha => {
       (trilha.modules || []).forEach(mod => syncModuleProgress(trilha, mod));
     });
   }
@@ -371,7 +431,7 @@
   }
 
   function allModulesComplete() {
-    const modules = (cfg.trilhas || []).flatMap(t => t.modules || []);
+    const modules = allTrilhas().flatMap(t => t.modules || []);
     if (modules.length === 0) return false;
     return modules.every(isModuleComplete);
   }
@@ -379,18 +439,16 @@
   function checkGamesUnlock() {
     const isUnlocked = allModulesComplete() || teacherUnlockOverride || currentUser.role === 'professor';
     const btnJogos = document.getElementById('tabBtnJogos');
-    const lblStatus = document.getElementById('lblGamesUnlock');
 
     if (isUnlocked) {
       btnJogos.classList.remove('disabled');
       btnJogos.textContent = 'Jogos 🎮';
-      lblStatus.textContent = 'LIBERADO';
-      lblStatus.style.color = 'var(--green)';
+      btnJogos.removeAttribute('title');
     } else {
       btnJogos.classList.add('disabled');
       btnJogos.textContent = 'Jogos 🔒';
-      lblStatus.textContent = 'BLOQUEADO (conclua as atividades ou aguarde liberação do professor)';
-      lblStatus.style.color = 'var(--blood-bright)';
+      // não depende só do cadeado/opacidade pra passar a mensagem — leitor de tela também explica o porquê.
+      btnJogos.title = 'Bloqueado: conclua as atividades ou aguarde a liberação do professor.';
     }
   }
 
@@ -703,7 +761,7 @@
   }
 
   async function renderRelatorioNotas() {
-    const trilhas = cfg.trilhas || [];
+    const trilhas = allTrilhas();
     const students = turmaStudents();
     const theadRow = document.getElementById('relatorioNotasHead');
     const tbody = document.getElementById('relatorioNotasBody');
@@ -777,7 +835,7 @@
     if (!container) return;
 
     const slideModules = [];
-    (cfg.trilhas || []).forEach(trilha => {
+    allTrilhas().forEach(trilha => {
       (trilha.modules || []).forEach(mod => {
         if (mod.hasSlides) slideModules.push(mod);
       });
@@ -886,11 +944,18 @@
     }
 
     if (tabName === 'aulas') {
-      const select = document.getElementById('trilhaSelect');
-      const activeSub = select ? select.value : (cfg.trilhas && cfg.trilhas[0] && cfg.trilhas[0].key);
-      const trilha = (cfg.trilhas || []).find(t => t.key === activeSub);
-      if (trilha && !openModuleFrame[activeSub] && typeof window.resumeActivityHeartbeat === 'function') {
-        window.resumeActivityHeartbeat(`aulas_${activeSub}`, `${trilha.label} — Escolhendo módulo`);
+      const materiaAberta = document.getElementById('materiaDetailArea').style.display !== 'none';
+      if (!materiaAberta) {
+        if (typeof window.resumeActivityHeartbeat === 'function') {
+          window.resumeActivityHeartbeat('aulas_materias', 'Aulas & Atividades — Escolhendo matéria');
+        }
+      } else {
+        const select = document.getElementById('trilhaSelect');
+        const activeSub = select ? select.value : document.querySelector('#aulasSubTabPages .subtab-page')?.id.replace('subTabContent_', '');
+        const trilha = allTrilhas().find(t => t.key === activeSub);
+        if (trilha && !openModuleFrame[activeSub] && typeof window.resumeActivityHeartbeat === 'function') {
+          window.resumeActivityHeartbeat(`aulas_${activeSub}`, `${trilha.label} — Escolhendo módulo`);
+        }
       }
     }
   }
@@ -959,7 +1024,7 @@
 
   // ---------- Módulos de trilha (Aulas & Atividades) ----------
   function openModule(trilhaKey, modKey) {
-    const trilha = (cfg.trilhas || []).find(t => t.key === trilhaKey);
+    const trilha = allTrilhas().find(t => t.key === trilhaKey);
     const mod = findModule(trilhaKey, modKey);
     if (!mod || (trilha && isModuleLocked(trilha, mod))) return;
 
@@ -984,7 +1049,7 @@
     openModuleFrame[trilhaKey] = false;
     checkGamesUnlock();
 
-    const trilha = (cfg.trilhas || []).find(t => t.key === trilhaKey);
+    const trilha = allTrilhas().find(t => t.key === trilhaKey);
     if (trilha) {
       const grid = document.querySelector(`#moduleSelector_${trilhaKey} .card-grid`);
       if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
@@ -1000,16 +1065,17 @@
   // ---------- Acessibilidade ----------
   function applyA11y() {
     const root = document.documentElement;
+    const btnFontStyle = document.getElementById('btnFontStyle');
     if (a11y.fontMode === 'traditional') {
       root.style.setProperty('--user-font', 'system-ui, -apple-system, sans-serif');
       root.style.setProperty('--user-font-display', 'system-ui, -apple-system, sans-serif');
-      document.getElementById('btnFontStyle').textContent = 'Fonte: tradicional';
-      document.getElementById('btnFontStyle').classList.add('on');
+      btnFontStyle.classList.add('on');
+      btnFontStyle.title = 'Fonte tradicional ativa — clique para usar a fonte pixelada';
     } else {
       root.style.setProperty('--user-font', "'JetBrains Mono', monospace");
       root.style.setProperty('--user-font-display', "'VT323', monospace");
-      document.getElementById('btnFontStyle').textContent = 'Fonte: pixelada';
-      document.getElementById('btnFontStyle').classList.remove('on');
+      btnFontStyle.classList.remove('on');
+      btnFontStyle.title = 'Fonte pixelada ativa — clique para usar a fonte tradicional';
     }
     root.style.setProperty('--user-font-scale', a11y.fontScale);
 
@@ -1027,7 +1093,6 @@
 
   // ---------- Bootstrap ----------
   function setupRBAC() {
-    document.getElementById('sessionUser').textContent = currentUser.nome;
     document.getElementById('txtUserNom').textContent = currentUser.nome;
     document.getElementById('txtUserTurma').textContent = currentUser.role === 'professor' ? 'Corpo Docente' : cfg.label;
 
@@ -1038,12 +1103,13 @@
 
     checkGamesUnlock();
     switchTab('aulas');
-    if ((cfg.trilhas || []).length > 0) switchAulasSubTab(cfg.trilhas[0].key);
+    // Tela padrão da aba Aulas agora é o grid de matérias (renderMaterias,
+    // chamado em init()) — nenhuma trilha é aberta sozinha no carregamento.
   }
 
   function init() {
     renderShell();
-    renderTrilhas();
+    renderMaterias();
     renderGameCards();
     setupVLibras();
     syncAllModulesProgress();
@@ -1090,8 +1156,8 @@
     window.ACTIVITY_STUDENT_EMAIL = currentUser.email;
     window.ACTIVITY_STUDENT_TURMA = currentUser.turma;
     window.ACTIVITY_STUDENT_ROLE = currentUser.role;
-    window.ACTIVITY_LOCATION = (cfg.trilhas && cfg.trilhas[0]) ? `aulas_${cfg.trilhas[0].key}` : 'aulas';
-    window.ACTIVITY_LABEL = (cfg.trilhas && cfg.trilhas[0]) ? `${cfg.trilhas[0].label} — Escolhendo módulo` : 'Aulas & Atividades';
+    window.ACTIVITY_LOCATION = 'aulas_materias';
+    window.ACTIVITY_LABEL = 'Aulas & Atividades — Escolhendo matéria';
 
     const tracker = document.createElement('script');
     tracker.src = '../../shared/activity-tracker.js';
@@ -1099,7 +1165,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, toggleStudentGamesTurma };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma };
 
   document.addEventListener('DOMContentLoaded', init);
 })();
