@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Login</title>
+<title>Portal de Aulas — Login</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
   :root {
-    --bg: #0a0d0a; --panel: #10140f; --panel2: #0d110c; --line: #223022;
-    --green: #7cff3f; --green-dim: #4a9a2a; --blood-bright: #ff3b30;
-    --yellow: #d4c86a; --ink: #d9e6d2; --ink-dim: #6f8368;
+    --bg: #0b0e12; --panel: #12161c; --panel2: #0e1116; --line: #262c34;
+    --green: #8fa6c9; --green-dim: #56637a; --blood-bright: #ff5b4d;
+    --yellow: #d4c86a; --ink: #dde3ea; --ink-dim: #7b8493;
   }
   * { box-sizing: border-box; }
   body {
@@ -22,7 +22,7 @@
   .login-card {
     width: 100%; max-width: 420px; background: var(--panel);
     border: 2px solid var(--green-dim); padding: 24px;
-    box-shadow: 0 0 20px rgba(124, 255, 63, 0.15);
+    box-shadow: 0 0 20px rgba(143, 166, 201, 0.15);
   }
   .login-card h1 {
     font-family: 'VT323', monospace; font-size: 32px; color: var(--green);
@@ -44,7 +44,7 @@
   }
   .form-group input:focus { border-color: var(--green); }
   .btn-submit {
-    width: 100%; background: var(--green); color: #04220a; border: none;
+    width: 100%; background: var(--green); color: #0b0e12; border: none;
     font-weight: 800; font-size: 12px; text-transform: uppercase;
     padding: 12px; cursor: pointer; margin-top: 8px; font-family: inherit;
   }
@@ -57,21 +57,21 @@
 <body>
 
 <div class="login-card">
-  <h1>GIT_HACK OS</h1>
-  <div class="subtitle">PixelForge Studios — Autenticação</div>
+  <h1>Portal de Aulas</h1>
+  <div class="subtitle">SENAI — Acesso ao portal</div>
 
   <form id="loginForm" onsubmit="return handleLogin(event)">
     <div class="form-group">
       <label for="txtUser">Usuário / E-mail</label>
-      <input type="text" id="txtUser" placeholder="usuario.aluno" required autofocus autocomplete="off">
+      <input type="text" id="txtUser" placeholder="usuario@exemplo.com" required autofocus autocomplete="off">
     </div>
 
     <div class="form-group">
-      <label for="txtPass">Senha de Acesso</label>
+      <label for="txtPass">Senha</label>
       <input type="password" id="txtPass" placeholder="••••••••" required>
     </div>
 
-    <button type="submit" class="btn-submit">Entrar no Sistema</button>
+    <button type="submit" class="btn-submit">Entrar</button>
     <div class="error-msg" id="errMsg">Usuário ou senha incorretos!</div>
   </form>
 </div>
