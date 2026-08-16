@@ -231,7 +231,7 @@
       enemyEmoji: '🛡️',
       fnName: 'escudoAtivo',
       starter: 'function escudoAtivo(n) {\n  // retorne true se n for par, false se for ímpar\n\n}',
-      explanation: 'O operador <code>%</code> (resto da divisão) devolve o que sobra de uma divisão.<pre>10 % 2   // resultado: 0 (divisão exata, é par)\n7 % 2    // resultado: 1 (sobra 1, é ímpar)</pre>Uma comparação como <code>n % 2 === 0</code> já resulta em <code>true</code> ou <code>false</code> — você pode devolver isso direto com <code>return</code>.',
+      explanation: 'O operador <code>%</code> (resto da divisão) devolve o que sobra de uma divisão.<pre>10 % 2   // resultado: 0 (divisão exata, é par)\n7 % 2    // resultado: 1 (sobra 1, é ímpar)</pre>Uma comparação com <code>===</code> já resulta em <code>true</code> ou <code>false</code> sozinha — você pode devolver esse resultado direto com <code>return</code>, sem precisar de <code>if/else</code>.',
       desc: 'O <b>Guardião Binário</b> 🛡️ só fica vulnerável quando a energia recebida é <b>par</b>. Complete <code>escudoAtivo(n)</code> retornando <b>true</b> se n for par e <b>false</b> se for ímpar.',
       hint: 'Existe um operador que devolve o resto de uma divisão. Como ele te ajuda a saber se um número é par?',
       tests: [
@@ -297,7 +297,7 @@
       enemyEmoji: '🐉',
       fnName: 'furiaFinal',
       starter: 'function furiaFinal(poderes) {\n  // retorne true se a soma dos poderes for MAIOR que 100\n\n}',
-      explanation: 'Este duelo combina duas coisas que você já aprendeu: somar os itens de um array (como no duelo anterior) e comparar o resultado com <code>&gt;</code>.<pre>let total = poderes.reduce((soma, item) => soma + item, 0);\nreturn total > 100;</pre>',
+      explanation: 'Este duelo combina duas coisas que você já aprendeu: somar os itens de um array (como no duelo anterior, com <code>.reduce()</code>) e comparar o resultado com <code>&gt;</code>.',
       desc: 'BOSS FINAL: o <b>Dragão Binário</b> 🐉 só é derrotado se a soma do poder do seu time ultrapassar <b>100</b>. Complete <code>furiaFinal(poderes)</code> retornando <b>true</b> se a soma dos valores do array for maior que 100, ou <b>false</b> caso contrário.',
       hint: 'Este duelo combina duas coisas que você já resolveu antes: some os valores do array e depois compare o total com 100.',
       tests: [
@@ -515,7 +515,7 @@
 
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
 
 </body>

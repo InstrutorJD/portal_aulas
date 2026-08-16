@@ -188,9 +188,9 @@
       id: 1,
       title: 'Convertendo velocidade',
       icon: '🔢',
-      explanation: 'Velocidade de internet é medida em megabits por segundo (Mbps). Tamanho e velocidade de transferência de arquivo costumam ser em megabytes por segundo (MB/s). Como 1 byte = 8 bits, é só dividir por 8 pra converter.',
+      explanation: 'Velocidade de internet é medida em megabits por segundo (Mbps). Tamanho e velocidade de transferência de arquivo costumam ser em megabytes por segundo (MB/s) — unidades diferentes, fáceis de confundir.',
       desc: 'A internet contratada é de <b>100 Mbps</b>. Aproximadamente qual a velocidade MÁXIMA de download, em <b>MB/s (megabytes por segundo)</b>?',
-      hint: 'Lembre da conversão: 1 byte = 8 bits. Divida o valor em Mbps por 8.',
+      hint: 'Bit e byte não são a mesma unidade — quantos bits existem em 1 byte? Isso muda a conversão entre Mbps e MB/s.',
       options: ['~12,5 MB/s', '~100 MB/s', '~800 MB/s', '~1 MB/s'],
       correctIndex: 0
     },
@@ -401,7 +401,7 @@
 
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
 
 </body>

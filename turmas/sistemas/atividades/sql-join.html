@@ -245,7 +245,7 @@
       starter: '-- traga o nome do funcionário e o nome do departamento dele (nessa ordem), pra TODOS os funcionários\n\n',
       explanation: 'Um JOIN combina linhas de duas tabelas usando uma condição de igualdade em ON:<pre>SELECT tabelaA.coluna, tabelaB.coluna\nFROM tabelaA JOIN tabelaB ON tabelaA.chave = tabelaB.chave;</pre>',
       desc: 'A central quer um relatório com o <b>nome do funcionário</b> e o <b>nome do departamento</b> dele, juntando as duas tabelas.',
-      hint: 'Você vai precisar de JOIN ... ON ligando funcionarios.departamento_id com departamentos.id — e como as duas tabelas têm uma coluna "nome", prefixe cada uma com o nome da tabela.',
+      hint: 'O JOIN da explicação acima liga as duas tabelas por uma coluna em comum — qual coluna de funcionarios aponta pro departamento, e com qual coluna de departamentos ela combina? E como as duas tabelas têm uma coluna "nome", prefixe cada uma com o nome da tabela.',
       solutionSql: 'SELECT funcionarios.nome, departamentos.nome FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id;',
       verifyQuery: null,
       orderMatters: false
@@ -281,7 +281,7 @@
       starter: '-- reescreva: nome do funcionário e nome do departamento, mas dando os apelidos f e d pras tabelas\n\n',
       explanation: 'Um apelido de tabela é escrito logo depois do nome dela (com ou sem AS), e depois usado no lugar do nome completo:<pre>FROM tabelaA a JOIN tabelaB b ON a.chave = b.chave</pre>',
       desc: 'Repita o relatório de <b>nome do funcionário</b> e <b>nome do departamento</b>, mas dessa vez dando o apelido <code>f</code> pra tabela funcionarios e <code>d</code> pra tabela departamentos.',
-      hint: 'Coloque o apelido logo depois de cada nome de tabela (FROM funcionarios f JOIN departamentos d ...) e use esses apelidos no SELECT e no ON.',
+      hint: 'O apelido vai logo depois do nome da tabela, tanto no FROM quanto no JOIN — depois disso, troque o nome completo da tabela pelo apelido no resto da consulta (SELECT e ON).',
       solutionSql: 'SELECT f.nome, d.nome FROM funcionarios f JOIN departamentos d ON f.departamento_id = d.id;',
       verifyQuery: null,
       orderMatters: false
@@ -293,7 +293,7 @@
       starter: '-- nome e salario dos funcionários que ganham mais de 3000, com o nome do departamento, do maior salario pro menor\n\n',
       explanation: 'Dá pra combinar tudo: JOIN + WHERE + ORDER BY na mesma consulta, na ordem certa (FROM/JOIN, depois WHERE, depois ORDER BY).',
       desc: 'Chamado final: uma tabela com <b>nome do funcionário</b>, <b>salário</b> e <b>nome do departamento</b>, só de quem ganha <b>mais de 3000</b>, ordenado do <b>maior salário pro menor</b>.',
-      hint: 'Junte as duas tabelas, filtre salario > 3000 e ordene por salario DESC — a ordem das cláusulas é sempre FROM/JOIN, WHERE, ORDER BY.',
+      hint: 'Combine o JOIN de antes com um WHERE na coluna salario e um ORDER BY — lembre da ordem das cláusulas explicada acima (FROM/JOIN, depois WHERE, depois ORDER BY).',
       solutionSql: 'SELECT funcionarios.nome, funcionarios.salario, departamentos.nome FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id WHERE funcionarios.salario > 3000 ORDER BY funcionarios.salario DESC;',
       verifyQuery: null,
       orderMatters: true
@@ -548,7 +548,7 @@
 
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
 
 </body>

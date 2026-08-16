@@ -278,7 +278,7 @@
       starter: '-- pra cada departamento_id, conte quantos funcionários tem\n\n',
       explanation: 'GROUP BY agrupa as linhas por uma coluna, e a função de agregação calcula um valor por grupo:<pre>SELECT coluna, COUNT(*) FROM tabela GROUP BY coluna;</pre>',
       desc: 'Conte quantos funcionários tem em <b>CADA departamento</b> — uma linha por <code>departamento_id</code>, com a contagem.',
-      hint: 'Selecione departamento_id e COUNT(*), agrupando por departamento_id.',
+      hint: 'Qual função de agregação conta quantas linhas existem em cada grupo? E qual coluna precisa aparecer tanto no SELECT quanto no GROUP BY, já que você quer uma linha por departamento?',
       solutionSql: 'SELECT departamento_id, COUNT(*) FROM funcionarios GROUP BY departamento_id;',
       verifyQuery: null,
       orderMatters: false
@@ -290,7 +290,7 @@
       starter: '-- nome do departamento e média salarial de cada um, do maior pro menor\n\n',
       explanation: 'Dá pra combinar tudo que você já aprendeu: JOIN pra trazer o nome do departamento, GROUP BY pra agrupar por departamento, AVG pra calcular a média e ORDER BY pra ordenar o resultado.',
       desc: 'Chamado final: mostre o <b>nome do departamento</b> e a <b>média salarial</b> de cada um, ordenado do maior pro menor.',
-      hint: 'Junte funcionarios com departamentos, agrupe por departamentos.nome, calcule AVG(salario) e ordene pelo resultado da média, do maior pro menor.',
+      hint: 'Que tipo de JOIN você já usou pra trazer o nome do departamento junto com o funcionário? Depois, pense em qual coluna agrupar, qual função calcula a média, e em qual direção ordenar pra ficar "do maior pro menor".',
       solutionSql: 'SELECT departamentos.nome, AVG(funcionarios.salario) FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id GROUP BY departamentos.nome ORDER BY AVG(funcionarios.salario) DESC;',
       verifyQuery: null,
       orderMatters: true
@@ -545,7 +545,7 @@
 
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
 
 </body>

@@ -213,7 +213,7 @@
       icon: '🏷️',
       explanation: 'As faixas privadas mais comuns são 192.168.0.0/16, 172.16.0.0/12 (de 172.16 a 172.31) e 10.0.0.0/8. Qualquer coisa fora dessas faixas costuma ser um IP público.',
       desc: 'Qual desses endereços pertence a uma faixa <b>PRIVADA</b> (de rede local, não roteável direto na internet)?',
-      hint: 'Uma das faixas privadas mais conhecidas começa com 192.168.',
+      hint: 'Compare cada opção com as 3 faixas privadas da explicação acima — preste atenção aos limites exatos de cada uma, não só nos dois primeiros números.',
       options: ['192.168.5.10', '8.8.8.8', '172.32.0.1', '200.150.1.1'],
       correctIndex: 0
     },
@@ -406,7 +406,7 @@
 
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
-  new window.VLibras.Widget('https://vlibras.gov.br/app');
+  if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
 </script>
 
 </body>
