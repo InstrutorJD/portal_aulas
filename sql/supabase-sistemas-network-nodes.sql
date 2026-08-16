@@ -1,5 +1,5 @@
 -- ============================================================
--- Cadastra os nós de rede (jogo GitHack OS / Hacker) para os 27
+-- Cadastra os nós de rede (jogo GitHack OS / Hacker) para os 26
 -- alunos novos da turma Sistemas. Sem isso, tentar hackear esses
 -- alunos falha com "Nó de destino não encontrado", porque
 -- execute_hack_transfer() só enxerga IPs que existem aqui.
@@ -23,7 +23,6 @@ values
   ('192.168.2.2', 'amanda.silva32', 1367.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.3', 'ana.quevedo1', 1550.50, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.4', 'anne.karoline', 1734.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
-  ('192.168.2.5', 'bianca.venturini', 1917.50, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.6', 'bianca.bernardi', 2101.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.7', 'bruno.gomes1', 2211.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
   ('192.168.2.8', 'douglas.silva16', 2394.50, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
