@@ -45,6 +45,35 @@
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
 
+  // ---------- Alerta estilizado (substitui window.alert nativo, que sai feio
+  // e fora do tema) ----------
+  function showAlert(message) {
+    document.getElementById('pfAlertOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'pfAlertOverlay';
+    overlay.className = 'pf-alert-overlay';
+    overlay.innerHTML = `
+      <div class="pf-alert-box" role="alertdialog" aria-modal="true">
+        <p class="pf-alert-msg"></p>
+        <button class="btn pf-alert-ok">OK</button>
+      </div>
+    `;
+    overlay.querySelector('.pf-alert-msg').textContent = message;
+    document.body.appendChild(overlay);
+
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close();
+    }
+    overlay.querySelector('.pf-alert-ok').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('.pf-alert-ok').focus();
+  }
+
   // ---------- Shell HTML ----------
   function renderShell() {
     const mount = document.getElementById('app');
@@ -64,6 +93,7 @@
       <div class="app-container">
         <div class="statusbar">
           <div class="user-info">Usuário: <b id="txtUserNom">--</b> | Turma: <b id="txtUserTurma">--</b></div>
+          <div class="ranking-badge" id="rankingBadge" style="display:none;"></div>
         </div>
 
         <div class="tabs" id="mainNavTabs">
@@ -905,6 +935,52 @@
     return Math.round((sum / modules.length) * 100);
   }
 
+  // Mesma conta do materiaPercentForStudent acima, só que achatada pra TODAS
+  // as trilhas da turma (não uma matéria por vez) — dá um % geral de
+  // conclusão por aluno, usado só pra calcular o ranking (ver renderRankingBadge).
+  function overallProgressForStudent(progressRows) {
+    const modules = allTrilhas().flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+    if (modules.length === 0) return null;
+    let sum = 0;
+    modules.forEach(({ trilhaKey, mod }) => {
+      const row = progressRows.find(r => r.trilha_key === trilhaKey && r.module_key === mod.key);
+      if (!row) return;
+      const total = row.progress_total || 1;
+      sum += Math.min((row.progress_current || 0) / total, 1);
+    });
+    return (sum / modules.length) * 100;
+  }
+
+  // Ranking do aluno dentro da própria turma, pelo % geral de conclusão
+  // (student_module_progress). Calcula a posição de TODOS pra saber onde o
+  // aluno logado cai, mas só mostra a dele — nome/posição de colegas nunca
+  // chegam a aparecer na tela (só entram como chave de desempate no sort).
+  async function renderRankingBadge() {
+    const badge = document.getElementById('rankingBadge');
+    if (!badge || currentUser.role !== 'aluno' || !sbClient) return;
+
+    const students = turmaStudents();
+    if (students.length === 0) return;
+
+    const { data } = await sbClient.from('student_module_progress').select('*').eq('turma', cfg.id);
+    const rows = data || [];
+    const byStudent = {};
+    rows.forEach(r => { (byStudent[r.student_email] = byStudent[r.student_email] || []).push(r); });
+
+    const scored = students
+      .map(u => ({ email: u.email, pct: overallProgressForStudent(byStudent[u.email] || []) }))
+      .filter(s => s.pct !== null)
+      .sort((a, b) => b.pct - a.pct || a.email.localeCompare(b.email));
+
+    const myIndex = scored.findIndex(s => s.email === paramUser);
+    if (myIndex === -1) return;
+
+    const posicao = myIndex + 1;
+    const meuPct = Math.round(scored[myIndex].pct);
+    badge.textContent = `🏆 Sua posição na turma: ${posicao}º de ${scored.length} (${meuPct}% concluído)`;
+    badge.style.display = '';
+  }
+
   async function renderRelatorioNotas() {
     const materias = cfg.materias || [];
     const students = turmaStudents();
@@ -1062,7 +1138,7 @@
         id: cfg.id, clipboard_blocked: newValue, updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
       if (error) {
-        alert('Não foi possível salvar o bloqueio de copiar/colar: ' + error.message);
+        showAlert('Não foi possível salvar o bloqueio de copiar/colar: ' + error.message);
         return;
       }
       gestaoClipboardBlocked = newValue;
@@ -1225,7 +1301,7 @@
       if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
 
       const closedMod = closedModKey && findModule(trilhaKey, closedModKey);
-      if (closedMod) syncModuleProgress(trilha, closedMod);
+      if (closedMod) syncModuleProgress(trilha, closedMod).then(renderRankingBadge);
     }
     if (trilha && typeof window.resumeActivityHeartbeat === 'function') {
       window.resumeActivityHeartbeat(`aulas_${trilhaKey}`, `${trilha.label} — Escolhendo módulo`);
@@ -1300,6 +1376,7 @@
       setupOverrideRealtime();
       fetchTrilhaLocks();
       setupTrilhaLockRealtime();
+      renderRankingBadge();
     }
 
     checkGamesUnlock();
@@ -1320,7 +1397,7 @@
       btn.addEventListener('click', (e) => {
         const tabTarget = e.target.getAttribute('data-tab');
         if (tabTarget === 'jogos' && e.target.classList.contains('disabled')) {
-          alert('A aba de jogos está bloqueada! Conclua 100% das suas tarefas do dia ou aguarde a liberação do professor.');
+          showAlert('A aba de jogos está bloqueada! Conclua 100% das suas tarefas do dia ou aguarde a liberação do professor.');
           return;
         }
         switchTab(tabTarget);
