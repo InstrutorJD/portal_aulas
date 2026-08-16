@@ -16,9 +16,15 @@ async function openGestao(page, url, seed) {
   await page.waitForTimeout(200);
 }
 
+// As seções da aba Gestão vêm reduzidas por padrão — precisa expandir antes de mexer no conteúdo.
+async function expandGestaoSection(page, titulo) {
+  await page.locator('.collapsible-card .collapsible-head', { hasText: titulo }).click();
+}
+
 test.describe('Chamada — dentro do portal da turma', () => {
   test('marcar falta e finalizar salva presente=false só pro aluno marcado', async ({ page }) => {
     await openGestao(page, JOGOS_URL, { attendance: [] });
+    await expandGestaoSection(page, 'Chamada');
 
     await page.check('#chamadaBody input[data-email="breno.silva80"]');
     await page.click('#btnFinalizarChamada');
@@ -41,6 +47,7 @@ test.describe('Chamada — dentro do portal da turma', () => {
         { turma: 'jogos', data: today, student_email: 'breno.silva80', student_name: 'Breno Silva', presente: false },
       ],
     });
+    await expandGestaoSection(page, 'Chamada');
 
     await expect(page.locator('#chamadaBody input[data-email="breno.silva80"]')).toBeChecked();
   });
@@ -54,6 +61,7 @@ test.describe('Chamada — dentro do portal da turma', () => {
         { turma: 'jogos', data: '2026-03-04', student_email: 'breno.silva80', presente: true },
       ],
     });
+    await expandGestaoSection(page, 'Relatório de Presença');
 
     const row = page.locator('#presencaBody tr', { hasText: 'Breno Silva' });
     await expect(row).toContainText('4'); // dias com chamada
@@ -65,6 +73,7 @@ test.describe('Chamada — dentro do portal da turma', () => {
 test.describe('Notas — dentro do portal da turma', () => {
   test('média recalcula ao vivo enquanto digita e salvar grava as 4 notas', async ({ page }) => {
     await openGestao(page, JOGOS_URL, { grades: [] });
+    await expandGestaoSection(page, 'Lançar Notas');
 
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
     await row.locator('[data-campo="nota1"]').fill('10');
@@ -94,6 +103,7 @@ test.describe('Notas — dentro do portal da turma', () => {
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 4, progress_total: 8, completed: false },
       ],
     });
+    await expandGestaoSection(page, 'Relatório de Notas');
 
     // Só a média aparece no relatório — nunca os 4 campos de nota.
     await expect(page.locator('#relatorioNotasBody')).not.toContainText('nota1');

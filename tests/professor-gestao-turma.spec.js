@@ -5,6 +5,11 @@ const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
 
+// As seções da aba Gestão vêm reduzidas por padrão — precisa expandir antes de mexer no conteúdo.
+async function expandGestaoSection(page, titulo) {
+  await page.locator('.collapsible-card .collapsible-head', { hasText: titulo }).click();
+}
+
 test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
   test('aluno não vê a aba Gestão', async ({ page }) => {
     await stubSupabaseDisabled(page);
@@ -22,6 +27,12 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(300);
+
+    // expande todas as seções pra recriar o cenário de conteúdo empilhado que causava o travamento
+    const heads = page.locator('#tabContentGestao .collapsible-head');
+    const count = await heads.count();
+    for (let i = 0; i < count; i++) await heads.nth(i).click();
+    await page.waitForTimeout(200);
 
     const before = await page.evaluate(() => {
       const vc = document.querySelector('.viewport-content');
@@ -42,6 +53,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Liberação de Jogos');
 
     await expect(page.locator('#tblGestaoStudentsBody')).toContainText('Breno Silva');
     await expect(page.locator('#tblGestaoStudentsBody')).not.toContainText('Alexandre Natal');
@@ -52,6 +64,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Liberação de Jogos');
 
     const row = page.locator('#tblGestaoStudentsBody tr', { hasText: 'Breno Silva' });
     await expect(row).toContainText('BLOQUEADO');
@@ -67,6 +80,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Liberação de Jogos');
 
     await page.click('#btnUnlockGamesTurma');
     await page.waitForTimeout(200);
@@ -81,6 +95,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Restrições');
 
     await expect(page.locator('#btnToggleClipboard')).toContainText('Bloquear Copiar/Colar');
     await page.click('#btnToggleClipboard');
@@ -96,6 +111,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Apresentações (Slides)');
 
     await expect(page.locator('#gestaoSlidesList')).toContainText('Básico — A Jornada do Eri');
 
@@ -121,6 +137,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Atividade em Tempo Real');
 
     const rows = page.locator('#tblGestaoActivityBody tr');
     await expect(rows).toHaveCount(1);

@@ -114,110 +114,155 @@
           </div>
 
           <div id="tabContentGestao" class="tab-page" style="display:none;">
-            <div class="card">
-              <h2>Restrições</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.
-              </p>
-              <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar</button>
-            </div>
-
-            <div class="card">
-              <h2>Liberação de Jogos</h2>
-              <div style="display:flex; gap:10px; margin-bottom:12px;">
-                <button class="btn" id="btnUnlockGamesTurma">Liberar Todos</button>
-                <button class="btn btn-danger" id="btnLockGamesTurma">Bloquear Todos</button>
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Restrições</h2>
+                <span class="collapsible-arrow">▶</span>
               </div>
-              <table class="audit-table">
-                <thead><tr><th>Aluno</th><th>Acesso Jogos</th><th>Ações</th></tr></thead>
-                <tbody id="tblGestaoStudentsBody"></tbody>
-              </table>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.
+                </p>
+                <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar</button>
+              </div>
             </div>
 
-            <div class="card">
-              <h2>Apresentações (Slides)</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                Gera um .pptx pronto pra apresentar em aula, a partir de cada aula teórica — sem precisar abrir o módulo pra achar o botão.
-              </p>
-              <div id="gestaoSlidesList"></div>
-            </div>
-
-            <div class="card">
-              <h2>Chamada</h2>
-              <div class="field-row">
-                <div>
-                  <label class="field-label" for="chamadaData">Data</label>
-                  <input type="date" id="chamadaData">
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Liberação de Jogos</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <div style="display:flex; gap:10px; margin-bottom:12px;">
+                  <button class="btn" id="btnUnlockGamesTurma">Liberar Todos</button>
+                  <button class="btn btn-danger" id="btnLockGamesTurma">Bloquear Todos</button>
                 </div>
-              </div>
-              <table class="audit-table">
-                <thead><tr><th>Aluno</th><th style="width:110px; text-align:center;">Faltou</th></tr></thead>
-                <tbody id="chamadaBody"></tbody>
-              </table>
-              <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                <button class="btn" id="btnFinalizarChamada">Finalizar</button>
-                <span class="status-msg" id="chamadaStatus"></span>
-              </div>
-            </div>
-
-            <div class="card">
-              <h2>Relatório de Presença</h2>
-              <table class="audit-table">
-                <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
-                <tbody id="presencaBody"></tbody>
-              </table>
-            </div>
-
-            <div class="card">
-              <h2>Lançar Notas</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
-              <div class="field-row">
-                <div>
-                  <label class="field-label" for="notasBimestre">Bimestre</label>
-                  <select id="notasBimestre">
-                    <option value="1">1º Bimestre</option>
-                    <option value="2">2º Bimestre</option>
-                    <option value="3">3º Bimestre</option>
-                    <option value="4">4º Bimestre</option>
-                  </select>
-                </div>
-              </div>
-              <div style="overflow-x:auto;">
                 <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Nota 1</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
-                  <tbody id="notasBody"></tbody>
-                </table>
-              </div>
-              <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                <button class="btn" id="btnSalvarNotas">Salvar</button>
-                <span class="status-msg" id="notasStatus"></span>
-              </div>
-            </div>
-
-            <div class="card">
-              <h2>Relatório de Notas</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Lançar Notas".</p>
-              <div style="overflow-x:auto;">
-                <table class="audit-table">
-                  <thead><tr id="relatorioNotasHead"></tr></thead>
-                  <tbody id="relatorioNotasBody"></tbody>
+                  <thead><tr><th>Aluno</th><th>Acesso Jogos</th><th>Ações</th></tr></thead>
+                  <tbody id="tblGestaoStudentsBody"></tbody>
                 </table>
               </div>
             </div>
 
-            <div class="card">
-              <h2>Atividade em Tempo Real</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
-              <table class="audit-table">
-                <thead><tr><th>Aluno</th><th>Onde está</th><th>Status</th><th>Última atualização</th></tr></thead>
-                <tbody id="tblGestaoActivityBody"></tbody>
-              </table>
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Apresentações (Slides)</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Gera um .pptx pronto pra apresentar em aula, a partir de cada aula teórica — sem precisar abrir o módulo pra achar o botão.
+                </p>
+                <div id="gestaoSlidesList"></div>
+              </div>
             </div>
 
-            <div class="card">
-              <h2>Auditoria</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Registros gerados neste navegador (login, troca de aba, módulos abertos).</p>
-              <div class="log-box" id="gestaoAuditLogBox"></div>
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Chamada</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <div class="field-row">
+                  <div>
+                    <label class="field-label" for="chamadaData">Data</label>
+                    <input type="date" id="chamadaData">
+                  </div>
+                </div>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th style="width:110px; text-align:center;">Faltou</th></tr></thead>
+                  <tbody id="chamadaBody"></tbody>
+                </table>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+                  <button class="btn" id="btnFinalizarChamada">Finalizar</button>
+                  <span class="status-msg" id="chamadaStatus"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Relatório de Presença</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
+                  <tbody id="presencaBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Lançar Notas</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
+                <div class="field-row">
+                  <div>
+                    <label class="field-label" for="notasBimestre">Bimestre</label>
+                    <select id="notasBimestre">
+                      <option value="1">1º Bimestre</option>
+                      <option value="2">2º Bimestre</option>
+                      <option value="3">3º Bimestre</option>
+                      <option value="4">4º Bimestre</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="overflow-x:auto;">
+                  <table class="audit-table">
+                    <thead><tr><th>Aluno</th><th>Nota 1</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
+                    <tbody id="notasBody"></tbody>
+                  </table>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+                  <button class="btn" id="btnSalvarNotas">Salvar</button>
+                  <span class="status-msg" id="notasStatus"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Relatório de Notas</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Lançar Notas".</p>
+                <div style="overflow-x:auto;">
+                  <table class="audit-table">
+                    <thead><tr id="relatorioNotasHead"></tr></thead>
+                    <tbody id="relatorioNotasBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Atividade em Tempo Real</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Onde está</th><th>Status</th><th>Última atualização</th></tr></thead>
+                  <tbody id="tblGestaoActivityBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Auditoria</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Registros gerados neste navegador (login, troca de aba, módulos abertos).</p>
+                <div class="log-box" id="gestaoAuditLogBox"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -866,6 +911,10 @@
     });
   }
 
+  function toggleGestaoSection(headEl) {
+    headEl.closest('.collapsible-card').classList.toggle('expanded');
+  }
+
   function renderGestaoTab() {
     renderGestaoStudents();
     renderGestaoLogs();
@@ -1165,7 +1214,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection };
 
   document.addEventListener('DOMContentLoaded', init);
 })();
