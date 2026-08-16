@@ -96,7 +96,7 @@ function handleLogin(e) {
     sessionStorage.setItem('githack_authenticated', 'true');
     sessionStorage.setItem('githack_current_user', JSON.stringify(match));
 
-    const qs = `user=${encodeURIComponent(match.email)}&ip=${encodeURIComponent(match.ip)}&saldo=${encodeURIComponent(match.saldo)}&role=${encodeURIComponent(match.role)}`;
+    const qs = `user=${encodeURIComponent(match.email)}&ip=${encodeURIComponent(match.ip)}&saldo=${encodeURIComponent(match.saldo)}&role=${encodeURIComponent(match.role)}&turma=${encodeURIComponent(match.turma)}`;
 
     // Cada turma tem sua própria tela; o professor cai num painel único.
     const destino = (match.role === 'professor')

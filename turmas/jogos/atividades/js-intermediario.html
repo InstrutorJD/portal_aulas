@@ -112,6 +112,21 @@
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--green); font-weight:bold; }
   .console .line.warn{ color:var(--yellow); }
+
+  /* Celular/telas estreitas: a barra lateral + painel lado a lado espreme
+     demais o conteúdo (texto quebrando palavra a palavra). Empilha tudo
+     numa coluna só e deixa a página inteira rolar, em vez de depender de
+     várias regiões de scroll aninhadas. */
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:8px; }
+    .env{ height:auto; min-height:calc(100vh - 16px); }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:110px; }
+    .console{ flex:none; max-height:160px; }
+  }
 </style>
 <script>
   window.ACTIVITY_LOCATION = 'js_intermediario';
@@ -185,7 +200,7 @@
       starter: 'function contraAtaque(poderInimigo) {\n  // retorne um valor MAIOR que poderInimigo\n\n}',
       explanation: 'Uma <b>função</b> é um bloco de código reutilizável. Ela pode receber valores, chamados de <b>parâmetros</b>, e devolver um resultado com a palavra <code>return</code>.<pre>function dobrar(numero) {\n  return numero * 2;\n}</pre>Aqui, <code>dobrar</code> é o nome da função e <code>numero</code> é o parâmetro que ela recebe. Neste duelo, complete <code>contraAtaque(poderInimigo)</code> — ela já recebe o poder do inimigo como parâmetro, chamado <code>poderInimigo</code> dentro da função.',
       desc: 'O <b>Slime de Bits</b> 🟢 lança um feitiço de poder <code>poderInimigo</code>. Complete <code>contraAtaque(poderInimigo)</code> retornando um número <b>maior</b> que o poder recebido, para superá-lo.',
-      hint: 'Basta somar algo ao valor recebido, por exemplo <code>return poderInimigo + 1;</code> — qualquer valor maior já vence o duelo.',
+      hint: 'Pense numa operação simples com <code>poderInimigo</code> que sempre resulte em algo maior que ele — não precisa ser complicado.',
       tests: [
         { args: [10], check: (r, inp) => typeof r === 'number' && r > inp, expectedLabel: 'número maior que 10' },
         { args: [50], check: (r, inp) => typeof r === 'number' && r > inp, expectedLabel: 'número maior que 50' },
@@ -201,7 +216,7 @@
       starter: 'function inverterFeitico(n) {\n  // devolva o valor absoluto (positivo) de n\n\n}',
       explanation: 'JavaScript já vem com funções prontas para usar. Uma delas é <code>Math.abs()</code>, que transforma qualquer número em positivo.<pre>Math.abs(-5)   // resultado: 5\nMath.abs(3)    // resultado: 3</pre>Você pode usar o resultado dela dentro do seu <code>return</code>.',
       desc: 'O <b>Bruxo Reverso</b> 🔮 tenta drenar seu poder com números negativos. Complete <code>inverterFeitico(n)</code> retornando o valor absoluto (positivo) de <code>n</code>, neutralizando o feitiço.',
-      hint: 'Use <code>Math.abs(n)</code> para transformar qualquer número negativo em positivo.',
+      hint: 'O objeto <code>Math</code> tem uma função pronta pra isso — procure por algo relacionado a "valor absoluto".',
       tests: [
         { args: [-7], expected: 7 },
         { args: [5], expected: 5 },
@@ -218,7 +233,7 @@
       starter: 'function escudoAtivo(n) {\n  // retorne true se n for par, false se for ímpar\n\n}',
       explanation: 'O operador <code>%</code> (resto da divisão) devolve o que sobra de uma divisão.<pre>10 % 2   // resultado: 0 (divisão exata, é par)\n7 % 2    // resultado: 1 (sobra 1, é ímpar)</pre>Uma comparação como <code>n % 2 === 0</code> já resulta em <code>true</code> ou <code>false</code> — você pode devolver isso direto com <code>return</code>.',
       desc: 'O <b>Guardião Binário</b> 🛡️ só fica vulnerável quando a energia recebida é <b>par</b>. Complete <code>escudoAtivo(n)</code> retornando <b>true</b> se n for par e <b>false</b> se for ímpar.',
-      hint: 'Use o operador de resto <code>%</code>: um número é par quando <code>n % 2 === 0</code>.',
+      hint: 'Existe um operador que devolve o resto de uma divisão. Como ele te ajuda a saber se um número é par?',
       tests: [
         { args: [4], expected: true },
         { args: [7], expected: false },
@@ -235,7 +250,7 @@
       starter: 'function liderDoExercito(poderes) {\n  // retorne o maior valor do array poderes\n\n}',
       explanation: 'Um <b>array</b> é uma lista de valores guardada em uma única variável.<pre>let numeros = [3, 7, 2];</pre>Para achar o maior valor de um array, você pode usar <code>Math.max(...numeros)</code> — o <code>...</code> espalha os itens do array como se fossem parâmetros separados.',
       desc: 'A <b>Legião de Sombras</b> 👥 invoca um exército com vários níveis de poder. Complete <code>liderDoExercito(poderes)</code> retornando o maior valor do array — o líder que vai lutar por você.',
-      hint: 'Você pode usar <code>Math.max(...poderes)</code>, ou percorrer o array comparando cada valor com o maior encontrado até agora.',
+      hint: 'Você pode percorrer o array guardando o maior valor visto até agora, ou procurar se o objeto <code>Math</code> já tem algo pronto pra isso.',
       tests: [
         { args: [[1, 5, 3]], expected: 5 },
         { args: [[10, 2, 8]], expected: 10 },
@@ -251,7 +266,7 @@
       starter: 'function invocarTropas(n) {\n  // retorne um array com os números de 1 até n (IDs das tropas)\n\n}',
       explanation: 'Um <b>laço</b> <code>for</code> repete um trecho de código várias vezes. Você pode usar isso para ir montando um array aos poucos com <code>.push()</code>, que adiciona um item ao final.<pre>let lista = [];\nfor (let i = 1; i <= 3; i++) {\n  lista.push(i);\n}\n// lista agora é [1, 2, 3]</pre>',
       desc: 'Para enfrentar o <b>Exército Ancestral</b> ⚔️ você precisa invocar tropas. Complete <code>invocarTropas(n)</code> retornando um array com os números de <b>1</b> até <b>n</b>, representando os IDs das tropas invocadas.',
-      hint: 'Crie um array vazio, use um laço <code>for</code> de 1 até n e adicione cada número com <code>.push()</code>.',
+      hint: 'Comece com um array vazio e pense em como repetir uma ação de 1 até <code>n</code>, adicionando um número por vez.',
       tests: [
         { args: [3], expected: [1, 2, 3] },
         { args: [5], expected: [1, 2, 3, 4, 5] },
@@ -267,7 +282,7 @@
       starter: 'function poderTotal(poderes) {\n  // retorne a soma de todos os valores do array\n\n}',
       explanation: 'Para somar todos os itens de um array, você pode usar um laço somando um por um, ou o método pronto <code>.reduce()</code>:<pre>let numeros = [10, 20, 30];\nlet total = numeros.reduce((soma, item) => soma + item, 0);\n// total é 60</pre>',
       desc: 'O <b>Coletivo de Mana</b> 🔷 só cai se você calcular corretamente a soma total do poder do seu time. Complete <code>poderTotal(poderes)</code> retornando a soma de todos os valores do array.',
-      hint: 'Você pode somar item por item em um laço, ou usar <code>poderes.reduce((total, p) => total + p, 0)</code>.',
+      hint: 'Pense em percorrer o array acumulando uma soma a cada item, ou pesquise se arrays têm algum método pronto pra "reduzir" seus valores a um só.',
       tests: [
         { args: [[10, 20, 30]], expected: 60 },
         { args: [[5]], expected: 5 },
@@ -284,7 +299,7 @@
       starter: 'function furiaFinal(poderes) {\n  // retorne true se a soma dos poderes for MAIOR que 100\n\n}',
       explanation: 'Este duelo combina duas coisas que você já aprendeu: somar os itens de um array (como no duelo anterior) e comparar o resultado com <code>&gt;</code>.<pre>let total = poderes.reduce((soma, item) => soma + item, 0);\nreturn total > 100;</pre>',
       desc: 'BOSS FINAL: o <b>Dragão Binário</b> 🐉 só é derrotado se a soma do poder do seu time ultrapassar <b>100</b>. Complete <code>furiaFinal(poderes)</code> retornando <b>true</b> se a soma dos valores do array for maior que 100, ou <b>false</b> caso contrário.',
-      hint: 'Primeiro some todos os valores do array (como no duelo anterior), depois compare o resultado com <code>&gt; 100</code>.',
+      hint: 'Este duelo combina duas coisas que você já resolveu antes: some os valores do array e depois compare o total com 100.',
       tests: [
         { args: [[50, 60]], expected: true },
         { args: [[10, 20]], expected: false },

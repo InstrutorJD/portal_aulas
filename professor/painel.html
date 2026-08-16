@@ -9,17 +9,33 @@
      Sistemas), lendo shared/users-db.js para enxergar todos os alunos. -->
 <style>
   :root{
-    --bg:#0b0b0d; --panel:#141417; --panel2:#101012; --line:#2a2a30;
-    --green:#e0a83a; --green-dim:#a67b2a; --blood:#c1121f; --blood-bright:#ff3b30;
-    --yellow:#e0a83a; --ink:#e7e6e2; --ink-dim:#8a8a90;
+    --bg:#0b0d11; --panel:#141821; --panel2:#10131a; --line:#262b36;
+    --green:#4fd1c5; --green-dim:#2f8f86; --blood:#c1121f; --blood-bright:#ff5c5c;
+    --yellow:#ff9466; --ink:#e8ecf1; --ink-dim:#8993a4;
   }
-  .quicklinks{ display:flex; gap:8px; flex-wrap:wrap; }
+  .turma-card{ text-align:center; padding:32px 20px; cursor:pointer; }
+  .turma-card:hover{ border-color:var(--green); }
+  .turma-card .icon{ font-size:44px; margin-bottom:10px; }
+  .turma-card h3{ color:var(--ink); font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; letter-spacing:1px; margin:0; }
+
+  .field-label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  select, input[type="date"], input[type="number"]{
+    background:var(--panel2); color:var(--ink); border:1px solid var(--line);
+    padding:7px 10px; font-family:inherit; font-size:12px; border-radius:2px;
+  }
+  input[type="number"]{ width:70px; }
+  input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--green); cursor:pointer; }
+  .media-cell{ color:var(--yellow); font-weight:700; }
+  .field-row{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }
+  .status-msg{ font-size:11px; color:var(--ink-dim); }
 </style>
 <link rel="stylesheet" href="../shared/platform-core.css">
 
 <script src="../shared/users-db.js"></script>
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../turmas/jogos/config.js"></script>
+<script src="../turmas/sistemas/config.js"></script>
 </head>
 <body>
 
@@ -37,68 +53,132 @@
     <div class="sub">Gestão das turmas Jogos Digitais e Sistemas</div>
   </header>
 
+  <div class="tabs" id="painelTabs">
+    <button class="tab-btn active" data-tab="turmas">Turmas</button>
+    <button class="tab-btn" data-tab="chamada">Chamada</button>
+    <button class="tab-btn" data-tab="notas">Notas</button>
+  </div>
+
   <div class="viewport-content">
-    <div class="card">
-      <h2>Visualizar Portais</h2>
-      <div class="quicklinks">
-        <a class="btn btn-secondary" href="../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor" target="_blank">Portal — Jogos Digitais</a>
-        <a class="btn btn-secondary" href="../turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor" target="_blank">Portal — Sistemas</a>
+
+    <div id="tabPage-turmas" class="painel-tab-page">
+      <div class="card">
+        <h2>Escolha uma turma</h2>
+        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 16px;">
+          Liberar jogos, bloquear/liberar Ctrl+C/V, status e atividade dos alunos ficam dentro do portal de cada turma, na aba "Gestão 🛠️".
+        </p>
+        <div class="card-grid">
+          <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
+            <div class="icon">🎮</div>
+            <h3>Jogos Digitais</h3>
+          </div>
+          <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
+            <div class="icon">🖥️</div>
+            <h3>Desenvolvimento de Sistemas</h3>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>Restrições</h2>
-      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-        Vale pras duas turmas. É um desincentivo dentro do portal, não uma trava de verdade —
-        um aluno pode contornar pelo DevTools do navegador.
-      </p>
-      <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar (Todos)</button>
-    </div>
-
-    <div class="card">
-      <h2>Gerenciamento de Turmas & Liberações</h2>
-      <div style="display:flex; gap:10px; margin-bottom:12px;">
-        <button class="btn" id="btnUnlockGamesGlobal">Liberar Jogos (Todos)</button>
-        <button class="btn btn-danger" id="btnLockGamesGlobal">Bloquear Jogos (Todos)</button>
+    <div id="tabPage-chamada" class="painel-tab-page" style="display:none;">
+      <div class="card">
+        <h2>Chamada</h2>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="chamadaTurma">Turma</label>
+            <select id="chamadaTurma">
+              <option value="jogos">Jogos Digitais</option>
+              <option value="sistemas">Sistemas</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="chamadaData">Data</label>
+            <input type="date" id="chamadaData">
+          </div>
+        </div>
+        <table class="audit-table">
+          <thead><tr><th>Aluno</th><th style="width:110px; text-align:center;">Faltou</th></tr></thead>
+          <tbody id="chamadaBody"></tbody>
+        </table>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+          <button class="btn" id="btnFinalizarChamada">Finalizar Chamada</button>
+          <span class="status-msg" id="chamadaStatus"></span>
+        </div>
       </div>
 
-      <h3 style="font-size:13px; color:var(--ink-dim); text-transform:uppercase;">Status dos Alunos</h3>
-      <table class="audit-table">
-        <thead>
-          <tr>
-            <th>Aluno</th>
-            <th>Turma</th>
-            <th>Progresso Hoje</th>
-            <th>Acesso Jogos</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tblStudentsBody"></tbody>
-      </table>
+      <div class="card">
+        <h2>Relatório de Presença</h2>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="presencaTurma">Turma</label>
+            <select id="presencaTurma">
+              <option value="jogos">Jogos Digitais</option>
+              <option value="sistemas">Sistemas</option>
+            </select>
+          </div>
+        </div>
+        <table class="audit-table">
+          <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
+          <tbody id="presencaBody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Atividade em Tempo Real</h2>
-      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno está agora — atualiza sozinho.</p>
-      <table class="audit-table">
-        <thead>
-          <tr>
-            <th>Aluno</th>
-            <th>Turma</th>
-            <th>Onde está</th>
-            <th>Status</th>
-            <th>Última atualização</th>
-          </tr>
-        </thead>
-        <tbody id="tblActivityBody"></tbody>
-      </table>
+    <div id="tabPage-notas" class="painel-tab-page" style="display:none;">
+      <div class="card">
+        <h2>Lançar Notas</h2>
+        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="notasTurma">Turma</label>
+            <select id="notasTurma">
+              <option value="jogos">Jogos Digitais</option>
+              <option value="sistemas">Sistemas</option>
+            </select>
+          </div>
+          <div>
+            <label class="field-label" for="notasBimestre">Bimestre</label>
+            <select id="notasBimestre">
+              <option value="1">1º Bimestre</option>
+              <option value="2">2º Bimestre</option>
+              <option value="3">3º Bimestre</option>
+              <option value="4">4º Bimestre</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="audit-table">
+            <thead><tr><th>Aluno</th><th>Nota 1</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
+            <tbody id="notasBody"></tbody>
+          </table>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+          <button class="btn" id="btnSalvarNotas">Salvar Notas</button>
+          <span class="status-msg" id="notasStatus"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Relatório de Notas</h2>
+        <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Lançar Notas".</p>
+        <div class="field-row">
+          <div>
+            <label class="field-label" for="relatorioNotasTurma">Turma</label>
+            <select id="relatorioNotasTurma">
+              <option value="jogos">Jogos Digitais</option>
+              <option value="sistemas">Sistemas</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="audit-table">
+            <thead><tr id="relatorioNotasHead"></tr></thead>
+            <tbody id="relatorioNotasBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>Monitoramento e Logs em Tempo Real (Auditoria)</h2>
-      <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Registros gerados neste navegador (login, troca de aba, jogos abertos).</p>
-      <div class="log-box" id="auditLogBox"></div>
-    </div>
   </div>
 </div>
 
@@ -121,193 +201,280 @@ document.getElementById('btnLogout').addEventListener('click', () => {
   window.location.href = '../index.html';
 });
 
-function getLogs() {
-  return JSON.parse(localStorage.getItem('pf_audit_logs') || '[]');
+// ---------- Abas do painel ----------
+function switchPainelTab(tab) {
+  document.querySelectorAll('#painelTabs .tab-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tab));
+  document.querySelectorAll('.painel-tab-page').forEach(p => { p.style.display = (p.id === `tabPage-${tab}`) ? 'block' : 'none'; });
+  if (tab === 'chamada') { loadChamada(); loadRelatorioPresenca(); }
+  if (tab === 'notas') { loadNotas(); loadRelatorioNotas(); }
 }
-function renderLogs() {
-  const box = document.getElementById('auditLogBox');
-  box.innerHTML = getLogs().map(l => `<div class="log-entry"><span class="time">[${l.time}]</span> <b>${l.user}</b>: ${l.action}</div>`).join('');
-}
+document.querySelectorAll('#painelTabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchPainelTab(btn.getAttribute('data-tab')));
+});
 
-let overridesCache = {};
-
-async function fetchAllOverrides() {
-  if (!sbClient) return;
-  const { data, error } = await sbClient.from('student_overrides').select('*');
-  if (error) return;
-  overridesCache = {};
-  (data || []).forEach(r => { overridesCache[r.student_email] = r.games_unlocked; });
-}
-
-async function renderTeacherPanel() {
-  await fetchAllOverrides();
-
-  const tbody = document.getElementById('tblStudentsBody');
-  tbody.innerHTML = '';
-
-  Object.keys(DB.users).forEach(k => {
-    const u = DB.users[k];
-    if (u.role === 'aluno') {
-      const isUnl = u.progress >= 100 || !!overridesCache[k];
-      tbody.innerHTML += `
-        <tr>
-          <td><b>${u.nome}</b> (${u.email})</td>
-          <td>${u.turma.toUpperCase()}</td>
-          <td>${u.progress}%</td>
-          <td><span style="color:${isUnl ? 'var(--green)' : 'var(--blood-bright)'}">${isUnl ? 'LIBERADO' : 'BLOQUEADO'}</span></td>
-          <td>
-            <button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="toggleStudentGames('${k}')">
-              ${overridesCache[k] ? 'Revogar Acesso' : 'Liberar Jogos'}
-            </button>
-          </td>
-        </tr>
-      `;
-    }
-  });
-
-  renderLogs();
-  setupActivityMonitoring();
+function studentsOfTurma(turma) {
+  return Object.values(DB.users)
+    .filter(u => u.role === 'aluno' && u.turma === turma)
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 }
 
-const ACTIVITY_OFFLINE_THRESHOLD_MS = 45000;
-let activityRealtimeStarted = false;
-let activityPollStarted = false;
-
-function computeDisplayStatus(row) {
-  const updatedAt = row.updated_at ? new Date(row.updated_at).getTime() : 0;
-  if (!updatedAt || (Date.now() - updatedAt) > ACTIVITY_OFFLINE_THRESHOLD_MS) return 'offline';
-  return row.status || 'offline';
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-async function fetchStudentActivity() {
-  if (!sbClient) return [];
-  const { data, error } = await sbClient.from('student_activity').select('*').order('student_name', { ascending: true });
-  if (error) return [];
-  return data || [];
+function noSupabaseRow(colspan, id) {
+  return `<tr id="${id || ''}"><td colspan="${colspan}" style="color:var(--ink-dim); text-align:center; padding:14px;">Configure o Supabase (shared/supabase-config.js) para usar esta tela.</td></tr>`;
 }
 
-async function renderActivityPanel() {
-  const tbody = document.getElementById('tblActivityBody');
-  if (!tbody) return;
+// ---------- Chamada ----------
+async function loadChamada() {
+  const tbody = document.getElementById('chamadaBody');
+  const dataInput = document.getElementById('chamadaData');
+  if (!dataInput.value) dataInput.value = todayStr();
 
-  const rows = await fetchStudentActivity();
+  if (!sbClient) { tbody.innerHTML = noSupabaseRow(2); return; }
 
-  if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum registro de atividade ainda.</td></tr>`;
+  const turma = document.getElementById('chamadaTurma').value;
+  const data = dataInput.value;
+  const students = studentsOfTurma(turma);
+
+  if (students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
     return;
   }
 
-  const statusMeta = {
-    active: { color: 'var(--green)', label: '🟢 Ativo' },
-    idle: { color: 'var(--yellow)', label: '🟡 Inativo' },
-    offline: { color: 'var(--ink-dim)', label: '⚫ Offline' }
-  };
+  const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', turma).eq('data', data);
+  const existing = {};
+  (rows || []).forEach(r => { existing[r.student_email] = r; });
 
-  tbody.innerHTML = rows.map(r => {
-    const displayStatus = computeDisplayStatus(r);
-    const meta = statusMeta[displayStatus] || statusMeta.offline;
-    const lastUpdate = r.updated_at ? new Date(r.updated_at).toLocaleTimeString() : '--';
+  tbody.innerHTML = students.map(u => {
+    const row = existing[u.email];
+    const faltou = row ? !row.presente : false;
     return `
       <tr>
-        <td><b>${r.student_name || r.student_email}</b></td>
-        <td>${(r.turma || '--').toUpperCase()}</td>
-        <td>${r.location_label || r.location || '--'}</td>
-        <td><span style="color:${meta.color}">${meta.label}</span></td>
-        <td>${lastUpdate}</td>
+        <td>${u.nome}</td>
+        <td style="text-align:center;"><input type="checkbox" data-email="${u.email}" ${faltou ? 'checked' : ''}></td>
+      </tr>
+    `;
+  }).join('');
+  document.getElementById('chamadaStatus').textContent = '';
+}
+document.getElementById('chamadaTurma').addEventListener('change', loadChamada);
+document.getElementById('chamadaData').addEventListener('change', loadChamada);
+
+document.getElementById('btnFinalizarChamada').addEventListener('click', async () => {
+  if (!sbClient) return;
+  const turma = document.getElementById('chamadaTurma').value;
+  const data = document.getElementById('chamadaData').value || todayStr();
+  const students = studentsOfTurma(turma);
+  const now = new Date().toISOString();
+
+  const rows = students.map(u => {
+    const checkbox = document.querySelector(`#chamadaBody input[data-email="${u.email}"]`);
+    const faltou = !!(checkbox && checkbox.checked);
+    return {
+      turma, data,
+      student_email: u.email,
+      student_name: u.nome,
+      presente: !faltou,
+      finalizada_em: now,
+      updated_at: now
+    };
+  });
+
+  if (rows.length === 0) return;
+  await sbClient.from('attendance').upsert(rows, { onConflict: 'turma,data,student_email' });
+  document.getElementById('chamadaStatus').textContent = `Chamada registrada às ${new Date().toLocaleTimeString('pt-BR')}.`;
+  loadRelatorioPresenca();
+});
+
+// ---------- Relatório de Presença ----------
+async function loadRelatorioPresenca() {
+  const tbody = document.getElementById('presencaBody');
+  if (!sbClient) { tbody.innerHTML = noSupabaseRow(4); return; }
+
+  const turma = document.getElementById('presencaTurma').value;
+  const students = studentsOfTurma(turma);
+
+  if (students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
+    return;
+  }
+
+  const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', turma);
+  const byStudent = {};
+  (rows || []).forEach(r => {
+    byStudent[r.student_email] = byStudent[r.student_email] || { dias: 0, faltas: 0 };
+    byStudent[r.student_email].dias += 1;
+    if (!r.presente) byStudent[r.student_email].faltas += 1;
+  });
+
+  tbody.innerHTML = students.map(u => {
+    const s = byStudent[u.email] || { dias: 0, faltas: 0 };
+    const pct = s.dias > 0 ? Math.round(((s.dias - s.faltas) / s.dias) * 100) : null;
+    return `
+      <tr>
+        <td>${u.nome}</td>
+        <td>${s.dias}</td>
+        <td>${s.faltas}</td>
+        <td>${pct === null ? '—' : pct + '%'}</td>
       </tr>
     `;
   }).join('');
 }
+document.getElementById('presencaTurma').addEventListener('change', loadRelatorioPresenca);
 
-function setupActivityMonitoring() {
-  if (!sbClient) return;
+// ---------- Notas ----------
+function calcMedia(n1, n2, n3, n4) {
+  const vals = [n1, n2, n3, n4].map(v => (v === '' || v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
+  return Math.round(((vals[0] + vals[1] + vals[2] + vals[3]) / 4) * 100) / 100;
+}
 
-  renderActivityPanel();
+async function loadNotas() {
+  const tbody = document.getElementById('notasBody');
+  if (!sbClient) { tbody.innerHTML = noSupabaseRow(6); return; }
 
-  if (!activityRealtimeStarted) {
-    activityRealtimeStarted = true;
-    sbClient.channel('realtime_student_activity')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_activity' }, () => renderActivityPanel())
-      .subscribe();
+  const turma = document.getElementById('notasTurma').value;
+  const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+  const students = studentsOfTurma(turma);
+
+  if (students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
+    return;
   }
 
-  if (!activityPollStarted) {
-    activityPollStarted = true;
-    setInterval(renderActivityPanel, 15000);
+  const { data: rows } = await sbClient.from('grades').select('*').eq('turma', turma).eq('bimestre', bimestre);
+  const byStudent = {};
+  (rows || []).forEach(r => { byStudent[r.student_email] = r; });
+
+  tbody.innerHTML = students.map(u => {
+    const g = byStudent[u.email] || {};
+    const n1 = g.nota1 ?? '', n2 = g.nota2 ?? '', n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
+    return `
+      <tr data-email="${u.email}">
+        <td>${u.nome}</td>
+        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota1" value="${n1}"></td>
+        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota2" value="${n2}"></td>
+        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
+        <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
+        <td class="media-cell">${calcMedia(n1, n2, n3, n4).toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('tr[data-email]').forEach(tr => {
+    const inputs = tr.querySelectorAll('.nota-input');
+    const mediaCell = tr.querySelector('.media-cell');
+    inputs.forEach(inp => {
+      inp.addEventListener('input', () => {
+        const vals = Array.from(inputs).map(i => i.value);
+        mediaCell.textContent = calcMedia(vals[0], vals[1], vals[2], vals[3]).toFixed(2);
+      });
+    });
+  });
+
+  document.getElementById('notasStatus').textContent = '';
+}
+document.getElementById('notasTurma').addEventListener('change', loadNotas);
+document.getElementById('notasBimestre').addEventListener('change', loadNotas);
+
+document.getElementById('btnSalvarNotas').addEventListener('click', async () => {
+  if (!sbClient) return;
+  const turma = document.getElementById('notasTurma').value;
+  const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+  const now = new Date().toISOString();
+
+  const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
+    const email = tr.getAttribute('data-email');
+    const u = DB.users[email];
+    const get = campo => {
+      const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
+      const v = inp ? inp.value : '';
+      return v === '' ? null : parseFloat(v);
+    };
+    return {
+      student_email: email,
+      student_name: u ? u.nome : email,
+      turma, bimestre,
+      nota1: get('nota1'), nota2: get('nota2'), nota3: get('nota3'), nota4: get('nota4'),
+      updated_at: now
+    };
+  });
+
+  if (rows.length === 0) return;
+  await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
+  document.getElementById('notasStatus').textContent = `Notas salvas às ${new Date().toLocaleTimeString('pt-BR')}.`;
+  loadRelatorioNotas();
+});
+
+// ---------- Relatório de Notas ----------
+function getTurmaConfig(turma) {
+  return turma === 'jogos' ? window.TURMA_CONFIG_JOGOS : window.TURMA_CONFIG_SISTEMAS;
+}
+
+function trilhaPercentForStudent(trilha, progressRows) {
+  const modules = trilha.modules || [];
+  if (modules.length === 0) return null;
+  let sum = 0;
+  modules.forEach(m => {
+    const row = progressRows.find(r => r.trilha_key === trilha.key && r.module_key === m.key);
+    if (!row) return;
+    const total = row.progress_total || 1;
+    sum += Math.min((row.progress_current || 0) / total, 1);
+  });
+  return Math.round((sum / modules.length) * 100);
+}
+
+async function loadRelatorioNotas() {
+  const turma = document.getElementById('relatorioNotasTurma').value;
+  const cfg = getTurmaConfig(turma);
+  const trilhas = (cfg && cfg.trilhas) || [];
+  const students = studentsOfTurma(turma);
+
+  const theadRow = document.getElementById('relatorioNotasHead');
+  const tbody = document.getElementById('relatorioNotasBody');
+  const totalCols = 6 + trilhas.length;
+
+  theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th>${trilhas.map(t => `<th>${t.label}</th>`).join('')}`;
+
+  if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
+  if (students.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${totalCols}" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
+    return;
   }
+
+  const [gradesRes, progressRes] = await Promise.all([
+    sbClient.from('grades').select('*').eq('turma', turma),
+    sbClient.from('student_module_progress').select('*').eq('turma', turma)
+  ]);
+
+  const gradesByStudent = {};
+  (gradesRes.data || []).forEach(r => {
+    gradesByStudent[r.student_email] = gradesByStudent[r.student_email] || {};
+    gradesByStudent[r.student_email][r.bimestre] = r.media;
+  });
+  const progressByStudent = {};
+  (progressRes.data || []).forEach(r => {
+    progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
+    progressByStudent[r.student_email].push(r);
+  });
+
+  tbody.innerHTML = students.map(u => {
+    const bims = gradesByStudent[u.email] || {};
+    const bimCells = [1, 2, 3, 4].map(b => `<td>${bims[b] !== undefined && bims[b] !== null ? Number(bims[b]).toFixed(2) : '—'}</td>`).join('');
+    const lancadas = [1, 2, 3, 4].map(b => bims[b]).filter(v => v !== undefined && v !== null);
+    const mediaGeral = lancadas.length ? (lancadas.reduce((a, b) => a + Number(b), 0) / lancadas.length).toFixed(2) : '—';
+
+    const pRows = progressByStudent[u.email] || [];
+    const trilhaCells = trilhas.map(t => {
+      const pct = trilhaPercentForStudent(t, pRows);
+      return `<td>${pct === null ? '—' : pct + '%'}</td>`;
+    }).join('');
+
+    return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${trilhaCells}</tr>`;
+  }).join('');
 }
-
-async function toggleStudentGames(userKey) {
-  if (!sbClient) return;
-  const u = DB.users[userKey];
-  const newValue = !overridesCache[userKey];
-
-  await sbClient.from('student_overrides').upsert({
-    student_email: userKey,
-    games_unlocked: newValue,
-    updated_at: new Date().toISOString()
-  }, { onConflict: 'student_email' });
-
-  renderTeacherPanel();
-}
-
-document.getElementById('btnUnlockGamesGlobal').addEventListener('click', async () => {
-  if (!sbClient) return;
-  const rows = Object.keys(DB.users)
-    .filter(k => DB.users[k].role === 'aluno')
-    .map(k => ({ student_email: k, games_unlocked: true, updated_at: new Date().toISOString() }));
-  await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
-  renderTeacherPanel();
-});
-
-document.getElementById('btnLockGamesGlobal').addEventListener('click', async () => {
-  if (!sbClient) return;
-  const rows = Object.keys(DB.users)
-    .filter(k => DB.users[k].role === 'aluno')
-    .map(k => ({ student_email: k, games_unlocked: false, updated_at: new Date().toISOString() }));
-  await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
-  renderTeacherPanel();
-});
-
-renderTeacherPanel();
-
-// ---------- Restrições (bloqueio global de copiar/colar) ----------
-let clipboardBlocked = false;
-
-function renderClipboardButton() {
-  const btn = document.getElementById('btnToggleClipboard');
-  if (clipboardBlocked) {
-    btn.textContent = 'Copiar/Colar BLOQUEADO — Clique para liberar';
-    btn.classList.add('btn-danger');
-  } else {
-    btn.textContent = 'Bloquear Copiar/Colar (Todos)';
-    btn.classList.remove('btn-danger');
-  }
-}
-
-async function fetchClipboardState() {
-  if (!sbClient) return;
-  const { data } = await sbClient
-    .from('classroom_settings')
-    .select('clipboard_blocked')
-    .eq('id', 'global')
-    .maybeSingle();
-  clipboardBlocked = !!(data && data.clipboard_blocked);
-  renderClipboardButton();
-}
-
-document.getElementById('btnToggleClipboard').addEventListener('click', async () => {
-  if (!sbClient) return;
-  clipboardBlocked = !clipboardBlocked;
-  await sbClient.from('classroom_settings').upsert({
-    id: 'global',
-    clipboard_blocked: clipboardBlocked,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'id' });
-  renderClipboardButton();
-});
-
-fetchClipboardState();
+document.getElementById('relatorioNotasTurma').addEventListener('change', loadRelatorioNotas);
 </script>
 
 </body>

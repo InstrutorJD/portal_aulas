@@ -19,10 +19,18 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(green).not.toBe('#7cff3f'); // não é o verde da turma Jogos
   });
 
-  test('mostra a trilha SQL cadastrada pra essa turma', async ({ page }) => {
+  test('mostra a trilha SQL cadastrada pra essa turma, com teoria e prática', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('.subtab-btn[data-subtab="sql"]')).toHaveClass(/active/);
-    await expect(page.locator('#moduleSelector_sql')).toContainText('Básico — Central de Dados');
+    await expect(page.locator('#moduleSelector_sql')).toContainText('Teoria — Fundamentos de SQL');
+    await expect(page.locator('#moduleSelector_sql')).toContainText('Prática — Central de Dados');
+  });
+
+  test('prática do SQL fica bloqueada até a teoria ser concluída', async ({ page }) => {
+    await page.goto(URL);
+    const praticaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Prática — Central de Dados' });
+    await expect(praticaCard).toHaveClass(/locked/);
+    await expect(praticaCard).toContainText('Bloqueado');
   });
 
   test('jogos ficam bloqueados até completar a trilha SQL', async ({ page }) => {

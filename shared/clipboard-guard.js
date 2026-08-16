@@ -1,4 +1,5 @@
-// Bloqueio de Ctrl+C/Ctrl+V ligado pelo professor (professor/painel.html).
+// Bloqueio de Ctrl+C/Ctrl+V ligado pelo professor, por turma (aba "Gestão"
+// dentro de turmas/<turma>/plataforma.html).
 //
 // IMPORTANTE — isso é um desincentivo pedagógico, não segurança de verdade:
 // só intercepta copiar/colar DENTRO das páginas do portal. Um aluno pode
@@ -12,6 +13,9 @@
   const urlParams = new URLSearchParams(window.location.search);
   const role = urlParams.get('role') || 'aluno';
   if (role === 'professor' || role === 'admin') return;
+
+  // O bloqueio agora é ligado por turma (dentro do portal de cada uma), não mais global.
+  const turma = urlParams.get('turma') || 'global';
 
   const SUPABASE_URL = window.SUPABASE_URL;
   const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
@@ -66,14 +70,14 @@
     const { data } = await sb
       .from('classroom_settings')
       .select('clipboard_blocked')
-      .eq('id', 'global')
+      .eq('id', turma)
       .maybeSingle();
     blocked = !!(data && data.clipboard_blocked);
   }
 
   function setupRealtime() {
-    sb.channel('realtime_classroom_settings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'classroom_settings', filter: 'id=eq.global' }, fetchState)
+    sb.channel('realtime_classroom_settings_' + turma)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'classroom_settings', filter: `id=eq.${turma}` }, fetchState)
       .subscribe();
   }
 

@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — A Jornada do Eri</title>
+<title>PixelForge Studios — SQL Básico: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
   :root{
-    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
-    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
-    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --green:#3aa0ff; --green-dim:#2b6ba3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#d6e2ec; --ink-dim:#6c8698;
   }
   *{box-sizing:border-box;}
   body{
@@ -19,8 +19,8 @@
   }
 
   .env{
-    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
-    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050a10;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(58,160,255,0.15);
   }
 
   .topbar{
@@ -37,7 +37,7 @@
 
   .eri-row{ display:flex; align-items:flex-start; gap:12px; }
   .eri-avatar{
-    font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(124,255,63,0.5));
+    font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(58,160,255,0.5));
   }
   .speech-bubble{
     background:var(--panel); border:1px solid var(--green-dim); padding:16px 18px;
@@ -47,6 +47,11 @@
     display:block; font-family:'VT323', monospace; font-size:18px; color:var(--green);
     letter-spacing:1px; margin-bottom:6px;
   }
+  .speech-bubble pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:8px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--yellow); white-space:pre;
+  }
+  .speech-bubble code{ color:var(--yellow); }
 
   .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
   .card h2{
@@ -62,9 +67,9 @@
     width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
     display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
   }
-  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .option.correct{ border-color:var(--green); background:rgba(58,160,255,0.08); }
   .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
-  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,91,77,0.08); }
   .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
   .option.disabled{ cursor:default; }
 
@@ -78,7 +83,7 @@
   .actions{ display:flex; justify-content:flex-end; }
   button.btn{
     font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
-    background:var(--green); color:#04220a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+    background:var(--green); color:#04150c; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
   }
   button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
   button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
@@ -94,11 +99,11 @@
     background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:5px 10px;
     cursor:pointer; border-radius:2px;
   }
-  .btn-topbar:hover{ background:rgba(124,255,63,0.1); }
+  .btn-topbar:hover{ background:rgba(58,160,255,0.1); }
   .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'csharp_basico';
+  window.ACTIVITY_LOCATION = 'sql_basico_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -111,7 +116,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>C# — A JORNADA DO ERI</div>
+    <div>SQL — CENTRAL DE DADOS (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
       <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">11</span></span>
@@ -127,111 +132,121 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `csharp_basico_progress_${username}`;
+  const PROGRESS_KEY = `sql_basico_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Olá! Eu sou o <b>Eri</b>, o C#arpão — o guardião curioso do oceano de código! Vim te contar minha história e a da linguagem que carrego no nome: o <b>C#</b>. Antes de mergulharmos fundo, vamos conhecer quem deu vida a essa linguagem.',
+      story: 'Olá! Eu sou a <b>Query</b>, a IA que cuida da <b>Central de Dados</b>. Antes de você começar a resolver chamados de verdade, preciso te ensinar o básico sobre onde esses dados moram: os <b>bancos de dados relacionais</b>.',
       question: {
-        prompt: 'Quem criou a linguagem C#?',
-        options: ['A Microsoft', 'O Google', 'A Apple', 'A NASA'],
+        prompt: 'Num banco de dados relacional, as informações ficam organizadas principalmente em:',
+        options: ['Tabelas', 'Pastas de arquivo', 'Slides', 'E-mails'],
         correctIndex: 0,
-        explanation: 'Isso mesmo! O C# foi criado pela Microsoft, como parte da plataforma .NET.'
+        explanation: 'Isso! Num banco relacional, os dados ficam guardados em tabelas — parecidas com planilhas.'
       }
     },
     {
-      story: 'O C# nasceu no início dos anos 2000, liderado por um engenheiro chamado <b>Anders Hejlsberg</b>. A Microsoft queria uma linguagem moderna, segura e poderosa para construir o futuro da programação — e assim eu, Eri, ganhei meu propósito!',
+      story: 'Pensa numa tabela como uma planilha: cada <b>coluna</b> é um tipo de informação (nome, cargo, salário...) e cada <b>linha</b> é um registro completo — por exemplo, um funcionário específico com todos os seus dados.',
       question: {
-        prompt: 'Em que período aproximado o C# foi lançado?',
-        options: ['Início dos anos 2000', 'Década de 1970', 'Ano 2020', 'Ano 1990'],
-        correctIndex: 0,
-        explanation: 'Exato! O C# foi lançado oficialmente por volta de 2000/2002, junto com a plataforma .NET.'
-      }
-    },
-    {
-      story: 'Hoje eu nado por muitos mares diferentes: sites, aplicativos, sistemas empresariais... mas o mar que eu mais amo é o dos <b>jogos</b>! Muitos estúdios de games usam C# todos os dias.',
-      question: {
-        prompt: 'Qual motor de jogos (game engine) muito famoso usa o C# como linguagem principal de programação?',
-        options: ['Unity', 'Scratch', 'Excel', 'Photoshop'],
-        correctIndex: 0,
-        explanation: 'Isso! A Unity é um dos motores de jogos mais usados do mundo, e o C# é a linguagem oficial dela.'
-      }
-    },
-    {
-      story: 'Programar é como me dar ordens no oceano: eu só faço exatamente o que você escreve, na ordem em que você escreve. Um programa nada mais é do que uma <b>sequência de instruções</b> para o computador seguir.',
-      question: {
-        prompt: 'O que é, basicamente, uma linguagem de programação?',
+        prompt: 'Numa tabela chamada "funcionarios", o que representa cada LINHA?',
         options: [
-          'Uma forma de dar instruções para o computador executar',
-          'Um idioma falado apenas por robôs',
-          'Um tipo de sistema operacional',
-          'Um programa para editar imagens'
+          'Um funcionário específico, com todos os seus dados',
+          'O nome da tabela',
+          'Uma coluna nova',
+          'O banco de dados inteiro'
         ],
         correctIndex: 0,
-        explanation: 'Perfeito! Uma linguagem de programação é uma forma estruturada de dizer ao computador o que fazer.'
+        explanation: 'Exato! Cada linha é um registro — um funcionário, com o valor de cada coluna preenchido para ele.'
       }
     },
     {
-      story: 'Toda instrução que eu executo em C# precisa terminar com um sinalzinho — o ponto e vírgula ( <b>;</b> ). É como se fosse o final de uma frase, avisando "pronto, terminei esta ordem!".',
+      story: 'Toda tabela costuma ter uma coluna especial: a <b>chave primária</b> (primary key). Ela guarda um valor único para cada linha, tipo o "id" — nunca se repete, e serve pra identificar aquele registro sem confusão.',
       question: {
-        prompt: 'Qual símbolo marca o fim de uma instrução em C#?',
-        options: [';', '.', ':', ','],
+        prompt: 'Para que serve a chave primária (id) de uma tabela?',
+        options: [
+          'Identificar cada linha de forma única, sem repetir',
+          'Deixar a tabela mais bonita',
+          'Guardar o nome da tabela',
+          'Apagar dados automaticamente'
+        ],
         correctIndex: 0,
-        explanation: 'Isso mesmo! Quase toda linha de código em C# termina com ponto e vírgula ( ; ).'
+        explanation: 'Isso mesmo! A chave primária garante que cada linha tenha um identificador único.'
       }
     },
     {
-      story: 'Quando eu quero mostrar uma mensagem na tela, uso um comando mágico chamado <b>Console.WriteLine()</b>. Ele escreve o que estiver entre parênteses e aspas, bem na telinha do programa.',
+      story: 'Chegou o primeiro chamado: "preciso ver todos os dados da tabela". Pra isso existe o comando <b>SELECT</b>. Combinado com <code>*</code> (que significa "todas as colunas") e <code>FROM</code> (de qual tabela), ele busca tudo.<pre>SELECT * FROM funcionarios;</pre>',
       question: {
-        prompt: 'Qual comando exibe um texto na tela em C#?',
-        options: ['Console.WriteLine()', 'print()', 'echo()', 'show()'],
+        prompt: 'Qual comando SQL é usado para BUSCAR dados de uma tabela?',
+        options: ['SELECT', 'INSERT', 'DELETE', 'CREATE'],
         correctIndex: 0,
-        explanation: 'Correto! Console.WriteLine() é o comando usado em C# para escrever texto na tela.'
+        explanation: 'Correto! SELECT é o comando de consulta — o mais usado no dia a dia com bancos de dados.'
       }
     },
     {
-      story: 'Às vezes eu preciso guardar informações para usar depois — como o nome de um jogador ou sua pontuação. Para isso, uso <b>variáveis</b>: pequenas caixinhas com nome, que guardam um valor.',
+      story: 'Nem sempre você precisa de todas as colunas. Dá pra listar só as que interessam, separadas por vírgula, no lugar do <code>*</code>:<pre>SELECT nome, cargo FROM funcionarios;</pre>Isso traz só as colunas <code>nome</code> e <code>cargo</code> de cada linha.',
       question: {
-        prompt: 'Qual das opções abaixo é uma forma correta de criar uma variável em C#?',
-        options: ['int idade = 10;', 'variable idade = 10', 'idade == 10;', 'criar idade = 10'],
+        prompt: 'Para trazer só as colunas "nome" e "salario" (nessa ordem), o que substitui o <code>*</code>?',
+        options: ['nome, salario', 'salario; nome', '[nome][salario]', 'nome + salario'],
         correctIndex: 0,
-        explanation: 'Isso! Em C#, criamos variáveis indicando o tipo (como int), o nome e o valor: int idade = 10;'
+        explanation: 'Isso! As colunas ficam separadas por vírgula, na ordem em que você quer que apareçam.'
       }
     },
     {
-      story: 'Nem toda caixinha guarda o mesmo tipo de coisa. Algumas guardam números inteiros, outras guardam textos, outras guardam apenas "verdadeiro" ou "falso". Isso se chama <b>tipo de dado</b>.',
+      story: 'E se o chamado pedir só ALGUMAS linhas, não todas? Aí entra o <b>WHERE</b>: ele filtra o resultado, mantendo só as linhas que atendem a uma condição.<pre>SELECT * FROM funcionarios WHERE departamento_id = 1;</pre>Isso traz só quem tem <code>departamento_id</code> igual a 1.',
       question: {
-        prompt: 'Qual tipo de dado é usado em C# para guardar um texto?',
-        options: ['string', 'int', 'bool', 'void'],
+        prompt: 'Qual cláusula é usada para FILTRAR quais linhas aparecem no resultado?',
+        options: ['WHERE', 'ORDER BY', 'FROM', 'SELECT'],
         correctIndex: 0,
-        explanation: 'Exato! O tipo string guarda textos (uma sequência de caracteres) em C#.'
+        explanation: 'Exato! WHERE define a condição que cada linha precisa cumprir para aparecer no resultado.'
       }
     },
     {
-      story: 'Às vezes eu quero deixar um recadinho no meio do código, só para explicar algo — sem que o computador tente executar aquilo. Para isso, uso <b>comentários</b>, que o C# simplesmente ignora.',
+      story: 'O <code>WHERE</code> não serve só pra igualdade. Dá pra comparar números com <code>&gt;</code> (maior que), <code>&lt;</code> (menor que), <code>&gt;=</code> e <code>&lt;=</code>:<pre>SELECT nome FROM funcionarios WHERE salario &gt; 3000;</pre>Isso traz só quem ganha mais de 3000.',
       question: {
-        prompt: 'Como se escreve um comentário de uma linha em C#?',
-        options: ['// comentário', '# comentário', '<!-- comentário -->', '** comentário **'],
+        prompt: 'Qual operador você usaria em WHERE para filtrar quem ganha "mais de 3000"?',
+        options: ['salario > 3000', 'salario = mais de 3000', 'salario >> 3000', 'salario ~ 3000'],
         correctIndex: 0,
-        explanation: 'Isso mesmo! Duas barras (//) transformam o resto da linha em um comentário, ignorado pelo computador.'
+        explanation: 'Isso mesmo! O operador > compara se o valor da coluna é maior que o número informado.'
       }
     },
     {
-      story: 'Uma curiosidade sobre mim: eu levo bem a sério a diferença entre letras maiúsculas e minúsculas! Para o C#, "idade" e "Idade" são coisas completamente diferentes.',
+      story: 'Quer o resultado em uma ordem específica? Use <code>ORDER BY</code>. Por padrão ele ordena do menor pro maior; adicionando <code>DESC</code>, ele inverte, do maior pro menor.<pre>SELECT nome, salario FROM funcionarios ORDER BY salario DESC;</pre>',
       question: {
-        prompt: 'O C# diferencia letras maiúsculas de minúsculas (é "case sensitive")?',
-        options: ['Sim, sempre', 'Não, nunca', 'Só em alguns comandos', 'Só aos finais de semana'],
+        prompt: 'Qual palavra-chave, junto de ORDER BY, ordena do MAIOR valor para o MENOR?',
+        options: ['DESC', 'ASC', 'MAX', 'TOP'],
         correctIndex: 0,
-        explanation: 'Isso! C# é case sensitive: "nome" e "Nome" seriam consideradas variáveis diferentes.'
+        explanation: 'Isso! DESC (descendente) ordena do maior para o menor. Sem ela (ou com ASC), a ordem é crescente.'
       }
     },
     {
-      story: 'Por fim, no C#, quase tudo que eu faço mora dentro de uma estrutura chamada <b>classe</b> — como se fosse uma casinha organizando meu código e meus comportamentos.',
+      story: 'Até aqui só consultamos dados — mas às vezes o chamado pede pra <b>cadastrar</b> algo novo. Pra isso existe o <b>INSERT INTO</b>: você lista as colunas e depois os valores, na mesma ordem.<pre>INSERT INTO departamentos (id, nome)\nVALUES (4, "Financeiro");</pre>',
       question: {
-        prompt: 'Em C#, o código geralmente fica organizado dentro de uma estrutura chamada:',
-        options: ['Classe', 'Planilha', 'Pasta zipada', 'Banco de dados'],
+        prompt: 'Qual comando adiciona uma LINHA NOVA numa tabela?',
+        options: ['INSERT INTO', 'SELECT', 'ORDER BY', 'WHERE'],
         correctIndex: 0,
-        explanation: 'Isso! Classes são a forma como o C# organiza dados e comportamentos — um conceito fundamental da Programação Orientada a Objetos.'
+        explanation: 'Correto! INSERT INTO cria uma nova linha, com os valores que você especificar para cada coluna.'
+      }
+    },
+    {
+      story: 'Quando um dado já existe mas precisa mudar — tipo um salário que foi reajustado — usamos <b>UPDATE</b>. E aqui vai um alerta importante: <b>sempre use WHERE junto</b>, senão você muda a coluna em TODAS as linhas da tabela!<pre>UPDATE departamentos SET nome = "TI" WHERE id = 1;</pre>',
+      question: {
+        prompt: 'Por que é perigoso rodar um UPDATE sem WHERE?',
+        options: [
+          'Porque ele muda aquela coluna em TODAS as linhas da tabela',
+          'Porque ele apaga a tabela inteira',
+          'Porque ele não funciona sem WHERE',
+          'Não tem perigo nenhum'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Sem WHERE, o UPDATE aplica a mudança em toda linha da tabela — um erro comum e perigoso no dia a dia.'
+      }
+    },
+    {
+      story: 'Por fim, quando um registro precisa sumir de vez — tipo um funcionário que saiu da empresa — usamos <b>DELETE FROM</b>. O mesmo alerta vale aqui: sem <code>WHERE</code>, ele apaga a tabela inteira!<pre>DELETE FROM departamentos WHERE id = 3;</pre>Com isso você já tem o básico pra encarar os chamados de verdade na Central de Dados.',
+      question: {
+        prompt: 'Qual comando REMOVE uma linha de uma tabela?',
+        options: ['DELETE FROM', 'DROP TABLE', 'REMOVE ROW', 'CLEAR'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! DELETE FROM remove linhas — sempre acompanhado de WHERE para não apagar tudo.'
       }
     }
   ];
@@ -247,13 +262,13 @@
       btnGenSlides.textContent = '⏳ Gerando...';
       setTimeout(() => {
         window.PortalSlides.generate({
-          title: 'C# Básico — A Jornada do Eri',
-          subtitle: 'Aula Teórica · Trilha C# · Turma Jogos Digitais',
-          capacidade: 'Reconhecer a origem, o propósito e a sintaxe básica da linguagem C# (variáveis, tipos de dados, comandos de saída e comentários).',
+          title: 'SQL Básico — Fundamentos',
+          subtitle: 'Aula Teórica · Trilha SQL · Turma Sistemas',
+          capacidade: 'Utilizar comandos SQL básicos (SELECT, WHERE, ORDER BY, INSERT, UPDATE, DELETE) para consultar e manipular dados em um banco relacional.',
           steps: STEPS,
-          fileName: 'csharp-basico-slides.pptx',
+          fileName: 'sql-basico-teoria-slides.pptx',
           closingTitle: 'Hora da prática!',
-          closingText: 'Em breve, novos desafios práticos de código vão esperar os alunos no Portal de Aulas.'
+          closingText: 'Abra o módulo "Prática — Central de Dados" no Portal de Aulas para os alunos aplicarem SQL de verdade.'
         });
         btnGenSlides.disabled = false;
         btnGenSlides.textContent = '🖨️ Gerar Slides (PPTX)';
@@ -292,7 +307,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('csharp_basico', label, {
+      window.reportActivity('sql_basico_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -303,16 +318,16 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[currentStepIndex];
-    reportStep(`C# Básico — A Jornada do Eri — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`SQL Básico — Teoria — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
     const row = document.createElement('div');
     row.className = 'eri-row';
     row.innerHTML = `
-      <div class="eri-avatar">🦈</div>
+      <div class="eri-avatar">🤖</div>
       <div class="speech-bubble">
-        <span class="eri-name">Eri, o C#arpão</span>
+        <span class="eri-name">Query, IA da Central de Dados</span>
         ${step.story}
       </div>
     `;
@@ -374,7 +389,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`C# Básico — A Jornada do Eri — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`SQL Básico — Teoria — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -395,7 +410,7 @@
 
   function finishJourney() {
     saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: true });
-    reportStep(`C# Básico — A Jornada do Eri — Concluída (${correctCount}/${STEPS.length})`);
+    reportStep(`SQL Básico — Teoria — Concluída (${correctCount}/${STEPS.length})`);
 
     progressFill.style.width = '100%';
     lblStepNum.textContent = STEPS.length;
@@ -403,12 +418,12 @@
     storyWrap.innerHTML = `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Jornada do Eri concluída!</h2>
-        <p>Você mergulhou fundo no oceano do C# e conheceu quem criou a linguagem, por que ela existe e seus primeiros conceitos de sintaxe.</p>
+        <h2>Fundamentos de SQL concluídos!</h2>
+        <p>Você já conhece tabelas, colunas, chave primária e os comandos SELECT, WHERE, ORDER BY, INSERT, UPDATE e DELETE.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas.</div>
-        <p>Em breve, novos desafios práticos de código vão te esperar por aqui!</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Dados.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
-          <button class="btn btn-secondary" id="btnRestart">🔁 Refazer a Jornada</button>
+          <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>
       </div>
     `;

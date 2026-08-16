@@ -33,9 +33,12 @@
       upsert(payload, opts) {
         const rows = Array.isArray(payload) ? payload : [payload];
         const t = table(name);
-        const conflictCol = (opts && opts.onConflict) || (rows[0] && (rows[0].id !== undefined ? 'id' : rows[0].ip_address !== undefined ? 'ip_address' : rows[0].student_email !== undefined ? 'student_email' : null));
+        // onConflict pode ser uma coluna só ("id") ou composta ("turma,data,student_email"),
+        // igual ao Supabase de verdade — nesse caso a linha só é a "mesma" se TODAS baterem.
+        const conflictCols = ((opts && opts.onConflict) || (rows[0] && (rows[0].id !== undefined ? 'id' : rows[0].ip_address !== undefined ? 'ip_address' : rows[0].student_email !== undefined ? 'student_email' : null)) || '')
+          .split(',').map(c => c.trim()).filter(Boolean);
         rows.forEach(row => {
-          const idx = conflictCol ? t.findIndex(r => r[conflictCol] === row[conflictCol]) : -1;
+          const idx = conflictCols.length ? t.findIndex(r => conflictCols.every(c => r[c] === row[c])) : -1;
           if (idx >= 0) t[idx] = Object.assign({}, t[idx], row);
           else t.push(row);
         });

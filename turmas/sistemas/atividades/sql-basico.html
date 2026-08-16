@@ -128,6 +128,21 @@
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--green); font-weight:bold; }
   .console .line.warn{ color:var(--yellow); }
+
+  /* Celular/telas estreitas: a barra lateral + painel lado a lado espreme
+     demais o conteúdo (texto quebrando palavra a palavra). Empilha tudo
+     numa coluna só e deixa a página inteira rolar, em vez de depender de
+     várias regiões de scroll aninhadas. */
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:8px; }
+    .env{ height:auto; min-height:calc(100vh - 16px); }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:110px; }
+    .console{ flex:none; max-height:160px; }
+  }
 </style>
 <script>
   window.ACTIVITY_LOCATION = 'sql_basico';
@@ -230,7 +245,7 @@
       starter: '-- liste TODOS os funcionários, com todas as colunas\n\n',
       explanation: 'Pra trazer todas as colunas de uma tabela, use <code>SELECT *</code> seguido de <code>FROM nome_da_tabela</code>:<pre>SELECT * FROM departamentos;</pre>',
       desc: 'Chegou um chamado: a central quer ver <b>todos os funcionários</b> cadastrados, com todas as colunas.',
-      hint: 'Escreva: <code>SELECT * FROM funcionarios;</code>',
+      hint: 'Lembre da estrutura <code>SELECT ... FROM tabela;</code> — qual símbolo representa "todas as colunas"?',
       solutionSql: 'SELECT * FROM funcionarios;',
       verifyQuery: null,
       orderMatters: false
@@ -242,7 +257,7 @@
       starter: '-- traga só as colunas nome e cargo, nessa ordem\n\n',
       explanation: 'Em vez de <code>*</code>, você pode listar só as colunas que quer, separadas por vírgula:<pre>SELECT nome, id FROM departamentos;</pre>',
       desc: 'A central só precisa do <b>nome</b> e do <b>cargo</b> de cada funcionário — nessa ordem, sem as outras colunas.',
-      hint: 'Escreva: <code>SELECT nome, cargo FROM funcionarios;</code>',
+      hint: 'No lugar de <code>*</code>, liste só as colunas que você quer, separadas por vírgula, na ordem pedida.',
       solutionSql: 'SELECT nome, cargo FROM funcionarios;',
       verifyQuery: null,
       orderMatters: false
@@ -254,7 +269,7 @@
       starter: '-- liste (todas as colunas) só quem é do departamento_id 1\n\n',
       explanation: 'O <code>WHERE</code> filtra quais linhas aparecem no resultado:<pre>SELECT * FROM funcionarios WHERE departamento_id = 2;</pre>',
       desc: 'Liste <b>todas as colunas</b> dos funcionários que são do departamento de <b>Desenvolvimento</b> (<code>departamento_id = 1</code>).',
-      hint: 'Escreva: <code>SELECT * FROM funcionarios WHERE departamento_id = 1;</code>',
+      hint: 'Use <code>WHERE</code> para filtrar pela coluna que guarda o departamento, comparando com o id certo.',
       solutionSql: 'SELECT * FROM funcionarios WHERE departamento_id = 1;',
       verifyQuery: null,
       orderMatters: false
@@ -266,7 +281,7 @@
       starter: '-- traga nome e salario de quem ganha mais de 3000\n\n',
       explanation: 'No <code>WHERE</code> você também pode comparar números com <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>:<pre>SELECT nome FROM funcionarios WHERE salario &lt; 2000;</pre>',
       desc: 'Liste <b>nome</b> e <b>salario</b> (nessa ordem) de quem ganha <b>mais de 3000</b>.',
-      hint: 'Escreva: <code>SELECT nome, salario FROM funcionarios WHERE salario > 3000;</code>',
+      hint: 'Use <code>WHERE</code> com um operador de "maior que" na coluna de salário.',
       solutionSql: 'SELECT nome, salario FROM funcionarios WHERE salario > 3000;',
       verifyQuery: null,
       orderMatters: false
@@ -278,7 +293,7 @@
       starter: '-- traga nome e salario de todos, do maior salario pro menor\n\n',
       explanation: '<code>ORDER BY coluna DESC</code> ordena do maior pro menor; <code>ORDER BY coluna ASC</code> (ou sem nada) ordena do menor pro maior:<pre>SELECT nome FROM funcionarios ORDER BY nome ASC;</pre>',
       desc: 'Liste <b>nome</b> e <b>salario</b> (nessa ordem) de <b>todos os funcionários</b>, do <b>maior salário pro menor</b>.',
-      hint: 'Escreva: <code>SELECT nome, salario FROM funcionarios ORDER BY salario DESC;</code>',
+      hint: 'Use <code>ORDER BY</code> na coluna de salário — qual palavra-chave ordena do maior pro menor?',
       solutionSql: 'SELECT nome, salario FROM funcionarios ORDER BY salario DESC;',
       verifyQuery: null,
       orderMatters: true
@@ -290,7 +305,7 @@
       starter: "-- cadastre o novo funcionário descrito no chamado\n\n",
       explanation: '<code>INSERT INTO</code> adiciona uma linha nova. Liste as colunas e depois os valores, na mesma ordem:<pre>INSERT INTO departamentos (id, nome)\nVALUES (4, &quot;Financeiro&quot;);</pre>',
       desc: 'Chegou um novo funcionário: <b>id 6</b>, nome <code>Bruno Martins</code>, cargo <code>Suporte Júnior</code>, <code>departamento_id 2</code>, salario <code>2100</code>. Cadastre ele na tabela <code>funcionarios</code>.',
-      hint: "Escreva: <code>INSERT INTO funcionarios (id, nome, cargo, departamento_id, salario) VALUES (6, 'Bruno Martins', 'Suporte Júnior', 2, 2100);</code>",
+      hint: 'Use <code>INSERT INTO tabela (colunas) VALUES (valores)</code> — capriche pra colocar os dados do chamado na mesma ordem das colunas.',
       solutionSql: "INSERT INTO funcionarios (id, nome, cargo, departamento_id, salario) VALUES (6, 'Bruno Martins', 'Suporte Júnior', 2, 2100);",
       verifyQuery: 'SELECT * FROM funcionarios ORDER BY id;',
       orderMatters: true
@@ -302,7 +317,7 @@
       starter: '-- atualize o salario da funcionária descrita no chamado\n\n',
       explanation: '<code>UPDATE</code> muda valores de linhas já existentes. Sempre use <code>WHERE</code> pra não mudar a tabela inteira por engano:<pre>UPDATE departamentos SET nome = &quot;TI&quot; WHERE id = 1;</pre>',
       desc: 'A funcionária <b>Juliana Costa</b> (<code>id 5</code>) foi efetivada — atualize o <code>salario</code> dela para <b>2600</b>.',
-      hint: 'Escreva: <code>UPDATE funcionarios SET salario = 2600 WHERE id = 5;</code>',
+      hint: 'Use <code>UPDATE tabela SET coluna = valor WHERE ...</code> — não esqueça do <code>WHERE</code>, senão muda todo mundo.',
       solutionSql: 'UPDATE funcionarios SET salario = 2600 WHERE id = 5;',
       verifyQuery: 'SELECT * FROM funcionarios ORDER BY id;',
       orderMatters: true
@@ -314,7 +329,7 @@
       starter: '-- remova o funcionário descrito no chamado\n\n',
       explanation: '<code>DELETE FROM</code> remove linhas. Sempre com <code>WHERE</code>, senão apaga a tabela inteira:<pre>DELETE FROM departamentos WHERE id = 3;</pre>',
       desc: 'O funcionário <b>Carlos Eduardo</b> (<code>id 2</code>) saiu da empresa — remova o cadastro dele de <code>funcionarios</code>.',
-      hint: 'Escreva: <code>DELETE FROM funcionarios WHERE id = 2;</code>',
+      hint: 'Use <code>DELETE FROM tabela WHERE ...</code> apontando exatamente pro funcionário certo, senão apaga tudo.',
       solutionSql: 'DELETE FROM funcionarios WHERE id = 2;',
       verifyQuery: 'SELECT * FROM funcionarios ORDER BY id;',
       orderMatters: true

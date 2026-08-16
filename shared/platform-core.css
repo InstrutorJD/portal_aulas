@@ -84,6 +84,10 @@ header .sub{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; let
 .game-card .icon{ font-size:32px; margin-bottom:8px; }
 .game-card h3{ color:var(--yellow); margin:0 0 6px; }
 .game-card p{ font-size:11px; color:var(--ink-dim); margin:0; }
+.game-card .card-status{ font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-dim); margin-top:8px; }
+.game-card.completed{ border-color:var(--green-dim); }
+.game-card.completed .card-status{ color:var(--green); }
+.game-card.locked{ opacity:0.4; cursor:not-allowed; }
 .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
 
 button.btn{

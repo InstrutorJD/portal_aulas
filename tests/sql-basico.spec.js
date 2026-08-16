@@ -83,6 +83,7 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
     await stubSupabaseDisabled(page);
     await page.addInitScript(user => {
       localStorage.setItem(`sql_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8]));
+      localStorage.setItem(`sql_basico_teoria_progress_${user}`, JSON.stringify({ completed: true }));
     }, 'alexandre.natal');
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');

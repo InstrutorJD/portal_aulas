@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno';
 
@@ -68,5 +68,37 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await tabJogos.click();
     await expect(page.locator('#tabContentJogos')).toBeVisible();
     await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(3);
+  });
+});
+
+test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro Supabase', () => {
+  test('fechar um módulo manda o progresso pra student_module_progress', async ({ page }) => {
+    await stubSupabaseFake(page, { student_module_progress: [] });
+    await page.addInitScript(user => {
+      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+    }, 'breno.silva80');
+
+    await page.goto(URL);
+    await page.click('.subtab-btn[data-subtab="csharp"]');
+    await page.click('#moduleSelector_csharp .game-card');
+    await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();
+
+    await page.click('#moduleFrameArea_csharp .btn-secondary');
+    await expect(page.locator('#moduleSelector_csharp')).toBeVisible();
+
+    const rows = await page.evaluate(() => window.__FAKE_DB__.student_module_progress || []);
+    const csharpRow = rows.find(r => r.trilha_key === 'csharp' && r.module_key === 'basico');
+    expect(csharpRow).toMatchObject({
+      student_email: 'breno.silva80',
+      turma: 'jogos',
+      progress_current: 1,
+      progress_total: 1,
+      completed: true
+    });
+
+    // js básico/intermediário nunca foram abertos, mas o sync do carregamento
+    // inicial (init()) já deve ter mandado o estado 0/N deles também.
+    const jsRow = rows.find(r => r.trilha_key === 'js' && r.module_key === 'basico');
+    expect(jsRow).toMatchObject({ progress_current: 0, progress_total: 5, completed: false });
   });
 });

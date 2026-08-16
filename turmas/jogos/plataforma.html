@@ -20,50 +20,14 @@
 <script src="../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../shared/clipboard-guard.js"></script>
+<script src="config.js"></script>
 </head>
 <body>
 
 <div id="app"></div>
 
 <script>
-  window.TURMA_CONFIG = {
-    id: 'jogos',
-    label: 'Jogos Digitais',
-    trilhas: [
-      {
-        key: 'js',
-        label: 'JavaScript',
-        desc: 'Escolha um módulo de desafios para praticar.',
-        modules: [
-          {
-            key: 'basico', title: 'Básico — Desafios de JavaScript',
-            desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
-            icon: '🟨', src: 'atividades/js-basico.html',
-            progressKey: 'js_basico_progress_', progressTotal: 5
-          },
-          {
-            key: 'intermediario', title: 'Intermediário — Desafios de JavaScript',
-            desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
-            icon: '🟧', src: 'atividades/js-intermediario.html',
-            progressKey: 'js_intermediario_progress_', progressTotal: 7
-          }
-        ]
-      },
-      {
-        key: 'csharp',
-        label: 'C#',
-        desc: 'Escolha um módulo para começar.',
-        modules: [
-          {
-            key: 'basico', title: 'Básico — A Jornada do Eri',
-            desc: 'Primeiro contato com C#, contado em forma de história. Responda cada pergunta para avançar.',
-            icon: '🦈', src: 'atividades/csharp-basico.html',
-            progressKey: 'csharp_basico_progress_', progressMode: 'flag'
-          }
-        ]
-      }
-    ]
-  };
+  window.TURMA_CONFIG = window.TURMA_CONFIG_JOGOS;
 </script>
 <script src="../../shared/platform-core.js"></script>
 
