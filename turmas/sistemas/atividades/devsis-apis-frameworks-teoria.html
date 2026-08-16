@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Conexão e Endereçamento IP: Teoria</title>
+<title>PixelForge Studios — Ferramentas, APIs e Frameworks: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -113,7 +113,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'redes_conexao_teoria';
+  window.ACTIVITY_LOCATION = 'devsis_apis_frameworks_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -126,10 +126,10 @@
 
 <div class="env">
   <div class="topbar">
-    <div>REDES — CENTRAL DE REDES (TEORIA)</div>
+    <div>DEV SISTEMAS — CENTRAL DE SISTEMAS (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">12</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">14</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -142,158 +142,206 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `redes_conexao_teoria_progress_${username}`;
+  const PROGRESS_KEY = `devsis_apis_frameworks_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Olá! Eu sou o <b>Nex</b>, técnico da Central de Redes. Antes de resolver chamados de verdade, preciso te ensinar como as redes se conectam fisicamente e como cada dispositivo recebe um endereço. Vamos começar pela <b>topologia</b>: o desenho de como os cabos ligam os dispositivos entre si.',
+      story: 'Olá! Eu sou o <b>Bit</b>, mentor de código da Central de Sistemas. Antes dos chamados de verdade, vamos revisar o ferramental do dia a dia. Primeiro: o <b>VS Code</b>, editor de código com extensões (plugins pra cada linguagem/ferramenta), temas visuais e um <b>terminal integrado</b> — tudo sem sair do editor.',
       question: {
-        prompt: 'Numa topologia em ESTRELA, como os dispositivos se conectam entre si?',
+        prompt: 'Qual a vantagem de um terminal INTEGRADO ao editor de código, como no VS Code?',
         options: [
-          'Todos se conectam a um ponto central (como um switch)',
-          'Um se conecta direto no outro, em fila',
-          'Todos formam um círculo fechado',
-          'Não existe cabo nenhum'
+          'Rodar comandos (como Git) sem precisar trocar de janela/programa',
+          'Deixa o código mais bonito',
+          'Substitui a necessidade de salvar o arquivo',
+          'Só serve pra jogos'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Na topologia estrela, cada dispositivo tem um cabo próprio até um ponto central — hoje, a mais usada em redes locais.'
+        explanation: 'Um terminal integrado deixa o fluxo de trabalho mais rápido — você roda comandos sem sair do contexto do editor.'
       }
     },
     {
-      story: 'Pra ligar os dispositivos, existem meios físicos diferentes. O <b>cabo par trançado</b> (com conector RJ45) é o mais comum em redes locais. Já a <b>fibra óptica</b> transmite luz em vez de eletricidade — por isso não sofre interferência elétrica e aguenta distâncias bem maiores.',
+      story: 'Todo projeto sério usa um <b>repositório Git local</b>: um histórico de versões do código, guardado no seu próprio computador antes (ou além) de subir pra um serviço remoto. Cada mudança significativa vira um "commit" — um ponto no tempo que você pode voltar se precisar.',
       question: {
-        prompt: 'Qual meio físico é mais indicado para uma conexão de LONGA distância com imunidade a interferência elétrica?',
-        options: ['Fibra óptica', 'Cabo par trançado (UTP)', 'Bluetooth', 'Nenhum, todos são iguais'],
-        correctIndex: 0,
-        explanation: 'Correto! A fibra óptica transmite luz, não eletricidade — por isso não sofre interferência eletromagnética e alcança distâncias muito maiores.'
-      }
-    },
-    {
-      story: 'Nem toda conexão usa cabo. <b>Wi-Fi</b> (Wireless) conecta dispositivos numa área maior (uma casa, um andar inteiro), enquanto <b>Bluetooth</b> foi feito pra distâncias bem curtas, entre poucos dispositivos pessoais (fone, mouse, teclado).',
-      question: {
-        prompt: 'Entre Wi-Fi e Bluetooth, qual tecnologia tem MAIOR alcance típico?',
-        options: ['Wi-Fi', 'Bluetooth', 'Os dois têm o mesmo alcance', 'Nenhum dos dois tem alcance'],
-        correctIndex: 0,
-        explanation: 'Isso! O Wi-Fi cobre distâncias bem maiores que o Bluetooth, que foi pensado pra conexões pessoais bem próximas.'
-      }
-    },
-    {
-      story: 'Chegou o primeiro conceito de "saída pra fora": o <b>gateway</b> (porta de saída padrão) é o dispositivo — geralmente o roteador — que permite que sua rede local converse com redes externas, como a internet.',
-      question: {
-        prompt: 'Sem o gateway configurado corretamente, o que geralmente acontece?',
+        prompt: 'Para que serve um repositório Git?',
         options: [
-          'O dispositivo consegue falar com a rede local, mas não com a internet',
-          'O dispositivo perde toda e qualquer conexão, inclusive local',
-          'Nada muda, o gateway é opcional',
-          'A internet fica mais rápida'
+          'Guardar um histórico de versões do código, permitindo voltar a pontos anteriores',
+          'Deixar o código mais rápido de executar',
+          'Substituir o editor de código',
+          'Compilar o projeto automaticamente'
         ],
         correctIndex: 0,
-        explanation: 'Exato! Sem o gateway certo, o tráfego não sabe por onde sair da rede local — a comunicação interna continua funcionando, mas a externa não.'
+        explanation: 'Isso mesmo — Git rastreia o histórico de mudanças do código, essencial pra trabalho em equipe e pra desfazer erros.'
       }
     },
     {
-      story: 'Todo dispositivo numa rede IPv4 tem um endereço no formato de <b>4 números separados por ponto</b> (de 0 a 255 cada), tipo <code>192.168.1.10</code>. Cada um desses números é chamado de <b>octeto</b>.',
+      story: 'Linguagens <b>compiladas</b> precisam de uma etapa de <b>compilação</b> (transformar código-fonte em algo executável) antes de rodar. Linguagens <b>interpretadas</b>, como JavaScript, rodam direto — por isso ferramentas como o <b>CodePen</b> mostram o resultado instantaneamente, sem build.',
       question: {
-        prompt: 'Quantos octetos (grupos de números) tem um endereço IPv4?',
-        options: ['4', '6', '8', '2'],
-        correctIndex: 0,
-        explanation: 'Isso! Um IPv4 sempre tem 4 octetos, cada um variando de 0 a 255.'
-      }
-    },
-    {
-      story: 'Algumas faixas de IP são reservadas pra uso <b>privado</b> (dentro de casas e empresas) e nunca aparecem direto na internet — a mais comum é <code>192.168.0.0</code> até <code>192.168.255.255</code>. Endereços públicos, como <code>8.8.8.8</code>, são únicos no mundo inteiro.',
-      question: {
-        prompt: 'Qual desses endereços pertence a uma faixa PRIVADA (de rede local)?',
-        options: ['192.168.5.10', '8.8.8.8', '200.150.1.1', '1.1.1.1'],
-        correctIndex: 0,
-        explanation: 'Correto! 192.168.x.x é uma das faixas reservadas pra redes privadas — nunca é único na internet, porque cada rede local usa a sua por dentro.'
-      }
-    },
-    {
-      story: 'O IPv4 tem um problema: só existem cerca de 4 bilhões de endereços possíveis, e eles já estão esgotando. Por isso foi criado o <b>IPv6</b>, com endereços bem maiores (em formato hexadecimal), garantindo endereços suficientes pra todos os dispositivos do mundo.',
-      question: {
-        prompt: 'Qual foi o principal motivo para criar o IPv6?',
+        prompt: 'Qual a principal diferença entre uma linguagem COMPILADA e uma INTERPRETADA?',
         options: [
-          'O esgotamento dos endereços IPv4 disponíveis',
-          'O IPv4 era rápido demais',
-          'Substituir o cabo de rede',
-          'Deixar os endereços mais fáceis de decorar'
+          'A compilada precisa de uma etapa de build antes de rodar; a interpretada roda direto',
+          'A interpretada é sempre mais rápida em produção',
+          'Só linguagens compiladas têm erros',
+          'Não existe diferença nenhuma'
         ],
         correctIndex: 0,
-        explanation: 'Isso mesmo! O IPv4 tem uma quantidade limitada de endereços, e o crescimento de dispositivos conectados esgotou essa faixa — daí a necessidade do IPv6.'
+        explanation: 'Exato — compilar transforma o código em algo executável antes da execução; interpretar executa o código diretamente, linha a linha.'
       }
     },
     {
-      story: 'A <b>máscara de sub-rede</b> (tipo <code>255.255.255.0</code>) trabalha junto do IP: ela define quais bits do endereço identificam a REDE e quais identificam o HOST (o dispositivo específico dentro dela).',
+      story: 'Quando um bug é difícil de achar só lendo o código, usamos <b>breakpoints</b>: marcamos uma linha pra a execução PAUSAR ali, e então inspecionamos o valor de cada variável naquele momento exato — muito mais preciso que espalhar <code>console.log</code> por todo lado.',
       question: {
-        prompt: 'Para que serve a máscara de sub-rede?',
+        prompt: 'Para que serve um breakpoint durante a depuração (debugging)?',
         options: [
-          'Definir quais bits do IP identificam a rede e quais identificam o host',
-          'Esconder o IP de outros dispositivos',
-          'Aumentar a velocidade da conexão',
-          'Substituir o gateway'
+          'Pausar a execução numa linha específica para inspecionar variáveis',
+          'Apagar uma linha de código',
+          'Acelerar a execução do programa',
+          'Comentar o código automaticamente'
         ],
         correctIndex: 0,
-        explanation: 'Isso! A máscara separa a parte "rede" da parte "host" do endereço IP — essencial pra saber quem está na mesma rede local.'
+        explanation: 'Isso! O breakpoint congela a execução naquele ponto, permitindo examinar o estado exato do programa.'
       }
     },
     {
-      story: 'Uma forma mais curta de escrever a máscara é a notação <b>CIDR</b>: em vez de <code>255.255.255.0</code>, escrevemos <code>/24</code> — o número indica quantos bits (de 32 no total) pertencem à parte de rede.',
+      story: 'Nomear bem variáveis, funções e classes facilita MUITO a leitura do código. As convenções mais comuns: <b>camelCase</b> (<code>nomeVariavel</code>) pra variáveis/funções, <b>PascalCase</b> (<code>NomeClasse</code>) pra classes/componentes, e <b>snake_case</b> (<code>nome_variavel</code>) usado em algumas linguagens/contextos.',
       question: {
-        prompt: 'Numa notação CIDR como /24, o que o número 24 representa?',
+        prompt: 'Qual convenção de nomenclatura é normalmente usada para uma CLASSE ou COMPONENTE (ex: "UserProfile")?',
+        options: ['PascalCase', 'camelCase', 'snake_case', 'kebab-case'],
+        correctIndex: 0,
+        explanation: 'Correto! PascalCase (primeira letra de cada palavra maiúscula, sem separador) é o padrão pra nomes de classes e componentes.'
+      }
+    },
+    {
+      story: 'Além de nomear bem, uma <b>indentação</b> (recuo) consistente mostra visualmente onde cada bloco de código começa e termina — essencial em blocos aninhados (um <code>if</code> dentro de outro <code>if</code>, por exemplo). Editores como o VS Code ajudam a manter isso automático.',
+      question: {
+        prompt: 'Por que a indentação consistente é importante, principalmente em código com blocos aninhados?',
         options: [
-          'Quantos bits (de 32) identificam a parte de REDE do endereço',
-          'Quantos dispositivos cabem na rede',
-          'A velocidade máxima da rede',
-          'O número da porta usada'
+          'Mostra visualmente onde cada bloco começa e termina, facilitando a leitura',
+          'Faz o código rodar mais rápido',
+          'É apenas uma questão de estética, sem impacto real',
+          'Substitui a necessidade de chaves { }'
         ],
         correctIndex: 0,
-        explanation: 'Correto! /24 significa que os primeiros 24 bits (dos 32 de um IPv4) identificam a rede — o resto identifica o host.'
+        explanation: 'Isso! Indentação consistente é um guia visual da estrutura do código — fundamental pra entender blocos aninhados rapidamente.'
       }
     },
     {
-      story: 'Quando alguém configura um IP <b>manualmente</b> (estático) e escolhe, sem querer, o mesmo endereço que outro dispositivo já está usando, acontece um <b>conflito de IP</b> — geralmente um ou os dois dispositivos perdem a conexão, e o sistema costuma avisar sobre isso.',
+      story: 'Antes de uma mudança entrar oficialmente no projeto, é comum passar por <b>Peer Review</b> (revisão por pares): outra pessoa da equipe lê o código no repositório e aponta problemas, sugestões ou aprova — pegando bugs e compartilhando conhecimento antes de virar problema em produção.',
       question: {
-        prompt: 'O que causa um "conflito de IP" numa rede?',
+        prompt: 'Qual é o principal benefício de fazer Peer Review (revisão de código) antes de aceitar uma mudança?',
         options: [
-          'Dois dispositivos configurados com o MESMO endereço IP',
-          'Um cabo de rede rompido',
-          'Uma máscara de sub-rede muito grande',
-          'O uso de fibra óptica'
+          'Pega bugs e compartilha conhecimento entre a equipe antes da mudança entrar no projeto',
+          'Deixa o código visualmente mais bonito, só isso',
+          'É uma etapa burocrática sem propósito real',
+          'Aumenta artificialmente o número de commits'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Dois dispositivos não podem ter o mesmo IP na mesma rede ao mesmo tempo — isso gera o conflito.'
+        explanation: 'Exato! Peer review é uma camada de qualidade: outra pessoa encontra o que passou despercebido, e todo mundo aprende com o código do outro.'
       }
     },
     {
-      story: 'Pra testar se um dispositivo está acessível na rede, usamos o comando <b><code>ping</code></b> no terminal: ele manda um sinal pro destino e espera a resposta, medindo se e quão rápido ela chega.',
+      story: 'Chegou a parte de conectar sistemas: uma <b>API</b> (Interface de Programação de Aplicações) é o "cardápio" que um sistema oferece pra outros pedirem dados ou ações. A maioria das APIs modernas troca dados no formato <b>JSON</b> — um jeito de organizar informação em objetos (<code>{ }</code>) e listas (<code>[ ]</code>), fácil de ler tanto por humanos quanto por código.',
       question: {
-        prompt: 'Qual comando de terminal testa se um host está acessível na rede?',
-        options: ['ping', 'gateway', 'octeto', 'CIDR'],
+        prompt: 'A maioria das APIs modernas troca dados usando qual formato?',
+        options: ['JSON', 'Apenas XML', 'Texto puro sem estrutura nenhuma', 'Apenas imagens'],
         correctIndex: 0,
-        explanation: 'Isso mesmo! ping é o comando clássico pra testar conectividade básica com outro dispositivo.'
+        explanation: 'Correto! JSON é o formato mais comum hoje pra troca de dados entre sistemas — leve e fácil de interpretar.'
       }
     },
     {
-      story: 'Quando o <code>ping</code> não é suficiente e você precisa saber POR ONDE (por quais roteadores) o tráfego está passando até chegar no destino, usa-se o <b><code>tracert</code></b> (Windows) ou <b><code>traceroute</code></b> (Linux/Mac) — ele mostra cada "salto" do caminho. Com isso, você já sabe o básico de conexão e endereçamento pra encarar os primeiros chamados da Central de Redes!',
+      story: 'Consumir uma API pública geralmente significa: pedir os dados, receber uma resposta em JSON, e então exibir isso de forma útil — seja um log no terminal, uma lista na tela do navegador, ou um <b>dashboard</b> (painel visual que resume os dados em gráficos/números destacados).',
       question: {
-        prompt: 'Qual comando mostra o caminho (os saltos/roteadores) percorrido até um destino?',
-        options: ['tracert / traceroute', 'ping', 'ipconfig', 'DHCP'],
+        prompt: 'O que é um "dashboard" construído a partir de dados de uma API?',
+        options: [
+          'Um painel visual que resume os dados de forma clara (gráficos, números destacados)',
+          'O nome de uma API específica',
+          'Um tipo de banco de dados',
+          'Um comando do terminal'
+        ],
         correctIndex: 0,
-        explanation: 'Correto! tracert (ou traceroute) revela cada salto da rota até o destino — útil pra descobrir ONDE o tráfego está travando.'
+        explanation: 'Isso! Um dashboard transforma dados brutos (como um JSON de uma API) numa visualização fácil de entender rapidamente.'
+      }
+    },
+    {
+      story: 'Em vez de programar tudo do zero, usamos <b>bibliotecas de terceiros</b>: pacotes de código pronto que resolvem um problema específico (formatar datas, desenhar gráficos, etc.). É preciso pesquisar, escolher e <b>gerenciar</b> essas dependências no projeto — sem exagerar (cada biblioteca extra é mais código pra manter atualizado).',
+      question: {
+        prompt: 'Qual a vantagem principal de usar uma biblioteca de terceiros pronta, em vez de programar tudo do zero?',
+        options: [
+          'Resolve um problema comum sem reinventar a roda, economizando tempo',
+          'Deixa o projeto automaticamente mais seguro',
+          'Elimina a necessidade de testar o código',
+          'É sempre gratuito e sem manutenção'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Bibliotecas prontas evitam retrabalho — mas ainda exigem pesquisa e gerenciamento consciente (nem toda dependência vale a pena).'
+      }
+    },
+    {
+      story: 'Um <b>framework</b> vai um passo além de uma biblioteca: ele define uma <b>estrutura geral</b> pro seu projeto (como organizar pastas, como as peças se conectam), e você constrói DENTRO dessa estrutura — diferente de uma biblioteca, que você só chama quando precisa de uma função específica.',
+      question: {
+        prompt: 'Qual a principal diferença entre usar um FRAMEWORK e uma BIBLIOTECA?',
+        options: [
+          'O framework define a estrutura geral do projeto (você se encaixa nele); a biblioteca você chama quando precisa',
+          'Não existe diferença nenhuma entre os dois',
+          'Framework é sempre mais lento que biblioteca',
+          'Biblioteca só funciona em uma linguagem específica'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Frameworks moldam a arquitetura do projeto inteiro; bibliotecas são ferramentas pontuais que você invoca quando precisa.'
+      }
+    },
+    {
+      story: 'Frameworks modernos costumam ter uma <b>CLI</b> (interface de linha de comando) pra iniciar um projeto novo já com a estrutura de pastas pronta — o chamado <b>scaffold</b> (esqueleto inicial). Isso evita montar tudo manualmente do zero.',
+      question: {
+        prompt: 'O que é o "scaffold" gerado por uma CLI de framework ao iniciar um projeto novo?',
+        options: [
+          'A estrutura inicial de pastas e arquivos já pronta pra começar a desenvolver',
+          'Um tipo de banco de dados',
+          'O nome do servidor de produção',
+          'Um comando pra apagar o projeto'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! O scaffold é o "esqueleto" inicial do projeto — pastas, arquivos de configuração e estrutura básica, gerados automaticamente.'
+      }
+    },
+    {
+      story: 'Frameworks modernos de interface trabalham com <b>componentes</b>: pedaços reutilizáveis de tela (um botão, um cartão, um formulário) que você monta como blocos de LEGO. Cada componente tem um <b>ciclo de vida</b> — é criado (montado), pode ser atualizado várias vezes, e eventualmente é removido (desmontado) da tela.',
+      question: {
+        prompt: 'O que é um "componente" num framework moderno de interface?',
+        options: [
+          'Um pedaço reutilizável de tela (como um botão ou cartão) que pode ser reaproveitado',
+          'Um arquivo de configuração do projeto',
+          'Um tipo de banco de dados',
+          'Um comando de terminal'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Componentes são blocos reutilizáveis de interface — a peça fundamental de frameworks modernos como React, Vue e Angular.'
+      }
+    },
+    {
+      story: 'Por fim, aplicações com várias "telas" usam <b>rotas</b>: cada URL (ex: <code>/perfil</code>, <code>/configuracoes</code>) é mapeada pra um componente/página específico, permitindo navegar dentro do app sem recarregar tudo do zero a cada clique. Com isso, você já tem o panorama completo das ferramentas e conceitos do dia a dia de desenvolvimento!',
+      question: {
+        prompt: 'Para que servem as "rotas" numa aplicação com várias telas?',
+        options: [
+          'Mapear cada URL pra um componente/página específico, permitindo navegação sem recarregar tudo',
+          'Acelerar a conexão com a internet',
+          'Substituir o banco de dados',
+          'Compilar o projeto mais rápido'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! O sistema de rotas conecta URLs a telas específicas — a base da navegação em qualquer aplicação com múltiplas páginas.'
       }
     }
   ];
 
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Redes — Conexão e Endereçamento IP',
-      subtitle: 'Aula Teórica · Trilha Conexão e Endereçamento IP · Turma Sistemas',
-      capacidade: 'Identificar tipos e tecnologias de conexão a redes de computadores.',
+      title: 'Dev Sistemas — Ferramentas, APIs e Frameworks',
+      subtitle: 'Aula Teórica · Trilha APIs, Bibliotecas e Frameworks · Turma Sistemas',
+      capacidade: 'Aplicar linguagem de programação por meio de apis, bibliotecas, frameworks na construção de rotinas de software.',
       steps: STEPS,
-      fileName: 'redes-conexao-teoria-slides.pptx',
+      fileName: 'devsis-apis-frameworks-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central de Redes: Conexões" no Portal de Aulas para os alunos resolverem chamados de verdade.'
+      closingText: 'Abra o módulo "Prática — Central de Sistemas: Ferramentas e APIs" no Portal de Aulas para os alunos resolverem chamados de verdade.'
     });
   };
 
@@ -343,7 +391,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('redes_conexao_teoria', label, {
+      window.reportActivity('devsis_apis_frameworks_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -354,16 +402,16 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[currentStepIndex];
-    reportStep(`Redes — Conexão e IP — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Dev Sistemas — Ferramentas e APIs — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
     const row = document.createElement('div');
     row.className = 'eri-row';
     row.innerHTML = `
-      <div class="eri-avatar">📡</div>
+      <div class="eri-avatar">🧑‍💻</div>
       <div class="speech-bubble">
-        <span class="eri-name">Nex, Técnico da Central de Redes</span>
+        <span class="eri-name">Bit, Mentor de Código</span>
         ${step.story}
       </div>
     `;
@@ -427,7 +475,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Redes — Conexão e IP — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Dev Sistemas — Ferramentas e APIs — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -448,7 +496,7 @@
 
   function finishJourney() {
     saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: true });
-    reportStep(`Redes — Conexão e IP — Concluída (${correctCount}/${STEPS.length})`);
+    reportStep(`Dev Sistemas — Ferramentas e APIs — Concluída (${correctCount}/${STEPS.length})`);
 
     progressFill.style.width = '100%';
     lblStepNum.textContent = STEPS.length;
@@ -456,10 +504,10 @@
     storyWrap.innerHTML = `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Conexão e Endereçamento IP concluídos!</h2>
-        <p>Você já conhece topologias, meios físicos, Wi-Fi/Bluetooth, gateway, IPv4/IPv6, máscara de sub-rede, CIDR, conflito de IP, ping e tracert.</p>
+        <h2>Ferramentas, APIs e Frameworks concluídos!</h2>
+        <p>Você já conhece VS Code, Git, debugging, convenções de nomenclatura, peer review, APIs/JSON, bibliotecas, frameworks, CLI scaffold, componentes e rotas.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas.</div>
-        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Redes.</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Sistemas.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>

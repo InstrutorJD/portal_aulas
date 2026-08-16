@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Comentários em SQL e PL/SQL: Teoria</title>
+<title>PixelForge Studios — Requisitos Funcionais e Não Funcionais: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -102,8 +102,6 @@
   .btn-topbar:hover{ background:rgba(58,160,255,0.1); }
   .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
 
-  /* Celular: deixa a página rolar em vez de prender tudo numa tela só, e
-     tira padding/borda que só rouba espaço útil numa tela pequena. */
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
@@ -113,7 +111,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'sql_comentarios_teoria';
+  window.ACTIVITY_LOCATION = 'devsis_requisitos_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -126,10 +124,10 @@
 
 <div class="env">
   <div class="topbar">
-    <div>SQL — DOCUMENTAÇÃO DE CÓDIGO (TEORIA)</div>
+    <div>DEV SISTEMAS — CENTRAL DE SISTEMAS (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -142,131 +140,144 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `sql_comentarios_teoria_progress_${username}`;
+  const PROGRESS_KEY = `devsis_requisitos_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Oi de novo! Eu sou a <b>Query</b>, e agora vamos falar de uma capacidade que parece simples, mas faz toda diferença: <b>documentar seu código com comentários</b>. Comentários são textos que o banco de dados IGNORA na hora de rodar — servem só pra explicar o código pra quem for ler depois (inclusive você mesmo, no futuro).',
+      story: 'De volta! Eu sou o <b>Bit</b> de novo. Agora vamos falar de <b>requisitos</b>: antes de escolher QUALQUER tecnologia, é preciso entender o que o sistema PRECISA fazer. Existem dois tipos: <b>requisitos funcionais</b> (O QUE o sistema faz) e <b>requisitos não funcionais</b> (COMO ele se comporta — performance, segurança, escalabilidade).',
       question: {
-        prompt: 'O que acontece quando o banco de dados encontra um comentário no meio do código SQL?',
+        prompt: 'Qual é a diferença entre um requisito FUNCIONAL e um NÃO FUNCIONAL?',
         options: [
-          'Ele ignora o comentário e não executa aquele trecho',
-          'Ele executa o comentário como se fosse um comando',
-          'Ele para de executar o script inteiro',
-          'Ele apaga a linha do banco'
+          'Funcional é O QUE o sistema faz; não funcional é COMO ele se comporta',
+          'Não existe diferença entre os dois',
+          'Funcional é sempre mais importante que não funcional',
+          'Não funcional só existe em jogos'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Comentários são só texto explicativo — o banco simplesmente pula essa parte na hora de rodar o código.'
+        explanation: 'Isso! Requisito funcional descreve uma ação/funcionalidade; não funcional descreve uma característica de qualidade do sistema.'
       }
     },
     {
-      story: 'Em SQL, o comentário de UMA LINHA começa com dois traços: <code>--</code>. Tudo que vem depois dele, até o fim da linha, é ignorado.<pre>-- lista os funcionários do setor de TI\nSELECT * FROM funcionarios WHERE departamento_id = 1;</pre>',
+      story: 'Exemplo de requisito <b>funcional</b>: "o sistema deve permitir que o usuário faça login com e-mail e senha". Repare que é uma AÇÃO concreta que o sistema executa.',
       question: {
-        prompt: 'Qual símbolo inicia um comentário de UMA LINHA em SQL?',
-        options: ['--', '//', '#', '**'],
-        correctIndex: 0,
-        explanation: 'Correto! Dois traços (--) comentam até o final daquela linha.'
-      }
-    },
-    {
-      story: 'Quando o comentário precisa ocupar VÁRIAS linhas, usamos <code>/* ... */</code> — tudo entre a abertura e o fechamento é ignorado, mesmo passando por várias linhas.<pre>/* Este bloco calcula\n   o total de vendas do mês */\nSELECT SUM(valor) FROM vendas;</pre>',
-      question: {
-        prompt: 'Qual sintaxe permite um comentário de VÁRIAS linhas em SQL?',
-        options: ['/* ... */', '-- ... --', '<!-- ... -->', '""" ... """'],
-        correctIndex: 0,
-        explanation: 'Isso! /* abre e */ fecha um comentário que pode se espalhar por quantas linhas precisar.'
-      }
-    },
-    {
-      story: 'Comentários são úteis pra explicar a INTENÇÃO de um trecho complicado — por exemplo, por que um agrupamento (GROUP BY) foi feito daquele jeito, ou o que uma consulta com vários JOINs está tentando responder. Bom comentário explica o "por quê", não repete o óbvio do "o quê".',
-      question: {
-        prompt: 'Qual desses é o MELHOR uso de comentário?',
+        prompt: 'Qual desses é um exemplo de requisito FUNCIONAL?',
         options: [
-          'Explicar por que a consulta agrupa os dados daquele jeito específico',
-          'Repetir "isso é um SELECT" em cima de todo SELECT',
-          'Comentar cada vírgula da consulta',
-          'Nenhum dos dois — comentário nunca ajuda'
+          '"O sistema deve permitir que o usuário faça login"',
+          '"O sistema deve responder em menos de 2 segundos"',
+          '"O sistema deve suportar 10 mil usuários simultâneos"',
+          '"O sistema deve ser compatível com qualquer navegador"'
         ],
         correctIndex: 0,
-        explanation: 'Exato! O comentário mais útil explica a lógica ou intenção — não descreve o óbvio que o próprio código já mostra.'
+        explanation: 'Correto! Permitir login é uma AÇÃO que o sistema executa — típico de requisito funcional.'
       }
     },
     {
-      story: 'Em PL/SQL, comentários também documentam a <b>declaração de variáveis</b> — deixando claro pra que serve cada uma:<pre>DECLARE\n  v_total NUMBER(10,2); -- soma acumulada das vendas\nBEGIN\n  ...\nEND;</pre>',
+      story: 'Já um requisito <b>não funcional</b> descreve uma QUALIDADE do sistema, não uma ação específica. Exemplo: "o sistema deve responder em menos de 2 segundos" — isso não descreve UMA funcionalidade, mas sim o desempenho de TODAS elas.',
       question: {
-        prompt: 'Num bloco PL/SQL, o que um comentário ao lado de "v_total NUMBER(10,2);" normalmente explica?',
+        prompt: 'Qual desses é um exemplo de requisito NÃO FUNCIONAL?',
         options: [
-          'Pra que serve aquela variável',
-          'O valor atual da variável em tempo de execução',
-          'O tipo de dado (isso já está explícito no código)',
-          'O nome do bloco PL/SQL'
+          '"O sistema deve responder em menos de 2 segundos"',
+          '"O sistema deve permitir cadastrar um produto"',
+          '"O sistema deve enviar um e-mail de confirmação"',
+          '"O sistema deve exportar um relatório em PDF"'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Comentário na declaração explica o PROPÓSITO da variável — o tipo de dado já está visível no próprio código.'
+        explanation: 'Isso! Tempo de resposta é uma característica de QUALIDADE (performance), não uma funcionalidade específica — por isso é não funcional.'
       }
     },
     {
-      story: 'Também é comum comentar os <b>desvios condicionais</b> (IF/ELSE) explicando a regra de negócio por trás da condição, e as <b>condições de parada de laços</b> (o EXIT WHEN de um LOOP) — pra quem ler entender rápido POR QUE o código para ali.<pre>EXIT WHEN v_contador > 100; -- limite de segurança do laço</pre>',
+      story: 'Quando o requisito NÃO funcional é <b>performance</b> (ex: "carregar rápido, mesmo no celular"), isso influencia diretamente a escolha de bibliotecas: entre duas opções que fazem a mesma coisa, a mais leve/rápida tende a ser a escolha certa.',
       question: {
-        prompt: 'Por que comentar a condição de parada de um LOOP (como um EXIT WHEN) costuma ser útil?',
+        prompt: 'Ao escolher entre duas bibliotecas equivalentes, uma pesada com muitos recursos e outra leve e rápida, para um app que precisa carregar rápido no celular, o que priorizar?',
         options: [
-          'Explica a razão daquele limite, que nem sempre é óbvia só olhando o número',
-          'Faz o laço rodar mais rápido',
-          'É a única forma de o laço realmente parar',
-          'Substitui a necessidade do EXIT WHEN'
+          'A biblioteca mais leve e rápida, pelo requisito de performance',
+          'Sempre a mais pesada, porque tem mais recursos',
+          'Não importa, todas as bibliotecas pesam igual',
+          'Nenhuma das duas, escrever tudo do zero sempre'
         ],
         correctIndex: 0,
-        explanation: 'Isso! O número sozinho (como 100) não conta a história — o comentário explica de onde veio aquele limite.'
+        explanation: 'Exato! Quando o requisito não funcional é performance, a biblioteca mais leve tende a ser a escolha certa — mesmo abrindo mão de recursos extras.'
       }
     },
     {
-      story: 'Por fim, é boa prática colocar um <b>comentário de cabeçalho</b> no início de um bloco PL/SQL mais complexo, resumindo o que ele faz, antes mesmo do DECLARE — como um resumo rápido pra quem só quer entender o objetivo sem ler linha por linha.<pre>/* Calcula o bônus anual de cada funcionário\n   com base no salário e no tempo de casa. */\nDECLARE\n  ...</pre>',
+      story: 'Já a escolha de um <b>framework</b> costuma partir de requisitos FUNCIONAIS: se o projeto PRECISA de automação de tarefas repetitivas, por exemplo, escolhemos um framework que já resolve isso pronto, em vez de reconstruir essa funcionalidade do zero.',
       question: {
-        prompt: 'Um comentário de cabeçalho, no topo de um bloco PL/SQL, serve principalmente para:',
-        options: [
-          'Resumir o objetivo do bloco antes de entrar nos detalhes do código',
-          'Substituir a necessidade de DECLARE',
-          'Ser executado como parte da lógica',
-          'Aumentar a performance do bloco'
-        ],
+        prompt: 'Escolher um framework porque ele já resolve pronto uma funcionalidade que o projeto PRECISA ter é decidir com base em qual tipo de requisito?',
+        options: ['Requisito funcional', 'Requisito não funcional', 'Nenhum requisito, só preferência pessoal', 'Requisito de design visual'],
         correctIndex: 0,
-        explanation: 'Correto! É um resumo rápido — documentação técnica do que aquele bloco resolve, sem precisar ler tudo primeiro.'
+        explanation: 'Isso! A funcionalidade que o projeto precisa entregar é justamente o requisito FUNCIONAL — e o framework é escolhido pra atendê-lo.'
       }
     },
     {
-      story: 'Cuidado com o extremo oposto também: comentar TUDO, inclusive o óbvio, deixa o código poluído e mais difícil de ler — não mais fácil. O segredo é comentar o que NÃO é óbvio só de olhar o código. Com isso, você já sabe documentar consultas SQL e blocos PL/SQL com comentários que realmente ajudam.',
+      story: 'Cuidado com um erro comum: escolher uma tecnologia só porque "todo mundo usa" ou "é a mais popular", SEM checar se ela realmente atende aos requisitos do projeto. Popularidade não é o mesmo que adequação.',
       question: {
-        prompt: 'Qual é o problema de comentar CADA linha do código, mesmo as óbvias?',
+        prompt: 'Qual é o problema de escolher uma tecnologia só porque ela é popular, sem checar os requisitos do projeto?',
         options: [
-          'Polui o código e dificulta achar os comentários que realmente importam',
-          'O banco de dados recusa rodar o script',
-          'Deixa a consulta mais lenta',
-          'Não existe problema nenhum'
+          'A escolha pode não atender aos requisitos reais do projeto',
+          'Tecnologias populares nunca têm problema',
+          'Não existe problema nenhum nessa abordagem',
+          'É sempre a decisão mais rápida e correta'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Excesso de comentários óbvios "afoga" os comentários realmente úteis — comente com intenção, não por hábito.'
+        explanation: 'Correto! Popularidade não garante adequação — a tecnologia certa é a que atende aos requisitos DAQUELE projeto específico.'
+      }
+    },
+    {
+      story: 'Depois de escolher, é importante <b>justificar e documentar</b> a decisão: por que essa API, essa biblioteca ou esse framework foi escolhido, e não outro. Isso ajuda o time inteiro a entender (e revisar, se precisar) a decisão no futuro.',
+      question: {
+        prompt: 'Por que é importante justificar e documentar a escolha de uma tecnologia num projeto?',
+        options: [
+          'Ajuda o time a entender e revisar a decisão no futuro',
+          'É burocracia sem utilidade real',
+          'Só serve pra impressionar o cliente',
+          'Não influencia em nada o projeto'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Documentar o "porquê" da escolha evita retrabalho e confusão quando alguém (inclusive você mesmo) revisitar essa decisão depois.'
+      }
+    },
+    {
+      story: 'Escolher a tecnologia ERRADA tem custo real: pode significar performance ruim, retrabalho pra trocar de biblioteca no meio do projeto, ou até funcionalidades que nunca ficam prontas do jeito que o cliente precisava.',
+      question: {
+        prompt: 'Qual é uma consequência real de escolher a tecnologia errada para um projeto?',
+        options: [
+          'Retrabalho, performance ruim ou funcionalidades que não atendem ao que era preciso',
+          'Nenhuma consequência, tecnologia é sempre intercambiável sem custo',
+          'O projeto sempre fica mais rápido de qualquer forma',
+          'O cliente nunca percebe a diferença'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! A tecnologia errada custa tempo, dinheiro e qualidade — por isso vale investir tempo analisando os requisitos antes de decidir.'
+      }
+    },
+    {
+      story: 'Resumindo: toda escolha de tecnologia — API, biblioteca ou framework — deveria partir dos <b>requisitos reais</b> do projeto (funcionais E não funcionais), não da preferência pessoal do desenvolvedor ou da tecnologia "da moda". Com isso, você já sabe como definir tecnologias de forma consciente.',
+      question: {
+        prompt: 'De onde deveria partir toda escolha de tecnologia num projeto?',
+        options: [
+          'Dos requisitos reais do projeto (funcionais e não funcionais)',
+          'Da preferência pessoal do desenvolvedor',
+          'Da tecnologia mais nova do mercado, sempre',
+          'Do que é mais fácil de aprender'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Requisitos primeiro, tecnologia depois — essa ordem evita escolhas erradas por modismo ou preferência pessoal.'
       }
     }
   ];
 
-  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
-  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
-  // sem o professor precisar abrir o módulo pra achar o botão.
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Comentários em SQL e PL/SQL',
-      subtitle: 'Aula Teórica · Trilha Documentação de Código · Turma Sistemas',
-      capacidade: 'Empregar comentários para documentação do código fonte.',
+      title: 'Dev Sistemas — Requisitos Funcionais e Não Funcionais',
+      subtitle: 'Aula Teórica · Trilha Tecnologias e Requisitos · Turma Sistemas',
+      capacidade: 'Definir tecnologias de acordo com os requisitos não funcionais / funcionais.',
       steps: STEPS,
-      fileName: 'sql-comentarios-teoria-slides.pptx',
-      closingTitle: 'Pratique a documentação!',
-      closingText: 'Ao escrever consultas SQL e blocos PL/SQL nos outros módulos, aplique comentários que expliquem o "por quê", não o óbvio.'
+      fileName: 'devsis-requisitos-teoria-slides.pptx',
+      closingTitle: 'Hora da prática!',
+      closingText: 'Abra o módulo "Prática — Central de Sistemas: Requisitos" no Portal de Aulas para os alunos resolverem chamados de verdade.'
     });
   };
 
-  // Só o professor vê o botão de gerar slides aqui dentro do módulo — é
-  // material de apoio pra ele apresentar em aula, não faz parte da jornada
-  // do aluno.
   const role = urlParams.get('role') || 'aluno';
   const btnGenSlides = document.getElementById('btnGenSlides');
   if (role === 'professor') {
@@ -313,7 +324,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('sql_comentarios_teoria', label, {
+      window.reportActivity('devsis_requisitos_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -324,16 +335,16 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[currentStepIndex];
-    reportStep(`Comentários em SQL/PL-SQL — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Dev Sistemas — Requisitos — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
     const row = document.createElement('div');
     row.className = 'eri-row';
     row.innerHTML = `
-      <div class="eri-avatar">🤖</div>
+      <div class="eri-avatar">🧑‍💻</div>
       <div class="speech-bubble">
-        <span class="eri-name">Query, IA da Central de Dados</span>
+        <span class="eri-name">Bit, Mentor de Código</span>
         ${step.story}
       </div>
     `;
@@ -397,7 +408,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Comentários em SQL/PL-SQL — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Dev Sistemas — Requisitos — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -418,7 +429,7 @@
 
   function finishJourney() {
     saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: true });
-    reportStep(`Comentários em SQL/PL-SQL — Concluída (${correctCount}/${STEPS.length})`);
+    reportStep(`Dev Sistemas — Requisitos — Concluída (${correctCount}/${STEPS.length})`);
 
     progressFill.style.width = '100%';
     lblStepNum.textContent = STEPS.length;
@@ -426,10 +437,10 @@
     storyWrap.innerHTML = `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Documentação de código concluída!</h2>
-        <p>Você já sabe usar -- e /* */ pra documentar consultas SQL e blocos PL/SQL, explicando o "por quê" sem poluir o código com o óbvio.</p>
+        <h2>Requisitos Funcionais e Não Funcionais concluídos!</h2>
+        <p>Você já sabe diferenciar requisito funcional de não funcional, e como usar isso pra escolher APIs, bibliotecas e frameworks de forma consciente.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas.</div>
-        <p>Aplique isso nos outros módulos da trilha SQL: comente suas consultas mais complexas.</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Sistemas.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>

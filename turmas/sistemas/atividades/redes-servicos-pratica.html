@@ -15,7 +15,7 @@
   *{box-sizing:border-box;}
   body{
     margin:0; padding:10px; background:var(--bg); color:var(--ink);
-    font-family:'JetBrains Mono', monospace; height:100vh; overflow:hidden;
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
   }
 
   .env{
@@ -57,7 +57,7 @@
   .ticket-status.pending{ background:rgba(255,91,77,0.15); color:var(--blood-bright); }
   .ticket-status.done{ background:rgba(58,160,255,0.15); color:var(--green); }
 
-  .challenge-header h2{ font-family:'VT323', monospace; font-size:19px; color:var(--green); margin:0 0 8px; letter-spacing:1px; }
+  .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 8px; letter-spacing:1px; }
   .challenge-header p{ font-size:12px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
   .challenge-header code{ color:var(--yellow); }
 

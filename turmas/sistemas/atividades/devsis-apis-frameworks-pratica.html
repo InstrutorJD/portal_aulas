@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Redes: Central de Conexões</title>
+<title>PixelForge Studios — Dev Sistemas: Ferramentas e APIs</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -114,9 +114,6 @@
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--green); font-weight:bold; }
 
-  /* Celular/telas estreitas: a barra lateral + painel lado a lado espreme
-     demais o conteúdo. Empilha tudo numa coluna só e deixa a página
-     inteira rolar, em vez de depender de várias regiões de scroll aninhadas. */
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
@@ -128,7 +125,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'redes_conexao_pratica';
+  window.ACTIVITY_LOCATION = 'devsis_apis_frameworks_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -139,7 +136,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>REDES — CENTRAL DE REDES (CONEXÕES)</div>
+    <div>DEV SISTEMAS — CENTRAL DE SISTEMAS (FERRAMENTAS E APIS)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
@@ -184,57 +181,57 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `redes_conexao_pratica_progress_${username}`;
+  const PROGRESS_KEY = `devsis_apis_frameworks_pratica_progress_${username}`;
 
   const CHALLENGES = [
     {
       id: 1,
-      title: 'Escolha o meio físico',
-      icon: '🔌',
-      explanation: 'Cada meio físico tem pontos fortes diferentes: cabo par trançado é barato e prático em distâncias curtas; fibra óptica aguenta longas distâncias e não sofre interferência elétrica; tecnologias sem fio evitam cabo, mas têm alcance e velocidade variáveis.',
-      desc: 'Você precisa conectar dois <b>prédios distantes 500 metros</b>, numa área com muita interferência elétrica de máquinas industriais. Qual meio físico é o mais indicado?',
-      hint: 'Pense em qual meio NÃO usa sinal elétrico pra transmitir dados — isso resolve o problema da interferência.',
-      options: ['Fibra óptica', 'Cabo par trançado (UTP)', 'Bluetooth', 'Cabo coaxial curto'],
+      title: 'Pausando a execução',
+      icon: '🐞',
+      explanation: 'Um breakpoint marca uma linha pra a execução parar exatamente ali, permitindo inspecionar o valor de cada variável naquele momento — mais preciso que espalhar console.log pelo código.',
+      desc: 'Chamado: um bug só acontece depois de várias chamadas de função, e você precisa ver o valor exato de uma variável bem naquele ponto do código. Qual ferramenta usar?',
+      hint: 'É um recurso do depurador (debugger) que pausa a execução numa linha específica.',
+      options: ['Um breakpoint no depurador', 'Um comentário no código', 'Um console.log no final do arquivo', 'Reiniciar o VS Code'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Identifique o dispositivo',
-      icon: '🚪',
-      explanation: 'O gateway é o "portão de saída" da rede local — sem ele configurado corretamente, o tráfego não sabe como sair pra fora da rede.',
-      desc: 'Um chamado descreve: "minha rede local funciona (consigo acessar outros PCs da empresa), mas não consigo acessar a internet". Qual dispositivo/configuração é o mais provável responsável?',
-      hint: 'É o dispositivo que serve de "porta de saída" da rede local pra internet.',
-      options: ['Gateway (roteador) mal configurado', 'Switch com defeito', 'Access Point desligado', 'Patch panel sem uso'],
+      title: 'Nomenclatura certa',
+      icon: '🏷️',
+      explanation: 'PascalCase (primeira letra de cada palavra maiúscula) é a convenção usada pra nomear classes e componentes — diferente do camelCase usado em variáveis e funções.',
+      desc: 'Chamado: você precisa nomear um novo COMPONENTE de interface chamado "perfil do usuário". Qual convenção de nomenclatura usar?',
+      hint: 'É a mesma convenção usada pra nomear classes — cada palavra começa com letra maiúscula, sem espaço ou underline.',
+      options: ['PascalCase (ex: PerfilUsuario)', 'camelCase (ex: perfilUsuario)', 'snake_case (ex: perfil_usuario)', 'kebab-case (ex: perfil-usuario)'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Classifique o endereço',
-      icon: '🏷️',
-      explanation: 'As faixas privadas mais comuns são 192.168.0.0/16, 172.16.0.0/12 (de 172.16 a 172.31) e 10.0.0.0/8. Qualquer coisa fora dessas faixas costuma ser um IP público.',
-      desc: 'Qual desses endereços pertence a uma faixa <b>PRIVADA</b> (de rede local, não roteável direto na internet)?',
-      hint: 'Uma das faixas privadas mais conhecidas começa com 192.168.',
-      options: ['192.168.5.10', '8.8.8.8', '172.32.0.1', '200.150.1.1'],
+      title: 'Por que revisar',
+      icon: '👀',
+      explanation: 'Peer review existe pra pegar bugs e compartilhar conhecimento entre a equipe ANTES da mudança entrar oficialmente no projeto — uma camada extra de qualidade.',
+      desc: 'Chamado: um colega perguntou por que a equipe exige que outra pessoa revise (peer review) o código antes de aceitar a mudança no repositório. Qual é a resposta certa?',
+      hint: 'Pense no que uma segunda pessoa consegue enxergar que quem escreveu o código pode não perceber.',
+      options: ['Pra pegar bugs e compartilhar conhecimento antes da mudança entrar no projeto', 'Pra deixar o código mais bonito só visualmente', 'É uma etapa obrigatória sem propósito real', 'Pra aumentar o número de commits'],
       correctIndex: 0
     },
     {
       id: 4,
-      title: 'Escolha o comando certo',
-      icon: '🗺️',
-      explanation: 'ping testa SE um host responde. tracert/traceroute mostra POR ONDE (quais roteadores) o tráfego passa até chegar lá — útil pra descobrir em qual trecho da rota o problema está.',
-      desc: 'Um chamado pede: "quero saber por quais roteadores meu tráfego passa até chegar num site específico". Qual comando resolve isso?',
-      hint: 'Não é o comando que só testa "está acessível ou não" — é o que mostra o caminho inteiro.',
-      options: ['tracert', 'ping', 'ipconfig', 'netstat'],
+      title: 'Formato de dados',
+      icon: '📦',
+      explanation: 'JSON (JavaScript Object Notation) é o formato mais comum de troca de dados entre sistemas hoje — leve, estruturado em objetos e listas, fácil de ler.',
+      desc: 'Chamado: você vai consumir uma API pública nova e precisa saber em que formato os dados provavelmente virão. Qual é a resposta mais provável?',
+      hint: 'É o formato baseado em chave-valor e listas, muito usado por APIs modernas.',
+      options: ['JSON', 'Apenas XML', 'Texto puro sem estrutura', 'Apenas imagens'],
       correctIndex: 0
     },
     {
       id: 5,
-      title: 'Diagnostique o conflito',
-      icon: '⚠️',
-      explanation: 'Quando dois dispositivos recebem manualmente o mesmo endereço IP, a rede não consegue distinguir pra quem entregar os pacotes — o sistema operacional costuma até avisar sobre o conflito.',
-      desc: 'Dois notebooks da mesma rede foram configurados manualmente com o <b>mesmo endereço IP</b> e os dois começaram a perder conexão do nada. Qual é a causa mais provável?',
-      hint: 'Pense no que acontece quando dois dispositivos "disputam" o mesmo endereço.',
-      options: ['Conflito de IP', 'Cabo rompido', 'Falta de gateway', 'DNS incorreto'],
+      title: 'Framework ou biblioteca?',
+      icon: '🧩',
+      explanation: 'Um framework define a estrutura geral do projeto — você se encaixa nele. Uma biblioteca é uma ferramenta pontual que você chama quando precisa de algo específico, sem ditar a arquitetura do projeto.',
+      desc: 'Chamado: a equipe está decidindo se usa um FRAMEWORK completo ou só uma BIBLIOTECA pontual pro novo projeto. Qual é a diferença real entre as duas opções?',
+      hint: 'Pense em qual das duas opções "dita as regras" da estrutura do projeto inteiro, e qual você só usa quando precisa.',
+      options: ['O framework define a estrutura geral do projeto; a biblioteca você chama quando precisa', 'Não existe diferença entre os dois', 'Framework é sempre mais lento que biblioteca', 'Biblioteca só funciona em uma linguagem'],
       correctIndex: 0
     }
   ];
@@ -299,7 +296,6 @@
   function renderOptions(challenge, alreadyDone) {
     optionsPanel.innerHTML = '';
     const letters = ['A', 'B', 'C', 'D'];
-    const wrongTried = new Set();
 
     challenge.options.forEach((optText, idx) => {
       const opt = document.createElement('div');
@@ -327,7 +323,7 @@
 
         const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
         if (isLast) {
-          logConsole('🏆 Chamado resolvido! Você concluiu todos os chamados de conexões!', 'success');
+          logConsole('🏆 Chamado resolvido! Você concluiu todos os chamados de ferramentas e APIs!', 'success');
         } else {
           logConsole('✅ Chamado resolvido! Próximo chamado liberado.', 'success');
           btnNext.style.display = 'inline-block';
@@ -336,13 +332,12 @@
 
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(
-            'redes_conexao_pratica',
-            `Redes — Conexões — Chamado ${challenge.id}: ${challenge.title} (resolvido)`,
+            'devsis_apis_frameworks_pratica',
+            `Dev Sistemas — Ferramentas e APIs — Chamado ${challenge.id}: ${challenge.title} (resolvido)`,
             { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
           );
         }
       } else {
-        wrongTried.add(idx);
         opt.classList.add('incorrect');
         logConsole('❌ Não é essa. Tente outra opção — a dica pode ajudar.', 'fail');
       }
@@ -376,8 +371,8 @@
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
-        'redes_conexao_pratica',
-        `Redes — Conexões — Chamado ${challenge.id}: ${challenge.title}`,
+        'devsis_apis_frameworks_pratica',
+        `Dev Sistemas — Ferramentas e APIs — Chamado ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }

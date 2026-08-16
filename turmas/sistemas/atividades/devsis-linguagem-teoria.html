@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Comentários em SQL e PL/SQL: Teoria</title>
+<title>PixelForge Studios — Linguagens e Plataformas: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -102,8 +102,6 @@
   .btn-topbar:hover{ background:rgba(58,160,255,0.1); }
   .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
 
-  /* Celular: deixa a página rolar em vez de prender tudo numa tela só, e
-     tira padding/borda que só rouba espaço útil numa tela pequena. */
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
@@ -113,7 +111,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'sql_comentarios_teoria';
+  window.ACTIVITY_LOCATION = 'devsis_linguagem_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -126,10 +124,10 @@
 
 <div class="env">
   <div class="topbar">
-    <div>SQL — DOCUMENTAÇÃO DE CÓDIGO (TEORIA)</div>
+    <div>DEV SISTEMAS — CENTRAL DE SISTEMAS (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -142,131 +140,129 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `sql_comentarios_teoria_progress_${username}`;
+  const PROGRESS_KEY = `devsis_linguagem_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Oi de novo! Eu sou a <b>Query</b>, e agora vamos falar de uma capacidade que parece simples, mas faz toda diferença: <b>documentar seu código com comentários</b>. Comentários são textos que o banco de dados IGNORA na hora de rodar — servem só pra explicar o código pra quem for ler depois (inclusive você mesmo, no futuro).',
+      story: 'Última parada! Eu sou o <b>Bit</b> de novo. Agora vamos falar de como escolher a <b>linguagem certa pra cada plataforma</b>. As três grandes plataformas — <b>Web</b>, <b>Desktop</b> e <b>Mobile</b> — têm linguagens/tecnologias dominantes diferentes, e escolher errado custa retrabalho.',
       question: {
-        prompt: 'O que acontece quando o banco de dados encontra um comentário no meio do código SQL?',
+        prompt: 'Por que a escolha de linguagem de programação muda dependendo da plataforma-alvo (Web, Desktop, Mobile)?',
         options: [
-          'Ele ignora o comentário e não executa aquele trecho',
-          'Ele executa o comentário como se fosse um comando',
-          'Ele para de executar o script inteiro',
-          'Ele apaga a linha do banco'
+          'Porque cada plataforma tem tecnologias dominantes e requisitos diferentes',
+          'Porque não existe diferença nenhuma entre plataformas',
+          'Porque toda linguagem funciona igual em qualquer lugar',
+          'Porque a escolha é sempre aleatória'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Comentários são só texto explicativo — o banco simplesmente pula essa parte na hora de rodar o código.'
+        explanation: 'Isso! Cada plataforma tem seu próprio ecossistema — o que funciona bem na Web não é necessariamente o ideal pra Mobile ou Desktop.'
       }
     },
     {
-      story: 'Em SQL, o comentário de UMA LINHA começa com dois traços: <code>--</code>. Tudo que vem depois dele, até o fim da linha, é ignorado.<pre>-- lista os funcionários do setor de TI\nSELECT * FROM funcionarios WHERE departamento_id = 1;</pre>',
+      story: 'Na <b>Web</b>, a combinação dominante é <b>HTML</b> (estrutura), <b>CSS</b> (estilo) e <b>JavaScript</b> (comportamento) — é o que todo navegador entende nativamente, sem precisar instalar nada.',
       question: {
-        prompt: 'Qual símbolo inicia um comentário de UMA LINHA em SQL?',
-        options: ['--', '//', '#', '**'],
+        prompt: 'Qual conjunto de tecnologias é o padrão pra construir algo que roda direto no NAVEGADOR, sem instalação?',
+        options: ['HTML, CSS e JavaScript', 'Apenas C#', 'Apenas Swift', 'Apenas Kotlin'],
         correctIndex: 0,
-        explanation: 'Correto! Dois traços (--) comentam até o final daquela linha.'
+        explanation: 'Correto! Todo navegador entende HTML/CSS/JS nativamente — por isso essa é a combinação padrão pra Web.'
       }
     },
     {
-      story: 'Quando o comentário precisa ocupar VÁRIAS linhas, usamos <code>/* ... */</code> — tudo entre a abertura e o fechamento é ignorado, mesmo passando por várias linhas.<pre>/* Este bloco calcula\n   o total de vendas do mês */\nSELECT SUM(valor) FROM vendas;</pre>',
+      story: 'No <b>Mobile</b>, cada sistema operacional tem sua linguagem nativa preferida: <b>Kotlin</b> pra Android, <b>Swift</b> pra iOS. Também existem frameworks multiplataforma (como React Native e Flutter) que escrevem uma vez e rodam nos dois.',
       question: {
-        prompt: 'Qual sintaxe permite um comentário de VÁRIAS linhas em SQL?',
-        options: ['/* ... */', '-- ... --', '<!-- ... -->', '""" ... """'],
+        prompt: 'Qual linguagem é a mais indicada pra um app NATIVO iOS, com o melhor desempenho possível na plataforma da Apple?',
+        options: ['Swift', 'JavaScript', 'PHP', 'SQL'],
         correctIndex: 0,
-        explanation: 'Isso! /* abre e */ fecha um comentário que pode se espalhar por quantas linhas precisar.'
+        explanation: 'Isso! Swift é a linguagem nativa da Apple pra iOS — a escolha certa quando o objetivo é máximo desempenho naquela plataforma específica.'
       }
     },
     {
-      story: 'Comentários são úteis pra explicar a INTENÇÃO de um trecho complicado — por exemplo, por que um agrupamento (GROUP BY) foi feito daquele jeito, ou o que uma consulta com vários JOINs está tentando responder. Bom comentário explica o "por quê", não repete o óbvio do "o quê".',
+      story: 'No <b>Desktop</b>, é comum ver C#/.NET (forte no Windows), ou até tecnologias web empacotadas com <b>Electron</b> (JavaScript rodando como app desktop, como o VS Code e o Discord).',
       question: {
-        prompt: 'Qual desses é o MELHOR uso de comentário?',
+        prompt: 'O que o Electron permite fazer?',
         options: [
-          'Explicar por que a consulta agrupa os dados daquele jeito específico',
-          'Repetir "isso é um SELECT" em cima de todo SELECT',
-          'Comentar cada vírgula da consulta',
-          'Nenhum dos dois — comentário nunca ajuda'
+          'Empacotar tecnologias web (JS/HTML/CSS) como um aplicativo desktop',
+          'Rodar apps só no navegador',
+          'Substituir totalmente o sistema operacional',
+          'Compilar código Swift pra Android'
         ],
         correctIndex: 0,
-        explanation: 'Exato! O comentário mais útil explica a lógica ou intenção — não descreve o óbvio que o próprio código já mostra.'
+        explanation: 'Exato! Electron permite reaproveitar conhecimento web pra construir aplicativos desktop de verdade — é assim que VS Code e Discord funcionam.'
       }
     },
     {
-      story: 'Em PL/SQL, comentários também documentam a <b>declaração de variáveis</b> — deixando claro pra que serve cada uma:<pre>DECLARE\n  v_total NUMBER(10,2); -- soma acumulada das vendas\nBEGIN\n  ...\nEND;</pre>',
+      story: 'Independente da plataforma, um app precisa ter <b>responsividade</b>: a interface se adapta bem tanto numa tela pequena de celular quanto num monitor grande — sem elementos cortados ou ilegíveis.',
       question: {
-        prompt: 'Num bloco PL/SQL, o que um comentário ao lado de "v_total NUMBER(10,2);" normalmente explica?',
-        options: [
-          'Pra que serve aquela variável',
-          'O valor atual da variável em tempo de execução',
-          'O tipo de dado (isso já está explícito no código)',
-          'O nome do bloco PL/SQL'
-        ],
+        prompt: 'Qual conceito garante que um app funcione bem tanto num celular pequeno quanto num monitor grande?',
+        options: ['Responsividade', 'Compilação', 'Peer Review', 'Debugging'],
         correctIndex: 0,
-        explanation: 'Isso! Comentário na declaração explica o PROPÓSITO da variável — o tipo de dado já está visível no próprio código.'
+        explanation: 'Isso! Responsividade é a capacidade da interface se adaptar a diferentes tamanhos de tela, mantendo tudo legível e usável.'
       }
     },
     {
-      story: 'Também é comum comentar os <b>desvios condicionais</b> (IF/ELSE) explicando a regra de negócio por trás da condição, e as <b>condições de parada de laços</b> (o EXIT WHEN de um LOOP) — pra quem ler entender rápido POR QUE o código para ali.<pre>EXIT WHEN v_contador > 100; -- limite de segurança do laço</pre>',
+      story: 'Depois de pronto, é essencial fazer <b>testes de compatibilidade</b>: o mesmo site pode se comportar diferente no Chrome, Firefox e Safari; o mesmo app pode ter bugs só em uma versão específica de Android ou iOS.',
       question: {
-        prompt: 'Por que comentar a condição de parada de um LOOP (como um EXIT WHEN) costuma ser útil?',
+        prompt: 'O que são "testes de compatibilidade"?',
         options: [
-          'Explica a razão daquele limite, que nem sempre é óbvia só olhando o número',
-          'Faz o laço rodar mais rápido',
-          'É a única forma de o laço realmente parar',
-          'Substitui a necessidade do EXIT WHEN'
+          'Verificar se o sistema funciona igual em diferentes navegadores/sistemas operacionais',
+          'Testar apenas a velocidade do banco de dados',
+          'Testar apenas a segurança da rede',
+          'Um tipo de teste que não é necessário'
         ],
         correctIndex: 0,
-        explanation: 'Isso! O número sozinho (como 100) não conta a história — o comentário explica de onde veio aquele limite.'
+        explanation: 'Correto! Testes de compatibilidade garantem que o comportamento seja consistente entre diferentes navegadores e sistemas operacionais.'
       }
     },
     {
-      story: 'Por fim, é boa prática colocar um <b>comentário de cabeçalho</b> no início de um bloco PL/SQL mais complexo, resumindo o que ele faz, antes mesmo do DECLARE — como um resumo rápido pra quem só quer entender o objetivo sem ler linha por linha.<pre>/* Calcula o bônus anual de cada funcionário\n   com base no salário e no tempo de casa. */\nDECLARE\n  ...</pre>',
+      story: 'Por fim, o código-fonte terminado precisa virar um <b>binário final</b> pronto pra distribuir — esse processo de transformar o projeto num arquivo instalável/executável se chama <b>build</b> (ou empacotamento).',
       question: {
-        prompt: 'Um comentário de cabeçalho, no topo de um bloco PL/SQL, serve principalmente para:',
-        options: [
-          'Resumir o objetivo do bloco antes de entrar nos detalhes do código',
-          'Substituir a necessidade de DECLARE',
-          'Ser executado como parte da lógica',
-          'Aumentar a performance do bloco'
-        ],
+        prompt: 'Como se chama o processo de transformar o código-fonte terminado num arquivo pronto pra instalar/distribuir?',
+        options: ['Build (empacotamento)', 'Peer Review', 'Debugging', 'Requisito funcional'],
         correctIndex: 0,
-        explanation: 'Correto! É um resumo rápido — documentação técnica do que aquele bloco resolve, sem precisar ler tudo primeiro.'
+        explanation: 'Isso! O build empacota tudo (código, dependências, recursos) num binário final, pronto pra rodar sem precisar do ambiente de desenvolvimento.'
       }
     },
     {
-      story: 'Cuidado com o extremo oposto também: comentar TUDO, inclusive o óbvio, deixa o código poluído e mais difícil de ler — não mais fácil. O segredo é comentar o que NÃO é óbvio só de olhar o código. Com isso, você já sabe documentar consultas SQL e blocos PL/SQL com comentários que realmente ajudam.',
+      story: 'A linguagem "favorita" do desenvolvedor não deveria ser o critério principal — o que importa é o <b>público-alvo</b> e a <b>plataforma</b> onde o produto vai rodar de verdade. Um app Mobile nativo de alta performance pede uma escolha diferente de um site institucional simples.',
       question: {
-        prompt: 'Qual é o problema de comentar CADA linha do código, mesmo as óbvias?',
+        prompt: 'Qual deveria ser o critério PRINCIPAL para escolher uma linguagem de programação num projeto?',
         options: [
-          'Polui o código e dificulta achar os comentários que realmente importam',
-          'O banco de dados recusa rodar o script',
-          'Deixa a consulta mais lenta',
-          'Não existe problema nenhum'
+          'O público-alvo e a plataforma onde o produto vai rodar',
+          'A linguagem favorita do desenvolvedor, sempre',
+          'A linguagem mais recente do mercado, sem exceção',
+          'A linguagem mais fácil de digitar'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Excesso de comentários óbvios "afoga" os comentários realmente úteis — comente com intenção, não por hábito.'
+        explanation: 'Exato! Assim como a escolha de tecnologia parte dos requisitos, a escolha de linguagem parte de ONDE e PRA QUEM o produto vai rodar.'
+      }
+    },
+    {
+      story: 'Resumindo: escolher a linguagem certa significa alinhar três coisas — a <b>plataforma-alvo</b> (Web, Desktop, Mobile), os <b>requisitos</b> do projeto (que você já viu na trilha anterior) e o <b>ecossistema</b> disponível pra essa combinação. Com isso, você já sabe selecionar linguagem e plataforma com critério.',
+      question: {
+        prompt: 'Quais três fatores devem ser alinhados na escolha de uma linguagem de programação?',
+        options: [
+          'Plataforma-alvo, requisitos do projeto e ecossistema disponível',
+          'Só a opinião pessoal do desenvolvedor',
+          'Só o preço da licença da linguagem',
+          'Só a popularidade nas redes sociais'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Plataforma, requisitos e ecossistema juntos apontam pra escolha certa — nenhum dos três sozinho é suficiente.'
       }
     }
   ];
 
-  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
-  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
-  // sem o professor precisar abrir o módulo pra achar o botão.
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Comentários em SQL e PL/SQL',
-      subtitle: 'Aula Teórica · Trilha Documentação de Código · Turma Sistemas',
-      capacidade: 'Empregar comentários para documentação do código fonte.',
+      title: 'Dev Sistemas — Linguagens e Plataformas',
+      subtitle: 'Aula Teórica · Trilha Linguagem e Plataforma · Turma Sistemas',
+      capacidade: 'Selecionar linguagem de programação de acordo com os requisitos.',
       steps: STEPS,
-      fileName: 'sql-comentarios-teoria-slides.pptx',
-      closingTitle: 'Pratique a documentação!',
-      closingText: 'Ao escrever consultas SQL e blocos PL/SQL nos outros módulos, aplique comentários que expliquem o "por quê", não o óbvio.'
+      fileName: 'devsis-linguagem-teoria-slides.pptx',
+      closingTitle: 'Hora da prática!',
+      closingText: 'Abra o módulo "Prática — Central de Sistemas: Linguagem e Plataforma" no Portal de Aulas para os alunos resolverem chamados de verdade.'
     });
   };
 
-  // Só o professor vê o botão de gerar slides aqui dentro do módulo — é
-  // material de apoio pra ele apresentar em aula, não faz parte da jornada
-  // do aluno.
   const role = urlParams.get('role') || 'aluno';
   const btnGenSlides = document.getElementById('btnGenSlides');
   if (role === 'professor') {
@@ -313,7 +309,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('sql_comentarios_teoria', label, {
+      window.reportActivity('devsis_linguagem_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -324,16 +320,16 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[currentStepIndex];
-    reportStep(`Comentários em SQL/PL-SQL — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Dev Sistemas — Linguagem e Plataforma — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
     const row = document.createElement('div');
     row.className = 'eri-row';
     row.innerHTML = `
-      <div class="eri-avatar">🤖</div>
+      <div class="eri-avatar">🧑‍💻</div>
       <div class="speech-bubble">
-        <span class="eri-name">Query, IA da Central de Dados</span>
+        <span class="eri-name">Bit, Mentor de Código</span>
         ${step.story}
       </div>
     `;
@@ -397,7 +393,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Comentários em SQL/PL-SQL — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Dev Sistemas — Linguagem e Plataforma — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -418,7 +414,7 @@
 
   function finishJourney() {
     saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: true });
-    reportStep(`Comentários em SQL/PL-SQL — Concluída (${correctCount}/${STEPS.length})`);
+    reportStep(`Dev Sistemas — Linguagem e Plataforma — Concluída (${correctCount}/${STEPS.length})`);
 
     progressFill.style.width = '100%';
     lblStepNum.textContent = STEPS.length;
@@ -426,10 +422,10 @@
     storyWrap.innerHTML = `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Documentação de código concluída!</h2>
-        <p>Você já sabe usar -- e /* */ pra documentar consultas SQL e blocos PL/SQL, explicando o "por quê" sem poluir o código com o óbvio.</p>
+        <h2>Linguagens e Plataformas concluídas!</h2>
+        <p>Você já sabe as tecnologias dominantes de Web, Desktop e Mobile, além de responsividade, testes de compatibilidade e build/empacotamento.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas.</div>
-        <p>Aplique isso nos outros módulos da trilha SQL: comente suas consultas mais complexas.</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Sistemas.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>

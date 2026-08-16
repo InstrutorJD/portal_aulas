@@ -73,7 +73,78 @@ window.TURMA_CONFIG_SISTEMAS = {
         }
       ]
     },
-    { key: 'dev-sistemas-1', label: 'Desenvolvimento de Sistemas 1', trilhas: [] },
+    {
+      key: 'dev-sistemas-1',
+      label: 'Desenvolvimento de Sistemas 1',
+      trilhas: [
+        {
+          key: 'devsis-apis-frameworks',
+          label: 'APIs, Bibliotecas e Frameworks',
+          desc: 'Aprenda a teoria e depois resolva chamados sobre ferramentas, boas práticas, APIs e frameworks.',
+          capacidade: 'Aplicar linguagem de programação por meio de apis, bibliotecas, frameworks na construção de rotinas de software.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Ferramentas, APIs e Frameworks',
+              desc: 'VS Code, Git local, compilação x interpretação, debugging, convenções de nomenclatura, peer review, consumo de APIs/JSON, bibliotecas, frameworks, CLI scaffold, componentes e rotas.',
+              icon: '🧑‍💻', src: 'atividades/devsis-apis-frameworks-teoria.html',
+              progressKey: 'devsis_apis_frameworks_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Sistemas: Ferramentas e APIs',
+              desc: 'Resolva chamados escolhendo a ferramenta, convenção ou tecnologia certa pra cada cenário.',
+              icon: '🛠️', src: 'atividades/devsis-apis-frameworks-pratica.html',
+              progressKey: 'devsis_apis_frameworks_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        },
+        {
+          key: 'devsis-requisitos-tecnologias',
+          label: 'Tecnologias e Requisitos',
+          desc: 'Aprenda a teoria e depois pratique escolhendo tecnologias de acordo com requisitos funcionais e não funcionais.',
+          capacidade: 'Definir tecnologias de acordo com os requisitos não funcionais / funcionais.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Requisitos Funcionais e Não Funcionais',
+              desc: 'Diferença entre requisito funcional e não funcional, e como escolher APIs, bibliotecas e frameworks a partir deles.',
+              icon: '📋', src: 'atividades/devsis-requisitos-teoria.html',
+              progressKey: 'devsis_requisitos_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Sistemas: Requisitos',
+              desc: 'Resolva chamados classificando requisitos e escolhendo tecnologias de acordo com eles.',
+              icon: '📐', src: 'atividades/devsis-requisitos-pratica.html',
+              progressKey: 'devsis_requisitos_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        },
+        {
+          key: 'devsis-linguagem-plataforma',
+          label: 'Linguagem e Plataforma',
+          desc: 'Aprenda a teoria e depois pratique escolhendo a linguagem e a plataforma certas pra cada projeto.',
+          capacidade: 'Selecionar linguagem de programação de acordo com os requisitos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Linguagens e Plataformas',
+              desc: 'Linguagens dominantes para Web, Desktop e Mobile, responsividade multiplataforma, testes de compatibilidade e build/empacotamento.',
+              icon: '🖥️', src: 'atividades/devsis-linguagem-teoria.html',
+              progressKey: 'devsis_linguagem_teoria_progress_', progressMode: 'flag',
+              hasSlides: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Sistemas: Linguagem e Plataforma',
+              desc: 'Resolva chamados escolhendo a linguagem e a plataforma certas pra cada cenário de projeto.',
+              icon: '📱', src: 'atividades/devsis-linguagem-pratica.html',
+              progressKey: 'devsis_linguagem_pratica_progress_', progressTotal: 5,
+              requires: 'teoria'
+            }
+          ]
+        }
+      ]
+    },
     {
       key: 'redes-computadores',
       label: 'Redes de Computadores',

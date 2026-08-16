@@ -15,7 +15,7 @@
   *{box-sizing:border-box;}
   body{
     margin:0; padding:10px; background:var(--bg); color:var(--ink);
-    font-family:'JetBrains Mono', monospace; height:100vh; overflow:hidden;
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
   }
 
   .env{
@@ -44,7 +44,7 @@
     font-size:14px; line-height:1.7; position:relative;
   }
   .speech-bubble .eri-name{
-    display:block; font-family:'VT323', monospace; font-size:18px; color:var(--green);
+    display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--green);
     letter-spacing:1px; margin-bottom:6px;
   }
   .speech-bubble pre{
@@ -55,7 +55,7 @@
 
   .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
   .card h2{
-    font-family:'VT323', monospace; font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
   }
 
   .option{
@@ -90,7 +90,7 @@
 
   .finish-screen{ text-align:center; }
   .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
-  .finish-screen h2{ font-family:'VT323', monospace; font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
   .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
   .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
 
@@ -366,7 +366,9 @@
 
         const feedback = document.createElement('div');
         feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-        feedback.innerHTML = `${isCorrect ? '✅ Correto!' : '❌ Não foi dessa vez.'} ${q.explanation}`;
+        feedback.innerHTML = isCorrect
+          ? `✅ Correto! ${q.explanation}`
+          : `❌ Não foi dessa vez. A resposta certa é "<b>${q.options[q.correctIndex]}</b>": ${q.explanation.replace(/^(Isso mesmo!|Isso!|Correto!|Exato!|Perfeito!|Correta!)\s*/i, '')}`;
         card.appendChild(feedback);
 
         const actions = document.createElement('div');

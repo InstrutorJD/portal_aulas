@@ -1055,6 +1055,7 @@
     document.getElementById('gameFrameDesc').textContent = game.desc;
 
     const frame = document.getElementById('gameFrame');
+    frame.onload = () => applyA11yToIframe(frame);
     frame.src = `${game.src}?user=${encodeURIComponent(paramUser)}&ip=${encodeURIComponent(paramIp)}&saldo=${encodeURIComponent(paramSaldo)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
 
     if (typeof window.pauseActivityHeartbeat === 'function') window.pauseActivityHeartbeat();
@@ -1083,6 +1084,7 @@
     document.getElementById(`moduleFrameDesc_${trilhaKey}`).textContent = mod.desc || '';
 
     const frame = document.getElementById(`moduleFrame_${trilhaKey}`);
+    frame.onload = () => applyA11yToIframe(frame);
     frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
 
     openModuleFrame[trilhaKey] = modKey;
@@ -1112,6 +1114,34 @@
   }
 
   // ---------- Acessibilidade ----------
+  // Módulos/jogos abrem em <iframe> com documento próprio — as variáveis de
+  // fonte do documento pai não "vazam" pra dentro sozinhas. Aplica as mesmas
+  // variáveis no <html> do iframe (mesma origem, então contentDocument é
+  // acessível) sempre que ele carrega e sempre que o professor/aluno troca
+  // a fonte com um módulo já aberto.
+  function applyA11yToIframe(frame) {
+    if (!frame || !frame.src || frame.src === 'about:blank') return;
+    try {
+      const root = frame.contentDocument && frame.contentDocument.documentElement;
+      if (!root) return;
+      if (a11y.fontMode === 'traditional') {
+        root.style.setProperty('--user-font', 'system-ui, -apple-system, sans-serif');
+        root.style.setProperty('--user-font-display', 'system-ui, -apple-system, sans-serif');
+      } else {
+        root.style.setProperty('--user-font', "'JetBrains Mono', monospace");
+        root.style.setProperty('--user-font-display', "'VT323', monospace");
+      }
+      root.style.setProperty('--user-font-scale', a11y.fontScale);
+    } catch (e) {
+      // iframe ainda não carregou o document, ou é de outra origem — ignora
+    }
+  }
+
+  function applyA11yToOpenIframes() {
+    applyA11yToIframe(document.getElementById('gameFrame'));
+    document.querySelectorAll('iframe[id^="moduleFrame_"]').forEach(applyA11yToIframe);
+  }
+
   function applyA11y() {
     const root = document.documentElement;
     const btnFontStyle = document.getElementById('btnFontStyle');
@@ -1127,6 +1157,7 @@
       btnFontStyle.title = 'Fonte pixelada ativa — clique para usar a fonte tradicional';
     }
     root.style.setProperty('--user-font-scale', a11y.fontScale);
+    applyA11yToOpenIframes();
 
     const vw = document.querySelector('div[vw]');
     if (vw) vw.style.display = a11y.libras ? '' : 'none';

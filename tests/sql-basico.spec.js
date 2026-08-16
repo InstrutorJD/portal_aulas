@@ -79,7 +79,7 @@ test.describe('turmas/sistemas/atividades/sql-basico.html', () => {
 });
 
 test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos', () => {
-  test('completar todos os módulos de Banco de Dados e Redes de Computadores libera a aba Jogos', async ({ page }) => {
+  test('completar todos os módulos das matérias com conteúdo libera a aba Jogos', async ({ page }) => {
     await stubSupabaseDisabled(page);
     await page.addInitScript(user => {
       localStorage.setItem(`sql_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8]));
@@ -87,6 +87,12 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`sql_join_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`sql_agregacao_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`sql_comentarios_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`devsis_apis_frameworks_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`devsis_apis_frameworks_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`devsis_requisitos_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`devsis_requisitos_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`devsis_linguagem_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`devsis_linguagem_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`redes_conexao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`redes_conexao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`redes_resolucao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
