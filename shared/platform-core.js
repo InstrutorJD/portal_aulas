@@ -1057,10 +1057,15 @@
 
     document.getElementById('btnToggleClipboard').addEventListener('click', async () => {
       if (!sbClient) return;
-      gestaoClipboardBlocked = !gestaoClipboardBlocked;
-      await sbClient.from('classroom_settings').upsert({
-        id: cfg.id, clipboard_blocked: gestaoClipboardBlocked, updated_at: new Date().toISOString()
+      const newValue = !gestaoClipboardBlocked;
+      const { error } = await sbClient.from('classroom_settings').upsert({
+        id: cfg.id, clipboard_blocked: newValue, updated_at: new Date().toISOString()
       }, { onConflict: 'id' });
+      if (error) {
+        alert('Não foi possível salvar o bloqueio de copiar/colar: ' + error.message);
+        return;
+      }
+      gestaoClipboardBlocked = newValue;
       renderClipboardButtonGestao();
     });
 

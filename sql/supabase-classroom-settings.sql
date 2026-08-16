@@ -22,13 +22,28 @@ on conflict (id) do nothing;
 
 alter table public.classroom_settings enable row level security;
 
+drop policy if exists "classroom_settings_select_all" on public.classroom_settings;
 create policy "classroom_settings_select_all"
   on public.classroom_settings for select
   using (true);
 
+drop policy if exists "classroom_settings_insert_all" on public.classroom_settings;
+create policy "classroom_settings_insert_all"
+  on public.classroom_settings for insert
+  with check (true);
+
+drop policy if exists "classroom_settings_update_all" on public.classroom_settings;
 create policy "classroom_settings_update_all"
   on public.classroom_settings for update
   using (true)
   with check (true);
 
-alter publication supabase_realtime add table public.classroom_settings;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'classroom_settings'
+  ) then
+    alter publication supabase_realtime add table public.classroom_settings;
+  end if;
+end $$;

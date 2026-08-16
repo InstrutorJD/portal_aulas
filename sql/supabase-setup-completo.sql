@@ -59,6 +59,11 @@ create policy "classroom_settings_select_all"
   on public.classroom_settings for select
   using (true);
 
+drop policy if exists "classroom_settings_insert_all" on public.classroom_settings;
+create policy "classroom_settings_insert_all"
+  on public.classroom_settings for insert
+  with check (true);
+
 drop policy if exists "classroom_settings_update_all" on public.classroom_settings;
 create policy "classroom_settings_update_all"
   on public.classroom_settings for update
