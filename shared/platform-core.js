@@ -40,6 +40,7 @@
     : null;
 
   let teacherUnlockOverride = false;
+  let trilhaLockCache = {}; // trilhaKey -> bool (bloqueada pelo professor, além da regra interna de pré-requisito)
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
@@ -116,23 +117,17 @@
           <div id="tabContentGestao" class="tab-page" style="display:none;">
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Restrições</h2>
+                <h2>Bloqueios e Liberações</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
               <div class="collapsible-body">
+                <h3 class="gestao-subhead">Restrições</h3>
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
                   É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.
                 </p>
                 <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar</button>
-              </div>
-            </div>
 
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Liberação de Jogos</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
+                <h3 class="gestao-subhead">Liberação de Jogos</h3>
                 <div style="display:flex; gap:10px; margin-bottom:12px;">
                   <button class="btn" id="btnUnlockGamesTurma">Liberar Todos</button>
                   <button class="btn btn-danger" id="btnLockGamesTurma">Bloquear Todos</button>
@@ -140,6 +135,15 @@
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>Acesso Jogos</th><th>Ações</th></tr></thead>
                   <tbody id="tblGestaoStudentsBody"></tbody>
+                </table>
+
+                <h3 class="gestao-subhead">Trilhas</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Bloqueia uma trilha inteira pra turma — não muda a regra interna dela (a prática continua exigindo a teoria concluída, por exemplo), só impede o acesso enquanto estiver bloqueada.
+                </p>
+                <table class="audit-table">
+                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Status</th><th>Ações</th></tr></thead>
+                  <tbody id="tblGestaoTrilhasBody"></tbody>
                 </table>
               </div>
             </div>
@@ -159,10 +163,11 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Chamada</h2>
+                <h2>Chamada e Notas</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
               <div class="collapsible-body">
+                <h3 class="gestao-subhead">Chamada</h3>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="chamadaData">Data</label>
@@ -177,28 +182,16 @@
                   <button class="btn" id="btnFinalizarChamada">Finalizar</button>
                   <span class="status-msg" id="chamadaStatus"></span>
                 </div>
-              </div>
-            </div>
+                <div id="chamadaResumoBox" style="display:none; margin-top:14px;">
+                  <label class="field-label" for="chamadaResumoTexto">Resumo (copiar e colar)</label>
+                  <textarea id="chamadaResumoTexto" readonly rows="2" style="width:100%; resize:vertical; font-family:inherit; font-size:11px; background:var(--panel2); color:var(--ink); border:1px solid var(--line); padding:8px;"></textarea>
+                  <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+                    <button class="btn btn-secondary" id="btnCopiarResumoChamada">Copiar</button>
+                    <span class="status-msg" id="chamadaResumoStatus"></span>
+                  </div>
+                </div>
 
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Relatório de Presença</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
-                <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
-                  <tbody id="presencaBody"></tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Lançar Notas</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
+                <h3 class="gestao-subhead">Lançar Notas</h3>
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
                 <div class="field-row">
                   <div>
@@ -226,11 +219,18 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Relatório de Notas</h2>
+                <h2>Relatórios</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
               <div class="collapsible-body">
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Lançar Notas".</p>
+                <h3 class="gestao-subhead">Relatório de Presença</h3>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
+                  <tbody id="presencaBody"></tbody>
+                </table>
+
+                <h3 class="gestao-subhead">Relatório de Notas</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Chamada e Notas".</p>
                 <div style="overflow-x:auto;">
                   <table class="audit-table">
                     <thead><tr id="relatorioNotasHead"></tr></thead>
@@ -359,6 +359,7 @@
           <h2 style="margin:0 0 4px;">Trilha ${trilha.label}</h2>
           ${trilha.capacidade ? `<p style="font-size:11px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
           <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">${trilha.desc || 'Escolha um módulo para começar.'}</p>
+          <div id="trilhaLockedBanner_${trilha.key}">${trilhaLockedBannerHtml(trilha)}</div>
           <div class="card-grid">${buildModuleCardsHtml(trilha)}</div>
         </div>
         <div id="moduleFrameArea_${trilha.key}" style="display:none;">
@@ -449,10 +450,18 @@
   }
 
   function isModuleLocked(trilha, mod) {
-    if (!mod.requires) return false;
     if (currentUser.role === 'professor') return false;
+    // Bloqueio do professor trava a trilha inteira, por cima da regra interna
+    // de pré-requisito (que continua valendo assim que a trilha for liberada).
+    if (trilhaLockCache[trilha.key]) return true;
+    if (!mod.requires) return false;
     const requiredMod = (trilha.modules || []).find(m => m.key === mod.requires);
     return !!requiredMod && !isModuleComplete(requiredMod);
+  }
+
+  function trilhaLockedBannerHtml(trilha) {
+    if (currentUser.role === 'professor' || !trilhaLockCache[trilha.key]) return '';
+    return `<p style="font-size:11px; color:var(--blood-bright); margin:0 0 12px; padding:8px 10px; border:1px dashed var(--blood-bright);">🔒 Trilha bloqueada pelo professor no momento — aguarde a liberação.</p>`;
   }
 
   function buildModuleCardsHtml(trilha) {
@@ -515,6 +524,33 @@
       .subscribe();
   }
 
+  // Refaz os cards de módulo (e o aviso de trilha bloqueada) de qualquer
+  // trilha que já esteja renderizada na tela — usado depois que o cadeado
+  // de uma trilha muda, pra refletir sem precisar recarregar a página.
+  function refreshAllModuleCards() {
+    allTrilhas().forEach(trilha => {
+      const banner = document.getElementById(`trilhaLockedBanner_${trilha.key}`);
+      if (banner) banner.innerHTML = trilhaLockedBannerHtml(trilha);
+      const grid = document.querySelector(`#moduleSelector_${trilha.key} .card-grid`);
+      if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
+    });
+  }
+
+  async function fetchTrilhaLocks() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('trilha_overrides').select('*').eq('turma', cfg.id);
+    trilhaLockCache = {};
+    (data || []).forEach(r => { trilhaLockCache[r.trilha_key] = !!r.locked; });
+    refreshAllModuleCards();
+  }
+
+  function setupTrilhaLockRealtime() {
+    if (!sbClient) return;
+    sbClient.channel('realtime_trilha_overrides_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_overrides', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaLocks())
+      .subscribe();
+  }
+
   // ---------- Log de auditoria (best-effort, local ao navegador) ----------
   function logAction(action, targetUser = null) {
     const logs = JSON.parse(localStorage.getItem('pf_audit_logs') || '[]');
@@ -573,6 +609,43 @@
       student_email: userKey, games_unlocked: newValue, updated_at: new Date().toISOString()
     }, { onConflict: 'student_email' });
     renderGestaoStudents();
+  }
+
+  // Lista achatada de trilhas com o rótulo da matéria dona, só pra exibição
+  // na tabela de bloqueio — allTrilhas() perde essa referência de propósito.
+  function allTrilhasComMateria() {
+    return (cfg.materias || []).flatMap(m => (m.trilhas || []).map(t => ({ materiaLabel: m.label, trilha: t })));
+  }
+
+  async function renderGestaoTrilhas() {
+    await fetchTrilhaLocks();
+    const tbody = document.getElementById('tblGestaoTrilhasBody');
+    if (!tbody) return;
+    const pares = allTrilhasComMateria();
+    if (pares.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = pares.map(({ materiaLabel, trilha }) => {
+      const locked = !!trilhaLockCache[trilha.key];
+      return `
+        <tr>
+          <td>${materiaLabel}</td>
+          <td>${trilha.label}</td>
+          <td><span style="color:${locked ? 'var(--blood-bright)' : 'var(--green)'}">${locked ? 'BLOQUEADA' : 'LIBERADA'}</span></td>
+          <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.toggleTrilhaLock('${trilha.key}')">${locked ? 'Liberar' : 'Bloquear'}</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function toggleTrilhaLock(trilhaKey) {
+    if (!sbClient) return;
+    const newValue = !trilhaLockCache[trilhaKey];
+    await sbClient.from('trilha_overrides').upsert({
+      turma: cfg.id, trilha_key: trilhaKey, locked: newValue, updated_at: new Date().toISOString()
+    }, { onConflict: 'turma,trilha_key' });
+    renderGestaoTrilhas();
   }
 
   function renderClipboardButtonGestao() {
@@ -694,6 +767,28 @@
     await sbClient.from('attendance').upsert(rows, { onConflict: 'turma,data,student_email' });
     document.getElementById('chamadaStatus').textContent = `Chamada registrada às ${new Date().toLocaleTimeString('pt-BR')}.`;
     renderRelatorioPresenca();
+    exibirResumoChamada(data, rows);
+  }
+
+  // Abreviação usada no texto de resumo da chamada, pra copiar/colar num
+  // grupo/relatório fora do portal sem precisar digitar o nome da turma toda.
+  function turmaAbrev() {
+    return cfg.id === 'sistemas' ? 'DS' : 'JD';
+  }
+
+  function formatDataBr(isoDate) {
+    const [ano, mes, dia] = isoDate.split('-');
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  function exibirResumoChamada(data, rows) {
+    const ausentes = rows.filter(r => !r.presente).map(r => r.student_name);
+    const presentesCount = rows.length - ausentes.length;
+    const texto = `Turma: ${turmaAbrev()} | Data: ${formatDataBr(data)} | Alunos presentes: ${presentesCount} | Ausentes: ${ausentes.length ? ausentes.join(', ') : 'Nenhum'}`;
+
+    document.getElementById('chamadaResumoTexto').value = texto;
+    document.getElementById('chamadaResumoBox').style.display = 'block';
+    document.getElementById('chamadaResumoStatus').textContent = '';
   }
 
   async function renderRelatorioPresenca() {
@@ -792,12 +887,17 @@
     renderRelatorioNotas();
   }
 
-  function trilhaPercentForStudent(trilha, progressRows) {
-    const modules = trilha.modules || [];
+  // % de desempenho de uma MATÉRIA pro aluno: média das frações de conclusão
+  // de TODOS os módulos de TODAS as trilhas dela (crédito parcial, não só
+  // 0%/100%). Lê direto de cfg.materias, então recalcula sozinho sempre que
+  // o professor adiciona uma trilha/módulo novo — nenhuma tabela guarda o %,
+  // só o progresso bruto por módulo (student_module_progress).
+  function materiaPercentForStudent(materia, progressRows) {
+    const modules = (materia.trilhas || []).flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
-    modules.forEach(m => {
-      const row = progressRows.find(r => r.trilha_key === trilha.key && r.module_key === m.key);
+    modules.forEach(({ trilhaKey, mod }) => {
+      const row = progressRows.find(r => r.trilha_key === trilhaKey && r.module_key === mod.key);
       if (!row) return;
       const total = row.progress_total || 1;
       sum += Math.min((row.progress_current || 0) / total, 1);
@@ -806,13 +906,13 @@
   }
 
   async function renderRelatorioNotas() {
-    const trilhas = allTrilhas();
+    const materias = cfg.materias || [];
     const students = turmaStudents();
     const theadRow = document.getElementById('relatorioNotasHead');
     const tbody = document.getElementById('relatorioNotasBody');
-    const totalCols = 6 + trilhas.length;
+    const totalCols = 6 + materias.length;
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th>${trilhas.map(t => `<th>${t.label}</th>`).join('')}`;
+    theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
 
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
@@ -840,12 +940,12 @@
       const mediaGeral = lancadas.length ? (lancadas.reduce((a, b) => a + Number(b), 0) / lancadas.length).toFixed(2) : '—';
 
       const pRows = progressByStudent[u.email] || [];
-      const trilhaCells = trilhas.map(t => {
-        const pct = trilhaPercentForStudent(t, pRows);
+      const materiaCells = materias.map(m => {
+        const pct = materiaPercentForStudent(m, pRows);
         return `<td>${pct === null ? '—' : pct + '%'}</td>`;
       }).join('');
 
-      return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${trilhaCells}</tr>`;
+      return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${materiaCells}</tr>`;
     }).join('');
   }
 
@@ -917,6 +1017,7 @@
 
   function renderGestaoTab() {
     renderGestaoStudents();
+    renderGestaoTrilhas();
     renderGestaoLogs();
     fetchClipboardStateGestao();
     renderGestaoSlidesList();
@@ -963,8 +1064,21 @@
       renderClipboardButtonGestao();
     });
 
-    document.getElementById('chamadaData').addEventListener('change', loadChamada);
+    document.getElementById('chamadaData').addEventListener('change', () => {
+      document.getElementById('chamadaResumoBox').style.display = 'none';
+      loadChamada();
+    });
     document.getElementById('btnFinalizarChamada').addEventListener('click', finalizarChamada);
+    document.getElementById('btnCopiarResumoChamada').addEventListener('click', async () => {
+      const texto = document.getElementById('chamadaResumoTexto').value;
+      const statusEl = document.getElementById('chamadaResumoStatus');
+      try {
+        await navigator.clipboard.writeText(texto);
+        statusEl.textContent = 'Copiado!';
+      } catch (e) {
+        statusEl.textContent = 'Não foi possível copiar automaticamente — selecione e copie manualmente.';
+      }
+    });
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
   }
@@ -1179,6 +1293,8 @@
     if (currentUser.role === 'aluno') {
       fetchTeacherOverride();
       setupOverrideRealtime();
+      fetchTrilhaLocks();
+      setupTrilhaLockRealtime();
     }
 
     checkGamesUnlock();
@@ -1245,7 +1361,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, toggleTrilhaLock };
 
   document.addEventListener('DOMContentLoaded', init);
 })();

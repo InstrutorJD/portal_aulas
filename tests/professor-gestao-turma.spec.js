@@ -53,7 +53,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Liberação de Jogos');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
 
     await expect(page.locator('#tblGestaoStudentsBody')).toContainText('Breno Silva');
     await expect(page.locator('#tblGestaoStudentsBody')).not.toContainText('Alexandre Natal');
@@ -64,7 +64,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Liberação de Jogos');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
 
     const row = page.locator('#tblGestaoStudentsBody tr', { hasText: 'Breno Silva' });
     await expect(row).toContainText('BLOQUEADO');
@@ -80,7 +80,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Liberação de Jogos');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
 
     await page.click('#btnUnlockGamesTurma');
     await page.waitForTimeout(200);
@@ -95,7 +95,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Restrições');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
 
     await expect(page.locator('#btnToggleClipboard')).toContainText('Bloquear Copiar/Colar');
     await page.click('#btnToggleClipboard');

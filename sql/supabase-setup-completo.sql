@@ -10,14 +10,16 @@
 --   6. supabase-turma-isolation.sql
 --   7. supabase-sistemas-network-nodes.sql
 --   8. supabase-chamada-notas.sql
+--   9. supabase-trilha-overrides.sql
 -- (Esses arquivos continuam no repositório como histórico/referência
 -- de cada mudança isolada — não precisa apagá-los.)
 --
 -- Cobre: bloqueio de Ctrl+C/V por turma, atividade em tempo real e
 -- liberação manual de jogos (painel do professor), o jogo GitHack OS
 -- (IP de sessão, criptografia de carteira, isolamento por turma no
--- hack transfer), o cadastro de rede da turma Sistemas, e chamada /
--- notas / progresso de trilha (relatórios da aba Gestão).
+-- hack transfer), o cadastro de rede da turma Sistemas, chamada /
+-- notas / progresso de trilha (relatórios da aba Gestão), e bloqueio
+-- manual de trilha inteira pelo professor.
 --
 -- PRÉ-REQUISITO: as tabelas network_nodes, node_permissions e
 -- node_shields precisam já existir no seu projeto Supabase (foram
@@ -627,9 +629,54 @@ create policy "student_module_progress_update_all"
   using (true)
   with check (true);
 
+
+-- ============================================================
+-- BLOCO 8 — Bloqueio manual de trilha inteira pelo professor (aba
+-- Gestão). Não muda a regra interna da trilha — um módulo que já
+-- dependia de outro (campo `requires`) continua dependendo dele assim
+-- que a trilha for liberada de novo; o bloqueio do professor é só uma
+-- trava A MAIS, por cima dessa regra.
+-- ============================================================
+
+create table if not exists public.trilha_overrides (
+  turma text not null,
+  trilha_key text not null,
+  locked boolean not null default false,
+  updated_at timestamptz not null default now(),
+  primary key (turma, trilha_key)
+);
+
+alter table public.trilha_overrides enable row level security;
+
+drop policy if exists "trilha_overrides_select_all" on public.trilha_overrides;
+create policy "trilha_overrides_select_all"
+  on public.trilha_overrides for select
+  using (true);
+
+drop policy if exists "trilha_overrides_insert_all" on public.trilha_overrides;
+create policy "trilha_overrides_insert_all"
+  on public.trilha_overrides for insert
+  with check (true);
+
+drop policy if exists "trilha_overrides_update_all" on public.trilha_overrides;
+create policy "trilha_overrides_update_all"
+  on public.trilha_overrides for update
+  using (true)
+  with check (true);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trilha_overrides'
+  ) then
+    alter publication supabase_realtime add table public.trilha_overrides;
+  end if;
+end $$;
+
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se attendance,
 -- grades, student_module_progress, classroom_settings,
--- student_activity e student_overrides foram criadas, e se
--- network_nodes ganhou as colunas current_ip e turma.
+-- student_activity, student_overrides e trilha_overrides foram
+-- criadas, e se network_nodes ganhou as colunas current_ip e turma.
 -- ============================================================
