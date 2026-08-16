@@ -24,6 +24,13 @@ body{
   display:flex; flex-direction:column;
 }
 
+/* #app é o wrapper que shared/platform-core.js usa pra montar a tela
+   inteira (renderShell). Sem isso, ele fica como uma div comum sem altura
+   definida — a cadeia "flex:1" de .app-container/.viewport-content abaixo
+   não tem contra quem se apoiar, então nada scrolla e conteúdo alto (como
+   a aba Gestão) fica simplesmente inacessível abaixo da dobra. */
+#app{ display:flex; flex-direction:column; height:100%; }
+
 .a11y-bar{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
   padding:6px 20px; border-bottom:1px solid var(--line); background:var(--panel2); flex-wrap:wrap; z-index:10;

@@ -12,6 +12,31 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#mainNavTabs .tab-btn[data-tab="gestao"]')).toHaveCount(0);
   });
 
+  test('a aba Gestão rola de verdade quando o conteúdo passa de uma tela (regressão do scroll travado)', async ({ page }) => {
+    // A aba Gestão é a mais alta do portal (vários cards empilhados) — se o
+    // wrapper #app perder o display:flex, .viewport-content nunca fica
+    // limitado à altura da tela e o scroll interno trava por completo
+    // (nada rola, nem o mouse wheel resolve, mesmo a página não crescendo).
+    await stubSupabaseFake(page, {});
+    await page.setViewportSize({ width: 1300, height: 700 });
+    await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(300);
+
+    const before = await page.evaluate(() => {
+      const vc = document.querySelector('.viewport-content');
+      return { scrollTop: vc.scrollTop, scrollHeight: vc.scrollHeight, clientHeight: vc.clientHeight };
+    });
+    expect(before.scrollHeight).toBeGreaterThan(before.clientHeight); // conteúdo realmente maior que a tela
+
+    await page.mouse.move(650, 400);
+    await page.mouse.wheel(0, 2000);
+    await page.waitForTimeout(200);
+
+    const scrollTopAfter = await page.evaluate(() => document.querySelector('.viewport-content').scrollTop);
+    expect(scrollTopAfter).toBeGreaterThan(0);
+  });
+
   test('professor vê só os alunos desta turma, não os de Sistemas', async ({ page }) => {
     await stubSupabaseFake(page, { student_overrides: [] });
     await page.goto(JOGOS_URL);
