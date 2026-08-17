@@ -41,12 +41,17 @@
       <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 16px;">
         Chamada, notas, liberação de jogos e bloqueio de Ctrl+C/V ficam dentro do portal de cada turma, na aba "Gestão 🛠️".
       </p>
+      <!-- IP do jogo do hacker (GitHack OS) é diferente por turma: cada linha de
+           network_nodes pertence a uma turma só, então o professor precisa de
+           um nó próprio em cada subnet (192.168.1.254 em Jogos, 192.168.2.254
+           em Sistemas) pra aparecer no netscan dos alunos da turma que estiver
+           jogando — ver sql/supabase-setup-completo.sql (bloco 6b). -->
       <div class="card-grid turma-grid">
         <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
           <div class="icon">🎮</div>
           <h3>Jogos Digitais</h3>
         </div>
-        <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
+        <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor', '_blank')">
           <div class="icon">🖥️</div>
           <h3>Desenvolvimento de Sistemas</h3>
         </div>

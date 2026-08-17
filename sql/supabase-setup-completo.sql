@@ -519,6 +519,21 @@ on conflict (ip_address) do nothing;
 
 
 -- ============================================================
+-- BLOCO 6b — Nó de rede do professor (usuário "admin"), um por turma.
+-- ip_address é a chave e cada linha pertence a uma turma só, então o
+-- professor precisa de um IP diferente em cada subnet pra aparecer no
+-- netscan/git clone dos alunos daquela turma (ver professor/painel.html,
+-- que já usa esses dois IPs pros links de "Jogos" e "Sistemas").
+-- ============================================================
+
+insert into public.network_nodes (ip_address, email, jdcoin_balance, is_online, current_ip, turma, folders)
+values
+  ('192.168.1.254', 'admin', 9999.00, false, null, 'jogos', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb),
+  ('192.168.2.254', 'admin', 9999.00, false, null, 'sistemas', '{"fotos":[],"whatsapp":[],"instagram":[],"tiktok":[],"jdcoin":[]}'::jsonb)
+on conflict (ip_address) do nothing;
+
+
+-- ============================================================
 -- BLOCO 7 — Chamada (frequência), notas por bimestre e progresso de
 -- trilha (usado no relatório de notas para mostrar % de desempenho).
 -- ============================================================

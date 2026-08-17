@@ -1414,7 +1414,7 @@
 
     const frame = document.getElementById('gameFrame');
     frame.onload = () => applyA11yToIframe(frame);
-    frame.src = `${game.src}?user=${encodeURIComponent(paramUser)}&ip=${encodeURIComponent(paramIp)}&saldo=${encodeURIComponent(paramSaldo)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
+    frame.src = `${game.src}?user=${encodeURIComponent(paramUser)}&ip=${encodeURIComponent(paramIp)}&saldo=${encodeURIComponent(paramSaldo)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
 
     if (typeof window.pauseActivityHeartbeat === 'function') window.pauseActivityHeartbeat();
     logAction(`Abriu o jogo: ${game.title}`);
@@ -1443,7 +1443,7 @@
 
     const frame = document.getElementById(`moduleFrame_${trilhaKey}`);
     frame.onload = () => applyA11yToIframe(frame);
-    frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(currentUser.turma)}`;
+    frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
 
     openModuleFrame[trilhaKey] = modKey;
     if (typeof window.pauseActivityHeartbeat === 'function') window.pauseActivityHeartbeat();
