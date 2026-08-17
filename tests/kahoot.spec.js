@@ -74,7 +74,11 @@ test.describe('Kahoot — entrada e resposta do aluno', () => {
     await page.goto(ALUNO_URL);
 
     await expect(page.locator('#scrQuestion')).toBeVisible();
-    await expect(page.locator('#qPrompt')).toContainText('2 + 2');
+    // aluno não vê o enunciado nem o texto das opções — só a cor/forma,
+    // pra ser obrigado a olhar a pergunta na tela do professor.
+    await expect(page.locator('#qPrompt')).toContainText('tela do professor');
+    await expect(page.locator('#qPrompt')).not.toContainText('2 + 2');
+    await expect(page.locator('#qTiles')).not.toContainText('4');
 
     // opção correta é o índice 1 ("4")
     await page.locator('#qTiles .tile').nth(1).click();
@@ -120,6 +124,9 @@ test.describe('Kahoot — condução da partida pelo professor', () => {
     });
     await page.goto(HOST_URL);
     await expect(page.locator('#scrQuestion')).toBeVisible();
+    // tela do professor (projetada) mostra a pergunta e as opções por extenso
+    await expect(page.locator('#qPrompt')).toContainText('2 + 2');
+    await expect(page.locator('#qTiles')).toContainText('4');
     await expect(page.locator('#qHostStatus')).toContainText('1 de 1 responderam');
 
     await page.click('#btnRevealNow');

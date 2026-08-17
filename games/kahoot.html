@@ -84,6 +84,11 @@
   .tile.c2{ background:var(--k-yellow); } .tile.c3{ background:var(--k-green); }
   .tile.chosen{ outline:4px solid #fff; }
 
+  /* Tela do aluno: só cor + forma, sem o texto da alternativa — força a
+     turma a olhar a pergunta/opções na tela do professor. */
+  .tiles.color-only .tile{ justify-content:center; padding:34px 16px; }
+  .tiles.color-only .tile .shape{ font-size:44px; }
+
   .bar-row{ display:flex; align-items:center; gap:10px; width:100%; max-width:640px; font-size:11.5px; color:#e7ddff; }
   .bar-row .shape{ width:20px; flex-shrink:0; }
   .bar-track{ flex:1; height:14px; background:rgba(255,255,255,.08); border-radius:8px; overflow:hidden; }
@@ -514,16 +519,28 @@
 
     const q = currentQuestion();
     document.getElementById('qMeta').textContent = `Pergunta ${state.session.current_index + 1} de ${state.session.questions.length}`;
-    document.getElementById('qPrompt').innerHTML = q.prompt;
 
     const tiles = document.getElementById('qTiles');
-    tiles.innerHTML = q.options.map((opt, i) => `
-      <button class="tile c${i}" data-choice="${i}" ${isHost ? 'disabled' : ''}>
-        <span class="shape">${SHAPES[i] || '?'}</span><span>${opt}</span>
-      </button>
-    `).join('');
-
-    if (!isHost) {
+    if (isHost) {
+      // Tela do professor (projetada): pergunta e alternativas completas.
+      document.getElementById('qPrompt').innerHTML = q.prompt;
+      tiles.classList.remove('color-only');
+      tiles.innerHTML = q.options.map((opt, i) => `
+        <button class="tile c${i}" data-choice="${i}" disabled>
+          <span class="shape">${SHAPES[i] || '?'}</span><span>${opt}</span>
+        </button>
+      `).join('');
+    } else {
+      // Tela do aluno: só a cor/forma de cada alternativa, sem texto — o
+      // aluno é obrigado a ler a pergunta e as opções na tela do professor,
+      // igual ao Kahoot original (o celular é só o "controle remoto").
+      document.getElementById('qPrompt').textContent = '👀 Olhe a pergunta e as alternativas na tela do professor!';
+      tiles.classList.add('color-only');
+      tiles.innerHTML = q.options.map((opt, i) => `
+        <button class="tile c${i}" data-choice="${i}" aria-label="${opt}">
+          <span class="shape">${SHAPES[i] || '?'}</span>
+        </button>
+      `).join('');
       tiles.querySelectorAll('.tile').forEach(t => t.addEventListener('click', onTileClick));
     }
 
