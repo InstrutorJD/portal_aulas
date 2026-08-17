@@ -571,6 +571,13 @@
 
   function isModuleLocked(trilha, mod) {
     if (currentUser.role === 'professor') return false;
+    // Liberação diária pra ESTE módulo hoje destrava ele por cima de
+    // qualquer outro bloqueio (trilha inteira travada ou pré-requisito) —
+    // é o professor dizendo explicitamente "faça isso hoje". Sem essa
+    // checagem aqui, uma atividade liberada continuava inacessível se a
+    // trilha dela estivesse bloqueada — a liberação só afetava o cadeado
+    // dos jogos, nunca se dava pra abrir o módulo em si.
+    if (releasesForToday(paramUser).some(r => r.trilha_key === trilha.key && r.module_key === mod.key)) return false;
     // Bloqueio do professor trava a trilha inteira, por cima da regra interna
     // de pré-requisito (que continua valendo assim que a trilha for liberada).
     if (trilhaLockCache[trilha.key]) return true;
@@ -581,17 +588,27 @@
 
   function trilhaLockedBannerHtml(trilha) {
     if (currentUser.role === 'professor' || !trilhaLockCache[trilha.key]) return '';
-    return `<p style="font-size:11px; color:var(--blood-bright); margin:0 0 12px; padding:8px 10px; border:1px dashed var(--blood-bright);">🔒 Trilha bloqueada pelo professor no momento — aguarde a liberação.</p>`;
+    const temLiberacaoHoje = releasesForToday(paramUser).some(r => r.trilha_key === trilha.key);
+    const extra = temLiberacaoHoje ? ' Uma atividade foi liberada especialmente para hoje — veja abaixo (📌).' : '';
+    return `<p style="font-size:11px; color:var(--blood-bright); margin:0 0 12px; padding:8px 10px; border:1px dashed var(--blood-bright);">🔒 Trilha bloqueada pelo professor no momento — aguarde a liberação.${extra}</p>`;
   }
 
   function buildModuleCardsHtml(trilha) {
     const modules = trilha.modules || [];
     if (!modules.length) return `<div class="empty-state">Nenhum módulo cadastrado ainda em "${trilha.label}".</div>`;
 
+    const releasedTodayKeys = new Set(
+      releasesForToday(paramUser).filter(r => r.trilha_key === trilha.key).map(r => r.module_key)
+    );
+
     return modules.map(m => {
       const locked = isModuleLocked(trilha, m);
       const done = isModuleComplete(m);
-      const statusLabel = locked ? '🔒 Bloqueado' : (done ? '✅ Concluído' : '');
+      // "Liberado hoje" só faz sentido de mostrar quando é a ÚNICA razão do
+      // módulo estar acessível (senão, ou já estaria acessível de qualquer
+      // jeito, ou o rótulo apareceria em módulos que não têm nada de especial).
+      const releasedByDaily = !locked && !done && trilhaLockCache[trilha.key] && releasedTodayKeys.has(m.key);
+      const statusLabel = locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : releasedByDaily ? '📌 Liberado hoje' : '';
       const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '');
       const click = locked ? '' : `onclick="PortalCore.openModule('${trilha.key}','${m.key}')"`;
       return `

@@ -160,4 +160,43 @@ test.describe('Liberação diária — visão do aluno', () => {
     await page.goto(ALUNO_URL);
     await expect(page.locator('#tabBtnJogos')).toHaveClass(/disabled/);
   });
+
+  // Regressão: a liberação diária só mexia no cadeado dos JOGOS — se o
+  // professor tivesse bloqueado a TRILHA inteira, a atividade liberada
+  // continuava impossível de abrir (o aluno via o card, mas ele ficava
+  // cinza/travado igual aos outros). A liberação de hoje precisa destravar
+  // o módulo em si, não só contar pra desbloquear os jogos depois.
+  test('atividade liberada hoje fica acessível mesmo com a trilha inteira bloqueada pelo professor', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      trilha_overrides: [
+        { turma: 'jogos', trilha_key: 'js', locked: true },
+        { turma: 'jogos', trilha_key: 'csharp', locked: true },
+      ],
+      daily_module_releases: [{
+        id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
+        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+      }],
+    });
+    await page.goto(ALUNO_URL);
+    await page.click('.game-card:has-text("Fundamentos de Programação")');
+    await page.selectOption('#trilhaSelect', 'csharp');
+
+    // o aviso de trilha bloqueada continua lá, mas agora avisa da exceção de hoje
+    await expect(page.locator('#trilhaLockedBanner_csharp')).toContainText('bloqueada pelo professor');
+    await expect(page.locator('#trilhaLockedBanner_csharp')).toContainText('liberada especialmente para hoje');
+
+    // o módulo liberado abre normalmente, mesmo com a trilha travada
+    const liberado = page.locator('#moduleSelector_csharp .game-card', { hasText: 'Básico — A Jornada do Eri' });
+    await expect(liberado).not.toHaveClass(/locked/);
+    await expect(liberado).toContainText('Liberado hoje');
+    await liberado.click();
+    await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();
+    await page.click('#moduleFrameArea_csharp .btn-secondary');
+
+    // outras trilhas continuam bloqueadas normalmente (a exceção é só do módulo liberado)
+    await page.selectOption('#trilhaSelect', 'js');
+    const naoLiberado = page.locator('#moduleSelector_js .game-card', { hasText: 'Básico — Desafios de JavaScript' });
+    await expect(naoLiberado).toHaveClass(/locked/);
+    await expect(naoLiberado).toContainText('Bloqueado');
+  });
 });
