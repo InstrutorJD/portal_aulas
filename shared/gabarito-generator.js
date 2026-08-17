@@ -47,6 +47,19 @@
     return out;
   }
 
+  // Embaralha a ordem de exibição das opções pra a letra da resposta certa não
+  // cair sempre em A no gabarito — mesmo com o quiz já embaralhando pro aluno
+  // em tempo de jogo, o gabarito lia os dados-fonte (que guardam a resposta
+  // certa sempre no índice 0) direto, sem aplicar nenhum embaralhamento.
+  function shuffledOptionOrder(count) {
+    const order = Array.from({ length: count }, (_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return order;
+  }
+
   function formatItem(item) {
     const lines = [];
     const heading = item.title ? `${item.number}) ${item.title}` : `${item.number})`;
@@ -56,9 +69,10 @@
 
     if (Array.isArray(item.options) && item.options.length) {
       lines.push('');
-      item.options.forEach((opt, i) => {
-        const mark = i === item.correctIndex ? '✔' : ' ';
-        lines.push(`   ${mark} ${LETTERS[i] || '?'}) ${stripHtml(opt)}`);
+      const order = shuffledOptionOrder(item.options.length);
+      order.forEach((origIdx, pos) => {
+        const mark = origIdx === item.correctIndex ? '✔' : ' ';
+        lines.push(`   ${mark} ${LETTERS[pos] || '?'}) ${stripHtml(item.options[origIdx])}`);
       });
     }
 
