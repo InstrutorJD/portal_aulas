@@ -280,6 +280,13 @@
                     <tbody id="relatorioNotasBody"></tbody>
                   </table>
                 </div>
+
+                <h3 class="gestao-subhead">Relatório de Inatividade</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;" id="inatividadeResumo">Quem nunca acessou o portal ou acessou mas não avançou em nenhuma atividade — listados primeiro.</p>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Status</th><th>Última vez visto no portal</th></tr></thead>
+                  <tbody id="inatividadeBody"></tbody>
+                </table>
               </div>
             </div>
 
@@ -1038,6 +1045,78 @@
     }).join('');
   }
 
+  // "Acessou o portal" é aproximado pela existência de uma linha em
+  // student_activity: o heartbeat (shared/activity-tracker.js) grava/atualiza
+  // essa linha assim que a plataforma carrega pro aluno, então sua ausência
+  // significa que o aluno nunca abriu o portal. "Fez alguma atividade" olha
+  // student_module_progress, mas não basta ter linha lá — o sync roda pra
+  // TODO módulo a cada carregamento (mesmo com progresso zero), então só
+  // conta como atividade de fato quando algum módulo tem progress_current > 0
+  // ou completed = true.
+  function hasRealProgress(rows) {
+    return (rows || []).some(r => (r.progress_current || 0) > 0 || r.completed);
+  }
+
+  async function renderRelatorioInatividade() {
+    const tbody = document.getElementById('inatividadeBody');
+    const resumo = document.getElementById('inatividadeResumo');
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
+
+    const students = turmaStudents();
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
+
+    const [activityRes, progressRes] = await Promise.all([
+      sbClient.from('student_activity').select('*').eq('turma', cfg.id),
+      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id)
+    ]);
+
+    const activityByStudent = {};
+    (activityRes.data || []).forEach(r => { activityByStudent[r.student_email] = r; });
+
+    const progressByStudent = {};
+    (progressRes.data || []).forEach(r => {
+      progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
+      progressByStudent[r.student_email].push(r);
+    });
+
+    const STATUS = {
+      nunca: { rank: 0, label: 'NUNCA ACESSOU', color: 'var(--blood-bright)' },
+      semAtividade: { rank: 1, label: 'ACESSOU, SEM ATIVIDADE', color: 'var(--yellow)' },
+      ativo: { rank: 2, label: 'ATIVO', color: 'var(--green)' }
+    };
+
+    const linhas = students.map(u => {
+      const activity = activityByStudent[u.email];
+      const status = !activity
+        ? STATUS.nunca
+        : hasRealProgress(progressByStudent[u.email])
+          ? STATUS.ativo
+          : STATUS.semAtividade;
+      const ultimaVez = activity && (activity.updated_at || activity.last_interaction_at)
+        ? new Date(activity.updated_at || activity.last_interaction_at).toLocaleString('pt-BR')
+        : '—';
+      return { nome: u.nome, status, ultimaVez };
+    });
+
+    // Quem precisa de atenção (nunca acessou / acessou sem fazer nada) sobe
+    // pro topo — o professor não deveria ter que rolar a turma toda pra achar.
+    linhas.sort((a, b) => a.status.rank - b.status.rank || a.nome.localeCompare(b.nome, 'pt-BR'));
+
+    const nuncaCount = linhas.filter(l => l.status === STATUS.nunca).length;
+    const semAtividadeCount = linhas.filter(l => l.status === STATUS.semAtividade).length;
+    if (resumo) {
+      resumo.textContent = `${nuncaCount} de ${students.length} aluno(s) nunca acessaram o portal; ${semAtividadeCount} acessaram mas não fizeram nenhuma atividade ainda.`;
+    }
+
+    tbody.innerHTML = linhas.map(l => `
+      <tr>
+        <td>${l.nome}</td>
+        <td><span style="color:${l.status.color}; font-weight:800;">${l.status.label}</span></td>
+        <td>${l.ultimaVez}</td>
+      </tr>
+    `).join('');
+  }
+
   // Carrega o módulo (aula teórica) num iframe escondido só pra rodar a
   // geração de slides dele — o professor não precisa abrir o módulo na
   // aba "Aulas & Atividades" nem achar o botão lá dentro pra gerar o .pptx.
@@ -1176,6 +1255,7 @@
     renderRelatorioPresenca();
     loadNotas();
     renderRelatorioNotas();
+    renderRelatorioInatividade();
 
     if (!sbClient) return;
     renderGestaoActivity();
