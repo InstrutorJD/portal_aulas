@@ -245,5 +245,19 @@ window.TURMA_CONFIG_SISTEMAS = {
     { key: 'mundo-trabalho', label: 'Mundo do Trabalho', trilhas: [] },
     { key: 'projeto-vida', label: 'Projeto de Vida', trilhas: [] },
     { key: 'prog-aplicativos', label: 'Programação de Aplicativos', trilhas: [] }
+  ],
+
+  // Insígnias da trilha "Curso de Desenvolvimento de Sistemas" (ver aba
+  // Perfil, só aluno). Progressivas por % geral de conclusão
+  // (student_module_progress) — minPct:0 é tratada à parte em platform-
+  // core.js (exige progresso real, não só "0% arredondado"). Sem tabela
+  // nova no Supabase: é só uma leitura derivada do progresso já sincronizado.
+  insignias: [
+    { key: 'iniciante', label: 'Iniciante', desc: 'Começou sua jornada no universo da programação!', icon: '💻', minPct: 0 },
+    { key: 'logico', label: 'Lógico', desc: 'Entendeu a lógica e escreveu seus primeiros códigos!', icon: '🧩', minPct: 20 },
+    { key: 'desenvolvedor', label: 'Desenvolvedor', desc: 'Construiu soluções e deu vida às suas ideias!', icon: '🗄️', minPct: 40 },
+    { key: 'arquiteto', label: 'Arquiteto', desc: 'Organizou ideias e criou sistemas estruturados!', icon: '🖥️', minPct: 60 },
+    { key: 'inovador', label: 'Inovador', desc: 'Aplicou boas práticas e levou seu código para outro nível!', icon: '☁️', minPct: 80 },
+    { key: 'guardiao-do-codigo', label: 'Guardião do Código', desc: 'Escreve com excelência, pensa no futuro e faz a diferença!', icon: '🛡️', minPct: 100 }
   ]
 };

@@ -59,5 +59,19 @@ window.TURMA_CONFIG_JOGOS = {
       ]
     },
     { key: 'testes-jogos', label: 'Testes de Jogos Digitais', trilhas: [] }
+  ],
+
+  // Insígnias da trilha "Curso de Jogos Digitais" (ver aba Perfil, só
+  // aluno). Progressivas por % geral de conclusão (student_module_progress)
+  // — minPct:0 é tratada à parte em platform-core.js (exige progresso real,
+  // não só "0% arredondado"). Sem tabela nova no Supabase: é só uma leitura
+  // derivada do progresso que já é sincronizado.
+  insignias: [
+    { key: 'iniciante', label: 'Iniciante', desc: 'Deu o primeiro passo no mundo dos jogos!', icon: '🚀', minPct: 0 },
+    { key: 'explorador', label: 'Explorador', desc: 'Explorou novas ferramentas e mecânicas!', icon: '💚', minPct: 20 },
+    { key: 'criador', label: 'Criador', desc: 'Criou seu primeiro jogo do começo ao fim!', icon: '🎮', minPct: 40 },
+    { key: 'desafiador', label: 'Desafiador', desc: 'Superou desafios e levou suas habilidades além!', icon: '🏆', minPct: 60 },
+    { key: 'mestre-dos-jogos', label: 'Mestre dos Jogos', desc: 'Domina as mecânicas e pensa como um Game Designer!', icon: '⚔️', minPct: 80 },
+    { key: 'lendario', label: 'Lendário', desc: 'Criatividade, técnica e paixão pelos jogos em outro nível!', icon: '🐉', minPct: 100 }
   ]
 };

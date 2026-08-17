@@ -41,6 +41,7 @@
 
   let teacherUnlockOverride = false;
   let trilhaLockCache = {}; // trilhaKey -> bool (bloqueada pelo professor, além da regra interna de pré-requisito)
+  let dailyReleasesCache = []; // linhas de daily_module_releases da turma inteira (todas as datas/dias), ver releasesForToday()
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
@@ -99,6 +100,7 @@
         <div class="tabs" id="mainNavTabs">
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
+          ${currentUser.role === 'aluno' ? '<button class="tab-btn" data-tab="perfil">Perfil 👤</button>' : ''}
           ${currentUser.role === 'professor' ? '<button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>' : ''}
         </div>
 
@@ -144,6 +146,28 @@
             </div>
           </div>
 
+          <div id="tabContentPerfil" class="tab-page" style="display:none;">
+            <div class="card">
+              <h2 style="margin:0 0 4px;">Meu Progresso</h2>
+              <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Acompanhe sua jornada em ${cfg.label}.</p>
+              <div class="perfil-stats-row" id="perfilResumo"></div>
+            </div>
+
+            <div class="card">
+              <h2 style="margin:0 0 4px;">Progresso por Matéria</h2>
+              <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">O quanto você já concluiu em cada matéria e trilha.</p>
+              <div id="perfilMaterias"></div>
+            </div>
+
+            <div class="card">
+              <h2 style="margin:0 0 4px;">Insígnias</h2>
+              <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">
+                Cada insígnia é desbloqueada automaticamente conforme seu progresso geral avança — continue concluindo atividades para liberar as próximas.
+              </p>
+              <div class="badge-grid" id="perfilBadgesGrid"></div>
+            </div>
+          </div>
+
           <div id="tabContentGestao" class="tab-page" style="display:none;">
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
@@ -165,6 +189,52 @@
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>Acesso Jogos</th><th>Ações</th></tr></thead>
                   <tbody id="tblGestaoStudentsBody"></tbody>
+                </table>
+
+                <h3 class="gestao-subhead">Liberação Diária de Atividades</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Escolha uma atividade que o aluno precisa concluir num dia certo (ou toda vez que cair num dia da semana), pra turma inteira ou só um aluno. Enquanto ela não for concluída, os jogos ficam bloqueados mesmo com o resto em dia — e a trava volta sozinha no dia seguinte.
+                </p>
+                <div class="field-row" style="flex-wrap:wrap;">
+                  <div>
+                    <label class="field-label" for="dailyReleaseScope">Quando</label>
+                    <select id="dailyReleaseScope">
+                      <option value="data">Nesta data</option>
+                      <option value="semana">Toda semana, neste dia</option>
+                    </select>
+                  </div>
+                  <div id="dailyReleaseDataWrap">
+                    <label class="field-label" for="dailyReleaseData">Data</label>
+                    <input type="date" id="dailyReleaseData">
+                  </div>
+                  <div id="dailyReleaseWeekdayWrap" style="display:none;">
+                    <label class="field-label" for="dailyReleaseWeekday">Dia da semana</label>
+                    <select id="dailyReleaseWeekday">
+                      <option value="1">Segunda-feira</option>
+                      <option value="2">Terça-feira</option>
+                      <option value="3">Quarta-feira</option>
+                      <option value="4">Quinta-feira</option>
+                      <option value="5">Sexta-feira</option>
+                      <option value="6">Sábado</option>
+                      <option value="0">Domingo</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="field-label" for="dailyReleaseAlvo">Alvo</label>
+                    <select id="dailyReleaseAlvo"><option value="">Turma inteira</option></select>
+                  </div>
+                  <div style="min-width:240px; flex:1;">
+                    <label class="field-label" for="dailyReleaseAtividade">Atividade</label>
+                    <select id="dailyReleaseAtividade"></select>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; margin:10px 0 16px;">
+                  <button class="btn" id="btnAddDailyRelease">Liberar Atividade</button>
+                  <span class="status-msg" id="dailyReleaseStatus"></span>
+                </div>
+                <table class="audit-table">
+                  <thead><tr><th>Quando</th><th>Alvo</th><th>Atividade</th><th>Ações</th></tr></thead>
+                  <tbody id="tblDailyReleasesBody"></tbody>
                 </table>
 
                 <h3 class="gestao-subhead">Trilhas</h3>
@@ -540,8 +610,31 @@
     return modules.every(isModuleComplete);
   }
 
+  // Liberações (data específica ou dia da semana recorrente) que valem HOJE
+  // pra este aluno — turma inteira (student_email vazio) ou só ele. Quando
+  // existe pelo menos uma pra hoje, ela substitui a regra padrão de "tudo
+  // completo" só por hoje: o aluno só precisa concluir o que foi liberado.
+  // No dia seguinte a checagem roda de novo contra a data/dia da semana
+  // atual, então o cadeado volta sozinho sem nenhuma ação do professor.
+  function releasesForToday(studentEmail) {
+    const todayD = todayStr();
+    const weekday = new Date().getDay();
+    return dailyReleasesCache.filter(r => {
+      const scopeMatch = r.scope === 'data' ? r.target_date === todayD : Number(r.target_weekday) === weekday;
+      const studentMatch = !r.student_email || r.student_email === studentEmail;
+      return scopeMatch && studentMatch;
+    });
+  }
+
   function checkGamesUnlock() {
-    const isUnlocked = allModulesComplete() || teacherUnlockOverride || currentUser.role === 'professor';
+    const todaysReleases = releasesForToday(paramUser);
+    const progressUnlocked = todaysReleases.length > 0
+      ? todaysReleases.every(r => {
+          const mod = findModule(r.trilha_key, r.module_key);
+          return mod ? isModuleComplete(mod) : true;
+        })
+      : allModulesComplete();
+    const isUnlocked = progressUnlocked || teacherUnlockOverride || currentUser.role === 'professor';
     const btnJogos = document.getElementById('tabBtnJogos');
 
     if (isUnlocked) {
@@ -552,7 +645,9 @@
       btnJogos.classList.add('disabled');
       btnJogos.textContent = 'Jogos 🔒';
       // não depende só do cadeado/opacidade pra passar a mensagem — leitor de tela também explica o porquê.
-      btnJogos.title = 'Bloqueado: conclua as atividades ou aguarde a liberação do professor.';
+      btnJogos.title = todaysReleases.length > 0
+        ? 'Bloqueado: conclua a(s) atividade(s) liberada(s) pelo professor para hoje.'
+        : 'Bloqueado: conclua as atividades ou aguarde a liberação do professor.';
     }
   }
 
@@ -598,6 +693,23 @@
     if (!sbClient) return;
     sbClient.channel('realtime_trilha_overrides_' + cfg.id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_overrides', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaLocks())
+      .subscribe();
+  }
+
+  async function fetchDailyReleases() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('daily_module_releases').select('*').eq('turma', cfg.id);
+    dailyReleasesCache = data || [];
+    checkGamesUnlock();
+  }
+
+  function setupDailyReleasesRealtime() {
+    if (!sbClient) return;
+    sbClient.channel('realtime_daily_releases_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_module_releases', filter: `turma=eq.${cfg.id}` }, async () => {
+        await fetchDailyReleases();
+        if (currentUser.role === 'professor') renderGestaoDailyReleasesTable();
+      })
       .subscribe();
   }
 
@@ -697,6 +809,72 @@
       turma: cfg.id, trilha_key: trilhaKey, locked: newValue, updated_at: new Date().toISOString()
     }, { onConflict: 'turma,trilha_key' });
     renderGestaoTrilhas();
+  }
+
+  const WEEKDAY_LABELS = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+  // Preenche os dois <select> do formulário (aluno-alvo e atividade) toda
+  // vez que a tabela é re-renderizada, pra sempre refletir a turma/config atual.
+  function populateDailyReleaseFormOptions() {
+    const alvoSel = document.getElementById('dailyReleaseAlvo');
+    if (alvoSel) {
+      const selected = alvoSel.value;
+      alvoSel.innerHTML = '<option value="">Turma inteira</option>' +
+        turmaStudents().map(u => `<option value="${u.email}">${u.nome}</option>`).join('');
+      if ([...alvoSel.options].some(o => o.value === selected)) alvoSel.value = selected;
+    }
+
+    const atividadeSel = document.getElementById('dailyReleaseAtividade');
+    if (atividadeSel) {
+      const selected = atividadeSel.value;
+      atividadeSel.innerHTML = allTrilhasComMateria().flatMap(({ materiaLabel, trilha }) =>
+        (trilha.modules || []).map(m => `<option value="${trilha.key}::${m.key}">${materiaLabel} — ${trilha.label} — ${m.title}</option>`)
+      ).join('');
+      if ([...atividadeSel.options].some(o => o.value === selected)) atividadeSel.value = selected;
+    }
+  }
+
+  // Só desenha a tabela/formulário a partir de dailyReleasesCache já
+  // carregado — não busca no Supabase de novo (quem faz isso é
+  // renderGestaoDailyReleases, chamada quando a aba Gestão abre).
+  function renderGestaoDailyReleasesTable() {
+    const tbody = document.getElementById('tblDailyReleasesBody');
+    if (!tbody) return;
+    populateDailyReleaseFormOptions();
+
+    const dataInput = document.getElementById('dailyReleaseData');
+    if (dataInput && !dataInput.value) dataInput.value = todayStr();
+
+    if (dailyReleasesCache.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma atividade liberada ainda.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = dailyReleasesCache.map(r => {
+      const quando = r.scope === 'data' ? formatDataBr(r.target_date) : `Toda ${WEEKDAY_LABELS[Number(r.target_weekday)]}`;
+      const alvo = r.student_email ? ((DB.users[r.student_email] || {}).nome || r.student_email) : 'Turma inteira';
+      const atividade = `${r.trilha_label || r.trilha_key} — ${r.module_title || r.module_key}`;
+      return `
+        <tr>
+          <td>${quando}</td>
+          <td>${alvo}</td>
+          <td>${atividade}</td>
+          <td><button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.removeDailyRelease('${r.id}')">Remover</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function renderGestaoDailyReleases() {
+    await fetchDailyReleases();
+    renderGestaoDailyReleasesTable();
+  }
+
+  async function removeDailyRelease(id) {
+    if (!sbClient) return;
+    await sbClient.from('daily_module_releases').delete().eq('id', id);
+    await fetchDailyReleases();
+    renderGestaoDailyReleasesTable();
   }
 
   function renderClipboardButtonGestao() {
@@ -974,14 +1152,15 @@
 
   // Ranking do aluno dentro da própria turma, pelo % geral de conclusão
   // (student_module_progress). Calcula a posição de TODOS pra saber onde o
-  // aluno logado cai, mas só mostra a dele — nome/posição de colegas nunca
+  // aluno logado cai, mas só devolve a dele — nome/posição de colegas nunca
   // chegam a aparecer na tela (só entram como chave de desempate no sort).
-  async function renderRankingBadge() {
-    const badge = document.getElementById('rankingBadge');
-    if (!badge || currentUser.role !== 'aluno' || !sbClient) return;
+  // Usada tanto pelo badge da statusbar (renderRankingBadge) quanto pela
+  // aba Perfil (renderPerfilTab).
+  async function computeRanking() {
+    if (currentUser.role !== 'aluno' || !sbClient) return null;
 
     const students = turmaStudents();
-    if (students.length === 0) return;
+    if (students.length === 0) return null;
 
     const { data } = await sbClient.from('student_module_progress').select('*').eq('turma', cfg.id);
     const rows = data || [];
@@ -994,12 +1173,120 @@
       .sort((a, b) => b.pct - a.pct || a.email.localeCompare(b.email));
 
     const myIndex = scored.findIndex(s => s.email === paramUser);
-    if (myIndex === -1) return;
+    if (myIndex === -1) return null;
 
-    const posicao = myIndex + 1;
-    const meuPct = Math.round(scored[myIndex].pct);
-    badge.textContent = `🏆 Sua posição na turma: ${posicao}º de ${scored.length} (${meuPct}% concluído)`;
+    return { posicao: myIndex + 1, total: scored.length, pct: Math.round(scored[myIndex].pct) };
+  }
+
+  async function renderRankingBadge() {
+    const badge = document.getElementById('rankingBadge');
+    if (!badge) return;
+    const ranking = await computeRanking();
+    if (!ranking) return;
+    badge.textContent = `🏆 Sua posição na turma: ${ranking.posicao}º de ${ranking.total} (${ranking.pct}% concluído)`;
     badge.style.display = '';
+  }
+
+  // ---------- Perfil do aluno (progresso + insígnias, aba só do aluno) ----------
+  // Insígnias são progressivas por % geral de conclusão — cada turma define
+  // as suas em cfg.insignias (ver turmas/<turma>/config.js), com ícone,
+  // nome, descrição e o minPct necessário pra desbloquear. Não existe tabela
+  // no Supabase pra isso: é só uma leitura derivada do progresso que já é
+  // sincronizado em student_module_progress, então nunca "dessincroniza".
+  function isBadgeUnlocked(insignia, overallPct, completedModules) {
+    // minPct:0 (a primeira insígnia, "Iniciante") exige progresso real, não
+    // só "0% arredondado" — senão todo aluno já entraria com ela liberada.
+    if (insignia.minPct === 0) return completedModules > 0;
+    return overallPct >= insignia.minPct;
+  }
+
+  function renderPerfilBadges(overallPct, completedModules) {
+    const grid = document.getElementById('perfilBadgesGrid');
+    if (!grid) return;
+    const insignias = cfg.insignias || [];
+    if (insignias.length === 0) {
+      grid.innerHTML = `<div class="empty-state">Nenhuma insígnia cadastrada ainda para esta turma.</div>`;
+      return;
+    }
+    grid.innerHTML = insignias.map(b => {
+      const unlocked = isBadgeUnlocked(b, overallPct, completedModules);
+      return `
+        <div class="badge-slot${unlocked ? ' unlocked' : ''}">
+          <div class="icon">${unlocked ? b.icon : '🔒'}</div>
+          <div class="label">${b.label}</div>
+          <div class="badge-desc">${unlocked ? b.desc : (b.minPct === 0 ? 'Comece uma atividade para desbloquear' : `Alcance ${b.minPct}% de progresso`)}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function renderPerfilTab() {
+    const summaryEl = document.getElementById('perfilResumo');
+    const materiasEl = document.getElementById('perfilMaterias');
+    if (!summaryEl || !materiasEl) return;
+
+    if (!sbClient) {
+      summaryEl.innerHTML = `<div class="empty-state">Configure o Supabase (shared/supabase-config.js) para ver seu progresso aqui.</div>`;
+      materiasEl.innerHTML = '';
+      renderPerfilBadges(0, 0);
+      return;
+    }
+
+    const [{ data: myRows }, ranking] = await Promise.all([
+      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id).eq('student_email', paramUser),
+      computeRanking()
+    ]);
+    const rows = myRows || [];
+
+    const overallPct = Math.round(overallProgressForStudent(rows) || 0);
+    const totalModules = allTrilhas().flatMap(t => t.modules || []).length;
+    const completedModules = rows.filter(r => r.completed).length;
+
+    renderPerfilBadges(overallPct, completedModules);
+
+    summaryEl.innerHTML = `
+      <div class="perfil-stat">
+        <div class="perfil-stat-value">${overallPct}%</div>
+        <div class="perfil-stat-label">Progresso Geral</div>
+      </div>
+      <div class="perfil-stat">
+        <div class="perfil-stat-value">${completedModules}/${totalModules}</div>
+        <div class="perfil-stat-label">Atividades Concluídas</div>
+      </div>
+      <div class="perfil-stat">
+        <div class="perfil-stat-value">${ranking ? `${ranking.posicao}º` : '—'}</div>
+        <div class="perfil-stat-label">${ranking ? `Posição de ${ranking.total}` : 'Posição na Turma'}</div>
+      </div>
+    `;
+
+    const materias = (cfg.materias || []).filter(m => (m.trilhas || []).length > 0);
+    if (materias.length === 0) {
+      materiasEl.innerHTML = `<div class="empty-state">Nenhuma matéria cadastrada ainda.</div>`;
+      return;
+    }
+
+    materiasEl.innerHTML = materias.map(m => {
+      const pct = materiaPercentForStudent(m, rows);
+      const pctDisplay = pct === null ? 0 : pct;
+      const trilhasHtml = (m.trilhas || []).map(t => {
+        const mods = t.modules || [];
+        const doneCount = mods.filter(mod => {
+          const r = rows.find(rr => rr.trilha_key === t.key && rr.module_key === mod.key);
+          return !!(r && r.completed);
+        }).length;
+        return `<div class="perfil-trilha-row"><span>${t.label}</span><span>${doneCount}/${mods.length}</span></div>`;
+      }).join('');
+      return `
+        <div class="perfil-materia-card">
+          <div class="perfil-materia-head">
+            <h3>${m.label}</h3>
+            <span>${pctDisplay}%</span>
+          </div>
+          <div class="perfil-progress-bar"><div class="perfil-progress-fill" style="width:${pctDisplay}%;"></div></div>
+          <div class="perfil-trilhas-list">${trilhasHtml}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   async function renderRelatorioNotas() {
@@ -1248,6 +1535,7 @@
   function renderGestaoTab() {
     renderGestaoStudents();
     renderGestaoTrilhas();
+    renderGestaoDailyReleases();
     renderGestaoLogs();
     fetchClipboardStateGestao();
     renderGestaoSlidesList();
@@ -1308,6 +1596,53 @@
       renderClipboardButtonGestao();
     });
 
+    document.getElementById('dailyReleaseScope').addEventListener('change', () => {
+      const isData = document.getElementById('dailyReleaseScope').value === 'data';
+      document.getElementById('dailyReleaseDataWrap').style.display = isData ? '' : 'none';
+      document.getElementById('dailyReleaseWeekdayWrap').style.display = isData ? 'none' : '';
+    });
+
+    document.getElementById('btnAddDailyRelease').addEventListener('click', async () => {
+      if (!sbClient) return;
+      const statusEl = document.getElementById('dailyReleaseStatus');
+      const scope = document.getElementById('dailyReleaseScope').value;
+      const activityVal = document.getElementById('dailyReleaseAtividade').value;
+      if (!activityVal) { statusEl.textContent = 'Escolha uma atividade.'; return; }
+
+      const [trilhaKey, modKey] = activityVal.split('::');
+      const par = allTrilhasComMateria().find(p => p.trilha.key === trilhaKey);
+      const mod = par ? (par.trilha.modules || []).find(m => m.key === modKey) : null;
+      if (!par || !mod) { statusEl.textContent = 'Atividade inválida.'; return; }
+
+      let targetDate = null;
+      let targetWeekday = null;
+      if (scope === 'data') {
+        targetDate = document.getElementById('dailyReleaseData').value;
+        if (!targetDate) { statusEl.textContent = 'Escolha uma data.'; return; }
+      } else {
+        targetWeekday = parseInt(document.getElementById('dailyReleaseWeekday').value, 10);
+      }
+
+      const newId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      await sbClient.from('daily_module_releases').upsert({
+        id: newId,
+        turma: cfg.id,
+        scope,
+        target_date: targetDate,
+        target_weekday: targetWeekday,
+        student_email: document.getElementById('dailyReleaseAlvo').value || '',
+        trilha_key: trilhaKey,
+        module_key: modKey,
+        trilha_label: par.trilha.label,
+        module_title: mod.title,
+        created_at: new Date().toISOString()
+      }, { onConflict: 'id' });
+
+      statusEl.textContent = 'Liberado!';
+      await fetchDailyReleases();
+      renderGestaoDailyReleasesTable();
+    });
+
     document.getElementById('chamadaData').addEventListener('change', () => {
       document.getElementById('chamadaResumoBox').style.display = 'none';
       loadChamada();
@@ -1336,11 +1671,20 @@
     });
     document.getElementById('tabContentAulas').style.display = (tabName === 'aulas') ? 'block' : 'none';
     document.getElementById('tabContentJogos').style.display = (tabName === 'jogos') ? 'block' : 'none';
+    const tabContentPerfil = document.getElementById('tabContentPerfil');
+    if (tabContentPerfil) tabContentPerfil.style.display = (tabName === 'perfil') ? 'block' : 'none';
     document.getElementById('tabContentGestao').style.display = (tabName === 'gestao') ? 'block' : 'none';
 
     logAction(`Acessou a aba: ${tabName.toUpperCase()}`);
 
     if (tabName === 'gestao') renderGestaoTab();
+
+    if (tabName === 'perfil') {
+      renderPerfilTab();
+      if (typeof window.resumeActivityHeartbeat === 'function') {
+        window.resumeActivityHeartbeat('perfil', 'Perfil — Vendo progresso');
+      }
+    }
 
     if (tabName === 'jogos') {
       document.getElementById('gameSelector').style.display = currentGameKey ? 'none' : 'block';
@@ -1539,6 +1883,8 @@
       setupOverrideRealtime();
       fetchTrilhaLocks();
       setupTrilhaLockRealtime();
+      fetchDailyReleases();
+      setupDailyReleasesRealtime();
       renderRankingBadge();
     }
 
@@ -1606,7 +1952,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, toggleTrilhaLock };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, toggleTrilhaLock, removeDailyRelease };
 
   document.addEventListener('DOMContentLoaded', init);
 })();

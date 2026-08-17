@@ -751,9 +751,79 @@ begin
 end $$;
 
 -- ============================================================
+-- BLOCO 10 — Liberação diária/semanal de atividades (aba Gestão,
+-- seção "Liberação Diária de Atividades" dentro de "Bloqueios e
+-- Liberações"). O professor escolhe um módulo (atividade) que precisa
+-- ser concluído numa data específica ou toda vez que cair num certo
+-- dia da semana, pra turma inteira ou só um aluno.
+--
+-- checkGamesUnlock (shared/platform-core.js) troca a regra padrão de
+-- desbloqueio ("completou tudo") por "completou o que foi liberado
+-- pra HOJE" sempre que existe pelo menos uma linha valendo hoje pro
+-- aluno — student_email = '' vale pra turma inteira, um e-mail vale
+-- só pra aquele aluno. Como a checagem é sempre contra a data/dia da
+-- semana atual, o cadeado volta sozinho no dia seguinte, sem nenhuma
+-- ação nova do professor (a menos que a mesma atividade continue
+-- valendo hoje também, aí seguiria liberada por já estar concluída).
+-- ============================================================
+
+create table if not exists public.daily_module_releases (
+  id uuid primary key default gen_random_uuid(),
+  turma text not null,
+  scope text not null check (scope in ('data', 'semana')),
+
+  -- scope='data': target_date preenchido (um dia específico), target_weekday nulo.
+  -- scope='semana': target_weekday preenchido (0=domingo..6=sábado, igual
+  -- JS Date.getDay()), target_date nulo — vale toda vez que cair nesse dia.
+  target_date date,
+  target_weekday smallint check (target_weekday between 0 and 6),
+
+  -- '' = turma inteira; senão, e-mail do aluno específico (USERS_JSON[].email).
+  student_email text not null default '',
+
+  trilha_key text not null,
+  module_key text not null,
+  -- cache do rótulo pra exibir na tabela da aba Gestão sem cruzar com o TURMA_CONFIG de cada turma.
+  trilha_label text,
+  module_title text,
+
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_daily_module_releases_turma on public.daily_module_releases (turma);
+
+alter table public.daily_module_releases enable row level security;
+
+drop policy if exists "daily_module_releases_select_all" on public.daily_module_releases;
+create policy "daily_module_releases_select_all"
+  on public.daily_module_releases for select
+  using (true);
+
+drop policy if exists "daily_module_releases_insert_all" on public.daily_module_releases;
+create policy "daily_module_releases_insert_all"
+  on public.daily_module_releases for insert
+  with check (true);
+
+drop policy if exists "daily_module_releases_delete_all" on public.daily_module_releases;
+create policy "daily_module_releases_delete_all"
+  on public.daily_module_releases for delete
+  using (true);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'daily_module_releases'
+  ) then
+    alter publication supabase_realtime add table public.daily_module_releases;
+  end if;
+end $$;
+
+
+-- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se attendance,
 -- grades, student_module_progress, classroom_settings,
--- student_activity, student_overrides, trilha_overrides e
--- game_scores foram criadas, e se network_nodes ganhou as colunas
--- current_ip e turma.
+-- student_activity, student_overrides, trilha_overrides,
+-- game_scores e daily_module_releases foram criadas, e se
+-- network_nodes ganhou as colunas current_ip e turma.
 -- ============================================================
