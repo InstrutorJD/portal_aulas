@@ -19,27 +19,39 @@ window.GameLeaderboard = (function () {
   const sb = client();
 
   // Só grava se for um recorde novo do aluno pra esse jogo (nunca piora o score salvo).
+  // Best-effort de propósito (nunca deve travar o jogo por causa do placar),
+  // mas os erros vão pro console — sem isso, uma tabela game_scores ausente
+  // ou uma policy de RLS faltando falha 100% das vezes em silêncio, e o
+  // placar parece só "vazio" pra sempre, sem pista nenhuma do motivo.
   async function submitScore({ game, turma, email, name, score }) {
     if (!sb || !email || !turma || !game) return;
     try {
-      const { data } = await sb.from('game_scores').select('score')
-        .eq('student_email', email).eq('game', game).maybeSingle();
+      const { data, error: selectError } = await sb.from('game_scores').select('score')
+        .eq('student_email', email).eq('game', game).eq('turma', turma).maybeSingle();
+      if (selectError) { console.error('[GameLeaderboard] falha ao ler o placar atual:', selectError); return; }
       if (data && Number(data.score) >= score) return;
-      await sb.from('game_scores').upsert({
+      const { error: upsertError } = await sb.from('game_scores').upsert({
         student_email: email, student_name: name || email, turma, game, score,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'student_email,game' });
-    } catch (e) { /* melhor-esforço: nunca deve travar o jogo */ }
+      }, { onConflict: 'student_email,game,turma' });
+      if (upsertError) console.error('[GameLeaderboard] falha ao gravar o placar:', upsertError);
+    } catch (e) {
+      console.error('[GameLeaderboard] erro inesperado ao gravar o placar:', e);
+    }
   }
 
   async function fetchTop({ game, turma, limit }) {
-    if (!sb || !turma || !game) return [];
+    if (!sb || !turma || !game) return { rows: [], error: null };
     try {
-      const { data } = await sb.from('game_scores').select('*')
+      const { data, error } = await sb.from('game_scores').select('*')
         .eq('game', game).eq('turma', turma)
         .order('score', { ascending: false }).limit(limit || 10);
-      return data || [];
-    } catch (e) { return []; }
+      if (error) { console.error('[GameLeaderboard] falha ao carregar o placar:', error); return { rows: [], error }; }
+      return { rows: data || [], error: null };
+    } catch (e) {
+      console.error('[GameLeaderboard] erro inesperado ao carregar o placar:', e);
+      return { rows: [], error: e };
+    }
   }
 
   // Chama onChange de novo sempre que QUALQUER score da turma/jogo mudar
@@ -105,9 +117,18 @@ window.GameLeaderboard = (function () {
     const fmt = formatScore || (s => s);
 
     async function render() {
-      const rows = await fetchTop({ game, turma, limit: 10 });
+      const { rows, error } = await fetchTop({ game, turma, limit: 10 });
       const listEl = overlay.querySelector('.gl-list');
       const youEl = overlay.querySelector('.gl-you');
+      // Erro de verdade (tabela/policy ausente etc.) é bem diferente de
+      // "ninguém jogou ainda" — sem essa distinção, os dois casos pareciam
+      // idênticos na tela e o problema real (Supabase mal configurado)
+      // ficava impossível de diagnosticar sem abrir o console.
+      if (error) {
+        listEl.innerHTML = '<li class="gl-empty">⚠️ Não foi possível carregar o ranking agora. Avise o professor: pode ser que a tabela game_scores ainda não exista no Supabase (ver sql/supabase-setup-completo.sql).</li>';
+        youEl.style.display = 'none';
+        return;
+      }
       if (rows.length === 0) {
         listEl.innerHTML = '<li class="gl-empty">Ninguém pontuou ainda. Seja o primeiro da turma! 🚀</li>';
         youEl.style.display = 'none';

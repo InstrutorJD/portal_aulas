@@ -717,8 +717,29 @@ create table if not exists public.game_scores (
   game text not null,
   score numeric not null default 0,
   updated_at timestamptz not null default now(),
-  primary key (student_email, game)
+  primary key (student_email, game, turma)
 );
+
+-- Corrige quem já rodou a versão antiga deste script (chave primária só
+-- (student_email, game), sem turma): o professor usa o mesmo e-mail "admin"
+-- pra entrar nas duas turmas, então jogar Digitação/Campo Minado numa turma
+-- sobrescrevia o placar da OUTRA turma na mesma linha, ao invés de manter
+-- uma linha por turma — sem isso, o placar de uma das turmas fica sempre
+-- vazio ou "roubado" pela última partida jogada na outra. Idempotente: se
+-- a chave primária já inclui turma, não faz nada.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.table_constraints
+    where table_schema = 'public' and table_name = 'game_scores' and constraint_name = 'game_scores_pkey'
+  ) and not exists (
+    select 1 from information_schema.key_column_usage
+    where table_schema = 'public' and table_name = 'game_scores' and constraint_name = 'game_scores_pkey' and column_name = 'turma'
+  ) then
+    alter table public.game_scores drop constraint game_scores_pkey;
+    alter table public.game_scores add constraint game_scores_pkey primary key (student_email, game, turma);
+  end if;
+end $$;
 
 create index if not exists idx_game_scores_turma_game on public.game_scores (turma, game, score desc);
 

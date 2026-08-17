@@ -14,6 +14,14 @@
     return d[name];
   }
 
+  // Opt-in: window.__FAKE_DB__.__errors = { game_scores: 'relation "game_scores" does not exist' }
+  // simula uma tabela/policy ausente no Supabase de verdade, pra testar como
+  // a app reage a um erro de consulta (não só a "tabela vazia").
+  function forcedError(name) {
+    const err = db().__errors && db().__errors[name];
+    return err ? { message: err } : null;
+  }
+
   function matches(row, filters) {
     return filters.every(([col, val]) => row[col] === val);
   }
@@ -28,9 +36,10 @@
       order(col, opts) { orderBy = { col, ascending: !(opts && opts.ascending === false) }; return api; },
       limit(n) { limitN = n; return api; },
       maybeSingle() {
+        const error = forcedError(name);
         return Promise.resolve({
-          data: table(name).filter(r => matches(r, filters))[0] || null,
-          error: null,
+          data: error ? null : (table(name).filter(r => matches(r, filters))[0] || null),
+          error,
         });
       },
       upsert(payload, opts) {
@@ -65,6 +74,8 @@
         };
       },
       then(resolve, reject) {
+        const error = forcedError(name);
+        if (error) return Promise.resolve({ data: null, error }).then(resolve, reject);
         let rows = table(name).filter(r => matches(r, filters));
         if (orderBy) {
           rows = rows.slice().sort((a, b) => {

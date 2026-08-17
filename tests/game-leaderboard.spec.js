@@ -73,6 +73,43 @@ test.describe('shared/game-leaderboard.js — Digitação', () => {
     await page.goto(DIGITACAO_URL);
     await expect(page.locator('#btnRanking')).toBeHidden();
   });
+
+  // Regressão: quando a tabela game_scores (ou a policy de RLS) não existe
+  // no Supabase, a consulta falha — e antes disso ficava indistinguível de
+  // "ninguém pontuou ainda", escondendo o problema real de configuração.
+  test('tabela game_scores ausente no Supabase mostra aviso de erro, não "ninguém pontuou"', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      __errors: { game_scores: 'relation "public.game_scores" does not exist' },
+    });
+    await page.goto(DIGITACAO_URL);
+    await page.click('#btnRanking');
+
+    const overlay = page.locator('#glOverlay');
+    await expect(overlay).toBeVisible();
+    await expect(overlay).toContainText('Não foi possível carregar o ranking agora');
+    await expect(overlay).not.toContainText('Ninguém pontuou ainda');
+  });
+
+  test('a checagem de recorde pessoal também é escopada por turma', async ({ page }) => {
+    // Mesmo student_email em duas turmas (só acontece de verdade com o
+    // professor, que usa "admin" nas duas) — o recorde de uma turma não
+    // pode bloquear a gravação de um score novo, mais baixo, na outra.
+    await stubSupabaseFake(page, {
+      game_scores: [{ student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'sistemas', game: 'digitacao', score: 999 }],
+    });
+    await page.goto(DIGITACAO_URL); // turma=jogos
+    const currentWord = await page.locator('.word.current').textContent();
+    await page.fill('#typeInput', currentWord + ' ');
+    await page.evaluate(() => window.endGame());
+    await page.waitForTimeout(200);
+
+    const rows = await page.evaluate(() => window.__FAKE_DB__.game_scores);
+    const jogosRow = rows.find(r => r.turma === 'jogos');
+    expect(jogosRow).toBeTruthy();
+    expect(jogosRow.score).toBeGreaterThan(0);
+    // a linha da turma sistemas continua intacta, sem ser sobrescrita
+    expect(rows.find(r => r.turma === 'sistemas')).toMatchObject({ score: 999 });
+  });
 });
 
 test.describe('shared/game-leaderboard.js — Campo Minado', () => {
