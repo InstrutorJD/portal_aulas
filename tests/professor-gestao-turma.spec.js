@@ -127,6 +127,35 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#tabContentAulas')).toBeHidden();
   });
 
+  test('Gabarito lista a atividade e gera o .txt com pergunta + resposta esperada, sem abrir o módulo', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Gabarito');
+
+    await expect(page.locator('#gestaoGabaritoList')).toContainText('Básico — A Jornada do Eri');
+
+    // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
+    await expect(page.locator('#tabContentAulas')).toBeHidden();
+
+    const csharpRow = page.locator('#gestaoGabaritoList > div', { hasText: 'Básico — A Jornada do Eri' });
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 15000 }),
+      csharpRow.locator('[data-gabarito-mod]').click(),
+    ]);
+    expect(download.suggestedFilename()).toBe('csharp-basico-gabarito.txt');
+
+    const filePath = await download.path();
+    const fs = require('node:fs');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('GABARITO');
+    expect(content).toContain('Quem criou a linguagem C#?');
+    expect(content).toContain('RESPOSTA ESPERADA: A Microsoft');
+
+    await expect(page.locator('#tabContentAulas')).toBeHidden();
+  });
+
   test('atividade em tempo real mostra só alunos desta turma', async ({ page }) => {
     await stubSupabaseFake(page, {
       student_activity: [

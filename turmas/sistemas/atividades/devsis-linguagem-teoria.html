@@ -119,6 +119,7 @@
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/vendor/pptxgen.bundle.js"></script>
 <script src="../../../shared/slides-generator.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
 
@@ -146,12 +147,12 @@
     {
       story: 'Última parada! Eu sou o <b>Bit</b> de novo. Agora vamos falar de como escolher a <b>linguagem certa pra cada plataforma</b>. As três grandes plataformas — <b>Web</b>, <b>Desktop</b> e <b>Mobile</b> — têm linguagens/tecnologias dominantes diferentes, e escolher errado custa retrabalho.',
       question: {
-        prompt: 'Por que a escolha de linguagem de programação muda dependendo da plataforma-alvo (Web, Desktop, Mobile)?',
+        prompt: 'Um dev usa exatamente a mesma stack pra construir um site e um app Android nativo, sem adaptar nada. Qual problema ele provavelmente vai enfrentar?',
         options: [
-          'Porque cada plataforma tem tecnologias dominantes e requisitos diferentes',
-          'Porque não existe diferença nenhuma entre plataformas',
-          'Porque toda linguagem funciona igual em qualquer lugar',
-          'Porque a escolha é sempre aleatória'
+          'Vai descobrir que a tecnologia ideal muda de plataforma pra plataforma, e terá retrabalho',
+          'Nenhum — toda tecnologia roda igual em qualquer plataforma',
+          'O problema vai ser só de design visual, nada técnico',
+          'Só existe problema se o app for muito grande'
         ],
         correctIndex: 0,
         explanation: 'Isso! Cada plataforma tem seu próprio ecossistema — o que funciona bem na Web não é necessariamente o ideal pra Mobile ou Desktop.'
@@ -160,8 +161,8 @@
     {
       story: 'Na <b>Web</b>, a combinação dominante é <b>HTML</b> (estrutura), <b>CSS</b> (estilo) e <b>JavaScript</b> (comportamento) — é o que todo navegador entende nativamente, sem precisar instalar nada.',
       question: {
-        prompt: 'Qual conjunto de tecnologias é o padrão pra construir algo que roda direto no NAVEGADOR, sem instalação?',
-        options: ['HTML, CSS e JavaScript', 'Apenas C#', 'Apenas Swift', 'Apenas Kotlin'],
+        prompt: 'Você precisa entregar uma página que rode direto no navegador, sem o usuário instalar absolutamente nada. Qual stack faz isso?',
+        options: ['HTML, CSS e JavaScript', 'Swift e Kotlin', 'C# e .NET', 'Python e Django'],
         correctIndex: 0,
         explanation: 'Correto! Todo navegador entende HTML/CSS/JS nativamente — por isso essa é a combinação padrão pra Web.'
       }
@@ -169,7 +170,7 @@
     {
       story: 'No <b>Mobile</b>, cada sistema operacional tem sua linguagem nativa preferida: <b>Kotlin</b> pra Android, <b>Swift</b> pra iOS. Também existem frameworks multiplataforma (como React Native e Flutter) que escrevem uma vez e rodam nos dois.',
       question: {
-        prompt: 'Qual linguagem é a mais indicada pra um app NATIVO iOS, com o melhor desempenho possível na plataforma da Apple?',
+        prompt: 'Uma empresa quer o app rodando com o MÁXIMO desempenho possível, só no iPhone — sem se preocupar com Android por enquanto. Qual linguagem nativa é a mais indicada?',
         options: ['Swift', 'JavaScript', 'PHP', 'SQL'],
         correctIndex: 0,
         explanation: 'Isso! Swift é a linguagem nativa da Apple pra iOS — a escolha certa quando o objetivo é máximo desempenho naquela plataforma específica.'
@@ -178,12 +179,12 @@
     {
       story: 'No <b>Desktop</b>, é comum ver C#/.NET (forte no Windows), ou até tecnologias web empacotadas com <b>Electron</b> (JavaScript rodando como app desktop, como o VS Code e o Discord).',
       question: {
-        prompt: 'O que o Electron permite fazer?',
+        prompt: 'Uma equipe já tem um site pronto em HTML/CSS/JS e quer entregar também uma versão instalável de desktop, sem reescrever o front-end do zero. O que permite empacotar essas tecnologias web como um app desktop de verdade?',
         options: [
-          'Empacotar tecnologias web (JS/HTML/CSS) como um aplicativo desktop',
-          'Rodar apps só no navegador',
-          'Substituir totalmente o sistema operacional',
-          'Compilar código Swift pra Android'
+          'Electron, empacotando o JS/HTML/CSS como aplicativo desktop',
+          'Rodar o mesmo site só dentro do navegador, sem instalar nada',
+          'Substituir totalmente o sistema operacional do usuário',
+          'Compilar o JavaScript direto pra Android'
         ],
         correctIndex: 0,
         explanation: 'Exato! Electron permite reaproveitar conhecimento web pra construir aplicativos desktop de verdade — é assim que VS Code e Discord funcionam.'
@@ -192,7 +193,7 @@
     {
       story: 'Independente da plataforma, um app precisa ter <b>responsividade</b>: a interface se adapta bem tanto numa tela pequena de celular quanto num monitor grande — sem elementos cortados ou ilegíveis.',
       question: {
-        prompt: 'Qual conceito garante que um app funcione bem tanto num celular pequeno quanto num monitor grande?',
+        prompt: 'Um site fica ótimo no monitor grande, mas no celular os botões saem da tela e o texto fica cortado. Que qualidade está faltando nesse site?',
         options: ['Responsividade', 'Compilação', 'Peer Review', 'Debugging'],
         correctIndex: 0,
         explanation: 'Isso! Responsividade é a capacidade da interface se adaptar a diferentes tamanhos de tela, mantendo tudo legível e usável.'
@@ -201,12 +202,12 @@
     {
       story: 'Depois de pronto, é essencial fazer <b>testes de compatibilidade</b>: o mesmo site pode se comportar diferente no Chrome, Firefox e Safari; o mesmo app pode ter bugs só em uma versão específica de Android ou iOS.',
       question: {
-        prompt: 'O que são "testes de compatibilidade"?',
+        prompt: 'Um site funciona perfeitamente no Chrome, mas trava no Safari. Que tipo de verificação, feita ANTES do lançamento, teria pego esse problema?',
         options: [
-          'Verificar se o sistema funciona igual em diferentes navegadores/sistemas operacionais',
-          'Testar apenas a velocidade do banco de dados',
-          'Testar apenas a segurança da rede',
-          'Um tipo de teste que não é necessário'
+          'Testes de compatibilidade entre navegadores/sistemas operacionais',
+          'Testes de velocidade do banco de dados',
+          'Testes de segurança da rede',
+          'Nenhum teste pega esse tipo de problema'
         ],
         correctIndex: 0,
         explanation: 'Correto! Testes de compatibilidade garantem que o comportamento seja consistente entre diferentes navegadores e sistemas operacionais.'
@@ -215,7 +216,7 @@
     {
       story: 'Por fim, o código-fonte terminado precisa virar um <b>binário final</b> pronto pra distribuir — esse processo de transformar o projeto num arquivo instalável/executável se chama <b>build</b> (ou empacotamento).',
       question: {
-        prompt: 'Como se chama o processo de transformar o código-fonte terminado num arquivo pronto pra instalar/distribuir?',
+        prompt: 'O código está pronto e testado, mas ainda precisa virar um instalador (.exe, .apk...) pra chegar até o usuário final. Como se chama esse processo de empacotamento?',
         options: ['Build (empacotamento)', 'Peer Review', 'Debugging', 'Requisito funcional'],
         correctIndex: 0,
         explanation: 'Isso! O build empacota tudo (código, dependências, recursos) num binário final, pronto pra rodar sem precisar do ambiente de desenvolvimento.'
@@ -224,12 +225,12 @@
     {
       story: 'A linguagem "favorita" do desenvolvedor não deveria ser o critério principal — o que importa é o <b>público-alvo</b> e a <b>plataforma</b> onde o produto vai rodar de verdade. Um app Mobile nativo de alta performance pede uma escolha diferente de um site institucional simples.',
       question: {
-        prompt: 'Qual deveria ser o critério PRINCIPAL para escolher uma linguagem de programação num projeto?',
+        prompt: 'Um dev insiste em usar Kotlin em TODO projeto, só porque é a linguagem favorita dele — mesmo num projeto que é puramente um site institucional. Qual é o problema dessa escolha?',
         options: [
-          'O público-alvo e a plataforma onde o produto vai rodar',
-          'A linguagem favorita do desenvolvedor, sempre',
-          'A linguagem mais recente do mercado, sem exceção',
-          'A linguagem mais fácil de digitar'
+          'Ignora o público-alvo e a plataforma onde o produto realmente vai rodar',
+          'Nenhum — a linguagem favorita do dev sempre deve vencer',
+          'O problema é puramente estético, nada técnico',
+          'Só existe problema se o site for muito grande'
         ],
         correctIndex: 0,
         explanation: 'Exato! Assim como a escolha de tecnologia parte dos requisitos, a escolha de linguagem parte de ONDE e PRA QUEM o produto vai rodar.'
@@ -238,12 +239,12 @@
     {
       story: 'Resumindo: escolher a linguagem certa significa alinhar três coisas — a <b>plataforma-alvo</b> (Web, Desktop, Mobile), os <b>requisitos</b> do projeto (que você já viu na trilha anterior) e o <b>ecossistema</b> disponível pra essa combinação. Com isso, você já sabe selecionar linguagem e plataforma com critério.',
       question: {
-        prompt: 'Quais três fatores devem ser alinhados na escolha de uma linguagem de programação?',
+        prompt: 'Antes de bater o martelo na linguagem de um projeto novo, quais três coisas você precisa olhar juntas — nenhuma sozinha basta?',
         options: [
           'Plataforma-alvo, requisitos do projeto e ecossistema disponível',
           'Só a opinião pessoal do desenvolvedor',
           'Só o preço da licença da linguagem',
-          'Só a popularidade nas redes sociais'
+          'Só a popularidade da linguagem nas redes sociais'
         ],
         correctIndex: 0,
         explanation: 'Isso! Plataforma, requisitos e ecossistema juntos apontam pra escolha certa — nenhum dos três sozinho é suficiente.'
@@ -260,6 +261,25 @@
       fileName: 'devsis-linguagem-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
       closingText: 'Abra o módulo "Prática — Central de Sistemas: Linguagem e Plataforma" no Portal de Aulas para os alunos resolverem chamados de verdade.'
+    });
+  };
+
+  // Mesmo esquema do generateSlidesForGestao acima: exposto sempre pra a aba
+  // "Gestão" poder chamar remotamente, num iframe oculto, e baixar um .txt
+  // com pergunta + resposta esperada de cada etapa — sem o professor precisar
+  // decorar as respostas ou abrir o módulo pra conferir.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Dev Sistemas — Linguagens e Plataformas',
+      subtitle: 'Aula Teórica · Trilha Linguagem e Plataforma · Turma Sistemas',
+      items: STEPS.map((step, i) => ({
+        number: i + 1,
+        prompt: step.question.prompt,
+        options: step.question.options,
+        correctIndex: step.question.correctIndex,
+        answer: step.question.options[step.question.correctIndex]
+      })),
+      fileName: 'devsis-linguagem-teoria-gabarito.txt'
     });
   };
 
@@ -297,7 +317,32 @@
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
   }
 
+  // Ordem das perguntas embaralhada por aluno/tentativa — evita que a sequência
+  // fixa vire uma "lista de gabarito" compartilhada entre turmas.
+  const ORDER_KEY = PROGRESS_KEY.replace('_progress_', '_order_');
+
+  function shuffleOrder() {
+    const arr = STEPS.map((_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function loadOrder() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(ORDER_KEY) || 'null');
+      if (Array.isArray(parsed) && parsed.length === STEPS.length && parsed.every(n => Number.isInteger(n) && n >= 0 && n < STEPS.length)) {
+        return parsed;
+      }
+    } catch (e) {}
+    return null;
+  }
+
   const saved = loadProgress();
+  let stepOrder = (saved && !saved.completed) ? (loadOrder() || shuffleOrder()) : shuffleOrder();
+  localStorage.setItem(ORDER_KEY, JSON.stringify(stepOrder));
   let currentStepIndex = (saved && !saved.completed) ? Math.min(saved.lastStepIndex || 0, STEPS.length - 1) : 0;
   let correctCount = (saved && typeof saved.correctCount === 'number') ? saved.correctCount : 0;
 
@@ -319,7 +364,7 @@
 
   function renderStory() {
     updateProgressBar();
-    const step = STEPS[currentStepIndex];
+    const step = STEPS[stepOrder[currentStepIndex]];
     reportStep(`Dev Sistemas — Linguagem e Plataforma — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
@@ -344,7 +389,7 @@
   }
 
   function renderQuestion() {
-    const step = STEPS[currentStepIndex];
+    const step = STEPS[stepOrder[currentStepIndex]];
     const q = step.question;
 
     storyWrap.innerHTML = '';
@@ -357,14 +402,23 @@
     const letters = ['A', 'B', 'C', 'D'];
     let answered = false;
 
-    q.options.forEach((optText, idx) => {
+    // Embaralha a ordem de exibição pra resposta certa não cair sempre na letra A.
+    const order = q.options.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    const correctPos = order.indexOf(q.correctIndex);
+
+    order.forEach((origIdx, pos) => {
+      const optText = q.options[origIdx];
       const opt = document.createElement('div');
       opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[idx]}</span><span>${optText}</span>`;
+      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
       opt.addEventListener('click', () => {
         if (answered) return;
         answered = true;
-        selectAnswer(idx);
+        selectAnswer(pos);
       });
       optionsWrap.appendChild(opt);
 
@@ -372,10 +426,10 @@
         const allOptionEls = optionsWrap.querySelectorAll('.option');
         allOptionEls.forEach(el => el.classList.add('disabled'));
 
-        const isCorrect = chosenIdx === q.correctIndex;
+        const isCorrect = chosenIdx === correctPos;
         allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
         if (!isCorrect) {
-          allOptionEls[q.correctIndex].classList.add('correct');
+          allOptionEls[correctPos].classList.add('correct');
         }
         if (isCorrect) correctCount++;
 
@@ -435,6 +489,8 @@
     document.getElementById('btnRestart').addEventListener('click', () => {
       currentStepIndex = 0;
       correctCount = 0;
+      stepOrder = shuffleOrder();
+      localStorage.setItem(ORDER_KEY, JSON.stringify(stepOrder));
       saveProgress({ lastStepIndex: 0, correctCount: 0, completed: false });
       renderStory();
     });

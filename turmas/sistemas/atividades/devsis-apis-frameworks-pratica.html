@@ -131,6 +131,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
 
@@ -235,6 +236,25 @@
       correctIndex: 0
     }
   ];
+
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + resposta esperada de cada chamado.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Dev Sistemas: Ferramentas e APIs',
+      subtitle: 'Prática · Turma Sistemas',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        options: c.options,
+        correctIndex: c.correctIndex,
+        answer: c.options[c.correctIndex]
+      })),
+      fileName: 'devsis-apis-frameworks-pratica-gabarito.txt'
+    });
+  };
 
   const challengeListEl = document.getElementById('challengeList');
   const challengeTitleEl = document.getElementById('challengeTitle');

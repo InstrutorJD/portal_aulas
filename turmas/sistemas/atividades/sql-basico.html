@@ -151,6 +151,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
 </head>
 <body>
@@ -335,6 +336,23 @@
       orderMatters: true
     }
   ];
+
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + consulta SQL esperada de cada chamado.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'SQL Básico',
+      subtitle: 'Prática · Turma Sistemas',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        answer: c.solutionSql
+      })),
+      fileName: 'sql-basico-gabarito.txt'
+    });
+  };
 
   const challengeListEl = document.getElementById('challengeList');
   const challengeTitleEl = document.getElementById('challengeTitle');

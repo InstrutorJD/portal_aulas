@@ -193,6 +193,19 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Gabarito</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Gera um .txt com o enunciado de cada pergunta/chamado e a resposta esperada — principalmente das atividades práticas, sem precisar abrir o módulo ou decorar as respostas.
+                </p>
+                <div id="gestaoGabaritoList"></div>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Chamada e Notas</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -1087,6 +1100,67 @@
     });
   }
 
+  // Mesmo esquema do generateSlidesFor acima: carrega o módulo num iframe
+  // escondido só pra rodar a geração do gabarito (.txt) dele.
+  function generateGabaritoFor(mod) {
+    return new Promise((resolve) => {
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
+      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
+
+      const cleanup = () => { iframe.remove(); resolve(); };
+      iframe.onload = async () => {
+        try {
+          const win = iframe.contentWindow;
+          if (win && typeof win.generateGabaritoForGestao === 'function') {
+            await win.generateGabaritoForGestao();
+          }
+        } catch (e) {
+          // best-effort: se der erro, só limpa o iframe e segue
+        }
+        setTimeout(cleanup, 400);
+      };
+      iframe.onerror = cleanup;
+      document.body.appendChild(iframe);
+    });
+  }
+
+  function renderGestaoGabaritoList() {
+    const container = document.getElementById('gestaoGabaritoList');
+    if (!container) return;
+
+    const gabaritoModules = [];
+    allTrilhas().forEach(trilha => {
+      (trilha.modules || []).forEach(mod => {
+        if (mod.hasGabarito) gabaritoModules.push(mod);
+      });
+    });
+
+    if (gabaritoModules.length === 0) {
+      container.innerHTML = `<div class="empty-state">Nenhuma atividade com gabarito disponível nesta turma ainda.</div>`;
+      return;
+    }
+
+    container.innerHTML = gabaritoModules.map((mod, i) => `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);">
+        <span>${mod.title}</span>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" data-gabarito-mod="${i}">📄 Gerar Gabarito</button>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('[data-gabarito-mod]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const mod = gabaritoModules[parseInt(btn.getAttribute('data-gabarito-mod'), 10)];
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ Gerando...';
+        await generateGabaritoFor(mod);
+        btn.disabled = false;
+        btn.textContent = original;
+      });
+    });
+  }
+
   function toggleGestaoSection(headEl) {
     headEl.closest('.collapsible-card').classList.toggle('expanded');
   }
@@ -1097,6 +1171,7 @@
     renderGestaoLogs();
     fetchClipboardStateGestao();
     renderGestaoSlidesList();
+    renderGestaoGabaritoList();
     loadChamada();
     renderRelatorioPresenca();
     loadNotas();

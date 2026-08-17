@@ -31,28 +31,28 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Tabelas, colunas, chave primária, SELECT/WHERE/ORDER BY/INSERT/UPDATE/DELETE, JOIN entre tabelas, agregação com GROUP BY e os fundamentos de PL/SQL.',
               icon: '📖', src: 'atividades/sql-basico-teoria.html',
               progressKey: 'sql_basico_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'basico', title: 'Prática — Central de Dados',
               desc: 'Resolva chamados escrevendo consultas SQL de verdade contra um banco de exemplo, direto no navegador.',
               icon: '🗄️', src: 'atividades/sql-basico.html',
               progressKey: 'sql_basico_progress_', progressTotal: 8,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             },
             {
               key: 'join', title: 'Prática — Central de Dados: Relatórios (JOIN)',
               desc: 'Cruze dados de funcionários e departamentos com JOIN pra montar relatórios de verdade.',
               icon: '🔗', src: 'atividades/sql-join.html',
               progressKey: 'sql_join_progress_', progressTotal: 5,
-              requires: 'basico'
+              requires: 'basico', hasGabarito: true
             },
             {
               key: 'agregacao', title: 'Prática — Central de Dados: Estatísticas (GROUP BY)',
               desc: 'Some, conte e tire médias com funções de agregação e GROUP BY.',
               icon: '📊', src: 'atividades/sql-agregacao.html',
               progressKey: 'sql_agregacao_progress_', progressTotal: 5,
-              requires: 'join'
+              requires: 'join', hasGabarito: true
             }
           ]
         },
@@ -67,7 +67,7 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Sintaxe de comentários de uma linha e de bloco, e onde/por que comentar código SQL e PL/SQL.',
               icon: '📝', src: 'atividades/sql-comentarios-teoria.html',
               progressKey: 'sql_comentarios_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             }
           ]
         }
@@ -88,14 +88,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'VS Code, Git local, compilação x interpretação, debugging, convenções de nomenclatura, peer review, consumo de APIs/JSON, bibliotecas, frameworks, CLI scaffold, componentes e rotas.',
               icon: '🧑‍💻', src: 'atividades/devsis-apis-frameworks-teoria.html',
               progressKey: 'devsis_apis_frameworks_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Sistemas: Ferramentas e APIs',
               desc: 'Resolva chamados escolhendo a ferramenta, convenção ou tecnologia certa pra cada cenário.',
               icon: '🛠️', src: 'atividades/devsis-apis-frameworks-pratica.html',
               progressKey: 'devsis_apis_frameworks_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         },
@@ -110,14 +110,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Diferença entre requisito funcional e não funcional, e como escolher APIs, bibliotecas e frameworks a partir deles.',
               icon: '📋', src: 'atividades/devsis-requisitos-teoria.html',
               progressKey: 'devsis_requisitos_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Sistemas: Requisitos',
               desc: 'Resolva chamados classificando requisitos e escolhendo tecnologias de acordo com eles.',
               icon: '📐', src: 'atividades/devsis-requisitos-pratica.html',
               progressKey: 'devsis_requisitos_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         },
@@ -132,14 +132,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Linguagens dominantes para Web, Desktop e Mobile, responsividade multiplataforma, testes de compatibilidade e build/empacotamento.',
               icon: '🖥️', src: 'atividades/devsis-linguagem-teoria.html',
               progressKey: 'devsis_linguagem_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Sistemas: Linguagem e Plataforma',
               desc: 'Resolva chamados escolhendo a linguagem e a plataforma certas pra cada cenário de projeto.',
               icon: '📱', src: 'atividades/devsis-linguagem-pratica.html',
               progressKey: 'devsis_linguagem_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         }
@@ -160,14 +160,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Topologias físicas, meios de cabeamento, interfaces Ethernet/Wireless/Bluetooth, gateway, IPv4/IPv6, máscara de sub-rede, ping e tracert.',
               icon: '📡', src: 'atividades/redes-conexao-teoria.html',
               progressKey: 'redes_conexao_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Redes: Conexões',
               desc: 'Resolva chamados escolhendo o meio físico, dispositivo ou comando certo pra cada cenário.',
               icon: '🔌', src: 'atividades/redes-conexao-pratica.html',
               progressKey: 'redes_conexao_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         },
@@ -182,14 +182,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Metodologia de diagnóstico por camadas, falhas físicas, conflito de IP, máscara de sub-rede errada e isolamento de causa.',
               icon: '🩺', src: 'atividades/redes-resolucao-teoria.html',
               progressKey: 'redes_resolucao_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Redes: Diagnóstico',
               desc: 'Analise sintomas reais e aponte a causa mais provável de cada chamado.',
               icon: '🔍', src: 'atividades/redes-resolucao-pratica.html',
               progressKey: 'redes_resolucao_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         },
@@ -204,14 +204,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'DHCP, Web, E-mail, FTP, acesso remoto, comunicação em tempo real, portas padrão e as camadas dos modelos OSI e TCP/IP.',
               icon: '🌐', src: 'atividades/redes-servicos-teoria.html',
               progressKey: 'redes_servicos_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Redes: Serviços',
               desc: 'Associe cada chamado ao serviço, porta ou camada de rede correta.',
               icon: '🛰️', src: 'atividades/redes-servicos-pratica.html',
               progressKey: 'redes_servicos_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         },
@@ -226,14 +226,14 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Local x rede x nuvem, switch/roteador/access point, bit x byte, Mbps x MB/s, redundância e políticas de backup.',
               icon: '💾', src: 'atividades/redes-armazenamento-teoria.html',
               progressKey: 'redes_armazenamento_teoria_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Redes: Armazenamento',
               desc: 'Resolva chamados sobre ativos de rede, unidades de medida, redundância e backup.',
               icon: '🗃️', src: 'atividades/redes-armazenamento-pratica.html',
               progressKey: 'redes_armazenamento_pratica_progress_', progressTotal: 5,
-              requires: 'teoria'
+              requires: 'teoria', hasGabarito: true
             }
           ]
         }

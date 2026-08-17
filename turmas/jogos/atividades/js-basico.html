@@ -138,6 +138,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
 
@@ -280,6 +281,29 @@
       ]
     }
   ];
+
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + critério de avaliação (testes) de cada
+  // duelo — aqui não existe UM código certo, e sim um valor esperado por
+  // combinação de entradas, então o gabarito lista os casos de teste.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'JavaScript Básico',
+      subtitle: 'Prática · Turma Jogos Digitais',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        answer: c.tests.map(t => {
+          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
+          return `${prefix} → ${c.resultVar} deve ser ${JSON.stringify(t.expected)}`;
+        }).join('\n')
+      })),
+      fileName: 'js-basico-gabarito.txt'
+    });
+  };
 
   const challengeListEl = document.getElementById('challengeList');
   const challengeTitleEl = document.getElementById('challengeTitle');

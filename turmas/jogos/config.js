@@ -29,13 +29,15 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'basico', title: 'Básico — Desafios de JavaScript',
               desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
               icon: '🟨', src: 'atividades/js-basico.html',
-              progressKey: 'js_basico_progress_', progressTotal: 5
+              progressKey: 'js_basico_progress_', progressTotal: 5,
+              hasGabarito: true
             },
             {
               key: 'intermediario', title: 'Intermediário — Desafios de JavaScript',
               desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
               icon: '🟧', src: 'atividades/js-intermediario.html',
-              progressKey: 'js_intermediario_progress_', progressTotal: 7
+              progressKey: 'js_intermediario_progress_', progressTotal: 7,
+              hasGabarito: true
             }
           ]
         },
@@ -50,7 +52,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Primeiro contato com C#, contado em forma de história. Responda cada pergunta para avançar.',
               icon: '🦈', src: 'atividades/csharp-basico.html',
               progressKey: 'csharp_basico_progress_', progressMode: 'flag',
-              hasSlides: true
+              hasSlides: true, hasGabarito: true
             }
           ]
         }

@@ -116,6 +116,7 @@
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/vendor/pptxgen.bundle.js"></script>
 <script src="../../../shared/slides-generator.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
 
@@ -258,6 +259,25 @@
       fileName: 'csharp-basico-slides.pptx',
       closingTitle: 'Hora da prática!',
       closingText: 'Em breve, novos desafios práticos de código vão esperar os alunos no Portal de Aulas.'
+    });
+  };
+
+  // Mesmo esquema do generateSlidesForGestao acima: exposto sempre pra a aba
+  // "Gestão" poder chamar remotamente, num iframe oculto, e baixar um .txt
+  // com pergunta + resposta esperada de cada etapa — sem o professor precisar
+  // decorar as respostas ou abrir o módulo pra conferir.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'C# Básico — A Jornada do Eri',
+      subtitle: 'Aula Teórica · Trilha C# · Turma Jogos Digitais',
+      items: STEPS.map((step, i) => ({
+        number: i + 1,
+        prompt: step.question.prompt,
+        options: step.question.options,
+        correctIndex: step.question.correctIndex,
+        answer: step.question.options[step.question.correctIndex]
+      })),
+      fileName: 'csharp-basico-gabarito.txt'
     });
   };
 
