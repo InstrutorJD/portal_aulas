@@ -84,11 +84,23 @@ test.describe('turmas/sistemas/atividades/sql-comentarios-teoria.html', () => {
     await stubSupabaseDisabled(page);
     await page.goto(URL);
 
+    // A ordem das opções (A/B/C/D) é embaralhada a cada renderização — não dá
+    // pra usar STEPS[...].correctIndex como posição na tela, precisa achar a
+    // opção pelo texto (ver comentário equivalente em quiz-wrong-answer-feedback.spec.js).
     const total = await page.evaluate(() => STEPS.length);
     for (let i = 0; i < total; i++) {
       await page.click('#btnNext');
-      const correctIdx = await page.evaluate(() => STEPS[currentStepIndex].question.correctIndex);
-      await page.locator('.option').nth(correctIdx).click();
+      const correctText = await page.evaluate(() => {
+        const q = STEPS[stepOrder[currentStepIndex]].question;
+        return q.options[q.correctIndex];
+      });
+      const options = page.locator('.option');
+      const count = await options.count();
+      let idx = 0;
+      for (let j = 0; j < count; j++) {
+        if ((await options.nth(j).innerText()).includes(correctText)) { idx = j; break; }
+      }
+      await options.nth(idx).click();
       const nextBtn = page.locator('#btnNextAfterAnswer');
       await nextBtn.click();
     }

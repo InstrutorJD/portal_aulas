@@ -500,22 +500,41 @@
     storyWrap.appendChild(card);
   }
 
-  function finishJourney() {
-    saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: true });
-    reportStep(`Redes — Conexão e IP — Concluída (${correctCount}/${STEPS.length})`);
+  function finishJourney(reviewOnly) {
+    // Só conta como concluída (e libera o resto da trilha/jogos) com pelo
+    // menos 80% de acerto — abaixo disso, fica só o convite pra tentar de novo.
+    // reviewOnly=true (reabrindo um módulo já concluído) só reexibe a tela
+    // de sucesso sem recalcular/regravar — sem isso, progresso salvo antes
+    // dessa regra existir (sem correctCount) seria rebaixado pra "não
+    // concluído" só por reabrir o módulo.
+    const pct = STEPS.length > 0 ? Math.round((correctCount / STEPS.length) * 100) : 0;
+    const passed = reviewOnly ? true : pct >= 80;
+    if (!reviewOnly) {
+      saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: passed });
+      reportStep(`Redes — Conexão e IP — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
+    }
 
     progressFill.style.width = '100%';
     lblStepNum.textContent = STEPS.length;
 
-    storyWrap.innerHTML = `
+    storyWrap.innerHTML = passed ? `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
         <h2>Conexão e Endereçamento IP concluídos!</h2>
         <p>Você já conhece topologias, meios físicos, Wi-Fi/Bluetooth, gateway, IPv4/IPv6, máscara de sub-rede, CIDR, conflito de IP, ping e tracert.</p>
-        <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas.</div>
+        <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%).</div>
         <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Redes.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
+        </div>
+      </div>
+    ` : `
+      <div class="card finish-screen">
+        <div class="trophy">📚</div>
+        <h2>Quase lá!</h2>
+        <p>Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%) — é preciso pelo menos 80% de acerto para concluir esta atividade.</p>
+        <div class="actions" style="justify-content:center; margin-top:12px;">
+          <button class="btn" id="btnRestart">🔁 Tentar novamente</button>
         </div>
       </div>
     `;
@@ -532,7 +551,7 @@
 
   if (saved && saved.completed) {
     currentStepIndex = STEPS.length;
-    finishJourney();
+    finishJourney(true);
   } else {
     renderStory();
   }
