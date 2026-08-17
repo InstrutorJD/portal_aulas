@@ -41,7 +41,9 @@ test.describe('Ranking do aluno na turma', () => {
     const badge = page.locator('#rankingBadge');
     await expect(badge).toBeVisible();
     // edward (100%) na frente, breno (33%) em 2º de 17 alunos da turma Jogos.
-    await expect(badge).toHaveText('🏆 Sua posição na turma: 2º de 17 (33% concluído)');
+    // O texto é só o essencial (troféu + posição); o detalhe completo vira title/tooltip.
+    await expect(badge).toHaveText('🏆 2º');
+    await expect(badge).toHaveAttribute('title', 'Sua posição na turma: 2º de 17 (33% concluído)');
 
     const bodyText = await page.locator('body').innerText();
     expect(bodyText).not.toContain('Edward');
@@ -67,6 +69,6 @@ test.describe('Ranking do aluno na turma', () => {
     });
     await page.goto('/turmas/jogos/plataforma.html?user=edward.guzman&ip=192.168.1.11&saldo=1580.11&role=aluno&turma=jogos');
 
-    await expect(page.locator('#rankingBadge')).toHaveText('🏆 Sua posição na turma: 1º de 17 (100% concluído)');
+    await expect(page.locator('#rankingBadge')).toHaveText('🏆 1º');
   });
 });

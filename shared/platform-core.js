@@ -1183,7 +1183,8 @@
     if (!badge) return;
     const ranking = await computeRanking();
     if (!ranking) return;
-    badge.textContent = `🏆 Sua posição na turma: ${ranking.posicao}º de ${ranking.total} (${ranking.pct}% concluído)`;
+    badge.textContent = `🏆 ${ranking.posicao}º`;
+    badge.title = `Sua posição na turma: ${ranking.posicao}º de ${ranking.total} (${ranking.pct}% concluído)`;
     badge.style.display = '';
   }
 
