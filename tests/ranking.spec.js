@@ -71,4 +71,41 @@ test.describe('Ranking do aluno na turma', () => {
 
     await expect(page.locator('#rankingBadge')).toHaveText('🏆 1º');
   });
+
+  // Empate divide a mesma posição ("ranking de competição": 1, 2, 2, 4, ...)
+  // — sem isso, um grupo de alunos com o mesmo % (0%, o caso mais comum no
+  // início da turma) aparecia em posições diferentes só por causa de um
+  // desempate alfabético interno, que não é ranking nenhum de verdade.
+  test('alunos empatados em 0% dividem a mesma posição', async ({ page }) => {
+    // SEED só dá progresso pro edward (100%) — breno e o resto da turma
+    // (16 outros alunos) ficam em 0%, todos empatados.
+    await stubSupabaseFake(page, SEED);
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+
+    await expect(page.locator('#rankingBadge')).toHaveText('🏆 2º');
+    await expect(page.locator('#rankingBadge')).toHaveAttribute('title', 'Sua posição na turma: 2º de 17 (0% concluído)');
+  });
+
+  test('vários grupos empatados: posição pula o tamanho do grupo (1, 2, 2, 4)', async ({ page }) => {
+    const TIE_SEED = {
+      student_module_progress: [
+        // edward: 100% (3/3 módulos) — sozinho no topo.
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+        // engel e gabriella: 67% cada (js/basico + csharp/basico, sem js/intermediario) — empatados em 2º.
+        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
+        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
+        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+        // iago: 33% (só csharp/basico) — sozinho em 4º (pula o 3º, ocupado pelo empate acima).
+        { student_email: 'iago.moreira', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    };
+    await stubSupabaseFake(page, TIE_SEED);
+    // breno não fez nada (0%) — empata com o resto da turma (13 alunos) em 5º.
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+
+    await expect(page.locator('#rankingBadge')).toHaveText('🏆 5º');
+  });
 });
