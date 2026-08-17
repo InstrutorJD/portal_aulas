@@ -181,10 +181,6 @@ test.describe('Liberação diária — visão do aluno', () => {
     await page.click('.game-card:has-text("Fundamentos de Programação")');
     await page.selectOption('#trilhaSelect', 'csharp');
 
-    // o aviso de trilha bloqueada continua lá, mas agora avisa da exceção de hoje
-    await expect(page.locator('#trilhaLockedBanner_csharp')).toContainText('bloqueada pelo professor');
-    await expect(page.locator('#trilhaLockedBanner_csharp')).toContainText('liberada especialmente para hoje');
-
     // o módulo liberado abre normalmente, mesmo com a trilha travada
     const liberado = page.locator('#moduleSelector_csharp .game-card', { hasText: 'Básico — A Jornada do Eri' });
     await expect(liberado).not.toHaveClass(/locked/);
@@ -198,5 +194,61 @@ test.describe('Liberação diária — visão do aluno', () => {
     const naoLiberado = page.locator('#moduleSelector_js .game-card', { hasText: 'Básico — Desafios de JavaScript' });
     await expect(naoLiberado).toHaveClass(/locked/);
     await expect(naoLiberado).toContainText('Bloqueado');
+  });
+});
+
+test.describe('Liberação diária — notificação de atividade nova', () => {
+  test('liberação criada com a sessão do aluno já aberta mostra um toast', async ({ page }) => {
+    await stubSupabaseFake(page, { daily_module_releases: [] });
+    await page.goto(ALUNO_URL);
+
+    // ainda não existe nada — nenhum aviso na tela
+    await expect(page.locator('.pf-toast')).toHaveCount(0);
+
+    // professor libera uma atividade "ao vivo": grava no banco e dispara o
+    // realtime que o aluno já está inscrito (setupDailyReleasesRealtime).
+    await page.evaluate(() => {
+      window.__FAKE_DB__.daily_module_releases.push({
+        id: 'r1', turma: 'jogos', scope: 'data', target_date: new Date().toISOString().slice(0, 10), target_weekday: null,
+        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+        trilha_label: 'C#', module_title: 'Básico — A Jornada do Eri',
+      });
+      window.__fireFakeRealtime('daily_module_releases');
+    });
+
+    const toast = page.locator('.pf-toast');
+    await expect(toast).toBeVisible();
+    await expect(toast).toContainText('Nova atividade liberada');
+    await expect(toast).toContainText('C# — Básico — A Jornada do Eri');
+
+    await toast.locator('.pf-toast-close').click();
+    await expect(page.locator('.pf-toast')).toHaveCount(0);
+  });
+
+  test('liberação que já existia antes de abrir o portal não gera toast', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      daily_module_releases: [{
+        id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
+        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+      }],
+    });
+    await page.goto(ALUNO_URL);
+    await page.waitForTimeout(300);
+
+    await expect(page.locator('.pf-toast')).toHaveCount(0);
+  });
+
+  test('professor não recebe o toast quando libera uma atividade', async ({ page }) => {
+    await stubSupabaseFake(page, { daily_module_releases: [] });
+    await page.goto(JOGOS_PROFESSOR_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
+
+    await page.selectOption('#dailyReleaseAtividade', 'csharp::basico');
+    await page.click('#btnAddDailyRelease');
+    await expect(page.locator('#dailyReleaseStatus')).toContainText('Liberado');
+
+    await expect(page.locator('.pf-toast')).toHaveCount(0);
   });
 });

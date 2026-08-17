@@ -96,7 +96,16 @@
     return {
       from(name) { return makeQuery(name); },
       channel() {
-        const chan = { on() { return chan; }, subscribe() { return chan; } };
+        const chan = {
+          on(_event, filterConfig, callback) {
+            const d = db();
+            d.__realtimeCallbacks = d.__realtimeCallbacks || {};
+            const t = filterConfig && filterConfig.table;
+            if (t) (d.__realtimeCallbacks[t] = d.__realtimeCallbacks[t] || []).push(callback);
+            return chan;
+          },
+          subscribe() { return chan; },
+        };
         return chan;
       },
       removeChannel() {},
@@ -107,4 +116,13 @@
   }
 
   window.supabase = { createClient };
+
+  // Ajuda os testes a simular uma atualização em tempo real (o mock acima
+  // não entrega eventos sozinho): modifique window.__FAKE_DB__.<tabela>
+  // primeiro, depois chame isto pra disparar os callbacks inscritos nela —
+  // exercita o caminho de verdade (subscribe → callback → refetch), não só
+  // uma função interna chamada direto pelo teste.
+  window.__fireFakeRealtime = function (table) {
+    ((db().__realtimeCallbacks && db().__realtimeCallbacks[table]) || []).forEach(cb => cb());
+  };
 })();

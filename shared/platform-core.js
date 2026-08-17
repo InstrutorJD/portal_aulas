@@ -42,6 +42,7 @@
   let teacherUnlockOverride = false;
   let trilhaLockCache = {}; // trilhaKey -> bool (bloqueada pelo professor, além da regra interna de pré-requisito)
   let dailyReleasesCache = []; // linhas de daily_module_releases da turma inteira (todas as datas/dias), ver releasesForToday()
+  let dailyReleasesLoadedOnce = false; // evita notificar sobre liberações que já existiam antes do carregamento inicial
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
@@ -73,6 +74,34 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     document.addEventListener('keydown', onKey);
     overlay.querySelector('.pf-alert-ok').focus();
+  }
+
+  // ---------- Notificação leve (toast, não bloqueia a tela) — usada pra
+  // avisar o aluno que o professor liberou uma atividade nova, sem
+  // interromper o que ele estava fazendo (diferente do showAlert). ----------
+  function showToast(title, message) {
+    let stack = document.getElementById('pfToastStack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.id = 'pfToastStack';
+      stack.className = 'pf-toast-stack';
+      document.body.appendChild(stack);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'pf-toast';
+    toast.setAttribute('role', 'status');
+    toast.innerHTML = `
+      <button class="pf-toast-close" aria-label="Fechar aviso">✕</button>
+      <b class="pf-toast-title"></b>
+      <span class="pf-toast-msg"></span>
+    `;
+    toast.querySelector('.pf-toast-title').textContent = title;
+    toast.querySelector('.pf-toast-msg').textContent = message;
+    stack.appendChild(toast);
+
+    const remove = () => toast.remove();
+    toast.querySelector('.pf-toast-close').addEventListener('click', remove);
+    setTimeout(remove, 9000);
   }
 
   // ---------- Shell HTML ----------
@@ -479,7 +508,6 @@
           <h2 style="margin:0 0 4px;">Trilha ${trilha.label}</h2>
           ${trilha.capacidade ? `<p style="font-size:11px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
           <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">${trilha.desc || 'Escolha um módulo para começar.'}</p>
-          <div id="trilhaLockedBanner_${trilha.key}">${trilhaLockedBannerHtml(trilha)}</div>
           <div class="card-grid">${buildModuleCardsHtml(trilha)}</div>
         </div>
         <div id="moduleFrameArea_${trilha.key}" style="display:none;">
@@ -586,13 +614,6 @@
     return !!requiredMod && !isModuleComplete(requiredMod);
   }
 
-  function trilhaLockedBannerHtml(trilha) {
-    if (currentUser.role === 'professor' || !trilhaLockCache[trilha.key]) return '';
-    const temLiberacaoHoje = releasesForToday(paramUser).some(r => r.trilha_key === trilha.key);
-    const extra = temLiberacaoHoje ? ' Uma atividade foi liberada especialmente para hoje — veja abaixo (📌).' : '';
-    return `<p style="font-size:11px; color:var(--blood-bright); margin:0 0 12px; padding:8px 10px; border:1px dashed var(--blood-bright);">🔒 Trilha bloqueada pelo professor no momento — aguarde a liberação.${extra}</p>`;
-  }
-
   function buildModuleCardsHtml(trilha) {
     const modules = trilha.modules || [];
     if (!modules.length) return `<div class="empty-state">Nenhum módulo cadastrado ainda em "${trilha.label}".</div>`;
@@ -686,13 +707,11 @@
       .subscribe();
   }
 
-  // Refaz os cards de módulo (e o aviso de trilha bloqueada) de qualquer
-  // trilha que já esteja renderizada na tela — usado depois que o cadeado
-  // de uma trilha muda, pra refletir sem precisar recarregar a página.
+  // Refaz os cards de módulo de qualquer trilha que já esteja renderizada
+  // na tela — usado depois que o cadeado de uma trilha muda ou uma
+  // liberação diária chega, pra refletir sem precisar recarregar a página.
   function refreshAllModuleCards() {
     allTrilhas().forEach(trilha => {
-      const banner = document.getElementById(`trilhaLockedBanner_${trilha.key}`);
-      if (banner) banner.innerHTML = trilhaLockedBannerHtml(trilha);
       const grid = document.querySelector(`#moduleSelector_${trilha.key} .card-grid`);
       if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
     });
@@ -715,9 +734,29 @@
 
   async function fetchDailyReleases() {
     if (!sbClient) return;
+    const previousIds = new Set(dailyReleasesCache.map(r => r.id));
+    const wasLoadedBefore = dailyReleasesLoadedOnce;
+
     const { data } = await sbClient.from('daily_module_releases').select('*').eq('turma', cfg.id);
     dailyReleasesCache = data || [];
+    dailyReleasesLoadedOnce = true;
+
     checkGamesUnlock();
+    refreshAllModuleCards();
+
+    // Só notifica a partir da SEGUNDA carga (a primeira é o próprio load da
+    // página — liberações que já existiam antes do aluno abrir o portal não
+    // são "novidade"). Isso roda de novo via realtime sempre que o
+    // professor mexe em daily_module_releases, então pega liberações
+    // criadas com a sessão do aluno já aberta.
+    if (wasLoadedBefore && currentUser.role === 'aluno') {
+      releasesForToday(paramUser)
+        .filter(r => !previousIds.has(r.id))
+        .forEach(r => {
+          const atividade = `${r.trilha_label || r.trilha_key} — ${r.module_title || r.module_key}`;
+          showToast('🆕 Nova atividade liberada!', atividade);
+        });
+    }
   }
 
   function setupDailyReleasesRealtime() {

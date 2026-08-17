@@ -37,14 +37,12 @@ test.describe('Gestão — bloqueio de trilha (professor)', () => {
 });
 
 test.describe('Trilha bloqueada — visão do aluno', () => {
-  test('módulos da trilha ficam bloqueados e mostram aviso, mesmo o primeiro (sem pré-requisito)', async ({ page }) => {
+  test('módulos da trilha ficam bloqueados, mesmo o primeiro (sem pré-requisito)', async ({ page }) => {
     await stubSupabaseFake(page, {
       trilha_overrides: [{ turma: 'sistemas', trilha_key: 'sql', locked: true }],
     });
     await page.goto(SISTEMAS_ALUNO_URL);
     await page.click('.game-card:has-text("Banco de Dados")');
-
-    await expect(page.locator('#trilhaLockedBanner_sql')).toContainText('bloqueada pelo professor');
 
     const teoriaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Teoria — Fundamentos de SQL' });
     await expect(teoriaCard).toHaveClass(/locked/);
@@ -54,14 +52,13 @@ test.describe('Trilha bloqueada — visão do aluno', () => {
     await expect(page.locator('#moduleFrameArea_sql')).toBeHidden();
   });
 
-  test('trilha liberada some com o aviso e destrava o primeiro módulo', async ({ page }) => {
+  test('trilha liberada destrava o primeiro módulo', async ({ page }) => {
     await stubSupabaseFake(page, {
       trilha_overrides: [{ turma: 'sistemas', trilha_key: 'sql', locked: false }],
     });
     await page.goto(SISTEMAS_ALUNO_URL);
     await page.click('.game-card:has-text("Banco de Dados")');
 
-    await expect(page.locator('#trilhaLockedBanner_sql')).toBeEmpty();
     const teoriaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Teoria — Fundamentos de SQL' });
     await expect(teoriaCard).not.toHaveClass(/locked/);
   });
