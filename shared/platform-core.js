@@ -617,6 +617,7 @@
   let gestaoClipboardBlocked = false;
   let gestaoActivityRealtimeStarted = false;
   let gestaoActivityPollStarted = false;
+  let gestaoInatividadePollStarted = false;
 
   function turmaStudents() {
     return Object.values(DB.users)
@@ -1268,6 +1269,13 @@
     if (!gestaoActivityPollStarted) {
       gestaoActivityPollStarted = true;
       setInterval(renderGestaoActivity, 15000);
+    }
+    // Não precisa ser em tempo real feito a atividade acima (o professor não
+    // fica de olho o tempo todo), mas o relatório não pode ficar parado do
+    // jeito que a turma estava quando a aba Gestão foi aberta.
+    if (!gestaoInatividadePollStarted) {
+      gestaoInatividadePollStarted = true;
+      setInterval(renderRelatorioInatividade, 60000);
     }
   }
 
