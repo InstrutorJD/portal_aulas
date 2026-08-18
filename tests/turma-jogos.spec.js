@@ -31,8 +31,10 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
     await openMateria1(page);
 
-    // 2 trilhas nessa matéria (JS/C#) — vira um <select> só, começando em "js".
-    await expect(page.locator('#trilhaSelect')).toHaveValue('js');
+    // 6 trilhas nessa matéria (fundamentos genéricos + JS/C#) — vira um
+    // <select> só, começando na primeira trilha cadastrada.
+    await expect(page.locator('#trilhaSelect')).toHaveValue('fund-ambiente');
+    await expect(page.locator('#trilhaSelect option[value="js"]')).toHaveCount(1);
     await expect(page.locator('#trilhaSelect option[value="csharp"]')).toHaveCount(1);
 
     // tema "hacker": --green deve ser o verde original, não o azul de Sistemas
@@ -73,6 +75,14 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
   test('aba Jogos desbloqueia quando todos os módulos já foram concluídos', async ({ page }) => {
     await page.addInitScript(user => {
+      localStorage.setItem(`fund_ambiente_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_ambiente_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`fund_logica_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_logica_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`fund_prog2d_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_prog2d_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`fund_multimidia_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_multimidia_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7]));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
