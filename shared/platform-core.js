@@ -1804,13 +1804,13 @@
       icon: '💣',
       src: '../../games/campo-minado.html'
     },
-    kahoot: {
-      title: 'Kahoot da Turma',
+    quizrush: {
+      title: 'QuizRush da Turma',
       desc: currentUser.role === 'professor'
         ? 'Escolha uma aula teórica e hospedeie um quiz ao vivo pra turma — as perguntas vêm do gabarito, sem cadastrar nada novo.'
         : 'Entre na partida ao vivo criada pelo professor. Quem acerta mais rápido, marca mais pontos!',
       icon: '🎉',
-      src: '../../games/kahoot.html'
+      src: '../../games/quizrush.html'
     }
   };
 

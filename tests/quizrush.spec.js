@@ -1,16 +1,16 @@
 // @ts-check
-// Kahoot da turma (games/kahoot.html + shared/kahoot-engine.js): o professor
+// QuizRush da turma (games/quizrush.html + shared/quizrush-engine.js): o professor
 // escolhe uma aula teórica e o motor busca as perguntas de múltipla escolha
 // direto do gabarito dela (sem cadastrar nada novo); atividades práticas de
 // código (sem options/correctIndex) não servem e a tela avisa. A pontuação
-// de cada resposta depende de acerto + velocidade (fórmula do Kahoot).
+// de cada resposta depende de acerto + velocidade (fórmula do QuizRush).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const HOST_URL = '/games/kahoot.html?user=admin&role=professor&name=Professor&turma=jogos';
-const ALUNO_URL = '/games/kahoot.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
+const HOST_URL = '/games/quizrush.html?user=admin&role=professor&name=Professor&turma=jogos';
+const ALUNO_URL = '/games/quizrush.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 
-test.describe('Kahoot — montagem pelo professor (aproveitando o gabarito)', () => {
+test.describe('QuizRush — montagem pelo professor (aproveitando o gabarito)', () => {
   test('busca as perguntas de uma aula teórica e cria a sessão', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(HOST_URL);
@@ -23,7 +23,7 @@ test.describe('Kahoot — montagem pelo professor (aproveitando o gabarito)', ()
     await page.click('#btnCreateSession');
 
     await expect(page.locator('#scrLobby')).toBeVisible();
-    const sessions = await page.evaluate(() => window.__FAKE_DB__.kahoot_sessions || []);
+    const sessions = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions || []);
     expect(sessions.length).toBe(1);
     expect(sessions[0]).toMatchObject({ turma: 'jogos', status: 'lobby', created_by: 'admin' });
     expect(sessions[0].questions.length).toBe(11);
@@ -40,13 +40,13 @@ test.describe('Kahoot — montagem pelo professor (aproveitando o gabarito)', ()
     await expect(page.locator('#btnCreateSession')).toBeDisabled();
   });
 
-  // O Kahoot não é exclusivo de uma turma — games/kahoot.html carrega o
+  // O QuizRush não é exclusivo de uma turma — games/quizrush.html carrega o
   // config.js da turma que vier no parâmetro ?turma=, então a turma
   // Sistemas (com 9 matérias/trilhas próprias) precisa funcionar igual à
   // Jogos Digitais, sem nada hardcoded pra uma turma só.
   test('funciona também na turma Sistemas, com as trilhas e aulas dela', async ({ page }) => {
     await stubSupabaseFake(page, {});
-    await page.goto('/games/kahoot.html?user=admin&role=professor&name=Professor&turma=sistemas');
+    await page.goto('/games/quizrush.html?user=admin&role=professor&name=Professor&turma=sistemas');
 
     await expect(page.locator('#scrSetup')).toBeVisible();
     const trilhas = await page.locator('#selModule optgroup').evaluateAll(els => els.map(e => e.label));
@@ -60,12 +60,12 @@ test.describe('Kahoot — montagem pelo professor (aproveitando o gabarito)', ()
 
     await page.click('#btnCreateSession');
     await expect(page.locator('#scrLobby')).toBeVisible();
-    const sessions = await page.evaluate(() => window.__FAKE_DB__.kahoot_sessions || []);
+    const sessions = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions || []);
     expect(sessions[0]).toMatchObject({ turma: 'sistemas', trilha_label: 'SQL' });
   });
 });
 
-test.describe('Kahoot — entrada e resposta do aluno', () => {
+test.describe('QuizRush — entrada e resposta do aluno', () => {
   const baseSession = {
     id: 'sess1', turma: 'jogos', created_by: 'admin',
     trilha_label: 'C#', module_title: 'Básico — A Jornada do Eri',
@@ -75,7 +75,7 @@ test.describe('Kahoot — entrada e resposta do aluno', () => {
 
   test('aluno entra na sala em lobby e aparece na lista de jogadores', async ({ page }) => {
     await stubSupabaseFake(page, {
-      kahoot_sessions: [{ ...baseSession, status: 'lobby', question_started_at: null }],
+      quizrush_sessions: [{ ...baseSession, status: 'lobby', question_started_at: null }],
     });
     await page.goto(ALUNO_URL);
 
@@ -86,14 +86,14 @@ test.describe('Kahoot — entrada e resposta do aluno', () => {
     await expect(page.locator('#scrLobby')).toBeVisible();
     await expect(page.locator('#lobbyPlayers')).toContainText('Breno Silva');
 
-    const players = await page.evaluate(() => window.__FAKE_DB__.kahoot_players || []);
+    const players = await page.evaluate(() => window.__FAKE_DB__.quizrush_players || []);
     expect(players.find(p => p.student_email === 'breno.silva80')).toBeTruthy();
   });
 
   test('responder rápido e certo vale mais pontos que responder certo e devagar', async ({ page }) => {
     await stubSupabaseFake(page, {
-      kahoot_sessions: [{ ...baseSession, status: 'question', question_started_at: new Date().toISOString() }],
-      kahoot_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
+      quizrush_sessions: [{ ...baseSession, status: 'question', question_started_at: new Date().toISOString() }],
+      quizrush_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
     });
     await page.goto(ALUNO_URL);
 
@@ -108,7 +108,7 @@ test.describe('Kahoot — entrada e resposta do aluno', () => {
     await page.locator('#qTiles .tile').nth(1).click();
     await expect(page.locator('#qStudentFeedbackText')).toContainText('Resposta enviada');
 
-    const answers = await page.evaluate(() => window.__FAKE_DB__.kahoot_answers || []);
+    const answers = await page.evaluate(() => window.__FAKE_DB__.quizrush_answers || []);
     expect(answers.length).toBe(1);
     expect(answers[0]).toMatchObject({ student_email: 'breno.silva80', choice_index: 1, is_correct: true });
     expect(answers[0].score).toBeGreaterThan(500); // respondeu quase instantaneamente
@@ -117,19 +117,19 @@ test.describe('Kahoot — entrada e resposta do aluno', () => {
 
   test('resposta errada não pontua', async ({ page }) => {
     await stubSupabaseFake(page, {
-      kahoot_sessions: [{ ...baseSession, status: 'question', question_started_at: new Date().toISOString() }],
-      kahoot_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
+      quizrush_sessions: [{ ...baseSession, status: 'question', question_started_at: new Date().toISOString() }],
+      quizrush_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
     });
     await page.goto(ALUNO_URL);
 
     await page.locator('#qTiles .tile').nth(0).click(); // opção errada ("3")
 
-    const answers = await page.evaluate(() => window.__FAKE_DB__.kahoot_answers || []);
+    const answers = await page.evaluate(() => window.__FAKE_DB__.quizrush_answers || []);
     expect(answers[0]).toMatchObject({ choice_index: 0, is_correct: false, score: 0 });
   });
 });
 
-test.describe('Kahoot — condução da partida pelo professor', () => {
+test.describe('QuizRush — condução da partida pelo professor', () => {
   test('avança de pergunta → revelação → pódio, com o placar acumulando os acertos', async ({ page }) => {
     const session = {
       id: 'sess1', turma: 'jogos', created_by: 'admin',
@@ -142,9 +142,9 @@ test.describe('Kahoot — condução da partida pelo professor', () => {
       question_started_at: new Date().toISOString(),
     };
     await stubSupabaseFake(page, {
-      kahoot_sessions: [session],
-      kahoot_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
-      kahoot_answers: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 1, is_correct: true, score: 900 }],
+      quizrush_sessions: [session],
+      quizrush_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
+      quizrush_answers: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 1, is_correct: true, score: 900 }],
     });
     await page.goto(HOST_URL);
     await expect(page.locator('#scrQuestion')).toBeVisible();
@@ -170,19 +170,19 @@ test.describe('Kahoot — condução da partida pelo professor', () => {
     await expect(page.locator('#scrPodium')).toBeVisible();
     await expect(page.locator('#podiumFullList')).toContainText('Breno Silva');
 
-    const finalSession = await page.evaluate(() => window.__FAKE_DB__.kahoot_sessions.find(s => s.id === 'sess1'));
+    const finalSession = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions.find(s => s.id === 'sess1'));
     expect(finalSession.status).toBe('podium');
   });
 });
 
-test.describe('Kahoot — cálculo de pontuação (shared/kahoot-engine.js)', () => {
+test.describe('QuizRush — cálculo de pontuação (shared/quizrush-engine.js)', () => {
   test('acerto rápido vale mais que acerto no limite do tempo; erro não pontua', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(HOST_URL);
 
-    const fast = await page.evaluate(() => window.KahootEngine.scoreFor(true, 0, 20000));
-    const slow = await page.evaluate(() => window.KahootEngine.scoreFor(true, 20000, 20000));
-    const wrong = await page.evaluate(() => window.KahootEngine.scoreFor(false, 0, 20000));
+    const fast = await page.evaluate(() => window.QuizRushEngine.scoreFor(true, 0, 20000));
+    const slow = await page.evaluate(() => window.QuizRushEngine.scoreFor(true, 20000, 20000));
+    const wrong = await page.evaluate(() => window.QuizRushEngine.scoreFor(false, 0, 20000));
 
     expect(fast).toBe(1000);
     expect(slow).toBe(500);

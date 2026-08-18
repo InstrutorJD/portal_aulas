@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kahoot da Turma — Portal de Aulas</title>
+<title>QuizRush da Turma — Portal de Aulas</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -124,21 +124,21 @@
 
   <!-- ---------- Carregando ---------- -->
   <div class="screen show" id="scrLoading">
-    <h1 class="title">🎉 Kahoot</h1>
+    <h1 class="title">🎉 QuizRush</h1>
     <p class="hint">Carregando...</p>
   </div>
 
   <!-- ---------- Supabase não configurado ---------- -->
   <div class="screen" id="scrDisabled">
-    <h1 class="title">🎉 Kahoot</h1>
+    <h1 class="title">🎉 QuizRush</h1>
     <div class="card">
-      <p class="hint" style="margin:0;">O Kahoot da turma precisa do Supabase configurado (é uma partida ao vivo, sincronizada entre professor e alunos). Rode <code>sql/supabase-kahoot.sql</code> no Supabase e configure <code>shared/supabase-config.js</code>.</p>
+      <p class="hint" style="margin:0;">O QuizRush da turma precisa do Supabase configurado (é uma partida ao vivo, sincronizada entre professor e alunos). Rode <code>sql/supabase-quizrush.sql</code> no Supabase e configure <code>shared/supabase-config.js</code>.</p>
     </div>
   </div>
 
-  <!-- ---------- Professor: montar um Kahoot novo ---------- -->
+  <!-- ---------- Professor: montar um QuizRush novo ---------- -->
   <div class="screen" id="scrSetup">
-    <h1 class="title">🎉 Criar um Kahoot</h1>
+    <h1 class="title">🎉 Criar um QuizRush</h1>
     <p class="subtitle">Escolha uma aula teórica com quiz — as perguntas vêm direto do gabarito dela</p>
     <div class="card" style="display:flex; flex-direction:column; gap:14px; align-items:stretch;">
       <label class="field">Atividade
@@ -151,22 +151,22 @@
         <label class="field">Tempo por pergunta (segundos)
           <input type="number" id="inpDuration" min="5" max="120" value="20">
         </label>
-        <button class="btn btn-primary" id="btnCreateSession">🚀 Iniciar Kahoot</button>
+        <button class="btn btn-primary" id="btnCreateSession">🚀 Iniciar QuizRush</button>
       </div>
     </div>
   </div>
 
-  <!-- ---------- Aluno: nenhum kahoot ao vivo ---------- -->
+  <!-- ---------- Aluno: nenhum quizrush ao vivo ---------- -->
   <div class="screen" id="scrNoSession">
-    <h1 class="title">🎉 Kahoot</h1>
+    <h1 class="title">🎉 QuizRush</h1>
     <div class="card">
-      <p class="hint" style="margin:0;">Nenhum Kahoot ao vivo agora. Assim que o professor iniciar um, esta tela muda sozinha — fique à vontade pra deixar aberta. 👀</p>
+      <p class="hint" style="margin:0;">Nenhum QuizRush ao vivo agora. Assim que o professor iniciar um, esta tela muda sozinha — fique à vontade pra deixar aberta. 👀</p>
     </div>
   </div>
 
   <!-- ---------- Aluno: entrar na partida ---------- -->
   <div class="screen" id="scrJoin">
-    <h1 class="title">🎉 Kahoot ao vivo!</h1>
+    <h1 class="title">🎉 QuizRush ao vivo!</h1>
     <div class="card">
       <p class="subtitle" style="margin:0 0 6px;" id="joinTrilha">--</p>
       <p style="font-size:18px; color:var(--ink); margin:0 0 16px;" id="joinModulo">--</p>
@@ -231,7 +231,7 @@
     </div>
     <ul class="rank-list" id="podiumFullList"></ul>
     <div class="btn-row" id="podiumHostActions" style="display:none;">
-      <button class="btn btn-primary" id="btnEndKahoot">🔚 Encerrar Kahoot</button>
+      <button class="btn btn-primary" id="btnEndQuizRush">🔚 Encerrar QuizRush</button>
     </div>
   </div>
 
@@ -239,7 +239,7 @@
 
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../shared/kahoot-engine.js"></script>
+<script src="../shared/quizrush-engine.js"></script>
 
 <script>
   const urlParams = new URLSearchParams(window.location.search);
@@ -310,13 +310,13 @@
   }
 
   // ============================================================
-  // Professor — montar um novo Kahoot
+  // Professor — montar um novo QuizRush
   // ============================================================
 
   async function renderSetupScreen() {
     showScreen('scrSetup');
-    const cfgTurma = await window.KahootEngine.loadTurmaConfig(turma).catch(() => null);
-    state.candidateModules = cfgTurma ? window.KahootEngine.listGabaritoModules(cfgTurma) : [];
+    const cfgTurma = await window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null);
+    state.candidateModules = cfgTurma ? window.QuizRushEngine.listGabaritoModules(cfgTurma) : [];
 
     const select = document.getElementById('selModule');
     const warn = document.getElementById('setupEmptyWarn');
@@ -351,7 +351,7 @@
     const original = btn.textContent;
     btn.disabled = true;
     btn.textContent = '⏳ Buscando...';
-    const questions = await window.KahootEngine.fetchModuleQuestions({ turma, mod: candidate.mod, email: username });
+    const questions = await window.QuizRushEngine.fetchModuleQuestions({ turma, mod: candidate.mod, email: username });
     btn.disabled = false;
     btn.textContent = original;
 
@@ -377,13 +377,13 @@
     const btn = document.getElementById('btnCreateSession');
     btn.disabled = true;
     btn.textContent = '⏳ Criando...';
-    const session = await window.KahootEngine.createSession({
+    const session = await window.QuizRushEngine.createSession({
       turma, email: username, trilhaLabel: candidate.trilhaLabel, moduleTitle: candidate.moduleTitle,
       questions, durationMs: seconds * 1000
     });
     btn.disabled = false;
-    btn.textContent = '🚀 Iniciar Kahoot';
-    if (!session) { alert('Não foi possível criar o Kahoot agora. Tente de novo.'); return; }
+    btn.textContent = '🚀 Iniciar QuizRush';
+    if (!session) { alert('Não foi possível criar o QuizRush agora. Tente de novo.'); return; }
     setSession(session);
     subscribeToSession();
     renderForSession();
@@ -404,28 +404,28 @@
     if (state.unsubNewSessions) { state.unsubNewSessions(); state.unsubNewSessions = null; }
 
     const id = state.session.id;
-    state.unsubSession = window.KahootEngine.watchSession(id, async () => {
-      const fresh = await window.KahootEngine.getLatestSession(turma);
+    state.unsubSession = window.QuizRushEngine.watchSession(id, async () => {
+      const fresh = await window.QuizRushEngine.getLatestSession(turma);
       if (fresh && fresh.id === id) {
         const statusChanged = !state.session || state.session.status !== fresh.status || state.session.current_index !== fresh.current_index;
         setSession(fresh);
         if (statusChanged) renderForSession();
       }
     });
-    state.unsubPlayers = window.KahootEngine.watchPlayers(id, async () => {
-      state.players = await window.KahootEngine.fetchPlayers(id);
+    state.unsubPlayers = window.QuizRushEngine.watchPlayers(id, async () => {
+      state.players = await window.QuizRushEngine.fetchPlayers(id);
       if (state.session.status === 'lobby') renderLobby();
     });
-    state.unsubAnswers = window.KahootEngine.watchAnswers(id, async () => {
-      state.answers = await window.KahootEngine.fetchAnswers(id);
+    state.unsubAnswers = window.QuizRushEngine.watchAnswers(id, async () => {
+      state.answers = await window.QuizRushEngine.fetchAnswers(id);
       if (state.session.status === 'question') renderQuestionLiveCounts();
     });
   }
 
   function subscribeToNewSessions() {
     if (state.unsubNewSessions) return;
-    state.unsubNewSessions = window.KahootEngine.watchNewSessions(turma, async () => {
-      const fresh = await window.KahootEngine.getLatestSession(turma);
+    state.unsubNewSessions = window.QuizRushEngine.watchNewSessions(turma, async () => {
+      const fresh = await window.QuizRushEngine.getLatestSession(turma);
       if (fresh && fresh.status !== 'ended' && (!state.session || state.session.id !== fresh.id)) {
         setSession(fresh);
         subscribeToSession();
@@ -441,13 +441,13 @@
       else { showScreen('scrNoSession'); subscribeToNewSessions(); }
       return;
     }
-    state.players = await window.KahootEngine.fetchPlayers(s.id);
-    state.answers = await window.KahootEngine.fetchAnswers(s.id);
+    state.players = await window.QuizRushEngine.fetchPlayers(s.id);
+    state.answers = await window.QuizRushEngine.fetchAnswers(s.id);
 
     if (!isHost) {
       state.joined = state.players.some(p => p.student_email === username);
       if (!state.joined && s.status === 'lobby') { renderJoinScreen(); return; }
-      if (!state.joined) { await window.KahootEngine.joinSession(s.id, username, displayName); state.joined = true; state.players = await window.KahootEngine.fetchPlayers(s.id); }
+      if (!state.joined) { await window.QuizRushEngine.joinSession(s.id, username, displayName); state.joined = true; state.players = await window.QuizRushEngine.fetchPlayers(s.id); }
     }
 
     if (s.status === 'lobby') renderLobby();
@@ -468,9 +468,9 @@
 
   async function onJoinClick() {
     beep(440, 0.1);
-    await window.KahootEngine.joinSession(state.session.id, username, displayName);
+    await window.QuizRushEngine.joinSession(state.session.id, username, displayName);
     state.joined = true;
-    state.players = await window.KahootEngine.fetchPlayers(state.session.id);
+    state.players = await window.QuizRushEngine.fetchPlayers(state.session.id);
     renderLobby();
   }
 
@@ -493,14 +493,14 @@
   async function onStartClick() {
     playFanfare();
     const startedAt = new Date().toISOString();
-    await window.KahootEngine.startSession(state.session.id);
+    await window.QuizRushEngine.startSession(state.session.id);
     Object.assign(state.session, { status: 'question', current_index: 0, question_started_at: startedAt });
     await renderForSession();
   }
 
   async function onCancelLobbyClick() {
-    if (!confirm('Cancelar este Kahoot?')) return;
-    await window.KahootEngine.endSession(state.session.id);
+    if (!confirm('Cancelar este QuizRush?')) return;
+    await window.QuizRushEngine.endSession(state.session.id);
     state.session.status = 'ended';
     await renderForSession();
   }
@@ -532,8 +532,8 @@
       `).join('');
     } else {
       // Tela do aluno: só a cor/forma de cada alternativa, sem texto — o
-      // aluno é obrigado a ler a pergunta e as opções na tela do professor,
-      // igual ao Kahoot original (o celular é só o "controle remoto").
+      // aluno é obrigado a ler a pergunta e as opções na tela do professor
+      // (o celular é só o "controle remoto").
       document.getElementById('qPrompt').textContent = '👀 Olhe a pergunta e as alternativas na tela do professor!';
       tiles.classList.add('color-only');
       tiles.innerHTML = q.options.map((opt, i) => `
@@ -584,7 +584,7 @@
         clearInterval(state.countdownTimer);
         if (isHost && !autoRevealed) {
           autoRevealed = true;
-          window.KahootEngine.reveal(state.session.id).then(() => {
+          window.QuizRushEngine.reveal(state.session.id).then(() => {
             state.session.status = 'reveal';
             renderForSession();
           });
@@ -611,7 +611,7 @@
     const startedAt = new Date(state.session.question_started_at).getTime();
     const elapsedMs = Math.max(0, Math.min(state.session.question_duration_ms, Date.now() - startedAt));
     const q = currentQuestion();
-    const result = await window.KahootEngine.submitAnswer({
+    const result = await window.QuizRushEngine.submitAnswer({
       sessionId: state.session.id, email: username, name: displayName,
       questionIndex: state.session.current_index, choiceIndex, correctIndex: q.correctIndex,
       elapsedMs, durationMs: state.session.question_duration_ms
@@ -627,7 +627,7 @@
 
   async function onRevealNowClick() {
     if (state.countdownTimer) clearInterval(state.countdownTimer);
-    await window.KahootEngine.reveal(state.session.id);
+    await window.QuizRushEngine.reveal(state.session.id);
     state.session.status = 'reveal';
     await renderForSession();
   }
@@ -639,7 +639,7 @@
   async function renderReveal() {
     showScreen('scrReveal');
     if (state.countdownTimer) clearInterval(state.countdownTimer);
-    state.answers = await window.KahootEngine.fetchAnswers(state.session.id);
+    state.answers = await window.QuizRushEngine.fetchAnswers(state.session.id);
 
     const q = currentQuestion();
     const forThisQ = state.answers.filter(a => a.question_index === state.session.current_index);
@@ -672,7 +672,7 @@
       }
     }
 
-    const leaderboard = window.KahootEngine.leaderboardFrom(state.answers).slice(0, 5);
+    const leaderboard = window.QuizRushEngine.leaderboardFrom(state.answers).slice(0, 5);
     document.getElementById('revealLeaderboard').innerHTML = leaderboard.map(r => `
       <li class="${r.email === username ? 'me' : ''}"><span>${escapeHtml(r.name)}</span><span>${r.score}</span></li>
     `).join('') || '<li class="empty-state">Sem respostas ainda</li>';
@@ -687,12 +687,12 @@
   async function onNextOrPodiumClick() {
     const isLast = state.session.current_index >= state.session.questions.length - 1;
     if (isLast) {
-      await window.KahootEngine.showPodium(state.session.id);
+      await window.QuizRushEngine.showPodium(state.session.id);
       state.session.status = 'podium';
     } else {
       const nextIndex = state.session.current_index + 1;
       const startedAt = new Date().toISOString();
-      await window.KahootEngine.nextQuestion(state.session.id, nextIndex);
+      await window.QuizRushEngine.nextQuestion(state.session.id, nextIndex);
       Object.assign(state.session, { status: 'question', current_index: nextIndex, question_started_at: startedAt });
     }
     await renderForSession();
@@ -704,8 +704,8 @@
 
   async function renderPodium() {
     showScreen('scrPodium');
-    state.answers = await window.KahootEngine.fetchAnswers(state.session.id);
-    const leaderboard = window.KahootEngine.leaderboardFrom(state.answers);
+    state.answers = await window.QuizRushEngine.fetchAnswers(state.session.id);
+    const leaderboard = window.QuizRushEngine.leaderboardFrom(state.answers);
 
     launchConfetti();
     playFanfare();
@@ -739,8 +739,8 @@
     document.getElementById('podiumHostActions').style.display = isHost ? 'flex' : 'none';
   }
 
-  async function onEndKahootClick() {
-    await window.KahootEngine.endSession(state.session.id);
+  async function onEndQuizRushClick() {
+    await window.QuizRushEngine.endSession(state.session.id);
     state.session.status = 'ended';
     await renderForSession();
   }
@@ -750,9 +750,9 @@
   // ============================================================
 
   async function init() {
-    if (!window.KahootEngine || !window.KahootEngine.enabled) { showScreen('scrDisabled'); return; }
+    if (!window.QuizRushEngine || !window.QuizRushEngine.enabled) { showScreen('scrDisabled'); return; }
 
-    const latest = await window.KahootEngine.getLatestSession(turma);
+    const latest = await window.QuizRushEngine.getLatestSession(turma);
     if (latest && latest.status !== 'ended') {
       setSession(latest);
       subscribeToSession();
@@ -772,12 +772,12 @@
   document.getElementById('btnCancelLobby').addEventListener('click', onCancelLobbyClick);
   document.getElementById('btnRevealNow').addEventListener('click', onRevealNowClick);
   document.getElementById('btnNextOrPodium').addEventListener('click', onNextOrPodiumClick);
-  document.getElementById('btnEndKahoot').addEventListener('click', onEndKahootClick);
+  document.getElementById('btnEndQuizRush').addEventListener('click', onEndQuizRushClick);
 
   init();
 
-  window.ACTIVITY_LOCATION = 'jogos_kahoot';
-  window.ACTIVITY_LABEL = 'Kahoot da Turma';
+  window.ACTIVITY_LOCATION = 'jogos_quizrush';
+  window.ACTIVITY_LABEL = 'QuizRush da Turma';
 </script>
 
 <script src="../shared/activity-tracker.js"></script>

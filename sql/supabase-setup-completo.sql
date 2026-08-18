@@ -842,18 +842,18 @@ end $$;
 
 
 -- ============================================================
--- BLOCO 11 — Kahoot do portal (aba Jogos). O professor escolhe uma
+-- BLOCO 11 — QuizRush do portal (aba Jogos). O professor escolhe uma
 -- trilha/módulo teórico (STEPS + quiz) e o motor de gabarito já
 -- existente (shared/gabarito-generator.js) fornece as perguntas de
 -- múltipla escolha prontas — sem precisar cadastrar pergunta nenhuma
 -- de novo. O professor hospeda uma partida ao vivo pra turma, pergunta
--- por pergunta, com cronômetro; shared/kahoot-engine.js calcula o
+-- por pergunta, com cronômetro; shared/quizrush-engine.js calcula o
 -- placar (quem acerta mais rápido ganha mais pontos). Só existe UMA
 -- sessão "corrente" por turma por vez — todo mundo lê a última linha
 -- não encerrada.
 -- ============================================================
 
-create table if not exists public.kahoot_sessions (
+create table if not exists public.quizrush_sessions (
   id uuid primary key default gen_random_uuid(),
   turma text not null,
   created_by text not null,
@@ -867,18 +867,18 @@ create table if not exists public.kahoot_sessions (
   created_at timestamptz not null default now()
 );
 
-create index if not exists idx_kahoot_sessions_turma on public.kahoot_sessions (turma, created_at desc);
+create index if not exists idx_quizrush_sessions_turma on public.quizrush_sessions (turma, created_at desc);
 
-create table if not exists public.kahoot_players (
-  session_id uuid not null references public.kahoot_sessions(id) on delete cascade,
+create table if not exists public.quizrush_players (
+  session_id uuid not null references public.quizrush_sessions(id) on delete cascade,
   student_email text not null,
   student_name text not null,
   joined_at timestamptz not null default now(),
   primary key (session_id, student_email)
 );
 
-create table if not exists public.kahoot_answers (
-  session_id uuid not null references public.kahoot_sessions(id) on delete cascade,
+create table if not exists public.quizrush_answers (
+  session_id uuid not null references public.quizrush_sessions(id) on delete cascade,
   student_email text not null,
   student_name text not null,
   question_index int not null,
@@ -889,52 +889,52 @@ create table if not exists public.kahoot_answers (
   primary key (session_id, student_email, question_index)
 );
 
-create index if not exists idx_kahoot_answers_session on public.kahoot_answers (session_id, question_index);
+create index if not exists idx_quizrush_answers_session on public.quizrush_answers (session_id, question_index);
 
-alter table public.kahoot_sessions enable row level security;
-alter table public.kahoot_players enable row level security;
-alter table public.kahoot_answers enable row level security;
+alter table public.quizrush_sessions enable row level security;
+alter table public.quizrush_players enable row level security;
+alter table public.quizrush_answers enable row level security;
 
-drop policy if exists "kahoot_sessions_select_all" on public.kahoot_sessions;
-create policy "kahoot_sessions_select_all" on public.kahoot_sessions for select using (true);
-drop policy if exists "kahoot_sessions_insert_all" on public.kahoot_sessions;
-create policy "kahoot_sessions_insert_all" on public.kahoot_sessions for insert with check (true);
-drop policy if exists "kahoot_sessions_update_all" on public.kahoot_sessions;
-create policy "kahoot_sessions_update_all" on public.kahoot_sessions for update using (true) with check (true);
+drop policy if exists "quizrush_sessions_select_all" on public.quizrush_sessions;
+create policy "quizrush_sessions_select_all" on public.quizrush_sessions for select using (true);
+drop policy if exists "quizrush_sessions_insert_all" on public.quizrush_sessions;
+create policy "quizrush_sessions_insert_all" on public.quizrush_sessions for insert with check (true);
+drop policy if exists "quizrush_sessions_update_all" on public.quizrush_sessions;
+create policy "quizrush_sessions_update_all" on public.quizrush_sessions for update using (true) with check (true);
 
-drop policy if exists "kahoot_players_select_all" on public.kahoot_players;
-create policy "kahoot_players_select_all" on public.kahoot_players for select using (true);
-drop policy if exists "kahoot_players_insert_all" on public.kahoot_players;
-create policy "kahoot_players_insert_all" on public.kahoot_players for insert with check (true);
-drop policy if exists "kahoot_players_update_all" on public.kahoot_players;
-create policy "kahoot_players_update_all" on public.kahoot_players for update using (true) with check (true);
+drop policy if exists "quizrush_players_select_all" on public.quizrush_players;
+create policy "quizrush_players_select_all" on public.quizrush_players for select using (true);
+drop policy if exists "quizrush_players_insert_all" on public.quizrush_players;
+create policy "quizrush_players_insert_all" on public.quizrush_players for insert with check (true);
+drop policy if exists "quizrush_players_update_all" on public.quizrush_players;
+create policy "quizrush_players_update_all" on public.quizrush_players for update using (true) with check (true);
 
-drop policy if exists "kahoot_answers_select_all" on public.kahoot_answers;
-create policy "kahoot_answers_select_all" on public.kahoot_answers for select using (true);
-drop policy if exists "kahoot_answers_insert_all" on public.kahoot_answers;
-create policy "kahoot_answers_insert_all" on public.kahoot_answers for insert with check (true);
-drop policy if exists "kahoot_answers_update_all" on public.kahoot_answers;
-create policy "kahoot_answers_update_all" on public.kahoot_answers for update using (true) with check (true);
+drop policy if exists "quizrush_answers_select_all" on public.quizrush_answers;
+create policy "quizrush_answers_select_all" on public.quizrush_answers for select using (true);
+drop policy if exists "quizrush_answers_insert_all" on public.quizrush_answers;
+create policy "quizrush_answers_insert_all" on public.quizrush_answers for insert with check (true);
+drop policy if exists "quizrush_answers_update_all" on public.quizrush_answers;
+create policy "quizrush_answers_update_all" on public.quizrush_answers for update using (true) with check (true);
 
 do $$
 begin
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'kahoot_sessions'
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'quizrush_sessions'
   ) then
-    alter publication supabase_realtime add table public.kahoot_sessions;
+    alter publication supabase_realtime add table public.quizrush_sessions;
   end if;
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'kahoot_players'
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'quizrush_players'
   ) then
-    alter publication supabase_realtime add table public.kahoot_players;
+    alter publication supabase_realtime add table public.quizrush_players;
   end if;
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'kahoot_answers'
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'quizrush_answers'
   ) then
-    alter publication supabase_realtime add table public.kahoot_answers;
+    alter publication supabase_realtime add table public.quizrush_answers;
   end if;
 end $$;
 
@@ -942,6 +942,6 @@ end $$;
 -- Fim. Confira no painel do Supabase (Table Editor) se attendance,
 -- grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, trilha_overrides, game_scores,
--- daily_module_releases e kahoot_sessions/kahoot_players/kahoot_answers
+-- daily_module_releases e quizrush_sessions/quizrush_players/quizrush_answers
 -- foram criadas, e se network_nodes ganhou as colunas current_ip e turma.
 -- ============================================================

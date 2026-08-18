@@ -1,4 +1,4 @@
-// Motor do Kahoot do portal (games/kahoot.html), reaproveitado tanto pela
+// Motor do QuizRush do portal (games/quizrush.html), reaproveitado tanto pela
 // visão do professor (host) quanto pela do aluno (jogador). Cuida de 3
 // coisas que não são "tela":
 //
@@ -7,13 +7,13 @@
 //    reaproveita o gabarito (shared/gabarito-generator.js) que cada
 //    atividade teórica (formato STEPS + quiz) já expõe via
 //    window.generateGabaritoForGestao().
-// 2) Ler o TURMA_CONFIG da turma atual (o próprio games/kahoot.html não
+// 2) Ler o TURMA_CONFIG da turma atual (o próprio games/quizrush.html não
 //    tem acesso a ele — só o plataforma.html de cada turma carrega esse
 //    arquivo hoje) e listar os módulos candidatos.
-// 3) Persistir/observar a sessão ao vivo no Supabase (kahoot_sessions/
-//    kahoot_players/kahoot_answers — ver sql/supabase-kahoot.sql),
+// 3) Persistir/observar a sessão ao vivo no Supabase (quizrush_sessions/
+//    quizrush_players/quizrush_answers — ver sql/supabase-quizrush.sql),
 //    incluindo o cálculo de pontuação (acerto + velocidade).
-window.KahootEngine = (function () {
+window.QuizRushEngine = (function () {
   function client() {
     if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
     try { return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); }
@@ -26,7 +26,7 @@ window.KahootEngine = (function () {
 
   const loadedConfigs = {};
 
-  // games/kahoot.html não é carregado dentro do plataforma.html de uma
+  // games/quizrush.html não é carregado dentro do plataforma.html de uma
   // turma (é só mais um jogo, num <iframe> igual aos outros) — então
   // window.TURMA_CONFIG nunca chega até aqui sozinho. Carregamos o mesmo
   // config.js que o plataforma.html da turma usaria, na mão.
@@ -112,7 +112,7 @@ window.KahootEngine = (function () {
           }
           clearTimeout(timeout);
           const items = (captured && captured.items) || [];
-          // Só perguntas de múltipla escolha de verdade servem pro Kahoot
+          // Só perguntas de múltipla escolha de verdade servem pro QuizRush
           // (atividades práticas de código têm gabarito por caso de
           // teste, sem `options`/`correctIndex` — ver formato em
           // shared/gabarito-generator.js).
@@ -134,9 +134,9 @@ window.KahootEngine = (function () {
 
   async function getLatestSession(turma) {
     if (!sb || !turma) return null;
-    const { data, error } = await sb.from('kahoot_sessions').select('*')
+    const { data, error } = await sb.from('quizrush_sessions').select('*')
       .eq('turma', turma).order('created_at', { ascending: false }).limit(1);
-    if (error) { console.error('[KahootEngine] falha ao buscar sessão:', error); return null; }
+    if (error) { console.error('[QuizRushEngine] falha ao buscar sessão:', error); return null; }
     return (data && data[0]) || null;
   }
 
@@ -147,13 +147,13 @@ window.KahootEngine = (function () {
       questions, status: 'lobby', current_index: 0, question_started_at: null,
       question_duration_ms: durationMs || 20000, created_at: new Date().toISOString()
     };
-    const { error } = await sb.from('kahoot_sessions').upsert(row, { onConflict: 'id' });
-    if (error) { console.error('[KahootEngine] falha ao criar sessão:', error); return null; }
+    const { error } = await sb.from('quizrush_sessions').upsert(row, { onConflict: 'id' });
+    if (error) { console.error('[QuizRushEngine] falha ao criar sessão:', error); return null; }
     return row;
   }
 
   function updateSession(id, patch) {
-    return sb.from('kahoot_sessions').update(patch).eq('id', id);
+    return sb.from('quizrush_sessions').update(patch).eq('id', id);
   }
 
   const startSession = (id) => updateSession(id, { status: 'question', current_index: 0, question_started_at: new Date().toISOString() });
@@ -164,28 +164,28 @@ window.KahootEngine = (function () {
 
   async function joinSession(sessionId, email, name) {
     if (!sb || !sessionId || !email) return;
-    const { error } = await sb.from('kahoot_players').upsert(
+    const { error } = await sb.from('quizrush_players').upsert(
       { session_id: sessionId, student_email: email, student_name: name || email },
       { onConflict: 'session_id,student_email' }
     );
-    if (error) console.error('[KahootEngine] falha ao entrar na partida:', error);
+    if (error) console.error('[QuizRushEngine] falha ao entrar na partida:', error);
   }
 
   async function fetchPlayers(sessionId) {
     if (!sb || !sessionId) return [];
-    const { data, error } = await sb.from('kahoot_players').select('*').eq('session_id', sessionId);
-    if (error) { console.error('[KahootEngine] falha ao listar jogadores:', error); return []; }
+    const { data, error } = await sb.from('quizrush_players').select('*').eq('session_id', sessionId);
+    if (error) { console.error('[QuizRushEngine] falha ao listar jogadores:', error); return []; }
     return data || [];
   }
 
   async function fetchAnswers(sessionId) {
     if (!sb || !sessionId) return [];
-    const { data, error } = await sb.from('kahoot_answers').select('*').eq('session_id', sessionId);
-    if (error) { console.error('[KahootEngine] falha ao listar respostas:', error); return []; }
+    const { data, error } = await sb.from('quizrush_answers').select('*').eq('session_id', sessionId);
+    if (error) { console.error('[QuizRushEngine] falha ao listar respostas:', error); return []; }
     return data || [];
   }
 
-  // Clássico do Kahoot: só pontua se acertou, e quanto mais rápido dentro
+  // Clássico do QuizRush: só pontua se acertou, e quanto mais rápido dentro
   // do tempo, mais pontos (500 a 1000) — por isso "mais rápido" E "mais
   // acertos" andam juntos numa única soma, sem precisar de critério de
   // desempate separado.
@@ -199,11 +199,11 @@ window.KahootEngine = (function () {
     if (!sb || !sessionId || !email) return null;
     const isCorrect = choiceIndex === correctIndex;
     const score = scoreFor(isCorrect, elapsedMs, durationMs);
-    const { error } = await sb.from('kahoot_answers').upsert({
+    const { error } = await sb.from('quizrush_answers').upsert({
       session_id: sessionId, student_email: email, student_name: name || email,
       question_index: questionIndex, choice_index: choiceIndex, is_correct: isCorrect, score
     }, { onConflict: 'session_id,student_email,question_index' });
-    if (error) { console.error('[KahootEngine] falha ao enviar resposta:', error); return null; }
+    if (error) { console.error('[QuizRushEngine] falha ao enviar resposta:', error); return null; }
     return { isCorrect, score };
   }
 
@@ -227,14 +227,14 @@ window.KahootEngine = (function () {
     return () => { try { sb.removeChannel(channel); } catch (e) {} };
   }
 
-  const watchSession = (id, cb) => watchTable('kahoot_sessions', 'id', id, cb);
-  const watchPlayers = (id, cb) => watchTable('kahoot_players', 'session_id', id, cb);
-  const watchAnswers = (id, cb) => watchTable('kahoot_answers', 'session_id', id, cb);
+  const watchSession = (id, cb) => watchTable('quizrush_sessions', 'id', id, cb);
+  const watchPlayers = (id, cb) => watchTable('quizrush_players', 'session_id', id, cb);
+  const watchAnswers = (id, cb) => watchTable('quizrush_answers', 'session_id', id, cb);
 
   // Pra o aluno detectar uma sessão nova nascendo sem precisar recarregar
-  // a página — assim que o professor clica em "Criar Kahoot", quem já
+  // a página — assim que o professor clica em "Criar QuizRush", quem já
   // está com a aba de Jogos aberta é puxado direto pra tela de entrada.
-  const watchNewSessions = (turma, cb) => watchTable('kahoot_sessions', 'turma', turma, cb);
+  const watchNewSessions = (turma, cb) => watchTable('quizrush_sessions', 'turma', turma, cb);
 
   return {
     enabled: !!sb,
