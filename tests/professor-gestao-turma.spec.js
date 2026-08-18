@@ -118,9 +118,10 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
     await expect(page.locator('#tabContentAulas')).toBeHidden();
 
+    const row = page.locator('#gestaoSlidesList > div', { hasText: 'Básico — A Jornada do Eri' });
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
-      page.click('#gestaoSlidesList [data-slide-mod]'),
+      row.locator('[data-slide-mod]').click(),
     ]);
     expect(download.suggestedFilename()).toBe('csharp-basico-slides.pptx');
 

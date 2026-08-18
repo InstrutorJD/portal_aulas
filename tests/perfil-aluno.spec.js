@@ -9,9 +9,10 @@ const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 
-// Turma Jogos, matéria "Fundamentos de Programação" tem 3 módulos ao todo
-// (js/basico progressTotal:5, js/intermediario progressTotal:7, csharp/basico
-// implícito total:1) — mesma base de cálculo usada em ranking.spec.js.
+// Turma Jogos, matéria "Fundamentos de Programação" tem 11 módulos ao todo:
+// js/basico, js/intermediario, csharp/basico, e mais 4 trilhas (teoria+prática
+// cada) de fundamentos gerais de jogos — mesma base de cálculo usada em
+// ranking.spec.js.
 const SEED = {
   student_module_progress: [
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
@@ -44,7 +45,7 @@ test.describe('Aba Perfil (só aluno)', () => {
 
   test('mostra progresso geral, por matéria/trilha, a posição no ranking e desbloqueia insígnias por % de conclusão', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
-    // breno completa só js/basico (5/5) → 33% geral ((100+0+0)/3), 1/3 atividades concluídas.
+    // breno completa só js/basico (5/5) → 9% geral (1 de 11 módulos da turma).
     await page.addInitScript(() => {
       localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4]));
     });
@@ -52,25 +53,25 @@ test.describe('Aba Perfil (só aluno)', () => {
     await openPerfil(page);
 
     const resumo = page.locator('#perfilResumo');
-    await expect(resumo).toContainText('33%');
-    await expect(resumo).toContainText('1/3');
-    await expect(resumo).toContainText('2º'); // atrás só do edward (100%), à frente do resto (0%)
+    await expect(resumo).toContainText('9%');
+    await expect(resumo).toContainText('1/11');
+    await expect(resumo).toContainText('2º'); // atrás só do edward (27%, 3/11), à frente do resto (0%)
     await expect(resumo).toContainText('Posição de 17');
 
     const materiaCard = page.locator('.perfil-materia-card', { hasText: 'Fundamentos de Programação' });
-    await expect(materiaCard).toContainText('33%');
+    await expect(materiaCard).toContainText('9%');
     await expect(materiaCard).toContainText('1/2'); // trilha JS: básico feito, intermediário não
     await expect(materiaCard).toContainText('0/1'); // trilha C#: nada feito
 
-    // 33% geral com progresso real: desbloqueia "Iniciante" (minPct:0, exige
-    // progresso real) e "Explorador" (minPct:20) — "Criador" (minPct:40) não.
+    // 9% geral com progresso real: desbloqueia só "Iniciante" (minPct:0,
+    // exige progresso real) — "Explorador" (minPct:20) ainda não.
     await expect(page.locator('#perfilBadgesGrid .badge-slot')).toHaveCount(6);
-    await expect(page.locator('#perfilBadgesGrid .badge-slot.unlocked')).toHaveCount(2);
+    await expect(page.locator('#perfilBadgesGrid .badge-slot.unlocked')).toHaveCount(1);
     const iniciante = page.locator('.badge-slot', { hasText: 'Iniciante' });
     await expect(iniciante).toHaveClass(/unlocked/);
     await expect(iniciante).toContainText('Deu o primeiro passo no mundo dos jogos!');
     const explorador = page.locator('.badge-slot', { hasText: 'Explorador' });
-    await expect(explorador).toHaveClass(/unlocked/);
+    await expect(explorador).not.toHaveClass(/unlocked/);
     const criador = page.locator('.badge-slot', { hasText: 'Criador' });
     await expect(criador).not.toHaveClass(/unlocked/);
     await expect(criador).toContainText('Alcance 40% de progresso');

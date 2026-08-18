@@ -6,9 +6,9 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-// Turma Jogos, matéria "Fundamentos de Programação" tem 3 módulos ao todo
-// (js/basico progressTotal:5, js/intermediario progressTotal:7, csharp/basico
-// progressTotal implícito 1) — usados como base do % geral.
+// Turma Jogos, matéria "Fundamentos de Programação" tem 11 módulos ao todo:
+// js/basico, js/intermediario, csharp/basico, e mais 4 trilhas (teoria+prática
+// cada) de fundamentos gerais de jogos — usados como base do % geral.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
 // (syncAllModulesProgress roda no load e reescreve student_module_progress
@@ -17,7 +17,7 @@ const { stubSupabaseFake } = require('./helpers');
 // sessão de navegador) fica estável vindo direto do seed do Supabase.
 const SEED = {
   student_module_progress: [
-    // edward.guzman: os 3 módulos 100% → 100% geral, fica na frente do breno.
+    // edward.guzman: completa os 3 módulos pré-existentes (3/11 = 27%) → fica na frente do breno.
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
@@ -25,7 +25,7 @@ const SEED = {
 };
 
 // breno.silva80 completou os 5 desafios de js/basico (progressTotal:5) e
-// nada mais → média geral (100+0+0)/3 = 33.33% → arredonda 33%.
+// nada mais → 1 de 11 módulos da turma = 9.09% → arredonda 9%.
 async function seedBrenoLocalProgress(page) {
   await page.addInitScript(() => {
     localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4]));
@@ -40,10 +40,10 @@ test.describe('Ranking do aluno na turma', () => {
 
     const badge = page.locator('#rankingBadge');
     await expect(badge).toBeVisible();
-    // edward (100%) na frente, breno (33%) em 2º de 17 alunos da turma Jogos.
+    // edward (27%, 3/11) na frente, breno (9%, 1/11) em 2º de 17 alunos da turma Jogos.
     // O texto é só o essencial (troféu + posição); o detalhe completo vira title/tooltip.
     await expect(badge).toHaveText('🏆 2º');
-    await expect(badge).toHaveAttribute('title', 'Sua posição na turma: 2º de 17 (33% concluído)');
+    await expect(badge).toHaveAttribute('title', 'Sua posição na turma: 2º de 17 (9% concluído)');
 
     const bodyText = await page.locator('body').innerText();
     expect(bodyText).not.toContain('Edward');
@@ -60,7 +60,8 @@ test.describe('Ranking do aluno na turma', () => {
   test('aluno no topo da turma vê a própria posição em 1º', async ({ page }) => {
     // Aqui é o edward.guzman quem está logado, então é o localStorage dele
     // (não a linha semeada no SEED, que syncAllModulesProgress reescreveria)
-    // que decide o % geral: os 3 módulos 100% → 100% geral, 1º lugar.
+    // que decide o % geral: completa os 3 módulos pré-existentes (3/11 = 27%,
+    // o maior % da turma) → 1º lugar, mesmo sem ser 100%.
     await stubSupabaseFake(page, SEED);
     await page.addInitScript(() => {
       localStorage.setItem('js_basico_progress_edward.guzman', JSON.stringify([0, 1, 2, 3, 4]));
@@ -89,16 +90,16 @@ test.describe('Ranking do aluno na turma', () => {
   test('vários grupos empatados: posição pula o tamanho do grupo (1, 2, 2, 4)', async ({ page }) => {
     const TIE_SEED = {
       student_module_progress: [
-        // edward: 100% (3/3 módulos) — sozinho no topo.
+        // edward: 3/11 módulos (27%) — sozinho no topo.
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
-        // engel e gabriella: 67% cada (js/basico + csharp/basico, sem js/intermediario) — empatados em 2º.
+        // engel e gabriella: 2/11 cada (js/basico + csharp/basico, sem js/intermediario) — empatados em 2º.
         { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
         { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
         { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
         { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
-        // iago: 33% (só csharp/basico) — sozinho em 4º (pula o 3º, ocupado pelo empate acima).
+        // iago: 1/11 (só csharp/basico) — sozinho em 4º (pula o 3º, ocupado pelo empate acima).
         { student_email: 'iago.moreira', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     };

@@ -139,6 +139,14 @@ test.describe('Liberação diária — visão do aluno', () => {
       }],
     });
     await page.addInitScript(user => {
+      localStorage.setItem(`fund_ambiente_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_ambiente_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`fund_logica_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_logica_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`fund_prog2d_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_prog2d_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`fund_multimidia_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_multimidia_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7]));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
