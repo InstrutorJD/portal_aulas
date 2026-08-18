@@ -109,7 +109,19 @@
         return chan;
       },
       removeChannel() {},
-      rpc(_name, _params) {
+      // Casos especiais que espelham as funções reais do Supabase (ver
+      // sql/supabase-quizrush.sql): mutam a linha e devolvem question_started_at
+      // como o now() do "banco" faria, em vez do relógio de quem chamou.
+      rpc(name, params) {
+        if (name === 'quizrush_start_session' || name === 'quizrush_next_question') {
+          const row = table('quizrush_sessions').find(r => r.id === params.p_session_id);
+          if (!row) return Promise.resolve({ data: null, error: null });
+          const now = new Date().toISOString();
+          row.status = 'question';
+          row.current_index = name === 'quizrush_next_question' ? params.p_index : 0;
+          row.question_started_at = now;
+          return Promise.resolve({ data: now, error: null });
+        }
         return Promise.resolve({ data: null, error: null });
       },
     };

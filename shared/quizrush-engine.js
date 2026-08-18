@@ -156,8 +156,19 @@ window.QuizRushEngine = (function () {
     return sb.from('quizrush_sessions').update(patch).eq('id', id);
   }
 
-  const startSession = (id) => updateSession(id, { status: 'question', current_index: 0, question_started_at: new Date().toISOString() });
-  const nextQuestion = (id, index) => updateSession(id, { status: 'question', current_index: index, question_started_at: new Date().toISOString() });
+  // question_started_at vem do relógio do BANCO (RPC com now()), não do
+  // dispositivo de quem clica — um relógio local adiantado/errado fazia o
+  // cronômetro já nascer "expirado" pros alunos ("tempo esgotado" na hora).
+  async function startSession(id) {
+    const { data, error } = await sb.rpc('quizrush_start_session', { p_session_id: id });
+    if (error) { console.error('[QuizRushEngine] falha ao iniciar sessão:', error); return null; }
+    return data;
+  }
+  async function nextQuestion(id, index) {
+    const { data, error } = await sb.rpc('quizrush_next_question', { p_session_id: id, p_index: index });
+    if (error) { console.error('[QuizRushEngine] falha ao avançar pergunta:', error); return null; }
+    return data;
+  }
   const reveal = (id) => updateSession(id, { status: 'reveal' });
   const showPodium = (id) => updateSession(id, { status: 'podium' });
   const endSession = (id) => updateSession(id, { status: 'ended' });

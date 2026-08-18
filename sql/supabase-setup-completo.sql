@@ -916,6 +916,39 @@ create policy "quizrush_answers_insert_all" on public.quizrush_answers for inser
 drop policy if exists "quizrush_answers_update_all" on public.quizrush_answers;
 create policy "quizrush_answers_update_all" on public.quizrush_answers for update using (true) with check (true);
 
+-- question_started_at precisa vir do relógio do BANCO (now()), não do
+-- computador de quem clica em "Iniciar"/"Próxima pergunta" — um relógio
+-- local adiantado ou com data errada fazia o cronômetro já nascer
+-- "expirado" pros alunos, mostrando "tempo esgotado" na hora. Ver
+-- shared/quizrush-engine.js (startSession/nextQuestion chamam essas funções
+-- em vez de gravar new Date().toISOString() direto).
+create or replace function public.quizrush_start_session(p_session_id uuid)
+returns timestamptz
+language sql
+security definer
+set search_path = public
+as $$
+  update quizrush_sessions
+  set status = 'question', current_index = 0, question_started_at = now()
+  where id = p_session_id
+  returning question_started_at;
+$$;
+
+create or replace function public.quizrush_next_question(p_session_id uuid, p_index int)
+returns timestamptz
+language sql
+security definer
+set search_path = public
+as $$
+  update quizrush_sessions
+  set status = 'question', current_index = p_index, question_started_at = now()
+  where id = p_session_id
+  returning question_started_at;
+$$;
+
+grant execute on function public.quizrush_start_session(uuid) to anon, authenticated;
+grant execute on function public.quizrush_next_question(uuid, int) to anon, authenticated;
+
 do $$
 begin
   if not exists (

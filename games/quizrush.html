@@ -492,8 +492,7 @@
   // própria ação surtir efeito. Quem depende só do Realtime é o aluno.
   async function onStartClick() {
     playFanfare();
-    const startedAt = new Date().toISOString();
-    await window.QuizRushEngine.startSession(state.session.id);
+    const startedAt = await window.QuizRushEngine.startSession(state.session.id);
     Object.assign(state.session, { status: 'question', current_index: 0, question_started_at: startedAt });
     await renderForSession();
   }
@@ -691,8 +690,7 @@
       state.session.status = 'podium';
     } else {
       const nextIndex = state.session.current_index + 1;
-      const startedAt = new Date().toISOString();
-      await window.QuizRushEngine.nextQuestion(state.session.id, nextIndex);
+      const startedAt = await window.QuizRushEngine.nextQuestion(state.session.id, nextIndex);
       Object.assign(state.session, { status: 'question', current_index: nextIndex, question_started_at: startedAt });
     }
     await renderForSession();
