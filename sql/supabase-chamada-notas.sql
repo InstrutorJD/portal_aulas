@@ -118,3 +118,38 @@ create policy "student_module_progress_update_all"
   on public.student_module_progress for update
   using (true)
   with check (true);
+
+-- ------------------------------------------------------------
+-- 4) completed_at: quando o módulo foi concluído de VERDADE — não
+--    confundir com updated_at, que muda toda vez que o portal carrega
+--    (syncAllModulesProgress ressincroniza TODOS os módulos a cada
+--    login, mesmo com progresso zero). Sem essa coluna, "Relatório de
+--    Atividade do Dia" (aba Gestão) não teria como saber SE e QUANDO
+--    um aluno concluiu algo, só a última vez que o navegador dele
+--    sincronizou. O trigger só grava/atualiza completed_at no instante
+--    em que completed vira true (preserva o valor em resyncs
+--    seguintes do mesmo módulo já concluído, e limpa se for resetado).
+-- ------------------------------------------------------------
+
+alter table public.student_module_progress add column if not exists completed_at timestamptz;
+
+create or replace function public.set_module_completed_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.completed and (tg_op = 'INSERT' or old.completed is distinct from true) then
+    new.completed_at := now();
+  elsif new.completed and old.completed = true then
+    new.completed_at := old.completed_at;
+  elsif not new.completed then
+    new.completed_at := null;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_student_module_progress_completed_at on public.student_module_progress;
+create trigger trg_student_module_progress_completed_at
+before insert or update on public.student_module_progress
+for each row execute function public.set_module_completed_at();

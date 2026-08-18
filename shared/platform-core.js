@@ -386,6 +386,11 @@
                   <thead><tr><th>Aluno</th><th>Status</th><th>Última vez visto no portal</th></tr></thead>
                   <tbody id="inatividadeBody"></tbody>
                 </table>
+
+                <h3 class="gestao-subhead">Relatório de Atividade do Dia</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos presentes hoje que ainda não concluíram nenhuma atividade hoje. Não considera quem já foi marcado como falta na chamada de hoje.</p>
+                <button class="btn btn-secondary" id="btnGerarAtividadeDia" style="margin-bottom:10px;">📋 Gerar Relatório do Dia</button>
+                <div id="atividadeDiaResultado"></div>
               </div>
             </div>
 
@@ -1478,6 +1483,59 @@
     `).join('');
   }
 
+  // "Concluiu alguma atividade hoje" olha completed_at (quando o módulo
+  // virou completed=true de verdade), NÃO updated_at — updated_at muda
+  // toda vez que o portal carrega, mesmo sem progresso nenhum (ver
+  // syncAllModulesProgress), então usá-lo aqui marcaria como "ativo hoje"
+  // qualquer aluno que só abriu o portal. Gerado sob demanda (botão), não
+  // em tempo real, porque é um retrato do dia, não um placar ao vivo.
+  async function gerarRelatorioAtividadeDia() {
+    const container = document.getElementById('atividadeDiaResultado');
+    const btn = document.getElementById('btnGerarAtividadeDia');
+    if (!sbClient) { container.innerHTML = `<p style="color:var(--ink-dim); font-size:12px;">Configure o Supabase (shared/supabase-config.js) para usar este relatório.</p>`; return; }
+
+    const students = turmaStudents();
+    if (students.length === 0) { container.innerHTML = `<p style="color:var(--ink-dim); font-size:12px;">Nenhum aluno cadastrado nesta turma.</p>`; return; }
+
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Gerando...';
+
+    const today = todayStr();
+    const [progressRes, attendanceRes] = await Promise.all([
+      sbClient.from('student_module_progress').select('student_email, completed_at').eq('turma', cfg.id).eq('completed', true),
+      sbClient.from('attendance').select('student_email, presente').eq('turma', cfg.id).eq('data', today)
+    ]);
+
+    btn.disabled = false;
+    btn.textContent = original;
+
+    const concluiuHoje = new Set(
+      (progressRes.data || [])
+        .filter(r => r.completed_at && new Date(r.completed_at).toISOString().slice(0, 10) === today)
+        .map(r => r.student_email)
+    );
+    const ausentesHoje = new Set(
+      (attendanceRes.data || []).filter(r => r.presente === false).map(r => r.student_email)
+    );
+
+    const semAtividade = students
+      .filter(u => !concluiuHoje.has(u.email) && !ausentesHoje.has(u.email))
+      .map(u => u.nome);
+
+    if (semAtividade.length === 0) {
+      container.innerHTML = `<p style="color:var(--green); font-size:12px;">🎉 Todos os alunos presentes hoje já concluíram alguma atividade.</p>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <p style="font-size:11px; color:var(--ink-dim); margin:0 0 8px;">${semAtividade.length} de ${students.length} aluno(s) sem nenhuma atividade concluída hoje:</p>
+      <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.8;">
+        ${semAtividade.map(nome => `<li>${nome}</li>`).join('')}
+      </ul>
+    `;
+  }
+
   // Carrega o módulo (aula teórica) num iframe escondido só pra rodar a
   // geração de slides dele — o professor não precisa abrir o módulo na
   // aba "Aulas & Atividades" nem achar o botão lá dentro pra gerar o .pptx.
@@ -1733,6 +1791,7 @@
     });
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
+    document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
   }
 
   // ---------- Tabs principais ----------
