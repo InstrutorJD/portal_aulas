@@ -200,6 +200,7 @@
     <p class="hint" id="qHostStatus" style="display:none; color:#e7ddff;">0 de 0 responderam</p>
     <div class="btn-row" id="qHostActions" style="display:none;">
       <button class="btn" id="btnRevealNow">⏭️ Revelar agora</button>
+      <button class="btn btn-danger" id="btnEmergencyEndQuestion">🛑 Encerrar</button>
     </div>
     <div id="qStudentFeedback" style="display:none;">
       <div class="feedback-big" id="qStudentFeedbackText">✅</div>
@@ -218,6 +219,7 @@
     <ul class="rank-list" id="revealLeaderboard"></ul>
     <div class="btn-row" id="revealHostActions" style="display:none;">
       <button class="btn btn-primary" id="btnNextOrPodium">➡️ Próxima Pergunta</button>
+      <button class="btn btn-danger" id="btnEmergencyEndReveal">🛑 Encerrar</button>
     </div>
   </div>
 
@@ -438,6 +440,11 @@
   async function renderForSession() {
     const s = state.session;
     if (!s || s.status === 'ended') {
+      // Um cronômetro que ficou correndo de uma pergunta/revelação
+      // interrompida (ver onEmergencyEndClick) não pode continuar vivo
+      // depois de "ended" — senão, ao zerar, ele chama reveal() de novo e
+      // "ressuscita" a sessão pra quem já saiu da tela de partida.
+      if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
       if (isHost) { renderSetupScreen(); }
       else { showScreen('scrNoSession'); subscribeToNewSessions(); }
       return;
@@ -752,6 +759,18 @@
     await renderForSession();
   }
 
+  // Saída de emergência pro professor em caso de problema em plena
+  // partida (pergunta travada, RPC falhando, etc.) — diferente de
+  // "Encerrar QuizRush" do pódio, aqui a partida é interrompida antes do
+  // fim, por isso pede confirmação.
+  async function onEmergencyEndClick() {
+    if (!confirm('Encerrar este QuizRush agora? A partida termina pra todo mundo, mesmo sem chegar ao pódio.')) return;
+    if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
+    await window.QuizRushEngine.endSession(state.session.id);
+    state.session.status = 'ended';
+    await renderForSession();
+  }
+
   // ============================================================
   // Boot
   // ============================================================
@@ -782,6 +801,8 @@
   document.getElementById('btnRevealNow').addEventListener('click', onRevealNowClick);
   document.getElementById('btnNextOrPodium').addEventListener('click', onNextOrPodiumClick);
   document.getElementById('btnEndQuizRush').addEventListener('click', onEndQuizRushClick);
+  document.getElementById('btnEmergencyEndQuestion').addEventListener('click', onEmergencyEndClick);
+  document.getElementById('btnEmergencyEndReveal').addEventListener('click', onEmergencyEndClick);
 
   init();
 

@@ -173,6 +173,30 @@ test.describe('QuizRush — condução da partida pelo professor', () => {
     const finalSession = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions.find(s => s.id === 'sess1'));
     expect(finalSession.status).toBe('podium');
   });
+
+  // Botão de emergência (games/quizrush.html): antes só dava pra encerrar
+  // pelo lobby ("Cancelar") ou pelo pódio ("Encerrar QuizRush") — se algo
+  // travasse em plena pergunta/revelação (RPC falhando, etc.), o professor
+  // ficava sem saída até o jogo acabar sozinho.
+  test('professor encerra o QuizRush em plena pergunta pelo botão de emergência', async ({ page }) => {
+    const session = {
+      id: 'sess1', turma: 'jogos', created_by: 'admin',
+      trilha_label: 'C#', module_title: 'Básico — A Jornada do Eri',
+      questions: [{ prompt: 'Quanto é 2 + 2?', options: ['3', '4', '5', '6'], correctIndex: 1 }],
+      current_index: 0, status: 'question', question_duration_ms: 20000,
+      question_started_at: new Date().toISOString(),
+    };
+    await stubSupabaseFake(page, { quizrush_sessions: [session] });
+    await page.goto(HOST_URL);
+    await expect(page.locator('#scrQuestion')).toBeVisible();
+
+    page.once('dialog', dialog => dialog.accept());
+    await page.click('#btnEmergencyEndQuestion');
+
+    await expect(page.locator('#scrSetup')).toBeVisible();
+    const finalSession = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions.find(s => s.id === 'sess1'));
+    expect(finalSession.status).toBe('ended');
+  });
 });
 
 test.describe('QuizRush — cálculo de pontuação (shared/quizrush-engine.js)', () => {
