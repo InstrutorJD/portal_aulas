@@ -145,7 +145,7 @@
       story: 'Oi de novo! Eu sou a <b>Bia</b>, a joaninha debugger da PixelForge Studios. Vamos falar de <b>linguagens de programação de jogos</b>: <code>C#</code> é muito usada na engine Unity, <code>GDScript</code> é a linguagem própria da Godot (parecida com Python), e <code>C++</code> é usada em engines de alta performance como a Unreal. Cada uma tem seu ecossistema — a escolha depende de qual engine o estúdio está usando.',
       question: {
         prompt: 'Um estúdio decide usar a engine Godot pra um novo projeto. Qual linguagem própria dessa engine, com sintaxe parecida com Python, provavelmente será usada?',
-        options: ['GDScript', 'C#', 'C++', 'HTML'],
+        options: ['GDScript — linguagem da Godot', 'C# — linguagem da Unity', 'C++ — linguagem da Unreal', 'HTML — linguagem de páginas web'],
         correctIndex: 0,
         explanation: 'Isso! GDScript é a linguagem própria da Godot, com sintaxe inspirada em Python.'
       }
@@ -154,7 +154,7 @@
       story: 'Jogos também precisam salvar e carregar <b>dados</b> — e existem vários <b>formatos</b> pra isso. <code>JSON</code> é leve e fácil de ler, ótimo pra configs e saves simples. <code>XML</code> é mais verboso, mas também amplamente usado em ferramentas mais antigas. Já formatos <b>binários</b> são mais compactos e rápidos de carregar, mas nada legíveis "a olho nu".',
       question: {
         prompt: 'Um dev precisa salvar as configurações do jogo (volume, dificuldade, idioma) num arquivo fácil de ler e editar manualmente se precisar. Qual formato de dados é mais indicado?',
-        options: ['JSON — leve e fácil de ler', 'Binário — compacto mas ilegível', 'Nenhum formato de dados é necessário', 'Apenas um arquivo de imagem'],
+        options: ['JSON — leve, fácil de ler e editar manualmente', 'Binário — compacto e rápido de carregar, mas ilegível', 'Nenhum formato de dados é necessário nesse caso', 'Apenas um arquivo de imagem, sem dados de configuração'],
         correctIndex: 0,
         explanation: 'Exato! JSON é leve e fácil de ler/editar, sendo ótimo pra configurações simples como essa.'
       }
@@ -166,8 +166,8 @@
         options: [
           'Requisito não funcional — descreve como o jogo deve se comportar (performance)',
           'Requisito funcional — descreve uma ação que o jogador pode fazer',
-          'Não é um requisito, é só uma sugestão',
-          'Um formato de dados, sem relação com requisitos'
+          'Não é um requisito, é só uma sugestão informal da equipe',
+          'Um formato de dados, sem nenhuma relação direta com requisitos'
         ],
         correctIndex: 0,
         explanation: 'Isso mesmo! Tempo de carregamento é sobre COMO o jogo se comporta, não sobre uma ação específica do jogador — por isso é um requisito não funcional.'
@@ -177,7 +177,7 @@
       story: 'A produção de um jogo passa por fases: a <b>pré-produção</b> é quando se planeja tudo (GDD, protótipos, testes de conceito) antes de produzir o jogo final de verdade. Só depois vem a <b>produção</b> propriamente dita, onde o time constrói o jogo completo com base no que foi planejado.',
       question: {
         prompt: 'Um estúdio cria um protótipo simples só pra testar se a mecânica principal do jogo é divertida, antes de investir em arte final e níveis completos. Em qual fase da produção isso acontece?',
-        options: ['Pré-produção — planejamento e testes de conceito antes do jogo final', 'Produção — construção do jogo completo', 'Pós-lançamento', 'Nenhuma fase específica'],
+        options: ['Pré-produção — planejamento e testes de conceito antes do jogo final', 'Produção — construção do jogo completo com arte final', 'Pós-lançamento, depois que o jogo já foi lançado', 'Nenhuma fase específica da produção do jogo'],
         correctIndex: 0,
         explanation: 'Isso! Testar conceitos com protótipos simples, antes de investir no jogo completo, é justamente o papel da pré-produção.'
       }

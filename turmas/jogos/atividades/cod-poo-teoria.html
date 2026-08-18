@@ -147,9 +147,9 @@
         prompt: 'Um dev cria uma classe "Inimigo" com atributos de vida e velocidade, e depois cria três objetos diferentes a partir dela, cada um com sua própria vida atual. O que representam esses três objetos criados?',
         options: [
           'Instâncias da classe — cada uma com seus próprios valores individuais',
-          'Três classes diferentes',
-          'Três componentes desacoplados',
-          'Três frameworks distintos'
+          'Três classes diferentes, cada uma com sua própria estrutura',
+          'Três componentes desacoplados, reaproveitados no mesmo objeto',
+          'Três frameworks distintos, usados juntos no projeto'
         ],
         correctIndex: 0,
         explanation: 'Isso! Cada objeto criado a partir de uma classe, com seus próprios valores, é uma instância dessa classe.'
@@ -159,7 +159,7 @@
       story: 'Outro pilar da POO é o <b>encapsulamento</b>: esconder os detalhes internos de uma classe, expondo só o que é necessário pro resto do código usar. Isso evita que outras partes do jogo mexam diretamente em dados internos de forma descontrolada, e protege contra erros difíceis de rastrear.',
       question: {
         prompt: 'A classe "Inimigo" só permite alterar a vida através de um método específico "receberDano()", em vez de deixar qualquer parte do código mudar o valor da vida diretamente. Que princípio da POO é esse?',
-        options: ['Encapsulamento', 'Instanciação', 'Desacoplamento de componentes', 'Renderização'],
+        options: ['Encapsulamento dos dados internos', 'Instanciação de um novo objeto', 'Desacoplamento de componentes', 'Renderização de sprites na tela'],
         correctIndex: 0,
         explanation: 'Exato! Controlar como os dados internos são acessados e alterados, expondo só métodos específicos, é encapsulamento.'
       }
@@ -170,9 +170,9 @@
         prompt: 'Em vez de criar uma classe "Inimigo" gigante com tudo dentro, um dev cria um componente separado só de "Movimento" e outro só de "Saúde", que podem ser reaproveitados em qualquer objeto do jogo. Que abordagem é essa?',
         options: [
           'Programação Orientada a Componentes — lógicas desacopladas e reaproveitáveis',
-          'Programação Orientada a Objetos clássica com herança',
-          'Encapsulamento, sem relação com componentes',
-          'Frameworks externos'
+          'Programação Orientada a Objetos clássica, usando herança de classes',
+          'Encapsulamento, sem nenhuma relação direta com componentes',
+          'Frameworks externos usados no projeto'
         ],
         correctIndex: 0,
         explanation: 'Isso mesmo! Separar lógicas em componentes independentes e reaproveitáveis é justamente a Programação Orientada a Componentes.'
@@ -182,7 +182,7 @@
       story: 'Muitos jogos usam <b>frameworks</b> (bibliotecas externas prontas) pra funcionalidades como áudio ou partículas, em vez de programar tudo do zero. Pra usar um framework direito, é essencial ler sua <b>documentação técnica</b> — ela explica quais funções existem, o que cada parâmetro faz e como integrar corretamente com seu projeto.',
       question: {
         prompt: 'Antes de usar uma biblioteca externa de áudio pela primeira vez, um dev lê o material que explica todas as funções disponíveis e como cada uma deve ser chamada. Que material é esse?',
-        options: ['Documentação técnica do framework', 'Um arquivo de save do jogo', 'Um componente de movimento', 'Um GDD'],
+        options: ['Documentação técnica oficial do framework', 'Um arquivo de save do jogo, com o progresso do jogador', 'Um componente de movimento reaproveitável', 'Um GDD, documento de design do jogo'],
         correctIndex: 0,
         explanation: 'Perfeito! O material que explica as funções e como usá-las corretamente é a documentação técnica do framework.'
       }
@@ -193,9 +193,9 @@
         prompt: 'Toda vez que o personagem pula, o código automaticamente toca o som de pulo e ativa a animação de salto, sem nenhuma ação manual extra do dev durante o jogo. Que mecanismo dispara isso automaticamente?',
         options: [
           'Um trigger (disparador) ligado à ação de pular',
-          'Encapsulamento de dados',
-          'Uma nova instância de classe',
-          'Um framework de rede'
+          'Encapsulamento de dados internos da classe',
+          'Uma nova instância de classe sendo criada',
+          'Um framework de rede multiplayer'
         ],
         correctIndex: 0,
         explanation: 'Isso! Um trigger disparado por uma ação específica do jogador é exatamente o mecanismo que ativa som/animação automaticamente.'

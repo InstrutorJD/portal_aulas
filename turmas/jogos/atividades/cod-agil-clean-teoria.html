@@ -145,7 +145,7 @@
       story: 'Oi! Eu sou a <b>Bia</b>, a joaninha debugger da PixelForge Studios. Hoje: <b>metodologia ágil</b>. Na PixelForge organizamos o trabalho em <b>Sprints</b> — ciclos curtos de trabalho com um objetivo definido — usando um <b>quadro Kanban</b>, que organiza as tarefas em colunas como "A Fazer", "Em Progresso" e "Concluído", deixando o fluxo de trabalho visível pra todo mundo.',
       question: {
         prompt: 'Uma equipe organiza as tarefas do projeto em três colunas visuais — "A Fazer", "Em Progresso" e "Concluído" — movendo os cartões conforme o trabalho avança. Que ferramenta ágil é essa?',
-        options: ['Quadro Kanban', 'Um GDD', 'Um pipeline de renderização', 'Uma variável de ambiente'],
+        options: ['Quadro Kanban de tarefas visuais', 'Um GDD, documento de design', 'Um pipeline de renderização', 'Uma variável de ambiente'],
         correctIndex: 0,
         explanation: 'Isso! Organizar tarefas em colunas visuais que mostram o progresso do fluxo de trabalho é justamente um quadro Kanban.'
       }
@@ -154,7 +154,7 @@
       story: 'Quando surge um problema técnico complexo, uma prática comum é o <b>live coding</b> em grupo: várias pessoas debugam juntas em tempo real, discutindo hipóteses e testando soluções — combinando diferentes perspectivas pra resolver mais rápido do que uma pessoa sozinha conseguiria.',
       question: {
         prompt: 'Diante de um bug de colisão difícil de entender, três devs se juntam numa chamada e debugam o código juntos em tempo real, testando hipóteses em conjunto. Que prática é essa?',
-        options: ['Live coding colaborativo pra resolução de problemas técnicos', 'Um Sprint isolado sem colaboração', 'Documentação técnica', 'Um requisito não funcional'],
+        options: ['Live coding colaborativo pra resolução de problemas técnicos', 'Um Sprint isolado, sem nenhuma colaboração entre os devs', 'Documentação técnica escrita sobre o código', 'Um requisito não funcional de performance do sistema'],
         correctIndex: 0,
         explanation: 'Exato! Debugar em grupo, em tempo real, combinando perspectivas diferentes, é live coding colaborativo.'
       }
@@ -163,7 +163,7 @@
       story: 'Escrever <b>Clean Code</b> (código limpo) significa usar <b>nomenclatura clara</b>: uma variável chamada <code>vidaJogador</code> comunica muito mais do que uma chamada <code>x</code>. Junto disso vem o princípio <b>DRY</b> ("Don’t Repeat Yourself" — não se repita): se você percebe o mesmo trecho de lógica copiado em vários lugares, é sinal de que ele deveria virar uma função reaproveitável.',
       question: {
         prompt: 'Um dev percebe que o mesmo cálculo de dano está copiado e colado em cinco lugares diferentes do código, e decide transformá-lo numa única função reaproveitável. Que princípio de Clean Code ele está aplicando?',
-        options: ['DRY (Don’t Repeat Yourself) — evitar repetição de código', 'Nomenclatura clara, sem relação com repetição', 'Um trigger de multimídia', 'Encapsulamento de dados'],
+        options: ['DRY (Don’t Repeat Yourself) — evitar repetição de código', 'Nomenclatura clara, sem nenhuma relação direta com repetição', 'Um trigger de multimídia disparado por ação', 'Encapsulamento de dados internos da classe'],
         correctIndex: 0,
         explanation: 'Isso mesmo! Transformar código duplicado numa única função reaproveitável é aplicar o princípio DRY.'
       }
@@ -172,7 +172,7 @@
       story: '<b>Refatorar</b> um código monolítico (uma função gigante que faz "tudo") significa quebrá-lo em partes menores, cada uma com uma responsabilidade clara — isso é chamado de <b>modularização</b>. O comportamento final do programa continua o mesmo, mas o código fica muito mais fácil de entender e manter.',
       question: {
         prompt: 'Uma função gigante que carregava o jogo, processava a entrada do jogador e desenhava a tela, tudo junto, é quebrada em três funções menores, cada uma com uma responsabilidade específica. Que prática é essa?',
-        options: ['Refatoração com modularização', 'Documentação técnica', 'Live coding colaborativo', 'Um quadro Kanban'],
+        options: ['Refatoração com modularização', 'Documentação técnica do código', 'Live coding colaborativo em grupo', 'Um quadro Kanban de tarefas'],
         correctIndex: 0,
         explanation: 'Perfeito! Quebrar uma função monolítica em partes menores, cada uma com sua responsabilidade, é refatoração com modularização.'
       }
@@ -181,7 +181,7 @@
       story: 'Por fim, boa <b>documentação</b> técnica inclui <b>docstrings</b> (comentários estruturados explicando o que uma função faz, seus parâmetros e retorno) e <b>guias de referência</b>, que ajudam outros devs (ou você mesmo, meses depois) a entender rapidamente como usar cada parte do código sem precisar ler tudo linha por linha. Agora você já reconhece Kanban, live coding, DRY, refatoração/modularização e documentação técnica!',
       question: {
         prompt: 'Acima de uma função complexa, um dev escreve um comentário estruturado explicando o que a função faz, quais parâmetros espera e o que retorna. Que prática de documentação é essa?',
-        options: ['Docstring', 'Um quadro Kanban', 'Refatoração', 'Um trigger de áudio'],
+        options: ['Docstring, comentário estruturado', 'Um quadro Kanban de tarefas', 'Refatoração do código monolítico', 'Um trigger de áudio disparado'],
         correctIndex: 0,
         explanation: 'Isso! Um comentário estruturado explicando função, parâmetros e retorno é justamente uma docstring.'
       }

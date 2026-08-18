@@ -145,7 +145,7 @@
       story: 'Oi! Eu sou a <b>Bia</b>, a joaninha debugger da PixelForge Studios. Hoje: <b>segurança no código</b>. Toda entrada do jogador (nome de usuário, texto de chat, valores digitados) deve passar por <b>validação de input</b> antes de ser usada — checar tipo, tamanho e conteúdo esperado. Sem isso, um jogador mal-intencionado pode tentar injetar comandos maliciosos disfarçados de texto comum.',
       question: {
         prompt: 'Antes de salvar o nome de usuário digitado no cadastro, o sistema verifica se ele tem um tamanho razoável e não contém caracteres suspeitos de comandos de banco de dados. Que prática de segurança é essa?',
-        options: ['Validação de inputs do usuário, pra prevenir injeções maliciosas', 'Um trigger de multimídia', 'Renderização de sprites', 'Um requisito não funcional de performance'],
+        options: ['Validação de inputs do usuário, pra prevenir injeções maliciosas', 'Um trigger de multimídia disparado por ação', 'Renderização de sprites na tela do jogo', 'Um requisito não funcional de performance'],
         correctIndex: 0,
         explanation: 'Isso! Checar tipo, tamanho e conteúdo de uma entrada antes de usá-la é validação de input, prevenindo injeções maliciosas.'
       }
@@ -163,7 +163,7 @@
       story: 'Uma vez que o grafo existe, é preciso um <b>algoritmo de busca</b> pra encontrar o melhor caminho entre dois pontos dentro dele — é assim que um NPC descobre a rota mais curta (ou mais segura) até o jogador, navegando pelo grafo de waypoints.',
       question: {
         prompt: 'Um NPC precisa descobrir o caminho mais curto entre sua posição atual e a posição do jogador, navegando pelos waypoints conectados do mapa. Que tipo de algoritmo resolve esse problema?',
-        options: ['Um algoritmo de busca em grafos', 'Uma docstring', 'Um trigger de áudio', 'Uma variável de ambiente'],
+        options: ['Um algoritmo de busca em grafos', 'Uma docstring explicando a função', 'Um trigger de áudio disparado', 'Uma variável de ambiente do sistema'],
         correctIndex: 0,
         explanation: 'Isso mesmo! Encontrar o melhor caminho entre dois pontos de um grafo é justamente o papel de um algoritmo de busca em grafos.'
       }

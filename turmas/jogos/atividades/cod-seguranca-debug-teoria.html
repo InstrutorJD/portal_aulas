@@ -156,9 +156,9 @@
         prompt: 'Um sistema impede que jogadores comuns alterem diretamente a pontuação de outros jogadores no banco de dados, permitindo essa alteração só pra contas administrativas. Que prática de segurança é essa?',
         options: [
           'Modelagem de permissões de acesso, protegendo integridade e confidencialidade',
-          'Um bug do sistema, sem relação com segurança',
-          'Um requisito não funcional de performance',
-          'Nenhuma prática de segurança específica'
+          'Um bug do sistema qualquer, sem nenhuma relação real com segurança',
+          'Um requisito não funcional de performance geral do sistema',
+          'Nenhuma prática de segurança específica sendo aplicada aqui de verdade'
         ],
         correctIndex: 0,
         explanation: 'Exato! Restringir quem pode alterar dados sensíveis é uma modelagem de permissões que protege integridade e confidencialidade.'
@@ -168,7 +168,7 @@
       story: 'Quando um bug aparece, é hora de <b>debugar</b>. No VSCode, a janela <b>Watch</b> permite acompanhar o valor de variáveis específicas em tempo real enquanto o código roda, e a <b>Call Stack</b> mostra a sequência de funções que foi chamada até chegar no ponto do erro — como um "rastro" de como o programa chegou ali.',
       question: {
         prompt: 'Um dev quer ver exatamente qual sequência de funções foi chamada até o código chegar na linha onde o erro aconteceu. Qual ferramenta do debugger do VSCode mostra esse "rastro"?',
-        options: ['Call Stack', 'Watch', 'Extensões', 'Variáveis de ambiente'],
+        options: ['Call Stack, sequência de chamadas', 'Watch, janela de acompanhar variáveis', 'Extensões instaladas no editor', 'Variáveis de ambiente do sistema'],
         correctIndex: 0,
         explanation: 'Isso mesmo! A Call Stack mostra exatamente a sequência de chamadas de função até o ponto do erro.'
       }
@@ -177,7 +177,7 @@
       story: 'Já a janela <b>Watch</b> serve pra outra coisa: acompanhar o <b>valor</b> de uma variável específica enquanto o código roda passo a passo, ajudando a descobrir exatamente em que momento ela ganhou um valor errado.',
       question: {
         prompt: 'Um dev suspeita que uma variável de vida do jogador está recebendo um valor errado em algum ponto do código, e quer acompanhar seu valor mudando em tempo real enquanto o código roda. Qual ferramenta do debugger ele deve usar?',
-        options: ['Watch', 'Call Stack', 'Extensões', 'Pipeline de renderização'],
+        options: ['Watch, pra acompanhar o valor da variável', 'Call Stack, sequência de chamadas de função', 'Extensões instaladas no editor', 'Pipeline de renderização de sprites'],
         correctIndex: 0,
         explanation: 'Perfeito! A janela Watch é feita exatamente pra acompanhar o valor de variáveis específicas em tempo real.'
       }
@@ -188,9 +188,9 @@
         prompt: 'Um designer altera o dano de uma arma só editando um arquivo JSON externo, sem precisar recompilar o jogo, porque a engine lê esse arquivo e cria os objetos automaticamente. Que prática está sendo usada aqui?',
         options: [
           'Manipulação de dados externos — ler e converter arquivos em objetos sem recompilar',
-          'Debugging com Call Stack',
-          'Confidencialidade de dados de login',
-          'Pipeline de renderização de sprites'
+          'Debugging com Call Stack pra encontrar exatamente onde está o erro',
+          'Confidencialidade de dados de login dos jogadores cadastrados',
+          'Pipeline de renderização de sprites e texturas na tela'
         ],
         correctIndex: 0,
         explanation: 'Isso! Ler um arquivo externo e converter seu conteúdo em objetos utilizáveis, sem recompilar, é manipulação de dados externos.'
