@@ -98,11 +98,10 @@ test.describe('QuizRush — entrada e resposta do aluno', () => {
     await page.goto(ALUNO_URL);
 
     await expect(page.locator('#scrQuestion')).toBeVisible();
-    // aluno não vê o enunciado nem o texto das opções — só a cor/forma,
-    // pra ser obrigado a olhar a pergunta na tela do professor.
-    await expect(page.locator('#qPrompt')).toContainText('tela do professor');
-    await expect(page.locator('#qPrompt')).not.toContainText('2 + 2');
-    await expect(page.locator('#qTiles')).not.toContainText('4');
+    // aluno vê o enunciado e o texto das opções por extenso, igual à tela
+    // do professor — dá pra jogar direto pelo próprio aparelho.
+    await expect(page.locator('#qPrompt')).toContainText('2 + 2');
+    await expect(page.locator('#qTiles')).toContainText('4');
 
     // opção correta é o índice 1 ("4")
     await page.locator('#qTiles .tile').nth(1).click();
