@@ -336,21 +336,29 @@
     const letters = ['A', 'B', 'C', 'D'];
     const wrongTried = new Set();
 
-    challenge.options.forEach((optText, idx) => {
+    const order = challenge.options.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    const correctPos = order.indexOf(challenge.correctIndex);
+
+    order.forEach((origIdx, pos) => {
+      const optText = challenge.options[origIdx];
       const opt = document.createElement('div');
       opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[idx]}</span><span>${optText}</span>`;
+      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
       if (alreadyDone) {
         opt.classList.add('disabled');
-        if (idx === challenge.correctIndex) opt.classList.add('correct');
+        if (pos === correctPos) opt.classList.add('correct');
       } else {
-        opt.addEventListener('click', () => handleAnswer(challenge, idx, opt));
+        opt.addEventListener('click', () => handleAnswer(challenge, pos, opt));
       }
       optionsPanel.appendChild(opt);
     });
 
     function handleAnswer(challenge, idx, opt) {
-      if (idx === challenge.correctIndex) {
+      if (idx === correctPos) {
         optionsPanel.querySelectorAll('.option').forEach(el => el.classList.add('disabled'));
         opt.classList.add('correct');
 
