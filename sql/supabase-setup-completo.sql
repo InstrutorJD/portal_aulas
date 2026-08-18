@@ -1074,9 +1074,46 @@ begin
 end $$;
 
 -- ============================================================
+-- BLOCO 12 — Sincronização de progresso entre dispositivos
+-- (shared/progress-sync.js). Uma linha por (aluno, atividade), com o
+-- estado exato que também vai pro localStorage do navegador — permite
+-- o aluno continuar de onde parou numa atividade mesmo trocando de
+-- computador, em vez de depender só do localStorage.
+-- ============================================================
+
+create table if not exists public.student_activity_state (
+  student_email text not null,
+  progress_key text not null,
+  state jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (student_email, progress_key)
+);
+
+create index if not exists idx_student_activity_state_student on public.student_activity_state (student_email);
+
+alter table public.student_activity_state enable row level security;
+
+drop policy if exists "student_activity_state_select_all" on public.student_activity_state;
+create policy "student_activity_state_select_all"
+  on public.student_activity_state for select
+  using (true);
+
+drop policy if exists "student_activity_state_insert_all" on public.student_activity_state;
+create policy "student_activity_state_insert_all"
+  on public.student_activity_state for insert
+  with check (true);
+
+drop policy if exists "student_activity_state_update_all" on public.student_activity_state;
+create policy "student_activity_state_update_all"
+  on public.student_activity_state for update
+  using (true)
+  with check (true);
+
+-- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se attendance,
 -- grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, trilha_overrides, game_scores,
--- daily_module_releases e quizrush_sessions/quizrush_players/quizrush_answers
--- foram criadas, e se network_nodes ganhou as colunas current_ip e turma.
+-- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers
+-- e student_activity_state foram criadas, e se network_nodes ganhou as
+-- colunas current_ip e turma.
 -- ============================================================
