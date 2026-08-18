@@ -491,8 +491,12 @@
   // volta do Realtime (latência, ou o canal cair um instante) pra ver a
   // própria ação surtir efeito. Quem depende só do Realtime é o aluno.
   async function onStartClick() {
-    playFanfare();
     const startedAt = await window.QuizRushEngine.startSession(state.session.id);
+    if (!startedAt) {
+      alert('Não foi possível iniciar o QuizRush (falha ao falar com o Supabase). Veja o console (F12) para detalhes e tente de novo.');
+      return;
+    }
+    playFanfare();
     Object.assign(state.session, { status: 'question', current_index: 0, question_started_at: startedAt });
     await renderForSession();
   }
@@ -691,6 +695,10 @@
     } else {
       const nextIndex = state.session.current_index + 1;
       const startedAt = await window.QuizRushEngine.nextQuestion(state.session.id, nextIndex);
+      if (!startedAt) {
+        alert('Não foi possível avançar a pergunta (falha ao falar com o Supabase). Veja o console (F12) para detalhes e tente de novo.');
+        return;
+      }
       Object.assign(state.session, { status: 'question', current_index: nextIndex, question_started_at: startedAt });
     }
     await renderForSession();
