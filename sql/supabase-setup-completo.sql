@@ -688,6 +688,18 @@ create trigger trg_student_module_progress_completed_at
 before insert or update on public.student_module_progress
 for each row execute function public.set_module_completed_at();
 
+-- Backfill único: módulos que já estavam completed=true ANTES desta
+-- coluna/trigger existir ficariam com completed_at nulo pra sempre (o
+-- trigger só carimba na TRANSIÇÃO false→true, e um módulo já concluído
+-- preserva o valor antigo em cada resync). Sem isso, quem concluiu algo
+-- antes de rodar este script nunca apareceria como "ativo" no Relatório
+-- de Atividade do Dia. Usa updated_at como aproximação — não é o
+-- instante exato da conclusão, mas é a melhor informação disponível.
+-- Idempotente: só afeta linhas com completed_at ainda nulo.
+update public.student_module_progress
+set completed_at = updated_at
+where completed = true and completed_at is null;
+
 
 -- ============================================================
 -- BLOCO 8 — Bloqueio manual de trilha inteira pelo professor (aba
