@@ -30,14 +30,17 @@ create index if not exists idx_attendance_student on public.attendance (student_
 
 alter table public.attendance enable row level security;
 
+drop policy if exists "attendance_select_all" on public.attendance;
 create policy "attendance_select_all"
   on public.attendance for select
   using (true);
 
+drop policy if exists "attendance_insert_all" on public.attendance;
 create policy "attendance_insert_all"
   on public.attendance for insert
   with check (true);
 
+drop policy if exists "attendance_update_all" on public.attendance;
 create policy "attendance_update_all"
   on public.attendance for update
   using (true)
@@ -69,14 +72,17 @@ create index if not exists idx_grades_turma_bimestre on public.grades (turma, bi
 
 alter table public.grades enable row level security;
 
+drop policy if exists "grades_select_all" on public.grades;
 create policy "grades_select_all"
   on public.grades for select
   using (true);
 
+drop policy if exists "grades_insert_all" on public.grades;
 create policy "grades_insert_all"
   on public.grades for insert
   with check (true);
 
+drop policy if exists "grades_update_all" on public.grades;
 create policy "grades_update_all"
   on public.grades for update
   using (true)
@@ -106,14 +112,17 @@ create index if not exists idx_student_module_progress_turma on public.student_m
 
 alter table public.student_module_progress enable row level security;
 
+drop policy if exists "student_module_progress_select_all" on public.student_module_progress;
 create policy "student_module_progress_select_all"
   on public.student_module_progress for select
   using (true);
 
+drop policy if exists "student_module_progress_insert_all" on public.student_module_progress;
 create policy "student_module_progress_insert_all"
   on public.student_module_progress for insert
   with check (true);
 
+drop policy if exists "student_module_progress_update_all" on public.student_module_progress;
 create policy "student_module_progress_update_all"
   on public.student_module_progress for update
   using (true)

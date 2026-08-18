@@ -12,14 +12,17 @@ create table if not exists public.student_overrides (
 
 alter table public.student_overrides enable row level security;
 
+drop policy if exists "student_overrides_select_all" on public.student_overrides;
 create policy "student_overrides_select_all"
   on public.student_overrides for select
   using (true);
 
+drop policy if exists "student_overrides_insert_all" on public.student_overrides;
 create policy "student_overrides_insert_all"
   on public.student_overrides for insert
   with check (true);
 
+drop policy if exists "student_overrides_update_all" on public.student_overrides;
 create policy "student_overrides_update_all"
   on public.student_overrides for update
   using (true)

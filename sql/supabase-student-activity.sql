@@ -46,14 +46,17 @@ create index if not exists idx_student_activity_updated_at
 
 alter table public.student_activity enable row level security;
 
+drop policy if exists "student_activity_select_all" on public.student_activity;
 create policy "student_activity_select_all"
   on public.student_activity for select
   using (true);
 
+drop policy if exists "student_activity_insert_all" on public.student_activity;
 create policy "student_activity_insert_all"
   on public.student_activity for insert
   with check (true);
 
+drop policy if exists "student_activity_update_all" on public.student_activity;
 create policy "student_activity_update_all"
   on public.student_activity for update
   using (true)
