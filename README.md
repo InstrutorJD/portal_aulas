@@ -64,6 +64,14 @@ Depende do Supabase estar configurado — rode `sql/supabase-setup-completo.sql`
 - **Campo Minado**: virou progressão infinita de níveis — cada bandeira alcançada aumenta o número de minas do próximo campo (até um teto, senão fica impossível gerar caminho seguro) e o score enviado ao placar é o nível alcançado.
 - Pra habilitar em produção, rode `sql/supabase-game-scores.sql` (já incluído em `sql/supabase-setup-completo.sql`, bloco 9).
 
+### Campo Minado — o robô sente o ambiente, não decora um caminho (`games/campo-minado.html`)
+O aluno não escreve mais uma lista fixa de `mover(direção)` decidida de antemão (isso virava só tentativa e erro, já que `mover()` não devolvia nada — `if`/`while` nunca faziam diferença de verdade). Agora o código roda contra um tabuleiro-sombra (`simulate()`) que responde na hora a cada chamada, e só DEPOIS a tela reproduz (`replayLog()`) o que já foi decidido, com a mesma animação de sempre:
+- `mover(dir)` devolve o resultado (`'seguro'|'parede'|'invalido'`) e já interrompe a execução do código ao pisar numa mina ou chegar na bandeira (lançando um sinal interno, `StopExec`, que "desliga o robô" na hora certa).
+- `perigo(dir)` sente se dá pra ir por ali — mina OU fora do tabuleiro — **antes** de mover pra lá, de propósito um sensor só (em vez de separar mina/parede) pra não exigir dois tratamentos diferentes de quem está aprendendo.
+- `posicao()` e `distanciaAteBandeira()` dão mais contexto pra decidir o próximo passo (ex.: preferir a direção que reduz a distância).
+- Duas redes de segurança evitam que um loop mal escrito trave a tela: `MAX_OPS` interrompe a simulação síncrona (conta toda chamada de sensor, não só movimento — um loop pode só "sentir" sem nunca mover), e `MAX_REPLAY_ANIMATED` garante que a encenação na tela nunca demora mais que alguns segundos — o resto do log é aplicado direto, sem animar, mesmo que tenha centenas de entradas.
+- O código padrão do editor já demonstra o padrão esperado: sensor + condicional + memória de casas visitadas (evita ficar oscilando entre as duas mesmas casas).
+
 ### QuizRush da turma (`games/quizrush.html`)
 Quiz ao vivo dentro da aba **Jogos** — o professor escolhe uma aula teórica (formato "história + quiz", ver seção de trilhas acima) e hospeda uma partida síncrona pra turma inteira, pergunta por pergunta, com cronômetro. Quem acerta E responde mais rápido ganha mais pontos (500 a 1000 pontos por acerto, proporcional ao tempo restante; erro ou não-resposta vale 0) — por isso velocidade e quantidade de acertos decidem o pódio junto, sem precisar de critério de desempate à parte.
 
