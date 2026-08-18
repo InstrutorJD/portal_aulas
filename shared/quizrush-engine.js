@@ -169,6 +169,23 @@ window.QuizRushEngine = (function () {
     if (error) { console.error('[QuizRushEngine] falha ao avançar pergunta:', error); return null; }
     return data;
   }
+
+  // question_started_at vem do relógio do banco, mas o cronômetro na tela
+  // ainda precisa comparar isso com Date.now() do próprio dispositivo pra
+  // saber quanto tempo falta — um relógio local errado voltava a causar
+  // "tempo esgotado" cedo/tarde demais mesmo com a hora de início certa.
+  // Mede a diferença uma vez (localMid - metade do round-trip ~= quando o
+  // banco respondeu "agora") pra somar em todo Date.now() usado no timer.
+  async function getServerTimeMs() {
+    if (!sb) return 0;
+    const before = Date.now();
+    const { data, error } = await sb.rpc('quizrush_server_now');
+    const after = Date.now();
+    if (error || !data) { console.error('[QuizRushEngine] falha ao medir relógio do servidor:', error); return 0; }
+    const roundTrip = after - before;
+    const localMid = before + roundTrip / 2;
+    return new Date(data).getTime() - localMid;
+  }
   const reveal = (id) => updateSession(id, { status: 'reveal' });
   const showPodium = (id) => updateSession(id, { status: 'podium' });
   const endSession = (id) => updateSession(id, { status: 'ended' });
@@ -250,7 +267,7 @@ window.QuizRushEngine = (function () {
   return {
     enabled: !!sb,
     loadTurmaConfig, listGabaritoModules, fetchModuleQuestions,
-    getLatestSession, createSession, startSession, nextQuestion, reveal, showPodium, endSession,
+    getLatestSession, createSession, startSession, nextQuestion, getServerTimeMs, reveal, showPodium, endSession,
     joinSession, fetchPlayers, fetchAnswers, submitAnswer, scoreFor, leaderboardFrom,
     watchSession, watchPlayers, watchAnswers, watchNewSessions
   };

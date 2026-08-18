@@ -112,6 +112,24 @@ $$;
 grant execute on function public.quizrush_start_session(uuid) to anon, authenticated;
 grant execute on function public.quizrush_next_question(uuid, int) to anon, authenticated;
 
+-- question_started_at vem do relógio do banco, mas o cronômetro (em
+-- games/quizrush.html) compara esse valor com o relógio LOCAL de cada
+-- aluno/professor pra saber quanto tempo falta — um dispositivo com hora
+-- adiantada/atrasada ainda mostrava "tempo esgotado" cedo ou tarde demais,
+-- mesmo com question_started_at correto. Esta função deixa cada cliente
+-- medir a diferença entre o próprio relógio e o do banco uma vez, ao
+-- carregar a página (ver getServerTimeMs em shared/quizrush-engine.js).
+create or replace function public.quizrush_server_now()
+returns timestamptz
+language sql
+security definer
+set search_path = public
+as $$
+  select now();
+$$;
+
+grant execute on function public.quizrush_server_now() to anon, authenticated;
+
 do $$
 begin
   if not exists (

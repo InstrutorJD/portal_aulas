@@ -122,6 +122,9 @@
           row.question_started_at = now;
           return Promise.resolve({ data: now, error: null });
         }
+        if (name === 'quizrush_server_now') {
+          return Promise.resolve({ data: new Date().toISOString(), error: null });
+        }
         return Promise.resolve({ data: null, error: null });
       },
     };

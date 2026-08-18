@@ -259,6 +259,7 @@
     answers: [],
     joined: false,
     myAnswerThisQuestion: null, // { choiceIndex, correct, score }
+    clockOffsetMs: 0, // Date.now() + clockOffsetMs ~= relógio do Supabase (ver init/getServerTimeMs)
     countdownTimer: null,
     unsubSession: null,
     unsubPlayers: null,
@@ -568,7 +569,7 @@
     let lastTickedSecond = null;
 
     function tick() {
-      const elapsed = Date.now() - startedAt;
+      const elapsed = (Date.now() + state.clockOffsetMs) - startedAt;
       const remainingMs = Math.max(0, duration - elapsed);
       const remainingSec = Math.ceil(remainingMs / 1000);
       const pct = Math.round((remainingMs / duration) * 100);
@@ -612,7 +613,7 @@
     e.currentTarget.classList.add('chosen');
 
     const startedAt = new Date(state.session.question_started_at).getTime();
-    const elapsedMs = Math.max(0, Math.min(state.session.question_duration_ms, Date.now() - startedAt));
+    const elapsedMs = Math.max(0, Math.min(state.session.question_duration_ms, (Date.now() + state.clockOffsetMs) - startedAt));
     const q = currentQuestion();
     const result = await window.QuizRushEngine.submitAnswer({
       sessionId: state.session.id, email: username, name: displayName,
@@ -757,6 +758,8 @@
 
   async function init() {
     if (!window.QuizRushEngine || !window.QuizRushEngine.enabled) { showScreen('scrDisabled'); return; }
+
+    state.clockOffsetMs = await window.QuizRushEngine.getServerTimeMs();
 
     const latest = await window.QuizRushEngine.getLatestSession(turma);
     if (latest && latest.status !== 'ended') {
