@@ -1,7 +1,9 @@
 // @ts-check
 // Relatório de Atividade do Dia (dentro de "Relatórios", na aba Gestão):
 // sob demanda (botão "Gerar"), lista os alunos PRESENTES hoje que ainda não
-// concluíram nenhuma atividade hoje.
+// concluíram nenhuma atividade hoje, com o tempo que cada um ficou logado
+// hoje (aproximado por active_seconds_today, acumulado por um gatilho no
+// Supabase a partir do heartbeat de shared/activity-tracker.js).
 //
 // "Concluiu hoje" olha completed_at (carimbado só no instante em que um
 // módulo vira completed=true de verdade — ver trigger em
@@ -42,6 +44,10 @@ test.describe('Relatório de Atividade do Dia — dentro do portal da turma', ()
         // alexandre.natal: concluiu um módulo em outro dia — deve aparecer (nada concluído HOJE).
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true, completed_at: '2020-01-01T09:00:00.000Z' },
       ],
+      student_activity: [
+        // alexandre.natal ficou 45min logado hoje, mesmo sem concluir nada.
+        { student_email: 'alexandre.natal', turma: 'sistemas', active_seconds_today: 2700, activity_date: today },
+      ],
     });
     await expandGestaoSection(page, 'Relatórios');
 
@@ -49,8 +55,25 @@ test.describe('Relatório de Atividade do Dia — dentro do portal da turma', ()
 
     const resultado = page.locator('#atividadeDiaResultado');
     await expect(resultado).toContainText('Alexandre Natal');
+    await expect(resultado).toContainText('45min');
     await expect(resultado).not.toContainText('Bianca Bernardi');
     await expect(resultado).not.toContainText('Bruno Gomes');
+  });
+
+  test('sem nenhum registro de atividade hoje, mostra travessão em vez de tempo', async ({ page }) => {
+    const today = todayStr();
+    await openGestao(page, {
+      // erasmo.prado tem um registro de atividade, mas de ONTEM — não conta pra hoje.
+      student_activity: [
+        { student_email: 'erasmo.prado', turma: 'sistemas', active_seconds_today: 1800, activity_date: '2020-01-01' },
+      ],
+    });
+    await expandGestaoSection(page, 'Relatórios');
+
+    await page.click('#btnGerarAtividadeDia');
+
+    const row = page.locator('#atividadeDiaResultado tr', { hasText: 'Erasmo Prado' });
+    await expect(row).toContainText('—');
   });
 
   test('quando todo mundo presente já concluiu algo hoje, mostra a mensagem de sucesso', async ({ page }) => {

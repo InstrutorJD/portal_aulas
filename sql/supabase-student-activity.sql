@@ -63,6 +63,58 @@ create policy "student_activity_update_all"
   with check (true);
 
 -- ============================================================
+-- Tempo logado hoje: acumula segundos ativos no dia, pra mostrar no
+-- Relatório de Atividade do Dia (aba Gestão) quanto tempo cada aluno
+-- ficou com o portal aberto hoje. Não existe log de sessão (login/
+-- logout) — só o heartbeat de 15 em 15s de shared/activity-tracker.js
+-- — então o gatilho abaixo estima o tempo somando o intervalo entre um
+-- heartbeat e o anterior, contando só intervalos de até 60s (~4x o
+-- heartbeat): um intervalo maior que isso significa aba fechada/
+-- computador dormindo nesse meio tempo, não tempo logado de verdade.
+-- Zera sozinho quando o dia muda (activity_date). Usa now() do banco
+-- pro cálculo do intervalo, não o relógio do cliente, pelo mesmo motivo
+-- da correção do QuizRush (relógio de dispositivo não é confiável).
+-- ============================================================
+
+alter table public.student_activity add column if not exists active_seconds_today int not null default 0;
+alter table public.student_activity add column if not exists activity_date date not null default current_date;
+
+create or replace function public.track_daily_active_seconds()
+returns trigger
+language plpgsql
+as $$
+declare
+  v_gap_seconds numeric;
+begin
+  if tg_op = 'INSERT' then
+    new.activity_date := current_date;
+    new.active_seconds_today := 0;
+    return new;
+  end if;
+
+  if old.activity_date is distinct from current_date then
+    new.activity_date := current_date;
+    new.active_seconds_today := 0;
+  else
+    v_gap_seconds := extract(epoch from (now() - old.updated_at));
+    if v_gap_seconds > 0 and v_gap_seconds <= 60 then
+      new.active_seconds_today := coalesce(old.active_seconds_today, 0) + round(v_gap_seconds)::int;
+    else
+      new.active_seconds_today := coalesce(old.active_seconds_today, 0);
+    end if;
+    new.activity_date := current_date;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_student_activity_daily_seconds on public.student_activity;
+create trigger trg_student_activity_daily_seconds
+before insert or update on public.student_activity
+for each row execute function public.track_daily_active_seconds();
+
+-- ============================================================
 -- Realtime: permite o painel do professor assinar mudanças ao vivo
 -- (mesmo padrão usado hoje para network_nodes / node_permissions / node_shields)
 -- ============================================================

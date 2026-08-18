@@ -1502,9 +1502,10 @@
     btn.textContent = '⏳ Gerando...';
 
     const today = todayStr();
-    const [progressRes, attendanceRes] = await Promise.all([
+    const [progressRes, attendanceRes, activityRes] = await Promise.all([
       sbClient.from('student_module_progress').select('student_email, completed_at').eq('turma', cfg.id).eq('completed', true),
-      sbClient.from('attendance').select('student_email, presente').eq('turma', cfg.id).eq('data', today)
+      sbClient.from('attendance').select('student_email, presente').eq('turma', cfg.id).eq('data', today),
+      sbClient.from('student_activity').select('student_email, active_seconds_today, activity_date').eq('turma', cfg.id)
     ]);
 
     btn.disabled = false;
@@ -1519,21 +1520,46 @@
       (attendanceRes.data || []).filter(r => r.presente === false).map(r => r.student_email)
     );
 
+    // activity_date vem como 'YYYY-MM-DD' (coluna date do Postgres) — compara
+    // string direto com todayStr(), sem passar por new Date() (evita timezone).
+    const segundosHojeByStudent = {};
+    (activityRes.data || []).forEach(r => {
+      segundosHojeByStudent[r.student_email] = (r.activity_date === today) ? (r.active_seconds_today || 0) : 0;
+    });
+
     const semAtividade = students
       .filter(u => !concluiuHoje.has(u.email) && !ausentesHoje.has(u.email))
-      .map(u => u.nome);
+      .map(u => ({ nome: u.nome, segundos: segundosHojeByStudent[u.email] || 0 }));
 
     if (semAtividade.length === 0) {
       container.innerHTML = `<p style="color:var(--green); font-size:12px;">🎉 Todos os alunos presentes hoje já concluíram alguma atividade.</p>`;
       return;
     }
 
+    // Quem ficou menos tempo logado aparece primeiro — é quem mais precisa de atenção.
+    semAtividade.sort((a, b) => a.segundos - b.segundos || a.nome.localeCompare(b.nome, 'pt-BR'));
+
     container.innerHTML = `
       <p style="font-size:11px; color:var(--ink-dim); margin:0 0 8px;">${semAtividade.length} de ${students.length} aluno(s) sem nenhuma atividade concluída hoje:</p>
-      <ul style="margin:0; padding-left:18px; font-size:13px; line-height:1.8;">
-        ${semAtividade.map(nome => `<li>${nome}</li>`).join('')}
-      </ul>
+      <table class="audit-table">
+        <thead><tr><th>Aluno</th><th>Tempo logado hoje</th></tr></thead>
+        <tbody>
+          ${semAtividade.map(s => `<tr><td>${s.nome}</td><td>${formatTempoLogado(s.segundos)}</td></tr>`).join('')}
+        </tbody>
+      </table>
     `;
+  }
+
+  // Aproximação de "tempo com o portal aberto hoje" — soma de intervalos entre
+  // heartbeats de shared/activity-tracker.js (ver trigger track_daily_active_seconds
+  // em sql/supabase-student-activity.sql). Não é um cronômetro de sessão exato.
+  function formatTempoLogado(segundos) {
+    if (!segundos) return '—';
+    const h = Math.floor(segundos / 3600);
+    const m = Math.round((segundos % 3600) / 60);
+    if (h > 0) return `${h}h ${m}min`;
+    if (m > 0) return `${m}min`;
+    return '< 1min';
   }
 
   // Carrega o módulo (aula teórica) num iframe escondido só pra rodar a
