@@ -171,6 +171,15 @@ for each row execute function public.set_module_completed_at();
 -- de Atividade do Dia. Usa updated_at como aproximação — não é o
 -- instante exato da conclusão, mas é a melhor informação disponível.
 -- Idempotente: só afeta linhas com completed_at ainda nulo.
+--
+-- Desliga o próprio gatilho durante o UPDATE: como completed não muda
+-- (continua true), o ramo "preserva o valor antigo" do gatilho
+-- sobrescreveria completed_at de volta pro valor antigo (nulo) na hora,
+-- anulando este backfill por completo se o gatilho ficasse ativo.
+alter table public.student_module_progress disable trigger trg_student_module_progress_completed_at;
+
 update public.student_module_progress
 set completed_at = updated_at
 where completed = true and completed_at is null;
+
+alter table public.student_module_progress enable trigger trg_student_module_progress_completed_at;
