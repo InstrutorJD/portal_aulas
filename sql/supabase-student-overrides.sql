@@ -28,4 +28,12 @@ create policy "student_overrides_update_all"
   using (true)
   with check (true);
 
-alter publication supabase_realtime add table public.student_overrides;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'student_overrides'
+  ) then
+    alter publication supabase_realtime add table public.student_overrides;
+  end if;
+end $$;

@@ -119,4 +119,12 @@ for each row execute function public.track_daily_active_seconds();
 -- (mesmo padrão usado hoje para network_nodes / node_permissions / node_shields)
 -- ============================================================
 
-alter publication supabase_realtime add table public.student_activity;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'student_activity'
+  ) then
+    alter publication supabase_realtime add table public.student_activity;
+  end if;
+end $$;
