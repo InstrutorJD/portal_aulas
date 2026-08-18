@@ -146,7 +146,7 @@
       <div class="board-panel">
         <div>
           <h1>LEVE O ROBÔ ATÉ A BANDEIRA</h1>
-          <div class="subtitle">Escreva comandos mover() para chegar em 🚩 sem pisar nas minas</div>
+          <div class="subtitle">O campo é invisível — use perigo() para sentir as minas antes de andar</div>
         </div>
         <div class="board" id="board">
           <div class="character" id="charEl">🤖</div>
@@ -156,11 +156,41 @@
       </div>
 
       <div class="code-panel">
-        <div class="code-header">editor.js — mover('cima' | 'baixo' | 'esquerda' | 'direita')</div>
-        <textarea id="codeInput" spellcheck="false">// Guie o robô até a bandeira!
-mover('direita');
-mover('direita');
-mover('baixo');</textarea>
+        <div class="code-header">editor.js — mover(dir) · perigo(dir) · posicao() · distanciaAteBandeira()</div>
+        <textarea id="codeInput" spellcheck="false">// Funções disponíveis:
+//   mover(dir)               anda uma casa: 'cima'|'baixo'|'esquerda'|'direita'
+//   perigo(dir)              true se NÃO dá pra ir por ali (mina ou fora do tabuleiro)
+//   posicao()                { linha, coluna } — posição atual (começa em 1,1)
+//   distanciaAteBandeira()   quantas casas faltam (linha + coluna) até 🚩
+
+// O campo é invisível: sinta antes de andar! Guardamos as casas já
+// visitadas pra preferir sempre um caminho novo, em vez de ficar
+// andando de um lado pro outro no mesmo lugar.
+const direcoes = { direita: [0, 1], baixo: [1, 0], cima: [-1, 0], esquerda: [0, -1] };
+const visitadas = new Set();
+
+function chave(p) { return p.linha + ',' + p.coluna; }
+function vizinha(p, dir) {
+  const [dl, dc] = direcoes[dir];
+  return { linha: p.linha + dl, coluna: p.coluna + dc };
+}
+
+visitadas.add(chave(posicao()));
+
+while (distanciaAteBandeira() > 0) {
+  const aqui = posicao();
+  const seguras = Object.keys(direcoes).filter(dir => !perigo(dir));
+
+  // prefere uma casa segura que ainda não visitamos...
+  let escolha = seguras.find(dir => !visitadas.has(chave(vizinha(aqui, dir))));
+  // ...senão, aceita repetir uma casa segura já visitada...
+  if (!escolha) escolha = seguras[0];
+  // ...e se não sobrou nenhuma direção segura, está cercado.
+  if (!escolha) break;
+
+  mover(escolha);
+  visitadas.add(chave(vizinha(aqui, escolha)));
+}</textarea>
         <div class="code-actions">
           <button class="btn" id="btnRun">▶ Executar</button>
           <button class="btn btn-secondary" id="btnRestart">↻ Reiniciar</button>
@@ -175,8 +205,28 @@ mover('baixo');</textarea>
   const ROWS = 8, COLS = 8;
   const GOAL_ROW = ROWS - 1, GOAL_COL = COLS - 1;
   const MOVE_DELAY = 260;
-  const MAX_MOVES = 200;
+  const SENSE_DELAY = 140;
+  // Um caminho de verdade no tabuleiro 8x8 tem no máximo ~14 passos — 80
+  // dá bastante folga pra um algoritmo que erra e recua algumas vezes,
+  // sem deixar a reprodução na tela (replay) durar minutos se o código
+  // do aluno ficar de um lado pro outro sem nunca "desistir" sozinho.
+  const MAX_MOVES = 80;
+  // Rede de segurança contra loop infinito (ex.: while(true) sem condição de
+  // parada) — conta toda chamada de mover()/perigo()/posicao()/
+  // distanciaAteBandeira(), não só movimentos de verdade, porque um loop
+  // pode ficar só sentindo o ambiente sem nunca mover.
+  const MAX_OPS = 600;
+  // Trava dura pro replay: mesmo que o log tenha muito mais entradas que
+  // isso (loop que só sente o ambiente gera muita entrada de sensor sem
+  // gastar movimento), a tela nunca fica animando por mais que isso —
+  // o restante do resultado é aplicado direto, sem atraso.
+  const MAX_REPLAY_ANIMATED = 70;
   const LEVEL_UP_PAUSE = 1300;
+
+  // Sinal interno pra interromper a execução do código do aluno assim que o
+  // resultado da rodada já foi decidido (mina, bandeira ou limite excedido) —
+  // não é um erro de verdade, só um jeito de "desligar o robô" na hora certa.
+  class StopExec extends Error {}
 
   // Dificuldade sobe com o nível (mais minas, caminho mais apertado),
   // até um teto — senão fica praticamente impossível de gerar um caminho seguro.
@@ -377,59 +427,195 @@ mover('baixo');</textarea>
     updateStatus();
   }
 
-  function tryMove(dir) {
+  // Espia o que tem na casa vizinha (sem mover pra lá) — usado tanto por
+  // mover() quanto por perigo(), contra a posição SIMULADA (simPos), não a
+  // posição visual (pos), porque o código do aluno roda inteiro e na hora
+  // (síncrono) antes de qualquer animação: a "sombra" da partida.
+  function peekFrom(simPos, dir) {
     const d = DIRS[dir];
-    if (!d) return { ok: false, reason: 'invalid' };
-    const nr = pos.row + d[0];
-    const nc = pos.col + d[1];
-    if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return { ok: false, reason: 'bounds' };
+    if (!d) return { valid: false };
+    const nr = simPos.row + d[0];
+    const nc = simPos.col + d[1];
+    if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return { valid: true, inBounds: false };
+    return { valid: true, inBounds: true, nr, nc, mine: board[nr][nc].mine };
+  }
 
-    pos = { row: nr, col: nc };
-    moveCountThisRun++;
-    board[nr][nc].revealed = true;
-    renderCell(nr, nc);
-    moveCharacterTo(nr, nc, true);
-    updateStatus();
+  // Roda o código do aluno inteiro, de uma vez, contra um tabuleiro-sombra
+  // (sem tocar a tela) — cada chamada de mover()/perigo() já responde na
+  // hora com o resultado real, então if/while do aluno reagem de verdade.
+  // O resultado vira um "log" de passos, e SÓ DEPOIS ele é reproduzido na
+  // tela com a mesma animação/atraso de sempre (replayLog abaixo) — a
+  // lógica roda instantânea, a encenação continua devagar.
+  function simulate(fn) {
+    let simPos = { row: 0, col: 0 };
+    let moveCount = 0;
+    let opsCount = 0;
+    let outcome = null; // null | 'goal' | 'mine' | 'exhausted' | 'loop'
+    const log = [];
 
-    if (board[nr][nc].mine) return { ok: true, result: 'mine' };
-    if (nr === GOAL_ROW && nc === GOAL_COL) return { ok: true, result: 'goal' };
-    return { ok: true, result: 'safe' };
+    function checkOps() {
+      opsCount++;
+      if (opsCount > MAX_OPS) { outcome = 'loop'; throw new StopExec('loop'); }
+    }
+
+    function mover(direcao) {
+      checkOps();
+      const dir = String(direcao).toLowerCase().trim();
+      if (outcome) { log.push({ type: 'move', dir, result: 'parado' }); return 'parado'; }
+      if (!DIRS[dir]) { log.push({ type: 'move', dir, result: 'invalido' }); return 'invalido'; }
+
+      moveCount++;
+      if (moveCount > MAX_MOVES) { outcome = 'exhausted'; throw new StopExec('exhausted'); }
+
+      const peek = peekFrom(simPos, dir);
+      if (!peek.inBounds) { log.push({ type: 'move', dir, result: 'parede' }); return 'parede'; }
+
+      simPos = { row: peek.nr, col: peek.nc };
+      if (peek.mine) {
+        log.push({ type: 'move', dir, result: 'mina' });
+        outcome = 'mine';
+        throw new StopExec('mine');
+      }
+      if (peek.nr === GOAL_ROW && peek.nc === GOAL_COL) {
+        log.push({ type: 'move', dir, result: 'chegou' });
+        outcome = 'goal';
+        throw new StopExec('goal');
+      }
+      log.push({ type: 'move', dir, result: 'seguro' });
+      return 'seguro';
+    }
+
+    // "Perigo" cobre tanto mina quanto sair do tabuleiro — pro aluno só
+    // precisar de UM sensor pra decidir "posso ir por aqui?", sem precisar
+    // também tratar parede como um caso especial separado.
+    function perigo(direcao) {
+      checkOps();
+      const dir = String(direcao).toLowerCase().trim();
+      const peek = peekFrom(simPos, dir);
+      const danger = !peek.valid || !peek.inBounds || peek.mine;
+      log.push({ type: 'sense', label: `perigo('${dir}') → ${danger ? 'sim ⚠️' : 'não'}` });
+      return danger;
+    }
+
+    function posicao() {
+      checkOps();
+      const p = { linha: simPos.row + 1, coluna: simPos.col + 1 };
+      log.push({ type: 'sense', label: `posicao() → (${p.linha},${p.coluna})` });
+      return p;
+    }
+
+    function distanciaAteBandeira() {
+      checkOps();
+      const d = Math.abs(GOAL_ROW - simPos.row) + Math.abs(GOAL_COL - simPos.col);
+      log.push({ type: 'sense', label: `distanciaAteBandeira() → ${d}` });
+      return d;
+    }
+
+    try {
+      fn(mover, perigo, posicao, distanciaAteBandeira);
+    } catch (err) {
+      if (!(err instanceof StopExec) && !outcome) throw err; // erro de verdade no código do aluno
+    }
+
+    return { log, outcome };
+  }
+
+  // Reproduz o log gerado por simulate() na tela, com a mesma animação e
+  // atraso de sempre — nada aqui decide mais nada, só encena o que já
+  // aconteceu na simulação síncrona.
+  async function replayLog(log, outcome) {
+    let stepNum = 0;
+    // Só os primeiros MAX_REPLAY_ANIMATED eventos são encenados com atraso —
+    // o resto é aplicado na hora, sem animar. Sem esse limite, um código
+    // que fica de um lado pro outro sem convencer (mas sem violar nenhum
+    // limite rápido o bastante) geraria um log gigante e travaria a tela
+    // animando por minutos antes de mostrar o resultado.
+    const animatedCount = Math.min(log.length, MAX_REPLAY_ANIMATED);
+    let warnedTruncation = false;
+
+    for (let i = 0; i < log.length; i++) {
+      const entry = log[i];
+      const animate = i < animatedCount;
+      if (!animate && !warnedTruncation) {
+        warnedTruncation = true;
+        logConsole(`⏩ Mais ${log.length - i} passos — aplicando direto, sem animar.`, 'info');
+      }
+
+      if (entry.type === 'sense') {
+        if (animate) { await sleep(SENSE_DELAY); logConsole(`🔎 ${entry.label}`, 'info'); }
+        continue;
+      }
+
+      if (animate) await sleep(MOVE_DELAY);
+      const { dir, result } = entry;
+      if (result === 'parado') continue;
+      stepNum++;
+
+      if (result === 'invalido') {
+        if (animate) logConsole(`[${stepNum}] mover('${dir}') → comando inválido. Use: cima, baixo, esquerda, direita.`, 'warn');
+        continue;
+      }
+      if (result === 'parede') {
+        if (animate) logConsole(`[${stepNum}] mover('${dir}') → bateu na parede.`, 'warn');
+        continue;
+      }
+
+      const d = DIRS[dir];
+      const nr = pos.row + d[0], nc = pos.col + d[1];
+      pos = { row: nr, col: nc };
+      moveCountThisRun++;
+      board[nr][nc].revealed = true;
+      renderCell(nr, nc);
+      moveCharacterTo(nr, nc, animate);
+      updateStatus();
+
+      if (result === 'mina') {
+        logConsole(`[${stepNum}] mover('${dir}') → 💥 Você pisou numa mina! Ajuste o código e tente de novo.`, 'error');
+        shakeBoard();
+        return;
+      }
+      if (result === 'chegou') {
+        logConsole(`[${stepNum}] mover('${dir}') → 🚩 Nível ${level} concluído em ${moveCountThisRun} movimentos!`, 'success');
+        await onLevelCleared();
+        return;
+      }
+      if (animate) logConsole(`[${stepNum}] mover('${dir}') → ok`, 'ok');
+    }
+
+    if (outcome === 'exhausted') {
+      logConsole(`Limite de ${MAX_MOVES} movimentos atingido sem chegar na bandeira.`, 'error');
+    } else if (outcome === 'loop') {
+      logConsole('O código entrou num loop sem chegar na bandeira (chamou mover()/perigo() demais). Revise a condição de parada.', 'error');
+    } else {
+      logConsole('Fim do código e a bandeira ainda não foi alcançada. Adicione mais lógica.', 'warn');
+    }
   }
 
   async function runCode() {
     if (isRunning) return;
     const code = codeInput.value;
-    const moveQueue = [];
-
-    function mover(direction) {
-      moveQueue.push(String(direction).toLowerCase().trim());
-    }
 
     let fn;
     try {
-      fn = new Function('mover', code);
+      fn = new Function('mover', 'perigo', 'posicao', 'distanciaAteBandeira', code);
     } catch (err) {
       clearConsole();
       logConsole('Erro de sintaxe: ' + err.message, 'error');
       return;
     }
 
+    let sim;
     try {
-      fn(mover);
+      sim = simulate(fn);
     } catch (err) {
       clearConsole();
       logConsole('Erro ao executar o código: ' + err.message, 'error');
       return;
     }
 
-    if (moveQueue.length === 0) {
+    if (sim.log.length === 0) {
       clearConsole();
-      logConsole("Nenhum comando mover(...) encontrado no código.", 'warn');
-      return;
-    }
-    if (moveQueue.length > MAX_MOVES) {
-      clearConsole();
-      logConsole(`Limite de ${MAX_MOVES} comandos excedido.`, 'error');
+      logConsole('Nenhum comando executado — chame mover(...) pra guiar o robô.', 'warn');
       return;
     }
 
@@ -440,40 +626,7 @@ mover('baixo');</textarea>
     clearConsole();
     logConsole('Executando código...', 'info');
 
-    for (let i = 0; i < moveQueue.length; i++) {
-      await sleep(MOVE_DELAY);
-      const dir = moveQueue[i];
-      const res = tryMove(dir);
-
-      if (!res.ok) {
-        if (res.reason === 'invalid') {
-          logConsole(`[${i + 1}] mover('${dir}') → comando inválido. Use: cima, baixo, esquerda, direita.`, 'warn');
-        } else {
-          logConsole(`[${i + 1}] mover('${dir}') → bateu na parede.`, 'warn');
-        }
-        continue;
-      }
-
-      if (res.result === 'mine') {
-        logConsole(`[${i + 1}] mover('${dir}') → 💥 Você pisou numa mina! Ajuste o código e tente de novo.`, 'error');
-        shakeBoard();
-        isRunning = false;
-        btnRun.disabled = false;
-        return;
-      }
-
-      if (res.result === 'goal') {
-        logConsole(`[${i + 1}] mover('${dir}') → 🚩 Nível ${level} concluído em ${moveCountThisRun} movimentos!`, 'success');
-        await onLevelCleared();
-        isRunning = false;
-        btnRun.disabled = false;
-        return;
-      }
-
-      logConsole(`[${i + 1}] mover('${dir}') → ok`, 'ok');
-    }
-
-    logConsole('Fim do código e a bandeira ainda não foi alcançada. Adicione mais comandos.', 'warn');
+    await replayLog(sim.log, sim.outcome);
     isRunning = false;
     btnRun.disabled = false;
   }
