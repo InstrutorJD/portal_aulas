@@ -39,6 +39,30 @@ test.describe('Kahoot — montagem pelo professor (aproveitando o gabarito)', ()
     await expect(page.locator('#setupResultText')).toContainText('não tem perguntas de múltipla escolha');
     await expect(page.locator('#btnCreateSession')).toBeDisabled();
   });
+
+  // O Kahoot não é exclusivo de uma turma — games/kahoot.html carrega o
+  // config.js da turma que vier no parâmetro ?turma=, então a turma
+  // Sistemas (com 9 matérias/trilhas próprias) precisa funcionar igual à
+  // Jogos Digitais, sem nada hardcoded pra uma turma só.
+  test('funciona também na turma Sistemas, com as trilhas e aulas dela', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto('/games/kahoot.html?user=admin&role=professor&name=Professor&turma=sistemas');
+
+    await expect(page.locator('#scrSetup')).toBeVisible();
+    const trilhas = await page.locator('#selModule optgroup').evaluateAll(els => els.map(e => e.label));
+    expect(trilhas).toContain('SQL');
+    expect(trilhas).toContain('Conexão e Endereçamento IP');
+
+    await page.selectOption('#selModule', { label: 'Teoria — Fundamentos de SQL e PL/SQL' });
+    await page.click('#btnFetchQuestions');
+    await expect(page.locator('#setupResultText')).toContainText('perguntas encontradas');
+    await expect(page.locator('#btnCreateSession')).toBeEnabled();
+
+    await page.click('#btnCreateSession');
+    await expect(page.locator('#scrLobby')).toBeVisible();
+    const sessions = await page.evaluate(() => window.__FAKE_DB__.kahoot_sessions || []);
+    expect(sessions[0]).toMatchObject({ turma: 'sistemas', trilha_label: 'SQL' });
+  });
 });
 
 test.describe('Kahoot — entrada e resposta do aluno', () => {
