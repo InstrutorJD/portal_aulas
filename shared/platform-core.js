@@ -25,13 +25,17 @@
     DB.users[u.email] = { ...u, progress: 0 };
   });
 
-  const currentUser = DB.users[paramUser] || {
-    email: paramUser,
-    nome: paramUser,
-    role: 'aluno',
-    turma: cfg.id,
-    progress: 0
-  };
+  // ?user= vem direto da URL sem nenhuma sessão/token por trás — sem essa
+  // checagem, qualquer valor (link forjado, bot varrendo URLs) virava um
+  // "aluno" válido, aparecendo no painel de atividade do professor e
+  // gravando dados no Supabase com uma identidade que não existe de verdade.
+  if (!DB.users[paramUser]) {
+    alert('Sessão inválida ou expirada. Faça login novamente.');
+    window.location.href = '../../index.html';
+    return;
+  }
+
+  const currentUser = DB.users[paramUser];
 
   const SUPABASE_URL = window.SUPABASE_URL;
   const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
