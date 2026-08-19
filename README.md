@@ -27,6 +27,21 @@ A MSEP do SENAI organiza o currículo em torno de **capacidades** a serem desenv
   - Prática: formato "desafios" (`CHALLENGES` com `tests`/`solutionSql`, ver seção de dicas acima), `progressTotal: <quantidade de desafios>`.
 - Para travar um módulo até outro ser concluído (ex.: prática só libera depois da teoria), adicione `requires: '<key do módulo pré-requisito>'` no módulo dependente. O motor (`shared/platform-core.js`) cuida do bloqueio/desbloqueio visual (cadeado no card) automaticamente — nenhuma outra mudança é necessária.
 - Professores (`role === 'professor'`) sempre veem todos os módulos destravados, para poder revisar o conteúdo sem precisar completar os pré-requisitos.
+
+### Organizando trilhas por bimestre — `inicio`/`prazo` na trilha
+Conforme o currículo cresce (o plano é ter conteúdo de vários bimestres), listar toda trilha de uma matéria sempre lotaria a tela do aluno. Em vez de um "bimestre ativo" configurado à parte, cada trilha aceita duas datas opcionais (`'YYYY-MM-DD'`) direto no objeto da trilha, em `turmas/<turma>/config.js`:
+
+- `inicio`: antes dessa data, a trilha **nem aparece** pro aluno (mas o professor sempre vê tudo, pra poder revisar/gerenciar conteúdo cadastrado com antecedência). É isso que evita lotar a tela com bimestres futuros já cadastrados.
+- `prazo`: passada essa data sem os módulos da trilha estarem 100% concluídos, ela entra no grupo "⚠️ Em atraso".
+
+Nenhum dos dois é obrigatório — trilha sem `inicio`/`prazo` continua sempre visível e sem prazo, igual antes desses campos existirem. A classificação (`trilhaStatus()` em `shared/platform-core.js`) roda a cada carregamento contra a data de hoje, então nada precisa ser "avançado" manualmente quando um bimestre termina:
+
+- **✅ Concluída** — todos os módulos da trilha já foram concluídos. Some do fluxo normal, mas continua acessível dentro do grupo "Concluídas" do seletor.
+- **⚠️ Em atraso** — passou do `prazo` e ainda não concluiu. Grupo aberto por padrão (é o que o aluno vê primeiro ao entrar na matéria).
+- **🟢 Em aberto** — o normal: sem prazo definido, ou prazo ainda não vencido.
+- **(oculta)** — `inicio` ainda não chegou.
+
+Quando a matéria tem 2+ trilhas visíveis, o `<select>` de trilha (`renderTrilhasFor`) agrupa essas 3 categorias em `<optgroup>` — nativo, então continua leve no celular mesmo com várias trilhas somadas. Se TODAS as trilhas de uma matéria estiverem ocultas (nenhuma com `inicio` já chegado), o card da matéria ganha o mesmo selo "Em breve" usado pra matéria sem trilha nenhuma.
 - **Fonte (acessibilidade)**: o botão de fonte tradicional/pixelada da `a11y-bar` só muda variáveis CSS no documento do `plataforma.html` — cada módulo abre num `<iframe>` com documento próprio, então o texto do módulo só respeita a troca se o `<style>` dele usar `font-family:var(--user-font, 'JetBrains Mono', monospace)` no `body` e `font-family:var(--user-font-display, 'VT323', monospace)` nos títulos/rótulos (nunca hardcode a fonte direto nesses seletores). `shared/platform-core.js` (`applyA11yToIframe`) propaga a variável pro iframe sozinho, tanto ao abrir quanto ao trocar a fonte com o módulo já aberto — não precisa de nenhum código adicional no módulo. Trechos de código (`pre`, `code`, `textarea` de editor) devem continuar com a fonte monoespaçada fixa, sem essa variável — é conteúdo de código, não prosa, e perde alinhamento na fonte tradicional.
 
 ### Gerar Slides (PPTX) a partir de uma aula teórica

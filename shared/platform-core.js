@@ -450,7 +450,10 @@
       return;
     }
     grid.innerHTML = materias.map(m => {
-      const vazia = (m.trilhas || []).length === 0;
+      // "Em breve" também cobre matéria cujas trilhas existem mas ainda não
+      // chegaram na data de início — mesmo selo, mesma ideia (nada pra
+      // fazer aqui ainda), sem precisar de um rótulo novo.
+      const vazia = visibleTrilhas(m.trilhas || []).length === 0;
       return `
         <div class="game-card" onclick="PortalCore.openMateria('${m.key}')">
           <div class="icon">📚</div>
@@ -466,8 +469,8 @@
     document.getElementById('materiaSelectorArea').style.display = 'none';
     document.getElementById('materiaDetailArea').style.display = 'block';
     document.getElementById('materiaDetailTitle').textContent = materia.label;
-    renderTrilhasFor(materia);
-    if ((materia.trilhas || []).length > 0) switchAulasSubTab(materia.trilhas[0].key);
+    const trilhas = renderTrilhasFor(materia);
+    if (trilhas.length > 0) switchAulasSubTab(trilhas[0].key);
     logAction(`Abriu a matéria: ${materia.label}`);
   }
 
@@ -482,24 +485,34 @@
   function renderTrilhasFor(materia) {
     const tabsEl = document.getElementById('aulasSubTabs');
     const pagesEl = document.getElementById('aulasSubTabPages');
-    const trilhas = materia.trilhas || [];
+    const todasTrilhas = materia.trilhas || [];
     pagesEl.innerHTML = '';
     tabsEl.querySelectorAll('select').forEach(s => s.remove());
 
+    // Trilha futura (inicio ainda não chegou) nem entra aqui pro aluno — é
+    // isso que evita a tela lotar conforme o currículo de vários bimestres
+    // vai sendo cadastrado adiantado (ver trilhaStatus/visibleTrilhas).
+    const trilhas = visibleTrilhasOrdered(materia);
+
     if (trilhas.length === 0) {
       tabsEl.style.display = 'none';
-      pagesEl.innerHTML = `<div class="empty-state">Nenhuma trilha cadastrada ainda nesta matéria.</div>`;
-      return;
+      const msg = todasTrilhas.length === 0
+        ? 'Nenhuma trilha cadastrada ainda nesta matéria.'
+        : 'Nenhuma trilha disponível nesta matéria no momento — volte mais perto da data de início.';
+      pagesEl.innerHTML = `<div class="empty-state">${msg}</div>`;
+      return trilhas;
     }
 
     // Só faz sentido pedir pra escolher quando há mais de uma trilha. Com 2+,
     // um <select> é mais conciso que uma fileira de botões (1 linha, tátil
-    // no celular) — sem precisar de sidebar/hambúrguer pra 2-4 itens.
+    // no celular) — sem precisar de sidebar/hambúrguer pra 2-4 itens. Pro
+    // aluno, os <optgroup> (Em atraso / Em aberto / Concluídas) organizam a
+    // lista sem precisar de nenhuma tela nova.
     if (trilhas.length > 1) {
       tabsEl.style.display = '';
       const select = document.createElement('select');
       select.id = 'trilhaSelect';
-      select.innerHTML = trilhas.map(t => `<option value="${t.key}">${t.label}</option>`).join('');
+      select.innerHTML = buildTrilhaOptionsHtml(trilhas);
       select.addEventListener('change', () => switchAulasSubTab(select.value));
       tabsEl.appendChild(select);
     } else {
@@ -512,9 +525,17 @@
       page.id = `subTabContent_${trilha.key}`;
       page.style.display = idx === 0 ? 'block' : 'none';
 
+      // Selo só quando diz algo além do óbvio: "aberta" é o estado neutro
+      // de sempre, não precisa gritar; atraso/concluída sim, valem destaque
+      // mesmo com o <select> já agrupando por status.
+      const status = currentUser.role === 'aluno' ? trilhaStatus(trilha) : 'aberta';
+      const statusBadge = status === 'atraso' ? '<span style="color:var(--blood-bright); font-weight:800;"> · ⚠️ Em atraso</span>'
+        : status === 'concluida' ? '<span style="color:var(--green);"> · ✅ Concluída</span>'
+        : '';
+
       page.innerHTML = `
         <div id="moduleSelector_${trilha.key}" class="card" style="padding:16px;">
-          <h2 style="margin:0 0 4px;">Trilha ${trilha.label}</h2>
+          <h2 style="margin:0 0 4px;">Trilha ${trilha.label}${statusBadge}</h2>
           ${trilha.capacidade ? `<p style="font-size:11px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
           <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">${trilha.desc || 'Escolha um módulo para começar.'}</p>
           <div class="card-grid">${buildModuleCardsHtml(trilha)}</div>
@@ -534,6 +555,8 @@
       `;
       pagesEl.appendChild(page);
     });
+
+    return trilhas;
   }
 
   function switchAulasSubTab(key) {
@@ -575,6 +598,63 @@
 
   function isModuleComplete(mod) {
     return getModuleProgress(mod).completed;
+  }
+
+  // Classifica uma trilha pra organizar a tela do aluno conforme o currículo
+  // cresce (bimestre a bimestre) sem precisar de um "bimestre ativo"
+  // configurado à parte — só usa as datas opcionais inicio/prazo de cada
+  // trilha (turmas/<turma>/config.js) contra o dia de hoje:
+  //  'futura'    -> inicio ainda não chegou (nem aparece pro aluno)
+  //  'concluida' -> todos os módulos já foram concluídos (some pro grupo recolhido)
+  //  'atraso'    -> passou do prazo e ainda não concluiu
+  //  'aberta'    -> o normal (sem inicio/prazo definidos, ou prazo ainda não passou)
+  // Trilha sem inicio/prazo sempre cai em 'aberta' (ou 'concluida' se já
+  // terminada) — mesmo comportamento de antes dessas datas existirem.
+  function trilhaStatus(trilha) {
+    const hoje = todayStr();
+    if (trilha.inicio && trilha.inicio > hoje) return 'futura';
+    const modules = trilha.modules || [];
+    if (modules.length > 0 && modules.every(isModuleComplete)) return 'concluida';
+    if (trilha.prazo && trilha.prazo < hoje) return 'atraso';
+    return 'aberta';
+  }
+
+  // Esconde trilha 'futura' só pro aluno — o professor sempre vê tudo, pra
+  // poder revisar/gerenciar conteúdo já cadastrado antes da data de início
+  // (mesma lógica de bypass que já vale pra cadeado de pré-requisito).
+  function visibleTrilhas(trilhas) {
+    if (currentUser.role !== 'aluno') return trilhas;
+    return trilhas.filter(t => trilhaStatus(t) !== 'futura');
+  }
+
+  // Ordena as trilhas visíveis por urgência (atraso primeiro, depois aberta,
+  // concluída por último) só pro aluno — o professor continua vendo na
+  // ordem original do config.js, já que "atraso"/"concluída" aqui reflete o
+  // progresso de QUEM ESTÁ LOGADO, e não faria sentido pro professor.
+  function visibleTrilhasOrdered(materia) {
+    const trilhas = visibleTrilhas(materia.trilhas || []);
+    if (currentUser.role !== 'aluno') return trilhas;
+    const ordem = { atraso: 0, aberta: 1, concluida: 2 };
+    return trilhas.slice().sort((a, b) => ordem[trilhaStatus(a)] - ordem[trilhaStatus(b)]);
+  }
+
+  const TRILHA_GROUP_LABEL = { atraso: '⚠️ Em atraso', aberta: '🟢 Em aberto', concluida: '✅ Concluídas' };
+
+  // <select> agrupado por status (<optgroup>) só pro aluno — nativo, então
+  // continua leve/tátil no celular mesmo com o currículo de vários
+  // bimestres somado. Professor vê a lista simples de sempre.
+  function buildTrilhaOptionsHtml(trilhas) {
+    if (currentUser.role !== 'aluno') {
+      return trilhas.map(t => `<option value="${t.key}">${t.label}</option>`).join('');
+    }
+    const grupos = { atraso: [], aberta: [], concluida: [] };
+    trilhas.forEach(t => grupos[trilhaStatus(t)].push(t));
+    return ['atraso', 'aberta', 'concluida']
+      .filter(status => grupos[status].length > 0)
+      .map(status => `<optgroup label="${TRILHA_GROUP_LABEL[status]}">${
+        grupos[status].map(t => `<option value="${t.key}">${t.label}</option>`).join('')
+      }</optgroup>`)
+      .join('');
   }
 
   // Manda o progresso local (localStorage) pro Supabase, pra o painel do
