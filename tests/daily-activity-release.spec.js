@@ -139,17 +139,32 @@ test.describe('Liberação diária — visão do aluno', () => {
       }],
     });
     await page.addInitScript(user => {
-      localStorage.setItem(`fund_ambiente_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_ambiente_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`fund_logica_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_logica_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`fund_prog2d_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_prog2d_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`fund_multimidia_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_multimidia_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7]));
+      // Trilhas teoria+prática (10 perguntas cada) de todas as matérias com
+      // conteúdo, exceto Projeto de Vida (5 perguntas — ver [[project_jogos_5_perguntas_pratica]]).
+      const dez = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const cinco = [1, 2, 3, 4, 5];
+      const teoriaFlag = [
+        'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
+        'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
+        'projetos_metodos_teoria', 'projetos_fases_teoria',
+        'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
+        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria'
+      ];
+      teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+
+      const praticaDez = [
+        'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
+        'projetos_metodos_pratica', 'projetos_fases_pratica',
+        'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
+        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica'
+      ];
+      praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
+      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
+      localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dez));
+
+      const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
+      praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));
     }, 'breno.silva80');
 
     await page.goto(ALUNO_URL);

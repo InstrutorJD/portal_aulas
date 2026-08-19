@@ -235,6 +235,56 @@
       hint: 'Pense num conjunto de "estados" com regras claras de quando trocar de um pro outro.',
       options: ['Máquina de estado', 'Validação de input', 'Pipeline de renderização', 'Encapsulamento de classe'],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Idade como texto',
+      icon: '🔢',
+      explanation: 'Checar se o dado enviado é do tipo esperado (número, nesse caso) também faz parte da validação de input.',
+      desc: 'Um formulário tem um campo "idade" que deveria aceitar só números, mas o sistema aceita texto solto ali sem checar nada. Que tipo de validação está faltando?',
+      hint: 'Pense em checar não só se o campo foi preenchido, mas se o VALOR é do tipo certo.',
+      options: ['Validação de tipo de dado', 'Um algoritmo de busca em grafos', 'Uma máquina de estado', 'Um trigger de colisão'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Lava ou caminho seguro?',
+      icon: '🌋',
+      explanation: 'Quando as conexões do grafo têm peso, o algoritmo busca o menor custo total, não necessariamente a menor distância.',
+      desc: 'O caminho A é mais curto, mas atravessa lava (custo alto); o caminho B é mais longo, mas seguro (custo baixo). Um algoritmo de busca que considera pesos escolhe qual caminho?',
+      hint: 'A palavra-chave é "custo total" — nem sempre é o caminho fisicamente mais curto.',
+      options: ['O de menor custo total', 'Sempre o caminho fisicamente mais curto', 'Um caminho aleatório entre os dois', 'Nenhum — o NPC fica parado'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Fugir antes de atacar',
+      icon: '🥇',
+      explanation: 'Numa árvore de decisão, a condição checada primeiro tem prioridade — aqui, sobreviver vem antes de atacar.',
+      desc: 'Um inimigo checa PRIMEIRO se a vida está baixa (foge, se estiver) e só DEPOIS se vê o jogador (ataca). O que essa ordem revela sobre a prioridade do comportamento?',
+      hint: 'Pense em qual condição "vence" quando é checada antes das outras.',
+      options: ['Sobreviver tem prioridade mais alta que atacar', 'A ordem das condições nunca importa numa árvore de decisão', 'O inimigo está com bug', 'Isso é um grafo de waypoints, não uma árvore de decisão'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Vida baixa, novo estado',
+      icon: '🏃',
+      explanation: 'Máquinas de estado reagem a condições do jogo (como vida baixa) pra decidir quando transicionar entre estados.',
+      desc: 'Durante "Atacando", a vida do NPC cai abaixo de 20% e ele transiciona pra "Fugindo", parando de atacar. O que provocou essa transição?',
+      hint: 'Pense em qual condição do jogo (não do jogador) disparou a mudança de comportamento.',
+      options: ['Uma condição de vida baixa disparou a transição de estado', 'O grafo de waypoints foi apagado', 'Um trigger de colisão com uma moeda', 'A validação de input do nome falhou'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Só validou no navegador',
+      icon: '🖥️',
+      explanation: 'A validação no cliente pode ser burlada — por isso o servidor, que realmente controla os dados, precisa validar de novo.',
+      desc: 'Um jogo só valida o nome de usuário no navegador do jogador, sem checar de novo no servidor. Por que isso é uma falha de segurança?',
+      hint: 'Pense em quem realmente controla o que chega até o servidor — o jogador ou o próprio servidor?',
+      options: ['Um jogador mal-intencionado pode burlar a validação do cliente', 'Validação no cliente já é suficiente e nunca precisa repetir', 'O servidor não tem capacidade de validar dados', 'Isso só seria problema se o jogo fosse offline'],
+      correctIndex: 0
     }
   ];
 

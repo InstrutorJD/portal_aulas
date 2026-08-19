@@ -260,6 +260,81 @@
         'Formatar o computador de um dos dois colegas'
       ],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Personagem sem animação',
+      icon: '🏃',
+      explanation: 'Animar um personagem exige trocar qual frame de uma spritesheet é exibido em intervalos regulares — sem essa troca de quadros, o sprite fica parado mesmo se movendo pelo cenário.',
+      desc: 'Um personagem se move pelo cenário normalmente, mas o sprite dele fica totalmente parado, sem nenhuma animação de "andar". O que provavelmente falta?',
+      hint: 'Pense num flipbook: são vários quadros trocados rapidamente que criam a ilusão de movimento.',
+      options: [
+        'Trocar qual frame da spritesheet é exibido em intervalos regulares, criando a animação',
+        'Aumentar a velocidade de movimento do personagem',
+        'Trocar a cor do personagem',
+        'Redesenhar o sprite inteiro do zero'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Música para de repente',
+      icon: '🎵',
+      explanation: 'Trilha sonora de fundo precisa ser configurada explicitamente pra tocar em loop — sem isso, ela simplesmente silencia quando o arquivo de áudio termina.',
+      desc: 'A música de fundo de um jogo toca normalmente, mas silencia por completo depois de alguns minutos, sem nenhum aviso — era só a duração do arquivo. O que não foi configurado?',
+      hint: 'Pense na diferença entre "tocar uma vez" e "repetir sem parar" num player de áudio.',
+      options: [
+        'A opção de tocar a música em loop (repetir ao chegar no final)',
+        'O volume geral do jogo',
+        'A resolução do arquivo de áudio',
+        'A cor de fundo da tela'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Dois devs, um só código',
+      icon: '🌿',
+      explanation: 'Trabalhar direto na branch principal (main) expõe o código estável a mudanças incompletas. Uma branch separada isola o trabalho em progresso até estar pronto pra ser unido (merge) à main.',
+      desc: 'Dois desenvolvedores editam código direto na branch principal ao mesmo tempo, e um recurso ainda incompleto quebra o jogo pra todo mundo do time. O que evitaria isso?',
+      hint: 'Pense em isolar o trabalho "ainda não pronto" longe do código que todo mundo usa.',
+      options: [
+        'Desenvolver o recurso numa branch separada, só unindo à main quando estivesse pronto e testado',
+        'Trabalhar sempre sozinho, sem nunca usar Git em equipe',
+        'Apagar o código de um dos dois desenvolvedores',
+        'Isso não tem relação com branches'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Repositório gigante e lento',
+      icon: '🐘',
+      explanation: 'Arquivos gerados automaticamente (como pastas de build) não deveriam ser versionados. Um .gitignore lista o que o Git deve ignorar, mantendo o repositório leve.',
+      desc: 'O repositório de um projeto ficou enorme e lento porque a pasta de "build" (recriada a cada compilação) está sendo versionada junto com o código-fonte. O que resolveria isso?',
+      hint: 'Pense num arquivo que diz ao Git "nunca versione isto aqui".',
+      options: [
+        'Listar a pasta de build num arquivo .gitignore, pra o Git nunca versionar esse conteúdo',
+        'Apagar o Git do projeto por completo',
+        'Compactar a pasta de build antes de cada commit',
+        'Isso é normal e não há como evitar'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Histórico ilegível',
+      icon: '📜',
+      explanation: 'Commits pequenos e com mensagens descritivas tornam o histórico do projeto útil de verdade — mensagens genéricas como "fix" ou "ajustes" não dizem nada sobre o que de fato mudou.',
+      desc: 'O histórico de commits de um projeto está cheio de mensagens como "fix", "fix2", "ajustes finais v3", e ninguém consegue entender o que mudou em cada um sem abrir o código inteiro. O que deveria ter sido feito diferente?',
+      hint: 'Pense no que uma mensagem de commit deveria descrever, além de só "corrigi algo".',
+      options: [
+        'Fazer commits menores e mais frequentes, com mensagens descritivas do que de fato mudou',
+        'Nunca fazer commits, só salvar localmente',
+        'Apagar o histórico de commits antigo',
+        'Commitar o projeto inteiro de uma vez só, no final'
+      ],
+      correctIndex: 0
     }
   ];
 

@@ -195,6 +195,51 @@
         correctIndex: 0,
         explanation: 'Isso! Ler um arquivo externo e converter seu conteúdo em objetos utilizáveis, sem recompilar, é manipulação de dados externos.'
       }
+    },
+    {
+      story: 'O terceiro pilar do CID é a <b>Disponibilidade</b>: garantir que o sistema esteja acessível quando os usuários precisam dele. Um servidor de jogo que cai com frequência, mesmo sem vazar nem corromper nenhum dado, ainda representa uma falha grave de segurança da informação.',
+      question: {
+        prompt: 'O servidor de login de um jogo fica fora do ar por horas, impedindo todos os jogadores de entrar — mesmo sem nenhum dado vazado ou corrompido. Qual pilar do CID foi violado?',
+        options: ['Disponibilidade', 'Confidencialidade', 'Integridade', 'Nenhum pilar, pois nenhum dado foi alterado'],
+        correctIndex: 0,
+        explanation: 'Isso! Mesmo sem vazamento ou corrupção de dados, o sistema ficar fora do ar é uma falha de disponibilidade.'
+      }
+    },
+    {
+      story: 'Além dos três pilares, sistemas costumam ter <b>níveis hierárquicos de acesso</b>: um jogador comum, um moderador e um administrador não deveriam ter as mesmas permissões. Definir essa hierarquia é essencial pra limitar o estrago que uma conta comprometida pode causar.',
+      question: {
+        prompt: 'Um sistema define que jogadores comuns só podem ver suas próprias informações, moderadores podem silenciar jogadores no chat, e só administradores podem alterar dados financeiros. Que conceito de segurança está sendo aplicado?',
+        options: ['Níveis hierárquicos de acesso, com permissões diferentes por papel', 'Confidencialidade simples, sem nenhuma hierarquia envolvida', 'Um bug de permissões não intencional', 'Pipeline de renderização de elementos visuais'],
+        correctIndex: 0,
+        explanation: 'Exato! Definir permissões diferentes por papel/hierarquia é justamente estabelecer níveis hierárquicos de acesso.'
+      }
+    },
+    {
+      story: 'Além de rastrear erros com Watch e Call Stack, um bom <b>tratamento de erros</b> evita que o jogo inteiro trave por causa de uma falha pequena e previsível — como tentar carregar um arquivo de save que não existe. Capturar esse tipo de erro e reagir com uma mensagem adequada é bem melhor que deixar o jogo simplesmente fechar.',
+      question: {
+        prompt: 'Ao tentar carregar um arquivo de save que não existe, o jogo captura esse problema e mostra "Nenhum save encontrado, iniciando novo jogo" — em vez de travar e fechar sozinho. Que prática de programação está sendo usada aqui?',
+        options: ['Tratamento de erros, capturando e reagindo a uma falha esperada', 'Confidencialidade de dados de jogadores', 'Pipeline de renderização de assets gráficos', 'Nenhuma prática específica, é só sorte do sistema'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Antecipar uma falha possível e reagir a ela, em vez de deixar o programa travar, é tratamento de erros.'
+      }
+    },
+    {
+      story: 'Uma técnica fundamental de debugging é o <b>breakpoint</b>: um ponto marcado no código onde a execução PAUSA automaticamente, permitindo inspecionar variáveis (com Watch) e a sequência de chamadas (com Call Stack) exatamente naquele instante, em vez de adivinhar onde o erro está.',
+      question: {
+        prompt: 'Um dev marca um ponto específico numa linha de código pra que a execução do jogo pare exatamente ali, permitindo inspecionar variáveis e a Call Stack naquele momento. Como se chama esse ponto marcado?',
+        options: ['Breakpoint, ponto de pausa da execução', 'Pipeline de renderização de sprites', 'Requisito funcional do GDD', 'Extensão instalada na IDE'],
+        correctIndex: 0,
+        explanation: 'Perfeito! Um breakpoint é justamente um ponto marcado no código onde a execução pausa pra permitir inspeção.'
+      }
+    },
+    {
+      story: 'Ao converter dados externos, também é preciso <b>validar</b> o conteúdo antes de confiar nele: um arquivo JSON malformado, ou com um campo faltando, pode quebrar a conversão em objeto se o código simplesmente assumir que os dados sempre estarão corretos. Agora você já reconhece os três pilares do CID, níveis hierárquicos, tratamento de erros, breakpoints e a importância de validar dados externos!',
+      question: {
+        prompt: 'Um arquivo JSON de itens do jogo vem com um campo obrigatório faltando, e o código quebra ao tentar converter esse arquivo em objeto sem checar nada antes. O que faltou nesse processo?',
+        options: ['Validação do conteúdo do arquivo externo antes de confiar nele', 'Um pilar novo de segurança, ainda não estudado', 'Um breakpoint marcado naquela linha específica', 'Nenhuma prática específica poderia ter evitado isso'],
+        correctIndex: 0,
+        explanation: 'Isso! Validar o conteúdo de um arquivo externo antes de convertê-lo evita que dados malformados quebrem o programa.'
+      }
     }
   ];
 

@@ -224,6 +224,62 @@
         correctIndex: 0,
         explanation: 'Exato! Bibliotecas prontas evitam reinventar a roda — é só integrar ao projeto o pacote de código já testado para aquele efeito.'
       }
+    },
+    {
+      story: 'Mas o oceano de código não para no básico! Nem toda engine serve pra todo jogo: engines voltadas a mundos 3D pesados (com iluminação avançada, física complexa) trazem uma bagagem de aprendizado e configuração muito maior do que o necessário pra um jogo 2D casual — escolher a ferramenta do tamanho certo do projeto poupa tempo e dor de cabeça.',
+      question: {
+        prompt: 'Uma equipe quer fazer um jogo 2D casual simples e escolhe uma engine pesada, voltada a mundos 3D de alta performance. O que é mais provável de acontecer?',
+        options: [
+          'O tempo gasto aprendendo e configurando a engine fica desproporcional à complexidade real do projeto',
+          'Não faz diferença nenhuma, toda engine é igualmente simples pra qualquer projeto',
+          'O jogo automaticamente vira 3D mesmo sendo pensado como 2D',
+          'É proibido usar uma engine 3D pra fazer jogos 2D'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! A engine certa é a que combina com o tamanho e a complexidade do projeto — usar uma ferramenta pesada demais só adiciona aprendizado e configuração desnecessários.'
+      }
+    },
+    {
+      story: 'Voltando às variáveis de ambiente: elas não servem só pra "achar" uma ferramenta — quando existe MAIS de uma versão instalada de uma engine ou SDK, é a ordem das pastas na variável PATH que decide qual versão o terminal encontra primeiro. Instalar uma versão nova não apaga a antiga automaticamente!',
+      question: {
+        prompt: 'Um desenvolvedor instala a versão nova de uma engine, mas o terminal insiste em rodar a versão antiga, como se a nova nem existisse. O que provavelmente está acontecendo?',
+        options: [
+          'A variável de ambiente PATH ainda aponta primeiro pra pasta da versão antiga',
+          'A engine nova sempre substitui a antiga automaticamente, então o problema é outro',
+          'O terminal escolhe a versão aleatoriamente a cada execução',
+          'É necessário formatar o computador pra resolver'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Com mais de uma versão instalada, quem decide qual é encontrada primeiro é a ordem das pastas na variável PATH — a versão antiga pode continuar "na frente" mesmo com a nova instalada.'
+      }
+    },
+    {
+      story: 'O editor de código também pode crescer com você: <b>extensões</b> como as de autocomplete (sugestão automática de código enquanto você digita) tornam a escrita muito mais rápida. Mas atenção — isso é um reforço do EDITOR, continua sendo o compilador/interpretador quem de fato valida se aquele código funciona.',
+      question: {
+        prompt: 'Uma desenvolvedora quer parar de digitar cada função inteira na mão e receber sugestões automáticas de código enquanto escreve. O que ela deve buscar?',
+        options: [
+          'Instalar uma extensão de autocomplete/IntelliSense no editor de código',
+          'Trocar o compilador da engine por um mais rápido',
+          'Isso só é possível reescrevendo o sistema operacional',
+          'Não existe forma de acelerar a escrita de código'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Extensões de autocomplete são recursos do editor que sugerem código automaticamente — poupando digitação, mas sem substituir o papel do compilador na validação.'
+      }
+    },
+    {
+      story: 'Por fim, um ponto que confunde muita gente: instalar a <b>engine</b> não é o mesmo que instalar o <b>SDK</b> da linguagem escolhida. O SDK é o conjunto de ferramentas que efetivamente compila/executa código naquela linguagem — sem ele, mesmo com a engine instalada, o projeto não compila.',
+      question: {
+        prompt: 'Um aluno instala a engine certinho, mas o projeto não compila e aparece uma mensagem dizendo que a linguagem escolhida não foi encontrada no ambiente. O que provavelmente falta?',
+        options: [
+          'Instalar e configurar o SDK da linguagem de programação escolhida, separado da engine',
+          'Reinstalar a engine do zero, ela deve estar corrompida',
+          'Trocar de computador',
+          'Isso é normal, engines nunca precisam de SDK'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! A engine e o SDK da linguagem são peças diferentes do ambiente — a engine organiza o projeto, mas é o SDK que compila/executa o código daquela linguagem específica.'
+      }
     }
   ];
 

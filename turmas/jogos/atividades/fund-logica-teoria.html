@@ -210,6 +210,76 @@
         correctIndex: 0,
         explanation: 'Isso mesmo! Sem aplicar gravidade continuamente (reduzindo a posição Y a cada frame, por exemplo), o personagem nunca volta a descer sozinho.'
       }
+    },
+    {
+      story: 'Um detalhe importante do game loop: nem todo computador roda o jogo na mesma velocidade de quadros por segundo (FPS). Se você mover um personagem "um pixel por frame", ele andará mais rápido em PCs potentes (mais frames por segundo) e mais devagar em PCs fracos. A solução é o <b>delta time</b>: o tempo real que passou desde o último frame, usado pra escalar o movimento.',
+      question: {
+        prompt: 'Um jogo se move mais rápido em computadores potentes e mais devagar em computadores fracos, mesmo usando exatamente o mesmo código. Qual conceito resolve essa inconsistência?',
+        options: [
+          'Usar o delta time (tempo desde o último frame) pra escalar o movimento, independente do FPS',
+          'Travar o jogo pra rodar só em um tipo específico de computador',
+          'Aumentar o tamanho dos sprites',
+          'Isso é normal e não tem solução'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Multiplicar o movimento pelo delta time garante que o personagem percorra a mesma distância por segundo, não importa quantos frames por segundo o computador consiga rodar.'
+      }
+    },
+    {
+      story: 'Assim como o eixo Y controla o vertical, o eixo <b>X</b> controla o horizontal: na maioria das engines, aumentar o valor de X move o elemento pra <b>direita</b>, e diminuir move pra <b>esquerda</b> — isso não muda de sentido como o Y costuma mudar.',
+      question: {
+        prompt: 'Um personagem precisa andar para a ESQUERDA na tela. O que deve acontecer com o valor do eixo X dele a cada frame?',
+        options: [
+          'O valor de X deve DIMINUIR a cada frame',
+          'O valor de X deve AUMENTAR a cada frame',
+          'O valor de Y deve diminuir, X não importa pra movimento horizontal',
+          'X e Y precisam mudar juntos sempre'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Diferente do Y (que costuma crescer pra baixo), o X segue o sentido "natural": crescer é ir pra direita, diminuir é ir pra esquerda.'
+      }
+    },
+    {
+      story: 'Pra saber quando dois elementos se tocam, jogos usam <b>colisores</b>: formas simples (geralmente retângulos) associadas a cada objeto. O método mais comum pra jogos 2D é a <b>colisão AABB</b> (Axis-Aligned Bounding Box), que compara as bordas dos dois retângulos pra saber se eles se sobrepõem.',
+      question: {
+        prompt: 'Dois personagens estão visualmente se sobrepondo na tela, mas o jogo não registra nenhuma colisão entre eles. O que provavelmente está faltando?',
+        options: [
+          'Um colisor associado aos personagens e a lógica de detecção de colisão (como AABB) comparando suas bordas',
+          'Aumentar o brilho dos sprites',
+          'Diminuir a resolução da tela',
+          'Trocar a cor de fundo do cenário'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Sem um colisor e uma lógica de detecção (como comparar as bordas dos retângulos na AABB), o jogo não tem como "saber" que dois elementos se tocaram.'
+      }
+    },
+    {
+      story: 'Fechando o RGB: as cores nascem da <b>mistura</b> dos três canais. Vermelho e Verde no máximo, com Azul baixo, formam o <b>amarelo</b>. Os três no máximo formam branco; os três em zero formam preto. Entender essa mistura ajuda a criar exatamente a cor que você imagina.',
+      question: {
+        prompt: 'Você quer que um sprite fique AMARELO. Quais canais do RGB você deve deixar altos, e qual deve ficar baixo?',
+        options: [
+          'Vermelho (R) e Verde (G) altos, Azul (B) baixo',
+          'Só o canal Azul (B) alto, os outros em zero',
+          'Só o canal alpha alto, os outros não importam',
+          'Vermelho (R) baixo e os outros dois altos'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Misturar Vermelho e Verde no máximo, mantendo o Azul baixo, produz o amarelo — é assim que o sistema RGB combina luz colorida.'
+      }
+    },
+    {
+      story: 'Por último: <b>velocidade</b> não é a mesma coisa que <b>posição</b>. A posição é ONDE o objeto está; a velocidade é o QUANTO ela muda a cada frame. Se você for somando velocidade à própria velocidade sem limite (em vez de somar à posição), o personagem acelera pra sempre, sem controle.',
+      question: {
+        prompt: 'Um personagem começa a acelerar cada vez mais rápido, sem nenhum limite, até sair da tela descontroladamente. O que provavelmente está errado na lógica?',
+        options: [
+          'A velocidade está sendo acumulada sem limite (ou aplicada à própria velocidade, em vez de à posição), faltando um teto máximo',
+          'O personagem está com a cor errada',
+          'Faltou aumentar a resolução da tela',
+          'O eixo Y foi invertido'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Velocidade sem um limite máximo (ou aplicada incorretamente) faz o personagem acelerar indefinidamente — é preciso somar a velocidade à posição a cada frame, e limitar a própria velocidade.'
+      }
     }
   ];
 

@@ -279,6 +279,91 @@
         { values: { a: 9, b: 3 }, expected: 3 },
         { values: { a: 7, b: 2 }, expected: 3.5 }
       ]
+    },
+    {
+      id: 6,
+      title: 'Duelo de Poderes',
+      enemyName: 'Sentinela Balança',
+      enemyEmoji: '⚖️',
+      resultVar: 'resultado',
+      givenVars: ['a', 'b'],
+      starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado que seja true se a for maior que b, ou false caso contrário\n\n',
+      explanation: 'JavaScript tem operadores de comparação que já devolvem <code>true</code> ou <code>false</code>. Por exemplo, <code>x &lt; y</code> resulta em <code>true</code> se x for menor que y.<pre>let cabe = x &lt; 10;</pre>',
+      desc: 'A <b>Sentinela Balança</b> ⚖️ só tomba se um lado pesar mais que o outro. As variáveis <code>a</code> e <code>b</code> já existem — crie <code>resultado</code> com <b>true</b> se <code>a</code> for maior que <code>b</code>, ou <b>false</b> caso contrário.',
+      hint: 'Existe um operador que compara se um valor é maior que outro e já devolve true ou false sozinho. Aplique-o entre a e b, na ordem certa.',
+      tests: [
+        { values: { a: 10, b: 5 }, expected: true },
+        { values: { a: 5, b: 10 }, expected: false },
+        { values: { a: 7, b: 7 }, expected: false }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Resíduo Arcano',
+      enemyName: 'Espírito do Resto',
+      enemyEmoji: '🌀',
+      resultVar: 'resultado',
+      givenVars: ['a', 'b'],
+      starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com o resto da divisão de a por b\n\n',
+      explanation: 'O operador de resto (módulo) devolve o que sobra de uma divisão inteira.<pre>let sobra = 10 % 3; // sobra vale 1</pre>',
+      desc: 'O <b>Espírito do Resto</b> 🌀 só se revela quando você calcula exatamente o que sobra de uma divisão. As variáveis <code>a</code> e <code>b</code> já existem — crie <code>resultado</code> com o resto da divisão de <code>a</code> por <code>b</code>.',
+      hint: 'Existe um operador específico para "o que sobra" de uma divisão — não é a barra normal de divisão.',
+      tests: [
+        { values: { a: 10, b: 3 }, expected: 1 },
+        { values: { a: 9, b: 3 }, expected: 0 },
+        { values: { a: 7, b: 2 }, expected: 1 }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Grito de Guerra',
+      enemyName: 'Eco Sussurrante',
+      enemyEmoji: '🗣️',
+      resultVar: 'resultado',
+      givenVars: ['nome', 'titulo'],
+      starter: '// as variáveis nome e titulo já existem\n// crie uma variável chamada resultado juntando nome e titulo, com um espaço entre eles\n\n',
+      explanation: 'Strings (textos) também podem ser combinadas com o sinal <code>+</code>. Isso se chama <b>concatenação</b>.<pre>let frase = "Olá" + " " + "mundo"; // "Olá mundo"</pre>',
+      desc: 'O <b>Eco Sussurrante</b> 🗣️ só escuta um grito de guerra completo. As variáveis <code>nome</code> e <code>titulo</code> já existem (textos) — crie <code>resultado</code> juntando <code>nome</code>, um espaço, e <code>titulo</code>, nessa ordem.',
+      hint: 'O mesmo sinal usado pra somar números também junta textos. Não esqueça do espaço entre eles.',
+      tests: [
+        { values: { nome: 'Eri', titulo: 'Guardião' }, expected: 'Eri Guardião' },
+        { values: { nome: 'Ana', titulo: 'Mestra' }, expected: 'Ana Mestra' },
+        { values: { nome: 'Zed', titulo: 'Rei' }, expected: 'Zed Rei' }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Ampliação de Energia',
+      enemyName: 'Golem Crescente',
+      enemyEmoji: '🗿',
+      resultVar: 'resultado',
+      givenVars: ['pontos'],
+      starter: '// a variável pontos já existe\n// crie uma variável chamada resultado somando 10 ao valor de pontos\n\n',
+      explanation: 'Você pode combinar soma com atribuição usando <code>+=</code>, que soma um valor à variável e já guarda o resultado nela mesma.<pre>let vida = 5;\nvida += 3; // vida agora vale 8</pre>Também dá pra criar uma variável nova a partir de outra, só com <code>+</code>.',
+      desc: 'O <b>Golem Crescente</b> 🗿 só reage a um aumento exato de energia. A variável <code>pontos</code> já existe — crie <code>resultado</code> com o valor de <code>pontos</code> mais <b>10</b>.',
+      hint: 'Pense em como aumentar um valor existente em uma quantia fixa — pode usar soma normal ou o operador de soma-e-atribuição.',
+      tests: [
+        { values: { pontos: 0 }, expected: 10 },
+        { values: { pontos: 5 }, expected: 15 },
+        { values: { pontos: -10 }, expected: 0 }
+      ]
+    },
+    {
+      id: 10,
+      title: 'Julgamento Final',
+      enemyName: 'Oráculo Binário',
+      enemyEmoji: '🔯',
+      resultVar: 'resultado',
+      givenVars: ['vida'],
+      starter: '// a variável vida já existe\n// crie uma variável chamada resultado com o texto \'vitoria\' se vida for maior que 0, ou \'derrota\' caso contrário\n\n',
+      explanation: 'Um bloco <code>if/else</code> permite escolher entre dois caminhos dependendo de uma condição.<pre>let status;\nif (energia &gt; 0) {\n  status = \'ativo\';\n} else {\n  status = \'inativo\';\n}</pre>',
+      desc: 'O <b>Oráculo Binário</b> 🔯 só aceita um veredito baseado na vida restante. A variável <code>vida</code> já existe — crie <code>resultado</code> com o texto <code>"vitoria"</code> se <code>vida</code> for maior que 0, ou <code>"derrota"</code> caso contrário.',
+      hint: 'Use uma estrutura condicional pra decidir entre os dois textos com base no valor de vida. Preste atenção na grafia exata dos textos pedidos.',
+      tests: [
+        { values: { vida: 10 }, expected: 'vitoria' },
+        { values: { vida: 0 }, expected: 'derrota' },
+        { values: { vida: -5 }, expected: 'derrota' }
+      ]
     }
   ];
 

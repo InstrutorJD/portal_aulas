@@ -4,8 +4,8 @@ const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno';
 
-// As trilhas de verdade (JS/C#) ficam dentro de Fundamentos de Programação —
-// as demais 5 matérias de Jogos Digitais são placeholders vazios por enquanto.
+// As trilhas de verdade (JS/C#) ficam dentro de Fundamentos de Programação,
+// junto com as trilhas fund-*. Só "Testes de Jogos Digitais" segue vazia.
 async function openMateria1(page) {
   await page.click('.game-card:has-text("Fundamentos de Programação")');
 }
@@ -21,7 +21,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await expect(page.locator('#materiaCardGrid')).toContainText('Fundamentos de Programação');
     await expect(page.locator('#materiaCardGrid')).toContainText('Testes de Jogos Digitais');
     // matéria vazia ganha o selo "Em breve"
-    await expect(page.locator('.game-card:has-text("Mundo do Trabalho")')).toContainText('Em breve');
+    await expect(page.locator('.game-card:has-text("Testes de Jogos Digitais")')).toContainText('Em breve');
   });
 
   test('carrega tema, usuário e trilhas JS/C# dentro de Fundamentos de Programação', async ({ page }) => {
@@ -75,17 +75,32 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
   test('aba Jogos desbloqueia quando todos os módulos já foram concluídos', async ({ page }) => {
     await page.addInitScript(user => {
-      localStorage.setItem(`fund_ambiente_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_ambiente_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`fund_logica_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_logica_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`fund_prog2d_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_prog2d_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`fund_multimidia_teoria_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`fund_multimidia_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7]));
+      // Trilhas teoria+prática (10 perguntas cada) de todas as matérias com
+      // conteúdo, exceto Projeto de Vida (5 perguntas — ver [[project_jogos_5_perguntas_pratica]]).
+      const dez = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const cinco = [1, 2, 3, 4, 5];
+      const teoriaFlag = [
+        'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
+        'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
+        'projetos_metodos_teoria', 'projetos_fases_teoria',
+        'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
+        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria'
+      ];
+      teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+
+      const praticaDez = [
+        'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
+        'projetos_metodos_pratica', 'projetos_fases_pratica',
+        'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
+        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica'
+      ];
+      praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
+      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
+      localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dez));
+
+      const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
+      praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));
     }, 'breno.silva80');
 
     await page.goto(URL);
@@ -128,6 +143,6 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
     // js básico/intermediário nunca foram abertos, mas o sync do carregamento
     // inicial (init()) já deve ter mandado o estado 0/N deles também.
     const jsRow = rows.find(r => r.trilha_key === 'js' && r.module_key === 'basico');
-    expect(jsRow).toMatchObject({ progress_current: 0, progress_total: 5, completed: false });
+    expect(jsRow).toMatchObject({ progress_current: 0, progress_total: 10, completed: false });
   });
 });

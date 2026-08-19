@@ -126,7 +126,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Revoluções Industriais',
               desc: 'Resolva pareceres identificando a revolução industrial ou a tecnologia habilitadora certa em cada cenário.',
               icon: '⚙️', src: 'atividades/mundo-revolucao-pratica.html',
-              progressKey: 'mundo_revolucao_pratica_progress_', progressTotal: 5,
+              progressKey: 'mundo_revolucao_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -148,7 +148,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Inovação',
               desc: 'Resolva pareceres identificando inovação, melhoria contínua e o raciocínio certo pra cada problema do cotidiano.',
               icon: '💡', src: 'atividades/mundo-inovacao-pratica.html',
-              progressKey: 'mundo_inovacao_pratica_progress_', progressTotal: 5,
+              progressKey: 'mundo_inovacao_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -170,7 +170,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Trabalho em Equipe',
               desc: 'Resolva pareceres identificando a atitude certa de colaboração, liderança e gestão de conflitos em cada cenário.',
               icon: '🤝', src: 'atividades/mundo-equipe-pratica.html',
-              progressKey: 'mundo_equipe_pratica_progress_', progressTotal: 5,
+              progressKey: 'mundo_equipe_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -197,7 +197,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Projetos: Métodos e Estratégias',
               desc: 'Resolva pareceres identificando o método ou estratégia aplicada em cada cenário.',
               icon: '🧭', src: 'atividades/projetos-metodos-pratica.html',
-              progressKey: 'projetos_metodos_pratica_progress_', progressTotal: 5,
+              progressKey: 'projetos_metodos_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -219,7 +219,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Projetos: Fases de um Projeto',
               desc: 'Resolva pareceres identificando a fase certa do projeto em cada cenário.',
               icon: '📌', src: 'atividades/projetos-fases-pratica.html',
-              progressKey: 'projetos_fases_pratica_progress_', progressTotal: 5,
+              progressKey: 'projetos_fases_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -246,7 +246,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Codificação: Instalação e Configuração da IDE',
               desc: 'Resolva pareceres sobre IDE, instalação, variáveis de ambiente, extensões e o teste inicial.',
               icon: '🧰', src: 'atividades/cod-ide-pratica.html',
-              progressKey: 'cod_ide_pratica_progress_', progressTotal: 5,
+              progressKey: 'cod_ide_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -268,7 +268,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Codificação: Linguagens, Dados e GDD',
               desc: 'Resolva pareceres sobre linguagens de jogos, formatos de dados, requisitos do GDD e pipeline de renderização.',
               icon: '🐍', src: 'atividades/cod-linguagens-pratica.html',
-              progressKey: 'cod_linguagens_pratica_progress_', progressTotal: 5,
+              progressKey: 'cod_linguagens_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -290,7 +290,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Codificação: Segurança e Debugging',
               desc: 'Resolva pareceres sobre os pilares CID, permissões, Watch, Call Stack e manipulação de dados externos.',
               icon: '🔐', src: 'atividades/cod-seguranca-debug-pratica.html',
-              progressKey: 'cod_seguranca_debug_pratica_progress_', progressTotal: 5,
+              progressKey: 'cod_seguranca_debug_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -312,7 +312,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Codificação: POO, Componentes e Multimídia',
               desc: 'Resolva pareceres sobre classes, instâncias, encapsulamento, componentes, frameworks e triggers.',
               icon: '👾', src: 'atividades/cod-poo-pratica.html',
-              progressKey: 'cod_poo_pratica_progress_', progressTotal: 5,
+              progressKey: 'cod_poo_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -334,7 +334,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Codificação: Metodologia Ágil e Clean Code',
               desc: 'Resolva pareceres sobre Kanban, live coding, DRY, refatoração e documentação técnica.',
               icon: '📋', src: 'atividades/cod-agil-clean-pratica.html',
-              progressKey: 'cod_agil_clean_pratica_progress_', progressTotal: 5,
+              progressKey: 'cod_agil_clean_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -356,7 +356,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Codificação: Segurança no Código e IA com Grafos',
               desc: 'Resolva pareceres sobre validação de inputs, grafos de waypoints, algoritmos de busca, árvores de decisão e máquinas de estado.',
               icon: '🕸️', src: 'atividades/cod-seguranca-ia-pratica.html',
-              progressKey: 'cod_seguranca_ia_pratica_progress_', progressTotal: 5,
+              progressKey: 'cod_seguranca_ia_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -384,7 +384,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Suporte: Ambiente e Ferramentas',
               desc: 'Resolva chamados escolhendo a plataforma, ferramenta ou biblioteca certa pra cada cenário.',
               icon: '🛠️', src: 'atividades/fund-ambiente-pratica.html',
-              progressKey: 'fund_ambiente_pratica_progress_', progressTotal: 5,
+              progressKey: 'fund_ambiente_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -406,7 +406,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Suporte: Lógica e Algoritmos',
               desc: 'Resolva chamados de game loop, coordenadas, matriz de cenário, cor/transparência e física.',
               icon: '🧮', src: 'atividades/fund-logica-pratica.html',
-              progressKey: 'fund_logica_pratica_progress_', progressTotal: 5,
+              progressKey: 'fund_logica_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -428,7 +428,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Suporte: Programação de Jogos 2D',
               desc: 'Resolva chamados de movimentação, colisão, eventos e controle de objetos.',
               icon: '🕹️', src: 'atividades/fund-prog2d-pratica.html',
-              progressKey: 'fund_prog2d_pratica_progress_', progressTotal: 5,
+              progressKey: 'fund_prog2d_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -450,7 +450,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'pratica', title: 'Prática — Central de Suporte: Multimídia e Versionamento',
               desc: 'Resolva chamados de sprites, organização de assets, áudio e versionamento com Git.',
               icon: '🎬', src: 'atividades/fund-multimidia-pratica.html',
-              progressKey: 'fund_multimidia_pratica_progress_', progressTotal: 5,
+              progressKey: 'fund_multimidia_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
@@ -464,14 +464,14 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'basico', title: 'Básico — Desafios de JavaScript',
               desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
               icon: '🟨', src: 'atividades/js-basico.html',
-              progressKey: 'js_basico_progress_', progressTotal: 5,
+              progressKey: 'js_basico_progress_', progressTotal: 10,
               hasGabarito: true
             },
             {
               key: 'intermediario', title: 'Intermediário — Desafios de JavaScript',
               desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
               icon: '🟧', src: 'atividades/js-intermediario.html',
-              progressKey: 'js_intermediario_progress_', progressTotal: 7,
+              progressKey: 'js_intermediario_progress_', progressTotal: 10,
               hasGabarito: true
             }
           ]

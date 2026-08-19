@@ -235,6 +235,56 @@
       hint: 'É um tipo específico de comentário, colado logo acima da função que documenta.',
       options: ['Docstring, comentário estruturado', 'Um quadro Kanban de tarefas', 'Refatoração do código monolítico', 'Um trigger de áudio disparado'],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'x virou vidaJogador',
+      icon: '🏷️',
+      explanation: 'Trocar um nome vago por um nome que comunica claramente o propósito da variável é nomenclatura clara.',
+      desc: 'Uma dev encontra uma variável chamada só "x" guardando a vida do jogador, e renomeia para "vidaJogador", sem mudar mais nada no código. Que princípio de Clean Code ela aplicou?',
+      hint: 'Pense em nomes que "dizem o que guardam", sem precisar de comentário extra.',
+      options: ['Nomenclatura clara', 'DRY — eliminar repetição', 'Refatoração com modularização', 'Uma docstring documentando a função'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Duas semanas, um objetivo',
+      icon: '⏱️',
+      explanation: 'Um ciclo curto de trabalho com objetivo definido, revisado ao final antes do próximo ciclo, é um Sprint.',
+      desc: 'No início de um ciclo de duas semanas a equipe define um objetivo claro, e só ao final revisa o resultado antes do próximo ciclo. Que conceito ágil é esse?',
+      hint: 'É o nome do "ciclo curto" em si, diferente do quadro que organiza as tarefas dentro dele.',
+      options: ['Sprint', 'Quadro Kanban', 'Docstring', 'Refatoração'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Bug de colisão inconsistente',
+      icon: '🧩',
+      explanation: 'Debugar em grupo ajuda especialmente em bugs inconsistentes/difíceis de reproduzir, já que várias pessoas testam hipóteses ao mesmo tempo.',
+      desc: 'Um bug faz personagens atravessarem paredes só às vezes, difícil de reproduzir sozinho. A equipe decide debugar junto, em tempo real. Por que essa abordagem ajuda nesse tipo de bug?',
+      hint: 'Pense em por que "várias pessoas testando hipóteses juntas" ajuda mais num bug difícil de reproduzir.',
+      options: ['Combina perspectivas diferentes em tempo real, ajudando a isolar um bug inconsistente', 'Porque um Sprint só termina depois que todos os bugs forem corrigidos', 'Porque documentação técnica sozinha resolveria o bug', 'Porque bugs de colisão nunca podem ser debugados em grupo'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Arquitetura explicada',
+      icon: '📘',
+      explanation: 'Um documento mais amplo, sobre arquitetura e decisões de design, é um guia de referência — garante rastreabilidade.',
+      desc: 'Além dos comentários em cada função, a equipe mantém um documento único explicando a arquitetura geral e por que certas decisões foram tomadas. Que tipo de documentação é essa?',
+      hint: 'Não é o comentário de uma função só — é um documento mais amplo sobre o projeto inteiro.',
+      options: ['Um guia de referência', 'Uma docstring de uma função específica', 'Um quadro Kanban de tarefas', 'Um Sprint de duas semanas'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'O resultado mudou',
+      icon: '⚠️',
+      explanation: 'Refatoração de verdade preserva o comportamento externo — se o resultado mudou, algo além da estrutura interna foi alterado.',
+      desc: 'Ao refatorar uma função de dano, um dev percebe que o resultado calculado mudou pros mesmos valores de entrada de antes. Isso é sinal de quê?',
+      hint: 'Pense no que a refatoração NUNCA deveria alterar, mesmo mudando a estrutura interna do código.',
+      options: ['A refatoração não foi "pura" — o comportamento externo mudou', 'Isso é normal e esperado em qualquer refatoração', 'É sinal de que o código está mais modularizado', 'É sinal de que a nomenclatura ficou mais clara'],
+      correctIndex: 0
     }
   ];
 

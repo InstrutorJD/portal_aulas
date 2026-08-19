@@ -210,6 +210,76 @@
         correctIndex: 0,
         explanation: 'Isso! Sem diagnóstico, qualquer correção é um tiro no escuro — investigar primeiro economiza tempo e evita consertar a coisa errada.'
       }
+    },
+    {
+      story: 'Vale reforçar a diferença com outro exemplo prático: às vezes você já conhece uma regra geral consolidada — tipo "nesta engine, colisores sempre disparam o evento antes da física ser aplicada" — e usa essa regra pra prever o comportamento de um caso novo específico. Isso também é <b>dedução</b>: partir do geral pro específico.',
+      question: {
+        prompt: 'A equipe sabe, por documentação da engine, que "colisores sempre disparam o evento antes da física ser aplicada". Baseado só nessa regra já conhecida, o dev prevê corretamente que um evento de colisão específico vai disparar antes do personagem cair. Que método ele usou?',
+        options: [
+          'Método dedutivo — partiu de uma regra geral já conhecida para prever um caso específico',
+          'Método indutivo — observou vários casos até chegar numa regra',
+          'Método dialético — confrontou duas ideias opostas',
+          'Nenhum método, foi só sorte'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Partir de uma regra geral já sabida para prever/explicar um caso específico é o caminho inverso da indução — é dedução pura.'
+      }
+    },
+    {
+      story: 'O <b>método dialético</b> merece destaque à parte: ele não descarta ideias opostas, e sim as coloca em confronto direto — uma <b>tese</b> contra uma <b>antítese</b> — até nascer uma <b>síntese</b> que aproveita o melhor dos dois lados.',
+      question: {
+        prompt: 'Um dev defende programar o inimigo com árvore de decisão (tese); outro defende máquina de estados (antítese). Depois de debater os prós e contras de cada abordagem, a equipe chega numa solução híbrida que combina os pontos fortes das duas. Que método foi aplicado?',
+        options: [
+          'Método dialético — tese e antítese confrontadas até uma síntese',
+          'Método indutivo — várias observações levaram a uma regra',
+          'Método hipotético-dedutivo — uma hipótese foi testada isoladamente',
+          'Nenhum método, foi decisão aleatória'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Confrontar duas ideias opostas (tese x antítese) até nascer uma solução que aproveita o melhor das duas é a marca do método dialético.'
+      }
+    },
+    {
+      story: 'Outra estratégia poderosa de resolução de problemas é a <b>analogia</b>: lembrar de um problema parecido que você (ou a comunidade) já resolveu antes, e adaptar aquela solução pro caso novo, em vez de partir do zero.',
+      question: {
+        prompt: 'Uma dev se lembra de ter resolvido um bug parecido de colisão em outro projeto, e adapta aquela mesma lógica pro problema atual, em vez de investigar do zero. Que estratégia de resolução de problema é essa?',
+        options: [
+          'Analogia — adaptar uma solução de um problema parecido já resolvido antes',
+          'Decomposição do problema em partes menores',
+          'Método dialético de confronto de ideias',
+          'Ignorar o problema até ele desaparecer'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Reconhecer um padrão parecido com algo já resolvido e adaptar a solução é a estratégia de analogia — economiza tempo de investigação do zero.'
+      }
+    },
+    {
+      story: 'Além de sugerir correções, ferramentas de IA também ajudam <b>gerando casos de teste</b> — cenários que talvez a equipe não tivesse pensado sozinha. Mas, de novo, cabe ao time revisar se esses testes realmente fazem sentido pro jogo antes de confiar neles.',
+      question: {
+        prompt: 'Uma IA sugere 10 casos de teste pra uma função de dano, mas dois deles usam valores que nunca aconteceriam no jogo de verdade (vida negativa fora de qualquer regra). O que a equipe deve fazer?',
+        options: [
+          'Revisar os casos gerados pela IA e descartar os que não fazem sentido pro jogo antes de usar',
+          'Aceitar todos os 10 casos sem revisão, já que vieram de uma IA',
+          'Ignorar completamente qualquer sugestão de teste gerada por IA',
+          'Deletar a função de dano por causa dos casos estranhos'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! IA pode ajudar a gerar ideias de teste, mas cabe ao time validar se cada caso realmente representa uma situação possível do jogo.'
+      }
+    },
+    {
+      story: 'Por fim, um cuidado extra da postura investigativa: nem toda coincidência é causa. Um bug pode aparecer sempre "depois" de uma ação sem ser <b>causado</b> por ela — confundir <b>correlação</b> com <b>causa</b> leva a corrigir a coisa errada. Agora sim: você domina os métodos que orientam qualquer bom desenvolvimento de projeto!',
+      question: {
+        prompt: 'Um dev percebe que o jogo trava sempre alguns segundos depois de o jogador pular, e conclui de cara que "o pulo causa o travamento" sem investigar mais. Qual é o risco dessa conclusão apressada?',
+        options: [
+          'Confundir correlação (acontecer junto/depois) com causa real, corrigindo a coisa errada',
+          'Nenhum risco, coincidência sempre significa causa',
+          'O risco é só estético, não afeta a correção do bug',
+          'Pular deixa de existir no jogo depois dessa conclusão'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Duas coisas acontecerem em sequência não prova que uma causou a outra — postura investigativa exige confirmar a causa real antes de corrigir.'
+      }
     }
   ];
 

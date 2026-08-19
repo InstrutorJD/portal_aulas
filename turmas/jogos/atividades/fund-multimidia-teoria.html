@@ -210,6 +210,76 @@
         correctIndex: 0,
         explanation: 'Isso! Um conflito de merge exige decisão humana — o Git avisa quando duas mudanças colidem, mas não escolhe sozinho qual delas deve prevalecer.'
       }
+    },
+    {
+      story: 'Voltando aos sprites: personagens que "andam" ou "atacam" de verdade usam uma <b>spritesheet</b> — uma única imagem com vários quadros (frames) da animação lado a lado. O código troca qual frame é exibido a cada intervalo de tempo, criando a ilusão de movimento, como um flipbook.',
+      question: {
+        prompt: 'Um personagem se move pelo cenário, mas o sprite dele fica completamente parado, sem nenhuma animação de "andar". O que provavelmente falta?',
+        options: [
+          'Trocar qual frame da spritesheet é exibido em intervalos regulares, criando a animação de andar',
+          'Aumentar a velocidade de movimento do personagem',
+          'Trocar a cor do personagem',
+          'Isso é impossível de resolver sem redesenhar o sprite inteiro'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Sem alternar os frames da spritesheet ao longo do tempo, o sprite fica estático mesmo se movendo pelo cenário — a animação depende dessa troca de quadros.'
+      }
+    },
+    {
+      story: 'Sobre áudio: a trilha sonora de fundo normalmente é configurada pra tocar em <b>loop</b> (repetir automaticamente ao chegar no final), diferente de um efeito sonoro curto, que toca uma vez e para. Esquecer de marcar a música como loop faz ela simplesmente silenciar quando o arquivo termina.',
+      question: {
+        prompt: 'A música de fundo de um jogo toca normalmente, mas silencia completamente depois de alguns minutos, sem motivo aparente — o jogador percebe que era só a duração do arquivo. O que provavelmente não foi configurado?',
+        options: [
+          'A opção de tocar a música em loop (repetir ao chegar no final)',
+          'O volume geral do jogo',
+          'A resolução do arquivo de áudio',
+          'A cor de fundo da tela'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Música de fundo precisa ser configurada explicitamente pra repetir (loop) — sem isso, ela simplesmente para quando o arquivo termina.'
+      }
+    },
+    {
+      story: 'No Git, <b>branches</b> (ramificações) permitem trabalhar numa funcionalidade nova sem mexer direto no código estável da <b>main</b> (ramo principal). Só depois que a funcionalidade está pronta e testada, ela é unida (merge) de volta à main — protegendo o que já funciona.',
+      question: {
+        prompt: 'Dois desenvolvedores editam código direto na branch principal (main) ao mesmo tempo, e um recurso ainda incompleto quebra o jogo pra todo mundo do time. O que uma estratégia de branches teria evitado?',
+        options: [
+          'Desenvolver o recurso novo numa branch separada, só unindo (merge) à main quando estivesse pronto e testado',
+          'Trabalhar sempre sozinho, sem nunca usar Git em equipe',
+          'Apagar o código de um dos dois desenvolvedores',
+          'Branches não têm relação nenhuma com esse tipo de problema'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Isolar trabalho em progresso numa branch separada protege a main de ficar quebrada por código ainda incompleto.'
+      }
+    },
+    {
+      story: 'Nem tudo deve entrar no controle de versão: arquivos temporários, pastas geradas automaticamente (como builds compiladas) ou pesados demais poluem o histórico e deixam o repositório gigante. Um arquivo <b>.gitignore</b> lista o que o Git deve simplesmente ignorar, nunca versionando.',
+      question: {
+        prompt: 'O repositório de um projeto ficou enorme e lento porque a pasta inteira de "build" (gerada automaticamente a cada compilação) está sendo versionada junto com o código-fonte. Qual prática evitaria isso?',
+        options: [
+          'Listar a pasta de build num arquivo .gitignore, pra o Git nunca versionar esse conteúdo gerado',
+          'Apagar o Git do projeto por completo',
+          'Compactar a pasta de build antes de cada commit',
+          'Isso é normal e não há como evitar'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O .gitignore existe exatamente pra manter arquivos gerados/temporários fora do controle de versão, mantendo o repositório limpo e leve.'
+      }
+    },
+    {
+      story: 'Por fim, a forma de <b>commitar</b> importa tanto quanto commitar: commits pequenos, com mensagens descritivas ("corrige colisão do inimigo com parede"), tornam o histórico útil de verdade. Um único commit gigante chamado "mudanças" não ajuda ninguém a entender o que realmente mudou meses depois.',
+      question: {
+        prompt: 'Um projeto tem um histórico de commits cheio de mensagens como "fix", "fix2", "ajustes finais v3" — e ninguém consegue entender o que mudou em cada um sem abrir o código inteiro. O que deveria ter sido feito diferente?',
+        options: [
+          'Fazer commits menores e mais frequentes, com mensagens descritivas do que de fato mudou',
+          'Nunca fazer commits, só salvar o projeto localmente',
+          'Apagar o histórico de commits antigo',
+          'Commitar o projeto inteiro de uma vez só, no final do desenvolvimento'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Commits pequenos e bem descritos tornam o histórico do projeto uma ferramenta útil, não só uma obrigação — facilita entender e reverter mudanças específicas.'
+      }
     }
   ];
 

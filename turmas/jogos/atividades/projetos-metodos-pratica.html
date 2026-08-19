@@ -255,6 +255,66 @@
         'Ignorar o relato até surgir mais gente reclamando'
       ],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Prevendo pela regra já conhecida',
+      icon: '📐',
+      explanation: 'Partir de uma regra geral já conhecida pra prever/explicar um caso específico é dedução — caminho inverso da indução.',
+      desc: 'A documentação da engine afirma que "sempre que dois colisores se sobrepõem, o evento onCollision dispara antes de qualquer física ser aplicada". Baseado só nisso, um dev prevê corretamente o comportamento de uma colisão nova, sem testar nada. Que método ele aplicou?',
+      hint: 'Ele partiu de algo geral já sabido — não observou vários casos até chegar numa regra.',
+      options: ['Método dedutivo', 'Método indutivo', 'Método dialético', 'Nenhum método, só sorte'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Duas abordagens, uma síntese',
+      icon: '⚔️',
+      explanation: 'O método dialético confronta uma tese e uma antítese até nascer uma síntese que aproveita o melhor dos dois lados.',
+      desc: 'Um dev defende árvore de decisão pra IA do inimigo; outra defende máquina de estados. Depois de debater prós e contras das duas, a equipe cria uma solução híbrida com o melhor de cada abordagem. Que método foi usado?',
+      hint: 'Não é escolher um lado nem o outro — é o que nasce do confronto direto entre os dois.',
+      options: ['Método dialético', 'Método indutivo', 'Método hipotético-dedutivo', 'Nenhum método, foi aleatório'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Já vi esse problema antes',
+      icon: '🔁',
+      explanation: 'Reconhecer um problema parecido com algo já resolvido e adaptar aquela solução é a estratégia de analogia.',
+      desc: 'Uma dev se lembra de ter resolvido um bug de colisão parecido em outro projeto, e adapta a mesma lógica pro problema atual em vez de investigar do zero. Que estratégia é essa?',
+      hint: 'Pense em "isso me lembra de algo que eu já resolvi antes" — não é quebrar o problema em partes, nem confrontar ideias opostas.',
+      options: ['Estratégia de analogia com um problema já resolvido', 'Decomposição em partes menores', 'Método dialético', 'Ignorar o problema até sumir'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Os testes que a IA sugeriu',
+      icon: '🧾',
+      explanation: 'IA pode ajudar a gerar casos de teste, mas cabe à equipe revisar se cada caso realmente representa uma situação possível do jogo antes de confiar nele.',
+      desc: 'Uma IA sugere 10 casos de teste pra função de dano do jogo, mas 2 deles usam valores de vida negativa que nunca aconteceriam nas regras reais. O que a equipe deve fazer com esses 2 casos?',
+      hint: 'Pense em quem deve ter a palavra final sobre o que faz sentido pro jogo: a IA, ou o time que conhece as regras?',
+      options: [
+        'Revisar e descartar os casos que não fazem sentido pro jogo antes de usar',
+        'Aceitar todos os 10 casos sem revisão nenhuma',
+        'Ignorar toda sugestão de teste vinda de IA, sempre',
+        'Remover a função de dano por causa dos casos estranhos'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Coincidência não é causa',
+      icon: '🎯',
+      explanation: 'Duas coisas acontecerem em sequência não prova que uma causou a outra — confundir correlação com causa leva a corrigir o problema errado.',
+      desc: 'Um dev nota que o jogo trava sempre alguns segundos depois do jogador pular, e já conclui que "o pulo causa o travamento", sem investigar mais. Qual é o risco dessa conclusão apressada?',
+      hint: 'Pense se "acontecer logo depois de" é sempre a mesma coisa que "ser causado por".',
+      options: [
+        'Confundir correlação com causa real, corrigindo a coisa errada',
+        'Nenhum risco, coincidência sempre prova causa',
+        'O risco é só estético',
+        'O pulo deixa de existir no jogo'
+      ],
+      correctIndex: 0
     }
   ];
 

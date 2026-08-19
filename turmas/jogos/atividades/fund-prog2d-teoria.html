@@ -238,6 +238,48 @@
         correctIndex: 0,
         explanation: 'Isso mesmo! Esconder visualmente não basta — é preciso de fato remover o objeto da estrutura de controle (lista/array) pra ele parar de participar da lógica do jogo.'
       }
+    },
+    {
+      story: 'Voltando à <b>atualização</b> de elementos: cada objeto ativo (inimigo, item, projétil) precisa rodar sua própria lógica de estado a cada frame — vida, posição, animação. Se essa atualização for feita só uma vez (na criação) e não a cada frame, o objeto fica "congelado" mesmo que o jogo continue mudando por trás.',
+      question: {
+        prompt: 'Um inimigo recebe dano e o valor interno de vida diminui corretamente no código, mas a barra de vida na tela nunca muda visualmente. O que provavelmente falta?',
+        options: [
+          'Atualizar a representação visual (a barra de vida) a cada frame, lendo o valor de vida atual do objeto',
+          'Aumentar o dano causado ao inimigo',
+          'Trocar o sprite do inimigo',
+          'Remover o inimigo da cena'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O dado interno (vida) pode estar certo, mas se a atualização visual não roda a cada frame lendo esse valor, a tela nunca reflete a mudança.'
+      }
+    },
+    {
+      story: 'Sobre <b>criação</b> de elementos: instanciar e destruir objetos o tempo todo (como um projétil por disparo) pode pesar bastante no desempenho. Uma técnica comum é o <b>object pooling</b>: em vez de criar/destruir sem parar, um conjunto de objetos é reaproveitado — "desativado" e reposicionado, em vez de recriado do zero.',
+      question: {
+        prompt: 'Um jogo cria e destrói centenas de projéteis por segundo durante tiroteios intensos, e a taxa de quadros despenca nesses momentos. Qual técnica ajudaria a resolver esse problema de desempenho?',
+        options: [
+          'Object pooling: reaproveitar um conjunto de projéteis já criados, em vez de criar/destruir a cada disparo',
+          'Aumentar o dano de cada projétil',
+          'Reduzir a cor dos projéteis para preto e branco',
+          'Remover o som dos disparos'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Reaproveitar objetos existentes (object pooling) evita o custo repetido de criar e destruir instâncias, aliviando bastante o desempenho em momentos intensos.'
+      }
+    },
+    {
+      story: 'Por fim, um jogo real costuma combinar <b>múltiplas fontes de entrada</b> no mesmo frame — teclado pra mover e mouse pra mirar, por exemplo. O game loop precisa checar TODAS as entradas relevantes a cada volta do ciclo, não processar uma e ignorar a outra.',
+      question: {
+        prompt: 'Um jogo usa teclado (WASD) pra mover o personagem e mouse pra mirar ao mesmo tempo, mas só a mira do mouse funciona — o personagem não anda mais com o teclado. O que a lógica do game loop provavelmente está fazendo de errado?',
+        options: [
+          'Está processando só uma fonte de entrada por frame (mouse), em vez de checar teclado E mouse a cada volta do loop',
+          'O mouse está com defeito',
+          'É impossível usar teclado e mouse juntos num jogo',
+          'O teclado precisa ser trocado por um controle'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! O game loop precisa checar todas as entradas relevantes (teclado E mouse) a cada frame — se só uma for processada, a outra "trava".'
+      }
     }
   ];
 

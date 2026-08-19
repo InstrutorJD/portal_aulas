@@ -260,6 +260,81 @@
         'Faltou som de explosão'
       ],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Barra de vida congelada',
+      icon: '❤️',
+      explanation: 'O dado interno pode estar certo, mas se a representação visual (a barra de vida) não é atualizada a cada frame lendo esse valor, a tela nunca reflete a mudança real do objeto.',
+      desc: 'Um chamado relata: "o inimigo recebe dano e o valor de vida dele diminui certinho no código, mas a barra de vida na tela continua cheia o tempo todo". O que provavelmente falta?',
+      hint: 'O valor interno está certo — pense no que falta pra tela "ler" esse valor de novo a cada frame.',
+      options: [
+        'Atualizar a barra de vida a cada frame, lendo o valor de vida atual do inimigo',
+        'Aumentar o dano causado ao inimigo',
+        'Trocar o sprite do inimigo',
+        'Remover o inimigo da lista de objetos'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Tiroteio derruba o FPS',
+      icon: '🔫',
+      explanation: 'Criar e destruir muitos objetos repetidamente (como projéteis a cada disparo) pesa no desempenho. Object pooling reaproveita um conjunto de objetos já criados, evitando esse custo repetido.',
+      desc: 'Durante tiroteios intensos, o jogo cria e destrói centenas de projéteis por segundo, e a taxa de quadros despenca nesses momentos. Qual técnica ajudaria?',
+      hint: 'Pense em reaproveitar objetos já existentes, em vez de criar e destruir um novo a cada disparo.',
+      options: [
+        'Object pooling: reaproveitar um conjunto de projéteis já criados, em vez de criar/destruir a cada disparo',
+        'Reduzir a cor dos projéteis para preto e branco',
+        'Remover o som dos disparos',
+        'Aumentar o dano de cada projétil'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Só a mira funciona',
+      icon: '🎯',
+      explanation: 'O game loop precisa checar todas as fontes de entrada relevantes (teclado E mouse) a cada frame — se só uma for processada por volta do ciclo, a outra fica travada.',
+      desc: 'Um chamado relata: "o personagem mira certinho com o mouse, mas parou de andar com o teclado (WASD) desde que adicionamos a mira". O que a lógica do game loop provavelmente está fazendo errado?',
+      hint: 'Pense em quantas fontes de entrada o loop está checando a cada volta — teclado e mouse deveriam ser lidos juntos.',
+      options: [
+        'Está processando só uma fonte de entrada por frame (mouse), em vez de checar teclado E mouse a cada volta do loop',
+        'O mouse está com defeito',
+        'É impossível usar teclado e mouse juntos num jogo',
+        'O teclado precisa ser trocado por um controle'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Colisão disparando sem parar',
+      icon: '🔁',
+      explanation: 'Enquanto dois colisores continuam sobrepostos, o evento de colisão pode disparar repetidamente a cada frame. É preciso um controle de estado (uma "flag" marcando que já foi tratado) pra disparar o efeito só uma vez por contato.',
+      desc: 'Um chamado relata: "o jogador toca numa moeda e o som de coletar toca dezenas de vezes seguidas, muito rápido, em vez de tocar uma única vez". O que provavelmente falta no fluxo de eventos?',
+      hint: 'Pense em como "lembrar" que aquele contato específico já foi tratado, pra não repetir o efeito enquanto os colisores continuam sobrepostos.',
+      options: [
+        'Um controle de estado (flag) marcando que a moeda já foi coletada, pra não disparar o evento de novo',
+        'Aumentar o volume do som da moeda',
+        'Remover o colisor da moeda por completo',
+        'Diminuir a velocidade do jogador'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Personagem some atrás do cenário',
+      icon: '🎭',
+      explanation: 'A ordem de renderização (às vezes chamada de z-index ou camada) decide o que é desenhado por cima do quê. Se o cenário é desenhado depois do personagem, ele acaba cobrindo o personagem visualmente, mesmo com a posição lógica correta.',
+      desc: 'Um chamado relata: "o personagem está na posição certa, mas visualmente ele aparece ATRÁS de um elemento do cenário que deveria ficar no fundo". O que provavelmente está errado?',
+      hint: 'A posição lógica está certa — pense na ORDEM em que os elementos são desenhados na tela, não em onde eles estão.',
+      options: [
+        'A ordem/camada de renderização está errada: o cenário está sendo desenhado depois (por cima) do personagem',
+        'O personagem está sem colisor',
+        'Faltou aplicar gravidade ao personagem',
+        'O problema é sempre a resolução da tela'
+      ],
+      correctIndex: 0
     }
   ];
 

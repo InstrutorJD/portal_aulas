@@ -210,6 +210,76 @@
         correctIndex: 0,
         explanation: 'Perfeito! O teste "Hello World" serve justamente pra validar que todo o ambiente de desenvolvimento está funcionando antes de começar o projeto real.'
       }
+    },
+    {
+      story: 'Antes das engines modernas, era comum escrever jogos praticamente sem essas facilidades: código em baixo nível, compiladores manuais e pouquíssima automação. Conhecer esse <b>histórico</b> ajuda a entender por que ferramentas como a IDE moderna economizam tanto trabalho hoje.',
+      question: {
+        prompt: 'Comparado às linguagens e ferramentas usadas nos primórdios do desenvolvimento de jogos, o que uma IDE moderna oferece a mais, tornando o trabalho do programador bem mais produtivo?',
+        options: [
+          'Editor, depurador, terminal e outras ferramentas já integradas num só lugar',
+          'Nenhuma vantagem real, é só uma questão de estética visual',
+          'Jogos eram programados exatamente do mesmo jeito, sem nenhuma diferença',
+          'Apenas gráficos mais bonitos na tela do computador'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O grande ganho histórico das IDEs modernas é reunir várias ferramentas — antes usadas separadamente e manualmente — num único ambiente integrado.'
+      }
+    },
+    {
+      story: 'É importante não confundir <b>instalar</b> com <b>configurar</b>: instalar é copiar o programa pro computador (rodar o instalador). Configurar é o passo seguinte — ajustar variáveis de ambiente, preferências e extensões pra IDE funcionar do jeito que o projeto precisa.',
+      question: {
+        prompt: 'Um aluno baixa o instalador do VSCode e conclui a instalação com sucesso, mas ainda precisa ajustar variáveis de ambiente e instalar extensões antes de começar a programar de verdade. Essa segunda etapa é chamada de quê?',
+        options: [
+          'Configuração do ambiente',
+          'Instalação, que é a mesma coisa que configuração',
+          'Desinstalação do programa recém-instalado',
+          'Renderização de sprites na tela'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Instalar coloca o programa no computador; configurar é o passo seguinte de ajustar tudo pro projeto específico.'
+      }
+    },
+    {
+      story: 'Às vezes, mais de uma versão de uma mesma ferramenta fica instalada no computador — por exemplo, duas versões diferentes de um compilador. Quando isso acontece, a ordem das entradas na variável <code>PATH</code> decide qual versão o sistema vai encontrar primeiro ao rodar um comando.',
+      question: {
+        prompt: 'Um dev tem duas versões de um compilador instaladas e percebe que o terminal está sempre chamando a versão antiga, mesmo depois de instalar a nova. Qual é a explicação mais provável?',
+        options: [
+          'A entrada da versão antiga aparece antes na variável PATH, sendo encontrada primeiro',
+          'O computador só é capaz de guardar uma versão de cada programa',
+          'A versão nova foi apagada automaticamente sem motivo',
+          'Isso nunca acontece de verdade em computadores reais'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Quando há várias versões instaladas, a ordem das pastas na variável PATH determina qual é encontrada primeiro.'
+      }
+    },
+    {
+      story: 'Nem toda extensão serve pra todo projeto: instalar uma extensão pensada pra outra linguagem ou engine pode até conflitar com o que você está usando. Por isso, vale escolher extensões específicas pra stack do projeto — por exemplo, uma extensão de C# faz sentido pra quem trabalha com Unity, mas não ajuda em nada num projeto em GDScript.',
+      question: {
+        prompt: 'Um aluno que programa em GDScript na Godot instala, por engano, uma extensão pensada só pra projetos C# na Unity. O que é mais provável de acontecer?',
+        options: [
+          'A extensão não ajuda em nada nesse projeto, pois foi pensada pra outra linguagem/engine',
+          'A extensão converte automaticamente todo o projeto pra C#',
+          'Nenhum problema, porque toda extensão serve pra qualquer projeto',
+          'O VSCode para de funcionar completamente por causa disso'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Extensões costumam ser específicas de linguagem/engine — instalar uma fora de contexto simplesmente não ajuda no projeto atual.'
+      }
+    },
+    {
+      story: 'Se o teste "Hello World" falhar mesmo depois de tudo instalado e configurado, o problema costuma estar numa etapa anterior: PATH mal configurado, SDK ausente ou extensão faltando. Por isso o teste básico é tão valioso — ele aponta exatamente se algo ficou pra trás no processo. Agora você já reconhece o histórico, a instalação, a configuração de ambiente, as extensões certas e o papel do teste "Hello World"!',
+      question: {
+        prompt: 'O teste "Hello World" de um aluno falha com uma mensagem de erro relacionada ao compilador não encontrado. Em qual etapa anterior do processo ele deve procurar o problema primeiro?',
+        options: [
+          'Na instalação/configuração do ambiente, como variáveis de ambiente e SDK',
+          'No próprio código do "Hello World", que está sempre correto por padrão',
+          'Na velocidade da internet do computador',
+          'No tema visual escolhido para a IDE'
+        ],
+        correctIndex: 0,
+        explanation: 'Perfeito! Um "Hello World" que falha por compilador não encontrado aponta pra um problema de instalação/configuração do ambiente, não do próprio código simples.'
+      }
     }
   ];
 

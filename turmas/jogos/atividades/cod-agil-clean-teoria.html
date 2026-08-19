@@ -185,6 +185,51 @@
         correctIndex: 0,
         explanation: 'Isso! Um comentário estruturado explicando função, parâmetros e retorno é justamente uma docstring.'
       }
+    },
+    {
+      story: 'Clean Code também é sobre <b>nomenclatura clara</b>: nomes de variáveis e funções devem comunicar seu propósito sem precisar de comentário extra. <code>vidaJogador</code> diz muito mais que <code>x</code>, e <code>calcularDano()</code> diz muito mais que <code>fn1()</code>.',
+      question: {
+        prompt: 'Ao revisar um código antigo, uma dev encontra uma variável chamada apenas "x" guardando a vida do jogador, e renomeia para "vidaJogador" sem mudar mais nada. Que princípio de Clean Code ela está aplicando?',
+        options: ['Nomenclatura clara — nomes que comunicam o propósito', 'DRY — eliminar repetição de código', 'Refatoração com modularização', 'Uma docstring documentando a função'],
+        correctIndex: 0,
+        explanation: 'Isso! Trocar um nome vago por um nome que comunica claramente o propósito da variável é aplicar nomenclatura clara.'
+      }
+    },
+    {
+      story: 'Voltando à metodologia ágil: um <b>Sprint</b> é um ciclo curto de trabalho (geralmente 1 a 4 semanas) com um objetivo bem definido no início — ao final do Sprint, a equipe entrega algo funcional e revisa o que foi feito antes de começar o próximo ciclo.',
+      question: {
+        prompt: 'No início de um ciclo de duas semanas, a equipe define um objetivo claro pro que será entregue, e só ao final desse período revisa o resultado antes de começar o próximo ciclo. Que conceito ágil descreve esse ciclo curto e objetivo?',
+        options: ['Sprint', 'Quadro Kanban', 'Docstring', 'Refatoração'],
+        correctIndex: 0,
+        explanation: 'Exato! Um ciclo curto de trabalho com objetivo definido, revisado ao final antes do próximo ciclo, é um Sprint.'
+      }
+    },
+    {
+      story: 'Um exemplo clássico de <b>live coding</b> em grupo: um bug de <b>colisão</b> em que os personagens atravessam paredes de forma inconsistente. Como o comportamento só aparece em certas situações, é mais rápido reunir a equipe pra testar hipóteses juntos do que um dev sozinho tentar reproduzir o bug isoladamente.',
+      question: {
+        prompt: 'Um bug faz personagens atravessarem paredes só em certas situações, difícil de reproduzir sozinho. A equipe decide se reunir numa chamada e debugar juntos, testando hipóteses em tempo real. Por que essa abordagem funciona bem pra esse tipo de bug?',
+        options: ['Combina perspectivas diferentes em tempo real, ajudando a reproduzir e isolar um bug difícil e inconsistente', 'Porque um Sprint só pode terminar depois que todos os bugs forem corrigidos', 'Porque documentação técnica sozinha já resolveria o bug', 'Porque bugs de colisão nunca podem ser debugados em grupo'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Debugar em grupo ajuda especialmente em bugs inconsistentes/difíceis de reproduzir, já que várias pessoas testam hipóteses ao mesmo tempo.'
+      }
+    },
+    {
+      story: 'Além de docstrings em funções específicas, projetos maiores mantêm <b>guias de referência</b> — documentos mais amplos que explicam a arquitetura geral, decisões de design e como as partes se conectam, garantindo <b>rastreabilidade</b>: qualquer pessoa consegue entender por que o código foi feito de determinado jeito.',
+      question: {
+        prompt: 'Além dos comentários em cada função, a equipe mantém um documento único explicando a arquitetura geral do projeto e por que certas decisões de design foram tomadas. Que tipo de documentação é essa?',
+        options: ['Um guia de referência, garantindo rastreabilidade das decisões', 'Uma docstring de uma função específica', 'Um quadro Kanban de tarefas', 'Um Sprint de duas semanas'],
+        correctIndex: 0,
+        explanation: 'Correto! Um documento mais amplo, sobre arquitetura e decisões de design, é um guia de referência — ele garante rastreabilidade.'
+      }
+    },
+    {
+      story: 'Um ponto importante da refatoração: o <b>comportamento externo do programa não muda</b> — só a estrutura interna do código melhora. Se, ao refatorar, uma funcionalidade passa a se comportar diferente pro jogador, isso não é mais refatoração pura, é uma mudança de comportamento (que merece ser testada e comunicada à parte).',
+      question: {
+        prompt: 'Ao refatorar uma função de dano, um dev percebe que o resultado calculado mudou pros mesmos valores de entrada de antes. Isso é um sinal de quê?',
+        options: ['A refatoração não foi "pura" — o comportamento externo mudou, o que não deveria acontecer', 'Isso é normal e esperado em qualquer refatoração', 'É um sinal de que o código está mais modularizado', 'É um sinal de que a nomenclatura ficou mais clara'],
+        correctIndex: 0,
+        explanation: 'Isso! Refatoração de verdade preserva o comportamento externo — se o resultado mudou, algo além da estrutura interna foi alterado.'
+      }
     }
   ];
 

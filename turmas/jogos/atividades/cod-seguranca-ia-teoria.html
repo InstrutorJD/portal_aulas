@@ -185,6 +185,51 @@
         correctIndex: 0,
         explanation: 'Isso! Organizar comportamentos em estados distintos, com transições entre eles, é justamente uma máquina de estado.'
       }
+    },
+    {
+      story: 'Validar input não é só checar se o campo está vazio: também é checar o <b>tipo de dado</b> esperado. Um campo de "idade" deve aceitar apenas números — se o sistema aceitar um texto qualquer ali sem verificar, pode gerar erros inesperados (ou brechas de segurança) mais adiante no código.',
+      question: {
+        prompt: 'Um formulário de cadastro tem um campo "idade" que deveria aceitar só números, mas o sistema aceita texto solto ali sem checar nada. Que tipo de validação está faltando nesse campo?',
+        options: ['Validação de tipo de dado — checar se o valor é realmente um número', 'Um algoritmo de busca em grafos', 'Uma máquina de estado', 'Um trigger de colisão'],
+        correctIndex: 0,
+        explanation: 'Isso! Checar se o dado enviado é do tipo esperado (número, nesse caso) também faz parte da validação de input.'
+      }
+    },
+    {
+      story: 'Nem todo caminho num grafo de waypoints tem o mesmo "custo": alguns trechos podem ser mais longos, mais lentos (terreno difícil) ou mais perigosos. Quando o grafo tem esses <b>pesos</b> nas conexões, o algoritmo de busca não procura só QUALQUER caminho — procura o de <b>menor custo total</b>.',
+      question: {
+        prompt: 'Num grafo de waypoints, o caminho A é mais curto em distância, mas atravessa lava (custo alto); o caminho B é mais longo, mas seguro (custo baixo). Um algoritmo de busca que considera pesos escolhe qual caminho?',
+        options: ['O de menor custo total, que pode não ser o mais curto em distância', 'Sempre o caminho fisicamente mais curto, ignorando o risco', 'Um caminho aleatório entre os dois', 'Nenhum dos dois — o NPC fica parado'],
+        correctIndex: 0,
+        explanation: 'Exato! Quando as conexões do grafo têm peso, o algoritmo busca o menor custo total, não necessariamente a menor distância.'
+      }
+    },
+    {
+      story: 'Árvores de decisão podem ter várias condições em cascata, e a <b>ordem</b> delas importa: a condição checada primeiro tem prioridade. Um inimigo pode checar primeiro "vida baixa?" antes mesmo de checar "vê o jogador?" — porque fugir pra sobreviver é mais urgente que atacar.',
+      question: {
+        prompt: 'Um inimigo checa PRIMEIRO se sua vida está baixa (e foge, se estiver) e só DEPOIS checa se vê o jogador (pra atacar). O que essa ordem de condições revela sobre a prioridade do comportamento?',
+        options: ['Sobreviver (fugir com vida baixa) tem prioridade mais alta que atacar o jogador', 'A ordem das condições numa árvore de decisão nunca importa', 'O inimigo está com bug, porque deveria atacar sempre primeiro', 'Isso não é uma árvore de decisão, e sim um grafo de waypoints'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Numa árvore de decisão, a condição checada primeiro tem prioridade — aqui, sobreviver vem antes de atacar.'
+      }
+    },
+    {
+      story: 'Máquinas de estado podem ter mais de três estados. Além de Patrulhando/Perseguindo/Atacando, é comum adicionar um estado <b>Fugindo</b>: quando a vida do NPC fica baixa durante um combate, ele transiciona pra esse novo estado, priorizando sobrevivência sobre o ataque.',
+      question: {
+        prompt: 'Durante o estado "Atacando", a vida do NPC cai abaixo de 20%, e ele transiciona automaticamente pro estado "Fugindo", parando de atacar. O que provocou essa transição de estado?',
+        options: ['Uma condição de vida baixa, definida na máquina de estado, disparou a transição pro novo estado', 'O grafo de waypoints foi apagado do jogo', 'Um trigger de colisão com uma moeda', 'A validação de input do nome do jogador falhou'],
+        correctIndex: 0,
+        explanation: 'Correto! Máquinas de estado reagem a condições do jogo (como vida baixa) pra decidir quando transicionar entre estados — aqui, de Atacando pra Fugindo.'
+      }
+    },
+    {
+      story: 'Por fim, um cuidado essencial de segurança: validar dados só no <b>cliente</b> (no computador do jogador) não é suficiente, porque um jogador mal-intencionado pode burlar essa checagem. É preciso validar novamente no <b>servidor</b>, que é quem realmente controla e confia (ou não) nos dados recebidos.',
+      question: {
+        prompt: 'Um jogo só valida o nome de usuário no navegador do jogador (client-side), sem checar de novo no servidor. Por que isso é uma falha de segurança?',
+        options: ['Um jogador mal-intencionado pode burlar a validação do cliente e enviar dados inválidos direto pro servidor', 'Validação no cliente já é suficiente e nunca precisa ser repetida', 'O servidor não tem capacidade de validar nenhum dado', 'Isso só seria um problema se o jogo fosse offline'],
+        correctIndex: 0,
+        explanation: 'Isso! A validação no cliente pode ser burlada — por isso o servidor, que realmente controla os dados, precisa validar de novo.'
+      }
     }
   ];
 

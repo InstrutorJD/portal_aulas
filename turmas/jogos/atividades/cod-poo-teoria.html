@@ -200,6 +200,51 @@
         correctIndex: 0,
         explanation: 'Isso! Um trigger disparado por uma ação específica do jogador é exatamente o mecanismo que ativa som/animação automaticamente.'
       }
+    },
+    {
+      story: 'Voltando à POO: além de criar objetos direto de uma classe, você pode criar uma <b>subclasse</b> que <b>herda</b> atributos e comportamentos de uma classe base, e ainda soma funcionalidades próprias. Por exemplo, uma classe "InimigoVoador" pode herdar vida e velocidade de "Inimigo", e adicionar um comportamento exclusivo de voo.',
+      question: {
+        prompt: 'A classe "InimigoVoador" reaproveita os atributos de vida e velocidade já definidos em "Inimigo", e ainda adiciona um comportamento próprio de voar. Que mecanismo da POO permite essa relação entre as duas classes?',
+        options: ['Herança — a subclasse reaproveita e estende a classe base', 'Encapsulamento dos dados internos', 'Um componente de movimento desacoplado', 'Um trigger de multimídia'],
+        correctIndex: 0,
+        explanation: 'Isso! Reaproveitar atributos/comportamentos de uma classe base e adicionar algo próprio é herança.'
+      }
+    },
+    {
+      story: 'Dentro de uma classe, é importante diferenciar dois tipos de membros: <b>atributos</b> guardam dados (como <code>vida</code> ou <code>velocidade</code>), enquanto <b>métodos</b> são as ações/comportamentos que a classe sabe executar (como <code>atacar()</code> ou <code>mover()</code>).',
+      question: {
+        prompt: 'Na classe "Inimigo", <code>vida</code> guarda um número e <code>atacar()</code> executa uma ação quando chamado. O que é <code>atacar()</code> nesse caso?',
+        options: ['Um método — comportamento/ação que a classe executa', 'Um atributo — dado guardado pela classe', 'Uma instância criada a partir da classe', 'Um framework externo integrado ao projeto'],
+        correctIndex: 0,
+        explanation: 'Exato! Uma ação que a classe sabe executar, como atacar(), é um método — diferente de um atributo, que guarda dado.'
+      }
+    },
+    {
+      story: 'Nem sempre herança é a melhor escolha: se só ALGUNS inimigos precisam voar, forçar todos numa hierarquia rígida de herança complica o design. Por isso muitos jogos preferem <b>componentes desacoplados</b> — um componente "Voo" que só é anexado aos objetos que realmente precisam dele, sem alterar a estrutura dos demais.',
+      question: {
+        prompt: 'Só alguns inimigos do jogo precisam voar; os demais ficam no chão. Um dev decide não criar uma subclasse "InimigoVoador" pra isso, e em vez disso anexa um componente "Voo" só nos objetos que voam. Por que essa escolha evita um problema de design?',
+        options: ['Evita forçar uma hierarquia rígida de herança em objetos que não precisam do comportamento', 'Porque herança é proibida em jogos digitais', 'Porque componentes sempre substituem classes por completo', 'Porque só componentes podem ter atributos de vida'],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Componentes desacoplados evitam obrigar todos os objetos de uma hierarquia rígida a carregar um comportamento que só alguns precisam.'
+      }
+    },
+    {
+      story: 'Frameworks não servem só pra áudio — muitos jogos usam um <b>framework de partículas</b> pronto pra efeitos como explosões, fumaça ou faíscas. Assim como qualquer framework, o primeiro passo é sempre ler a documentação técnica pra saber como chamar a função certa com os parâmetros certos.',
+      question: {
+        prompt: 'Um dev quer criar um efeito de explosão quando um inimigo morre, usando um framework de partículas que a equipe nunca usou antes. Qual deve ser o primeiro passo antes de chamar qualquer função desse framework?',
+        options: ['Ler a documentação técnica do framework, pra saber a função e os parâmetros certos', 'Criar uma nova instância de classe do zero, sem usar o framework', 'Pular direto pro código, sem consultar nada', 'Desativar o encapsulamento da classe Inimigo'],
+        correctIndex: 0,
+        explanation: 'Correto! Mesmo pra frameworks diferentes (partículas, áudio etc.), o primeiro passo continua sendo consultar a documentação técnica.'
+      }
+    },
+    {
+      story: 'Já vimos um trigger disparado por pular — mas triggers também disparam em <b>colisões</b>. Quando o personagem toca numa moeda, por exemplo, o jogo pode automaticamente tocar um som de coleta e remover o sprite da moeda da tela, sem nenhuma ação manual do jogador além de encostar nela.',
+      question: {
+        prompt: 'Assim que o personagem toca numa moeda no cenário, o jogo automaticamente toca um som de coleta e faz o sprite da moeda desaparecer. Que mecanismo dispara essa sequência de ações a partir do toque?',
+        options: ['Um trigger disparado pela colisão com a moeda', 'Uma subclasse herdando da classe Moeda', 'Um atributo de vida sendo alterado', 'Documentação técnica de um framework'],
+        correctIndex: 0,
+        explanation: 'Isso! A colisão do personagem com a moeda dispara o trigger que toca o som e remove o sprite — mesmo mecanismo do exemplo do pulo, só que ativado por colisão.'
+      }
     }
   ];
 

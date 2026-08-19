@@ -235,6 +235,56 @@
       hint: 'É um "gatilho" ligado a uma ação específica.',
       options: ['Um trigger (disparador)', 'Encapsulamento de dados', 'Uma nova instância de classe', 'Um framework de rede'],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Inimigo que também voa',
+      icon: '🦅',
+      explanation: 'Reaproveitar atributos/comportamentos de uma classe base e adicionar algo próprio é herança.',
+      desc: 'Um chamado descreve: a classe "InimigoVoador" reaproveita os atributos de vida e velocidade já definidos em "Inimigo", e ainda adiciona um comportamento próprio de voar. Que mecanismo da POO permite essa relação?',
+      hint: 'Pense em "uma classe nova que reaproveita e estende uma classe já existente".',
+      options: ['Herança entre classes', 'Encapsulamento dos dados internos', 'Um componente de movimento desacoplado', 'Um trigger de multimídia'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Dado ou ação?',
+      icon: '🏷️',
+      explanation: 'Uma ação que a classe sabe executar, como atacar(), é um método — diferente de um atributo, que guarda dado.',
+      desc: 'Um chamado pergunta: na classe "Inimigo", vida guarda um número e atacar() executa uma ação quando chamado. O que é atacar() nesse caso?',
+      hint: 'Um guarda dado; o outro executa uma ação. Qual dos dois é atacar()?',
+      options: ['Um método da classe', 'Um atributo da classe', 'Uma instância da classe', 'Um framework externo'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Só quem voa, ganha asas',
+      icon: '🧷',
+      explanation: 'Componentes desacoplados evitam obrigar todos os objetos de uma hierarquia rígida a carregar um comportamento que só alguns precisam.',
+      desc: 'Só alguns inimigos do jogo voam. Em vez de criar uma subclasse "InimigoVoador", um dev anexa um componente "Voo" só nos objetos que voam. Por que essa escolha evita um problema de design?',
+      hint: 'Pense no que acontece se TODOS os inimigos fossem forçados a herdar de uma mesma hierarquia rígida.',
+      options: ['Evita forçar uma hierarquia rígida de herança em quem não precisa do comportamento', 'Porque herança é proibida em jogos digitais', 'Porque componentes substituem classes por completo', 'Porque só componentes podem ter atributos de vida'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Explosão nova em folha',
+      icon: '💥',
+      explanation: 'Mesmo para frameworks diferentes (partículas, áudio etc.), o primeiro passo continua sendo consultar a documentação técnica.',
+      desc: 'Um dev quer criar uma explosão quando um inimigo morre, usando um framework de partículas que o time nunca usou. Qual deve ser o primeiro passo antes de chamar qualquer função desse framework?',
+      hint: 'Antes de chamar qualquer função de uma lib desconhecida, o que você deveria consultar primeiro?',
+      options: ['Ler a documentação técnica do framework', 'Criar uma instância de classe do zero, sem o framework', 'Pular direto pro código sem consultar nada', 'Desativar o encapsulamento da classe Inimigo'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Moeda coletada',
+      icon: '🪙',
+      explanation: 'A colisão com a moeda dispara o trigger que toca o som e remove o sprite — mesmo mecanismo de um trigger de pulo, só que ativado por colisão.',
+      desc: 'Assim que o personagem toca numa moeda, o jogo automaticamente toca um som de coleta e faz o sprite da moeda desaparecer. Que mecanismo dispara essa sequência de ações?',
+      hint: 'É o mesmo tipo de mecanismo que dispara som/animação quando o personagem pula — só que a ação que o ativa é outra.',
+      options: ['Um trigger disparado pela colisão com a moeda', 'Uma subclasse herdando da classe Moeda', 'Um atributo de vida sendo alterado', 'Documentação técnica de um framework'],
+      correctIndex: 0
     }
   ];
 

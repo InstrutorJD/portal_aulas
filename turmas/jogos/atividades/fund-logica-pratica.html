@@ -260,6 +260,81 @@
         'Remover a colisão com o chão'
       ],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Rápido demais no PC do chefe',
+      icon: '⏱️',
+      explanation: 'Sem usar delta time (o tempo real desde o último frame) pra escalar o movimento, o jogo roda mais rápido em computadores com mais FPS e mais devagar em computadores fracos, mesmo com o mesmo código.',
+      desc: 'Um chamado relata: "no meu notebook o personagem anda devagar, mas no PC do chefe da equipe ele dispara na tela, e o código de movimento é idêntico". O que explica isso?',
+      hint: 'Pense em quantos quadros por segundo cada máquina consegue rodar, e no que falta pra "compensar" essa diferença no movimento.',
+      options: [
+        'Falta usar o delta time pra escalar o movimento conforme o tempo real, não conforme o número de frames',
+        'O código está certo, é só trocar o mouse',
+        'É preciso reinstalar o sistema operacional do PC mais rápido',
+        'Isso não tem relação nenhuma com o FPS de cada máquina'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Vira pra direita, anda pra esquerda',
+      icon: '↔️',
+      explanation: 'No eixo X, aumentar o valor move o elemento pra direita e diminuir move pra esquerda — diferente do Y, esse sentido não costuma se inverter entre engines.',
+      desc: 'Um aluno programou o botão "esquerda" pra AUMENTAR o valor de X do personagem, e ele acaba indo pra direita em vez de esquerda. Qual é o erro?',
+      hint: 'Pense em qual direção o valor de X precisa ir pra mover algo pra esquerda na tela.',
+      options: [
+        'Pra ir pra esquerda, o valor de X precisa DIMINUIR, não aumentar',
+        'O eixo X não controla movimento horizontal',
+        'O problema está no eixo Y, não no X',
+        'Botões de direção não afetam coordenadas'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Personagens se atravessando',
+      icon: '🚧',
+      explanation: 'Sem um colisor e uma lógica de detecção de colisão (como AABB, que compara as bordas de dois retângulos), o jogo não percebe quando dois elementos se sobrepõem, mesmo que pareçam se tocar visualmente.',
+      desc: 'Um chamado relata: "dois personagens estão visivelmente sobrepostos na tela, um passando por cima do outro, e o jogo não faz nada — como se não existisse contato". O que falta?',
+      hint: 'Pense no que precisa existir pra o jogo "perceber" que dois retângulos se sobrepõem, além da aparência visual.',
+      options: [
+        'Um colisor em cada personagem e uma lógica de detecção de colisão (como AABB) comparando suas bordas',
+        'Aumentar o tamanho dos sprites',
+        'Diminuir o brilho da tela',
+        'Trocar a cor de fundo do cenário'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Encomenda: sprite amarelo',
+      icon: '🟡',
+      explanation: 'O amarelo nasce da mistura de Vermelho e Verde no máximo, com o canal Azul baixo — é assim que o sistema RGB combina luz colorida pra formar essa cor.',
+      desc: 'Um designer pede um sprite na cor amarela, mas o desenvolvedor não sabe quais canais RGB ajustar. Qual combinação produz amarelo?',
+      hint: 'Pense em quais dois canais, juntos no máximo, formam essa cor — e qual canal precisa ficar baixo.',
+      options: [
+        'Vermelho (R) e Verde (G) altos, Azul (B) baixo',
+        'Só o canal Azul (B) alto',
+        'Só o canal alpha alto',
+        'Vermelho (R) baixo, Verde e Azul altos'
+      ],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Personagem fora de controle',
+      icon: '💨',
+      explanation: 'Sem um limite máximo pra velocidade (ou somando velocidade à própria velocidade em vez de aplicá-la à posição), o personagem acelera indefinidamente até sair de controle.',
+      desc: 'Um chamado relata: "o personagem começa devagar, mas vai acelerando cada vez mais até sair voando da tela, sem nenhum limite". O que está errado na lógica?',
+      hint: 'Pense na diferença entre posição e velocidade, e no que falta pra "travar" a velocidade num valor máximo.',
+      options: [
+        'Falta limitar a velocidade máxima e aplicar a velocidade corretamente à posição, em vez de acumulá-la sem controle',
+        'O problema é a cor do personagem',
+        'Faltou aumentar a resolução da tela',
+        'O eixo Y foi invertido'
+      ],
+      correctIndex: 0
     }
   ];
 

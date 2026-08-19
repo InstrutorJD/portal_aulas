@@ -235,6 +235,56 @@
       hint: 'Pense em "ler um arquivo de fora e transformar em objeto usável pela engine".',
       options: ['Manipulação de dados externos', 'Debugging com Call Stack', 'Confidencialidade de login', 'Pipeline de renderização'],
       correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Servidor fora do ar',
+      icon: '📴',
+      explanation: 'Mesmo sem vazamento ou corrupção de dados, o sistema ficar fora do ar é uma falha de disponibilidade.',
+      desc: 'O servidor de login de um jogo fica fora do ar por horas, impedindo todos os jogadores de entrar, mesmo sem nenhum dado vazado ou corrompido. Qual pilar do CID foi violado?',
+      hint: 'Pense em "o sistema está acessível quando as pessoas precisam dele?".',
+      options: ['Disponibilidade', 'Confidencialidade', 'Integridade', 'Nenhum pilar, pois nenhum dado foi alterado'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Jogador, moderador, admin',
+      icon: '🪪',
+      explanation: 'Definir permissões diferentes por papel/hierarquia é estabelecer níveis hierárquicos de acesso.',
+      desc: 'Um sistema define que jogadores comuns só veem suas informações, moderadores podem silenciar no chat, e só admins alteram dados financeiros. Que conceito está sendo aplicado?',
+      hint: 'Pense em papéis diferentes tendo permissões diferentes.',
+      options: ['Níveis hierárquicos de acesso', 'Confidencialidade simples, sem hierarquia', 'Um bug de permissões não intencional', 'Pipeline de renderização'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Save que não existe',
+      icon: '💾',
+      explanation: 'Antecipar uma falha possível e reagir a ela, em vez de deixar o programa travar, é tratamento de erros.',
+      desc: 'Ao tentar carregar um save que não existe, o jogo mostra "Nenhum save encontrado, iniciando novo jogo" em vez de travar. Que prática é essa?',
+      hint: 'Pense em "prever que algo pode dar errado e reagir direito a isso".',
+      options: ['Tratamento de erros', 'Confidencialidade de dados', 'Pipeline de renderização', 'Nenhuma prática específica'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Pausar a execução',
+      icon: '⏸️',
+      explanation: 'Um breakpoint é um ponto marcado no código onde a execução pausa pra permitir inspeção.',
+      desc: 'Um dev marca um ponto numa linha de código pra que a execução pare exatamente ali, permitindo inspecionar variáveis e Call Stack. Como se chama esse ponto?',
+      hint: 'É um "ponto de pausa" que você marca no código.',
+      options: ['Breakpoint', 'Pipeline de renderização', 'Requisito funcional do GDD', 'Extensão instalada na IDE'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Campo faltando no JSON',
+      icon: '⚠️',
+      explanation: 'Validar o conteúdo de um arquivo externo antes de convertê-lo evita que dados malformados quebrem o programa.',
+      desc: 'Um arquivo JSON de itens vem com um campo obrigatório faltando, e o código quebra ao converter sem checar nada antes. O que faltou nesse processo?',
+      hint: 'Pense em "checar se os dados estão OK" antes de confiar neles.',
+      options: ['Validação do conteúdo do arquivo externo', 'Um pilar novo de segurança', 'Um breakpoint marcado naquela linha', 'Nenhuma prática específica poderia evitar isso'],
+      correctIndex: 0
     }
   ];
 
