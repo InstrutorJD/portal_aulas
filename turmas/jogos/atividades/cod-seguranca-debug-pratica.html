@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Central de Codificação</title>
+<title>PixelForge Studios — Segurança da Informação e Debugging: Prática</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -69,6 +69,10 @@
     color:var(--blue); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
   }
   .explanation-box code{ color:var(--gold); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); white-space:pre;
+  }
 
   .hint-toggle{
     display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
@@ -82,21 +86,12 @@
   .hint-box.show{ display:block; }
   .hint-box b{ color:var(--gold); }
 
-  .options-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
-  .option{
-    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
-    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  textarea#codeInput{
+    width:100%; flex:1; min-height:60px; resize:vertical; background:#000; color:var(--blue);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5;
   }
-  .option:hover{ border-color:var(--blue-dim); }
-  .option .opt-letter{
-    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
-  }
-  .option.correct{ border-color:var(--blue); background:rgba(94,200,255,0.08); }
-  .option.correct .opt-letter{ border-color:var(--blue); color:var(--blue); }
-  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); opacity:0.6; cursor:not-allowed; }
-  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
-  .option.disabled{ cursor:default; }
+  textarea#codeInput:focus{ border-color:var(--blue); }
 
   .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
   button.btn{
@@ -111,8 +106,10 @@
     flex:1; min-height:50px; overflow-y:auto; line-height:1.6;
   }
   .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--blue); }
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--blue); font-weight:bold; }
+  .console .line.warn{ color:var(--gold); }
 
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
@@ -121,6 +118,7 @@
     .layout{ flex-direction:column; height:auto; }
     .sidebar{ width:100%; height:auto; max-height:150px; }
     .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:110px; }
     .console{ flex:none; max-height:160px; }
   }
 </style>
@@ -138,14 +136,14 @@
 
 <div class="env">
   <div class="topbar">
-    <div>CODIFICAÇÃO — CENTRAL (SEGURANÇA E DEBUGGING)</div>
+    <div>CODIFICAÇÃO — OFICINA DE CÓDIGO (SEGURANÇA E DEBUGGING)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
   <div class="stage">
     <div class="layout">
       <div class="sidebar">
-        <div class="sidebar-title">Pareceres</div>
+        <div class="sidebar-title">Chamados de Código</div>
         <div id="challengeList"></div>
       </div>
 
@@ -168,10 +166,11 @@
           <div class="hint-box" id="hintBox"></div>
         </div>
 
-        <div class="options-panel" id="optionsPanel"></div>
+        <textarea id="codeInput" spellcheck="false"></textarea>
 
         <div class="actions">
-          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo parecer →</button>
+          <button class="btn" id="btnRun">▶ Executar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo chamado →</button>
         </div>
 
         <div class="console" id="consoleOutput"></div>
@@ -188,117 +187,183 @@
   const CHALLENGES = [
     {
       id: 1,
-      title: 'Senha protegida',
-      icon: '🔐',
-      explanation: 'Garantir que só quem deve acessar uma informação consegue acessá-la é confidencialidade.',
-      desc: 'Um sistema de login garante que a senha de um jogador não pode ser lida por outros jogadores nem pelo suporte sem autorização. Qual pilar da segurança está sendo protegido?',
-      hint: 'Pense em "quem pode ver essa informação".',
-      options: ['Confidencialidade', 'Integridade', 'Disponibilidade', 'Nenhum pilar específico'],
-      correctIndex: 0
+      title: 'Confidencialidade: só o dono vê',
+      icon: '🔒',
+      fnName: 'podeVerDados',
+      starter: 'function podeVerDados(idSolicitante, idDono) {\n  // retorne true só se idSolicitante for igual a idDono\n\n}',
+      explanation: 'Confidencialidade é garantir que só quem deve acessar uma informação, acessa. Uma forma simples de checar isso é comparar dois valores com <code>===</code>.<pre>function mesmoTime(a, b) {\n  return a === b;\n}</pre>',
+      desc: 'Um chamado pede que só o próprio jogador veja os dados da sua conta — nem outro jogador, nem por engano. Complete <code>podeVerDados(idSolicitante, idDono)</code> retornando <b>true</b> só se os dois ids forem iguais.',
+      hint: 'Qual operador compara se dois valores são exatamente iguais?',
+      tests: [
+        { args: [5, 5], expected: true },
+        { args: [5, 7], expected: false },
+        { args: ['ana', 'ana'], expected: true },
+        { args: ['ana', 'bia'], expected: false }
+      ]
     },
     {
       id: 2,
-      title: 'Só admin pode alterar',
+      title: 'Integridade: pontuação não pode diminuir',
       icon: '🛡️',
-      explanation: 'Restringir quem pode alterar dados sensíveis é modelagem de permissões, protegendo integridade e confidencialidade.',
-      desc: 'Um sistema impede que jogadores comuns alterem a pontuação de outros jogadores no banco, permitindo isso só pra contas administrativas. Que prática de segurança é essa?',
-      hint: 'Pense em restringir quem pode alterar dados sensíveis.',
-      options: ['Modelagem de permissões de acesso', 'Um bug do sistema não intencional', 'Um requisito de performance', 'Nenhuma prática de segurança'],
-      correctIndex: 0
+      fnName: 'pontuacaoIntegra',
+      starter: 'function pontuacaoIntegra(pontuacaoAntiga, pontuacaoNova) {\n  // retorne true se pontuacaoNova for maior ou igual a pontuacaoAntiga\n\n}',
+      explanation: 'Integridade significa que os dados não são alterados de forma indevida. Comparações numéricas usam operadores como <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>.<pre>function subiu(a, b) {\n  return b > a;\n}</pre>',
+      desc: 'Pra proteger a integridade do placar, uma atualização de pontuação só é aceita se a pontuação nova for maior ou igual à antiga (nunca diminui por fora do jogo). Complete <code>pontuacaoIntegra(pontuacaoAntiga, pontuacaoNova)</code> retornando <b>true</b> só se isso valer.',
+      hint: 'Existe um operador de comparação que já inclui "igual". Use ele entre os dois parâmetros, na ordem certa.',
+      tests: [
+        { args: [100, 150], expected: true },
+        { args: [100, 100], expected: true },
+        { args: [100, 50], expected: false },
+        { args: [0, 1], expected: true }
+      ]
     },
     {
       id: 3,
-      title: 'O rastro do erro',
-      icon: '🧵',
-      explanation: 'A Call Stack mostra exatamente a sequência de chamadas de função até o ponto do erro.',
-      desc: 'Um dev quer ver qual sequência de funções foi chamada até o código chegar na linha onde o erro aconteceu. Qual ferramenta do debugger mostra esse "rastro"?',
-      hint: 'É uma "pilha" que mostra o caminho das chamadas de função.',
-      options: ['Call Stack, sequência de chamadas', 'Watch, janela de variáveis', 'Extensões instaladas no editor', 'Variáveis de ambiente do sistema'],
-      correctIndex: 0
+      title: 'Disponibilidade: resposta dentro do prazo',
+      icon: '⏱️',
+      fnName: 'sistemaDisponivel',
+      starter: 'function sistemaDisponivel(tempoRespostaMs) {\n  // retorne true se tempoRespostaMs for MENOR que 5000\n\n}',
+      explanation: 'Disponibilidade é garantir que o sistema responde quando é preciso. Um jeito comum de medir isso é comparar um tempo medido contra um limite aceitável.<pre>function dentroDoLimite(valor, limite) {\n  return valor < limite;\n}</pre>',
+      desc: 'Um servidor só é considerado disponível se responder em menos de <b>5000ms</b>. Complete <code>sistemaDisponivel(tempoRespostaMs)</code> retornando <b>true</b> se o tempo de resposta for menor que 5000.',
+      hint: 'Qual operador de comparação verifica se um valor é menor que outro?',
+      tests: [
+        { args: [1200], expected: true },
+        { args: [4999], expected: true },
+        { args: [5000], expected: false },
+        { args: [9000], expected: false }
+      ]
     },
     {
       id: 4,
-      title: 'Acompanhar uma variável',
-      icon: '👁️',
-      explanation: 'A janela Watch é feita exatamente pra acompanhar o valor de variáveis específicas em tempo real.',
-      desc: 'Um dev suspeita que uma variável de vida do jogador recebe um valor errado, e quer acompanhar seu valor mudando em tempo real. Qual ferramenta ele deve usar?',
-      hint: 'É uma janela pra "vigiar" o valor de uma variável específica.',
-      options: ['Watch, pra ver o valor da variável', 'Call Stack, sequência de chamadas', 'Extensões instaladas no editor', 'Pipeline de renderização'],
-      correctIndex: 0
+      title: 'Níveis hierárquicos de acesso',
+      icon: '🪪',
+      fnName: 'nivelSuficiente',
+      starter: 'function nivelSuficiente(nivelUsuario, nivelExigido) {\n  // retorne true se nivelUsuario for suficiente pra nivelExigido\n\n}',
+      explanation: 'Níveis hierárquicos de acesso funcionam como uma escala numérica: quem está num nível mais alto (ou igual ao exigido) pode realizar a ação.<pre>function podeEntrar(idade, minima) {\n  return idade >= minima;\n}</pre>',
+      desc: 'Cada ação exige um nível mínimo de acesso (1=jogador, 2=moderador, 3=administrador). Complete <code>nivelSuficiente(nivelUsuario, nivelExigido)</code> retornando <b>true</b> se o nível do usuário for suficiente pra ação.',
+      hint: 'Pense em "o nível do usuário precisa ser pelo menos o nível exigido" — qual comparação representa isso?',
+      tests: [
+        { args: [3, 2], expected: true },
+        { args: [2, 2], expected: true },
+        { args: [1, 2], expected: false },
+        { args: [1, 1], expected: true }
+      ]
     },
     {
       id: 5,
-      title: 'Editar sem recompilar',
-      icon: '📦',
-      explanation: 'Ler um arquivo externo e converter seu conteúdo em objetos utilizáveis, sem recompilar, é manipulação de dados externos.',
-      desc: 'Um designer altera o dano de uma arma só editando um arquivo JSON externo, sem recompilar o jogo, porque a engine lê e cria os objetos automaticamente. Que prática é essa?',
-      hint: 'Pense em "ler um arquivo de fora e transformar em objeto usável pela engine".',
-      options: ['Manipulação de dados externos', 'Debugging com Call Stack', 'Confidencialidade de login', 'Pipeline de renderização'],
-      correctIndex: 0
+      title: 'Tratamento de erros: save ausente',
+      icon: '💾',
+      fnName: 'mensagemDeCarregamento',
+      starter: 'function mensagemDeCarregamento(save) {\n  // se save for null, retorne \'Nenhum save encontrado, iniciando novo jogo\'\n  // caso contrário, retorne \'Save carregado com sucesso\'\n\n}',
+      explanation: 'Tratamento de erros significa prever um caso problemático (como um dado ausente) e reagir com uma mensagem clara, em vez de deixar o programa quebrar. Um <code>if/else</code> simples resolve isso.<pre>function status(valor) {\n  if (valor === null) return \'vazio\';\n  return \'preenchido\';\n}</pre>',
+      desc: 'Ao tentar carregar um save que pode não existir, o jogo não deve travar — deve reagir com uma mensagem adequada. Complete <code>mensagemDeCarregamento(save)</code> retornando exatamente <code>"Nenhum save encontrado, iniciando novo jogo"</code> se <code>save</code> for <code>null</code>, ou <code>"Save carregado com sucesso"</code> caso contrário.',
+      hint: 'Use um if/else comparando o parâmetro com null, e retorne o texto certo em cada caso — copie as mensagens exatamente como pedido.',
+      tests: [
+        { args: [null], expected: 'Nenhum save encontrado, iniciando novo jogo' },
+        { args: [{ nivel: 3 }], expected: 'Save carregado com sucesso' },
+        { args: [{}], expected: 'Save carregado com sucesso' }
+      ]
     },
     {
       id: 6,
-      title: 'Servidor fora do ar',
-      icon: '📴',
-      explanation: 'Mesmo sem vazamento ou corrupção de dados, o sistema ficar fora do ar é uma falha de disponibilidade.',
-      desc: 'O servidor de login de um jogo fica fora do ar por horas, impedindo todos os jogadores de entrar, mesmo sem nenhum dado vazado ou corrompido. Qual pilar do CID foi violado?',
-      hint: 'Pense em "o sistema está acessível quando as pessoas precisam dele?".',
-      options: ['Disponibilidade', 'Confidencialidade', 'Integridade', 'Nenhum pilar, pois nenhum dado foi alterado'],
-      correctIndex: 0
+      title: 'Validação segura de JSON externo',
+      icon: '📄',
+      fnName: 'lerItemJSON',
+      starter: 'function lerItemJSON(texto) {\n  // tente converter texto com JSON.parse e retorne o objeto\n  // se der erro, retorne null em vez de deixar o erro estourar\n\n}',
+      explanation: '<code>JSON.parse()</code> converte texto em objeto, mas lança um erro se o texto não for um JSON válido. Um bloco <code>try/catch</code> permite capturar esse erro e reagir, em vez de travar o programa.<pre>function tentar(fn) {\n  try {\n    return fn();\n  } catch (e) {\n    return \'deu erro\';\n  }\n}</pre>',
+      desc: 'Um arquivo de item vem como texto JSON, e pode estar malformado. Complete <code>lerItemJSON(texto)</code> retornando o objeto convertido se o JSON for válido, ou <code>null</code> se não for (sem travar o jogo).',
+      hint: 'Envolva a conversão num try/catch: tente converter dentro do try, e no catch retorne null.',
+      tests: [
+        { args: ['{"nome":"Espada","dano":10}'], check: (r) => !!r && r.nome === 'Espada' && r.dano === 10, expectedLabel: 'objeto com nome "Espada" e dano 10' },
+        { args: ['{isso nao e valido}'], expected: null },
+        { args: ['[1,2,3]'], expected: [1, 2, 3] },
+        { args: [''], expected: null }
+      ]
     },
     {
       id: 7,
-      title: 'Jogador, moderador, admin',
-      icon: '🪪',
-      explanation: 'Definir permissões diferentes por papel/hierarquia é estabelecer níveis hierárquicos de acesso.',
-      desc: 'Um sistema define que jogadores comuns só veem suas informações, moderadores podem silenciar no chat, e só admins alteram dados financeiros. Que conceito está sendo aplicado?',
-      hint: 'Pense em papéis diferentes tendo permissões diferentes.',
-      options: ['Níveis hierárquicos de acesso', 'Confidencialidade simples, sem hierarquia', 'Um bug de permissões não intencional', 'Pipeline de renderização'],
-      correctIndex: 0
+      title: 'Campos obrigatórios do item',
+      icon: '📋',
+      fnName: 'itemValido',
+      starter: 'function itemValido(item) {\n  // retorne true só se item tiver os campos nome, dano e preco (nenhum undefined)\n\n}',
+      explanation: 'Validar campos obrigatórios evita que o código quebre mais adiante por falta de um dado esperado. Comparar uma propriedade com <code>undefined</code> mostra se ela existe no objeto.<pre>function temCampo(obj, campo) {\n  return obj[campo] !== undefined;\n}</pre>',
+      desc: 'Antes de usar um item convertido do JSON, o código precisa confirmar que ele tem todos os campos obrigatórios: <code>nome</code>, <code>dano</code> e <code>preco</code>. Complete <code>itemValido(item)</code> retornando <b>true</b> só se os três campos existirem no objeto.',
+      hint: 'Cheque os três campos, um por um (combine com &&) — todos precisam existir pro item ser válido.',
+      tests: [
+        { args: [{ nome: 'Escudo', dano: 0, preco: 50 }], expected: true },
+        { args: [{ nome: 'Escudo', preco: 50 }], expected: false },
+        { args: [{}], expected: false },
+        { args: [{ nome: 'Poção', dano: 5, preco: 0 }], expected: true }
+      ]
     },
     {
       id: 8,
-      title: 'Save que não existe',
-      icon: '💾',
-      explanation: 'Antecipar uma falha possível e reagir a ela, em vez de deixar o programa travar, é tratamento de erros.',
-      desc: 'Ao tentar carregar um save que não existe, o jogo mostra "Nenhum save encontrado, iniciando novo jogo" em vez de travar. Que prática é essa?',
-      hint: 'Pense em "prever que algo pode dar errado e reagir direito a isso".',
-      options: ['Tratamento de erros', 'Confidencialidade de dados', 'Pipeline de renderização', 'Nenhuma prática específica'],
-      correctIndex: 0
+      title: 'Corrigir o filtro de vidas',
+      icon: '❤️',
+      fnName: 'somarVidasPositivas',
+      starter: 'function somarVidasPositivas(vidas) {\n  // retorne a soma só dos valores MAIORES que 0 no array vidas\n\n}',
+      explanation: 'Combine dois passos: primeiro filtre os valores que passam num teste, depois some o que sobrou. <code>.filter()</code> mantém só o que passa numa condição.<pre>let nums = [4, -2, 0, 6];\nlet positivos = nums.filter(n => n > 0);\n// positivos é [4, 6]</pre>',
+      desc: 'Um chamado reporta que a soma de vida do time está errada quando algum personagem está com vida zerada ou negativa — esses <b>não deveriam contar</b> na soma. Escreva <code>somarVidasPositivas(vidas)</code> retornando a soma só dos valores estritamente maiores que 0 no array.',
+      hint: 'Filtre os valores maiores que 0 primeiro, depois some o que sobrou — pode usar .filter() seguido de .reduce(), ou um laço só.',
+      tests: [
+        { args: [[10, -5, 0, 20]], expected: 30 },
+        { args: [[-1, -2, -3]], expected: 0 },
+        { args: [[]], expected: 0 },
+        { args: [[5]], expected: 5 }
+      ]
     },
     {
       id: 9,
-      title: 'Pausar a execução',
-      icon: '⏸️',
-      explanation: 'Um breakpoint é um ponto marcado no código onde a execução pausa pra permitir inspeção.',
-      desc: 'Um dev marca um ponto numa linha de código pra que a execução pare exatamente ali, permitindo inspecionar variáveis e Call Stack. Como se chama esse ponto?',
-      hint: 'É um "ponto de pausa" que você marca no código.',
-      options: ['Breakpoint', 'Pipeline de renderização', 'Requisito funcional do GDD', 'Extensão instalada na IDE'],
-      correctIndex: 0
+      title: 'Inspecionar o histórico (breakpoint)',
+      icon: '🔎',
+      fnName: 'estadoNoPasso',
+      starter: 'function estadoNoPasso(historico, indice) {\n  // retorne historico[indice], ou null se o índice estiver fora dos limites\n\n}',
+      explanation: 'Antes de acessar uma posição de array por índice, é preciso checar se ela existe — um índice fora dos limites (negativo, ou maior/igual ao tamanho do array) não deve ser acessado direto.<pre>function seguro(lista, i) {\n  if (i < 0 || i >= lista.length) return null;\n  return lista[i];\n}</pre>',
+      desc: 'Um "breakpoint" pausa a execução num ponto específico pra inspecionar o estado ali. Complete <code>estadoNoPasso(historico, indice)</code> retornando o item de <code>historico</code> na posição <code>indice</code>, ou <code>null</code> se o índice estiver fora dos limites do array.',
+      hint: 'Cheque se indice é negativo OU maior/igual ao tamanho do array antes de acessar historico[indice].',
+      tests: [
+        { args: [[10, 20, 30], 1], expected: 20 },
+        { args: [[10, 20, 30], 5], expected: null },
+        { args: [[10, 20, 30], -1], expected: null },
+        { args: [[10, 20, 30], 0], expected: 10 }
+      ]
     },
     {
       id: 10,
-      title: 'Campo faltando no JSON',
-      icon: '⚠️',
-      explanation: 'Validar o conteúdo de um arquivo externo antes de convertê-lo evita que dados malformados quebrem o programa.',
-      desc: 'Um arquivo JSON de itens vem com um campo obrigatório faltando, e o código quebra ao converter sem checar nada antes. O que faltou nesse processo?',
-      hint: 'Pense em "checar se os dados estão OK" antes de confiar neles.',
-      options: ['Validação do conteúdo do arquivo externo', 'Um pilar novo de segurança', 'Um breakpoint marcado naquela linha', 'Nenhuma prática específica poderia evitar isso'],
-      correctIndex: 0
+      title: 'BOSS: liberar configuração com segurança',
+      icon: '🏆',
+      fnName: 'carregarConfigSegura',
+      starter: 'function carregarConfigSegura(autenticado, textoJson) {\n  // 1. se autenticado for false, retorne null\n  // 2. tente converter textoJson com JSON.parse — se der erro, retorne null\n  // 3. se o objeto não tiver a chave "versao", retorne null\n  // 4. caso contrário, retorne o objeto convertido\n\n}',
+      explanation: 'Este chamado combina os três conceitos treinados nos anteriores: autenticação (confidencialidade), conversão segura de JSON (try/catch) e validação de campo obrigatório.',
+      hint: 'Trate os três casos em sequência: autenticação, depois o try/catch do JSON.parse, depois o campo "versao" — qualquer um que falhar já retorna null.',
+      desc: 'BOSS: combine tudo que você aprendeu. Complete <code>carregarConfigSegura(autenticado, textoJson)</code>: só retorne o objeto convertido se <code>autenticado</code> for <code>true</code>, o JSON for válido, E o objeto tiver a chave <code>"versao"</code>. Em qualquer outro caso, retorne <code>null</code>.',
+      tests: [
+        { args: [true, '{"versao":2,"som":true}'], check: (r) => !!r && r.versao === 2 && r.som === true, expectedLabel: 'objeto com versao 2 e som true' },
+        { args: [false, '{"versao":2}'], expected: null },
+        { args: [true, '{invalido}'], expected: null },
+        { args: [true, '{"som":true}'], expected: null }
+      ]
     }
   ];
 
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + critério de avaliação (testes) de cada
+  // chamado — aqui não existe UM código certo, e sim um valor esperado por
+  // combinação de argumentos, então o gabarito lista os casos de teste.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Codificação de Jogos: Central — Segurança e Debugging',
+      title: 'Jogos: Oficina de Código — Segurança e Debugging',
       subtitle: 'Prática · Turma Jogos Digitais',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
         prompt: c.desc,
-        options: c.options,
-        correctIndex: c.correctIndex,
-        answer: c.options[c.correctIndex]
+        answer: c.tests.map(t => {
+          const inputs = (t.args || []).map(a => JSON.stringify(a)).join(', ');
+          const exp = ('expected' in t) ? JSON.stringify(t.expected) : (t.expectedLabel || 'ver critério no código-fonte');
+          return `${c.fnName}(${inputs}) deve retornar ${exp}`;
+        }).join('\n')
       })),
       fileName: 'cod-seguranca-debug-pratica-gabarito.txt'
     });
@@ -310,7 +375,8 @@
   const explanationTextEl = document.getElementById('explanationText');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
-  const optionsPanel = document.getElementById('optionsPanel');
+  const codeInput = document.getElementById('codeInput');
+  const btnRun = document.getElementById('btnRun');
   const btnNext = document.getElementById('btnNext');
   const btnHint = document.getElementById('btnHint');
   const hintBox = document.getElementById('hintBox');
@@ -344,7 +410,7 @@
       const isDone = completed.has(c.id);
       const item = document.createElement('div');
       item.className = 'challenge-item' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (!unlocked ? ' locked' : '');
-      const statusIcon = isDone ? '✅' : (unlocked ? '🐞' : '🔒');
+      const statusIcon = isDone ? '✅' : (unlocked ? '🎫' : '🔒');
       item.innerHTML = `<span class="status">${statusIcon}</span><span class="name">${c.icon} ${c.title}</span>`;
       if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
       challengeListEl.appendChild(item);
@@ -361,65 +427,11 @@
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
   }
 
-  function renderOptions(challenge, alreadyDone) {
-    optionsPanel.innerHTML = '';
-    const letters = ['A', 'B', 'C', 'D'];
-    const wrongTried = new Set();
-
-    const order = challenge.options.map((_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
+  function deepEqual(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
     }
-    const correctPos = order.indexOf(challenge.correctIndex);
-
-    order.forEach((origIdx, pos) => {
-      const optText = challenge.options[origIdx];
-      const opt = document.createElement('div');
-      opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
-      if (alreadyDone) {
-        opt.classList.add('disabled');
-        if (pos === correctPos) opt.classList.add('correct');
-      } else {
-        opt.addEventListener('click', () => handleAnswer(challenge, pos, opt));
-      }
-      optionsPanel.appendChild(opt);
-    });
-
-    function handleAnswer(challenge, idx, opt) {
-      if (idx === correctPos) {
-        optionsPanel.querySelectorAll('.option').forEach(el => el.classList.add('disabled'));
-        opt.classList.add('correct');
-
-        completed.add(challenge.id);
-        saveCompleted(completed);
-        ticketStatusEl.textContent = 'RESOLVIDO';
-        ticketStatusEl.classList.add('done');
-        ticketStatusEl.classList.remove('pending');
-
-        const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
-        if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de segurança e debugging!', 'success');
-        } else {
-          logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
-          btnNext.style.display = 'inline-block';
-        }
-        renderSidebar();
-
-        if (typeof window.reportActivity === 'function') {
-          window.reportActivity(
-            'cod_seguranca_debug_pratica',
-            `Codificação — Segurança e Debugging — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
-            { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
-          );
-        }
-      } else {
-        wrongTried.add(idx);
-        opt.classList.add('incorrect');
-        logConsole('❌ Não é essa. Tente outra opção — a dica pode ajudar.', 'fail');
-      }
-    }
+    return a === b;
   }
 
   function selectChallenge(id) {
@@ -427,9 +439,10 @@
     if (!challenge || !isUnlocked(challenge)) return;
     selectedId = id;
 
-    challengeTitleEl.textContent = `Parecer ${challenge.id}: ${challenge.title}`;
+    challengeTitleEl.textContent = `Chamado ${challenge.id}: ${challenge.title}`;
     explanationTextEl.innerHTML = challenge.explanation;
     challengeDescEl.innerHTML = challenge.desc;
+    codeInput.value = challenge.starter;
     btnNext.style.display = 'none';
 
     hintBox.innerHTML = challenge.hint || '';
@@ -439,20 +452,96 @@
     ticketIconEl.textContent = challenge.icon;
     const alreadyDone = completed.has(id);
     ticketStatusEl.textContent = alreadyDone ? 'RESOLVIDO' : 'PENDENTE';
-    ticketStatusEl.classList.toggle('done', alreadyDone);
-    ticketStatusEl.classList.toggle('pending', !alreadyDone);
+    ticketStatusEl.className = 'ticket-status ' + (alreadyDone ? 'done' : 'pending');
 
     clearConsole();
-    if (alreadyDone) logConsole('Você já emitiu este parecer. Pode revisar as opções.', 'info');
-    renderOptions(challenge, alreadyDone);
+    if (alreadyDone) {
+      logConsole(`Você já resolveu este chamado. Pode tentar de novo pra treinar.`, 'info');
+    }
     renderSidebar();
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
         'cod_seguranca_debug_pratica',
-        `Codificação — Segurança e Debugging — Parecer ${challenge.id}: ${challenge.title}`,
+        `Codificação — Segurança e Debugging — Chamado ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
+    }
+  }
+
+  function runChallenge() {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    let fn;
+    try {
+      fn = new Function(`${codeInput.value}\nreturn typeof ${challenge.fnName} === 'function' ? ${challenge.fnName} : undefined;`)();
+    } catch (err) {
+      logConsole('Erro de sintaxe: ' + err.message, 'fail');
+      return;
+    }
+
+    if (typeof fn !== 'function') {
+      logConsole(`A função '${challenge.fnName}' não foi encontrada. Verifique o nome da função.`, 'fail');
+      return;
+    }
+
+    let allPass = true;
+    challenge.tests.forEach((t, i) => {
+      let result, errorMsg = null;
+      try {
+        result = fn(...t.args);
+      } catch (err) {
+        errorMsg = err.message;
+      }
+
+      let pass;
+      if (errorMsg !== null) {
+        pass = false;
+      } else if (typeof t.check === 'function') {
+        pass = t.check(result, ...t.args);
+      } else {
+        pass = deepEqual(result, t.expected);
+      }
+      if (!pass) allPass = false;
+
+      const argsStr = t.args.map(a => JSON.stringify(a)).join(', ');
+      const expectedStr = t.expectedLabel ? t.expectedLabel : JSON.stringify(t.expected);
+
+      if (pass) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → ${JSON.stringify(result)} ✅`, 'pass');
+      } else if (errorMsg) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → Erro: ${errorMsg} ❌`, 'fail');
+      } else {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → ${JSON.stringify(result)} (esperado ${expectedStr}) ❌`, 'fail');
+      }
+    });
+
+    if (allPass) {
+      completed.add(challenge.id);
+      saveCompleted(completed);
+      ticketStatusEl.textContent = 'RESOLVIDO';
+      ticketStatusEl.className = 'ticket-status done';
+
+      const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+      if (isLast) {
+        logConsole(`🏆 Chamado resolvido! Você concluiu todos os chamados de Segurança e Debugging.`, 'success');
+      } else {
+        logConsole(`✅ Chamado resolvido! Próximo chamado liberado.`, 'success');
+        btnNext.style.display = 'inline-block';
+      }
+      renderSidebar();
+
+      if (typeof window.reportActivity === 'function') {
+        window.reportActivity(
+          'cod_seguranca_debug_pratica',
+          `Codificação — Segurança e Debugging — Chamado ${challenge.id}: ${challenge.title} (resolvido)`,
+          { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
+        );
+      }
+    } else {
+      logConsole('❌ Ainda não passou em todos os testes. Ajuste o código e tente de novo.', 'warn');
     }
   }
 
@@ -460,13 +549,14 @@
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
   });
+
+  btnRun.addEventListener('click', runChallenge);
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);
     const next = CHALLENGES[idx + 1];
     if (next) selectChallenge(next.id);
   });
 
-  renderSidebar();
   selectChallenge(selectedId);
 </script>
 

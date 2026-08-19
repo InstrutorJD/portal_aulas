@@ -69,6 +69,10 @@
     color:var(--blue); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
   }
   .explanation-box code{ color:var(--gold); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); white-space:pre;
+  }
 
   .hint-toggle{
     display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
@@ -82,21 +86,12 @@
   .hint-box.show{ display:block; }
   .hint-box b{ color:var(--gold); }
 
-  .options-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
-  .option{
-    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
-    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  textarea#codeInput{
+    width:100%; flex:1; min-height:60px; resize:vertical; background:#000; color:var(--blue);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5;
   }
-  .option:hover{ border-color:var(--blue-dim); }
-  .option .opt-letter{
-    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
-  }
-  .option.correct{ border-color:var(--blue); background:rgba(94,200,255,0.08); }
-  .option.correct .opt-letter{ border-color:var(--blue); color:var(--blue); }
-  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); opacity:0.6; cursor:not-allowed; }
-  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
-  .option.disabled{ cursor:default; }
+  textarea#codeInput:focus{ border-color:var(--blue); }
 
   .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
   button.btn{
@@ -111,8 +106,10 @@
     flex:1; min-height:50px; overflow-y:auto; line-height:1.6;
   }
   .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--blue); }
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--blue); font-weight:bold; }
+  .console .line.warn{ color:var(--gold); }
 
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
@@ -121,6 +118,7 @@
     .layout{ flex-direction:column; height:auto; }
     .sidebar{ width:100%; height:auto; max-height:150px; }
     .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:110px; }
     .console{ flex:none; max-height:160px; }
   }
 </style>
@@ -145,7 +143,7 @@
   <div class="stage">
     <div class="layout">
       <div class="sidebar">
-        <div class="sidebar-title">Pareceres</div>
+        <div class="sidebar-title">Desafios de Código</div>
         <div id="challengeList"></div>
       </div>
 
@@ -163,15 +161,15 @@
           </div>
 
           <p id="challengeDesc"></p>
-
           <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
           <div class="hint-box" id="hintBox"></div>
         </div>
 
-        <div class="options-panel" id="optionsPanel"></div>
+        <textarea id="codeInput" spellcheck="false"></textarea>
 
         <div class="actions">
-          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo parecer →</button>
+          <button class="btn" id="btnRun">▶ Executar código</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo desafio →</button>
         </div>
 
         <div class="console" id="consoleOutput"></div>
@@ -190,115 +188,178 @@
       id: 1,
       title: 'Três inimigos, um molde',
       icon: '👾',
-      explanation: 'Cada objeto criado a partir de uma classe, com seus próprios valores, é uma instância dessa classe.',
-      desc: 'Um dev cria uma classe "Inimigo" e depois cria três objetos diferentes a partir dela, cada um com sua própria vida atual. O que representam esses três objetos?',
-      hint: 'A classe é o "molde"; e o que se cria a partir dele?',
-      options: ['Instâncias da classe Inimigo', 'Três classes diferentes', 'Três componentes desacoplados', 'Três frameworks distintos'],
-      correctIndex: 0
+      fnName: 'criarInimigo',
+      starter: 'function criarInimigo(vidaInicial) {\n  // defina uma classe Inimigo com o atributo "vida"\n  // devolva uma INSTÂNCIA dessa classe com vida = vidaInicial\n\n}',
+      explanation: 'Uma <b>classe</b> é um molde que descreve atributos. Você cria uma <b>instância</b> dela com <code>new</code>:<pre>class Jogador {\n  constructor(pontos) {\n    this.pontos = pontos;\n  }\n}\nconst jogador1 = new Jogador(10);\n// jogador1.pontos é 10</pre>',
+      desc: 'Um chamado pede: crie uma classe <code>Inimigo</code> com o atributo <code>vida</code>, e complete <code>criarInimigo(vidaInicial)</code> devolvendo uma instância dessa classe com a vida recebida.',
+      hint: 'Toda classe usa <code>constructor(...)</code> pra guardar os valores recebidos em atributos com <code>this.nome = valor</code>.',
+      tests: [
+        { args: [100], check: (r, inp) => typeof r === 'object' && r !== null && r.vida === inp, expectedLabel: 'objeto com vida igual a 100' },
+        { args: [50], check: (r, inp) => typeof r === 'object' && r !== null && r.vida === inp, expectedLabel: 'objeto com vida igual a 50' },
+        { args: [0], check: (r, inp) => typeof r === 'object' && r !== null && r.vida === inp, expectedLabel: 'objeto com vida igual a 0' }
+      ]
     },
     {
       id: 2,
       title: 'Só um jeito de mudar a vida',
       icon: '🔒',
-      explanation: 'Controlar como os dados internos são acessados e alterados, expondo só métodos específicos, é encapsulamento.',
-      desc: 'A classe "Inimigo" só permite alterar a vida através de um método específico, em vez de deixar qualquer código mudar o valor diretamente. Que princípio da POO é esse?',
-      hint: 'Pense em "esconder os detalhes internos, expor só o necessário".',
-      options: ['Encapsulamento dos dados internos', 'Instanciação de um objeto', 'Desacoplamento de componentes', 'Renderização de sprites'],
-      correctIndex: 0
+      fnName: 'criarInimigoComReceberDano',
+      starter: 'function criarInimigoComReceberDano(vidaInicial) {\n  // devolva um objeto com os métodos receberDano(qtd) e getVida()\n  // a vida deve começar em vidaInicial e só pode mudar através de receberDano\n\n}',
+      explanation: 'Encapsulamento esconde o dado interno e só permite mudá-lo por um método específico. Uma forma de fazer isso é guardar o valor numa variável local (dentro da função), em vez de numa propriedade pública do objeto:<pre>function criarContador(inicial) {\n  let valor = inicial;\n  return {\n    incrementar() { valor++; },\n    getValor() { return valor; }\n  };\n}</pre>',
+      desc: 'A classe "Inimigo" só pode ter a vida alterada através de um método específico, nunca direto por fora. Complete <code>criarInimigoComReceberDano(vidaInicial)</code> respeitando essa regra.',
+      hint: 'Guarde a vida numa variável local (com <code>let</code>), não como propriedade pública do objeto que você devolve — só os métodos devem poder alterá-la.',
+      tests: [
+        { args: [100], check: (r) => { if (typeof r.receberDano !== 'function' || typeof r.getVida !== 'function') return false; if (r.getVida() !== 100) return false; r.receberDano(30); return r.getVida() === 70; }, expectedLabel: 'getVida() após receberDano(30) deve ser 70' },
+        { args: [50], check: (r) => { r.receberDano(10); r.receberDano(5); return r.getVida() === 35; }, expectedLabel: 'getVida() após dois receberDano deve refletir a soma dos danos' },
+        { args: [20], check: (r) => { r.vida = 9999; return r.getVida() === 20; }, expectedLabel: 'alterar r.vida diretamente NÃO deve mudar o valor de getVida()' }
+      ]
     },
     {
       id: 3,
-      title: 'Movimento e Saúde separados',
-      icon: '🧱',
-      explanation: 'Separar lógicas em componentes independentes e reaproveitáveis é Programação Orientada a Componentes.',
-      desc: 'Em vez de uma classe "Inimigo" gigante, um dev cria um componente de "Movimento" e outro de "Saúde", reaproveitáveis em qualquer objeto do jogo. Que abordagem é essa?',
-      hint: 'Pense em pedaços de lógica independentes, prontos pra encaixar em qualquer objeto.',
-      options: ['Programação Orientada a Componentes', 'POO clássica, usando herança de classes', 'Encapsulamento dos dados internos', 'Frameworks externos prontos'],
-      correctIndex: 0
+      title: 'Componente de Movimento',
+      icon: '🏃',
+      fnName: 'criarComponenteMovimento',
+      starter: 'function criarComponenteMovimento(x, y) {\n  // devolva um objeto { x, y, mover(dx, dy) }\n  // mover deve SOMAR dx/dy à posição atual (x e y do próprio objeto)\n\n}',
+      explanation: 'Um objeto pode ter métodos que alteram os próprios atributos usando <code>this</code>:<pre>const contador = {\n  valor: 0,\n  incrementar(qtd) { this.valor += qtd; }\n};\ncontador.incrementar(5);\n// contador.valor é 5</pre>',
+      desc: 'Um componente de "Movimento" precisa guardar posição e saber se mover. Complete <code>criarComponenteMovimento(x, y)</code> devolvendo um objeto com <code>x</code>, <code>y</code> e o método <code>mover(dx, dy)</code>.',
+      hint: 'Dentro do método <code>mover</code>, use <code>this.x</code> e <code>this.y</code> pra ler e atualizar a posição.',
+      tests: [
+        { args: [0, 0], check: (r) => { r.mover(3, 4); return r.x === 3 && r.y === 4; }, expectedLabel: 'após mover(3,4) a partir de (0,0): x=3, y=4' },
+        { args: [10, 5], check: (r) => { r.mover(-2, 1); return r.x === 8 && r.y === 6; }, expectedLabel: 'após mover(-2,1) a partir de (10,5): x=8, y=6' },
+        { args: [1, 1], check: (r) => { r.mover(0, 0); r.mover(2, 2); return r.x === 3 && r.y === 3; }, expectedLabel: 'após dois mover(): posição acumulada corretamente' }
+      ]
     },
     {
       id: 4,
-      title: 'Antes de usar a lib',
-      icon: '📚',
-      explanation: 'O material que explica as funções e como usá-las corretamente é a documentação técnica do framework.',
-      desc: 'Antes de usar uma biblioteca de áudio pela primeira vez, um dev lê o material que explica todas as funções disponíveis e como cada uma deve ser chamada. Que material é esse?',
-      hint: 'É o "manual de instruções" de uma biblioteca externa.',
-      options: ['Documentação técnica do framework', 'Um arquivo de save do jogador', 'Um componente de movimento reaproveitável', 'Um GDD, documento de design'],
-      correctIndex: 0
+      title: 'Vida e Movimento, sem herança',
+      icon: '🧩',
+      fnName: 'criarObjetoComponentizado',
+      starter: 'function criarObjetoComponentizado(vida, x, y) {\n  // combine um componente de vida { vida, receberDano(qtd) }\n  // e um componente de posição { x, y, mover(dx, dy) }\n  // num ÚNICO objeto, sem usar herança (extends)\n\n}',
+      explanation: 'Você pode juntar vários "pedaços" de comportamento num objeto só com espalhamento (<code>...</code>) ou <code>Object.assign</code> — sem precisar de uma cadeia de herança:<pre>const base = { nome: \'Item\' };\nconst extra = { preco: 10 };\nconst completo = { ...base, ...extra };\n// completo tem nome E preco</pre>',
+      desc: 'Em vez de uma classe "Inimigo" gigante, um dev quer compor um objeto a partir de dois componentes independentes: vida e posição. Complete <code>criarObjetoComponentizado(vida, x, y)</code> juntando os dois num objeto só.',
+      hint: 'Crie os dois componentes separadamente (vida e posição, cada um com seu método) e junte os dois num objeto final com espalhamento (<code>...</code>).',
+      tests: [
+        { args: [100, 0, 0], check: (r) => { if (r.vida !== 100 || r.x !== 0 || r.y !== 0) return false; if (typeof r.receberDano !== 'function' || typeof r.mover !== 'function') return false; r.receberDano(20); r.mover(5, 5); return r.vida === 80 && r.x === 5 && r.y === 5; }, expectedLabel: 'objeto com vida e posição, ambos os métodos funcionando' },
+        { args: [50, 2, 3], check: (r) => { r.mover(1, 1); r.receberDano(10); return r.vida === 40 && r.x === 3 && r.y === 4; }, expectedLabel: 'vida e posição atualizadas de forma independente' },
+        { args: [10, 0, 0], check: (r) => r.vida === 10 && r.x === 0 && r.y === 0 && typeof r.receberDano === 'function' && typeof r.mover === 'function', expectedLabel: 'objeto inicial com os dois componentes presentes' }
+      ]
     },
     {
       id: 5,
-      title: 'Som e animação automáticos',
+      title: 'Trigger de pulo',
       icon: '🎬',
-      explanation: 'Um trigger disparado por uma ação específica do jogador é o mecanismo que ativa som/animação automaticamente.',
-      desc: 'Toda vez que o personagem pula, o código automaticamente toca o som de pulo e ativa a animação de salto, sem ação manual extra. Que mecanismo dispara isso?',
-      hint: 'É um "gatilho" ligado a uma ação específica.',
-      options: ['Um trigger (disparador)', 'Encapsulamento de dados', 'Uma nova instância de classe', 'Um framework de rede'],
-      correctIndex: 0
+      fnName: 'criarSistemaDePulo',
+      starter: 'function criarSistemaDePulo(aoPular) {\n  // devolva uma função pular() que, quando chamada,\n  // executa aoPular() (o callback recebido) e depois retorna true\n\n}',
+      explanation: 'Um <b>trigger</b> nada mais é do que uma função que, ao ser chamada, executa outra função (callback) associada a uma ação:<pre>function criarBotao(aoClicar) {\n  return function clicar() {\n    aoClicar();\n    return \'clicado\';\n  };\n}</pre>',
+      desc: 'Toda vez que o personagem pula, o jogo precisa disparar automaticamente o efeito de pulo. Complete <code>criarSistemaDePulo(aoPular)</code> devolvendo uma função <code>pular()</code> que chama o callback recebido.',
+      hint: 'A função que você devolve precisa CHAMAR <code>aoPular()</code> antes de retornar <code>true</code> — sem chamar, o callback nunca dispara.',
+      tests: [] // preenchido logo abaixo, com callbacks "tracker" (ver comentário perto de CHALLENGES[4].tests)
     },
     {
       id: 6,
       title: 'Inimigo que também voa',
       icon: '🦅',
-      explanation: 'Reaproveitar atributos/comportamentos de uma classe base e adicionar algo próprio é herança.',
-      desc: 'Um chamado descreve: a classe "InimigoVoador" reaproveita os atributos de vida e velocidade já definidos em "Inimigo", e ainda adiciona um comportamento próprio de voar. Que mecanismo da POO permite essa relação?',
-      hint: 'Pense em "uma classe nova que reaproveita e estende uma classe já existente".',
-      options: ['Herança entre classes', 'Encapsulamento dos dados internos', 'Um componente de movimento desacoplado', 'Um trigger de multimídia'],
-      correctIndex: 0
+      fnName: 'criarInimigoVoador',
+      starter: 'function criarInimigoVoador(vida, velocidade) {\n  // crie uma classe InimigoVoador que HERDA de uma classe base Inimigo\n  // (com atributos vida e velocidade), e adicione um método voar()\n  // que retorna a string \'voando\'\n  // devolva uma instância de InimigoVoador\n\n}',
+      explanation: 'Uma classe pode herdar de outra com <code>extends</code>, reaproveitando atributos e comportamentos, e ainda adicionar algo próprio:<pre>class Veiculo {\n  constructor(velocidade) { this.velocidade = velocidade; }\n}\nclass Carro extends Veiculo {\n  buzinar() { return \'bi bi\'; }\n}\nconst c = new Carro(100);\n// c.velocidade é 100, e c.buzinar() existe</pre>',
+      desc: 'A classe "InimigoVoador" precisa reaproveitar os atributos de "Inimigo" (vida, velocidade) e ainda ganhar um comportamento próprio de voar. Complete <code>criarInimigoVoador(vida, velocidade)</code>.',
+      hint: 'Use <code>class InimigoVoador extends Inimigo { ... }</code> — se você não escrever um <code>constructor</code> próprio na subclasse, ela já recebe os parâmetros automaticamente da classe base.',
+      tests: [
+        { args: [100, 5], check: (r) => r.vida === 100 && r.velocidade === 5 && typeof r.voar === 'function' && r.voar() === 'voando', expectedLabel: 'instância com vida, velocidade e voar() retornando "voando"' },
+        { args: [50, 10], check: (r) => r.vida === 50 && r.velocidade === 10 && r.voar() === 'voando', expectedLabel: 'instância com vida, velocidade e voar() retornando "voando"' }
+      ]
     },
     {
       id: 7,
       title: 'Dado ou ação?',
       icon: '🏷️',
-      explanation: 'Uma ação que a classe sabe executar, como atacar(), é um método — diferente de um atributo, que guarda dado.',
-      desc: 'Um chamado pergunta: na classe "Inimigo", vida guarda um número e atacar() executa uma ação quando chamado. O que é atacar() nesse caso?',
-      hint: 'Um guarda dado; o outro executa uma ação. Qual dos dois é atacar()?',
-      options: ['Um método da classe', 'Um atributo da classe', 'Uma instância da classe', 'Um framework externo'],
-      correctIndex: 0
+      fnName: 'contarMetodos',
+      starter: 'function contarMetodos(obj) {\n  // devolva quantas propriedades de obj são MÉTODOS (funções)\n  // (não conte atributos que guardam apenas dados)\n\n}',
+      explanation: 'Você pode verificar o tipo de cada propriedade de um objeto com <code>typeof</code>, percorrendo suas chaves com <code>Object.keys()</code>:<pre>const item = { nome: \'Espada\', usar() {} };\nObject.keys(item).forEach(chave => {\n  console.log(chave, typeof item[chave]); // \'nome\' \'string\', \'usar\' \'function\'\n});</pre>',
+      desc: 'Um chamado pergunta: dado um objeto qualquer, quantas das suas propriedades são métodos (ações) em vez de atributos (dados)? Complete <code>contarMetodos(obj)</code>.',
+      hint: 'Percorra as chaves do objeto com <code>Object.keys(obj)</code> e conte quantas têm <code>typeof</code> igual a <code>\'function\'</code>.',
+      tests: [
+        { args: [{ vida: 100, atacar(){}, velocidade: 5 }], expected: 1 },
+        { args: [{ nome: 'x', andar(){}, correr(){} }], expected: 2 },
+        { args: [{ a: 1, b: 2, c: 3 }], expected: 0 }
+      ]
     },
     {
       id: 8,
       title: 'Só quem voa, ganha asas',
       icon: '🧷',
-      explanation: 'Componentes desacoplados evitam obrigar todos os objetos de uma hierarquia rígida a carregar um comportamento que só alguns precisam.',
-      desc: 'Só alguns inimigos do jogo voam. Em vez de criar uma subclasse "InimigoVoador", um dev anexa um componente "Voo" só nos objetos que voam. Por que essa escolha evita um problema de design?',
-      hint: 'Pense no que acontece se TODOS os inimigos fossem forçados a herdar de uma mesma hierarquia rígida.',
-      options: ['Evita forçar uma hierarquia rígida de herança em quem não precisa do comportamento', 'Porque herança é proibida em jogos digitais', 'Porque componentes substituem classes por completo', 'Porque só componentes podem ter atributos de vida'],
-      correctIndex: 0
+      fnName: 'montarEsquadrao',
+      starter: 'function montarEsquadrao(inimigos, indicesQueVoam) {\n  // "inimigos" é um array de objetos { nome }\n  // "indicesQueVoam" é um array de índices que devem GANHAR\n  // um método voar() (que retorna \'voando\') — os demais objetos\n  // do array não devem ganhar esse método\n  // devolva o array de inimigos (modificado)\n\n}',
+      explanation: 'Você pode anexar um comportamento só a ALGUNS itens de um array, sem mexer nos outros — percorrendo os índices certos e adicionando a propriedade só neles:<pre>const itens = [{ nome: \'A\' }, { nome: \'B\' }];\nitens[1].destacado = true;\n// só itens[1] ganhou a propriedade extra</pre>',
+      desc: 'Só alguns inimigos do jogo voam. Em vez de criar uma subclasse "InimigoVoador" pra todos, complete <code>montarEsquadrao(inimigos, indicesQueVoam)</code> anexando o comportamento de voo só em quem precisa.',
+      hint: 'Percorra <code>indicesQueVoam</code> com <code>forEach</code> e adicione a propriedade <code>voar</code> só no item de <code>inimigos</code> naquele índice.',
+      tests: [
+        { args: [[{nome:'A'},{nome:'B'},{nome:'C'}], [1]], check: (r) => typeof r[0].voar !== 'function' && typeof r[1].voar === 'function' && r[1].voar() === 'voando' && typeof r[2].voar !== 'function', expectedLabel: 'só o item de índice 1 ganha voar()' },
+        { args: [[{nome:'A'},{nome:'B'}], [0,1]], check: (r) => typeof r[0].voar === 'function' && typeof r[1].voar === 'function', expectedLabel: 'todos os índices indicados ganham voar()' },
+        { args: [[{nome:'A'}], []], check: (r) => typeof r[0].voar !== 'function', expectedLabel: 'sem índices indicados, ninguém ganha voar()' }
+      ]
     },
     {
       id: 9,
-      title: 'Explosão nova em folha',
-      icon: '💥',
-      explanation: 'Mesmo para frameworks diferentes (partículas, áudio etc.), o primeiro passo continua sendo consultar a documentação técnica.',
-      desc: 'Um dev quer criar uma explosão quando um inimigo morre, usando um framework de partículas que o time nunca usou. Qual deve ser o primeiro passo antes de chamar qualquer função desse framework?',
-      hint: 'Antes de chamar qualquer função de uma lib desconhecida, o que você deveria consultar primeiro?',
-      options: ['Ler a documentação técnica do framework', 'Criar uma instância de classe do zero, sem o framework', 'Pular direto pro código sem consultar nada', 'Desativar o encapsulamento da classe Inimigo'],
-      correctIndex: 0
+      title: 'Antes de disparar, leia a doc',
+      icon: '📚',
+      fnName: 'dispararEfeito',
+      starter: 'function dispararEfeito(framework, tipo, x, y) {\n  // "framework" é um objeto assim: { criarParticula(tipo, x, y) { ... } }\n  // chame framework.criarParticula com os argumentos NA ORDEM CERTA\n  // (tipo, x, y) e devolva o resultado dessa chamada\n\n}',
+      explanation: 'Antes de usar uma função de um framework, é preciso conferir a ASSINATURA dela na documentação — quais parâmetros ela espera, e em que ordem:<pre>// doc: framework.tocar(nomeDoSom, volume)\nframework.tocar(\'explosao\', 0.8);</pre>Chamar com a ordem errada quebra o efeito, mesmo sem erro de sintaxe.',
+      desc: 'Um dev quer criar um efeito de partícula usando um framework externo, cuja documentação diz que <code>criarParticula</code> espera <code>(tipo, x, y)</code> nessa ordem. Complete <code>dispararEfeito(framework, tipo, x, y)</code>.',
+      hint: 'Repare na ordem dos parâmetros que o framework espera: <code>tipo</code> primeiro, depois <code>x</code>, depois <code>y</code> — nessa ordem exata.',
+      tests: [
+        { args: [{ criarParticula: (tipo, x, y) => `${tipo}@${x},${y}` }, 'fumaca', 10, 20], expected: 'fumaca@10,20' },
+        { args: [{ criarParticula: (tipo, x, y) => `${tipo}@${x},${y}` }, 'faisca', 0, 0], expected: 'faisca@0,0' }
+      ]
     },
     {
       id: 10,
-      title: 'Moeda coletada',
+      title: 'BOSS: Moeda coletada',
       icon: '🪙',
-      explanation: 'A colisão com a moeda dispara o trigger que toca o som e remove o sprite — mesmo mecanismo de um trigger de pulo, só que ativado por colisão.',
-      desc: 'Assim que o personagem toca numa moeda, o jogo automaticamente toca um som de coleta e faz o sprite da moeda desaparecer. Que mecanismo dispara essa sequência de ações?',
-      hint: 'É o mesmo tipo de mecanismo que dispara som/animação quando o personagem pula — só que a ação que o ativa é outra.',
-      options: ['Um trigger disparado pela colisão com a moeda', 'Uma subclasse herdando da classe Moeda', 'Um atributo de vida sendo alterado', 'Documentação técnica de um framework'],
-      correctIndex: 0
+      fnName: 'verificarColisaoMoeda',
+      starter: 'function verificarColisaoMoeda(personagem, moeda, aoColetar) {\n  // "personagem" e "moeda" são { x, y }\n  // se as posições forem IGUAIS, chame aoColetar() e retorne true\n  // caso contrário, não chame nada e retorne false\n\n}',
+      explanation: 'Este desafio junta dois conceitos que você já viu: comparar valores (posições) e disparar um trigger (callback) quando uma condição acontece — igual ao trigger de pular, mas agora ativado por colisão.',
+      desc: 'BOSS FINAL: assim que o personagem toca numa moeda, o jogo precisa disparar automaticamente a coleta. Complete <code>verificarColisaoMoeda(personagem, moeda, aoColetar)</code>.',
+      hint: 'Compare <code>personagem.x</code> com <code>moeda.x</code> E <code>personagem.y</code> com <code>moeda.y</code> — só chame <code>aoColetar()</code> se os DOIS baterem.',
+      tests: [] // preenchido logo abaixo, com callbacks "tracker" (ver comentário perto de CHALLENGES[4].tests)
     }
+  ];
+
+  // Desafios 5 e 10 usam callback: cada "tracker" é uma função que conta
+  // quantas vezes foi chamada — criada por teste, e injetada em `args` na
+  // hora (ver abaixo), pra não precisar guardar closures dentro do array
+  // CHALLENGES (que fica achatado/serializável só pelo gabarito).
+  function tracker() {
+    const t = () => { t.calls++; };
+    t.calls = 0;
+    return t;
+  }
+
+  CHALLENGES[4].tests = [
+    { args: [tracker()], check: (r, cb) => { if (typeof r !== 'function') return false; const before = cb.calls; const ret = r(); return cb.calls === before + 1 && ret === true; }, expectedLabel: 'pular() deve chamar aoPular() uma vez e retornar true' },
+    { args: [tracker()], check: (r, cb) => { r(); r(); r(); return cb.calls === 3; }, expectedLabel: 'chamar pular() 3 vezes deve chamar aoPular() 3 vezes' }
+  ];
+
+  CHALLENGES[9].tests = [
+    { args: [{x:3,y:5}, {x:3,y:5}, tracker()], check: (r, p, m, cb) => r === true && cb.calls === 1, expectedLabel: 'posições iguais: retorna true e chama aoColetar() uma vez' },
+    { args: [{x:1,y:1}, {x:2,y:2}, tracker()], check: (r, p, m, cb) => r === false && cb.calls === 0, expectedLabel: 'posições diferentes: retorna false e NÃO chama aoColetar()' },
+    { args: [{x:0,y:0}, {x:0,y:1}, tracker()], check: (r, p, m, cb) => r === false && cb.calls === 0, expectedLabel: 'só um eixo bate: retorna false e NÃO chama aoColetar()' }
   ];
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Codificação de Jogos: Central — POO, Componentes e Multimídia',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      subtitle: 'Prática (código) · Turma Jogos Digitais',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
         prompt: c.desc,
-        options: c.options,
-        correctIndex: c.correctIndex,
-        answer: c.options[c.correctIndex]
+        answer: c.tests.map(t => {
+          const inputs = (t.args || []).map(a => (typeof a === 'function' ? '<função>' : JSON.stringify(a))).join(', ');
+          const exp = ('expected' in t) ? JSON.stringify(t.expected) : (t.expectedLabel || 'ver critério no código-fonte');
+          return `${c.fnName}(${inputs}) deve resultar em: ${exp}`;
+        }).join('\n')
       })),
       fileName: 'cod-poo-pratica-gabarito.txt'
     });
@@ -310,7 +371,8 @@
   const explanationTextEl = document.getElementById('explanationText');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
-  const optionsPanel = document.getElementById('optionsPanel');
+  const codeInput = document.getElementById('codeInput');
+  const btnRun = document.getElementById('btnRun');
   const btnNext = document.getElementById('btnNext');
   const btnHint = document.getElementById('btnHint');
   const hintBox = document.getElementById('hintBox');
@@ -361,65 +423,11 @@
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
   }
 
-  function renderOptions(challenge, alreadyDone) {
-    optionsPanel.innerHTML = '';
-    const letters = ['A', 'B', 'C', 'D'];
-    const wrongTried = new Set();
-
-    const order = challenge.options.map((_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
+  function deepEqual(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
     }
-    const correctPos = order.indexOf(challenge.correctIndex);
-
-    order.forEach((origIdx, pos) => {
-      const optText = challenge.options[origIdx];
-      const opt = document.createElement('div');
-      opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
-      if (alreadyDone) {
-        opt.classList.add('disabled');
-        if (pos === correctPos) opt.classList.add('correct');
-      } else {
-        opt.addEventListener('click', () => handleAnswer(challenge, pos, opt));
-      }
-      optionsPanel.appendChild(opt);
-    });
-
-    function handleAnswer(challenge, idx, opt) {
-      if (idx === correctPos) {
-        optionsPanel.querySelectorAll('.option').forEach(el => el.classList.add('disabled'));
-        opt.classList.add('correct');
-
-        completed.add(challenge.id);
-        saveCompleted(completed);
-        ticketStatusEl.textContent = 'RESOLVIDO';
-        ticketStatusEl.classList.add('done');
-        ticketStatusEl.classList.remove('pending');
-
-        const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
-        if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de POO, componentes e multimídia!', 'success');
-        } else {
-          logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
-          btnNext.style.display = 'inline-block';
-        }
-        renderSidebar();
-
-        if (typeof window.reportActivity === 'function') {
-          window.reportActivity(
-            'cod_poo_pratica',
-            `Codificação — POO e Componentes — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
-            { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
-          );
-        }
-      } else {
-        wrongTried.add(idx);
-        opt.classList.add('incorrect');
-        logConsole('❌ Não é essa. Tente outra opção — a dica pode ajudar.', 'fail');
-      }
-    }
+    return a === b;
   }
 
   function selectChallenge(id) {
@@ -427,9 +435,10 @@
     if (!challenge || !isUnlocked(challenge)) return;
     selectedId = id;
 
-    challengeTitleEl.textContent = `Parecer ${challenge.id}: ${challenge.title}`;
+    challengeTitleEl.textContent = `Desafio ${challenge.id}: ${challenge.title}`;
     explanationTextEl.innerHTML = challenge.explanation;
     challengeDescEl.innerHTML = challenge.desc;
+    codeInput.value = challenge.starter;
     btnNext.style.display = 'none';
 
     hintBox.innerHTML = challenge.hint || '';
@@ -443,16 +452,94 @@
     ticketStatusEl.classList.toggle('pending', !alreadyDone);
 
     clearConsole();
-    if (alreadyDone) logConsole('Você já emitiu este parecer. Pode revisar as opções.', 'info');
-    renderOptions(challenge, alreadyDone);
+    if (alreadyDone) {
+      logConsole(`Você já resolveu este desafio. Pode rodar de novo pra treinar.`, 'info');
+    }
     renderSidebar();
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
         'cod_poo_pratica',
-        `Codificação — POO e Componentes — Parecer ${challenge.id}: ${challenge.title}`,
+        `Codificação — POO e Componentes — Desafio ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
+    }
+  }
+
+  function runChallenge() {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    let fn;
+    try {
+      fn = new Function(`${codeInput.value}\nreturn typeof ${challenge.fnName} === 'function' ? ${challenge.fnName} : undefined;`)();
+    } catch (err) {
+      logConsole('Erro de sintaxe: ' + err.message, 'fail');
+      return;
+    }
+
+    if (typeof fn !== 'function') {
+      logConsole(`A função '${challenge.fnName}' não foi encontrada. Verifique o nome da função.`, 'fail');
+      return;
+    }
+
+    let allPass = true;
+    challenge.tests.forEach((t, i) => {
+      let result, errorMsg = null;
+      try {
+        result = fn(...t.args);
+      } catch (err) {
+        errorMsg = err.message;
+      }
+
+      let pass;
+      if (errorMsg !== null) {
+        pass = false;
+      } else if (typeof t.check === 'function') {
+        pass = t.check(result, ...t.args);
+      } else {
+        pass = deepEqual(result, t.expected);
+      }
+      if (!pass) allPass = false;
+
+      const argsStr = t.args.map(a => (typeof a === 'function' ? '<função>' : JSON.stringify(a))).join(', ');
+      const expectedStr = t.expectedLabel ? t.expectedLabel : JSON.stringify(t.expected);
+
+      if (pass) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → OK ✅`, 'pass');
+      } else if (errorMsg) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → Erro: ${errorMsg} ❌`, 'fail');
+      } else {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → resultado errado (esperado: ${expectedStr}) ❌`, 'fail');
+      }
+    });
+
+    if (allPass) {
+      completed.add(challenge.id);
+      saveCompleted(completed);
+      ticketStatusEl.textContent = 'RESOLVIDO';
+      ticketStatusEl.classList.add('done');
+      ticketStatusEl.classList.remove('pending');
+
+      const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+      if (isLast) {
+        logConsole('🏆 Você resolveu todos os desafios de POO, componentes e multimídia!', 'success');
+      } else {
+        logConsole('✅ Desafio resolvido! Próximo desafio liberado.', 'success');
+        btnNext.style.display = 'inline-block';
+      }
+      renderSidebar();
+
+      if (typeof window.reportActivity === 'function') {
+        window.reportActivity(
+          'cod_poo_pratica',
+          `Codificação — POO e Componentes — Desafio ${challenge.id}: ${challenge.title} (resolvido)`,
+          { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
+        );
+      }
+    } else {
+      logConsole('❌ Ainda não passou em todos os testes. Ajuste o código e tente de novo.', 'warn');
     }
   }
 
@@ -460,6 +547,7 @@
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
   });
+  btnRun.addEventListener('click', runChallenge);
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);
     const next = CHALLENGES[idx + 1];

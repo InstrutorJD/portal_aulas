@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Central de Suporte a Devs (Lógica)</title>
+<title>PixelForge Studios — Jogos: Central de Suporte a Devs (Lógica) — Código</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -69,6 +69,10 @@
     color:var(--green); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
   }
   .explanation-box code{ color:var(--yellow); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--yellow); white-space:pre;
+  }
 
   .hint-toggle{
     display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
@@ -82,21 +86,12 @@
   .hint-box.show{ display:block; }
   .hint-box b{ color:var(--yellow); }
 
-  .options-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
-  .option{
-    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
-    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  textarea#codeInput{
+    width:100%; flex:1; min-height:60px; resize:vertical; background:#000; color:var(--green);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5;
   }
-  .option:hover{ border-color:var(--green-dim); }
-  .option .opt-letter{
-    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
-  }
-  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.08); }
-  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
-  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); opacity:0.6; cursor:not-allowed; }
-  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
-  .option.disabled{ cursor:default; }
+  textarea#codeInput:focus{ border-color:var(--green); }
 
   .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
   button.btn{
@@ -111,6 +106,7 @@
     flex:1; min-height:50px; overflow-y:auto; line-height:1.6;
   }
   .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--green); }
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--green); font-weight:bold; }
 
@@ -121,6 +117,7 @@
     .layout{ flex-direction:column; height:auto; }
     .sidebar{ width:100%; height:auto; max-height:150px; }
     .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:110px; }
     .console{ flex:none; max-height:160px; }
   }
 </style>
@@ -168,9 +165,10 @@
           <div class="hint-box" id="hintBox"></div>
         </div>
 
-        <div class="options-panel" id="optionsPanel"></div>
+        <textarea id="codeInput" spellcheck="false"></textarea>
 
         <div class="actions">
+          <button class="btn" id="btnRun">▶ Executar</button>
           <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo chamado →</button>
         </div>
 
@@ -190,165 +188,173 @@
       id: 1,
       title: 'O ciclo que nunca para',
       icon: '🔁',
-      explanation: 'O game loop repete continuamente ler entrada, atualizar o estado e redesenhar a tela — é isso que faz o jogo reagir ao jogador em tempo real, ao invés de rodar a lógica só uma vez.',
-      desc: 'Um chamado relata: "o personagem só se move UMA vez quando aperto a tecla, e depois trava, mesmo segurando a tecla". Qual conceito provavelmente falta na implementação?',
-      hint: 'Pense no que faz o jogo continuar checando a entrada do jogador quadro após quadro.',
-      options: [
-        'Um game loop que reavalia entrada e posição continuamente, a cada frame',
-        'Uma cor diferente pro personagem',
-        'Mais memória RAM no computador',
-        'Um novo sistema operacional'
-      ],
-      correctIndex: 0
+      fnName: 'atualizarPosicao',
+      explanation: 'O game loop atualiza a posição de cada objeto a cada frame, somando a velocidade atual à posição. Se um saldo bancário aumenta com um depósito, o novo saldo é <code>saldo + deposito</code> — o mesmo raciocínio se aplica a posição e velocidade.',
+      desc: 'Chamado: "preciso de uma função que receba a posição atual de um objeto e sua velocidade, e devolva a posição dele no próximo frame do game loop." Implemente <code>atualizarPosicao(pos, velocidade)</code>.',
+      hint: 'Pense em como a velocidade se soma (ou subtrai, se for negativa) à posição a cada novo frame.',
+      starter: 'function atualizarPosicao(pos, velocidade) {\n  // devolva a posição do objeto no próximo frame\n\n}',
+      tests: [
+        { args: [0, 5], expected: 5 },
+        { args: [10, -3], expected: 7 },
+        { args: [100, 0], expected: 100 }
+      ]
     },
     {
       id: 2,
       title: 'Para onde é "baixo"?',
       icon: '📐',
-      explanation: 'Na maioria dos motores de jogo 2D, a origem (0,0) fica no canto superior esquerdo e o eixo Y cresce para BAIXO — o oposto do gráfico de matemática da escola.',
-      desc: 'Um aluno quer que um sprite desça na tela e escreve um código que DIMINUI o valor de Y a cada frame — mas o sprite sobe em vez de descer. O que ele entendeu errado?',
-      hint: 'Lembre pra qual lado o eixo Y cresce na maioria das engines 2D — não é como no gráfico da escola.',
-      options: [
-        'Ele inverteu o eixo: pra descer na tela, é preciso AUMENTAR o valor de Y, não diminuir',
-        'O sprite está com o tamanho errado',
-        'O problema é a cor do sprite',
-        'Não existe erro, o comportamento está correto'
-      ],
-      correctIndex: 0
+      fnName: 'moverNoEixoY',
+      explanation: 'Na maioria dos motores 2D, a origem fica no canto superior esquerdo e o eixo Y cresce para BAIXO — o oposto do gráfico da escola. Uma função que decide entre dois resultados conforme uma condição booleana costuma usar <code>if/else</code> ou o operador ternário: <pre>condicao ? valorSeVerdadeiro : valorSeFalso</pre>',
+      desc: 'Chamado: "preciso mover um objeto uma casa no eixo Y — se <code>paraBaixo</code> for true, ele desce; se for false, ele sobe." Implemente <code>moverNoEixoY(y, paraBaixo)</code>, devolvendo o novo valor de Y.',
+      hint: 'Lembre pra qual lado o eixo Y cresce nos motores de jogo 2D — não é como no gráfico da escola.',
+      starter: 'function moverNoEixoY(y, paraBaixo) {\n  // se paraBaixo for true, desça (mude Y na direção certa)\n  // se for false, suba\n\n}',
+      tests: [
+        { args: [5, true], expected: 6 },
+        { args: [5, false], expected: 4 },
+        { args: [0, true], expected: 1 }
+      ]
     },
     {
       id: 3,
-      title: 'Organize o cenário',
-      icon: '🗺️',
-      explanation: 'Representar o cenário como uma matriz de tiles (uma grade de linhas e colunas, cada posição guardando o tipo de bloco) torna a edição, o reaproveitamento e a geração de níveis muito mais simples do que posicionar cada peça manualmente.',
-      desc: 'O time está desenhando manualmente, pixel a pixel, a posição de cada bloco do cenário — e está lento e cheio de erros. O que resolveria isso de forma mais organizada?',
-      hint: 'Pense numa estrutura de linhas e colunas onde cada posição só guarda "qual tile vai aqui".',
-      options: [
-        'Representar o cenário como uma matriz de tiles (uma grade de linhas e colunas)',
-        'Desenhar tudo em um único sprite gigante sem divisões',
-        'Remover o cenário do jogo',
-        'Aumentar a resolução da tela'
-      ],
-      correctIndex: 0
+      title: 'Vira pra direita, anda pra esquerda',
+      icon: '↔️',
+      fnName: 'moverNoEixoX',
+      explanation: 'Diferente do Y, o eixo X segue o sentido "natural": aumentar move pra direita, diminuir move pra esquerda, e isso não se inverte entre engines.',
+      desc: 'Chamado: "preciso mover um objeto uma casa no eixo X — se <code>paraDireita</code> for true, ele vai pra direita; se for false, pra esquerda." Implemente <code>moverNoEixoX(x, paraDireita)</code>.',
+      hint: 'Pense em qual direção o valor de X precisa ir pra mover algo pra direita ou pra esquerda na tela.',
+      starter: 'function moverNoEixoX(x, paraDireita) {\n  // se paraDireita for true, vá pra direita\n  // se for false, vá pra esquerda\n\n}',
+      tests: [
+        { args: [5, true], expected: 6 },
+        { args: [5, false], expected: 4 },
+        { args: [10, false], expected: 9 }
+      ]
     },
     {
       id: 4,
-      title: 'Sprite sumindo aos poucos',
-      icon: '🎨',
-      explanation: 'O canal alpha do sistema RGBA controla a transparência: 0 é totalmente transparente e o valor máximo é totalmente opaco. É o canal certo pra criar um efeito de "sumir aos poucos".',
-      desc: 'Um chamado pede um efeito de fantasma "sumindo" aos poucos da tela. Qual valor de cor deve ser reduzido gradualmente pra isso funcionar?',
-      hint: 'Não são os canais de cor (R, G, B) — é o quarto valor do sistema RGBA.',
-      options: [
-        'O canal alpha (transparência)',
-        'O canal vermelho (R)',
-        'O canal verde (G)',
-        'O canal azul (B)'
-      ],
-      correctIndex: 0
+      title: 'Organize o cenário',
+      icon: '🗺️',
+      fnName: 'tileNaMatriz',
+      explanation: 'Guardar o cenário como uma matriz de tiles (uma grade de linhas e colunas) permite consultar qualquer posição só acessando aquela linha e coluna do array. Em JS, um array de arrays se acessa em duas etapas: primeiro a linha, depois a coluna dentro dela.<pre>const grade = [[10, 20], [30, 40]];\ngrade[0][1]; // 20 — linha 0, coluna 1</pre>',
+      desc: 'Chamado: "preciso de uma função que devolva o tile que está numa determinada linha/coluna da matriz do cenário." Implemente <code>tileNaMatriz(matriz, linha, coluna)</code>.',
+      hint: 'Acesse primeiro a linha da matriz, e dentro dela, a coluna.',
+      starter: 'function tileNaMatriz(matriz, linha, coluna) {\n  // devolva o valor guardado na matriz nessa linha/coluna\n\n}',
+      tests: [
+        { args: [[[1, 2], [3, 4]], 0, 1], expected: 2 },
+        { args: [[[1, 2], [3, 4]], 1, 0], expected: 3 },
+        { args: [[[5]], 0, 0], expected: 5 }
+      ]
     },
     {
       id: 5,
-      title: 'Por que ele não cai?',
-      icon: '🪂',
-      explanation: 'Sem aplicar gravidade (uma aceleração constante puxando o objeto pra baixo a cada frame), nada faz o personagem descer sozinho depois de subir — ele fica flutuando.',
-      desc: 'Um personagem pula, mas depois fica flutuando parado no ar, sem nunca descer de volta ao chão. O que está faltando na física dele?',
-      hint: 'Pense na força que, no mundo real, sempre puxa as coisas pra baixo.',
-      options: [
-        'Aplicar gravidade — uma aceleração constante puxando o personagem pra baixo a cada frame',
-        'Aumentar a velocidade horizontal',
-        'Trocar a cor do sprite',
-        'Remover a colisão com o chão'
-      ],
-      correctIndex: 0
+      title: 'Sprite sumindo aos poucos',
+      icon: '🎨',
+      fnName: 'aplicarAlpha',
+      explanation: 'O sistema RGBA guarda um quarto canal, o alpha, controlando a transparência. Uma função pode devolver uma cópia de um objeto com um campo novo usando o operador spread: <pre>const atualizado = { ...original, novoCampo: valor };</pre>',
+      desc: 'Chamado: "preciso de uma função que receba uma cor <code>{r, g, b}</code> e um valor de transparência, e devolva a cor com o canal alpha aplicado." Implemente <code>aplicarAlpha(cor, alpha)</code>, devolvendo um novo objeto com <code>r</code>, <code>g</code>, <code>b</code> iguais aos da cor recebida, e <code>a</code> igual ao alpha recebido.',
+      hint: 'Copie os campos <code>r</code>, <code>g</code>, <code>b</code> da cor recebida e acrescente um campo <code>a</code> com o valor do alpha.',
+      starter: 'function aplicarAlpha(cor, alpha) {\n  // cor é um objeto { r, g, b }\n  // devolva um novo objeto com r, g, b da cor recebida, e a com o alpha\n\n}',
+      tests: [
+        { args: [{ r: 255, g: 0, b: 0 }, 0.5], check: (r) => r && r.r === 255 && r.g === 0 && r.b === 0 && r.a === 0.5, expectedLabel: '{ r: 255, g: 0, b: 0, a: 0.5 }' },
+        { args: [{ r: 10, g: 20, b: 30 }, 0], check: (r) => r && r.r === 10 && r.g === 20 && r.b === 30 && r.a === 0, expectedLabel: '{ r: 10, g: 20, b: 30, a: 0 }' },
+        { args: [{ r: 1, g: 2, b: 3 }, 1], check: (r) => r && r.a === 1, expectedLabel: 'objeto com a: 1' }
+      ]
     },
     {
       id: 6,
-      title: 'Rápido demais no PC do chefe',
-      icon: '⏱️',
-      explanation: 'Sem usar delta time (o tempo real desde o último frame) pra escalar o movimento, o jogo roda mais rápido em computadores com mais FPS e mais devagar em computadores fracos, mesmo com o mesmo código.',
-      desc: 'Um chamado relata: "no meu notebook o personagem anda devagar, mas no PC do chefe da equipe ele dispara na tela, e o código de movimento é idêntico". O que explica isso?',
-      hint: 'Pense em quantos quadros por segundo cada máquina consegue rodar, e no que falta pra "compensar" essa diferença no movimento.',
-      options: [
-        'Falta usar o delta time pra escalar o movimento conforme o tempo real, não conforme o número de frames',
-        'O código está certo, é só trocar o mouse',
-        'É preciso reinstalar o sistema operacional do PC mais rápido',
-        'Isso não tem relação nenhuma com o FPS de cada máquina'
-      ],
-      correctIndex: 0
+      title: 'Por que ele não cai?',
+      icon: '🪂',
+      fnName: 'aplicarGravidade',
+      explanation: 'Gravidade é uma aceleração constante somada à velocidade vertical a cada frame — é isso que faz um personagem, depois de pular, comece a acelerar de volta pra baixo.',
+      desc: 'Chamado: "preciso de uma função que, a cada frame, some a gravidade à velocidade vertical atual de um personagem." Implemente <code>aplicarGravidade(velocidadeY, gravidade)</code>.',
+      hint: 'A gravidade se soma à velocidade vertical a cada frame — pense em como somar dois valores.',
+      starter: 'function aplicarGravidade(velocidadeY, gravidade) {\n  // devolva a nova velocidade vertical após somar a gravidade\n\n}',
+      tests: [
+        { args: [0, 0.5], expected: 0.5 },
+        { args: [2, 0.5], expected: 2.5 },
+        { args: [-1, 1], expected: 0 }
+      ]
     },
     {
       id: 7,
-      title: 'Vira pra direita, anda pra esquerda',
-      icon: '↔️',
-      explanation: 'No eixo X, aumentar o valor move o elemento pra direita e diminuir move pra esquerda — diferente do Y, esse sentido não costuma se inverter entre engines.',
-      desc: 'Um aluno programou o botão "esquerda" pra AUMENTAR o valor de X do personagem, e ele acaba indo pra direita em vez de esquerda. Qual é o erro?',
-      hint: 'Pense em qual direção o valor de X precisa ir pra mover algo pra esquerda na tela.',
-      options: [
-        'Pra ir pra esquerda, o valor de X precisa DIMINUIR, não aumentar',
-        'O eixo X não controla movimento horizontal',
-        'O problema está no eixo Y, não no X',
-        'Botões de direção não afetam coordenadas'
-      ],
-      correctIndex: 0
+      title: 'Rápido demais no PC do chefe',
+      icon: '⏱️',
+      fnName: 'escalarPorDeltaTime',
+      explanation: 'Delta time é o tempo real (em segundos) que passou desde o último frame. Escalar uma velocidade "por segundo" pelo delta time converte ela pro tanto que deve se mover NESSE frame específico, independente do FPS da máquina.',
+      desc: 'Chamado: "o personagem anda rápido demais em PCs potentes e devagar em PCs fracos — preciso de uma função que escale a velocidade pelo delta time do frame atual." Implemente <code>escalarPorDeltaTime(velocidade, deltaTime)</code>.',
+      hint: 'Pense em qual operação matemática "escala" um valor por uma fração de tempo.',
+      starter: 'function escalarPorDeltaTime(velocidade, deltaTime) {\n  // devolva o quanto o objeto deve se mover NESTE frame\n\n}',
+      tests: [
+        { args: [100, 0.5], expected: 50 },
+        { args: [200, 1], expected: 200 },
+        { args: [60, 0.25], expected: 15 }
+      ]
     },
     {
       id: 8,
       title: 'Personagens se atravessando',
       icon: '🚧',
-      explanation: 'Sem um colisor e uma lógica de detecção de colisão (como AABB, que compara as bordas de dois retângulos), o jogo não percebe quando dois elementos se sobrepõem, mesmo que pareçam se tocar visualmente.',
-      desc: 'Um chamado relata: "dois personagens estão visivelmente sobrepostos na tela, um passando por cima do outro, e o jogo não faz nada — como se não existisse contato". O que falta?',
-      hint: 'Pense no que precisa existir pra o jogo "perceber" que dois retângulos se sobrepõem, além da aparência visual.',
-      options: [
-        'Um colisor em cada personagem e uma lógica de detecção de colisão (como AABB) comparando suas bordas',
-        'Aumentar o tamanho dos sprites',
-        'Diminuir o brilho da tela',
-        'Trocar a cor de fundo do cenário'
-      ],
-      correctIndex: 0
+      fnName: 'colideAABB',
+      explanation: 'A colisão AABB compara as bordas de dois retângulos: eles se sobrepõem se, em AMBOS os eixos (X e Y), a faixa de um cruza a faixa do outro. Se em qualquer um dos dois eixos eles não se cruzam, não há colisão.',
+      desc: 'Chamado: "preciso de uma função que receba dois retângulos <code>{x, y, w, h}</code> (posição e tamanho) e diga se eles estão colidindo." Implemente <code>colideAABB(a, b)</code>, devolvendo <code>true</code> se os retângulos se sobrepõem, <code>false</code> caso contrário.',
+      hint: 'Um retângulo vai de <code>x</code> até <code>x + w</code>, e de <code>y</code> até <code>y + h</code>. Compare essas faixas nos dois eixos.',
+      starter: 'function colideAABB(a, b) {\n  // a e b são objetos { x, y, w, h }\n  // devolva true se os dois retângulos se sobrepõem, false caso contrário\n\n}',
+      tests: [
+        { args: [{ x: 0, y: 0, w: 10, h: 10 }, { x: 5, y: 5, w: 10, h: 10 }], expected: true },
+        { args: [{ x: 0, y: 0, w: 10, h: 10 }, { x: 20, y: 20, w: 10, h: 10 }], expected: false },
+        { args: [{ x: 0, y: 0, w: 10, h: 10 }, { x: 10, y: 0, w: 10, h: 10 }], expected: false }
+      ]
     },
     {
       id: 9,
       title: 'Encomenda: sprite amarelo',
       icon: '🟡',
-      explanation: 'O amarelo nasce da mistura de Vermelho e Verde no máximo, com o canal Azul baixo — é assim que o sistema RGB combina luz colorida pra formar essa cor.',
-      desc: 'Um designer pede um sprite na cor amarela, mas o desenvolvedor não sabe quais canais RGB ajustar. Qual combinação produz amarelo?',
-      hint: 'Pense em quais dois canais, juntos no máximo, formam essa cor — e qual canal precisa ficar baixo.',
-      options: [
-        'Vermelho (R) e Verde (G) altos, Azul (B) baixo',
-        'Só o canal Azul (B) alto',
-        'Só o canal alpha alto',
-        'Vermelho (R) baixo, Verde e Azul altos'
-      ],
-      correctIndex: 0
+      fnName: 'ehAmarelo',
+      explanation: 'O amarelo nasce da mistura de Vermelho e Verde altos, com Azul baixo. Uma função pode checar várias condições ao mesmo tempo com o operador <code>&&</code>: <pre>valorA >= limite && valorB <= outroLimite</pre>',
+      desc: 'Chamado: "preciso validar se uma cor <code>{r, g, b}</code> é (aproximadamente) amarela, pra um filtro de assets." Implemente <code>ehAmarelo(cor)</code>, devolvendo <code>true</code> se <code>r</code> e <code>g</code> forem pelo menos 200, e <code>b</code> for no máximo 50.',
+      hint: 'Combine três comparações numéricas com o operador "e" (&&): duas checando se um canal é alto o suficiente, uma checando se o outro é baixo o suficiente.',
+      starter: 'function ehAmarelo(cor) {\n  // cor é um objeto { r, g, b }\n  // devolva true se for uma cor amarela (R e G altos, B baixo)\n\n}',
+      tests: [
+        { args: [{ r: 255, g: 255, b: 0 }], expected: true },
+        { args: [{ r: 255, g: 0, b: 0 }], expected: false },
+        { args: [{ r: 200, g: 200, b: 50 }], expected: true },
+        { args: [{ r: 0, g: 0, b: 255 }], expected: false }
+      ]
     },
     {
       id: 10,
       title: 'Personagem fora de controle',
       icon: '💨',
-      explanation: 'Sem um limite máximo pra velocidade (ou somando velocidade à própria velocidade em vez de aplicá-la à posição), o personagem acelera indefinidamente até sair de controle.',
-      desc: 'Um chamado relata: "o personagem começa devagar, mas vai acelerando cada vez mais até sair voando da tela, sem nenhum limite". O que está errado na lógica?',
-      hint: 'Pense na diferença entre posição e velocidade, e no que falta pra "travar" a velocidade num valor máximo.',
-      options: [
-        'Falta limitar a velocidade máxima e aplicar a velocidade corretamente à posição, em vez de acumulá-la sem controle',
-        'O problema é a cor do personagem',
-        'Faltou aumentar a resolução da tela',
-        'O eixo Y foi invertido'
-      ],
-      correctIndex: 0
+      fnName: 'limitarVelocidade',
+      explanation: 'Sem um teto, uma velocidade que só aumenta acelera pra sempre. Limitar (clamp) um valor significa "prendê-lo" dentro de uma faixa mínima e máxima — em JS, <code>Math.min</code> e <code>Math.max</code> combinados fazem esse tipo de coisa.',
+      desc: 'Chamado: "o personagem acelera sem limite até sair da tela — preciso de uma função que limite a velocidade dele entre <code>-maxVelocidade</code> e <code>+maxVelocidade</code>." Implemente <code>limitarVelocidade(velocidade, maxVelocidade)</code>.',
+      hint: 'Pense em como usar <code>Math.min</code> e <code>Math.max</code> juntos pra "prender" um valor dentro de uma faixa.',
+      starter: 'function limitarVelocidade(velocidade, maxVelocidade) {\n  // devolva velocidade "presa" entre -maxVelocidade e +maxVelocidade\n\n}',
+      tests: [
+        { args: [15, 10], expected: 10 },
+        { args: [-15, 10], expected: -10 },
+        { args: [5, 10], expected: 5 }
+      ]
     }
   ];
 
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + critério de avaliação (testes) de cada
+  // chamado — aqui não existe UMA alternativa certa, e sim um valor esperado
+  // por combinação de argumentos, então o gabarito lista os casos de teste.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Jogos: Central de Suporte a Devs — Lógica e Algoritmos',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      subtitle: 'Prática (código) · Turma Jogos Digitais',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
         prompt: c.desc,
-        options: c.options,
-        correctIndex: c.correctIndex,
-        answer: c.options[c.correctIndex]
+        answer: c.tests.map(t => {
+          const inputs = (t.args || []).map(a => JSON.stringify(a)).join(', ');
+          const exp = ('expected' in t) ? JSON.stringify(t.expected) : (t.expectedLabel || 'ver critério no código-fonte');
+          return `${c.fnName}(${inputs}) deve retornar ${exp}`;
+        }).join('\n')
       })),
       fileName: 'fund-logica-pratica-gabarito.txt'
     });
@@ -360,7 +366,8 @@
   const explanationTextEl = document.getElementById('explanationText');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
-  const optionsPanel = document.getElementById('optionsPanel');
+  const codeInput = document.getElementById('codeInput');
+  const btnRun = document.getElementById('btnRun');
   const btnNext = document.getElementById('btnNext');
   const btnHint = document.getElementById('btnHint');
   const hintBox = document.getElementById('hintBox');
@@ -411,64 +418,87 @@
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
   }
 
-  function renderOptions(challenge, alreadyDone) {
-    optionsPanel.innerHTML = '';
-    const letters = ['A', 'B', 'C', 'D'];
-    const wrongTried = new Set();
-
-    const order = challenge.options.map((_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
+  function deepEqual(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
     }
-    const correctPos = order.indexOf(challenge.correctIndex);
+    return a === b;
+  }
 
-    order.forEach((origIdx, pos) => {
-      const optText = challenge.options[origIdx];
-      const opt = document.createElement('div');
-      opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
-      if (alreadyDone) {
-        opt.classList.add('disabled');
-        if (pos === correctPos) opt.classList.add('correct');
-      } else {
-        opt.addEventListener('click', () => handleAnswer(challenge, pos, opt));
+  function runChallenge() {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    let fn;
+    try {
+      fn = new Function(`${codeInput.value}\nreturn typeof ${challenge.fnName} === 'function' ? ${challenge.fnName} : undefined;`)();
+    } catch (err) {
+      logConsole('Erro de sintaxe: ' + err.message, 'fail');
+      return;
+    }
+
+    if (typeof fn !== 'function') {
+      logConsole(`A função '${challenge.fnName}' não foi encontrada. Verifique o nome da função.`, 'fail');
+      return;
+    }
+
+    let allPass = true;
+    challenge.tests.forEach((t, i) => {
+      let result, errorMsg = null;
+      try {
+        result = fn(...t.args);
+      } catch (err) {
+        errorMsg = err.message;
       }
-      optionsPanel.appendChild(opt);
+
+      let pass;
+      if (errorMsg !== null) {
+        pass = false;
+      } else if (typeof t.check === 'function') {
+        pass = t.check(result, ...t.args);
+      } else {
+        pass = deepEqual(result, t.expected);
+      }
+      if (!pass) allPass = false;
+
+      const argsStr = t.args.map(a => JSON.stringify(a)).join(', ');
+      const expectedStr = t.expectedLabel ? t.expectedLabel : JSON.stringify(t.expected);
+
+      if (pass) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → ${JSON.stringify(result)} ✅`, 'pass');
+      } else if (errorMsg) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → Erro: ${errorMsg} ❌`, 'fail');
+      } else {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → ${JSON.stringify(result)} (esperado ${expectedStr}) ❌`, 'fail');
+      }
     });
 
-    function handleAnswer(challenge, idx, opt) {
-      if (idx === correctPos) {
-        optionsPanel.querySelectorAll('.option').forEach(el => el.classList.add('disabled'));
-        opt.classList.add('correct');
+    if (allPass) {
+      completed.add(challenge.id);
+      saveCompleted(completed);
+      ticketStatusEl.textContent = 'RESOLVIDO';
+      ticketStatusEl.classList.add('done');
+      ticketStatusEl.classList.remove('pending');
 
-        completed.add(challenge.id);
-        saveCompleted(completed);
-        ticketStatusEl.textContent = 'RESOLVIDO';
-        ticketStatusEl.classList.add('done');
-        ticketStatusEl.classList.remove('pending');
-
-        const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
-        if (isLast) {
-          logConsole('🏆 Chamado resolvido! Você concluiu todos os chamados de lógica e algoritmos!', 'success');
-        } else {
-          logConsole('✅ Chamado resolvido! Próximo chamado liberado.', 'success');
-          btnNext.style.display = 'inline-block';
-        }
-        renderSidebar();
-
-        if (typeof window.reportActivity === 'function') {
-          window.reportActivity(
-            'fund_logica_pratica',
-            `Jogos — Lógica e Algoritmos — Chamado ${challenge.id}: ${challenge.title} (resolvido)`,
-            { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
-          );
-        }
+      const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+      if (isLast) {
+        logConsole('🏆 Chamado resolvido! Você concluiu todos os chamados de lógica e algoritmos!', 'success');
       } else {
-        wrongTried.add(idx);
-        opt.classList.add('incorrect');
-        logConsole('❌ Não é essa. Tente outra opção — a dica pode ajudar.', 'fail');
+        logConsole('✅ Chamado resolvido! Próximo chamado liberado.', 'success');
+        btnNext.style.display = 'inline-block';
       }
+      renderSidebar();
+
+      if (typeof window.reportActivity === 'function') {
+        window.reportActivity(
+          'fund_logica_pratica',
+          `Jogos — Lógica e Algoritmos — Chamado ${challenge.id}: ${challenge.title} (resolvido)`,
+          { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
+        );
+      }
+    } else {
+      logConsole('❌ Ainda não é isso. Ajuste o código e execute de novo.', 'fail');
     }
   }
 
@@ -480,6 +510,7 @@
     challengeTitleEl.textContent = `Chamado ${challenge.id}: ${challenge.title}`;
     explanationTextEl.innerHTML = challenge.explanation;
     challengeDescEl.innerHTML = challenge.desc;
+    codeInput.value = challenge.starter;
     btnNext.style.display = 'none';
 
     hintBox.innerHTML = challenge.hint || '';
@@ -493,8 +524,7 @@
     ticketStatusEl.classList.toggle('pending', !alreadyDone);
 
     clearConsole();
-    if (alreadyDone) logConsole('Você já resolveu este chamado. Pode revisar as opções.', 'info');
-    renderOptions(challenge, alreadyDone);
+    if (alreadyDone) logConsole('Você já resolveu este chamado. Pode revisar/reexecutar o código.', 'info');
     renderSidebar();
 
     if (typeof window.reportActivity === 'function') {
@@ -510,6 +540,7 @@
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
   });
+  btnRun.addEventListener('click', runChallenge);
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);
     const next = CHALLENGES[idx + 1];

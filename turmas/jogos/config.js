@@ -266,7 +266,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Codificação: Linguagens, Dados e GDD',
-              desc: 'Resolva pareceres sobre linguagens de jogos, formatos de dados, requisitos do GDD e pipeline de renderização.',
+              desc: 'Escreva código de verdade: manipule dados JSON, valide requisitos do GDD e calcule orçamento de assets do pipeline de renderização.',
               icon: '🐍', src: 'atividades/cod-linguagens-pratica.html',
               progressKey: 'cod_linguagens_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
@@ -288,7 +288,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Codificação: Segurança e Debugging',
-              desc: 'Resolva pareceres sobre os pilares CID, permissões, Watch, Call Stack e manipulação de dados externos.',
+              desc: 'Escreva código de verdade: valide permissões, trate erros com segurança e manipule dados externos sem quebrar o jogo.',
               icon: '🔐', src: 'atividades/cod-seguranca-debug-pratica.html',
               progressKey: 'cod_seguranca_debug_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
@@ -298,7 +298,7 @@ window.TURMA_CONFIG_JOGOS = {
         {
           key: 'cod-poo',
           label: 'POO, Componentes e Multimídia',
-          desc: 'Aprenda a teoria e depois resolva pareceres sobre classes/instâncias, encapsulamento, componentes desacoplados, frameworks e triggers.',
+          desc: 'Aprenda a teoria e depois escreva código de verdade sobre classes/instâncias, encapsulamento, componentes desacoplados, frameworks e triggers.',
           capacidade: 'Aplicar técnicas e métodos de desenvolvimento utilizando Programação Orientada a Objetos (POO) e Programação Orientada a Componentes / Aplicar linguagem de programação no uso de frameworks e integração multimídia.',
           modules: [
             {
@@ -310,7 +310,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Codificação: POO, Componentes e Multimídia',
-              desc: 'Resolva pareceres sobre classes, instâncias, encapsulamento, componentes, frameworks e triggers.',
+              desc: 'Escreva funções e classes JS de verdade, rodando contra casos de teste: instâncias, encapsulamento, componentes, herança e triggers.',
               icon: '👾', src: 'atividades/cod-poo-pratica.html',
               progressKey: 'cod_poo_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
@@ -332,7 +332,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Codificação: Metodologia Ágil e Clean Code',
-              desc: 'Resolva pareceres sobre Kanban, live coding, DRY, refatoração e documentação técnica.',
+              desc: 'Escreva código de verdade aplicando Clean Code: elimine repetição (DRY), nomeie constantes e refatore sem quebrar o comportamento.',
               icon: '📋', src: 'atividades/cod-agil-clean-pratica.html',
               progressKey: 'cod_agil_clean_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
@@ -354,7 +354,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Codificação: Segurança no Código e IA com Grafos',
-              desc: 'Resolva pareceres sobre validação de inputs, grafos de waypoints, algoritmos de busca, árvores de decisão e máquinas de estado.',
+              desc: 'Escreva código de verdade: valide inputs, navegue grafos de waypoints e programe a decisão/estado de um NPC.',
               icon: '🕸️', src: 'atividades/cod-seguranca-ia-pratica.html',
               progressKey: 'cod_seguranca_ia_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
@@ -404,7 +404,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Suporte: Lógica e Algoritmos',
-              desc: 'Resolva chamados de game loop, coordenadas, matriz de cenário, cor/transparência e física.',
+              desc: 'Escreva código de verdade: coordenadas, matriz de cenário, mistura de cor e física básica de jogo.',
               icon: '🧮', src: 'atividades/fund-logica-pratica.html',
               progressKey: 'fund_logica_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
@@ -426,7 +426,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Suporte: Programação de Jogos 2D',
-              desc: 'Resolva chamados de movimentação, colisão, eventos e controle de objetos.',
+              desc: 'Escreva código de verdade: movimentação, colisão, eventos e controle de objetos do jogo.',
               icon: '🕹️', src: 'atividades/fund-prog2d-pratica.html',
               progressKey: 'fund_prog2d_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true

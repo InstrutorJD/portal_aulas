@@ -69,6 +69,10 @@
     color:var(--blue); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
   }
   .explanation-box code{ color:var(--gold); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); white-space:pre;
+  }
 
   .hint-toggle{
     display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
@@ -82,21 +86,12 @@
   .hint-box.show{ display:block; }
   .hint-box b{ color:var(--gold); }
 
-  .options-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
-  .option{
-    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
-    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  textarea#codeInput{
+    width:100%; flex:1; min-height:60px; resize:vertical; background:#000; color:var(--blue);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5;
   }
-  .option:hover{ border-color:var(--blue-dim); }
-  .option .opt-letter{
-    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
-    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
-  }
-  .option.correct{ border-color:var(--blue); background:rgba(94,200,255,0.08); }
-  .option.correct .opt-letter{ border-color:var(--blue); color:var(--blue); }
-  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); opacity:0.6; cursor:not-allowed; }
-  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
-  .option.disabled{ cursor:default; }
+  textarea#codeInput:focus{ border-color:var(--blue); }
 
   .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
   button.btn{
@@ -111,8 +106,10 @@
     flex:1; min-height:50px; overflow-y:auto; line-height:1.6;
   }
   .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--blue); }
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--blue); font-weight:bold; }
+  .console .line.warn{ color:var(--gold); }
 
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
@@ -121,6 +118,7 @@
     .layout{ flex-direction:column; height:auto; }
     .sidebar{ width:100%; height:auto; max-height:150px; }
     .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:110px; }
     .console{ flex:none; max-height:160px; }
   }
 </style>
@@ -138,14 +136,14 @@
 
 <div class="env">
   <div class="topbar">
-    <div>CODIFICAÇÃO — CENTRAL (ÁGIL E CLEAN CODE)</div>
+    <div>CODIFICAÇÃO — OFICINA DE CÓDIGO (ÁGIL E CLEAN CODE)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
   <div class="stage">
     <div class="layout">
       <div class="sidebar">
-        <div class="sidebar-title">Pareceres</div>
+        <div class="sidebar-title">Chamados</div>
         <div id="challengeList"></div>
       </div>
 
@@ -168,10 +166,11 @@
           <div class="hint-box" id="hintBox"></div>
         </div>
 
-        <div class="options-panel" id="optionsPanel"></div>
+        <textarea id="codeInput" spellcheck="false"></textarea>
 
         <div class="actions">
-          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo parecer →</button>
+          <button class="btn" id="btnRun">▶ Executar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo chamado →</button>
         </div>
 
         <div class="console" id="consoleOutput"></div>
@@ -188,106 +187,176 @@
   const CHALLENGES = [
     {
       id: 1,
-      title: 'A Fazer, Em Progresso, Concluído',
-      icon: '📋',
-      explanation: 'Organizar tarefas em colunas visuais que mostram o progresso do fluxo de trabalho é um quadro Kanban.',
-      desc: 'Uma equipe organiza as tarefas em três colunas visuais — "A Fazer", "Em Progresso" e "Concluído" — movendo os cartões conforme o trabalho avança. Que ferramenta ágil é essa?',
-      hint: 'É um quadro visual bem conhecido em times ágeis.',
-      options: ['Quadro Kanban de tarefas visuais', 'Um GDD, documento de design', 'Um pipeline de renderização', 'Uma variável de ambiente'],
-      correctIndex: 0
+      title: 'Soma copiada em três lugares',
+      icon: '♻️',
+      explanation: 'O princípio <b>DRY</b> (Don’t Repeat Yourself) diz: se a mesma conta aparece em vários lugares do código, ela deveria virar uma única função reaproveitável.<pre>function metros(cm) {\n  return cm / 100;\n}</pre>Assim, em vez de escrever <code>cm / 100</code> toda vez, você chama <code>metros(cm)</code>.',
+      desc: 'A tela de checkout da loja da PixelForge soma <code>dinheiro + cartao + pix</code> copiado em três telas diferentes. Centralize essa conta numa função só: complete <code>custoTotal(dinheiro, cartao, pix)</code> retornando a soma dos três valores.',
+      hint: 'É só somar os três parâmetros recebidos — pense em qual operador junta valores numéricos.',
+      fnName: 'custoTotal',
+      starter: 'function custoTotal(dinheiro, cartao, pix) {\n  // retorne a soma de dinheiro + cartao + pix\n\n}',
+      tests: [
+        { args: [10, 20, 30], expected: 60 },
+        { args: [0, 0, 0], expected: 0 },
+        { args: [50, 0, 25], expected: 75 }
+      ]
     },
     {
       id: 2,
-      title: 'Três devs, um bug difícil',
-      icon: '👥',
-      explanation: 'Debugar em grupo, em tempo real, combinando perspectivas diferentes, é live coding colaborativo.',
-      desc: 'Diante de um bug difícil, três devs se juntam numa chamada e debugam o código juntos em tempo real, testando hipóteses em conjunto. Que prática é essa?',
-      hint: 'Pense em "programar junto, em tempo real, resolvendo um problema".',
-      options: ['Live coding colaborativo', 'Um Sprint isolado, sem colaboração entre os devs', 'Documentação técnica do código', 'Um requisito não funcional de performance'],
-      correctIndex: 0
+      title: 'O número 100 solto no código',
+      icon: '🔢',
+      explanation: 'Um <b>"número mágico"</b> é um valor solto no meio do código sem explicação (tipo um <code>100</code> aparecendo do nada). Clean Code prefere dar nome a esse valor com uma <b>constante</b>:<pre>const LIMITE_ESTOQUE = 50;\nfunction faltam(vendidos) {\n  return LIMITE_ESTOQUE - vendidos;\n}</pre>Assim, quem lê o código entende o que aquele número significa, e se o valor mudar um dia, muda num lugar só.',
+      desc: 'A vida máxima de um personagem da PixelForge é sempre <b>100</b> — em vez de escrever esse número solto, use a constante <code>VIDA_MAXIMA</code> já declarada no editor. Complete <code>vidaRestante(dano)</code> retornando <code>VIDA_MAXIMA</code> menos o dano recebido.',
+      hint: 'Use a constante <code>VIDA_MAXIMA</code> que já está declarada acima da função — não escreva o número 100 direto na conta.',
+      fnName: 'vidaRestante',
+      starter: 'const VIDA_MAXIMA = 100;\n\nfunction vidaRestante(dano) {\n  // retorne VIDA_MAXIMA menos dano (use a constante, não o número solto)\n\n}',
+      tests: [
+        { args: [30], expected: 70 },
+        { args: [0], expected: 100 },
+        { args: [100], expected: 0 }
+      ]
     },
     {
       id: 3,
-      title: 'Código copiado cinco vezes',
-      icon: '♻️',
-      explanation: 'Transformar código duplicado numa única função reaproveitável é aplicar o princípio DRY.',
-      desc: 'Um dev percebe que o mesmo cálculo está copiado em cinco lugares diferentes, e decide transformá-lo numa única função reaproveitável. Que princípio ele está aplicando?',
-      hint: 'É a sigla em inglês pra "não se repita".',
-      options: ['DRY (Don’t Repeat Yourself)', 'Nomenclatura clara, sem nenhuma relação direta com repetição', 'Um trigger de multimídia disparado por ação', 'Encapsulamento de dados internos da classe'],
-      correctIndex: 0
+      title: 'Validação copiada em três formulários',
+      icon: '🏷️',
+      explanation: 'Outro caso clássico de <b>DRY</b>: a mesma regra de validação (nome, apelido, nome de guilda) copiada em vários formulários. Centralizar numa função evita que, se a regra mudar, alguém esqueça de atualizar uma das cópias.<pre>function idadeValida(idade) {\n  return idade >= 0 && idade <= 120;\n}</pre>',
+      desc: 'Cadastro de personagem, de guilda e de apelido repetem a mesma validação de nome. Centralize numa função só: complete <code>nomeValido(nome)</code> retornando <b>true</b> se <code>nome</code> tiver pelo menos <b>3 caracteres</b> (ignorando espaços em branco no início/fim), e <b>false</b> caso contrário.',
+      hint: 'Strings têm um método pra remover espaços das pontas antes de checar o tamanho — procure por algo relacionado a "trim" ou "aparar".',
+      fnName: 'nomeValido',
+      starter: 'function nomeValido(nome) {\n  // retorne true se nome (sem espaços nas pontas) tiver pelo menos 3 caracteres\n\n}',
+      tests: [
+        { args: ['Eri'], expected: true },
+        { args: ['Al'], expected: false },
+        { args: ['   '], expected: false },
+        { args: ['Guardião'], expected: true }
+      ]
     },
     {
       id: 4,
-      title: 'Uma função vira três',
-      icon: '🧩',
-      explanation: 'Quebrar uma função monolítica em partes menores, cada uma com sua responsabilidade, é refatoração com modularização.',
-      desc: 'Uma função gigante que fazia tudo junto é quebrada em três funções menores, cada uma com uma responsabilidade específica. Que prática é essa?',
-      hint: 'Pense em "quebrar o monólito em pedaços organizados".',
-      options: ['Refatoração com modularização', 'Documentação técnica do código', 'Live coding colaborativo em grupo', 'Um quadro Kanban de tarefas'],
-      correctIndex: 0
+      title: 'A lista não pode mudar sozinha',
+      icon: '⚠️',
+      explanation: 'Uma <b>função pura</b> não altera (não tem "efeito colateral" em) os dados que recebeu — ela devolve um resultado NOVO, sem mexer no original.<pre>function comEconomia(precos, i) {\n  return precos.filter((_, idx) => idx !== i);\n}\n// o array "precos" original continua intacto depois da chamada</pre>Isso evita bugs em que outra parte do jogo ainda esperava a lista antiga intacta.',
+      desc: 'Outras telas da PixelForge ainda precisam da lista de inimigos original depois da chamada. Complete <code>semItem(lista, id)</code> retornando um <b>novo</b> array sem o item cujo <code>id</code> foi passado, <b>sem alterar</b> o array <code>lista</code> recebido.',
+      hint: 'Existe um método de array que já devolve uma NOVA lista filtrada, sem tocar no array original — pesquise por métodos relacionados a "filtrar".',
+      fnName: 'semItem',
+      starter: 'function semItem(lista, id) {\n  // retorne um NOVO array sem o item de id igual a "id", sem alterar "lista"\n\n}',
+      tests: [
+        {
+          args: [[{ id: 1 }, { id: 2 }, { id: 3 }], 2],
+          check: (r, lista) => JSON.stringify(r) === JSON.stringify([{ id: 1 }, { id: 3 }])
+                                && JSON.stringify(lista) === JSON.stringify([{ id: 1 }, { id: 2 }, { id: 3 }]),
+          expectedLabel: 'novo array sem o id 2, e o array original intacto'
+        },
+        {
+          args: [[{ id: 5 }], 5],
+          check: (r) => JSON.stringify(r) === JSON.stringify([]),
+          expectedLabel: 'array vazio'
+        }
+      ]
     },
     {
       id: 5,
-      title: 'Comentário estruturado',
-      icon: '📝',
-      explanation: 'Um comentário estruturado explicando função, parâmetros e retorno é uma docstring.',
-      desc: 'Acima de uma função complexa, um dev escreve um comentário estruturado explicando o que ela faz, seus parâmetros e o que retorna. Que prática de documentação é essa?',
-      hint: 'É um tipo específico de comentário, colado logo acima da função que documenta.',
-      options: ['Docstring, comentário estruturado', 'Um quadro Kanban de tarefas', 'Refatoração do código monolítico', 'Um trigger de áudio disparado'],
-      correctIndex: 0
+      title: 'If/else emaranhado pro acesso VIP',
+      icon: '🔀',
+      explanation: 'Clean Code evita condicionais emaranhadas quando uma comparação simples já resolve. Uma expressão booleana já vale <code>true</code> ou <code>false</code> sozinha — não precisa de <code>if/else</code> pra devolvê-la:<pre>function ehMaiorDeIdade(idade) {\n  return idade >= 18;\n}</pre>',
+      desc: 'A área VIP da PixelForge libera acesso pra quem tem <b>nível 10 ou mais</b>, OU já é <b>VIP</b>. Complete <code>acessoLiberado(nivel, vip)</code> retornando <b>true</b> ou <b>false</b>, num código limpo e direto (sem <code>if/else</code> desnecessário).',
+      hint: 'Combine as duas condições com o operador "ou" (<code>||</code>) e devolva o resultado direto com <code>return</code>.',
+      fnName: 'acessoLiberado',
+      starter: 'function acessoLiberado(nivel, vip) {\n  // retorne true se nivel >= 10 OU vip for true\n\n}',
+      tests: [
+        { args: [12, false], expected: true },
+        { args: [5, true], expected: true },
+        { args: [5, false], expected: false },
+        { args: [10, false], expected: true }
+      ]
     },
     {
       id: 6,
-      title: 'x virou vidaJogador',
-      icon: '🏷️',
-      explanation: 'Trocar um nome vago por um nome que comunica claramente o propósito da variável é nomenclatura clara.',
-      desc: 'Uma dev encontra uma variável chamada só "x" guardando a vida do jogador, e renomeia para "vidaJogador", sem mudar mais nada no código. Que princípio de Clean Code ela aplicou?',
-      hint: 'Pense em nomes que "dizem o que guardam", sem precisar de comentário extra.',
-      options: ['Nomenclatura clara', 'DRY — eliminar repetição', 'Refatoração com modularização', 'Uma docstring documentando a função'],
-      correctIndex: 0
+      title: 'Pontuação formatada na mão, toda vez',
+      icon: '📝',
+      explanation: 'Mais um caso de <b>DRY</b>: formatar um texto do mesmo jeito em várias telas (placar, ranking, perfil) é sinal de que essa formatação merece virar uma função só, reaproveitada em todo lugar.<pre>function comSinal(n) {\n  return (n >= 0 ? \'+\' : \'\') + n;\n}</pre>',
+      desc: 'O placar, o ranking e o perfil do jogador formatam a pontuação cada um do seu jeito. Centralize: complete <code>formatarPontuacao(pontos)</code> retornando uma string no formato <code>"{pontos} pts"</code> (ex.: para 100, retornar <code>"100 pts"</code>).',
+      hint: 'Você pode montar a string juntando o número com o texto " pts" — pesquise sobre template strings (crase + chaves) ou concatenação com <code>+</code>.',
+      fnName: 'formatarPontuacao',
+      starter: 'function formatarPontuacao(pontos) {\n  // retorne uma string no formato "{pontos} pts", ex: "100 pts"\n\n}',
+      tests: [
+        { args: [100], expected: '100 pts' },
+        { args: [0], expected: '0 pts' }
+      ]
     },
     {
       id: 7,
-      title: 'Duas semanas, um objetivo',
-      icon: '⏱️',
-      explanation: 'Um ciclo curto de trabalho com objetivo definido, revisado ao final antes do próximo ciclo, é um Sprint.',
-      desc: 'No início de um ciclo de duas semanas a equipe define um objetivo claro, e só ao final revisa o resultado antes do próximo ciclo. Que conceito ágil é esse?',
-      hint: 'É o nome do "ciclo curto" em si, diferente do quadro que organiza as tarefas dentro dele.',
-      options: ['Sprint', 'Quadro Kanban', 'Docstring', 'Refatoração'],
-      correctIndex: 0
+      title: 'A mesma divisão, de novo',
+      icon: '🧩',
+      explanation: '<b>Modularização</b> não é só criar funções pequenas — é também REAPROVEITAR as que já existem, em vez de reescrever a mesma lógica na mão de novo.<pre>function dobro(n) { return n * 2; }\nfunction areaDobrada(lado) {\n  return dobro(lado * lado); // reaproveita dobro() em vez de "* 2" solto de novo\n}</pre>',
+      desc: 'A função <code>metade(n)</code> já existe no editor (calcula a metade de um número). Complete <code>distanciaCentro(largura)</code> retornando a metade da largura recebida — mas <b>reaproveitando a função <code>metade()</code></b> já pronta, em vez de escrever a divisão de novo.',
+      hint: 'Chame <code>metade(largura)</code> dentro de <code>distanciaCentro</code> e devolva o resultado — não escreva <code>largura / 2</code> de novo.',
+      fnName: 'distanciaCentro',
+      starter: 'function metade(n) {\n  return n / 2;\n}\n\nfunction distanciaCentro(largura) {\n  // reaproveite a função metade() acima em vez de repetir a divisão\n\n}',
+      tests: [
+        { args: [800], expected: 400 },
+        { args: [100], expected: 50 }
+      ]
     },
     {
       id: 8,
-      title: 'Bug de colisão inconsistente',
-      icon: '🧩',
-      explanation: 'Debugar em grupo ajuda especialmente em bugs inconsistentes/difíceis de reproduzir, já que várias pessoas testam hipóteses ao mesmo tempo.',
-      desc: 'Um bug faz personagens atravessarem paredes só às vezes, difícil de reproduzir sozinho. A equipe decide debugar junto, em tempo real. Por que essa abordagem ajuda nesse tipo de bug?',
-      hint: 'Pense em por que "várias pessoas testando hipóteses juntas" ajuda mais num bug difícil de reproduzir.',
-      options: ['Combina perspectivas diferentes em tempo real, ajudando a isolar um bug inconsistente', 'Porque um Sprint só termina depois que todos os bugs forem corrigidos', 'Porque documentação técnica sozinha resolveria o bug', 'Porque bugs de colisão nunca podem ser debugados em grupo'],
-      correctIndex: 0
+      title: 'Contando ativos em cada tela',
+      icon: '🧮',
+      explanation: 'Mais uma repetição comum de contar-e-filtrar espalhada pelo código: centralizar numa função evita que cada tela implemente a própria versão (e talvez com bugs diferentes entre si).<pre>function contarPares(numeros) {\n  return numeros.filter(n => n % 2 === 0).length;\n}</pre>',
+      desc: 'Várias telas da PixelForge precisam saber quantos itens de uma lista estão com <code>ativo: true</code>. Centralize: complete <code>contarAtivos(lista)</code> retornando quantos itens do array têm a propriedade <code>ativo</code> igual a <code>true</code>.',
+      hint: 'Combine um método de array que filtra por uma condição com a propriedade <code>.length</code> do resultado.',
+      fnName: 'contarAtivos',
+      starter: 'function contarAtivos(lista) {\n  // retorne quantos itens de "lista" têm item.ativo === true\n\n}',
+      tests: [
+        { args: [[{ ativo: true }, { ativo: false }, { ativo: true }]], expected: 2 },
+        { args: [[]], expected: 0 },
+        { args: [[{ ativo: false }]], expected: 0 }
+      ]
     },
     {
       id: 9,
-      title: 'Arquitetura explicada',
-      icon: '📘',
-      explanation: 'Um documento mais amplo, sobre arquitetura e decisões de design, é um guia de referência — garante rastreabilidade.',
-      desc: 'Além dos comentários em cada função, a equipe mantém um documento único explicando a arquitetura geral e por que certas decisões foram tomadas. Que tipo de documentação é essa?',
-      hint: 'Não é o comentário de uma função só — é um documento mais amplo sobre o projeto inteiro.',
-      options: ['Um guia de referência', 'Uma docstring de uma função específica', 'Um quadro Kanban de tarefas', 'Um Sprint de duas semanas'],
-      correctIndex: 0
+      title: 'A refatoração que mudou o resultado',
+      icon: '🔒',
+      explanation: 'Refatorar significa melhorar a ESTRUTURA interna do código sem mudar o que ele calcula pra fora. Se o resultado muda pros mesmos valores de entrada, isso não é mais refatoração pura — é uma mudança de comportamento escondida.',
+      desc: 'A fórmula antiga de dano da PixelForge era <code>base vezes multiplicador</code>, espalhada em vários lugares. Ao centralizar numa função só, o resultado pros mesmos valores de entrada <b>precisa continuar idêntico</b> ao de antes. Complete <code>calcularDanoFinal(base, multiplicador)</code> retornando exatamente essa conta.',
+      hint: 'A fórmula já existia antes de virar função — é só reproduzir exatamente "base vezes multiplicador".',
+      fnName: 'calcularDanoFinal',
+      starter: 'function calcularDanoFinal(base, multiplicador) {\n  // retorne base * multiplicador (mesma fórmula de sempre, só que centralizada aqui)\n\n}',
+      tests: [
+        { args: [10, 3], expected: 30 },
+        { args: [5, 0], expected: 0 },
+        { args: [7, 1], expected: 7 }
+      ]
     },
     {
       id: 10,
-      title: 'O resultado mudou',
-      icon: '⚠️',
-      explanation: 'Refatoração de verdade preserva o comportamento externo — se o resultado mudou, algo além da estrutura interna foi alterado.',
-      desc: 'Ao refatorar uma função de dano, um dev percebe que o resultado calculado mudou pros mesmos valores de entrada de antes. Isso é sinal de quê?',
-      hint: 'Pense no que a refatoração NUNCA deveria alterar, mesmo mudando a estrutura interna do código.',
-      options: ['A refatoração não foi "pura" — o comportamento externo mudou', 'Isso é normal e esperado em qualquer refatoração', 'É sinal de que o código está mais modularizado', 'É sinal de que a nomenclatura ficou mais clara'],
-      correctIndex: 0
+      title: 'CHAMADO FINAL: Resumo do Personagem',
+      icon: '🏆',
+      explanation: 'Este chamado combina o que você já resolveu: usar uma constante nomeada em vez de número mágico (como no chamado 2) e devolver um resultado novo, sem efeitos colaterais (como no chamado 4) — só que agora devolvendo um <b>objeto</b> com mais de um valor calculado.<pre>function resumoPreco(preco, desconto) {\n  return { precoFinal: preco - desconto, percentualPago: Math.round(((preco - desconto) / preco) * 100) };\n}</pre>',
+      desc: 'Complete <code>resumoPersonagem(vida, dano)</code> usando a constante <code>VIDA_MAXIMA</code> já declarada, retornando um objeto <code>{ vidaRestante, percentual }</code>, onde <code>vidaRestante</code> é <code>vida - dano</code> e <code>percentual</code> é o arredondamento de <code>(vidaRestante / VIDA_MAXIMA) * 100</code>.',
+      hint: 'Calcule vidaRestante primeiro (numa variável), depois use ela pra calcular o percentual — e lembre de arredondar o percentual com <code>Math.round()</code>.',
+      fnName: 'resumoPersonagem',
+      starter: 'const VIDA_MAXIMA = 100;\n\nfunction resumoPersonagem(vida, dano) {\n  // retorne { vidaRestante, percentual }\n  // vidaRestante = vida - dano\n  // percentual = Math.round((vidaRestante / VIDA_MAXIMA) * 100)\n\n}',
+      tests: [
+        {
+          args: [100, 30],
+          check: r => r && r.vidaRestante === 70 && r.percentual === 70,
+          expectedLabel: '{ vidaRestante: 70, percentual: 70 }'
+        },
+        {
+          args: [100, 0],
+          check: r => r && r.vidaRestante === 100 && r.percentual === 100,
+          expectedLabel: '{ vidaRestante: 100, percentual: 100 }'
+        }
+      ]
     }
   ];
 
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + critério de avaliação (testes) de cada
+  // chamado — aqui não existe UMA resposta certa em texto, e sim um valor
+  // esperado por combinação de argumentos, então o gabarito lista os casos.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Codificação de Jogos: Central — Metodologia Ágil e Clean Code',
@@ -296,9 +365,11 @@
         number: i + 1,
         title: c.title,
         prompt: c.desc,
-        options: c.options,
-        correctIndex: c.correctIndex,
-        answer: c.options[c.correctIndex]
+        answer: c.tests.map(t => {
+          const inputs = (t.args || []).map(a => JSON.stringify(a)).join(', ');
+          const exp = ('expected' in t) ? JSON.stringify(t.expected) : (t.expectedLabel || 'ver critério no código-fonte');
+          return `${c.fnName}(${inputs}) deve retornar ${exp}`;
+        }).join('\n')
       })),
       fileName: 'cod-agil-clean-pratica-gabarito.txt'
     });
@@ -310,7 +381,8 @@
   const explanationTextEl = document.getElementById('explanationText');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
-  const optionsPanel = document.getElementById('optionsPanel');
+  const codeInput = document.getElementById('codeInput');
+  const btnRun = document.getElementById('btnRun');
   const btnNext = document.getElementById('btnNext');
   const btnHint = document.getElementById('btnHint');
   const hintBox = document.getElementById('hintBox');
@@ -361,64 +433,87 @@
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
   }
 
-  function renderOptions(challenge, alreadyDone) {
-    optionsPanel.innerHTML = '';
-    const letters = ['A', 'B', 'C', 'D'];
-    const wrongTried = new Set();
-
-    const order = challenge.options.map((_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
+  function deepEqual(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
     }
-    const correctPos = order.indexOf(challenge.correctIndex);
+    return a === b;
+  }
 
-    order.forEach((origIdx, pos) => {
-      const optText = challenge.options[origIdx];
-      const opt = document.createElement('div');
-      opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
-      if (alreadyDone) {
-        opt.classList.add('disabled');
-        if (pos === correctPos) opt.classList.add('correct');
-      } else {
-        opt.addEventListener('click', () => handleAnswer(challenge, pos, opt));
+  function runChallenge() {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    let fn;
+    try {
+      fn = new Function(`${codeInput.value}\nreturn typeof ${challenge.fnName} === 'function' ? ${challenge.fnName} : undefined;`)();
+    } catch (err) {
+      logConsole('Erro de sintaxe: ' + err.message, 'fail');
+      return;
+    }
+
+    if (typeof fn !== 'function') {
+      logConsole(`A função '${challenge.fnName}' não foi encontrada. Verifique o nome da função.`, 'fail');
+      return;
+    }
+
+    let allPass = true;
+    challenge.tests.forEach((t, i) => {
+      let result, errorMsg = null;
+      try {
+        result = fn(...t.args);
+      } catch (err) {
+        errorMsg = err.message;
       }
-      optionsPanel.appendChild(opt);
+
+      let pass;
+      if (errorMsg !== null) {
+        pass = false;
+      } else if (typeof t.check === 'function') {
+        pass = t.check(result, ...t.args);
+      } else {
+        pass = deepEqual(result, t.expected);
+      }
+      if (!pass) allPass = false;
+
+      const argsStr = t.args.map(a => JSON.stringify(a)).join(', ');
+      const expectedStr = t.expectedLabel ? t.expectedLabel : JSON.stringify(t.expected);
+
+      if (pass) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → ${JSON.stringify(result)} ✅`, 'pass');
+      } else if (errorMsg) {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → Erro: ${errorMsg} ❌`, 'fail');
+      } else {
+        logConsole(`[Teste ${i + 1}] ${challenge.fnName}(${argsStr}) → ${JSON.stringify(result)} (esperado ${expectedStr}) ❌`, 'fail');
+      }
     });
 
-    function handleAnswer(challenge, idx, opt) {
-      if (idx === correctPos) {
-        optionsPanel.querySelectorAll('.option').forEach(el => el.classList.add('disabled'));
-        opt.classList.add('correct');
+    if (allPass) {
+      completed.add(challenge.id);
+      saveCompleted(completed);
+      ticketStatusEl.textContent = 'RESOLVIDO';
+      ticketStatusEl.classList.add('done');
+      ticketStatusEl.classList.remove('pending');
 
-        completed.add(challenge.id);
-        saveCompleted(completed);
-        ticketStatusEl.textContent = 'RESOLVIDO';
-        ticketStatusEl.classList.add('done');
-        ticketStatusEl.classList.remove('pending');
-
-        const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
-        if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de metodologia ágil e Clean Code!', 'success');
-        } else {
-          logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
-          btnNext.style.display = 'inline-block';
-        }
-        renderSidebar();
-
-        if (typeof window.reportActivity === 'function') {
-          window.reportActivity(
-            'cod_agil_clean_pratica',
-            `Codificação — Ágil e Clean Code — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
-            { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
-          );
-        }
+      const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+      if (isLast) {
+        logConsole('🏆 Parecer emitido! Você resolveu todos os chamados de Metodologia Ágil e Clean Code!', 'success');
       } else {
-        wrongTried.add(idx);
-        opt.classList.add('incorrect');
-        logConsole('❌ Não é essa. Tente outra opção — a dica pode ajudar.', 'fail');
+        logConsole('✅ Parecer emitido! Próximo chamado liberado.', 'success');
+        btnNext.style.display = 'inline-block';
       }
+      renderSidebar();
+
+      if (typeof window.reportActivity === 'function') {
+        window.reportActivity(
+          'cod_agil_clean_pratica',
+          `Codificação — Ágil e Clean Code — Chamado ${challenge.id}: ${challenge.title} (resolvido)`,
+          { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
+        );
+      }
+    } else {
+      logConsole('❌ Ainda não é isso. Ajuste o código e tente de novo.', 'warn');
     }
   }
 
@@ -427,9 +522,10 @@
     if (!challenge || !isUnlocked(challenge)) return;
     selectedId = id;
 
-    challengeTitleEl.textContent = `Parecer ${challenge.id}: ${challenge.title}`;
+    challengeTitleEl.textContent = `Chamado ${challenge.id}: ${challenge.title}`;
     explanationTextEl.innerHTML = challenge.explanation;
     challengeDescEl.innerHTML = challenge.desc;
+    codeInput.value = challenge.starter;
     btnNext.style.display = 'none';
 
     hintBox.innerHTML = challenge.hint || '';
@@ -443,14 +539,13 @@
     ticketStatusEl.classList.toggle('pending', !alreadyDone);
 
     clearConsole();
-    if (alreadyDone) logConsole('Você já emitiu este parecer. Pode revisar as opções.', 'info');
-    renderOptions(challenge, alreadyDone);
+    if (alreadyDone) logConsole('Você já resolveu este chamado. Pode treinar de novo.', 'info');
     renderSidebar();
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
         'cod_agil_clean_pratica',
-        `Codificação — Ágil e Clean Code — Parecer ${challenge.id}: ${challenge.title}`,
+        `Codificação — Ágil e Clean Code — Chamado ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }
@@ -460,6 +555,7 @@
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
   });
+  btnRun.addEventListener('click', runChallenge);
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);
     const next = CHALLENGES[idx + 1];
