@@ -208,7 +208,7 @@
       starter: 'function gddCompleto(gdd) {\n  // gdd é um objeto, ex: { titulo: "...", genero: "...", plataforma: "..." }\n  // retorne true só se as TRÊS chaves existirem no objeto\n\n}',
       explanation: 'O operador <code>in</code> verifica se uma chave existe dentro de um objeto, devolvendo <code>true</code> ou <code>false</code>.<pre>const obj = { nome: "Ana" };\n"nome" in obj   // true\n"idade" in obj  // false</pre>',
       desc: 'Chegou uma reclamação: um GDD está incompleto e ninguém percebeu. Complete <code>gddCompleto(gdd)</code> retornando <b>true</b> só se o objeto tiver as três chaves <code>"titulo"</code>, <code>"genero"</code> e <code>"plataforma"</code> ao mesmo tempo.',
-      hint: 'Existe um operador que testa se uma chave existe num objeto — combine as três checagens com "e" (&&).',
+      hint: 'Existe um operador que testa se uma chave existe num objeto — como você combinaria essa checagem pras três chaves ao mesmo tempo, sem nenhuma podendo faltar?',
       tests: [
         { args: [{ titulo: 'A', genero: 'RPG', plataforma: 'PC' }], expected: true },
         { args: [{ titulo: 'A', genero: 'RPG' }], expected: false },

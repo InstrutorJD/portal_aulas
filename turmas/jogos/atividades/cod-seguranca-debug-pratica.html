@@ -288,7 +288,7 @@
       starter: 'function itemValido(item) {\n  // retorne true só se item tiver os campos nome, dano e preco (nenhum undefined)\n\n}',
       explanation: 'Validar campos obrigatórios evita que o código quebre mais adiante por falta de um dado esperado. Comparar uma propriedade com <code>undefined</code> mostra se ela existe no objeto.<pre>function temCampo(obj, campo) {\n  return obj[campo] !== undefined;\n}</pre>',
       desc: 'Antes de usar um item convertido do JSON, o código precisa confirmar que ele tem todos os campos obrigatórios: <code>nome</code>, <code>dano</code> e <code>preco</code>. Complete <code>itemValido(item)</code> retornando <b>true</b> só se os três campos existirem no objeto.',
-      hint: 'Cheque os três campos, um por um (combine com &&) — todos precisam existir pro item ser válido.',
+      hint: 'Você precisa confirmar os três campos ao mesmo tempo — como você garante que TODAS as condições sejam verdadeiras, não só uma delas?',
       tests: [
         { args: [{ nome: 'Escudo', dano: 0, preco: 50 }], expected: true },
         { args: [{ nome: 'Escudo', preco: 50 }], expected: false },
@@ -320,7 +320,7 @@
       starter: 'function estadoNoPasso(historico, indice) {\n  // retorne historico[indice], ou null se o índice estiver fora dos limites\n\n}',
       explanation: 'Antes de acessar uma posição de array por índice, é preciso checar se ela existe — um índice fora dos limites (negativo, ou maior/igual ao tamanho do array) não deve ser acessado direto.<pre>function seguro(lista, i) {\n  if (i < 0 || i >= lista.length) return null;\n  return lista[i];\n}</pre>',
       desc: 'Um "breakpoint" pausa a execução num ponto específico pra inspecionar o estado ali. Complete <code>estadoNoPasso(historico, indice)</code> retornando o item de <code>historico</code> na posição <code>indice</code>, ou <code>null</code> se o índice estiver fora dos limites do array.',
-      hint: 'Cheque se indice é negativo OU maior/igual ao tamanho do array antes de acessar historico[indice].',
+      hint: 'Antes de acessar a posição, pense nos dois jeitos de um índice "não existir" num array — um deles é ser negativo. Qual é o outro, relacionado ao tamanho da lista?',
       tests: [
         { args: [[10, 20, 30], 1], expected: 20 },
         { args: [[10, 20, 30], 5], expected: null },

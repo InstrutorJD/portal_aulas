@@ -260,7 +260,7 @@
       icon: '🔀',
       explanation: 'Clean Code evita condicionais emaranhadas quando uma comparação simples já resolve. Uma expressão booleana já vale <code>true</code> ou <code>false</code> sozinha — não precisa de <code>if/else</code> pra devolvê-la:<pre>function ehMaiorDeIdade(idade) {\n  return idade >= 18;\n}</pre>',
       desc: 'A área VIP da PixelForge libera acesso pra quem tem <b>nível 10 ou mais</b>, OU já é <b>VIP</b>. Complete <code>acessoLiberado(nivel, vip)</code> retornando <b>true</b> ou <b>false</b>, num código limpo e direto (sem <code>if/else</code> desnecessário).',
-      hint: 'Combine as duas condições com o operador "ou" (<code>||</code>) e devolva o resultado direto com <code>return</code>.',
+      hint: 'Pense em como juntar duas condições numa expressão só, que já vale <code>true</code> quando QUALQUER uma delas for verdadeira — que operador lógico faz isso?',
       fnName: 'acessoLiberado',
       starter: 'function acessoLiberado(nivel, vip) {\n  // retorne true se nivel >= 10 OU vip for true\n\n}',
       tests: [
@@ -290,7 +290,7 @@
       icon: '🧩',
       explanation: '<b>Modularização</b> não é só criar funções pequenas — é também REAPROVEITAR as que já existem, em vez de reescrever a mesma lógica na mão de novo.<pre>function dobro(n) { return n * 2; }\nfunction areaDobrada(lado) {\n  return dobro(lado * lado); // reaproveita dobro() em vez de "* 2" solto de novo\n}</pre>',
       desc: 'A função <code>metade(n)</code> já existe no editor (calcula a metade de um número). Complete <code>distanciaCentro(largura)</code> retornando a metade da largura recebida — mas <b>reaproveitando a função <code>metade()</code></b> já pronta, em vez de escrever a divisão de novo.',
-      hint: 'Chame <code>metade(largura)</code> dentro de <code>distanciaCentro</code> e devolva o resultado — não escreva <code>largura / 2</code> de novo.',
+      hint: 'Você já tem uma função pronta ali em cima que faz exatamente essa conta — reaproveite ela em vez de escrever a divisão de novo.',
       fnName: 'distanciaCentro',
       starter: 'function metade(n) {\n  return n / 2;\n}\n\nfunction distanciaCentro(largura) {\n  // reaproveite a função metade() acima em vez de repetir a divisão\n\n}',
       tests: [

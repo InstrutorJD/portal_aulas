@@ -263,7 +263,7 @@
       starter: 'function criarInimigoVoador(vida, velocidade) {\n  // crie uma classe InimigoVoador que HERDA de uma classe base Inimigo\n  // (com atributos vida e velocidade), e adicione um método voar()\n  // que retorna a string \'voando\'\n  // devolva uma instância de InimigoVoador\n\n}',
       explanation: 'Uma classe pode herdar de outra com <code>extends</code>, reaproveitando atributos e comportamentos, e ainda adicionar algo próprio:<pre>class Veiculo {\n  constructor(velocidade) { this.velocidade = velocidade; }\n}\nclass Carro extends Veiculo {\n  buzinar() { return \'bi bi\'; }\n}\nconst c = new Carro(100);\n// c.velocidade é 100, e c.buzinar() existe</pre>',
       desc: 'A classe "InimigoVoador" precisa reaproveitar os atributos de "Inimigo" (vida, velocidade) e ainda ganhar um comportamento próprio de voar. Complete <code>criarInimigoVoador(vida, velocidade)</code>.',
-      hint: 'Use <code>class InimigoVoador extends Inimigo { ... }</code> — se você não escrever um <code>constructor</code> próprio na subclasse, ela já recebe os parâmetros automaticamente da classe base.',
+      hint: 'Você vai precisar de DUAS classes aqui: uma base com <code>vida</code>/<code>velocidade</code>, e outra que herda dela ganhando o novo comportamento. Qual palavra-chave declara essa herança entre classes?',
       tests: [
         { args: [100, 5], check: (r) => r.vida === 100 && r.velocidade === 5 && typeof r.voar === 'function' && r.voar() === 'voando', expectedLabel: 'instância com vida, velocidade e voar() retornando "voando"' },
         { args: [50, 10], check: (r) => r.vida === 50 && r.velocidade === 10 && r.voar() === 'voando', expectedLabel: 'instância com vida, velocidade e voar() retornando "voando"' }
@@ -277,7 +277,7 @@
       starter: 'function contarMetodos(obj) {\n  // devolva quantas propriedades de obj são MÉTODOS (funções)\n  // (não conte atributos que guardam apenas dados)\n\n}',
       explanation: 'Você pode verificar o tipo de cada propriedade de um objeto com <code>typeof</code>, percorrendo suas chaves com <code>Object.keys()</code>:<pre>const item = { nome: \'Espada\', usar() {} };\nObject.keys(item).forEach(chave => {\n  console.log(chave, typeof item[chave]); // \'nome\' \'string\', \'usar\' \'function\'\n});</pre>',
       desc: 'Um chamado pergunta: dado um objeto qualquer, quantas das suas propriedades são métodos (ações) em vez de atributos (dados)? Complete <code>contarMetodos(obj)</code>.',
-      hint: 'Percorra as chaves do objeto com <code>Object.keys(obj)</code> e conte quantas têm <code>typeof</code> igual a <code>\'function\'</code>.',
+      hint: 'Percorra as chaves do objeto com <code>Object.keys(obj)</code> — pra cada uma, como você descobre se o valor guardado ali é uma função ou só um dado comum?',
       tests: [
         { args: [{ vida: 100, atacar(){}, velocidade: 5 }], expected: 1 },
         { args: [{ nome: 'x', andar(){}, correr(){} }], expected: 2 },
@@ -292,7 +292,7 @@
       starter: 'function montarEsquadrao(inimigos, indicesQueVoam) {\n  // "inimigos" é um array de objetos { nome }\n  // "indicesQueVoam" é um array de índices que devem GANHAR\n  // um método voar() (que retorna \'voando\') — os demais objetos\n  // do array não devem ganhar esse método\n  // devolva o array de inimigos (modificado)\n\n}',
       explanation: 'Você pode anexar um comportamento só a ALGUNS itens de um array, sem mexer nos outros — percorrendo os índices certos e adicionando a propriedade só neles:<pre>const itens = [{ nome: \'A\' }, { nome: \'B\' }];\nitens[1].destacado = true;\n// só itens[1] ganhou a propriedade extra</pre>',
       desc: 'Só alguns inimigos do jogo voam. Em vez de criar uma subclasse "InimigoVoador" pra todos, complete <code>montarEsquadrao(inimigos, indicesQueVoam)</code> anexando o comportamento de voo só em quem precisa.',
-      hint: 'Percorra <code>indicesQueVoam</code> com <code>forEach</code> e adicione a propriedade <code>voar</code> só no item de <code>inimigos</code> naquele índice.',
+      hint: 'Você precisa alterar só os itens de <code>inimigos</code> cujo índice aparece em <code>indicesQueVoam</code> — que método de array percorre uma lista te dando cada valor pra usar como índice de outro array?',
       tests: [
         { args: [[{nome:'A'},{nome:'B'},{nome:'C'}], [1]], check: (r) => typeof r[0].voar !== 'function' && typeof r[1].voar === 'function' && r[1].voar() === 'voando' && typeof r[2].voar !== 'function', expectedLabel: 'só o item de índice 1 ganha voar()' },
         { args: [[{nome:'A'},{nome:'B'}], [0,1]], check: (r) => typeof r[0].voar === 'function' && typeof r[1].voar === 'function', expectedLabel: 'todos os índices indicados ganham voar()' },
@@ -321,7 +321,7 @@
       starter: 'function verificarColisaoMoeda(personagem, moeda, aoColetar) {\n  // "personagem" e "moeda" são { x, y }\n  // se as posições forem IGUAIS, chame aoColetar() e retorne true\n  // caso contrário, não chame nada e retorne false\n\n}',
       explanation: 'Este desafio junta dois conceitos que você já viu: comparar valores (posições) e disparar um trigger (callback) quando uma condição acontece — igual ao trigger de pular, mas agora ativado por colisão.',
       desc: 'BOSS FINAL: assim que o personagem toca numa moeda, o jogo precisa disparar automaticamente a coleta. Complete <code>verificarColisaoMoeda(personagem, moeda, aoColetar)</code>.',
-      hint: 'Compare <code>personagem.x</code> com <code>moeda.x</code> E <code>personagem.y</code> com <code>moeda.y</code> — só chame <code>aoColetar()</code> se os DOIS baterem.',
+      hint: 'As duas posições são objetos com <code>x</code> e <code>y</code> — o que precisa ser verdade nos DOIS eixos ao mesmo tempo pra dizer que elas são "iguais"?',
       tests: [] // preenchido logo abaixo, com callbacks "tracker" (ver comentário perto de CHALLENGES[4].tests)
     }
   ];

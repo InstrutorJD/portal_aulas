@@ -311,7 +311,7 @@
       fnName: 'ehAmarelo',
       explanation: 'O amarelo nasce da mistura de Vermelho e Verde altos, com Azul baixo. Uma função pode checar várias condições ao mesmo tempo com o operador <code>&&</code>: <pre>valorA >= limite && valorB <= outroLimite</pre>',
       desc: 'Chamado: "preciso validar se uma cor <code>{r, g, b}</code> é (aproximadamente) amarela, pra um filtro de assets." Implemente <code>ehAmarelo(cor)</code>, devolvendo <code>true</code> se <code>r</code> e <code>g</code> forem pelo menos 200, e <code>b</code> for no máximo 50.',
-      hint: 'Combine três comparações numéricas com o operador "e" (&&): duas checando se um canal é alto o suficiente, uma checando se o outro é baixo o suficiente.',
+      hint: 'As três condições (r, g e b) precisam valer AO MESMO TEMPO pra cor ser considerada amarela — que jeito você tem de exigir isso numa expressão só?',
       starter: 'function ehAmarelo(cor) {\n  // cor é um objeto { r, g, b }\n  // devolva true se for uma cor amarela (R e G altos, B baixo)\n\n}',
       tests: [
         { args: [{ r: 255, g: 255, b: 0 }], expected: true },

@@ -341,7 +341,7 @@
       starter: 'function contemPadraoPerigoso(texto) {\n  // retorne true se texto (ou algo que nem é texto) tiver algum sinal de\n  // tentativa de injeção maliciosa; false se for um texto comum\n\n}',
       explanation: 'O método <code>.some()</code> de um array verifica se PELO MENOS UM item passa num teste — ótimo pra checar se um texto contém qualquer item de uma lista de padrões proibidos.<pre>const proibidas = ["fogo", "gelo"];\nconst texto = "bola de fogo";\nproibidas.some(p => texto.includes(p))   // true</pre><code>.toLowerCase()</code> ajuda a ignorar maiúsculas/minúsculas na comparação.',
       desc: 'Antes de aceitar qualquer texto do jogador, o sistema precisa desconfiar de padrões perigosos — mesmo que a checagem do navegador já tenha passado (nunca confie só nela!). Complete <code>contemPadraoPerigoso(texto)</code>.',
-      hint: 'Pense numa lista de trechos suspeitos (tipo <code>--</code>, <code>;</code>, <code>drop table</code>, <code>&lt;script</code>) e num jeito de checar se o texto contém QUALQUER um deles — sem esquecer de tratar entradas que nem são string.',
+      hint: 'Pense num jeito de checar se o texto contém QUALQUER item de uma lista de trechos suspeitos — que tipos de ataque a essa altura da oficina você já reconhece? — e não esqueça de tratar entradas que nem são string.',
       tests: [
         { args: ['Ana Clara'], expected: false },
         { args: ["robo'; DROP TABLE users;--"], expected: true },
