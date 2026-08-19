@@ -493,7 +493,77 @@ window.TURMA_CONFIG_JOGOS = {
         }
       ]
     },
-    { key: 'testes-jogos', label: 'Testes de Jogos Digitais', trilhas: [] }
+    {
+      key: 'testes-jogos', label: 'Testes de Jogos Digitais',
+      trilhas: [
+        {
+          key: 'teste-fundamentos',
+          label: 'Fundamentos e Níveis de Teste',
+          desc: 'Aprenda a teoria e depois resolva chamados sobre tipos de teste, técnicas caixa-preta/caixa-branca e níveis de Unidade a Aceitação.',
+          capacidade: 'Identificar tipos, função, ferramentas de teste de acordo com o sistema de jogos digitais / Reconhecer normas, métodos e técnicas de testes para correção de falhas de sistema.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Fundamentos e Níveis de Teste',
+              desc: 'Conceito de teste de jogos, processo fundamental, tipos (Funcionalidade, Confiabilidade, Desempenho, Manutenibilidade), técnicas caixa-preta/caixa-branca, níveis (Unidade, Integração, Sistema, Aceitação) e comunicação não violenta ao reportar bugs.',
+              icon: '🔍', src: 'atividades/teste-fundamentos-teoria.html',
+              progressKey: 'teste_fundamentos_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de QA: Fundamentos e Níveis de Teste',
+              desc: 'Resolva chamados classificando tipo, técnica e nível de teste em cada cenário.',
+              icon: '🧪', src: 'atividades/teste-fundamentos-pratica.html',
+              progressKey: 'teste_fundamentos_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'teste-planejamento',
+          label: 'Planejamento de Testes',
+          desc: 'Aprenda a teoria e depois resolva chamados sobre escopo, critérios de aceite, casos de teste, cronograma, teste de mesa, priorização e rastreabilidade.',
+          capacidade: 'Analisar documentação de teste para planejamento da rotina / Reconhecer os elementos de um plano de testes.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Planejamento de Testes',
+              desc: 'Escopo, critérios de aceite, casos de teste, cronograma e responsáveis, teste de mesa, priorização, rastreabilidade, comunicação não violenta e plano de testes como documento vivo.',
+              icon: '🔍', src: 'atividades/teste-planejamento-teoria.html',
+              progressKey: 'teste_planejamento_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de QA: Planejamento de Testes',
+              desc: 'Resolva chamados identificando qual peça do plano de testes está faltando em cada cenário da PixelForge.',
+              icon: '📋', src: 'atividades/teste-planejamento-pratica.html',
+              progressKey: 'teste_planejamento_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'teste-execucao',
+          label: 'Execução de Testes por Versão',
+          desc: 'Aprenda a teoria e depois resolva chamados sobre o ciclo Alfa/Beta/Release Candidate/Gold, frameworks de teste, ambiente de testes, roteiro de execução e critério de avanço.',
+          capacidade: 'Desenvolver plano de testes / Organizar o ambiente para o desenvolvimento das rotinas de testes / Definir roteiro de teste para execução, conforme recomendações técnicas.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Execução de Testes por Versão',
+              desc: 'Ciclo Alfa → Beta → Release Candidate → Gold, frameworks de teste, ambiente de testes separado da produção, roteiro de execução reproduzível, reteste e critério de avanço entre fases.',
+              icon: '🔍', src: 'atividades/teste-execucao-teoria.html',
+              progressKey: 'teste_execucao_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de QA: Execução de Testes por Versão',
+              desc: 'Resolva chamados identificando a fase do ciclo de versão, frameworks de teste, roteiro de execução, reteste e critério de avanço em cada cenário.',
+              icon: '🚀', src: 'atividades/teste-execucao-pratica.html',
+              progressKey: 'teste_execucao_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        }
+      ]
+    }
   ],
 
   // Insígnias da trilha "Curso de Jogos Digitais" (ver aba Perfil, só

@@ -5,7 +5,7 @@ const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
 const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno';
 
 // As trilhas de verdade (JS/C#) ficam dentro de Fundamentos de Programação,
-// junto com as trilhas fund-*. Só "Testes de Jogos Digitais" segue vazia.
+// junto com as trilhas fund-*.
 async function openMateria1(page) {
   await page.click('.game-card:has-text("Fundamentos de Programação")');
 }
@@ -20,8 +20,6 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(6);
     await expect(page.locator('#materiaCardGrid')).toContainText('Fundamentos de Programação');
     await expect(page.locator('#materiaCardGrid')).toContainText('Testes de Jogos Digitais');
-    // matéria vazia ganha o selo "Em breve"
-    await expect(page.locator('.game-card:has-text("Testes de Jogos Digitais")')).toContainText('Em breve');
   });
 
   test('carrega tema, usuário e trilhas JS/C# dentro de Fundamentos de Programação', async ({ page }) => {
@@ -84,7 +82,8 @@ test.describe('turmas/jogos/plataforma.html', () => {
         'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
         'projetos_metodos_teoria', 'projetos_fases_teoria',
         'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
-        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria'
+        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
+        'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria'
       ];
       teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
@@ -93,7 +92,8 @@ test.describe('turmas/jogos/plataforma.html', () => {
         'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
         'projetos_metodos_pratica', 'projetos_fases_pratica',
         'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
-        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica'
+        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
+        'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
       ];
       praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));

@@ -148,7 +148,8 @@ test.describe('Liberação diária — visão do aluno', () => {
         'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
         'projetos_metodos_teoria', 'projetos_fases_teoria',
         'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
-        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria'
+        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
+        'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria'
       ];
       teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
@@ -157,7 +158,8 @@ test.describe('Liberação diária — visão do aluno', () => {
         'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
         'projetos_metodos_pratica', 'projetos_fases_pratica',
         'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
-        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica'
+        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
+        'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
       ];
       praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));

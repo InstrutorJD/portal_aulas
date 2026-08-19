@@ -2,7 +2,6 @@
 
 > Fonte para gerar as aulas teóricas e práticas da turma **Jogos Digitais** (`turmas/jogos/config.js`).
 > Cada capacidade abaixo tende a virar uma trilha (teoria + prática), no mesmo padrão usado em `turmas/sistemas/config.js`.
-> A matéria "Testes de Jogos Digitais" ainda não tem conteúdo neste relatório.
 
 ## Fundamentos de Programação de Jogos Digitais
 _matéria: `fundamentos-programacao`_
@@ -216,3 +215,37 @@ _matéria: `codificacao-jogos`_
 - Segurança da Informação: validação de inputs de usuário para prevenir injeções maliciosas
 - Grafos em Jogos Digitais: navegação de NPCs via waypoints e algoritmos de busca em grafos para rastreamento de movimento/mecânicas
 - Árvores de Decisão: introdução à IA de inimigos/NPCs através de condicionais aninhadas e máquinas de estado ("Atacar se ver o player; senão, patrulhar")
+
+## Testes de Jogos Digitais
+_matéria: `testes-jogos`_
+
+### Identificar tipos, função, ferramentas de teste de acordo com o sistema de jogos digitais
+- Testes em jogos digitais: conceitos fundamentais
+- Processo fundamental de teste
+- Tipos de testes: Funcionalidade, Confiabilidade, Desempenho, Manutenibilidade
+
+### Reconhecer normas, métodos e técnicas de testes para correção de falhas de sistema
+- Tipos de testes: Testes de Funcionalidade
+- Técnicas de testes
+- Níveis de testes (Unidade, Integração, Sistema, Aceitação)
+- Comunicação não violenta nos ambientes de trabalho
+
+### Analisar documentação de teste para planejamento da rotina
+- Planejamento de testes em jogos digitais
+- Comunicação não violenta nos ambientes de trabalho
+
+### Reconhecer os elementos de um plano de testes
+- Planejamento de testes em jogos digitais
+- Testes de mesa
+
+### Desenvolver plano de testes
+- Testes e versão alfa
+- Testes e versão beta
+- Testes e versão Candidate
+- Testes e versão Gold
+
+### Organizar o ambiente para o desenvolvimento das rotinas de testes
+- Frameworks de teste em jogos digitais
+
+### Definir roteiro de teste para execução, conforme recomendações técnicas
+- Técnicas de testes
