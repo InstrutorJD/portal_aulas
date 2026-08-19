@@ -37,6 +37,17 @@
   }
   .subtitle{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-top:-10px; text-align:center; }
 
+  .settings-row{ display:flex; gap:16px; align-items:center; }
+  .setting-field{
+    display:flex; flex-direction:column; gap:4px; font-size:10px; color:var(--ink-dim);
+    text-transform:uppercase; letter-spacing:1px;
+  }
+  .setting-field select{
+    font-family:inherit; font-size:12px; background:var(--panel2); color:var(--ink);
+    border:1px solid var(--line); border-radius:2px; padding:6px 8px; cursor:pointer;
+  }
+  .setting-field select:disabled{ opacity:.45; cursor:not-allowed; }
+
   .stats{
     display:flex; gap:24px; font-size:12px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px;
   }
@@ -45,8 +56,8 @@
   .stats .timer-box b{ color:var(--blood-bright); }
 
   .words-box{
-    width:100%; max-width:720px; background:var(--panel); border:1px solid var(--line);
-    padding:18px 20px; font-size:17px; line-height:2; height:5.5em; overflow-y:auto;
+    width:100%; max-width:900px; background:var(--panel); border:1px solid var(--line);
+    padding:18px 20px; font-size:17px; line-height:2; height:9em; overflow-y:auto;
     letter-spacing:0.5px;
   }
   .word{ display:inline-block; margin:0 10px 4px 0; color:var(--ink-dim); }
@@ -57,7 +68,7 @@
   .word.current{ border-bottom:2px solid var(--yellow); padding-bottom:2px; }
 
   .input-line{
-    width:100%; max-width:720px; display:flex; align-items:center; gap:8px;
+    width:100%; max-width:900px; display:flex; align-items:center; gap:8px;
     background:#000; border:1px solid var(--line); padding:10px 14px;
   }
   .input-line .prompt{ color:var(--yellow); font-weight:bold; }
@@ -89,7 +100,7 @@
   .word.pop-wrong{ animation:shakeWrong .22s ease; }
 
   .results{
-    display:none; width:100%; max-width:720px; background:var(--panel); border:1px solid var(--green);
+    display:none; width:100%; max-width:900px; background:var(--panel); border:1px solid var(--green);
     padding:22px; text-align:center;
   }
   .results h2{ font-family:'VT323', monospace; font-size:26px; color:var(--green); margin:0 0 14px; }
@@ -110,13 +121,27 @@
     <div>DIGITAÇÃO — TREINO DE VELOCIDADE</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button class="btn-ranking" id="btnRanking">🏆 Ranking da Turma</button>
-      <span>DESAFIO: 30S</span>
     </div>
   </div>
 
   <div class="stage">
     <h1>PRATIQUE SUA DIGITAÇÃO</h1>
-    <div class="subtitle">Palavras do universo de desenvolvimento de jogos &amp; software</div>
+    <div class="subtitle">Escolha o tema e o tempo, e mostre sua velocidade</div>
+
+    <div class="settings-row">
+      <label class="setting-field">Tema
+        <select id="selTheme">
+          <option value="variado">🌍 Variado</option>
+          <option value="tecnologia">💻 Tecnologia</option>
+        </select>
+      </label>
+      <label class="setting-field">Tempo
+        <select id="selDuration">
+          <option value="15">15s</option>
+          <option value="30">30s</option>
+        </select>
+      </label>
+    </div>
 
     <div class="stats">
       <div class="timer-box"><b id="lblTimer">30</b><span>Segundos</span></div>
@@ -157,7 +182,7 @@
 </div>
 
 <script>
-  const WORD_BANK = [
+  const WORD_BANK_TECNOLOGIA = [
     "commit","branch","merge","rebase","checkout","clone","fork","pull-request","push","repositorio",
     "codigo","funcao","variavel","array","objeto","classe","interface","framework","biblioteca",
     "compilador","interpretador","debug","breakpoint","bug","patch","deploy","build","script",
@@ -174,7 +199,25 @@
     "testar","prototipo","wireframe","mockup","layout","responsivo"
   ];
 
-  const TEST_SECONDS = 30;
+  const WORD_BANK_VARIADO = [
+    "casa","familia","amigo","vizinho","cidade","estrada","viagem","praia","montanha","floresta",
+    "animal","cachorro","gato","passaro","peixe","arvore","flor","jardim","chuva","sol",
+    "lua","estrela","ceu","vento","verao","inverno","primavera","outono","comida","agua",
+    "leite","pao","arroz","feijao","fruta","banana","laranja","maca","uva","mesa",
+    "cadeira","janela","porta","telefone","roupa","sapato","camisa","calca","chapeu","relogio",
+    "dinheiro","trabalho","emprego","salario","cidadao","governo","pais","estado","municipio","historia",
+    "geografia","matematica","ciencia","arte","musica","teatro","cinema","livro","jornal","revista",
+    "noticia","esporte","futebol","basquete","natacao","corrida","saude","hospital","medico","remedio",
+    "exercicio","sono","descanso","aeroporto","aviao","trem","onibus","bicicleta","caminhada","mercado",
+    "loja","compra","venda","preco","desconto","feira","festa","aniversario","presente","felicidade",
+    "tristeza","alegria","amizade","respeito","paciencia","coragem","sabedoria","liberdade","justica","igualdade",
+    "natureza","reciclagem","energia","universidade","biblioteca","quadro","caderno","lapis","caneta","borracha",
+    "mochila","uniforme","recreio","merenda","portao","corredor","diretor","secretaria","boletim","tarefa"
+  ];
+
+  const WORD_BANKS = { variado: WORD_BANK_VARIADO, tecnologia: WORD_BANK_TECNOLOGIA };
+  const VALID_DURATIONS = [15, 30];
+
   const INITIAL_WORD_COUNT = 40;
   const EXTEND_WORD_COUNT = 20;
   const REFILL_THRESHOLD = 10;
@@ -197,12 +240,30 @@
   const resMaxStreak = document.getElementById('resMaxStreak');
   const btnRanking = document.getElementById('btnRanking');
   const btnRankingResults = document.getElementById('btnRankingResults');
+  const selTheme = document.getElementById('selTheme');
+  const selDuration = document.getElementById('selDuration');
 
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
   const displayName = urlParams.get('name') || username;
   const turma = urlParams.get('turma') || '';
   const BEST_PPM_KEY = `digitacao_best_ppm_${username}`;
+  const THEME_KEY = `digitacao_theme_${username}`;
+  const DURATION_KEY = `digitacao_duration_${username}`;
+
+  function loadTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    return WORD_BANKS[saved] ? saved : 'tecnologia';
+  }
+  function loadDuration() {
+    const saved = parseInt(localStorage.getItem(DURATION_KEY) || '', 10);
+    return VALID_DURATIONS.includes(saved) ? saved : 30;
+  }
+
+  let currentTheme = loadTheme();
+  let SELECTED_SECONDS = loadDuration();
+  selTheme.value = currentTheme;
+  selDuration.value = String(SELECTED_SECONDS);
 
   function openRanking() {
     window.GameLeaderboard.showPanel({
@@ -228,7 +289,7 @@
   let wordsData = [];
   let currentWordIndex = 0;
   let started = false;
-  let timer = TEST_SECONDS;
+  let timer = SELECTED_SECONDS;
   let timerInterval = null;
   let correctChars = 0;
   let incorrectChars = 0;
@@ -245,7 +306,7 @@
   }
 
   function generateWords(count) {
-    const pool = shuffle([...WORD_BANK]);
+    const pool = shuffle([...WORD_BANKS[currentTheme]]);
     const result = [];
     while (result.length < count) {
       for (const w of pool) {
@@ -359,7 +420,7 @@
   }
 
   function updateStatsLive() {
-    const elapsedSeconds = Math.max(TEST_SECONDS - timer, 1);
+    const elapsedSeconds = Math.max(SELECTED_SECONDS - timer, 1);
     const minutes = elapsedSeconds / 60;
     const wpm = Math.round((correctChars / 5) / minutes);
     const totalChars = correctChars + incorrectChars;
@@ -370,6 +431,8 @@
 
   function startTimer() {
     started = true;
+    selTheme.disabled = true;
+    selDuration.disabled = true;
     timerInterval = setInterval(() => {
       timer--;
       lblTimer.textContent = timer;
@@ -410,7 +473,7 @@
   }
 
   function showResults() {
-    const minutes = TEST_SECONDS / 60;
+    const minutes = SELECTED_SECONDS / 60;
     const wpm = Math.round((correctChars / 5) / minutes);
     const totalChars = correctChars + incorrectChars;
     const accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
@@ -440,7 +503,9 @@
     clearInterval(timerInterval);
     timerInterval = null;
     started = false;
-    timer = TEST_SECONDS;
+    selTheme.disabled = false;
+    selDuration.disabled = false;
+    timer = SELECTED_SECONDS;
     correctChars = 0;
     incorrectChars = 0;
     correctWords = 0;
@@ -467,8 +532,18 @@
   document.getElementById('btnRestart').addEventListener('click', restartGame);
   document.getElementById('btnPlayAgain').addEventListener('click', restartGame);
 
-  renderWords(generateWords(INITIAL_WORD_COUNT));
-  inputEl.focus();
+  selTheme.addEventListener('change', () => {
+    currentTheme = selTheme.value;
+    localStorage.setItem(THEME_KEY, currentTheme);
+    restartGame();
+  });
+  selDuration.addEventListener('change', () => {
+    SELECTED_SECONDS = parseInt(selDuration.value, 10);
+    localStorage.setItem(DURATION_KEY, String(SELECTED_SECONDS));
+    restartGame();
+  });
+
+  restartGame();
 </script>
 
 <script>
