@@ -2150,8 +2150,16 @@
     renderMaterias();
     renderGameCards();
     setupVLibras();
-    syncAllModulesProgressSafely();
     setupProgressSyncListener();
+    // setupRBAC() já chama renderRankingBadge() de cara (abaixo), com o que
+    // o Supabase tinha ANTES desta hidratação/sync — pra não atrasar a
+    // primeira pintura da tela nisso. Essa segunda chamada, só depois que a
+    // hidratação+sync termina de verdade, corrige o badge caso a primeira
+    // tenha renderizado com a % desatualizada (a linha do PRÓPRIO aluno
+    // ainda não tinha chegado no student_module_progress).
+    syncAllModulesProgressSafely().then(() => {
+      if (currentUser.role === 'aluno') renderRankingBadge();
+    });
     if (currentUser.role === 'professor') setupGestaoButtons();
 
     document.querySelectorAll('#mainNavTabs .tab-btn').forEach(btn => {
