@@ -1292,23 +1292,21 @@
     const scored = students
       .map(u => {
         const pct = overallProgressForStudent(byStudent[u.email] || []);
-        return pct === null ? null : { email: u.email, pctRounded: Math.round(pct) };
+        return pct === null ? null : { email: u.email, pct, pctRounded: Math.round(pct) };
       })
       .filter(Boolean)
-      // pct bruto como critério de ordenação (mais preciso que o arredondado),
-      // e-mail só decide a ORDEM de exibição interna — nunca a posição em si.
-      .sort((a, b) => b.pctRounded - a.pctRounded || a.email.localeCompare(b.email));
+      // pct BRUTO (não arredondado) decide a ordem — dois alunos só empatam de
+      // verdade quando a fração exata é idêntica (ex: os dois em 100%). E-mail
+      // é o desempate final, só pra garantir uma ordem determinística nesse
+      // caso raríssimo — nunca decide a posição sozinho.
+      .sort((a, b) => b.pct - a.pct || a.email.localeCompare(b.email));
 
-    // Ranking "de competição" (1, 2, 2, 4, ...): quem empata no % arredondado
-    // (o mesmo número que aparece na tela) divide a MESMA posição. Sem isso,
-    // um grupo de alunos com 0% (comum no início da turma, todo mundo que
-    // ainda não abriu nada) aparecia em posições diferentes só por causa do
-    // desempate alfabético interno — parecia ranking, mas não era um de verdade.
-    let rank = 0;
-    scored.forEach((s, i) => {
-      if (i === 0 || s.pctRounded !== scored[i - 1].pctRounded) rank = i + 1;
-      s.rank = rank;
-    });
+    // Cada aluno numa posição ÚNICA (1º, 2º, 3º, ...) — precisa dar pra
+    // diferenciar quem está de verdade na frente de quem, mesmo quando vários
+    // alunos arredondam pro mesmo % na tela (ex: 3+ alunos em "100%"). Um
+    // ranking de competição (1, 2, 2, 4, ...) já foi usado aqui, mas juntava
+    // alunos com desempenho diferente na mesma posição.
+    scored.forEach((s, i) => { s.rank = i + 1; });
 
     const myIndex = scored.findIndex(s => s.email === paramUser);
     if (myIndex === -1) return null;

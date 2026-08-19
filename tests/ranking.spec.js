@@ -75,40 +75,79 @@ test.describe('Ranking do aluno na turma', () => {
     await expect(page.locator('#rankingBadge')).toHaveText('🏆 1º');
   });
 
-  // Empate divide a mesma posição ("ranking de competição": 1, 2, 2, 4, ...)
-  // — sem isso, um grupo de alunos com o mesmo % (0%, o caso mais comum no
-  // início da turma) aparecia em posições diferentes só por causa de um
-  // desempate alfabético interno, que não é ranking nenhum de verdade.
-  test('alunos empatados em 0% dividem a mesma posição', async ({ page }) => {
-    // SEED só dá progresso pro edward (100%) — breno e o resto da turma
-    // (16 outros alunos) ficam em 0%, todos empatados.
+  // Cada aluno numa posição ÚNICA, mesmo quando o % ARREDONDADO (o número
+  // mostrado na tela) empata entre vários — o desempate por e-mail garante
+  // que a posição nunca se repete (já aconteceu de 3+ alunos aparecerem
+  // como "1º" ao mesmo tempo, com o ranking "de competição" antigo).
+  test('% arredondado igual entre vários alunos: cada um fica numa posição diferente', async ({ page }) => {
+    // SEED só dá progresso pro edward — breno e o resto da turma (16 outros
+    // alunos) ficam exatamente em 0%, um empate de verdade (não só de
+    // arredondamento). O e-mail decide a ordem entre eles.
     await stubSupabaseFake(page, SEED);
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
 
+    // "breno.silva80" é o 1º em ordem alfabética entre os 16 zerados.
     await expect(page.locator('#rankingBadge')).toHaveText('🏆 2º');
     await expect(page.locator('#rankingBadge')).toHaveAttribute('title', 'Sua posição na turma: 2º de 17 (0% concluído)');
   });
 
-  test('vários grupos empatados: posição pula o tamanho do grupo (1, 2, 2, 4)', async ({ page }) => {
-    const TIE_SEED = {
+  // Empate EXATO no % (não só no arredondado): dois alunos com o mesmíssimo
+  // progresso ainda assim precisam ficar em posições diferentes — só o
+  // e-mail como desempate final garante isso.
+  test('dois alunos com o mesmo % exato ficam em posições diferentes, nunca empatadas', async ({ page }) => {
+    // edward sempre acima dos dois (mais um módulo concluído que eles).
+    const baseSeed = {
       student_module_progress: [
-        // edward: 3/11 módulos (27%) — sozinho no topo.
-        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
-        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 10, progress_total: 10, completed: true },
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
-        // engel e gabriella: 2/11 cada (js/basico + csharp/basico, sem js/intermediario) — empatados em 2º.
-        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
-        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
-        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
-        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
-        // iago: 1/11 (só csharp/basico) — sozinho em 4º (pula o 3º, ocupado pelo empate acima).
-        { student_email: 'iago.moreira', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     };
-    await stubSupabaseFake(page, TIE_SEED);
-    // breno não fez nada (0%) — empata com o resto da turma (13 alunos) em 5º.
-    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
 
-    await expect(page.locator('#rankingBadge')).toHaveText('🏆 5º');
+    // Caso A: gabriella tem os mesmos 2 módulos concluídos (via SEED, ela
+    // não está logada nesta passagem) e engel.fraga loga com o MESMO
+    // progresso exato semeado no localStorage dela — mesmo % exato dos dois.
+    await stubSupabaseFake(page, {
+      student_module_progress: [
+        ...baseSeed.student_module_progress,
+        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
+        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    });
+    await page.addInitScript(user => {
+      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+    }, 'engel.fraga');
+    await page.goto('/turmas/jogos/plataforma.html?user=engel.fraga&ip=192.168.1.12&saldo=2100.12&role=aluno&turma=jogos');
+    // "engel.fraga" vem antes de "gabriella.borges5" em ordem alfabética.
+    await expect(page.locator('#rankingBadge')).toHaveText('🏆 2º');
+  });
+
+  test('o outro lado do mesmo empate exato: quem perde no desempate fica numa posição atrás', async ({ page }) => {
+    const baseSeed = {
+      student_module_progress: [
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 10, progress_total: 10, completed: true },
+        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    };
+
+    // Caso B: agora quem loga é gabriella.borges5, com o mesmo % exato de
+    // engel.fraga (que fica pelo SEED, sem logar nesta passagem).
+    await stubSupabaseFake(page, {
+      student_module_progress: [
+        ...baseSeed.student_module_progress,
+        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
+        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    });
+    await page.addInitScript(user => {
+      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+    }, 'gabriella.borges5');
+    await page.goto('/turmas/jogos/plataforma.html?user=gabriella.borges5&ip=192.168.1.13&saldo=1420.13&role=aluno&turma=jogos');
+    // Mesmo % exato de engel, mas "gabriella.borges5" perde o desempate
+    // alfabético — fica uma posição atrás dela (3º), nunca empatada em 2º.
+    await expect(page.locator('#rankingBadge')).toHaveText('🏆 3º');
   });
 });
