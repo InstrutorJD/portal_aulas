@@ -55,6 +55,14 @@
         { student_email: username, progress_key: ACTIVITY_LOCATION, state, updated_at: new Date().toISOString() },
         { onConflict: 'student_email,progress_key' }
       ).then(() => {}, () => {});
+      // Avisa a plataforma (plataforma.html, dona do <iframe> desta atividade)
+      // na hora que o progresso muda — sem isso, o card/cadeado/ranking só
+      // atualizavam quando o aluno clicava "← Voltar" (closeModule). Se ele
+      // saísse de outro jeito (fechou a aba, deslogou, trocou de tela sem
+      // voltar), a conclusão nunca chegava a subir pro student_module_progress.
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ pfProgressSync: true, activityLocation: ACTIVITY_LOCATION }, window.location.origin);
+      }
     } catch (e) {
       // sync é best-effort; o progresso já está salvo localmente de qualquer forma
     }

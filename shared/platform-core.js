@@ -606,6 +606,63 @@
     });
   }
 
+  // Mesma comparação de shared/progress-sync.js (isRemoteFurtherAlong lá) —
+  // cobre os dois formatos de estado usados pelas atividades: objeto
+  // {lastStepIndex, correctCount, completed} (teoria) e array de ids
+  // concluídos (prática).
+  function isRemoteProgressFurtherAlong(remote, localRaw) {
+    if (remote == null) return false;
+    let local = null;
+    try { local = localRaw ? JSON.parse(localRaw) : null; } catch (e) {}
+    if (Array.isArray(remote)) {
+      const localLen = Array.isArray(local) ? local.length : 0;
+      return remote.length > localLen;
+    }
+    if (typeof remote === 'object') {
+      if (local == null) return true;
+      if (!!remote.completed !== !!local.completed) return !!remote.completed;
+      return (remote.lastStepIndex || 0) > (local.lastStepIndex || 0);
+    }
+    return false;
+  }
+
+  // Antes de mandar o progresso local pro Supabase (syncAllModulesProgress),
+  // busca o estado bruto de cada atividade (student_activity_state, já
+  // mantido ao vivo por shared/progress-sync.js dentro de cada módulo) e
+  // adota o remoto sempre que ele estiver MAIS avançado que o local. Sem
+  // isso, abrir o portal num navegador/dispositivo sem esse progresso local
+  // (aluno trocou de máquina, cache limpo, sessão nova) sobrescrevia a
+  // conclusão já salva no servidor com "não concluído" — só corrigia depois
+  // que o aluno abria aquele módulo específico e clicava "Voltar" de novo.
+  async function hydrateLocalProgressFromRemote() {
+    if (!sbClient || currentUser.role !== 'aluno' || !paramUser) return;
+    const modules = allTrilhas().flatMap(t => t.modules || []);
+    if (!modules.length) return;
+    try {
+      const { data } = await sbClient.from('student_activity_state').select('progress_key, state').eq('student_email', paramUser);
+      if (!data || !data.length) return;
+      const remoteByKey = {};
+      data.forEach(r => { remoteByKey[r.progress_key] = r.state; });
+      modules.forEach(mod => {
+        const activityLocation = (mod.progressKey || '').replace(/_progress_$/, '');
+        if (!(activityLocation in remoteByKey)) return;
+        const localKey = `${mod.progressKey}${paramUser}`;
+        if (isRemoteProgressFurtherAlong(remoteByKey[activityLocation], localStorage.getItem(localKey))) {
+          localStorage.setItem(localKey, JSON.stringify(remoteByKey[activityLocation]));
+        }
+      });
+    } catch (e) {
+      // hidratação é best-effort: se falhar, segue com o que já tinha localmente
+    }
+  }
+
+  async function syncAllModulesProgressSafely() {
+    await hydrateLocalProgressFromRemote();
+    refreshAllModuleCards();
+    checkGamesUnlock();
+    syncAllModulesProgress();
+  }
+
   function isModuleLocked(trilha, mod) {
     if (currentUser.role === 'professor') return false;
     // Liberação diária pra ESTE módulo hoje destrava ele por cima de
@@ -1985,6 +2042,30 @@
     }
   }
 
+  // Escuta o aviso que shared/progress-sync.js manda do <iframe> do módulo
+  // toda vez que o progresso local muda — inclusive no exato momento em que
+  // um desafio/pergunta é concluído. Sem isso, card/cadeado/ranking só
+  // refletiam a conclusão quando o aluno clicava "← Voltar" (closeModule);
+  // qualquer outra forma de sair (fechar a aba, deslogar, trocar de tela)
+  // deixava o progresso "preso" só no localStorage, sem nunca subir pro
+  // student_module_progress — dando a sensação de que nada foi salvo.
+  function setupProgressSyncListener() {
+    window.addEventListener('message', (event) => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (!data || !data.pfProgressSync || !data.activityLocation) return;
+      allTrilhas().forEach(trilha => {
+        (trilha.modules || []).forEach(mod => {
+          if ((mod.progressKey || '').replace(/_progress_$/, '') !== data.activityLocation) return;
+          const grid = document.querySelector(`#moduleSelector_${trilha.key} .card-grid`);
+          if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
+          checkGamesUnlock();
+          syncModuleProgress(trilha, mod).then(renderRankingBadge);
+        });
+      });
+    });
+  }
+
   // ---------- Acessibilidade ----------
   // Módulos/jogos abrem em <iframe> com documento próprio — as variáveis de
   // fonte do documento pai não "vazam" pra dentro sozinhas. Aplica as mesmas
@@ -2069,7 +2150,8 @@
     renderMaterias();
     renderGameCards();
     setupVLibras();
-    syncAllModulesProgress();
+    syncAllModulesProgressSafely();
+    setupProgressSyncListener();
     if (currentUser.role === 'professor') setupGestaoButtons();
 
     document.querySelectorAll('#mainNavTabs .tab-btn').forEach(btn => {
