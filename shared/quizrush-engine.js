@@ -82,6 +82,26 @@ window.QuizRushEngine = (function () {
   // em vez de baixar o .txt. Zero mudança em qualquer atividade
   // existente: a interceptação troca só a referência dentro do iframe
   // isolado, nunca o arquivo real.
+  // No array-fonte de cada atividade a resposta certa costuma cair sempre
+  // em correctIndex 0 — as telas de teoria/prática de cada trilha já
+  // embaralham a ordem na hora de exibir (ver commit "corrige resposta
+  // sempre em A nas atividades práticas"), mas o QuizRush lê esse array
+  // direto do gabarito, sem passar por aquele embaralhamento. Sem isso, a
+  // resposta certa caía sempre no primeiro tile (vermelho) da roleta de
+  // cores do Kahoot-like, entregando de graça em toda pergunta.
+  function shuffleQuestionOptions(q) {
+    const order = q.options.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    return {
+      prompt: q.prompt,
+      options: order.map(i => q.options[i]),
+      correctIndex: order.indexOf(q.correctIndex)
+    };
+  }
+
   function fetchModuleQuestions({ turma, mod, email }) {
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
@@ -118,7 +138,7 @@ window.QuizRushEngine = (function () {
           // shared/gabarito-generator.js).
           const questions = items
             .filter(it => Array.isArray(it.options) && it.options.length >= 2 && typeof it.correctIndex === 'number')
-            .map(it => ({ prompt: it.prompt, options: it.options, correctIndex: it.correctIndex }));
+            .map(it => shuffleQuestionOptions({ prompt: it.prompt, options: it.options, correctIndex: it.correctIndex }));
           finish(questions);
         } catch (e) {
           clearTimeout(timeout);
