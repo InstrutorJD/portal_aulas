@@ -44,7 +44,8 @@
     : null;
 
   let teacherUnlockOverride = false;
-  let trilhaLockCache = {}; // trilhaKey -> bool (bloqueada pelo professor, além da regra interna de pré-requisito)
+  let trilhaDatesCache = {}; // trilhaKey -> {inicio, prazo} definidos pelo professor na Gestão (trilha_release_dates), ver trilhaStatus()
+  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando trilhaDatesCache muda ao vivo
   let dailyReleasesCache = []; // linhas de daily_module_releases da turma inteira (todas as datas/dias), ver releasesForToday()
   let dailyReleasesLoadedOnce = false; // evita notificar sobre liberações que já existiam antes do carregamento inicial
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
@@ -270,14 +271,18 @@
                   <tbody id="tblDailyReleasesBody"></tbody>
                 </table>
 
-                <h3 class="gestao-subhead">Trilhas</h3>
+                <h3 class="gestao-subhead">Trilhas — Início e Prazo</h3>
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Bloqueia uma trilha inteira pra turma — não muda a regra interna dela (a prática continua exigindo a teoria concluída, por exemplo), só impede o acesso enquanto estiver bloqueada.
+                  Organiza o currículo por bimestre pro aluno: antes do início, a trilha nem aparece pra ele — depois do prazo sem concluir, ela entra em "Em atraso". Deixe em branco pra "sempre visível"/"sem prazo" (não muda a regra interna da trilha, como a prática exigir a teoria concluída).
                 </p>
                 <table class="audit-table">
-                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Status</th><th>Ações</th></tr></thead>
+                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Início</th><th>Prazo</th><th>Status</th></tr></thead>
                   <tbody id="tblGestaoTrilhasBody"></tbody>
                 </table>
+                <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
+                  <button class="btn" id="btnSalvarTrilhaDatas">Salvar Datas</button>
+                  <span class="status-msg" id="trilhaDatasStatus"></span>
+                </div>
               </div>
             </div>
 
@@ -469,6 +474,7 @@
     document.getElementById('materiaSelectorArea').style.display = 'none';
     document.getElementById('materiaDetailArea').style.display = 'block';
     document.getElementById('materiaDetailTitle').textContent = materia.label;
+    openMateriaKey = key;
     const trilhas = renderTrilhasFor(materia);
     if (trilhas.length > 0) switchAulasSubTab(trilhas[0].key);
     logAction(`Abriu a matéria: ${materia.label}`);
@@ -477,6 +483,7 @@
   function closeMateria() {
     document.getElementById('materiaDetailArea').style.display = 'none';
     document.getElementById('materiaSelectorArea').style.display = 'block';
+    openMateriaKey = null;
     if (typeof window.resumeActivityHeartbeat === 'function') {
       window.resumeActivityHeartbeat('aulas_materias', 'Aulas & Atividades — Escolhendo matéria');
     }
@@ -600,10 +607,23 @@
     return getModuleProgress(mod).completed;
   }
 
+  // Datas de início/prazo de uma trilha: o que o professor definiu na
+  // Gestão (trilha_release_dates, trilhaDatesCache) manda, com o que estiver
+  // hardcoded na própria trilha (turmas/<turma>/config.js) como fallback —
+  // dá pra já nascer com uma data padrão no código e ainda assim deixar o
+  // professor mudar depois sem precisar de deploy novo.
+  function trilhaDates(trilha) {
+    const override = trilhaDatesCache[trilha.key] || {};
+    return {
+      inicio: override.inicio || trilha.inicio || null,
+      prazo: override.prazo || trilha.prazo || null,
+    };
+  }
+
   // Classifica uma trilha pra organizar a tela do aluno conforme o currículo
   // cresce (bimestre a bimestre) sem precisar de um "bimestre ativo"
-  // configurado à parte — só usa as datas opcionais inicio/prazo de cada
-  // trilha (turmas/<turma>/config.js) contra o dia de hoje:
+  // configurado à parte — só usa inicio/prazo (ver trilhaDates) contra o
+  // dia de hoje:
   //  'futura'    -> inicio ainda não chegou (nem aparece pro aluno)
   //  'concluida' -> todos os módulos já foram concluídos (some pro grupo recolhido)
   //  'atraso'    -> passou do prazo e ainda não concluiu
@@ -612,19 +632,34 @@
   // terminada) — mesmo comportamento de antes dessas datas existirem.
   function trilhaStatus(trilha) {
     const hoje = todayStr();
-    if (trilha.inicio && trilha.inicio > hoje) return 'futura';
+    const { inicio, prazo } = trilhaDates(trilha);
+    if (inicio && inicio > hoje) return 'futura';
     const modules = trilha.modules || [];
     if (modules.length > 0 && modules.every(isModuleComplete)) return 'concluida';
-    if (trilha.prazo && trilha.prazo < hoje) return 'atraso';
+    if (prazo && prazo < hoje) return 'atraso';
     return 'aberta';
   }
 
   // Esconde trilha 'futura' só pro aluno — o professor sempre vê tudo, pra
   // poder revisar/gerenciar conteúdo já cadastrado antes da data de início
-  // (mesma lógica de bypass que já vale pra cadeado de pré-requisito).
+  // (mesma lógica de bypass que já vale pra cadeado de pré-requisito). Uma
+  // liberação diária (ver releasesForToday) pra QUALQUER módulo dessa
+  // trilha faz ela aparecer mesmo antes do início — "faça isso hoje" do
+  // professor sempre vence, igual já valia pro antigo bloqueio de trilha.
   function visibleTrilhas(trilhas) {
     if (currentUser.role !== 'aluno') return trilhas;
-    return trilhas.filter(t => trilhaStatus(t) !== 'futura');
+    const liberadasHoje = new Set(releasesForToday(paramUser).map(r => r.trilha_key));
+    return trilhas.filter(t => trilhaStatus(t) !== 'futura' || liberadasHoje.has(t.key));
+  }
+
+  // Igual trilhaStatus, mas só com os 3 status que fazem sentido pra
+  // agrupar/ordenar a lista (atraso/aberta/concluida) — uma trilha 'futura'
+  // só chega até aqui quando visibleTrilhas já abriu exceção pra ela
+  // (liberação diária de algum módulo), e nesse caso ela entra junto de
+  // "aberta": está acessível hoje, então é isso que ela é pro aluno agora.
+  function trilhaGroupStatus(trilha) {
+    const status = trilhaStatus(trilha);
+    return status === 'futura' ? 'aberta' : status;
   }
 
   // Ordena as trilhas visíveis por urgência (atraso primeiro, depois aberta,
@@ -635,7 +670,7 @@
     const trilhas = visibleTrilhas(materia.trilhas || []);
     if (currentUser.role !== 'aluno') return trilhas;
     const ordem = { atraso: 0, aberta: 1, concluida: 2 };
-    return trilhas.slice().sort((a, b) => ordem[trilhaStatus(a)] - ordem[trilhaStatus(b)]);
+    return trilhas.slice().sort((a, b) => ordem[trilhaGroupStatus(a)] - ordem[trilhaGroupStatus(b)]);
   }
 
   const TRILHA_GROUP_LABEL = { atraso: '⚠️ Em atraso', aberta: '🟢 Em aberto', concluida: '✅ Concluídas' };
@@ -648,7 +683,7 @@
       return trilhas.map(t => `<option value="${t.key}">${t.label}</option>`).join('');
     }
     const grupos = { atraso: [], aberta: [], concluida: [] };
-    trilhas.forEach(t => grupos[trilhaStatus(t)].push(t));
+    trilhas.forEach(t => grupos[trilhaGroupStatus(t)].push(t));
     return ['atraso', 'aberta', 'concluida']
       .filter(status => grupos[status].length > 0)
       .map(status => `<optgroup label="${TRILHA_GROUP_LABEL[status]}">${
@@ -752,9 +787,6 @@
     // trilha dela estivesse bloqueada — a liberação só afetava o cadeado
     // dos jogos, nunca se dava pra abrir o módulo em si.
     if (releasesForToday(paramUser).some(r => r.trilha_key === trilha.key && r.module_key === mod.key)) return false;
-    // Bloqueio do professor trava a trilha inteira, por cima da regra interna
-    // de pré-requisito (que continua valendo assim que a trilha for liberada).
-    if (trilhaLockCache[trilha.key]) return true;
     if (!mod.requires) return false;
     const requiredMod = (trilha.modules || []).find(m => m.key === mod.requires);
     return !!requiredMod && !isModuleComplete(requiredMod);
@@ -772,9 +804,11 @@
       const locked = isModuleLocked(trilha, m);
       const done = isModuleComplete(m);
       // "Liberado hoje" só faz sentido de mostrar quando é a ÚNICA razão do
-      // módulo estar acessível (senão, ou já estaria acessível de qualquer
-      // jeito, ou o rótulo apareceria em módulos que não têm nada de especial).
-      const releasedByDaily = !locked && !done && trilhaLockCache[trilha.key] && releasedTodayKeys.has(m.key);
+      // módulo estar acessível: a trilha inteira ainda nem "começou"
+      // (trilhaStatus 'futura') mas essa liberação a fez aparecer mesmo
+      // assim (ver visibleTrilhas) — senão o rótulo apareceria em módulos
+      // que já estariam acessíveis de qualquer jeito.
+      const releasedByDaily = !locked && !done && trilhaStatus(trilha) === 'futura' && releasedTodayKeys.has(m.key);
       const statusLabel = locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : releasedByDaily ? '📌 Liberado hoje' : '';
       const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '');
       const click = locked ? '' : `onclick="PortalCore.openModule('${trilha.key}','${m.key}')"`;
@@ -788,8 +822,11 @@
     }).join('');
   }
 
+  // Só exige o que já está disponível — trilha 'futura' (bimestre seguinte,
+  // ainda não começou) não pode travar o desbloqueio dos jogos por algo que
+  // o aluno nem tem como ter feito ainda.
   function allModulesComplete() {
-    const modules = allTrilhas().flatMap(t => t.modules || []);
+    const modules = allTrilhas().filter(t => trilhaStatus(t) !== 'futura').flatMap(t => t.modules || []);
     if (modules.length === 0) return false;
     return modules.every(isModuleComplete);
   }
@@ -863,18 +900,31 @@
     });
   }
 
-  async function fetchTrilhaLocks() {
+  async function fetchTrilhaDates() {
     if (!sbClient) return;
-    const { data } = await sbClient.from('trilha_overrides').select('*').eq('turma', cfg.id);
-    trilhaLockCache = {};
-    (data || []).forEach(r => { trilhaLockCache[r.trilha_key] = !!r.locked; });
+    const { data } = await sbClient.from('trilha_release_dates').select('*').eq('turma', cfg.id);
+    trilhaDatesCache = {};
+    (data || []).forEach(r => { trilhaDatesCache[r.trilha_key] = { inicio: r.inicio, prazo: r.prazo }; });
     refreshAllModuleCards();
+    renderMaterias();
+    // Refaz o <select> de trilha da matéria que o aluno tem aberta agora,
+    // preservando a trilha selecionada quando ela continua visível — sem
+    // isso, o card de módulos ficaria com o status desatualizado até a
+    // próxima vez que a matéria fosse reaberta.
+    if (openMateriaKey) {
+      const materia = (cfg.materias || []).find(m => m.key === openMateriaKey);
+      if (materia) {
+        const selecionadaAntes = document.getElementById('trilhaSelect')?.value;
+        const trilhas = renderTrilhasFor(materia);
+        if (selecionadaAntes && trilhas.some(t => t.key === selecionadaAntes)) switchAulasSubTab(selecionadaAntes);
+      }
+    }
   }
 
-  function setupTrilhaLockRealtime() {
+  function setupTrilhaDatesRealtime() {
     if (!sbClient) return;
-    sbClient.channel('realtime_trilha_overrides_' + cfg.id)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_overrides', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaLocks())
+    sbClient.channel('realtime_trilha_release_dates_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_release_dates', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaDates())
       .subscribe();
   }
 
@@ -982,34 +1032,58 @@
     return (cfg.materias || []).flatMap(m => (m.trilhas || []).map(t => ({ materiaLabel: m.label, trilha: t })));
   }
 
+  // Rótulo pro professor na Gestão: só olha as datas, nunca o progresso de
+  // um aluno específico (não faria sentido "concluída" aqui — conclusão é
+  // por aluno; quem vê isso é o trilhaStatus() que cada aluno usa pra si).
+  function trilhaDateStatusLabel(inicio, prazo) {
+    const hoje = todayStr();
+    if (inicio && inicio > hoje) return { text: 'Ainda não iniciada', color: 'var(--ink-dim)' };
+    if (prazo && prazo < hoje) return { text: 'Prazo vencido', color: 'var(--blood-bright)' };
+    return { text: 'Em andamento', color: 'var(--green)' };
+  }
+
   async function renderGestaoTrilhas() {
-    await fetchTrilhaLocks();
+    await fetchTrilhaDates();
     const tbody = document.getElementById('tblGestaoTrilhasBody');
     if (!tbody) return;
     const pares = allTrilhasComMateria();
     if (pares.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
       return;
     }
     tbody.innerHTML = pares.map(({ materiaLabel, trilha }) => {
-      const locked = !!trilhaLockCache[trilha.key];
+      const saved = trilhaDatesCache[trilha.key] || {};
+      const inicio = saved.inicio || trilha.inicio || '';
+      const prazo = saved.prazo || trilha.prazo || '';
+      const status = trilhaDateStatusLabel(inicio, prazo);
       return `
-        <tr>
+        <tr data-trilha="${trilha.key}">
           <td>${materiaLabel}</td>
           <td>${trilha.label}</td>
-          <td><span style="color:${locked ? 'var(--blood-bright)' : 'var(--green)'}">${locked ? 'BLOQUEADA' : 'LIBERADA'}</span></td>
-          <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.toggleTrilhaLock('${trilha.key}')">${locked ? 'Liberar' : 'Bloquear'}</button></td>
+          <td><input type="date" class="trilha-data-input" data-campo="inicio" value="${inicio}"></td>
+          <td><input type="date" class="trilha-data-input" data-campo="prazo" value="${prazo}"></td>
+          <td><span style="color:${status.color}">${status.text}</span></td>
         </tr>
       `;
     }).join('');
   }
 
-  async function toggleTrilhaLock(trilhaKey) {
+  // Salva TODAS as linhas da tabela de uma vez (igual salvarNotas) — mais
+  // simples que um botão por linha, e a turma toda cabe numa única chamada.
+  async function salvarTrilhaDatas() {
     if (!sbClient) return;
-    const newValue = !trilhaLockCache[trilhaKey];
-    await sbClient.from('trilha_overrides').upsert({
-      turma: cfg.id, trilha_key: trilhaKey, locked: newValue, updated_at: new Date().toISOString()
-    }, { onConflict: 'turma,trilha_key' });
+    const now = new Date().toISOString();
+    const rows = Array.from(document.querySelectorAll('#tblGestaoTrilhasBody tr[data-trilha]')).map(tr => {
+      const get = campo => {
+        const inp = tr.querySelector(`.trilha-data-input[data-campo="${campo}"]`);
+        return inp && inp.value ? inp.value : null;
+      };
+      return { turma: cfg.id, trilha_key: tr.getAttribute('data-trilha'), inicio: get('inicio'), prazo: get('prazo'), updated_at: now };
+    });
+    if (rows.length === 0) return;
+    await sbClient.from('trilha_release_dates').upsert(rows, { onConflict: 'turma,trilha_key' });
+    const status = document.getElementById('trilhaDatasStatus');
+    if (status) status.textContent = `Datas salvas às ${new Date().toLocaleTimeString('pt-BR')}.`;
     renderGestaoTrilhas();
   }
 
@@ -1956,6 +2030,7 @@
     });
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
+    document.getElementById('btnSalvarTrilhaDatas').addEventListener('click', salvarTrilhaDatas);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
   }
 
@@ -2210,8 +2285,8 @@
     if (currentUser.role === 'aluno') {
       fetchTeacherOverride();
       setupOverrideRealtime();
-      fetchTrilhaLocks();
-      setupTrilhaLockRealtime();
+      fetchTrilhaDates();
+      setupTrilhaDatesRealtime();
       fetchDailyReleases();
       setupDailyReleasesRealtime();
       renderRankingBadge();
@@ -2290,7 +2365,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, toggleTrilhaLock, removeDailyRelease };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, removeDailyRelease };
 
   document.addEventListener('DOMContentLoaded', init);
 })();

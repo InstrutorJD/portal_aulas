@@ -760,36 +760,44 @@ alter table public.student_module_progress enable trigger trg_student_module_pro
 
 
 -- ============================================================
--- BLOCO 8 — Bloqueio manual de trilha inteira pelo professor (aba
--- Gestão). Não muda a regra interna da trilha — um módulo que já
--- dependia de outro (campo `requires`) continua dependendo dele assim
--- que a trilha for liberada de novo; o bloqueio do professor é só uma
--- trava A MAIS, por cima dessa regra.
+-- BLOCO 8 — Início/prazo por trilha, definidos pelo professor na aba
+-- Gestão. Organiza o currículo por bimestre pro aluno: antes do início
+-- a trilha nem aparece pra ele, depois do prazo sem concluir ela entra
+-- em "Em atraso" — não muda a regra interna da trilha (um módulo que
+-- já dependia de outro via `requires` continua dependendo dele).
+--
+-- Substitui o antigo bloqueio manual liga/desliga de trilha inteira
+-- (trilha_overrides): o mesmo resultado (trilha inacessível pro aluno)
+-- agora vem de deixar `inicio` no futuro, só que sem precisar lembrar
+-- de liberar depois — a trilha aparece sozinha na data.
 -- ============================================================
 
-create table if not exists public.trilha_overrides (
+drop table if exists public.trilha_overrides cascade;
+
+create table if not exists public.trilha_release_dates (
   turma text not null,
   trilha_key text not null,
-  locked boolean not null default false,
+  inicio date,
+  prazo date,
   updated_at timestamptz not null default now(),
   primary key (turma, trilha_key)
 );
 
-alter table public.trilha_overrides enable row level security;
+alter table public.trilha_release_dates enable row level security;
 
-drop policy if exists "trilha_overrides_select_all" on public.trilha_overrides;
-create policy "trilha_overrides_select_all"
-  on public.trilha_overrides for select
+drop policy if exists "trilha_release_dates_select_all" on public.trilha_release_dates;
+create policy "trilha_release_dates_select_all"
+  on public.trilha_release_dates for select
   using (true);
 
-drop policy if exists "trilha_overrides_insert_all" on public.trilha_overrides;
-create policy "trilha_overrides_insert_all"
-  on public.trilha_overrides for insert
+drop policy if exists "trilha_release_dates_insert_all" on public.trilha_release_dates;
+create policy "trilha_release_dates_insert_all"
+  on public.trilha_release_dates for insert
   with check (true);
 
-drop policy if exists "trilha_overrides_update_all" on public.trilha_overrides;
-create policy "trilha_overrides_update_all"
-  on public.trilha_overrides for update
+drop policy if exists "trilha_release_dates_update_all" on public.trilha_release_dates;
+create policy "trilha_release_dates_update_all"
+  on public.trilha_release_dates for update
   using (true)
   with check (true);
 
@@ -797,9 +805,9 @@ do $$
 begin
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trilha_overrides'
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trilha_release_dates'
   ) then
-    alter publication supabase_realtime add table public.trilha_overrides;
+    alter publication supabase_realtime add table public.trilha_release_dates;
   end if;
 end $$;
 
@@ -1130,7 +1138,7 @@ create policy "student_activity_state_update_all"
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se attendance,
 -- grades, student_module_progress, classroom_settings,
--- student_activity, student_overrides, trilha_overrides, game_scores,
+-- student_activity, student_overrides, trilha_release_dates, game_scores,
 -- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers
 -- e student_activity_state foram criadas, e se network_nodes ganhou as
 -- colunas current_ip e turma.
