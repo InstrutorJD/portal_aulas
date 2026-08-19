@@ -32,8 +32,12 @@ let checkedScripts = 0;
 
 const REF_RE = /\b(?:src|href)="([^"]+)"/g;
 const SCRIPT_BLOCK_RE = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
-const SCRIPT_OPEN_RE = /<script\b/g;
-const SCRIPT_CLOSE_RE = /<\/script>/g;
+// O \? opcional cobre <script>/<\/script> escapados de propósito dentro de
+// uma string JS (ex: um caso de teste que verifica detecção de "<script>"
+// malicioso) — sem isso, string literal teria que fechar o <script> real
+// da página, o que quebraria a atividade no navegador.
+const SCRIPT_OPEN_RE = /<\\?script\b/g;
+const SCRIPT_CLOSE_RE = /<\\?\/script>/g;
 
 for (const file of htmlFiles) {
   const rel = file.slice(ROOT.length + 1);
