@@ -163,34 +163,17 @@
 //   posicao()                { linha, coluna } — posição atual (começa em 1,1)
 //   distanciaAteBandeira()   quantas casas faltam (linha + coluna) até 🚩
 
-// O campo é invisível: sinta antes de andar! Guardamos as casas já
-// visitadas pra preferir sempre um caminho novo, em vez de ficar
-// andando de um lado pro outro no mesmo lugar.
-const direcoes = { direita: [0, 1], baixo: [1, 0], cima: [-1, 0], esquerda: [0, -1] };
-const visitadas = new Set();
-
-function chave(p) { return p.linha + ',' + p.coluna; }
-function vizinha(p, dir) {
-  const [dl, dc] = direcoes[dir];
-  return { linha: p.linha + dl, coluna: p.coluna + dc };
+// O campo é invisível: sinta antes de andar! Exemplo de como consultar
+// o sensor antes de decidir o movimento (isso sozinho não resolve o
+// nível — é só pra mostrar a sintaxe):
+if (!perigo('direita')) {
+  mover('direita');
+} else if (!perigo('baixo')) {
+  mover('baixo');
 }
 
-visitadas.add(chave(posicao()));
-
-while (distanciaAteBandeira() > 0) {
-  const aqui = posicao();
-  const seguras = Object.keys(direcoes).filter(dir => !perigo(dir));
-
-  // prefere uma casa segura que ainda não visitamos...
-  let escolha = seguras.find(dir => !visitadas.has(chave(vizinha(aqui, dir))));
-  // ...senão, aceita repetir uma casa segura já visitada...
-  if (!escolha) escolha = seguras[0];
-  // ...e se não sobrou nenhuma direção segura, está cercado.
-  if (!escolha) break;
-
-  mover(escolha);
-  visitadas.add(chave(vizinha(aqui, escolha)));
-}</textarea>
+// Agora é com você: escreva a lógica pra guiar o robô até a 🚩 sentindo
+// o caminho com perigo() antes de cada mover().</textarea>
         <div class="code-actions">
           <button class="btn" id="btnRun">▶ Executar</button>
           <button class="btn btn-secondary" id="btnRestart">↻ Reiniciar</button>
