@@ -548,14 +548,14 @@
           <div class="card-grid">${buildModuleCardsHtml(trilha)}</div>
         </div>
         <div id="moduleFrameArea_${trilha.key}" style="display:none;">
-          <div class="card module-frame-header">
-            <div>
+          <div id="moduleFrameHeader_${trilha.key}" class="card module-frame-header">
+            <div id="moduleFrameInfo_${trilha.key}">
               <h2 id="moduleFrameTitle_${trilha.key}" style="margin:0; font-size:18px;">--</h2>
               <p id="moduleFrameDesc_${trilha.key}" style="font-size:11px; color:var(--ink-dim); margin:4px 0 0 0;"></p>
             </div>
             <button class="btn btn-secondary" onclick="PortalCore.closeModule('${trilha.key}')">← Voltar</button>
           </div>
-          <div class="game-frame-wrapper" style="height:min(560px, 70vh); border:1px solid var(--green-dim);">
+          <div id="moduleFrameWrapper_${trilha.key}" class="game-frame-wrapper" style="height:min(560px, 70vh); border:1px solid var(--green-dim);">
             <iframe id="moduleFrame_${trilha.key}" src="about:blank"></iframe>
           </div>
         </div>
@@ -2164,6 +2164,14 @@
     document.getElementById(`moduleFrameArea_${trilhaKey}`).style.display = 'block';
     document.getElementById(`moduleFrameTitle_${trilhaKey}`).textContent = mod.title;
     document.getElementById(`moduleFrameDesc_${trilhaKey}`).textContent = mod.desc || '';
+
+    // Atividades de código (editor de verdade dentro do iframe) precisam do
+    // máximo de altura possível — minimiza o cabeçalho pra sobrar só o
+    // botão de voltar, e devolve o espaço do título/descrição pro iframe.
+    const info = document.getElementById(`moduleFrameInfo_${trilhaKey}`);
+    const wrapper = document.getElementById(`moduleFrameWrapper_${trilhaKey}`);
+    info.style.display = mod.codeEditor ? 'none' : '';
+    wrapper.style.height = mod.codeEditor ? 'min(760px, 85vh)' : 'min(560px, 70vh)';
 
     const frame = document.getElementById(`moduleFrame_${trilhaKey}`);
     frame.onload = () => applyA11yToIframe(frame);

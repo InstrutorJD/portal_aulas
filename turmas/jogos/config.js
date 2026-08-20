@@ -269,7 +269,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva código de verdade: manipule dados JSON, valide requisitos do GDD e calcule orçamento de assets do pipeline de renderização.',
               icon: '🐍', src: 'atividades/cod-linguagens-pratica.html',
               progressKey: 'cod_linguagens_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         },
@@ -291,7 +291,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva código de verdade: valide permissões, trate erros com segurança e manipule dados externos sem quebrar o jogo.',
               icon: '🔐', src: 'atividades/cod-seguranca-debug-pratica.html',
               progressKey: 'cod_seguranca_debug_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         },
@@ -313,7 +313,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva funções e classes JS de verdade, rodando contra casos de teste: instâncias, encapsulamento, componentes, herança e triggers.',
               icon: '👾', src: 'atividades/cod-poo-pratica.html',
               progressKey: 'cod_poo_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         },
@@ -335,7 +335,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva código de verdade aplicando Clean Code: elimine repetição (DRY), nomeie constantes e refatore sem quebrar o comportamento.',
               icon: '📋', src: 'atividades/cod-agil-clean-pratica.html',
               progressKey: 'cod_agil_clean_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         },
@@ -357,7 +357,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva código de verdade: valide inputs, navegue grafos de waypoints e programe a decisão/estado de um NPC.',
               icon: '🕸️', src: 'atividades/cod-seguranca-ia-pratica.html',
               progressKey: 'cod_seguranca_ia_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         }
@@ -407,7 +407,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva código de verdade: coordenadas, matriz de cenário, mistura de cor e física básica de jogo.',
               icon: '🧮', src: 'atividades/fund-logica-pratica.html',
               progressKey: 'fund_logica_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         },
@@ -429,7 +429,7 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Escreva código de verdade: movimentação, colisão, eventos e controle de objetos do jogo.',
               icon: '🕹️', src: 'atividades/fund-prog2d-pratica.html',
               progressKey: 'fund_prog2d_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
+              requires: 'teoria', hasGabarito: true, codeEditor: true
             }
           ]
         },
