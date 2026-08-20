@@ -973,7 +973,7 @@ create table if not exists public.quizrush_sessions (
   status text not null default 'lobby' check (status in ('lobby', 'question', 'reveal', 'podium', 'ended')),
   current_index int not null default 0,
   question_started_at timestamptz,
-  question_duration_ms int not null default 20000,
+  question_duration_ms int not null default 25000,
   created_at timestamptz not null default now()
 );
 

@@ -165,7 +165,7 @@ window.QuizRushEngine = (function () {
     const row = {
       id, turma, created_by: email, trilha_label: trilhaLabel, module_title: moduleTitle,
       questions, status: 'lobby', current_index: 0, question_started_at: null,
-      question_duration_ms: durationMs || 20000, created_at: new Date().toISOString()
+      question_duration_ms: durationMs || 25000, created_at: new Date().toISOString()
     };
     const { error } = await sb.from('quizrush_sessions').upsert(row, { onConflict: 'id' });
     if (error) { console.error('[QuizRushEngine] falha ao criar sessão:', error); return null; }

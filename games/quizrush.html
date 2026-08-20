@@ -144,7 +144,7 @@
       <div id="setupResult" style="display:none; flex-direction:column; gap:12px;">
         <div id="setupResultText" class="hint"></div>
         <label class="field">Tempo por pergunta (segundos)
-          <input type="number" id="inpDuration" min="5" max="120" value="20">
+          <input type="number" id="inpDuration" min="5" max="120" value="25">
         </label>
         <button class="btn btn-primary" id="btnCreateSession">🚀 Iniciar QuizRush</button>
       </div>
@@ -185,7 +185,7 @@
   <!-- ---------- Pergunta ---------- -->
   <div class="screen live" id="scrQuestion">
     <div class="q-head">
-      <div class="timer-ring" id="qTimerRing"><span id="qTimerNum">20</span></div>
+      <div class="timer-ring" id="qTimerRing"><span id="qTimerNum">25</span></div>
       <div>
         <p class="q-meta" id="qMeta">Pergunta 1 de 10</p>
         <div class="q-prompt" id="qPrompt">--</div>
@@ -370,7 +370,7 @@
 
   async function onCreateSession() {
     if (!state.fetchedQuestions) return;
-    const seconds = Math.max(5, Math.min(120, parseInt(document.getElementById('inpDuration').value, 10) || 20));
+    const seconds = Math.max(5, Math.min(120, parseInt(document.getElementById('inpDuration').value, 10) || 25));
     const { questions, candidate } = state.fetchedQuestions;
     const btn = document.getElementById('btnCreateSession');
     btn.disabled = true;
