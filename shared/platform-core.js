@@ -543,8 +543,8 @@
       page.innerHTML = `
         <div id="moduleSelector_${trilha.key}" class="card" style="padding:16px;">
           <h2 style="margin:0 0 4px;">Trilha ${trilha.label}${statusBadge}</h2>
-          ${trilha.capacidade ? `<p style="font-size:11px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
-          <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">${trilha.desc || 'Escolha um módulo para começar.'}</p>
+          ${trilha.capacidade ? `<p style="font-size:14px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
+          <p style="font-size:14px; color:var(--ink-dim); margin:0 0 16px;">${trilha.desc || 'Escolha um módulo para começar.'}</p>
           <div class="card-grid">${buildModuleCardsHtml(trilha)}</div>
         </div>
         <div id="moduleFrameArea_${trilha.key}" style="display:none;">

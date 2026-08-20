@@ -60,7 +60,7 @@
   .hp-bar-fill.defeated{ width:0%; background:var(--ink-dim); }
 
   .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 8px; letter-spacing:1px; }
-  .challenge-header p{ font-size:12px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
+  .challenge-header p{ font-size:14px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
   .challenge-header code{ color:var(--yellow); }
 
   .explanation-box{
@@ -92,7 +92,7 @@
   .hint-box b{ color:var(--yellow); }
 
   textarea#codeInput{
-    width:100%; flex:1; min-height:60px; resize:vertical; background:#000; color:var(--green);
+    width:100%; flex:1; min-height:140px; resize:vertical; background:#000; color:var(--green);
     border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
     padding:10px; outline:none; line-height:1.5;
   }
@@ -127,7 +127,7 @@
     .layout{ flex-direction:column; height:auto; }
     .sidebar{ width:100%; height:auto; max-height:150px; }
     .main-panel{ height:auto; overflow-y:visible; }
-    textarea#codeInput{ min-height:110px; }
+    textarea#codeInput{ min-height:200px; }
     .console{ flex:none; max-height:160px; }
   }
 </style>
