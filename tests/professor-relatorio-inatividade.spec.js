@@ -9,12 +9,12 @@
 // ALGUM módulo de student_module_progress — só ter linha lá não basta,
 // porque o sync roda pra todo módulo a cada carregamento, mesmo com 0%.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, sistemasAlunoProfiles } = require('./helpers');
 
 const SISTEMAS_URL = '/turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=sistemas';
 
 async function openGestao(page, seed) {
-  await stubSupabaseFake(page, seed);
+  await stubSupabaseFake(page, { ...seed, profiles: [...(seed.profiles || []), ...sistemasAlunoProfiles()] });
   await page.goto(SISTEMAS_URL);
   await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
   await page.waitForTimeout(200);
@@ -56,14 +56,8 @@ test.describe('Relatório de Inatividade — dentro do portal da turma', () => {
     await expect(page.locator('#inatividadeResumo')).toContainText('nunca acessaram o portal');
   });
 
-  test('sem Supabase configurado, mostra o aviso em vez de travar', async ({ page }) => {
-    const { stubSupabaseDisabled } = require('./helpers');
-    await stubSupabaseDisabled(page);
-    await page.goto(SISTEMAS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Relatórios');
-
-    await expect(page.locator('#inatividadeBody')).toContainText('Configure o Supabase');
-  });
+  // Removido: "logado como professor, mas sbClient nulo" não é mais um
+  // estado alcançável (mesmo motivo do teste equivalente removido em
+  // tests/professor-relatorio-atividade-dia.spec.js) — login agora exige
+  // Supabase Auth configurado.
 });

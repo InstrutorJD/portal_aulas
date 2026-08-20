@@ -1,12 +1,12 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
-const URL = '/professor/painel.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor';
+const URL = '/professor/painel.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&name=Instrutor%20%2F%20Professor&turma=all';
 
 test.describe('professor/painel.html', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('mostra só os dois cards de turma', async ({ page }) => {
@@ -31,14 +31,17 @@ test.describe('professor/painel.html', () => {
       page.waitForEvent('popup'),
       page.locator('.turma-card', { hasText: 'Jogos Digitais' }).click(),
     ]);
-    await expect(popupJogos).toHaveURL(/turmas\/jogos\/plataforma\.html\?.*role=professor/);
+    // A identidade agora vem da sessão (localStorage, compartilhada entre
+    // abas do mesmo site) — o link não precisa mais carregar ?role=/?user=
+    // na URL pra abrir o portal certo já autenticado como professor.
+    await expect(popupJogos).toHaveURL(/turmas\/jogos\/plataforma\.html/);
     await popupJogos.close();
 
     const [popupSistemas] = await Promise.all([
       page.waitForEvent('popup'),
       page.locator('.turma-card', { hasText: 'Desenvolvimento de Sistemas' }).click(),
     ]);
-    await expect(popupSistemas).toHaveURL(/turmas\/sistemas\/plataforma\.html\?.*role=professor/);
+    await expect(popupSistemas).toHaveURL(/turmas\/sistemas\/plataforma\.html/);
     await popupSistemas.close();
   });
 });

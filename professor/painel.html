@@ -22,7 +22,9 @@
 </style>
 <link rel="stylesheet" href="../shared/platform-core.css">
 
-<script src="../shared/users-db.js"></script>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/session.js"></script>
 </head>
 <body>
 
@@ -47,11 +49,11 @@
            em Sistemas) pra aparecer no netscan dos alunos da turma que estiver
            jogando — ver sql/supabase-setup-completo.sql (bloco 6b). -->
       <div class="card-grid turma-grid">
-        <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor', '_blank')">
+        <div class="card turma-card" onclick="window.open('../turmas/jogos/plataforma.html', '_blank')">
           <div class="icon">🎮</div>
           <h3>Jogos Digitais</h3>
         </div>
-        <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor', '_blank')">
+        <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html', '_blank')">
           <div class="icon">🖥️</div>
           <h3>Desenvolvimento de Sistemas</h3>
         </div>
@@ -61,28 +63,24 @@
 </div>
 
 <script>
-const urlParams = new URLSearchParams(window.location.search);
-const paramUser = urlParams.get('user') || 'admin';
+(async function () {
+  // Identidade real vem da sessão do Supabase Auth — quem não estiver
+  // logado (ou não for professor) é mandado de volta pro login, igual já
+  // acontece em shared/platform-core.js.
+  const currentUser = await window.PortalSession.requireUser('../index.html');
+  if (!currentUser) return;
+  if (currentUser.role !== 'professor') {
+    window.location.href = '../index.html';
+    return;
+  }
 
-const DB = { users: {} };
-(window.USERS_DB || []).forEach(u => { DB.users[u.email] = { ...u, progress: 0 }; });
+  document.getElementById('sessionUser').textContent = currentUser.nome;
 
-// ?user= vem direto da URL sem sessão/token por trás — sem essa checagem,
-// qualquer valor inexistente virava "professor" por padrão (mesmo risco que
-// já foi corrigido em shared/platform-core.js).
-if (!DB.users[paramUser]) {
-  alert('Sessão inválida ou expirada. Faça login novamente.');
-  window.location.href = '../index.html';
-  throw new Error('sessão inválida');
-}
-
-const currentUser = DB.users[paramUser];
-document.getElementById('sessionUser').textContent = currentUser.nome;
-
-document.getElementById('btnLogout').addEventListener('click', () => {
-  sessionStorage.clear();
-  window.location.href = '../index.html';
-});
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await window.PortalSession.signOut();
+    window.location.href = '../index.html';
+  });
+})();
 </script>
 
 </body>

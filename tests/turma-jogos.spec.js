@@ -1,8 +1,8 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
-const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno';
+const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&name=Breno%20Silva&turma=jogos';
 
 // As trilhas de verdade (JS/C#) ficam dentro de Fundamentos de Programação,
 // junto com as trilhas fund-*.
@@ -12,7 +12,7 @@ async function openMateria1(page) {
 
 test.describe('turmas/jogos/plataforma.html', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('mostra os cards das 6 matérias de Jogos Digitais', async ({ page }) => {

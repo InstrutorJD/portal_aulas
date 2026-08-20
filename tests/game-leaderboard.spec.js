@@ -5,7 +5,7 @@
 // o top 10 da turma, com nome e posição dos colegas — diferente do
 // ranking de progresso acadêmico, aqui o placar é público de propósito.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, stubSupabaseDisabled } = require('./helpers');
 
 const DIGITACAO_URL = '/games/digitacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 
@@ -67,11 +67,14 @@ test.describe('shared/game-leaderboard.js — Digitação', () => {
     await expect(overlay).toHaveCount(0);
   });
 
-  test('sem Supabase configurado, o botão de ranking fica escondido', async ({ page }) => {
-    const { stubSupabaseDisabled } = require('./helpers');
+  // Login agora é via Supabase Auth de verdade — sem Supabase configurado
+  // de jeito nenhum, ninguém consegue autenticar (não é mais possível "usar
+  // o jogo sem back-end", como era com a identidade vindo só da URL). O
+  // redirecionamento pro login é o comportamento correto aqui.
+  test('sem Supabase configurado, o jogo redireciona pro login', async ({ page }) => {
     await stubSupabaseDisabled(page);
     await page.goto(DIGITACAO_URL);
-    await expect(page.locator('#btnRanking')).toBeHidden();
+    await page.waitForURL(/index\.html$/);
   });
 
   // Regressão: quando a tabela game_scores (ou a policy de RLS) não existe

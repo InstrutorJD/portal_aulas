@@ -115,8 +115,8 @@
 <script>
   window.ACTIVITY_LOCATION = 'devsis_apis_frameworks_teoria';
 </script>
-<script src="../../../shared/users-db.js"></script>
 <script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
@@ -367,9 +367,10 @@
     });
   };
 
-  const role = (window.USERS_DB || []).find(u => u.email === (urlParams.get('user') || ''))?.role || 'aluno';
   const btnGenSlides = document.getElementById('btnGenSlides');
-  if (role === 'professor') {
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    if (!user || user.role !== 'professor') return;
     btnGenSlides.style.display = 'inline-block';
     btnGenSlides.addEventListener('click', () => {
       btnGenSlides.disabled = true;
@@ -380,7 +381,7 @@
         btnGenSlides.textContent = '🖨️ Gerar Slides (PPTX)';
       }, 50);
     });
-  }
+  })();
 
   const storyWrap = document.getElementById('storyWrap');
   const lblStepNum = document.getElementById('lblStepNum');

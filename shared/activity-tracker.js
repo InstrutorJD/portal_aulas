@@ -1,30 +1,42 @@
-(function () {
-  const SUPABASE_URL = window.SUPABASE_URL;
-  const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
+(async function () {
   const HEARTBEAT_MS = 15000;
   const IDLE_TIMEOUT_MS = 120000;
 
-  if (typeof window.supabase === 'undefined' || !SUPABASE_URL || !SUPABASE_KEY) {
-    return;
-  }
+  if (!window.PortalSession) return;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const role = window.ACTIVITY_STUDENT_ROLE || urlParams.get('role') || 'aluno';
+  // plataforma.html já resolveu a identidade (via sessão) e injeta esses
+  // globais antes de carregar este script (ver shared/platform-core.js);
+  // fora desse caminho (atividade/jogo aberto direto), resolve a própria
+  // sessão aqui.
+  let role = window.ACTIVITY_STUDENT_ROLE;
+  let studentEmail = window.ACTIVITY_STUDENT_EMAIL;
+  let studentName = window.ACTIVITY_STUDENT_NAME;
+  let studentTurma = window.ACTIVITY_STUDENT_TURMA;
+
+  if (!studentEmail) {
+    const user = await window.PortalSession.getUser();
+    if (!user) return;
+    role = user.role;
+    studentEmail = user.email;
+    studentName = user.nome;
+    studentTurma = user.turma;
+  }
 
   // Não rastreamos professor/admin — o painel é para acompanhar alunos.
   if (role === 'professor' || role === 'admin') {
     return;
   }
 
-  const studentEmail = (window.ACTIVITY_STUDENT_EMAIL || urlParams.get('user') || '').trim();
+  studentEmail = (studentEmail || '').trim();
   if (!studentEmail) {
     return;
   }
 
-  const studentName = window.ACTIVITY_STUDENT_NAME || urlParams.get('name') || studentEmail;
-  const studentTurma = window.ACTIVITY_STUDENT_TURMA || urlParams.get('turma') || null;
+  studentName = studentName || studentEmail;
+  studentTurma = studentTurma || null;
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.PortalSession.client();
+  if (!sb) return;
 
   let currentLocation = window.ACTIVITY_LOCATION || 'desconhecido';
   let currentLabel = window.ACTIVITY_LABEL || null;

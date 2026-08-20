@@ -127,7 +127,7 @@
   <div class="screen" id="scrDisabled">
     <h1 class="title">🎉 QuizRush</h1>
     <div class="card">
-      <p class="hint" style="margin:0;">O QuizRush da turma precisa do Supabase configurado (é uma partida ao vivo, sincronizada entre professor e alunos). Rode <code>sql/supabase-quizrush.sql</code> no Supabase e configure <code>shared/supabase-config.js</code>.</p>
+      <p class="hint" style="margin:0;">O QuizRush da turma precisa do Supabase configurado (é uma partida ao vivo, sincronizada entre professor e alunos). Rode <code>sql/supabase-setup-completo.sql</code> no Supabase e configure <code>shared/supabase-config.js</code>.</p>
     </div>
   </div>
 
@@ -234,18 +234,20 @@
 
 </div>
 
-<script src="../shared/users-db.js"></script>
 <script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/quizrush-engine.js"></script>
 
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get('user') || 'anon';
-  const displayName = urlParams.get('name') || username;
-  const turma = urlParams.get('turma') || '';
-  const role = (window.USERS_DB || []).find(u => u.email === (urlParams.get('user') || ''))?.role || 'aluno';
-  const isHost = role === 'professor';
+  // Identidade real (username/turma/role) só é conhecida depois da sessão
+  // do Supabase Auth resolver, dentro de init() — ver bootstrap no fim
+  // deste script. Nada aqui embaixo roda antes disso.
+  let username = 'anon';
+  let displayName = 'anon';
+  let turma = '';
+  let role = 'aluno';
+  let isHost = false;
 
   const SHAPES = ['▲', '◆', '●', '■'];
 
@@ -761,6 +763,14 @@
 
   async function init() {
     if (!window.QuizRushEngine || !window.QuizRushEngine.enabled) { showScreen('scrDisabled'); return; }
+
+    const user = window.PortalSession ? await window.PortalSession.requireUser('../index.html') : null;
+    if (!user) return;
+    username = user.email;
+    displayName = user.nome || username;
+    turma = user.turma || '';
+    role = user.role;
+    isHost = role === 'professor';
 
     state.clockOffsetMs = await window.QuizRushEngine.getServerTimeMs();
 

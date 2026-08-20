@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
 const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
@@ -12,7 +12,7 @@ async function expandGestaoSection(page, titulo) {
 
 test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
   test('aluno não vê a aba Gestão', async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
     await expect(page.locator('#mainNavTabs .tab-btn[data-tab="gestao"]')).toHaveCount(0);
   });
@@ -49,7 +49,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
   });
 
   test('professor vê só os alunos desta turma, não os de Sistemas', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [] });
+    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
@@ -60,7 +60,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
   });
 
   test('liberar jogos de um aluno específico grava o override certo', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [] });
+    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
@@ -76,7 +76,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
   });
 
   test('liberar jogos (todos) só afeta alunos desta turma', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [] });
+    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);

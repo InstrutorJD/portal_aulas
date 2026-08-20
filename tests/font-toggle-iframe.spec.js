@@ -4,13 +4,13 @@
 // do <iframe> de um módulo/jogo (documento separado) continuava com a fonte
 // pixelada, porque nada propagava a escolha pra dentro dele.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno';
 
 test.describe('Alternância de fonte propaga pro iframe do módulo', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('trocar a fonte com o módulo já aberto atualiza o conteúdo do iframe ao vivo', async ({ page }) => {

@@ -110,6 +110,7 @@
   .results-grid span{ font-size:10.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; }
 </style>
 <script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/clipboard-guard.js"></script>
 <script src="../shared/game-leaderboard.js"></script>
@@ -182,6 +183,13 @@
 </div>
 
 <script>
+(async function () {
+  const user = window.PortalSession ? await window.PortalSession.requireUser('../index.html') : null;
+  if (!user) return;
+  const username = user.email;
+  const displayName = user.nome || username;
+  const turma = user.turma || '';
+
   const WORD_BANK_TECNOLOGIA = [
     "commit","branch","merge","rebase","checkout","clone","fork","pull-request","push","repositorio",
     "codigo","funcao","variavel","array","objeto","classe","interface","framework","biblioteca",
@@ -243,10 +251,6 @@
   const selTheme = document.getElementById('selTheme');
   const selDuration = document.getElementById('selDuration');
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get('user') || 'anon';
-  const displayName = urlParams.get('name') || username;
-  const turma = urlParams.get('turma') || '';
   const BEST_PPM_KEY = `digitacao_best_ppm_${username}`;
   const THEME_KEY = `digitacao_theme_${username}`;
   const DURATION_KEY = `digitacao_duration_${username}`;
@@ -543,7 +547,11 @@
     restartGame();
   });
 
+  // tests/game-leaderboard.spec.js chama window.endGame() direto.
+  window.endGame = endGame;
+
   restartGame();
+})();
 </script>
 
 <script>

@@ -42,4 +42,42 @@ async function stubSupabaseFake(page, seed) {
   }
 }
 
-module.exports = { blockExternalNoise, stubSupabaseDisabled, stubSupabaseFake };
+// Roster fixo das duas turmas (mesmos usuários que existiam em
+// shared/users-db.js antes da migração pra Supabase Auth — o arquivo não
+// existe mais, mas vários testes de ranking/relatório precisam de um
+// roster real pra reproduzir "posição X de Y alunos"). Usar só quando o
+// teste depender do TOTAL/identidade dos colegas de turma — a maioria dos
+// testes não precisa disso, o cliente fake já sintetiza o profile de quem
+// está logado a partir da própria URL (ver fixtures/fake-supabase-client.js).
+const JOGOS_ALUNO_ROSTER = [
+  ['breno.silva80', 'Breno Silva'], ['edward.guzman', 'Edward Guzman'], ['engel.fraga', 'Engel Fraga'],
+  ['gabriella.borges5', 'Gabriella Borges'], ['iago.moreira', 'Iago Moreira'], ['joao.schneider', 'João Schneider'],
+  ['jose.lima8', 'José Lima'], ['jose.rodrigues6', 'José Rodrigues'], ['josuel.santos', 'Josuel Santos'],
+  ['juliano.alves', 'Juliano Alves'], ['leon.kacki', 'Leon Kacki'], ['maria.moura85', 'Maria Moura'],
+  ['maycongabriel.moreira', 'Maycon Gabriel Moreira'], ['miguelmendonca.martins', 'Miguel Mendonça Martins'],
+  ['murillo.lima', 'Murillo Lima'], ['tiago.dias1', 'Tiago Dias'], ['yasmim.rezende4', 'Yasmim Rezende'],
+];
+
+const SISTEMAS_ALUNO_ROSTER = [
+  ['alexandre.natal', 'Alexandre Natal'], ['amanda.silva32', 'Amanda Silva'], ['ana.quevedo1', 'Ana Quevedo'],
+  ['anne.karoline', 'Anne Karoline'], ['bianca.bernardi', 'Bianca Bernardi'], ['bruno.gomes1', 'Bruno Gomes'],
+  ['douglas.silva16', 'Douglas Silva'], ['emilly.oliveira75', 'Emilly Oliveira'], ['enzo.lopes4', 'Enzo Lopes'],
+  ['erasmo.prado', 'Erasmo Prado'], ['franciele.alencar', 'Franciele Alencar'], ['guilherme.almeida8', 'Guilherme Almeida'],
+  ['guilherme.lima119', 'Guilherme Lima'], ['gustavo.robson', 'Gustavo Robson'], ['hebert.eduardo', 'Hebert Eduardo'],
+  ['isabella.prado', 'Isabella Prado'], ['joao.sousa73', 'João Sousa'], ['jordanna.rocha', 'Jordanna Rocha'],
+  ['kaila.jesus', 'Kaila Jesus'], ['kauan.sousa60', 'Kauan Sousa'], ['lauan.souza', 'Lauan Souza'],
+  ['luana.victoria', 'Luana Victoria'], ['moises.barros', 'Moisés Barros'], ['nicole.santos21', 'Nicole Santos'],
+  ['vicente.ferreira', 'Vicente Ferreira'], ['victor.teodoro', 'Victor Teodoro'],
+];
+
+function rosterToProfiles(roster, turma) {
+  return roster.map(([email, nome]) => ({ id: `fake-${email}`, email, nome, role: 'aluno', turma }));
+}
+
+function jogosAlunoProfiles() { return rosterToProfiles(JOGOS_ALUNO_ROSTER, 'jogos'); }
+function sistemasAlunoProfiles() { return rosterToProfiles(SISTEMAS_ALUNO_ROSTER, 'sistemas'); }
+
+module.exports = {
+  blockExternalNoise, stubSupabaseDisabled, stubSupabaseFake,
+  jogosAlunoProfiles, sistemasAlunoProfiles,
+};

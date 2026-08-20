@@ -3,14 +3,17 @@
 // turma (shared/platform-core.js), não mais num painel central — por isso
 // não existe mais seletor de turma aqui: a turma já é a do portal aberto.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles, sistemasAlunoProfiles } = require('./helpers');
 
 const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const SISTEMAS_URL = '/turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=sistemas';
 const today = new Date().toISOString().slice(0, 10);
 
+// A tabela de chamada/notas lista turmaStudents() (profiles) — semeia o
+// roster certo pra turma da URL, além do que o teste já pedir.
 async function openGestao(page, url, seed) {
-  await stubSupabaseFake(page, seed);
+  const profiles = url === SISTEMAS_URL ? sistemasAlunoProfiles() : jogosAlunoProfiles();
+  await stubSupabaseFake(page, { ...seed, profiles: [...(seed.profiles || []), ...profiles] });
   await page.goto(url);
   await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
   await page.waitForTimeout(200);

@@ -2,13 +2,13 @@
 // Cobre os módulos novos da trilha SQL (Banco de Dados, turma Sistemas):
 // Prática de JOIN (sql-join.html) e Prática de agregação/GROUP BY (sql-agregacao.html).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 test.describe('turmas/sistemas/atividades/sql-join.html', () => {
   const URL = '/turmas/sistemas/atividades/sql-join.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('carrega o motor SQL e resolve os 5 chamados de JOIN em sequência', async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe('turmas/sistemas/atividades/sql-agregacao.html', () => {
   const URL = '/turmas/sistemas/atividades/sql-agregacao.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('carrega o motor SQL e resolve os 5 chamados de agregação/GROUP BY em sequência', async ({ page }) => {
@@ -81,7 +81,7 @@ test.describe('turmas/sistemas/atividades/sql-comentarios-teoria.html', () => {
   const URL = '/turmas/sistemas/atividades/sql-comentarios-teoria.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
   test('respondendo todas as etapas corretamente conclui e marca o progresso como completo', async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
     await page.goto(URL);
 
     // A ordem das opções (A/B/C/D) é embaralhada a cada renderização — não dá

@@ -9,19 +9,17 @@
 // Roda em toda página que o incluir (plataforma de cada turma + cada jogo/
 // atividade, já que iframes são documentos separados e não herdam listeners
 // do documento pai). Não afeta o professor.
-(function () {
-  const urlParams = new URLSearchParams(window.location.search);
-  const role = urlParams.get('role') || 'aluno';
-  if (role === 'professor' || role === 'admin') return;
+(async function () {
+  if (!window.PortalSession) return;
+  const user = await window.PortalSession.getUser();
+  if (!user || user.role === 'professor' || user.role === 'admin') return;
 
   // O bloqueio agora é ligado por turma (dentro do portal de cada uma), não mais global.
-  const turma = urlParams.get('turma') || 'global';
+  const turma = user.turma || 'global';
 
-  const SUPABASE_URL = window.SUPABASE_URL;
-  const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
-  if (!window.supabase || !SUPABASE_URL || !SUPABASE_KEY) return;
+  const sb = window.PortalSession.client();
+  if (!sb) return;
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   let blocked = false;
   let toastTimer = null;
 

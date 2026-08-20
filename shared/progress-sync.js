@@ -16,30 +16,27 @@
 //
 // Best-effort: qualquer falha de rede/Supabase é silenciosa — o aluno
 // nunca fica travado por causa da sincronização.
-(function () {
-  const SUPABASE_URL = window.SUPABASE_URL;
-  const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
+(async function () {
   const ACTIVITY_LOCATION = window.ACTIVITY_LOCATION;
+  if (!window.PortalSession || !ACTIVITY_LOCATION) return;
 
-  if (typeof window.supabase === 'undefined' || !SUPABASE_URL || !SUPABASE_KEY || !ACTIVITY_LOCATION) {
-    return;
-  }
+  const user = await window.PortalSession.getUser();
+  if (!user) return;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const role = urlParams.get('role') || 'aluno';
   // Professor/admin só está espiando a atividade (ex: gerar slides/gabarito
   // num iframe oculto) — não deve gravar nem puxar progresso de aluno nenhum.
-  if (role === 'professor' || role === 'admin') {
+  if (user.role === 'professor' || user.role === 'admin') {
     return;
   }
 
-  const username = (urlParams.get('user') || '').trim();
-  if (!username || username === 'anon') {
+  const username = user.email;
+  if (!username) {
     return;
   }
 
   const PROGRESS_KEY = `${ACTIVITY_LOCATION}_progress_${username}`;
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const sb = window.PortalSession.client();
+  if (!sb) return;
 
   // Guarda a implementação original pra continuar gravando no localStorage
   // normalmente — este script só ACRESCENTA o espelhamento pro Supabase,

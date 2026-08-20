@@ -3,13 +3,13 @@
 // WebAssembly (sql.js) carrega de verdade, roda consultas reais, e a
 // progressão (localStorage) funciona igual aos duelos de JS.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/sistemas/atividades/sql-basico.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
 test.describe('turmas/sistemas/atividades/sql-basico.html', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('carrega o motor SQL (WASM) e libera o botão Executar', async ({ page }) => {
@@ -80,7 +80,7 @@ test.describe('turmas/sistemas/atividades/sql-basico.html', () => {
 
 test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos', () => {
   test('completar todos os módulos das matérias com conteúdo libera a aba Jogos', async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
     await page.addInitScript(user => {
       localStorage.setItem(`sql_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8]));
       localStorage.setItem(`sql_basico_teoria_progress_${user}`, JSON.stringify({ completed: true }));

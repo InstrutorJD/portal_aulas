@@ -5,7 +5,7 @@
 // formato usado em Redes de Computadores, já que o conteúdo aqui também é
 // sobre ferramentas/decisões, não código pra executar).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 // A ordem das opções (A/B/C/D) é embaralhada a cada renderização — não dá
 // pra usar STEPS[...].correctIndex como posição na tela, precisa achar a
@@ -40,7 +40,7 @@ async function completePratica(page) {
 
 test.describe('turmas/sistemas/atividades — trilhas de Desenvolvimento de Sistemas 1', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('teoria de Ferramentas, APIs e Frameworks conclui e marca progresso', async ({ page }) => {

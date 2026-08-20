@@ -3,8 +3,9 @@
 // Cada turmas/<turma>/plataforma.html só precisa:
 //   1) definir o tema (cores) num <style>,
 //   2) definir window.TURMA_CONFIG com o rótulo da turma e suas trilhas/módulos,
-//   3) incluir, nessa ordem: shared/users-db.js, supabase-js, shared/supabase-config.js,
-//      shared/platform-core.css, o TURMA_CONFIG e por fim este arquivo.
+//   3) incluir, nessa ordem: supabase-js, shared/supabase-config.js,
+//      shared/session.js, shared/platform-core.css, o TURMA_CONFIG e por
+//      fim este arquivo.
 //
 // Para criar uma tela/trilha nova numa turma, edite APENAS o TURMA_CONFIG
 // daquela turma — este arquivo e as outras turmas não são tocados.
@@ -15,35 +16,19 @@
     return;
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const paramUser = urlParams.get('user') || '';
-  const paramIp = urlParams.get('ip') || '';
-  const paramSaldo = urlParams.get('saldo') || '';
+  // Identidade real vem da sessão do Supabase Auth (ver shared/session.js),
+  // não mais de "?user=" na URL — resolvida de forma assíncrona dentro de
+  // init(), abaixo, antes de qualquer coisa que dependa dela rodar.
+  // currentUser/paramUser continuam existindo como variáveis desta closure
+  // (por isso toda função abaixo pode seguir lendo currentUser.role/nome/
+  // turma e paramUser como já fazia) — só a ORIGEM da identidade mudou.
+  let currentUser = null;
+  let paramUser = '';
 
-  const DB = { users: {} };
-  (window.USERS_DB || []).forEach(u => {
-    DB.users[u.email] = { ...u, progress: 0 };
-  });
-
-  // ?user= vem direto da URL sem nenhuma sessão/token por trás — sem essa
-  // checagem, qualquer valor (link forjado, bot varrendo URLs) virava um
-  // "aluno" válido, aparecendo no painel de atividade do professor e
-  // gravando dados no Supabase com uma identidade que não existe de verdade.
-  if (!DB.users[paramUser]) {
-    alert('Sessão inválida ou expirada. Faça login novamente.');
-    window.location.href = '../../index.html';
-    return;
-  }
-
-  const currentUser = DB.users[paramUser];
-
-  const SUPABASE_URL = window.SUPABASE_URL;
-  const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
-  const sbClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY)
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-    : null;
+  const sbClient = window.PortalSession.client();
 
   let teacherUnlockOverride = false;
+  let turmaStudentsCache = []; // alunos da turma (profiles), só carregado/usado pro professor — ver turmaStudents()
   let trilhaDatesCache = {}; // trilhaKey -> {inicio, prazo} definidos pelo professor na Gestão (trilha_release_dates), ver trilhaStatus()
   let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando trilhaDatesCache muda ao vivo
   let dailyReleasesCache = []; // linhas de daily_module_releases da turma inteira (todas as datas/dias), ver releasesForToday()
@@ -984,9 +969,21 @@
   let gestaoInatividadePollStarted = false;
 
   function turmaStudents() {
-    return Object.values(DB.users)
-      .filter(u => u.role === 'aluno' && u.turma === cfg.id)
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    return turmaStudentsCache;
+  }
+
+  function turmaStudentByEmail(email) {
+    return turmaStudentsCache.find(u => u.email === email) || null;
+  }
+
+  async function fetchTurmaStudents() {
+    if (!sbClient) { turmaStudentsCache = []; return; }
+    const { data } = await sbClient
+      .from('profiles')
+      .select('email, nome, role, turma')
+      .eq('turma', cfg.id)
+      .eq('role', 'aluno');
+    turmaStudentsCache = (data || []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
   async function fetchGestaoOverrides() {
@@ -1128,7 +1125,7 @@
 
     tbody.innerHTML = dailyReleasesCache.map(r => {
       const quando = r.scope === 'data' ? formatDataBr(r.target_date) : `Toda ${WEEKDAY_LABELS[Number(r.target_weekday)]}`;
-      const alvo = r.student_email ? ((DB.users[r.student_email] || {}).nome || r.student_email) : 'Turma inteira';
+      const alvo = r.student_email ? ((turmaStudentByEmail(r.student_email) || {}).nome || r.student_email) : 'Turma inteira';
       const atividade = `${r.trilha_label || r.trilha_key} — ${r.module_title || r.module_key}`;
       return `
         <tr>
@@ -1371,7 +1368,7 @@
 
     const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
       const email = tr.getAttribute('data-email');
-      const u = DB.users[email];
+      const u = turmaStudentByEmail(email);
       const get = campo => {
         const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
         const v = inp ? inp.value : '';
@@ -1782,7 +1779,7 @@
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
       iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
-      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
+      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
 
       const cleanup = () => { iframe.remove(); resolve(); };
       iframe.onload = async () => {
@@ -1843,7 +1840,7 @@
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
       iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
-      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
+      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
 
       const cleanup = () => { iframe.remove(); resolve(); };
       iframe.onload = async () => {
@@ -2084,7 +2081,11 @@
   }
 
   // ---------- Jogos (compartilhados por todas as turmas) ----------
-  const GAMES = {
+  // Função, não const: o texto do QuizRush depende de currentUser.role, que
+  // só existe depois que init() resolve a sessão — um objeto literal aqui
+  // seria avaliado no parse do script, antes disso.
+  function buildGames() {
+    return {
     hacker: {
       title: 'GitHack OS — Terminal de Cibersegurança',
       desc: 'Ambiente de simulação sandbox. Conecte-se à subnet para realizar ataques e defesas.',
@@ -2111,9 +2112,11 @@
       icon: '🎉',
       src: '../../games/quizrush.html'
     }
-  };
+    };
+  }
 
   function renderGameCards() {
+    const GAMES = buildGames();
     const grid = document.getElementById('gameCardGrid');
     grid.innerHTML = Object.keys(GAMES).map(key => {
       const g = GAMES[key];
@@ -2127,7 +2130,7 @@
   }
 
   function openGame(key) {
-    const game = GAMES[key];
+    const game = buildGames()[key];
     if (!game) return;
 
     currentGameKey = key;
@@ -2138,7 +2141,7 @@
 
     const frame = document.getElementById('gameFrame');
     frame.onload = () => applyA11yToIframe(frame);
-    frame.src = `${game.src}?user=${encodeURIComponent(paramUser)}&ip=${encodeURIComponent(paramIp)}&saldo=${encodeURIComponent(paramSaldo)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
+    frame.src = `${game.src}?user=${encodeURIComponent(paramUser)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
 
     if (typeof window.pauseActivityHeartbeat === 'function') window.pauseActivityHeartbeat();
     logAction(`Abriu o jogo: ${game.title}`);
@@ -2175,7 +2178,7 @@
 
     const frame = document.getElementById(`moduleFrame_${trilhaKey}`);
     frame.onload = () => applyA11yToIframe(frame);
-    frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&role=${encodeURIComponent(currentUser.role)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
+    frame.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
 
     openModuleFrame[trilhaKey] = modKey;
     if (typeof window.pauseActivityHeartbeat === 'function') window.pauseActivityHeartbeat();
@@ -2306,7 +2309,11 @@
     // chamado em init()) — nenhuma trilha é aberta sozinha no carregamento.
   }
 
-  function init() {
+  async function init() {
+    currentUser = await window.PortalSession.requireUser('../../index.html');
+    if (!currentUser) return;
+    paramUser = currentUser.email;
+
     renderShell();
     renderMaterias();
     renderGameCards();
@@ -2318,10 +2325,17 @@
     // hidratação+sync termina de verdade, corrige o badge caso a primeira
     // tenha renderizado com a % desatualizada (a linha do PRÓPRIO aluno
     // ainda não tinha chegado no student_module_progress).
+    // Roster da turma (profiles) — precisa estar pronto antes de setupRBAC()
+    // (abaixo): ranking (computeRanking, só aluno) e a aba Gestão (só
+    // professor) usam os dois turmaStudents().
+    await fetchTurmaStudents();
+
     syncAllModulesProgressSafely().then(() => {
       if (currentUser.role === 'aluno') renderRankingBadge();
     });
-    if (currentUser.role === 'professor') setupGestaoButtons();
+    if (currentUser.role === 'professor') {
+      setupGestaoButtons();
+    }
 
     document.querySelectorAll('#mainNavTabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {

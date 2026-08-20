@@ -4,7 +4,7 @@
 // progressivas por % geral de conclusão — sem tabela nova no Supabase, é
 // tudo derivado de student_module_progress.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled, stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
@@ -14,6 +14,7 @@ const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254
 // js/basico, js/intermediario, csharp/basico, e mais 4 trilhas (teoria+prática
 // cada) de fundamentos gerais de jogos.
 const SEED = {
+  profiles: jogosAlunoProfiles(),
   student_module_progress: [
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
@@ -27,17 +28,17 @@ async function openPerfil(page) {
 
 test.describe('Aba Perfil (só aluno)', () => {
   test('professor não vê a aba Perfil', async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
     await page.goto(PROFESSOR_URL);
     await expect(page.locator('#mainNavTabs .tab-btn[data-tab="perfil"]')).toHaveCount(0);
   });
 
-  test('aluno sem Supabase configurado vê aviso, e a vitrine de insígnias aparece toda travada', async ({ page }) => {
-    await stubSupabaseDisabled(page);
+  test('aluno sem nenhum progresso salvo vê 0%, e a vitrine de insígnias aparece toda travada', async ({ page }) => {
+    await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
     await openPerfil(page);
 
-    await expect(page.locator('#perfilResumo')).toContainText('Configure o Supabase');
+    await expect(page.locator('#perfilResumo')).toContainText('0%');
     await expect(page.locator('#perfilBadgesGrid .badge-slot')).toHaveCount(6);
     await expect(page.locator('#perfilBadgesGrid')).toContainText('Iniciante');
     await expect(page.locator('#perfilBadgesGrid .badge-slot.unlocked')).toHaveCount(0);

@@ -76,37 +76,40 @@
   </form>
 </div>
 
-<script src="shared/users-db.js"></script>
+<script src="shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="shared/session.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  sessionStorage.removeItem('githack_authenticated');
-  sessionStorage.removeItem('githack_current_user');
-});
-
-function handleLogin(e) {
+async function handleLogin(e) {
   e.preventDefault();
-  const uVal = document.getElementById('txtUser').value.trim().toLowerCase();
+  const uVal = document.getElementById('txtUser').value.trim();
   const pVal = document.getElementById('txtPass').value.trim();
   const err = document.getElementById('errMsg');
+  const btn = document.querySelector('.btn-submit');
 
-  const match = (window.USERS_DB || []).find(u => u.email.toLowerCase() === uVal && u.senha === pVal);
+  btn.disabled = true;
+  const { error } = await window.PortalSession.signIn(uVal, pVal);
 
-  if (match) {
-    err.style.display = 'none';
-    sessionStorage.setItem('githack_authenticated', 'true');
-    sessionStorage.setItem('githack_current_user', JSON.stringify(match));
-
-    const qs = `user=${encodeURIComponent(match.email)}&ip=${encodeURIComponent(match.ip)}&saldo=${encodeURIComponent(match.saldo)}&role=${encodeURIComponent(match.role)}&turma=${encodeURIComponent(match.turma)}`;
-
-    // Cada turma tem sua própria tela; o professor cai num painel único.
-    const destino = (match.role === 'professor')
-      ? `professor/painel.html?${qs}`
-      : `turmas/${encodeURIComponent(match.turma)}/plataforma.html?${qs}`;
-
-    window.location.href = destino;
-  } else {
+  if (error) {
     err.style.display = 'block';
+    btn.disabled = false;
+    return false;
   }
+
+  const user = await window.PortalSession.getUser();
+  if (!user) {
+    err.style.display = 'block';
+    btn.disabled = false;
+    return false;
+  }
+
+  err.style.display = 'none';
+
+  // Cada turma tem sua própria tela; o professor cai num painel único.
+  window.location.href = (user.role === 'professor')
+    ? 'professor/painel.html'
+    : `turmas/${encodeURIComponent(user.turma)}/plataforma.html`;
+
   return false;
 }
 </script>

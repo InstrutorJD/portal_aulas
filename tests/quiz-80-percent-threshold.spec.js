@@ -5,7 +5,7 @@
 // perguntas. Abaixo disso, fica só o convite pra tentar de novo, sem
 // travar o progresso como concluído.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/sistemas/atividades/sql-comentarios-teoria.html?user=alexandre.natal&role=aluno&turma=sistemas';
 const PROGRESS_KEY = 'sql_comentarios_teoria_progress_alexandre.natal';
@@ -43,7 +43,7 @@ async function runQuiz(page, wrongCount) {
 
 test.describe('Limite de 80% de acerto pra concluir uma atividade', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('abaixo de 80% de acerto: fica "Quase lá!", completed continua false', async ({ page }) => {

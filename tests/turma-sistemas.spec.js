@@ -1,8 +1,8 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
-const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno';
+const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
 // A trilha de verdade (SQL) fica dentro de Banco de Dados — as demais 8
 // matérias de Sistemas são placeholders vazios por enquanto.
@@ -12,7 +12,7 @@ async function openMateria1(page) {
 
 test.describe('turmas/sistemas/plataforma.html', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('carrega com tema próprio, diferente do tema de Jogos', async ({ page }) => {

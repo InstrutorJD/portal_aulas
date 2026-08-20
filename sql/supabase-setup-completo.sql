@@ -1,32 +1,29 @@
 -- ============================================================
--- SETUP COMPLETO — consolida todos os scripts SQL recentes deste
--- projeto num arquivo só, na ordem certa de execução. Substitui a
--- necessidade de rodar, um por um, os arquivos:
---   1. supabase-classroom-settings.sql
---   2. supabase-classroom-settings-per-turma.sql
---   3. supabase-student-activity.sql
---   4. supabase-student-overrides.sql
---   5. supabase-hacker-game.sql
---   6. supabase-turma-isolation.sql
---   7. supabase-sistemas-network-nodes.sql
---   8. supabase-chamada-notas.sql
---   9. supabase-trilha-overrides.sql
---  10. supabase-game-scores.sql
--- (Esses arquivos continuam no repositório como histórico/referência
--- de cada mudança isolada — não precisa apagá-los.)
+-- SETUP COMPLETO — script único e idempotente com todas as tabelas/
+-- policies/functions do projeto. É a fonte da verdade: os scripts que
+-- criaram cada tabela/coluna isoladamente ao longo do tempo não ficam
+-- mais no repositório à parte (histórico de cada mudança preservado
+-- no git log deste arquivo).
 --
--- Cobre: bloqueio de Ctrl+C/V por turma, atividade em tempo real e
--- liberação manual de jogos (painel do professor), o jogo GitHack OS
--- (IP de sessão, criptografia de carteira, isolamento por turma no
--- hack transfer), o cadastro de rede da turma Sistemas, chamada /
--- notas / progresso de trilha (relatórios da aba Gestão), bloqueio
--- manual de trilha inteira pelo professor, e o placar competitivo dos
--- minigames (Digitação, Campo Minado) por turma.
+-- Cobre: identidade via Supabase Auth (profiles, current_email(),
+-- is_professor() — ver bloco 0), bloqueio de Ctrl+C/V por turma,
+-- atividade em tempo real e liberação manual de jogos (painel do
+-- professor), o jogo GitHack OS (IP de sessão, criptografia de
+-- carteira, isolamento por turma no hack transfer), o cadastro de
+-- rede da turma Sistemas, chamada / notas / progresso de trilha
+-- (relatórios da aba Gestão), datas de início/prazo por trilha, o
+-- placar competitivo dos minigames (Digitação, Campo Minado), a
+-- liberação diária de atividades, o QuizRush e a sincronização de
+-- progresso entre dispositivos.
 --
 -- PRÉ-REQUISITO: as tabelas network_nodes, node_permissions e
 -- node_shields precisam já existir no seu projeto Supabase (foram
--- criadas direto no painel, não por script — ver o bloco 5 abaixo).
--- Sem elas, o bloco 5 (jogo GitHack OS) falha.
+-- criadas direto no painel, não por script — ver o bloco 4 abaixo).
+-- Sem elas, os blocos 4-6 (jogo GitHack OS) falham. A tabela
+-- auth.users (Supabase Auth) precisa ter os usuários já criados por
+-- scripts/migrate-users-to-auth.mjs antes de rodar este script pela
+-- primeira vez após a migração de identidade (bloco 0 referencia
+-- auth.users via foreign key).
 --
 -- Este script é seguro de rodar mais de uma vez: toda tabela/coluna/
 -- índice/função usa IF NOT EXISTS ou CREATE OR REPLACE, e as policies
@@ -35,6 +32,88 @@
 --
 -- Execute este script inteiro, de uma vez, no SQL Editor do Supabase.
 -- ============================================================
+
+
+-- ============================================================
+-- BLOCO 0 — Identidade (Supabase Auth). Uma linha por usuário real
+-- (aluno ou professor) em auth.users, espelhada aqui com o MESMO
+-- e-mail/username que sempre foi usado como identidade em toda tabela
+-- deste script (student_email/aluno_email/network_nodes.email) — só
+-- o e-mail interno do Supabase Auth (ex: "breno.silva80@aluno.portal.local")
+-- é novo, e nunca aparece fora da tela de login.
+--
+-- current_email()/is_professor() são o que toda policy abaixo passa a
+-- usar em vez de "using (true)": cada policy passa a exigir que a
+-- sessão (JWT) bata com o dono da linha, ou que quem chamou seja
+-- professor — não é mais o cliente que decide quem ele é.
+--
+-- Popule/atualize esta tabela rodando scripts/migrate-users-to-auth.mjs
+-- (fora do SQL Editor, precisa da service_role key) — não insira linha
+-- aqui manualmente além do que o script já faz.
+-- ============================================================
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text unique not null,
+  nome text not null,
+  role text not null check (role in ('aluno', 'professor')),
+  turma text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- SECURITY DEFINER de propósito: uma policy comum não pode fazer
+-- subselect recursivo na própria tabela que ela protege sem entrar em
+-- loop de avaliação de RLS; a function roda com o dono (que enxerga
+-- profiles sem RLS) e devolve só o escalar necessário.
+create or replace function public.current_email()
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select email from public.profiles where id = auth.uid();
+$$;
+
+create or replace function public.is_professor()
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'professor');
+$$;
+
+-- O ranking de progresso (computeRanking/renderRankingBadge em
+-- platform-core.js) calcula a posição do aluno comparando o progresso de
+-- TODA a turma — precisa ler o roster (profiles) e student_module_progress
+-- de todo mundo da turma, não só a própria linha, mesmo que a TELA mostre
+-- só a posição do próprio aluno (nunca nome/progresso alheio).
+create or replace function public.current_turma()
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select turma from public.profiles where id = auth.uid();
+$$;
+
+grant execute on function public.current_email() to authenticated;
+grant execute on function public.is_professor() to authenticated;
+grant execute on function public.current_turma() to authenticated;
+
+drop policy if exists "profiles_select_self_or_professor" on public.profiles;
+create policy "profiles_select_self_or_professor_or_same_turma"
+  on public.profiles for select
+  using (id = auth.uid() or public.is_professor() or turma = public.current_turma());
+
+-- Sem policy de insert/update/delete pra authenticated: só quem tem a
+-- service_role key (scripts/migrate-users-to-auth.mjs, rodado fora do
+-- navegador) cria/atualiza linha em profiles.
 
 
 -- ============================================================
@@ -62,15 +141,15 @@ create policy "classroom_settings_select_all"
   using (true);
 
 drop policy if exists "classroom_settings_insert_all" on public.classroom_settings;
-create policy "classroom_settings_insert_all"
+create policy "classroom_settings_insert_professor"
   on public.classroom_settings for insert
-  with check (true);
+  with check (public.is_professor());
 
 drop policy if exists "classroom_settings_update_all" on public.classroom_settings;
-create policy "classroom_settings_update_all"
+create policy "classroom_settings_update_professor"
   on public.classroom_settings for update
-  using (true)
-  with check (true);
+  using (public.is_professor())
+  with check (public.is_professor());
 
 do $$
 begin
@@ -124,20 +203,20 @@ create index if not exists idx_student_activity_updated_at
 alter table public.student_activity enable row level security;
 
 drop policy if exists "student_activity_select_all" on public.student_activity;
-create policy "student_activity_select_all"
+create policy "student_activity_select_professor"
   on public.student_activity for select
-  using (true);
+  using (public.is_professor());
 
 drop policy if exists "student_activity_insert_all" on public.student_activity;
-create policy "student_activity_insert_all"
+create policy "student_activity_insert_self"
   on public.student_activity for insert
-  with check (true);
+  with check (student_email = public.current_email());
 
 drop policy if exists "student_activity_update_all" on public.student_activity;
-create policy "student_activity_update_all"
+create policy "student_activity_update_self"
   on public.student_activity for update
-  using (true)
-  with check (true);
+  using (student_email = public.current_email())
+  with check (student_email = public.current_email());
 
 -- Tempo logado hoje: acumula segundos ativos no dia, pra mostrar no
 -- Relatório de Atividade do Dia (aba Gestão) quanto tempo cada aluno
@@ -212,20 +291,20 @@ create table if not exists public.student_overrides (
 alter table public.student_overrides enable row level security;
 
 drop policy if exists "student_overrides_select_all" on public.student_overrides;
-create policy "student_overrides_select_all"
+create policy "student_overrides_select_self_or_professor"
   on public.student_overrides for select
-  using (true);
+  using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "student_overrides_insert_all" on public.student_overrides;
-create policy "student_overrides_insert_all"
+create policy "student_overrides_insert_professor"
   on public.student_overrides for insert
-  with check (true);
+  with check (public.is_professor());
 
 drop policy if exists "student_overrides_update_all" on public.student_overrides;
-create policy "student_overrides_update_all"
+create policy "student_overrides_update_professor"
   on public.student_overrides for update
-  using (true)
-  with check (true);
+  using (public.is_professor())
+  with check (public.is_professor());
 
 do $$
 begin
@@ -268,6 +347,12 @@ declare
   v_candidate text;
   v_attempt   int := 0;
 begin
+  if not exists (
+    select 1 from network_nodes where ip_address = p_ip_address and email = public.current_email()
+  ) then
+    raise exception 'Nó % não pertence ao usuário autenticado.', p_ip_address;
+  end if;
+
   loop
     v_attempt := v_attempt + 1;
     if v_attempt > 50 then
@@ -299,7 +384,8 @@ language sql
 security definer
 set search_path = public
 as $$
-  update network_nodes set current_ip = null, is_online = false where ip_address = p_ip_address;
+  update network_nodes set current_ip = null, is_online = false
+  where ip_address = p_ip_address and email = public.current_email();
 $$;
 
 grant execute on function public.assign_session_ip(text) to anon, authenticated;
@@ -421,6 +507,65 @@ grant execute on function public.set_wallet_password(text, text) to anon, authen
 grant execute on function public.wallet_lock_status(text) to anon, authenticated;
 grant execute on function public.attempt_wallet_bruteforce(text) to anon, authenticated;
 
+-- network_nodes/node_permissions/node_shields foram criadas direto no
+-- painel do Supabase (não por script), então nunca tiveram RLS
+-- definido aqui — na prática ficavam tão abertas quanto tudo mais.
+-- Leitura continua ampla (netscan precisa ver o estado de todo mundo
+-- da rede pra desenhar a tela); a escrita passa a exigir ser dono do
+-- próprio nó (ou professor). O saldo (jdcoin_balance) só muda via
+-- execute_hack_transfer (abaixo, já validado) ou pelo professor —
+-- update direto de saldo pelo cliente deixa de ser aceito.
+alter table public.network_nodes enable row level security;
+
+drop policy if exists "network_nodes_select_all" on public.network_nodes;
+create policy "network_nodes_select_all"
+  on public.network_nodes for select
+  using (true);
+
+drop policy if exists "network_nodes_update_professor" on public.network_nodes;
+create policy "network_nodes_update_professor"
+  on public.network_nodes for update
+  using (public.is_professor())
+  with check (public.is_professor());
+
+alter table public.node_permissions enable row level security;
+
+drop policy if exists "node_permissions_select_all" on public.node_permissions;
+create policy "node_permissions_select_all"
+  on public.node_permissions for select
+  using (true);
+
+drop policy if exists "node_permissions_write_own_or_professor" on public.node_permissions;
+create policy "node_permissions_write_own_or_professor"
+  on public.node_permissions for all
+  using (
+    public.is_professor()
+    or ip_address in (select ip_address from network_nodes where email = public.current_email())
+  )
+  with check (
+    public.is_professor()
+    or ip_address in (select ip_address from network_nodes where email = public.current_email())
+  );
+
+alter table public.node_shields enable row level security;
+
+drop policy if exists "node_shields_select_all" on public.node_shields;
+create policy "node_shields_select_all"
+  on public.node_shields for select
+  using (true);
+
+drop policy if exists "node_shields_write_own_or_professor" on public.node_shields;
+create policy "node_shields_write_own_or_professor"
+  on public.node_shields for all
+  using (
+    public.is_professor()
+    or ip_address in (select ip_address from network_nodes where email = public.current_email())
+  )
+  with check (
+    public.is_professor()
+    or ip_address in (select ip_address from network_nodes where email = public.current_email())
+  );
+
 
 -- ============================================================
 -- BLOCO 5 — Isolamento por turma no jogo GitHack OS: um aluno só
@@ -466,6 +611,12 @@ declare
 begin
   if attacker_ip = target_ip then
     return jsonb_build_object('success', false, 'message', 'Não é possível atacar o próprio nó.');
+  end if;
+
+  if not exists (
+    select 1 from network_nodes where ip_address = attacker_ip and email = public.current_email()
+  ) then
+    return jsonb_build_object('success', false, 'message', 'Falha no ataque: IP de origem não pertence à sua sessão.');
   end if;
 
   if attacker_ip < target_ip then
@@ -623,20 +774,20 @@ create index if not exists idx_attendance_student on public.attendance (student_
 alter table public.attendance enable row level security;
 
 drop policy if exists "attendance_select_all" on public.attendance;
-create policy "attendance_select_all"
+create policy "attendance_select_self_or_professor"
   on public.attendance for select
-  using (true);
+  using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "attendance_insert_all" on public.attendance;
-create policy "attendance_insert_all"
+create policy "attendance_insert_professor"
   on public.attendance for insert
-  with check (true);
+  with check (public.is_professor());
 
 drop policy if exists "attendance_update_all" on public.attendance;
-create policy "attendance_update_all"
+create policy "attendance_update_professor"
   on public.attendance for update
-  using (true)
-  with check (true);
+  using (public.is_professor())
+  with check (public.is_professor());
 
 -- Notas: uma linha por (aluno, bimestre), com 4 campos de nota. A
 -- média é uma coluna gerada (calculada pelo próprio banco).
@@ -662,20 +813,20 @@ create index if not exists idx_grades_turma_bimestre on public.grades (turma, bi
 alter table public.grades enable row level security;
 
 drop policy if exists "grades_select_all" on public.grades;
-create policy "grades_select_all"
+create policy "grades_select_self_or_professor"
   on public.grades for select
-  using (true);
+  using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "grades_insert_all" on public.grades;
-create policy "grades_insert_all"
+create policy "grades_insert_professor"
   on public.grades for insert
-  with check (true);
+  with check (public.is_professor());
 
 drop policy if exists "grades_update_all" on public.grades;
-create policy "grades_update_all"
+create policy "grades_update_professor"
   on public.grades for update
-  using (true)
-  with check (true);
+  using (public.is_professor())
+  with check (public.is_professor());
 
 -- Progresso de trilha, sincronizado pelo shared/platform-core.js (roda
 -- no navegador do aluno) — permite o relatório de notas mostrar o
@@ -698,21 +849,25 @@ create index if not exists idx_student_module_progress_turma on public.student_m
 
 alter table public.student_module_progress enable row level security;
 
+-- select por turma inteira (não só a própria linha): o ranking de cada
+-- aluno (computeRanking em platform-core.js) precisa comparar o progresso
+-- de todo mundo da turma pra calcular a própria posição — a TELA nunca
+-- mostra progresso/nome de outro aluno, só a leitura crua fica ampla.
 drop policy if exists "student_module_progress_select_all" on public.student_module_progress;
-create policy "student_module_progress_select_all"
+create policy "student_module_progress_select_same_turma_or_professor"
   on public.student_module_progress for select
-  using (true);
+  using (public.is_professor() or turma = public.current_turma());
 
 drop policy if exists "student_module_progress_insert_all" on public.student_module_progress;
-create policy "student_module_progress_insert_all"
+create policy "student_module_progress_insert_self"
   on public.student_module_progress for insert
-  with check (true);
+  with check (student_email = public.current_email());
 
 drop policy if exists "student_module_progress_update_all" on public.student_module_progress;
-create policy "student_module_progress_update_all"
+create policy "student_module_progress_update_self"
   on public.student_module_progress for update
-  using (true)
-  with check (true);
+  using (student_email = public.current_email())
+  with check (student_email = public.current_email());
 
 -- completed_at: quando o módulo foi concluído de VERDADE — não confundir
 -- com updated_at, que muda toda vez que o portal carrega
@@ -800,15 +955,15 @@ create policy "trilha_release_dates_select_all"
   using (true);
 
 drop policy if exists "trilha_release_dates_insert_all" on public.trilha_release_dates;
-create policy "trilha_release_dates_insert_all"
+create policy "trilha_release_dates_insert_professor"
   on public.trilha_release_dates for insert
-  with check (true);
+  with check (public.is_professor());
 
 drop policy if exists "trilha_release_dates_update_all" on public.trilha_release_dates;
-create policy "trilha_release_dates_update_all"
+create policy "trilha_release_dates_update_professor"
   on public.trilha_release_dates for update
-  using (true)
-  with check (true);
+  using (public.is_professor())
+  with check (public.is_professor());
 
 do $$
 begin
@@ -870,15 +1025,15 @@ create policy "game_scores_select_all"
   using (true);
 
 drop policy if exists "game_scores_insert_all" on public.game_scores;
-create policy "game_scores_insert_all"
+create policy "game_scores_insert_self"
   on public.game_scores for insert
-  with check (true);
+  with check (student_email = public.current_email());
 
 drop policy if exists "game_scores_update_all" on public.game_scores;
-create policy "game_scores_update_all"
+create policy "game_scores_update_self"
   on public.game_scores for update
-  using (true)
-  with check (true);
+  using (student_email = public.current_email())
+  with check (student_email = public.current_email());
 
 do $$
 begin
@@ -940,14 +1095,14 @@ create policy "daily_module_releases_select_all"
   using (true);
 
 drop policy if exists "daily_module_releases_insert_all" on public.daily_module_releases;
-create policy "daily_module_releases_insert_all"
+create policy "daily_module_releases_insert_professor"
   on public.daily_module_releases for insert
-  with check (true);
+  with check (public.is_professor());
 
 drop policy if exists "daily_module_releases_delete_all" on public.daily_module_releases;
-create policy "daily_module_releases_delete_all"
+create policy "daily_module_releases_delete_professor"
   on public.daily_module_releases for delete
-  using (true);
+  using (public.is_professor());
 
 do $$
 begin
@@ -1014,26 +1169,34 @@ alter table public.quizrush_sessions enable row level security;
 alter table public.quizrush_players enable row level security;
 alter table public.quizrush_answers enable row level security;
 
+-- select continua aberto nas 3 tabelas: o placar/podium mostra nome e
+-- pontuação de TODO mundo pra TODO mundo de propósito (mesma lógica do
+-- game_scores). quizrush_sessions.questions inclui o índice da
+-- resposta certa e hoje qualquer jogador consegue ler antes de
+-- responder — é um vazamento real, mas corrigi-lo direito exige
+-- separar a pergunta pública da leitura do host (RPC nova) e mexe na
+-- lógica de tempo real do jogo; fica documentado como follow-up, fora
+-- desta migração de auth.
 drop policy if exists "quizrush_sessions_select_all" on public.quizrush_sessions;
 create policy "quizrush_sessions_select_all" on public.quizrush_sessions for select using (true);
 drop policy if exists "quizrush_sessions_insert_all" on public.quizrush_sessions;
-create policy "quizrush_sessions_insert_all" on public.quizrush_sessions for insert with check (true);
+create policy "quizrush_sessions_insert_professor" on public.quizrush_sessions for insert with check (public.is_professor());
 drop policy if exists "quizrush_sessions_update_all" on public.quizrush_sessions;
-create policy "quizrush_sessions_update_all" on public.quizrush_sessions for update using (true) with check (true);
+create policy "quizrush_sessions_update_professor" on public.quizrush_sessions for update using (public.is_professor()) with check (public.is_professor());
 
 drop policy if exists "quizrush_players_select_all" on public.quizrush_players;
 create policy "quizrush_players_select_all" on public.quizrush_players for select using (true);
 drop policy if exists "quizrush_players_insert_all" on public.quizrush_players;
-create policy "quizrush_players_insert_all" on public.quizrush_players for insert with check (true);
+create policy "quizrush_players_insert_self" on public.quizrush_players for insert with check (student_email = public.current_email());
 drop policy if exists "quizrush_players_update_all" on public.quizrush_players;
-create policy "quizrush_players_update_all" on public.quizrush_players for update using (true) with check (true);
+create policy "quizrush_players_update_self" on public.quizrush_players for update using (student_email = public.current_email()) with check (student_email = public.current_email());
 
 drop policy if exists "quizrush_answers_select_all" on public.quizrush_answers;
 create policy "quizrush_answers_select_all" on public.quizrush_answers for select using (true);
 drop policy if exists "quizrush_answers_insert_all" on public.quizrush_answers;
-create policy "quizrush_answers_insert_all" on public.quizrush_answers for insert with check (true);
+create policy "quizrush_answers_insert_self" on public.quizrush_answers for insert with check (student_email = public.current_email());
 drop policy if exists "quizrush_answers_update_all" on public.quizrush_answers;
-create policy "quizrush_answers_update_all" on public.quizrush_answers for update using (true) with check (true);
+create policy "quizrush_answers_update_self" on public.quizrush_answers for update using (student_email = public.current_email()) with check (student_email = public.current_email());
 
 -- question_started_at precisa vir do relógio do BANCO (now()), não do
 -- computador de quem clica em "Iniciar"/"Próxima pergunta" — um relógio
@@ -1043,26 +1206,40 @@ create policy "quizrush_answers_update_all" on public.quizrush_answers for updat
 -- em vez de gravar new Date().toISOString() direto).
 create or replace function public.quizrush_start_session(p_session_id uuid)
 returns timestamptz
-language sql
+language plpgsql
 security definer
 set search_path = public
 as $$
-  update quizrush_sessions
-  set status = 'question', current_index = 0, question_started_at = now()
-  where id = p_session_id
-  returning question_started_at;
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode iniciar uma sessão do QuizRush.';
+  end if;
+  return (
+    update quizrush_sessions
+    set status = 'question', current_index = 0, question_started_at = now()
+    where id = p_session_id
+    returning question_started_at
+  );
+end;
 $$;
 
 create or replace function public.quizrush_next_question(p_session_id uuid, p_index int)
 returns timestamptz
-language sql
+language plpgsql
 security definer
 set search_path = public
 as $$
-  update quizrush_sessions
-  set status = 'question', current_index = p_index, question_started_at = now()
-  where id = p_session_id
-  returning question_started_at;
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode avançar pergunta no QuizRush.';
+  end if;
+  return (
+    update quizrush_sessions
+    set status = 'question', current_index = p_index, question_started_at = now()
+    where id = p_session_id
+    returning question_started_at
+  );
+end;
 $$;
 
 grant execute on function public.quizrush_start_session(uuid) to anon, authenticated;
@@ -1129,26 +1306,29 @@ create index if not exists idx_student_activity_state_student on public.student_
 alter table public.student_activity_state enable row level security;
 
 drop policy if exists "student_activity_state_select_all" on public.student_activity_state;
-create policy "student_activity_state_select_all"
+create policy "student_activity_state_select_self"
   on public.student_activity_state for select
-  using (true);
+  using (student_email = public.current_email());
 
 drop policy if exists "student_activity_state_insert_all" on public.student_activity_state;
-create policy "student_activity_state_insert_all"
+create policy "student_activity_state_insert_self"
   on public.student_activity_state for insert
-  with check (true);
+  with check (student_email = public.current_email());
 
 drop policy if exists "student_activity_state_update_all" on public.student_activity_state;
-create policy "student_activity_state_update_all"
+create policy "student_activity_state_update_self"
   on public.student_activity_state for update
-  using (true)
-  with check (true);
+  using (student_email = public.current_email())
+  with check (student_email = public.current_email());
 
 -- ============================================================
--- Fim. Confira no painel do Supabase (Table Editor) se attendance,
--- grades, student_module_progress, classroom_settings,
+-- Fim. Confira no painel do Supabase (Table Editor) se profiles,
+-- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, trilha_release_dates, game_scores,
 -- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers
--- e student_activity_state foram criadas, e se network_nodes ganhou as
--- colunas current_ip e turma.
+-- e student_activity_state foram criadas, se network_nodes ganhou as
+-- colunas current_ip e turma, e se network_nodes/node_permissions/
+-- node_shields aparecem com RLS habilitado (ícone de cadeado no Table
+-- Editor). Se profiles estiver vazia, rode
+-- scripts/migrate-users-to-auth.mjs antes de testar login.
 -- ============================================================

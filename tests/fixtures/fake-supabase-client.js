@@ -92,9 +92,102 @@
     return api;
   }
 
+  // ---------- Auth fake ----------
+  //
+  // window.PortalSession.getUser() (shared/session.js) chama
+  // auth.getUser() e depois consulta a tabela profiles pelo id — os dois
+  // precisam bater pra qualquer página autenticada renderizar no teste.
+  //
+  // "Estar logado" precisa sobreviver a uma navegação de verdade (ex.:
+  // index.html faz login e redireciona pra plataforma.html) — window.__FAKE_DB__
+  // é reinjetado do zero a cada documento (addInitScript roda de novo em
+  // toda página/iframe), então a sessão em si mora no localStorage (que o
+  // navegador de verdade preserva entre navegações do mesmo site), não no
+  // objeto __FAKE_DB__.
+  const AUTH_STORAGE_KEY = '__fake_supabase_session';
+
+  function getStoredAuthUser() {
+    try {
+      const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function setStoredAuthUser(user) {
+    try {
+      if (user) window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+      else window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
+  // Modo 1 (explícito): o teste chama auth.signInWithPassword (ver
+  // login.spec.js) ou seta window.__FAKE_DB__.__authUser antes de navegar
+  // (ver helpers.js `loginAs`) — persiste em localStorage, sobrevive a
+  // redirects de verdade.
+  //
+  // Modo 2 (auto, default): sem sessão explícita, sintetiza a identidade a
+  // partir de "?user=...&role=...&turma=...&name=..." na própria URL da
+  // página — o mesmo padrão que a suíte já usava pra montar URLs de teste
+  // antes da migração pra Supabase Auth, então a maioria dos testes não
+  // precisa mudar nada. Garante também a linha correspondente em
+  // `profiles`, senão PortalSession.getUser() não encontra ninguém.
+  function resolveFakeAuthUser() {
+    const d = db();
+    if (d.__authUser === null) { setStoredAuthUser(null); return null; } // teste pediu "deslogado" explicitamente
+    if (d.__authUser) { setStoredAuthUser(d.__authUser); return d.__authUser; }
+
+    // A URL da própria página manda, quando presente — cobre o padrão que
+    // a suíte já usava (navegar direto pra "?user=X&role=Y") e permite um
+    // mesmo teste trocar de usuário entre navegações. Só cai pro que foi
+    // persistido (login.spec.js) quando a URL não traz identidade nenhuma.
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get('user');
+    if (email) {
+      const id = 'fake-' + email;
+      const authUser = { id, email: email + '@aluno.portal.local' };
+      const profiles = table('profiles');
+      if (!profiles.some(p => p.id === id)) {
+        profiles.push({
+          id,
+          email,
+          nome: params.get('name') || email,
+          role: params.get('role') || 'aluno',
+          turma: params.get('turma') || '',
+        });
+      }
+      setStoredAuthUser(authUser);
+      return authUser;
+    }
+
+    return getStoredAuthUser();
+  }
+
   function createClient() {
     return {
       from(name) { return makeQuery(name); },
+      auth: {
+        getUser() {
+          const user = resolveFakeAuthUser();
+          return Promise.resolve({
+            data: { user },
+            error: user ? null : { message: 'not authenticated' },
+          });
+        },
+        signInWithPassword({ email, password }) {
+          const creds = db().__authCredentials || [];
+          const match = creds.find(c => c.email === email && c.password === password);
+          if (!match) {
+            return Promise.resolve({ data: { user: null, session: null }, error: { message: 'Invalid login credentials' } });
+          }
+          const authUser = { id: match.id, email };
+          setStoredAuthUser(authUser);
+          return Promise.resolve({ data: { user: authUser, session: { user: authUser } }, error: null });
+        },
+        signOut() {
+          setStoredAuthUser(null);
+          return Promise.resolve({ error: null });
+        },
+      },
       channel() {
         const chan = {
           on(_event, filterConfig, callback) {
@@ -110,7 +203,7 @@
       },
       removeChannel() {},
       // Casos especiais que espelham as funções reais do Supabase (ver
-      // sql/supabase-quizrush.sql): mutam a linha e devolvem question_started_at
+      // sql/supabase-setup-completo.sql, bloco 11): mutam a linha e devolvem question_started_at
       // como o now() do "banco" faria, em vez do relógio de quem chamou.
       rpc(name, params) {
         if (name === 'quizrush_start_session' || name === 'quizrush_next_question') {

@@ -11,16 +11,10 @@
 //    tem acesso a ele — só o plataforma.html de cada turma carrega esse
 //    arquivo hoje) e listar os módulos candidatos.
 // 3) Persistir/observar a sessão ao vivo no Supabase (quizrush_sessions/
-//    quizrush_players/quizrush_answers — ver sql/supabase-quizrush.sql),
+//    quizrush_players/quizrush_answers — ver sql/supabase-setup-completo.sql, bloco 11),
 //    incluindo o cálculo de pontuação (acerto + velocidade).
 window.QuizRushEngine = (function () {
-  function client() {
-    if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return null;
-    try { return window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); }
-    catch (e) { return null; }
-  }
-
-  const sb = client();
+  const sb = window.PortalSession ? window.PortalSession.client() : null;
 
   // ---------- TURMA_CONFIG + módulos candidatos ----------
 
@@ -106,7 +100,11 @@ window.QuizRushEngine = (function () {
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
       iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
-      iframe.src = `../turmas/${turma}/${mod.src}?user=${encodeURIComponent(email || '')}&role=professor&turma=${encodeURIComponent(turma)}`;
+      // Sem "role=" na URL: o módulo carregado aqui dentro resolve o papel
+      // sozinho via sessão do Supabase Auth (mesmo localStorage do mesmo
+      // domínio) — como só o professor chama fetchModuleQuestions, a
+      // sessão já é a dele.
+      iframe.src = `../turmas/${turma}/${mod.src}?user=${encodeURIComponent(email || '')}&turma=${encodeURIComponent(turma)}`;
 
       let settled = false;
       const finish = (questions) => {

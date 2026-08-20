@@ -94,8 +94,8 @@
   }
   .modal-body{ padding:16px; font-size:12px; color:var(--ink); min-height:120px; word-break:break-all; }
 </style>
-<script src="../shared/users-db.js"></script>
 <script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/game-leaderboard.js"></script>
 <script src="../shared/clipboard-guard.js"></script>
@@ -165,27 +165,40 @@
 </div>
 
 <script>
-  // Trava de Autenticação do Jogo
-  const isAuthenticated = sessionStorage.getItem('githack_authenticated');
-  const urlParams = new URLSearchParams(window.location.search);
-  const userParam = urlParams.get('user');
-  const ipParam = urlParams.get('ip');
+(async function () {
+  // Identidade real vem da sessão do Supabase Auth — sem sessão válida,
+  // requireUser() já redireciona pro login sozinho.
+  const user = window.PortalSession ? await window.PortalSession.requireUser('../index.html') : null;
+  if (!user) return;
 
-  if (!isAuthenticated || !userParam || !ipParam) {
-    window.location.href = '../index.html';
+  const sbClient = window.PortalSession.client();
+
+  // Contexto de turma: normalmente bate com a do próprio usuário; o
+  // professor pode abrir o jogo a partir do portal de qualquer uma das
+  // duas turmas, então respeita qual portal lançou (URL), só como contexto
+  // de exibição — nunca como identidade (essa já veio da sessão acima).
+  const urlParams = new URLSearchParams(window.location.search);
+  const contextTurma = urlParams.get('turma') || user.turma || 'jogos';
+
+  // ip/saldo (identidade do nó no jogo GitHack OS) vêm de network_nodes,
+  // a fonte de verdade — cada aluno tem uma linha própria lá (ver
+  // sql/supabase-setup-completo.sql, blocos 6/6b).
+  let myNode = null;
+  if (sbClient) {
+    const { data } = await sbClient.from('network_nodes')
+      .select('ip_address, jdcoin_balance')
+      .eq('email', user.email).eq('turma', contextTurma)
+      .maybeSingle();
+    myNode = data;
   }
 
-  const SUPABASE_URL = window.SUPABASE_URL;
-  const SUPABASE_KEY = window.SUPABASE_ANON_KEY;
-  const sbClient = (window.supabase && SUPABASE_URL && SUPABASE_KEY) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  window.username = user.email;
+  window.userIp = myNode?.ip_address || '';
+  window.userSaldo = myNode?.jdcoin_balance != null ? Number(myNode.jdcoin_balance) : 1234.80;
+  window.userRole = user.role;
+  window.userTurma = contextTurma;
+  window.userDisplayName = user.nome || window.username;
 
-  window.username = userParam;
-  window.userIp = ipParam;
-  window.userSaldo = parseFloat(urlParams.get('saldo')) || 1234.80;
-  window.userRole = (window.USERS_DB || []).find(u => u.email === (urlParams.get('user') || ''))?.role || 'aluno';
-  window.userTurma = urlParams.get('turma') || 'jogos';
-  window.userDisplayName = urlParams.get('name') || window.username;
-  
   let isConnected = false;
   let activeTargetIp = null;
   window.sessionIp = null;
@@ -1101,6 +1114,7 @@
       if (inp) inp.focus();
     }, 150);
   });
+})();
 </script>
 
 <script>

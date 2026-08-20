@@ -9,7 +9,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 const CONFIG_PATH = path.join(__dirname, '..', 'turmas', 'jogos', 'config.js');
 
@@ -24,7 +24,7 @@ async function withPatchedConfig(page, replacements) {
 
 test.describe('Organização das trilhas (em aberto / em atraso / concluídas)', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('trilha com prazo vencido aparece "em atraso" e vem primeiro no <select>', async ({ page }) => {

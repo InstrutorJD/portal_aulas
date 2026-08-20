@@ -4,7 +4,7 @@
 // posição de outro colega — só o número da própria colocação e o total de
 // alunos. O professor não vê o badge (não faz sentido pra ele).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
 // Turma Jogos tem 47 módulos ao todo (teoria+prática de todas as trilhas de
 // todas as matérias com conteúdo) — usados como base do % geral. O % de cada
@@ -17,6 +17,7 @@ const { stubSupabaseFake } = require('./helpers');
 // não na tabela. Só o progresso de OUTROS alunos (que nunca abrem essa
 // sessão de navegador) fica estável vindo direto do seed do Supabase.
 const SEED = {
+  profiles: jogosAlunoProfiles(),
   student_module_progress: [
     // edward.guzman: completa 3 módulos pré-existentes (js/basico, js/intermediario,
     // csharp/basico) → soma 3 frações de 1.0 / 47 módulos = 6,4% → arredonda 6%.
@@ -108,6 +109,7 @@ test.describe('Ranking do aluno na turma', () => {
     // não está logada nesta passagem) e engel.fraga loga com o MESMO
     // progresso exato semeado no localStorage dela — mesmo % exato dos dois.
     await stubSupabaseFake(page, {
+      profiles: jogosAlunoProfiles(),
       student_module_progress: [
         ...baseSeed.student_module_progress,
         { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
@@ -135,6 +137,7 @@ test.describe('Ranking do aluno na turma', () => {
     // Caso B: agora quem loga é gabriella.borges5, com o mesmo % exato de
     // engel.fraga (que fica pelo SEED, sem logar nesta passagem).
     await stubSupabaseFake(page, {
+      profiles: jogosAlunoProfiles(),
       student_module_progress: [
         ...baseSeed.student_module_progress,
         { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },

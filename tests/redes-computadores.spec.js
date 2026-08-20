@@ -5,7 +5,7 @@
 // pra rede como o sql.js existe pra SQL, então a prática usa o mesmo formato
 // de ticket/sidebar da prática de SQL, trocando o editor de código por opções).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 // A ordem das opções (A/B/C/D) é embaralhada a cada renderização — não dá
 // pra usar STEPS[...].correctIndex como posição na tela, precisa achar a
@@ -31,7 +31,7 @@ async function completeTeoria(page) {
 
 test.describe('turmas/sistemas/atividades — trilhas de Redes de Computadores', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('teoria de Conexão e Endereçamento IP conclui e marca progresso', async ({ page }) => {

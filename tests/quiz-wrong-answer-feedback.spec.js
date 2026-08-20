@@ -15,7 +15,7 @@
 // independente, isso converge rápido sem depender de nenhum detalhe interno
 // do algoritmo de embaralhamento.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/sistemas/atividades/sql-basico-teoria.html?user=alexandre.natal&role=aluno';
 const MAX_ATTEMPTS = 40;
@@ -43,7 +43,7 @@ async function answerUntil(page, wantedKind) {
 
 test.describe('Feedback de resposta errada no quiz de teoria', () => {
   test.beforeEach(async ({ page }) => {
-    await stubSupabaseDisabled(page);
+    await stubSupabaseFake(page, {});
   });
 
   test('mensagem de erro não repete a afirmação de acerto embutida na explicação', async ({ page }) => {

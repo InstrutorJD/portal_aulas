@@ -7,11 +7,11 @@
 //
 // "Concluiu hoje" olha completed_at (carimbado só no instante em que um
 // módulo vira completed=true de verdade — ver trigger em
-// sql/supabase-chamada-notas.sql), não updated_at, que muda toda vez que o
+// sql/supabase-setup-completo.sql, bloco 7), não updated_at, que muda toda vez que o
 // portal carrega mesmo sem progresso nenhum. Quem foi marcado como falta
 // (attendance.presente = false) na chamada de hoje nunca aparece na lista.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, stubSupabaseDisabled } = require('./helpers');
+const { stubSupabaseFake } = require('./helpers');
 
 const SISTEMAS_URL = '/turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=sistemas';
 
@@ -34,6 +34,11 @@ test.describe('Relatório de Atividade do Dia — dentro do portal da turma', ()
   test('lista só quem está presente hoje e não concluiu nada hoje', async ({ page }) => {
     const today = todayStr();
     await openGestao(page, {
+      profiles: [
+        { id: 'fake-bianca.bernardi', email: 'bianca.bernardi', nome: 'Bianca Bernardi', role: 'aluno', turma: 'sistemas' },
+        { id: 'fake-bruno.gomes1', email: 'bruno.gomes1', nome: 'Bruno Gomes', role: 'aluno', turma: 'sistemas' },
+        { id: 'fake-alexandre.natal', email: 'alexandre.natal', nome: 'Alexandre Natal', role: 'aluno', turma: 'sistemas' },
+      ],
       attendance: [
         // bianca.bernardi: marcada como FALTA hoje — nunca deve aparecer na lista.
         { turma: 'sistemas', data: today, student_email: 'bianca.bernardi', student_name: 'Bianca Bernardi', presente: false },
@@ -63,6 +68,9 @@ test.describe('Relatório de Atividade do Dia — dentro do portal da turma', ()
   test('sem nenhum registro de atividade hoje, mostra travessão em vez de tempo', async ({ page }) => {
     const today = todayStr();
     await openGestao(page, {
+      profiles: [
+        { id: 'fake-erasmo.prado', email: 'erasmo.prado', nome: 'Erasmo Prado', role: 'aluno', turma: 'sistemas' },
+      ],
       // erasmo.prado tem um registro de atividade, mas de ONTEM — não conta pra hoje.
       student_activity: [
         { student_email: 'erasmo.prado', turma: 'sistemas', active_seconds_today: 1800, activity_date: '2020-01-01' },
@@ -79,39 +87,29 @@ test.describe('Relatório de Atividade do Dia — dentro do portal da turma', ()
   test('quando todo mundo presente já concluiu algo hoje, mostra a mensagem de sucesso', async ({ page }) => {
     const today = todayStr();
 
-    // Descobre os e-mails reais dos alunos da turma Sistemas (users-db.js)
-    // pra seedar progresso concluído HOJE pra todo mundo, sem depender de
-    // manter essa lista sincronizada manualmente com o cadastro real.
-    await stubSupabaseDisabled(page);
-    await page.goto(SISTEMAS_URL);
-    const emails = await page.evaluate(() =>
-      window.USERS_DB.filter(u => u.role === 'aluno' && u.turma === 'sistemas').map(u => u.email)
-    );
-    expect(emails.length).toBeGreaterThan(0);
-
+    // A lista de alunos da turma agora vem de `profiles` (Supabase Auth),
+    // não mais de shared/users-db.js — semeia um punhado de alunos fixos
+    // pra turma Sistemas, com progresso concluído HOJE pra todos.
+    const emails = ['alexandre.natal', 'bianca.bernardi', 'bruno.gomes1'];
     const progressRows = emails.map(email => ({
       student_email: email, turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria',
       progress_current: 1, progress_total: 1, completed: true, completed_at: `${today}T09:00:00.000Z`,
     }));
 
-    await stubSupabaseFake(page, { student_module_progress: progressRows });
-    await page.goto(SISTEMAS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
+    await openGestao(page, {
+      profiles: emails.map(email => ({ id: `fake-${email}`, email, nome: email, role: 'aluno', turma: 'sistemas' })),
+      student_module_progress: progressRows,
+    });
     await expandGestaoSection(page, 'Relatórios');
 
     await page.click('#btnGerarAtividadeDia');
     await expect(page.locator('#atividadeDiaResultado')).toContainText('já concluíram alguma atividade');
   });
 
-  test('sem Supabase configurado, mostra o aviso em vez de travar', async ({ page }) => {
-    await stubSupabaseDisabled(page);
-    await page.goto(SISTEMAS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Relatórios');
-
-    await page.click('#btnGerarAtividadeDia');
-    await expect(page.locator('#atividadeDiaResultado')).toContainText('Configure o Supabase');
-  });
+  // Removido: "logado como professor, mas sbClient nulo" não é mais um
+  // estado alcançável — login agora exige Supabase Auth configurado, e
+  // sbClient (shared/platform-core.js) vem da mesma checagem que a sessão
+  // já usou pra autenticar. O guard `if (!sbClient)` continua no código-
+  // fonte por segurança, só não há mais como exercitá-lo por trás de um
+  // login bem-sucedido.
 });

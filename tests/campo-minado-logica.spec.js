@@ -5,8 +5,13 @@
 // (simulate()), pra que if/while do aluno reajam de verdade ao que o robô
 // sente. A tela só REPRODUZ depois (replayLog()) o que a simulação decidiu.
 const { test, expect } = require('@playwright/test');
+const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/games/campo-minado.html?user=test&role=aluno&name=Test&turma=jogos';
+
+test.beforeEach(async ({ page }) => {
+  await stubSupabaseFake(page, {});
+});
 
 // Deixa o tabuleiro sem nenhuma mina, exceto as que o teste colocar à mão —
 // assim os testes de sensor não dependem do layout aleatório do dia.

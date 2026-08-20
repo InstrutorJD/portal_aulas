@@ -7,7 +7,7 @@
 // é sempre contra a data/dia da semana atual, então o cadeado volta sozinho
 // no dia seguinte sem nenhuma ação nova do professor.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
 const JOGOS_PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
@@ -46,7 +46,7 @@ test.describe('Gestão — liberação diária de atividades (professor)', () =>
   });
 
   test('libera uma atividade pra um aluno específico', async ({ page }) => {
-    await stubSupabaseFake(page, { daily_module_releases: [] });
+    await stubSupabaseFake(page, { daily_module_releases: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_PROFESSOR_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);

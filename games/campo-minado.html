@@ -124,6 +124,7 @@
   .console .line.success{ color:var(--green); font-weight:bold; }
 </style>
 <script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/clipboard-guard.js"></script>
 <script src="../shared/game-leaderboard.js"></script>
@@ -185,6 +186,13 @@ if (!perigo('direita')) {
 </div>
 
 <script>
+(async function () {
+  const user = window.PortalSession ? await window.PortalSession.requireUser('../index.html') : null;
+  if (!user) return;
+  const username = user.email;
+  const displayName = user.nome || username;
+  const turma = user.turma || '';
+
   const ROWS = 8, COLS = 8;
   const GOAL_ROW = ROWS - 1, GOAL_COL = COLS - 1;
   const MOVE_DELAY = 260;
@@ -235,10 +243,6 @@ if (!perigo('direita')) {
   const levelUpBanner = document.getElementById('levelUpBanner');
   const btnRanking = document.getElementById('btnRanking');
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get('user') || 'anon';
-  const displayName = urlParams.get('name') || username;
-  const turma = urlParams.get('turma') || '';
   const BEST_LEVEL_KEY = `campo_minado_best_level_${username}`;
 
   function getBestLevel() { return parseInt(localStorage.getItem(BEST_LEVEL_KEY) || '0', 10); }
@@ -256,6 +260,12 @@ if (!perigo('direita')) {
   if (!window.GameLeaderboard.enabled) btnRanking.style.display = 'none';
 
   let board = [];
+  // Testes (tests/campo-minado-logica.spec.js) leem/escrevem board e chamam
+  // simulate() direto via page.evaluate — antes desta migração, "board" era
+  // top-level de verdade (virava propriedade implícita do escopo global do
+  // script clássico); envolver tudo num IIFE assíncrono pra esperar a sessão
+  // exigiu expor os dois em window explicitamente pra continuar acessível.
+  Object.defineProperty(window, 'board', { get: () => board, set: v => { board = v; } });
   let cellEls = [];
   let pos = { row: 0, col: 0 };
   let attempts = 0;
@@ -650,7 +660,12 @@ if (!perigo('direita')) {
   btnRun.addEventListener('click', runCode);
   btnRestart.addEventListener('click', restartGame);
 
+  // Mesmo motivo do window.board acima: testes chamam essas duas direto.
+  window.simulate = simulate;
+  window.onLevelCleared = onLevelCleared;
+
   restartGame();
+})();
 </script>
 
 <script>
