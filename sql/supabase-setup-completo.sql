@@ -441,6 +441,11 @@ alter table public.network_nodes add column if not exists turma text;
 update public.network_nodes set turma = 'jogos' where turma is null;
 alter table public.network_nodes alter column turma set default 'jogos';
 
+-- Contador de ataques bem-sucedidos, pro ranking "hacker com mais
+-- ataques" (comando `ranking` em games/jogo.html, placar genérico de
+-- shared/game-leaderboard.js com game='hacker').
+alter table public.network_nodes add column if not exists attack_count int not null default 0;
+
 create or replace function public.execute_hack_transfer(attacker_ip text, target_ip text)
 returns jsonb
 language plpgsql
@@ -448,15 +453,16 @@ security definer
 set search_path = public
 as $$
 declare
-  v_target_balance   numeric;
-  v_attacker_balance numeric;
-  v_target_online    boolean;
-  v_target_shielded  boolean;
-  v_target_turma     text;
-  v_attacker_turma    text;
-  v_stolen           numeric;
-  v_first_ip         text;
-  v_second_ip        text;
+  v_target_balance        numeric;
+  v_attacker_balance      numeric;
+  v_target_online         boolean;
+  v_target_shielded       boolean;
+  v_target_turma          text;
+  v_attacker_turma        text;
+  v_stolen                numeric;
+  v_first_ip              text;
+  v_second_ip             text;
+  v_attacker_attack_count int;
 begin
   if attacker_ip = target_ip then
     return jsonb_build_object('success', false, 'message', 'Não é possível atacar o próprio nó.');
@@ -514,14 +520,17 @@ begin
   v_stolen := round(v_target_balance * 0.5, 2);
 
   update network_nodes set jdcoin_balance = jdcoin_balance - v_stolen where ip_address = target_ip;
-  update network_nodes set jdcoin_balance = jdcoin_balance + v_stolen where ip_address = attacker_ip;
+  update network_nodes set jdcoin_balance = jdcoin_balance + v_stolen, attack_count = attack_count + 1
+    where ip_address = attacker_ip
+    returning attack_count into v_attacker_attack_count;
 
   return jsonb_build_object(
     'success', true,
     'message', 'Transferência concluída.',
     'target_balance', v_target_balance - v_stolen,
     'attacker_balance', v_attacker_balance + v_stolen,
-    'stolen', v_stolen
+    'stolen', v_stolen,
+    'attacker_attack_count', v_attacker_attack_count
   );
 end;
 $$;

@@ -96,6 +96,7 @@
 </style>
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/game-leaderboard.js"></script>
 <script src="../shared/clipboard-guard.js"></script>
 <script src="mock-data.js"></script>
 </head>
@@ -182,6 +183,7 @@
   window.userSaldo = parseFloat(urlParams.get('saldo')) || 1234.80;
   window.userRole = urlParams.get('role') || 'aluno';
   window.userTurma = urlParams.get('turma') || 'jogos';
+  window.userDisplayName = urlParams.get('name') || window.username;
   
   let isConnected = false;
   let activeTargetIp = null;
@@ -531,6 +533,11 @@
                 <td style="padding:2px 4px; color:var(--green)"><b>hack crack [IP]</b></td>
                 <td style="padding:2px 4px">Tenta 10 combinações por força bruta para quebrar a senha da carteira do nó clonado.</td>
                 <td style="padding:2px 4px; color:var(--yellow)">hack crack 192.168.1.11</td>
+              </tr>
+              <tr>
+                <td style="padding:2px 4px; color:var(--green)"><b>ranking</b></td>
+                <td style="padding:2px 4px">Mostra o placar de ataques bem-sucedidos da turma.</td>
+                <td style="padding:2px 4px; color:var(--yellow)">ranking</td>
               </tr>`;
 
           if (window.userRole === 'professor' || window.userRole === 'admin') {
@@ -590,6 +597,20 @@
               response.style.color = 'var(--yellow)';
               response.textContent = 'Comandos Admin: admin reset [IP] | admin setbalance [IP] [VALOR]';
             }
+          }
+          break;
+
+        case 'ranking':
+          if (!window.GameLeaderboard || !window.GameLeaderboard.enabled) {
+            response.style.color = 'var(--blood-bright)';
+            response.textContent = 'Erro: Ranking indisponível (Supabase não conectado).';
+          } else {
+            window.GameLeaderboard.showPanel({
+              game: 'hacker', turma: window.userTurma, email: window.username,
+              title: 'Ranking — Hackers mais ativos',
+              formatScore: s => `${s} ataque${s === 1 ? '' : 's'}`
+            });
+            response.innerHTML = `<span style="color:var(--green)">Abrindo placar de ataques da turma...</span>`;
           }
           break;
 
@@ -983,6 +1004,13 @@
 
                   updateUI();
                   saveState();
+
+                  if (window.GameLeaderboard && typeof data.attacker_attack_count === 'number') {
+                    window.GameLeaderboard.submitScore({
+                      game: 'hacker', turma: window.userTurma, email: window.username,
+                      name: window.userDisplayName, score: data.attacker_attack_count
+                    });
+                  }
 
                   response.innerHTML = `<span style="color:var(--green)">[INVASÃO CONCLUÍDA] 50% do saldo (${data.stolen} JDC) foi transferido do nó ${typedIp}.</span>`;
                 }
