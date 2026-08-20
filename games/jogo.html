@@ -94,6 +94,7 @@
   }
   .modal-body{ padding:16px; font-size:12px; color:var(--ink); min-height:120px; word-break:break-all; }
 </style>
+<script src="../shared/users-db.js"></script>
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/game-leaderboard.js"></script>
@@ -181,7 +182,7 @@
   window.username = userParam;
   window.userIp = ipParam;
   window.userSaldo = parseFloat(urlParams.get('saldo')) || 1234.80;
-  window.userRole = urlParams.get('role') || 'aluno';
+  window.userRole = (window.USERS_DB || []).find(u => u.email === (urlParams.get('user') || ''))?.role || 'aluno';
   window.userTurma = urlParams.get('turma') || 'jogos';
   window.userDisplayName = urlParams.get('name') || window.username;
   

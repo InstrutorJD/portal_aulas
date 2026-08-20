@@ -67,7 +67,16 @@ const paramUser = urlParams.get('user') || 'admin';
 const DB = { users: {} };
 (window.USERS_DB || []).forEach(u => { DB.users[u.email] = { ...u, progress: 0 }; });
 
-const currentUser = DB.users[paramUser] || { email: paramUser, nome: paramUser, role: 'professor', turma: 'all' };
+// ?user= vem direto da URL sem sessão/token por trás — sem essa checagem,
+// qualquer valor inexistente virava "professor" por padrão (mesmo risco que
+// já foi corrigido em shared/platform-core.js).
+if (!DB.users[paramUser]) {
+  alert('Sessão inválida ou expirada. Faça login novamente.');
+  window.location.href = '../index.html';
+  throw new Error('sessão inválida');
+}
+
+const currentUser = DB.users[paramUser];
 document.getElementById('sessionUser').textContent = currentUser.nome;
 
 document.getElementById('btnLogout').addEventListener('click', () => {

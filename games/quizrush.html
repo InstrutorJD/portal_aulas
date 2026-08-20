@@ -234,6 +234,7 @@
 
 </div>
 
+<script src="../shared/users-db.js"></script>
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/quizrush-engine.js"></script>
@@ -243,7 +244,7 @@
   const username = urlParams.get('user') || 'anon';
   const displayName = urlParams.get('name') || username;
   const turma = urlParams.get('turma') || '';
-  const role = urlParams.get('role') || 'aluno';
+  const role = (window.USERS_DB || []).find(u => u.email === (urlParams.get('user') || ''))?.role || 'aluno';
   const isHost = role === 'professor';
 
   const SHAPES = ['▲', '◆', '●', '■'];

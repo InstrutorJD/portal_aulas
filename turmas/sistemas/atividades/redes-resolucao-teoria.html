@@ -113,6 +113,7 @@
 <script>
   window.ACTIVITY_LOCATION = 'redes_resolucao_teoria';
 </script>
+<script src="../../../shared/users-db.js"></script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../../../shared/clipboard-guard.js"></script>
@@ -285,7 +286,7 @@
     });
   };
 
-  const role = urlParams.get('role') || 'aluno';
+  const role = (window.USERS_DB || []).find(u => u.email === (urlParams.get('user') || ''))?.role || 'aluno';
   const btnGenSlides = document.getElementById('btnGenSlides');
   if (role === 'professor') {
     btnGenSlides.style.display = 'inline-block';
