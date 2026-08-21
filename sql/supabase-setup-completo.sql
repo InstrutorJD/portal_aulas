@@ -107,6 +107,7 @@ grant execute on function public.is_professor() to authenticated;
 grant execute on function public.current_turma() to authenticated;
 
 drop policy if exists "profiles_select_self_or_professor" on public.profiles;
+drop policy if exists "profiles_select_self_or_professor_or_same_turma" on public.profiles;
 create policy "profiles_select_self_or_professor_or_same_turma"
   on public.profiles for select
   using (id = auth.uid() or public.is_professor() or turma = public.current_turma());
@@ -141,11 +142,13 @@ create policy "classroom_settings_select_all"
   using (true);
 
 drop policy if exists "classroom_settings_insert_all" on public.classroom_settings;
+drop policy if exists "classroom_settings_insert_professor" on public.classroom_settings;
 create policy "classroom_settings_insert_professor"
   on public.classroom_settings for insert
   with check (public.is_professor());
 
 drop policy if exists "classroom_settings_update_all" on public.classroom_settings;
+drop policy if exists "classroom_settings_update_professor" on public.classroom_settings;
 create policy "classroom_settings_update_professor"
   on public.classroom_settings for update
   using (public.is_professor())
@@ -203,16 +206,19 @@ create index if not exists idx_student_activity_updated_at
 alter table public.student_activity enable row level security;
 
 drop policy if exists "student_activity_select_all" on public.student_activity;
+drop policy if exists "student_activity_select_professor" on public.student_activity;
 create policy "student_activity_select_professor"
   on public.student_activity for select
   using (public.is_professor());
 
 drop policy if exists "student_activity_insert_all" on public.student_activity;
+drop policy if exists "student_activity_insert_self" on public.student_activity;
 create policy "student_activity_insert_self"
   on public.student_activity for insert
   with check (student_email = public.current_email());
 
 drop policy if exists "student_activity_update_all" on public.student_activity;
+drop policy if exists "student_activity_update_self" on public.student_activity;
 create policy "student_activity_update_self"
   on public.student_activity for update
   using (student_email = public.current_email())
@@ -291,16 +297,19 @@ create table if not exists public.student_overrides (
 alter table public.student_overrides enable row level security;
 
 drop policy if exists "student_overrides_select_all" on public.student_overrides;
+drop policy if exists "student_overrides_select_self_or_professor" on public.student_overrides;
 create policy "student_overrides_select_self_or_professor"
   on public.student_overrides for select
   using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "student_overrides_insert_all" on public.student_overrides;
+drop policy if exists "student_overrides_insert_professor" on public.student_overrides;
 create policy "student_overrides_insert_professor"
   on public.student_overrides for insert
   with check (public.is_professor());
 
 drop policy if exists "student_overrides_update_all" on public.student_overrides;
+drop policy if exists "student_overrides_update_professor" on public.student_overrides;
 create policy "student_overrides_update_professor"
   on public.student_overrides for update
   using (public.is_professor())
@@ -774,16 +783,19 @@ create index if not exists idx_attendance_student on public.attendance (student_
 alter table public.attendance enable row level security;
 
 drop policy if exists "attendance_select_all" on public.attendance;
+drop policy if exists "attendance_select_self_or_professor" on public.attendance;
 create policy "attendance_select_self_or_professor"
   on public.attendance for select
   using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "attendance_insert_all" on public.attendance;
+drop policy if exists "attendance_insert_professor" on public.attendance;
 create policy "attendance_insert_professor"
   on public.attendance for insert
   with check (public.is_professor());
 
 drop policy if exists "attendance_update_all" on public.attendance;
+drop policy if exists "attendance_update_professor" on public.attendance;
 create policy "attendance_update_professor"
   on public.attendance for update
   using (public.is_professor())
@@ -813,16 +825,19 @@ create index if not exists idx_grades_turma_bimestre on public.grades (turma, bi
 alter table public.grades enable row level security;
 
 drop policy if exists "grades_select_all" on public.grades;
+drop policy if exists "grades_select_self_or_professor" on public.grades;
 create policy "grades_select_self_or_professor"
   on public.grades for select
   using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "grades_insert_all" on public.grades;
+drop policy if exists "grades_insert_professor" on public.grades;
 create policy "grades_insert_professor"
   on public.grades for insert
   with check (public.is_professor());
 
 drop policy if exists "grades_update_all" on public.grades;
+drop policy if exists "grades_update_professor" on public.grades;
 create policy "grades_update_professor"
   on public.grades for update
   using (public.is_professor())
@@ -854,16 +869,19 @@ alter table public.student_module_progress enable row level security;
 -- de todo mundo da turma pra calcular a própria posição — a TELA nunca
 -- mostra progresso/nome de outro aluno, só a leitura crua fica ampla.
 drop policy if exists "student_module_progress_select_all" on public.student_module_progress;
+drop policy if exists "student_module_progress_select_same_turma_or_professor" on public.student_module_progress;
 create policy "student_module_progress_select_same_turma_or_professor"
   on public.student_module_progress for select
   using (public.is_professor() or turma = public.current_turma());
 
 drop policy if exists "student_module_progress_insert_all" on public.student_module_progress;
+drop policy if exists "student_module_progress_insert_self" on public.student_module_progress;
 create policy "student_module_progress_insert_self"
   on public.student_module_progress for insert
   with check (student_email = public.current_email());
 
 drop policy if exists "student_module_progress_update_all" on public.student_module_progress;
+drop policy if exists "student_module_progress_update_self" on public.student_module_progress;
 create policy "student_module_progress_update_self"
   on public.student_module_progress for update
   using (student_email = public.current_email())
@@ -955,11 +973,13 @@ create policy "trilha_release_dates_select_all"
   using (true);
 
 drop policy if exists "trilha_release_dates_insert_all" on public.trilha_release_dates;
+drop policy if exists "trilha_release_dates_insert_professor" on public.trilha_release_dates;
 create policy "trilha_release_dates_insert_professor"
   on public.trilha_release_dates for insert
   with check (public.is_professor());
 
 drop policy if exists "trilha_release_dates_update_all" on public.trilha_release_dates;
+drop policy if exists "trilha_release_dates_update_professor" on public.trilha_release_dates;
 create policy "trilha_release_dates_update_professor"
   on public.trilha_release_dates for update
   using (public.is_professor())
@@ -1025,11 +1045,13 @@ create policy "game_scores_select_all"
   using (true);
 
 drop policy if exists "game_scores_insert_all" on public.game_scores;
+drop policy if exists "game_scores_insert_self" on public.game_scores;
 create policy "game_scores_insert_self"
   on public.game_scores for insert
   with check (student_email = public.current_email());
 
 drop policy if exists "game_scores_update_all" on public.game_scores;
+drop policy if exists "game_scores_update_self" on public.game_scores;
 create policy "game_scores_update_self"
   on public.game_scores for update
   using (student_email = public.current_email())
@@ -1095,11 +1117,13 @@ create policy "daily_module_releases_select_all"
   using (true);
 
 drop policy if exists "daily_module_releases_insert_all" on public.daily_module_releases;
+drop policy if exists "daily_module_releases_insert_professor" on public.daily_module_releases;
 create policy "daily_module_releases_insert_professor"
   on public.daily_module_releases for insert
   with check (public.is_professor());
 
 drop policy if exists "daily_module_releases_delete_all" on public.daily_module_releases;
+drop policy if exists "daily_module_releases_delete_professor" on public.daily_module_releases;
 create policy "daily_module_releases_delete_professor"
   on public.daily_module_releases for delete
   using (public.is_professor());
@@ -1180,22 +1204,28 @@ alter table public.quizrush_answers enable row level security;
 drop policy if exists "quizrush_sessions_select_all" on public.quizrush_sessions;
 create policy "quizrush_sessions_select_all" on public.quizrush_sessions for select using (true);
 drop policy if exists "quizrush_sessions_insert_all" on public.quizrush_sessions;
+drop policy if exists "quizrush_sessions_insert_professor" on public.quizrush_sessions;
 create policy "quizrush_sessions_insert_professor" on public.quizrush_sessions for insert with check (public.is_professor());
 drop policy if exists "quizrush_sessions_update_all" on public.quizrush_sessions;
+drop policy if exists "quizrush_sessions_update_professor" on public.quizrush_sessions;
 create policy "quizrush_sessions_update_professor" on public.quizrush_sessions for update using (public.is_professor()) with check (public.is_professor());
 
 drop policy if exists "quizrush_players_select_all" on public.quizrush_players;
 create policy "quizrush_players_select_all" on public.quizrush_players for select using (true);
 drop policy if exists "quizrush_players_insert_all" on public.quizrush_players;
+drop policy if exists "quizrush_players_insert_self" on public.quizrush_players;
 create policy "quizrush_players_insert_self" on public.quizrush_players for insert with check (student_email = public.current_email());
 drop policy if exists "quizrush_players_update_all" on public.quizrush_players;
+drop policy if exists "quizrush_players_update_self" on public.quizrush_players;
 create policy "quizrush_players_update_self" on public.quizrush_players for update using (student_email = public.current_email()) with check (student_email = public.current_email());
 
 drop policy if exists "quizrush_answers_select_all" on public.quizrush_answers;
 create policy "quizrush_answers_select_all" on public.quizrush_answers for select using (true);
 drop policy if exists "quizrush_answers_insert_all" on public.quizrush_answers;
+drop policy if exists "quizrush_answers_insert_self" on public.quizrush_answers;
 create policy "quizrush_answers_insert_self" on public.quizrush_answers for insert with check (student_email = public.current_email());
 drop policy if exists "quizrush_answers_update_all" on public.quizrush_answers;
+drop policy if exists "quizrush_answers_update_self" on public.quizrush_answers;
 create policy "quizrush_answers_update_self" on public.quizrush_answers for update using (student_email = public.current_email()) with check (student_email = public.current_email());
 
 -- question_started_at precisa vir do relógio do BANCO (now()), não do
@@ -1210,16 +1240,17 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_started_at timestamptz;
 begin
   if not public.is_professor() then
     raise exception 'Só o professor pode iniciar uma sessão do QuizRush.';
   end if;
-  return (
-    update quizrush_sessions
-    set status = 'question', current_index = 0, question_started_at = now()
-    where id = p_session_id
-    returning question_started_at
-  );
+  update quizrush_sessions
+  set status = 'question', current_index = 0, question_started_at = now()
+  where id = p_session_id
+  returning question_started_at into v_started_at;
+  return v_started_at;
 end;
 $$;
 
@@ -1229,16 +1260,17 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_started_at timestamptz;
 begin
   if not public.is_professor() then
     raise exception 'Só o professor pode avançar pergunta no QuizRush.';
   end if;
-  return (
-    update quizrush_sessions
-    set status = 'question', current_index = p_index, question_started_at = now()
-    where id = p_session_id
-    returning question_started_at
-  );
+  update quizrush_sessions
+  set status = 'question', current_index = p_index, question_started_at = now()
+  where id = p_session_id
+  returning question_started_at into v_started_at;
+  return v_started_at;
 end;
 $$;
 
@@ -1306,16 +1338,19 @@ create index if not exists idx_student_activity_state_student on public.student_
 alter table public.student_activity_state enable row level security;
 
 drop policy if exists "student_activity_state_select_all" on public.student_activity_state;
+drop policy if exists "student_activity_state_select_self" on public.student_activity_state;
 create policy "student_activity_state_select_self"
   on public.student_activity_state for select
   using (student_email = public.current_email());
 
 drop policy if exists "student_activity_state_insert_all" on public.student_activity_state;
+drop policy if exists "student_activity_state_insert_self" on public.student_activity_state;
 create policy "student_activity_state_insert_self"
   on public.student_activity_state for insert
   with check (student_email = public.current_email());
 
 drop policy if exists "student_activity_state_update_all" on public.student_activity_state;
+drop policy if exists "student_activity_state_update_self" on public.student_activity_state;
 create policy "student_activity_state_update_self"
   on public.student_activity_state for update
   using (student_email = public.current_email())
