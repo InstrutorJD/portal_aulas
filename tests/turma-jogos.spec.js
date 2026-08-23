@@ -145,4 +145,26 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
     const jsRow = rows.find(r => r.trilha_key === 'js' && r.module_key === 'basico');
     expect(jsRow).toMatchObject({ progress_current: 0, progress_total: 10, completed: false });
   });
+
+  // Regressão: aluno loga num navegador/dispositivo sem o localStorage de
+  // antes (troca de máquina, cache limpo, primeira vez com login real pós-
+  // migração pro Supabase Auth) — o progresso local chega "zerado", mas o
+  // csharp/basico dele já estava concluído de verdade no Supabase. O sync
+  // automático do carregamento (syncAllModulesProgress) não pode sobrescrever
+  // esse progresso remoto com o zero local.
+  test('login num dispositivo sem progresso local não apaga o que já estava concluído no Supabase', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    });
+    // Sem addInitScript nenhum — localStorage chega vazio, como um
+    // dispositivo novo.
+    await page.goto(URL);
+
+    await expect.poll(async () => {
+      const rows = await page.evaluate(() => window.__FAKE_DB__.student_module_progress || []);
+      return rows.find(r => r.trilha_key === 'csharp' && r.module_key === 'basico');
+    }).toMatchObject({ progress_current: 1, progress_total: 1, completed: true });
+  });
 });

@@ -34,6 +34,7 @@
   let dailyReleasesCache = []; // linhas de daily_module_releases da turma inteira (todas as datas/dias), ver releasesForToday()
   let dailyReleasesLoadedOnce = false; // evita notificar sobre liberações que já existiam antes do carregamento inicial
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
+  let librasLoadFailed = false; // ver setupVLibras — script de terceiro (vlibras.gov.br) pode ser bloqueado pelo navegador
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
 
@@ -677,12 +678,46 @@
       .join('');
   }
 
+  // Todo o progresso já salvo no Supabase pro aluno logado, pra
+  // syncAllModulesProgress saber se o localStorage local está desatualizado
+  // ANTES de sincronizar — ver isLocalBehindRemote logo abaixo.
+  async function fetchRemoteModuleProgress() {
+    if (!sbClient || currentUser.role !== 'aluno' || !paramUser) return {};
+    try {
+      const { data } = await sbClient.from('student_module_progress')
+        .select('trilha_key, module_key, progress_current, completed')
+        .eq('turma', cfg.id).eq('student_email', paramUser);
+      const map = {};
+      (data || []).forEach(r => { map[`${r.trilha_key}::${r.module_key}`] = r; });
+      return map;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  // O remoto só pode estar "na frente" do local quando o navegador chega
+  // com o localStorage zerado/desatualizado (troca de máquina, cache
+  // limpo, primeiro login da conta real pós-migração pro Supabase Auth) —
+  // nesse caso o remoto já reflete um progresso de verdade que o aluno
+  // fez em outro momento/dispositivo. Sem essa checagem, syncModuleProgress
+  // sobrescrevia esse progresso remoto com o zero local, apagando conclusões
+  // reais (foi exatamente o que aconteceu com alguns alunos na migração).
+  function isLocalBehindRemote(local, remote) {
+    if (!remote) return false;
+    if (remote.completed && !local.completed) return true;
+    return (remote.progress_current || 0) > local.current;
+  }
+
   // Manda o progresso local (localStorage) pro Supabase, pra o painel do
   // professor conseguir calcular % de desempenho por trilha nos relatórios
-  // — sem isso, esse dado nunca sai do navegador do aluno.
-  async function syncModuleProgress(trilha, mod) {
+  // — sem isso, esse dado nunca sai do navegador do aluno. remoteMap
+  // (opcional, ver syncAllModulesProgress) evita regredir um progresso
+  // remoto mais avançado; sem ele (chamada avulsa ao fechar UM módulo, onde
+  // o local É a ação que acabou de acontecer) sincroniza direto, como antes.
+  async function syncModuleProgress(trilha, mod, remoteMap) {
     if (!sbClient || currentUser.role !== 'aluno' || !paramUser) return;
     const { current, total, completed } = getModuleProgress(mod);
+    if (remoteMap && isLocalBehindRemote({ current, completed }, remoteMap[`${trilha.key}::${mod.key}`])) return;
     try {
       await sbClient.from('student_module_progress').upsert({
         student_email: paramUser,
@@ -700,10 +735,19 @@
     }
   }
 
-  function syncAllModulesProgress() {
+  // Devolve a Promise de cada upsert (não só dispara e esquece) — quem
+  // chama (syncAllModulesProgressSafely) precisa poder esperar isso
+  // terminar de verdade antes de reler o ranking, senão o badge acaba lendo
+  // student_module_progress ANTES do fetchRemoteModuleProgress()+upserts
+  // acima completarem (a corrida existia mesmo antes desta função ganhar o
+  // fetch extra, mas ele deixou a janela grande o bastante pra aparecer).
+  async function syncAllModulesProgress() {
+    const remoteMap = await fetchRemoteModuleProgress();
+    const syncs = [];
     allTrilhas().forEach(trilha => {
-      (trilha.modules || []).forEach(mod => syncModuleProgress(trilha, mod));
+      (trilha.modules || []).forEach(mod => syncs.push(syncModuleProgress(trilha, mod, remoteMap)));
     });
+    await Promise.all(syncs);
   }
 
   // Mesma comparação de shared/progress-sync.js (isRemoteFurtherAlong lá) —
@@ -760,7 +804,7 @@
     await hydrateLocalProgressFromRemote();
     refreshAllModuleCards();
     checkGamesUnlock();
-    syncAllModulesProgress();
+    await syncAllModulesProgress();
   }
 
   function isModuleLocked(trilha, mod) {
@@ -2284,7 +2328,20 @@
   function setupVLibras() {
     const script = document.createElement('script');
     script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
-    script.onload = () => { if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app'); };
+    script.onload = () => {
+      try {
+        if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
+      } catch (e) { librasLoadFailed = true; }
+      // O widget carrega recursos de cdn.jsdelivr.net por baixo dos panos, de
+      // forma assíncrona — navegador com bloqueio de rastreamento mais estrito
+      // (ex: "Tracking Prevention" do Edge) pode deixar isso travado sem
+      // disparar script.onerror nenhum (o <script> em si carregou normal, só
+      // o que ele tenta buscar depois é que falha). Sem checar se o widget
+      // realmente terminou de se montar, clicar em 🤟 simplesmente não fazia
+      // nada, sem nenhuma pista do motivo.
+      setTimeout(() => { if (!document.querySelector('div[vw]')) librasLoadFailed = true; }, 4000);
+    };
+    script.onerror = () => { librasLoadFailed = true; };
     document.body.appendChild(script);
   }
 
@@ -2367,6 +2424,10 @@
       applyA11y();
     });
     document.getElementById('btnLibras').addEventListener('click', () => {
+      if (!a11y.libras && (librasLoadFailed || !document.querySelector('div[vw]'))) {
+        showToast('Libras indisponível', 'O widget VLibras ainda não carregou — pode estar sendo bloqueado pelo navegador (ex: "Rastreamento" no Edge). Tente de novo em alguns segundos, outro navegador, ou libere vlibras.gov.br/jsdelivr.net nas configurações de privacidade.');
+        return;
+      }
       a11y.libras = !a11y.libras;
       applyA11y();
     });
