@@ -191,7 +191,7 @@
       story: 'Validar input não é só checar se o campo está vazio: também é checar o <b>tipo de dado</b> esperado. Um campo de "idade" deve aceitar apenas números — se o sistema aceitar um texto qualquer ali sem verificar, pode gerar erros inesperados (ou brechas de segurança) mais adiante no código.',
       question: {
         prompt: 'Um formulário de cadastro tem um campo "idade" que deveria aceitar só números, mas o sistema aceita texto solto ali sem checar nada. Que tipo de validação está faltando nesse campo?',
-        options: ['Validação de tipo de dado — checar se o valor é realmente um número', 'Um algoritmo de busca em grafos', 'Uma máquina de estado', 'Um trigger de colisão'],
+        options: ['Validação de tipo de dado — checar se o valor é realmente um número', 'Um algoritmo de busca em grafos, usado pra calcular caminhos de NPCs', 'Uma máquina de estado, usada pra controlar o comportamento de inimigos', 'Um trigger de colisão, que dispara quando dois objetos se tocam'],
         correctIndex: 0,
         explanation: 'Isso! Checar se o dado enviado é do tipo esperado (número, nesse caso) também faz parte da validação de input.'
       }
@@ -218,7 +218,7 @@
       story: 'Máquinas de estado podem ter mais de três estados. Além de Patrulhando/Perseguindo/Atacando, é comum adicionar um estado <b>Fugindo</b>: quando a vida do NPC fica baixa durante um combate, ele transiciona pra esse novo estado, priorizando sobrevivência sobre o ataque.',
       question: {
         prompt: 'Durante o estado "Atacando", a vida do NPC cai abaixo de 20%, e ele transiciona automaticamente pro estado "Fugindo", parando de atacar. O que provocou essa transição de estado?',
-        options: ['Uma condição de vida baixa, definida na máquina de estado, disparou a transição pro novo estado', 'O grafo de waypoints foi apagado do jogo', 'Um trigger de colisão com uma moeda', 'A validação de input do nome do jogador falhou'],
+        options: ['Uma condição de vida baixa, definida na máquina de estado, disparou a transição pro novo estado', 'O grafo de waypoints foi apagado do jogo enquanto o NPC ainda estava atacando', 'Um trigger de colisão com uma moeda que o NPC nem tinha percebido antes', 'A validação de input do nome do jogador falhou durante o combate'],
         correctIndex: 0,
         explanation: 'Correto! Máquinas de estado reagem a condições do jogo (como vida baixa) pra decidir quando transicionar entre estados — aqui, de Atacando pra Fugindo.'
       }
@@ -227,7 +227,7 @@
       story: 'Por fim, um cuidado essencial de segurança: validar dados só no <b>cliente</b> (no computador do jogador) não é suficiente, porque um jogador mal-intencionado pode burlar essa checagem. É preciso validar novamente no <b>servidor</b>, que é quem realmente controla e confia (ou não) nos dados recebidos.',
       question: {
         prompt: 'Um jogo só valida o nome de usuário no navegador do jogador (client-side), sem checar de novo no servidor. Por que isso é uma falha de segurança?',
-        options: ['Um jogador mal-intencionado pode burlar a validação do cliente e enviar dados inválidos direto pro servidor', 'Validação no cliente já é suficiente e nunca precisa ser repetida', 'O servidor não tem capacidade de validar nenhum dado', 'Isso só seria um problema se o jogo fosse offline'],
+        options: ['Um jogador mal-intencionado pode burlar a validação do cliente e enviar dados inválidos direto pro servidor', 'Validação no cliente já é suficiente e nunca precisa ser repetida no servidor', 'O servidor não tem capacidade técnica de validar nenhum tipo de dado recebido', 'Isso só seria um problema de segurança se o jogo fosse totalmente offline'],
         correctIndex: 0,
         explanation: 'Isso! A validação no cliente pode ser burlada — por isso o servidor, que realmente controla os dados, precisa validar de novo.'
       }

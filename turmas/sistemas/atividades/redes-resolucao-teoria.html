@@ -152,9 +152,9 @@
         prompt: 'Um técnico recebe um chamado de "sem internet" e já vai direto reconfigurar IP e DNS, sem checar se o cabo está conectado. Por que começar pela camada FÍSICA (cabos, luzes da interface) costuma ser mais eficiente?',
         options: [
           'Porque é mais rápido descartar (ou confirmar) um problema físico simples antes de investigar configurações',
-          'Porque a camada física nunca dá problema',
-          'Porque a camada lógica não existe de verdade',
-          'Não importa a ordem, dá no mesmo'
+          'Porque a camada física nunca dá problema, então checar ela é só uma formalidade',
+          'Porque a camada lógica (IP, DNS) na verdade não existe de verdade em redes reais',
+          'Não importa a ordem de verificação nenhuma, o resultado final é sempre o mesmo'
         ],
         correctIndex: 0,
         explanation: 'Isso! Checar o básico físico primeiro evita perder tempo mexendo em configurações quando o problema é, por exemplo, um cabo solto.'
@@ -166,9 +166,9 @@
         prompt: 'Durante um chamado de "PC sem rede", você olha a placa de rede e percebe que a luz de "link" está apagada. O que isso geralmente indica?',
         options: [
           'Um problema físico — cabo desconectado, rompido ou porta com defeito',
-          'Um conflito de IP',
-          'Uma máscara de sub-rede errada',
-          'Um problema de DNS'
+          'Um conflito de IP entre dois dispositivos diferentes na mesma rede',
+          'Uma máscara de sub-rede configurada de forma errada no computador',
+          'Um problema no servidor de DNS usado pela rede'
         ],
         correctIndex: 0,
         explanation: 'Correto! A luz de link apagada é um forte sinal de que não existe conexão física estabelecida — comece por aí.'
@@ -231,9 +231,9 @@
         prompt: 'Qual é a forma mais confiável de confirmar se um problema é realmente do cabo?',
         options: [
           'Testar com outro cabo/porta conhecidos como bons, e comparar o resultado',
-          'Reiniciar o computador várias vezes',
-          'Trocar o sistema operacional',
-          'Ignorar e esperar resolver sozinho'
+          'Reiniciar o computador várias vezes seguidas até a rede voltar a funcionar',
+          'Trocar o sistema operacional inteiro do computador afetado pelo problema',
+          'Ignorar o chamado e esperar o problema se resolver sozinho com o tempo'
         ],
         correctIndex: 0,
         explanation: 'Isso mesmo! Isolar a variável suspeita (trocando só o cabo, mantendo tudo o resto igual) é o jeito mais confiável de confirmar a causa.'

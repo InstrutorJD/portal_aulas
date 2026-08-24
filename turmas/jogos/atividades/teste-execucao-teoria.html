@@ -232,9 +232,9 @@
         prompt: 'Um testador da PixelForge está rodando testes de uma nova funcionalidade usando o mesmo banco de dados e as mesmas contas dos jogadores reais do jogo. Qual é o problema nessa prática?',
         options: [
           'O ambiente de teste deveria ser separado da produção, com dados próprios — testar em cima de dados reais arrisca corromper o progresso de jogadores de verdade',
-          'Não tem problema nenhum, faz parte do processo normal de testes',
-          'O problema é só de desempenho, nada relacionado a segurança dos dados',
-          'Isso só seria um problema durante a fase Alfa'
+          'Não tem problema nenhum nisso, faz parte do processo normal de qualquer time de testes',
+          'O problema é só de desempenho do banco, nada relacionado à segurança dos dados dos jogadores',
+          'Isso só seria um problema real durante a fase Alfa do jogo, nunca depois do lançamento'
         ],
         correctIndex: 0,
         explanation: 'Exato! Ambiente de teste e ambiente de produção precisam ficar separados — testar em cima de dados reais de jogadores é um risco desnecessário.'
@@ -246,9 +246,9 @@
         prompt: 'Dois testadores da PixelForge testaram o mesmo caso, mas cada um seguiu uma ordem de passos diferente e chegou a resultados diferentes. O que está faltando nesse processo de teste?',
         options: [
           'Um roteiro de execução reproduzível, com passos claros e na mesma ordem pra qualquer pessoa do time',
-          'Uma versão Gold do jogo, isso resolveria o problema',
-          'Mais testadores fazendo o mesmo teste ao mesmo tempo',
-          'Trocar o framework de teste usado pela equipe'
+          'Uma versão Gold do jogo — isso sozinho já resolveria essa diferença de resultado entre os dois',
+          'Mais testadores fazendo o mesmo teste ao mesmo tempo, sem nenhum roteiro combinado antes',
+          'Trocar o framework de teste usado pela equipe por um mais moderno e conhecido do mercado'
         ],
         correctIndex: 0,
         explanation: 'Isso! Sem um roteiro reproduzível, cada pessoa testa "do seu jeito" — e resultados diferentes pro mesmo caso põem em dúvida qual teste está certo.'

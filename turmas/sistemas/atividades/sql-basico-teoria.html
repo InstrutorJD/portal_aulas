@@ -168,9 +168,9 @@
         prompt: 'Numa tabela "produtos" com colunas nome, preco e estoque, o que representa a linha "Caneta, 2.50, 100"?',
         options: [
           'O registro completo de um produto: a caneta, com preço 2.50 e estoque 100',
-          'O nome da tabela',
-          'Uma coluna nova chamada "Caneta"',
-          'O banco de dados inteiro'
+          'O nome oficial da tabela inteira de produtos do sistema',
+          'Uma coluna nova chamada "Caneta" adicionada à tabela produtos',
+          'O banco de dados inteiro, com todas as suas tabelas juntas'
         ],
         correctIndex: 0,
         explanation: 'Exato! Cada linha é um registro — nesse caso, um produto específico com o valor de cada coluna preenchido.'
@@ -307,9 +307,9 @@
         prompt: 'Numa consulta com <code>JOIN clientes ON pedidos.cliente_id = clientes.id</code>, o que essa condição está comparando?',
         options: [
           'A chave estrangeira de uma tabela (cliente_id) com a chave primária da outra (id)',
-          'O nome das duas tabelas',
-          'A quantidade de linhas de cada tabela',
-          'O tipo de dado das colunas'
+          'O nome das duas tabelas envolvidas na consulta',
+          'A quantidade de linhas de cada uma das tabelas',
+          'O tipo de dado usado em cada uma das colunas'
         ],
         correctIndex: 0,
         explanation: 'Exato! O ON conecta as tabelas pela coluna que faz o relacionamento entre elas — geralmente uma chave estrangeira apontando pra uma chave primária.'

@@ -11,6 +11,14 @@ As dicas dos exercícios (`turmas/*/atividades/*.html`, campo `hint` de cada ite
 - Prefira perguntas norteadoras ou pistas ("qual operador faz X?", "existe uma função pronta pra isso no objeto Y") que exigem o aluno pensar/escrever a solução.
 - O campo separado de solução/verificação (ex.: `solutionSql`, testes em `tests`) já guarda a resposta para validação — não duplique isso no `hint`.
 
+### Perguntas de múltipla escolha (quiz de teoria)
+Os quizzes das aulas teóricas (`turmas/*/atividades/*-teoria.html` e `csharp-basico.html`, campo `question` de cada item em `STEPS`) seguem o formato `{ prompt, options: [...], correctIndex, explanation }`, com a resposta certa sempre escrita **primeiro** no array `options` (`correctIndex: 0`) — a função que desenha o quiz (dentro do próprio arquivo de atividade, procure por "Embaralha a ordem de exibição") já sorteia a ordem das letras A/B/C/D a cada carregamento, então a posição no array não vaza a posição na tela. Copiando esse bloco pra uma atividade nova, o embaralhamento vem junto automaticamente. O que ainda pode vazar a resposta, e precisa de cuidado manual ao escrever cada pergunta:
+
+- **Comprimento da opção**: não escreva a resposta certa como a frase mais longa/detalhada e as erradas como frases curtas e genéricas — alunos aprenderam a "ler o tamanho" em vez de saber o conteúdo. As 4 opções devem ficar com comprimento parecido; se a certa precisa de mais contexto pra ficar correta, estenda as erradas com detalhe extra plausível (mas ainda claramente errado) até ficarem comparáveis, em vez de deixá-las curtas demais.
+- **Palavras da história**: a `story` (o texto que aparece antes da pergunta) não deve entregar a resposta literalmente — o aluno precisa aplicar o conceito a um cenário novo, não repetir uma frase que acabou de ler na tela.
+- **Distratores plausíveis**: as opções erradas devem soar como erros de raciocínio reais dentro do mesmo domínio da pergunta (não respostas absurdas óbvias tipo "isso é impossível" ou "não existe diferença nenhuma" sem nenhum contexto) — senão dá pra acertar por eliminação, sem saber o conteúdo.
+- Depois de escrever/editar perguntas, rode `node scripts/check-quiz-answer-length-bias.mjs` (só leitura) — ele lista, ordenado por gravidade, todo caso onde a resposta certa ainda é a opção mais comprida das 4. Zero linhas no relatório é o alvo, mas nem sempre dá pra eliminar 100%: o objetivo prático é manter a diferença de tamanho pequena (poucos caracteres), não necessariamente zerada.
+
 ### Hierarquia Matéria → Trilha → Módulo
 "Aulas & Atividades" tem 3 níveis: **matéria** (o currículo real da turma — Jogos Digitais tem 6, Sistemas tem 9) → **trilha** (uma capacidade dentro da matéria) → **módulo** (teoria/prática dentro da trilha). Só dentro de uma matéria as trilhas aparecem.
 

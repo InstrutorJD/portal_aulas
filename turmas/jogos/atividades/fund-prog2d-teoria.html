@@ -148,9 +148,9 @@
         prompt: 'Um personagem se move UMA vez quando a tecla é pressionada, mas não continua andando enquanto o jogador segura a tecla. O que a lógica de movimentação provavelmente está tratando errado?',
         options: [
           'Ela só reage ao evento único de "tecla pressionada", em vez de checar o ESTADO da tecla a cada frame do game loop',
-          'O teclado do jogador está com defeito',
-          'O personagem está sem sprite',
-          'Isso é esperado, teclado só deveria mover uma vez mesmo'
+          'O teclado do jogador está com defeito e só consegue registrar o primeiro toque de cada tecla',
+          'O personagem está sem um sprite de caminhada configurado, então a engine ignora o movimento',
+          'Isso é esperado — por padrão, todo personagem só deveria se mover uma vez a cada tecla pressionada'
         ],
         correctIndex: 0,
         explanation: 'Isso! Pra movimento contínuo, o jogo precisa checar "essa tecla está pressionada agora?" a cada frame, não só reagir ao evento único de tecla pressionada.'
@@ -176,9 +176,9 @@
         prompt: 'Dois sprites parecem se tocar na tela, mas o jogo não detecta nenhuma colisão entre eles. Qual é a explicação mais provável?',
         options: [
           'Os elementos não têm colisores configurados corretamente (ou os colisores não estão realmente se sobrepondo)',
-          'O jogo está rodando rápido demais',
-          'A cor dos sprites está errada',
-          'Colisão não pode ser detectada em jogos 2D'
+          'O jogo está rodando rápido demais, e o motor gráfico pula frames de detecção pra manter o desempenho',
+          'A cor dos sprites está errada, o que impede o motor de reconhecer os dois elementos como distintos',
+          'Colisão nunca pode ser detectada em jogos 2D, só funciona em jogos com física tridimensional'
         ],
         correctIndex: 0,
         explanation: 'Isso! Sem um colisor bem configurado (e de fato sobreposto), o motor do jogo não tem como saber que os dois elementos "se tocaram" — a aparência visual sozinha não conta.'
@@ -190,9 +190,9 @@
         prompt: 'Um inimigo deveria começar a perseguir o jogador assim que ele entra num raio de detecção, mas o inimigo nunca reage. Que peça do fluxo de eventos provavelmente está faltando?',
         options: [
           'Um evento de colisão/detecção (jogador entrou na área) que dispara a mudança de comportamento do inimigo',
-          'Uma nova textura para o inimigo',
-          'Mais luzes na cena',
-          'Um botão de pausa'
+          'Uma nova textura para o inimigo, pra ele ficar visualmente mais ameaçador durante o combate',
+          'Mais luzes na cena, pra deixar a área de detecção mais visível pro jogador enxergar',
+          'Um botão de pausa que interrompe temporariamente a lógica de todos os inimigos da fase'
         ],
         correctIndex: 0,
         explanation: 'Correto! Sem o evento de detecção disparando a mudança de estado do inimigo, ele nunca "sabe" que o jogador chegou perto.'
@@ -218,9 +218,9 @@
         prompt: 'Um jogo cria dezenas de projéteis por segundo e, depois de um tempo jogando, começa a travar bastante. Qual etapa do ciclo de vida dos objetos provavelmente está sendo ignorada?',
         options: [
           'A remoção dos projéteis que já saíram da tela ou já atingiram o alvo',
-          'A criação dos projéteis',
-          'A cor dos projéteis',
-          'O som do disparo'
+          'A criação dos projéteis, que deveria acontecer só uma vez por partida',
+          'A cor dos projéteis, que deveria mudar a cada disparo novo',
+          'O som do disparo, que deveria tocar só na primeira vez'
         ],
         correctIndex: 0,
         explanation: 'Exato! Sem remover objetos que não são mais necessários, eles continuam ocupando processamento e memória — um vazamento clássico de performance.'
@@ -232,9 +232,9 @@
         prompt: 'Um inimigo foi derrotado e sumiu visualmente da tela, mas o jogo continua checando colisão com ele "fantasma", travando o jogador em paredes invisíveis. O que provavelmente não foi feito?',
         options: [
           'O inimigo não foi removido da lista/array de objetos ativos do jogo, só ficou invisível',
-          'A lista de objetos nunca deveria existir',
-          'O jogador está com bug de movimento',
-          'O problema é sempre da placa de vídeo'
+          'A lista de objetos ativos nunca deveria existir — cada inimigo deveria ser checado sozinho',
+          'O jogador está com um bug de movimento que o empurra pra dentro de paredes normais',
+          'O problema é sempre da placa de vídeo, nunca tem relação com a lógica de colisão do jogo'
         ],
         correctIndex: 0,
         explanation: 'Isso mesmo! Esconder visualmente não basta — é preciso de fato remover o objeto da estrutura de controle (lista/array) pra ele parar de participar da lógica do jogo.'
@@ -246,9 +246,9 @@
         prompt: 'Um inimigo recebe dano e o valor interno de vida diminui corretamente no código, mas a barra de vida na tela nunca muda visualmente. O que provavelmente falta?',
         options: [
           'Atualizar a representação visual (a barra de vida) a cada frame, lendo o valor de vida atual do objeto',
-          'Aumentar o dano causado ao inimigo',
-          'Trocar o sprite do inimigo',
-          'Remover o inimigo da cena'
+          'Aumentar o dano causado ao inimigo, pra vida cair mais rápido e o problema ficar menos perceptível',
+          'Trocar o sprite do inimigo por um modelo mais detalhado, sem relação com a barra de vida',
+          'Remover o inimigo da cena assim que a vida chega a zero, sem nenhuma atualização durante o combate'
         ],
         correctIndex: 0,
         explanation: 'Isso! O dado interno (vida) pode estar certo, mas se a atualização visual não roda a cada frame lendo esse valor, a tela nunca reflete a mudança.'
@@ -260,9 +260,9 @@
         prompt: 'Um jogo cria e destrói centenas de projéteis por segundo durante tiroteios intensos, e a taxa de quadros despenca nesses momentos. Qual técnica ajudaria a resolver esse problema de desempenho?',
         options: [
           'Object pooling: reaproveitar um conjunto de projéteis já criados, em vez de criar/destruir a cada disparo',
-          'Aumentar o dano de cada projétil',
-          'Reduzir a cor dos projéteis para preto e branco',
-          'Remover o som dos disparos'
+          'Aumentar o dano de cada projétil, pra precisar disparar menos vezes durante o combate',
+          'Reduzir a cor dos projéteis para preto e branco, economizando processamento de renderização',
+          'Remover o som dos disparos, já que áudio é o que mais pesa no desempenho de um tiroteio'
         ],
         correctIndex: 0,
         explanation: 'Exato! Reaproveitar objetos existentes (object pooling) evita o custo repetido de criar e destruir instâncias, aliviando bastante o desempenho em momentos intensos.'
@@ -274,9 +274,9 @@
         prompt: 'Um jogo usa teclado (WASD) pra mover o personagem e mouse pra mirar ao mesmo tempo, mas só a mira do mouse funciona — o personagem não anda mais com o teclado. O que a lógica do game loop provavelmente está fazendo de errado?',
         options: [
           'Está processando só uma fonte de entrada por frame (mouse), em vez de checar teclado E mouse a cada volta do loop',
-          'O mouse está com defeito',
-          'É impossível usar teclado e mouse juntos num jogo',
-          'O teclado precisa ser trocado por um controle'
+          'O mouse está com defeito e está enviando sinais constantes que travam a leitura do teclado',
+          'É impossível usar teclado e mouse ao mesmo tempo — todo motor só lê uma entrada por frame',
+          'O teclado do jogador precisa ser trocado por um controle, já que teclados não combinam com mira'
         ],
         correctIndex: 0,
         explanation: 'Correto! O game loop precisa checar todas as entradas relevantes (teclado E mouse) a cada frame — se só uma for processada, a outra "trava".'

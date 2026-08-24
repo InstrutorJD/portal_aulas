@@ -148,9 +148,9 @@
         prompt: 'Por que um jogo precisa repetir constantemente o mesmo ciclo (ler entrada → atualizar → desenhar), em vez de rodar essa lógica só uma vez?',
         options: [
           'Porque o jogo precisa reagir em tempo real ao jogador e atualizar a tela continuamente enquanto está em execução',
-          'Porque rodar uma vez só deixaria o jogo mais rápido',
-          'Porque isso é uma limitação antiga que os jogos modernos não usam mais',
-          'Porque só assim o computador liga a placa de vídeo'
+          'Porque rodar uma vez só deixaria o jogo mais rápido e mais leve pra qualquer computador',
+          'Porque isso é uma limitação antiga de hardware que os jogos modernos já não usam mais',
+          'Porque só repetindo o ciclo o computador consegue ligar a placa de vídeo corretamente'
         ],
         correctIndex: 0,
         explanation: 'Isso! O game loop é o coração do jogo: sem repetir esse ciclo continuamente, nada reagiria ao jogador nem se moveria na tela.'
@@ -176,9 +176,9 @@
         prompt: 'Qual é a principal vantagem de representar o cenário de um jogo como uma matriz de tiles, em vez de posicionar cada peça manualmente pixel a pixel?',
         options: [
           'Fica muito mais fácil editar, reaproveitar e gerar níveis de forma organizada, já que cada posição da grade só guarda um número/código do tile',
-          'A matriz deixa o jogo automaticamente mais bonito',
-          'Não existe nenhuma vantagem, é só uma forma alternativa sem diferença prática',
-          'Matrizes só servem para cálculos matemáticos, nunca para jogos'
+          'A matriz deixa o jogo automaticamente mais bonito, com gráficos mais detalhados na tela',
+          'Não existe nenhuma vantagem real — é só uma forma alternativa, sem diferença prática nenhuma',
+          'Matrizes só servem para cálculos matemáticos de física, nunca pra representar cenário de jogo'
         ],
         correctIndex: 0,
         explanation: 'Isso! Guardar o cenário como uma matriz de tiles simplifica muito a edição e a reutilização de peças — em vez de posicionar cada pixel na mão.'
@@ -246,9 +246,9 @@
         prompt: 'Dois personagens estão visualmente se sobrepondo na tela, mas o jogo não registra nenhuma colisão entre eles. O que provavelmente está faltando?',
         options: [
           'Um colisor associado aos personagens e a lógica de detecção de colisão (como AABB) comparando suas bordas',
-          'Aumentar o brilho dos sprites',
-          'Diminuir a resolução da tela',
-          'Trocar a cor de fundo do cenário'
+          'Aumentar o brilho dos sprites, pra ficar mais fácil enxergar quando eles se encostam',
+          'Diminuir a resolução da tela, pra reduzir a distância entre os dois personagens',
+          'Trocar a cor de fundo do cenário, pra destacar melhor os personagens sobrepostos'
         ],
         correctIndex: 0,
         explanation: 'Correto! Sem um colisor e uma lógica de detecção (como comparar as bordas dos retângulos na AABB), o jogo não tem como "saber" que dois elementos se tocaram.'
@@ -274,9 +274,9 @@
         prompt: 'Um personagem começa a acelerar cada vez mais rápido, sem nenhum limite, até sair da tela descontroladamente. O que provavelmente está errado na lógica?',
         options: [
           'A velocidade está sendo acumulada sem limite (ou aplicada à própria velocidade, em vez de à posição), faltando um teto máximo',
-          'O personagem está com a cor errada',
-          'Faltou aumentar a resolução da tela',
-          'O eixo Y foi invertido'
+          'O personagem está com a cor errada, o que confunde a física do motor do jogo',
+          'Faltou aumentar a resolução da tela pra o motor calcular a posição corretamente',
+          'O eixo Y foi invertido, fazendo o personagem acelerar pra cima em vez de pra frente'
         ],
         correctIndex: 0,
         explanation: 'Exato! Velocidade sem um limite máximo (ou aplicada incorretamente) faz o personagem acelerar indefinidamente — é preciso somar a velocidade à posição a cada frame, e limitar a própria velocidade.'

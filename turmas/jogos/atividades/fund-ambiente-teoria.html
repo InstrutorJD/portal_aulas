@@ -162,9 +162,9 @@
         prompt: 'Um colega abre o terminal, digita o comando da engine e recebe "comando não reconhecido". Qual é a causa mais provável?',
         options: [
           'O ambiente de desenvolvimento não foi instalado/configurado corretamente (falta o SDK ou variável de ambiente)',
-          'O computador dele está com o teclado com defeito',
-          'Ele digitou o comando rápido demais',
-          'Isso é normal e não indica nenhum problema'
+          'O computador dele está com o teclado com defeito, então algumas letras não são digitadas',
+          'Ele digitou o comando rápido demais e o terminal não teve tempo de processar o texto',
+          'Isso é normal e não indica nenhum problema — todo terminal recusa o primeiro comando digitado'
         ],
         correctIndex: 0,
         explanation: 'Exato! "Comando não reconhecido" costuma significar que a ferramenta não está instalada ou que o sistema não sabe onde encontrá-la (variável de ambiente/PATH mal configurada).'
@@ -176,9 +176,9 @@
         prompt: 'Por que a maioria dos estúdios de jogos usa uma engine em vez de programar renderização, física e áudio do zero pra cada jogo novo?',
         options: [
           'Porque a engine já resolve essas partes complexas, deixando o time focado na lógica e no design do próprio jogo',
-          'Porque é proibido programar esses sistemas por conta própria',
-          'Porque engines são sempre gratuitas e sem código nenhum',
-          'Porque isso deixa o jogo mais lento de propósito'
+          'Porque é proibido por lei programar esses sistemas de física e renderização por conta própria',
+          'Porque toda engine é sempre gratuita e não usa nenhuma linha de código pra funcionar',
+          'Porque usar uma engine pronta deixa o jogo rodar mais lento de propósito'
         ],
         correctIndex: 0,
         explanation: 'Isso! Engines poupam um trabalho enorme de infraestrutura (renderização, física, áudio) que já vem pronta e testada — o time foca no que faz o jogo ser único.'
@@ -190,9 +190,9 @@
         prompt: 'Você escreveu um código com um erro de sintaxe, mas o editor de texto não avisou nada — só quando tentou RODAR o jogo é que apareceu uma mensagem de erro. Por que isso acontece?',
         options: [
           'Porque quem verifica se o código realmente funciona é o compilador/interpretador, não o editor de texto sozinho',
-          'Porque o editor de código está quebrado',
-          'Porque erros de sintaxe não existem em jogos',
-          'Porque o computador precisa ser reiniciado sempre'
+          'Porque o editor de código está quebrado e precisa ser reinstalado do zero',
+          'Porque erros de sintaxe simplesmente não existem em projetos de jogos',
+          'Porque o computador precisa ser reiniciado sempre antes de rodar qualquer jogo'
         ],
         correctIndex: 0,
         explanation: 'Correto! O editor ajuda a escrever, mas é o compilador/interpretador que efetivamente processa o código e revela se ele está correto ao ser executado.'

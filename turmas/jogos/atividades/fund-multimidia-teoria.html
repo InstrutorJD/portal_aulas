@@ -204,9 +204,9 @@
         prompt: 'Dois colegas editaram a mesma linha do mesmo arquivo de código, cada um no seu computador, e agora o Git avisa sobre um "conflito de merge" ao tentar juntar as mudanças. O que isso significa?',
         options: [
           'É preciso decidir manualmente qual das duas mudanças (ou uma combinação delas) deve ficar, antes de continuar',
-          'O projeto foi corrompido e precisa ser recriado do zero',
-          'Um dos dois computadores está com vírus',
-          'O Git resolve esse tipo de conflito sozinho, sem intervenção humana'
+          'O projeto foi corrompido de forma irreversível e precisa ser recriado do zero',
+          'Um dos dois computadores envolvidos na edição está com vírus',
+          'O Git sempre resolve esse tipo de conflito sozinho, sem precisar de intervenção humana'
         ],
         correctIndex: 0,
         explanation: 'Isso! Um conflito de merge exige decisão humana — o Git avisa quando duas mudanças colidem, mas não escolhe sozinho qual delas deve prevalecer.'
@@ -246,9 +246,9 @@
         prompt: 'Dois desenvolvedores editam código direto na branch principal (main) ao mesmo tempo, e um recurso ainda incompleto quebra o jogo pra todo mundo do time. O que uma estratégia de branches teria evitado?',
         options: [
           'Desenvolver o recurso novo numa branch separada, só unindo (merge) à main quando estivesse pronto e testado',
-          'Trabalhar sempre sozinho, sem nunca usar Git em equipe',
-          'Apagar o código de um dos dois desenvolvedores',
-          'Branches não têm relação nenhuma com esse tipo de problema'
+          'Trabalhar sempre sozinho, sem nunca usar Git em equipe pra evitar esse tipo de conflito',
+          'Apagar o código de um dos dois desenvolvedores pra ficar só uma versão na main',
+          'Branches não têm relação nenhuma com esse tipo de problema de código incompleto'
         ],
         correctIndex: 0,
         explanation: 'Correto! Isolar trabalho em progresso numa branch separada protege a main de ficar quebrada por código ainda incompleto.'
@@ -260,9 +260,9 @@
         prompt: 'O repositório de um projeto ficou enorme e lento porque a pasta inteira de "build" (gerada automaticamente a cada compilação) está sendo versionada junto com o código-fonte. Qual prática evitaria isso?',
         options: [
           'Listar a pasta de build num arquivo .gitignore, pra o Git nunca versionar esse conteúdo gerado',
-          'Apagar o Git do projeto por completo',
-          'Compactar a pasta de build antes de cada commit',
-          'Isso é normal e não há como evitar'
+          'Apagar o Git do projeto por completo e parar de usar controle de versão',
+          'Compactar a pasta de build num arquivo zip antes de cada commit novo',
+          'Isso é normal em qualquer projeto e não há nenhuma forma de evitar'
         ],
         correctIndex: 0,
         explanation: 'Isso! O .gitignore existe exatamente pra manter arquivos gerados/temporários fora do controle de versão, mantendo o repositório limpo e leve.'
