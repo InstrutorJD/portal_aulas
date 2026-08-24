@@ -92,6 +92,45 @@ test.describe('Chamada — dentro do portal da turma', () => {
     await expect(row).toContainText('1'); // faltas
     await expect(row).toContainText('75%'); // 3 presenças de 4 dias
   });
+
+  test('PDF do mês abre uma aba com a tabela aluno×dia do mês selecionado e aciona a impressão', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      attendance: [
+        { turma: 'jogos', data: '2026-03-02', student_email: 'breno.silva80', presente: true },
+        { turma: 'jogos', data: '2026-03-03', student_email: 'breno.silva80', presente: false },
+        // Fora do mês selecionado — não pode aparecer na tabela nem entrar no % do mês.
+        { turma: 'jogos', data: '2026-04-01', student_email: 'breno.silva80', presente: false },
+      ],
+    });
+    await expandGestaoSection(page, 'Relatórios');
+
+    await page.fill('#presencaPdfMes', '2026-03');
+
+    // Registra o stub de window.print() no contexto ANTES de abrir a aba —
+    // roda na carga inicial (about:blank) da aba nova e sobrevive ao
+    // document.write() que monta a tabela em seguida (mesmo objeto window).
+    await page.context().addInitScript(() => { window.print = () => { window.__printed = true; }; });
+
+    const [popup] = await Promise.all([
+      page.waitForEvent('popup'),
+      page.click('#btnGerarPdfPresenca'),
+    ]);
+
+    // window.open() abre a aba em branco antes da consulta ao Supabase
+    // terminar — o document.write() com a tabela só chega depois, então
+    // espera o <h1> aparecer em vez de "carregou" (que já vale pro blank).
+    await expect(popup.locator('h1')).toContainText('março de 2026');
+    await expect(popup.locator('table thead th')).toHaveCount(31 + 2); // Aluno + 31 dias de março + % Presença
+
+    const row = popup.locator('table tbody tr', { hasText: 'Breno Silva' });
+    await expect(row.locator('td.presente')).toHaveText('P');
+    await expect(row.locator('td.falta')).toHaveText('F');
+    await expect(row.locator('td.pct')).toHaveText('50%'); // 1 presença de 2 dias com chamada em março
+
+    // print() só é chamado depois de um pequeno delay (deixa o layout
+    // assentar antes de abrir o diálogo de impressão).
+    await expect.poll(() => popup.evaluate(() => window.__printed)).toBe(true);
+  });
 });
 
 test.describe('Notas — dentro do portal da turma', () => {

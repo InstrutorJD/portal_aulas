@@ -361,6 +361,13 @@
               </div>
               <div class="collapsible-body">
                 <h3 class="gestao-subhead">Relatório de Presença</h3>
+                <div style="display:flex; align-items:flex-end; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+                  <div>
+                    <label class="field-label" for="presencaPdfMes">Mês (para o PDF)</label>
+                    <input type="month" id="presencaPdfMes">
+                  </div>
+                  <button class="btn btn-secondary" id="btnGerarPdfPresenca">🖨️ Gerar PDF do Mês</button>
+                </div>
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
                   <tbody id="presencaBody"></tbody>
@@ -1355,6 +1362,9 @@
   }
 
   async function renderRelatorioPresenca() {
+    const mesInput = document.getElementById('presencaPdfMes');
+    if (mesInput && !mesInput.value) mesInput.value = new Date().toISOString().slice(0, 7);
+
     const tbody = document.getElementById('presencaBody');
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(4); return; }
 
@@ -1374,6 +1384,96 @@
       const pct = s.dias > 0 ? Math.round(((s.dias - s.faltas) / s.dias) * 100) : null;
       return `<tr><td>${u.nome}</td><td>${s.dias}</td><td>${s.faltas}</td><td>${pct === null ? '—' : pct + '%'}</td></tr>`;
     }).join('');
+  }
+
+  const MESES_PT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+  // 'YYYY-MM' -> primeiro/último dia do mês, já formatados 'YYYY-MM-DD'
+  // (pro filtro de attendance) e o número de dias do mês (pras colunas da
+  // tabela) — considera ano bissexto de graça via new Date(ano, mes, 0).
+  function monthBounds(mesStr) {
+    const [ano, mes] = mesStr.split('-').map(Number);
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    return { ano, mes, ultimoDia };
+  }
+
+  // Abre uma aba só com a tabela aluno×dia do mês (reaproveita a mesma
+  // consulta de attendance filtrada por turma — sem filtro de data no
+  // Supabase, igual renderRelatorioPresenca, filtra o mês em JS) e aciona a
+  // impressão do navegador — sem depender de nenhuma lib de PDF, o
+  // professor escolhe "Salvar como PDF" no diálogo de impressão.
+  async function gerarPdfChamadaMes() {
+    if (!sbClient) return;
+    // Abre a aba já aqui, síncrono dentro do handler de clique — se
+    // window.open() só rodar depois do await na consulta abaixo, o
+    // navegador não associa mais a abertura ao gesto do usuário e bloqueia
+    // o popup silenciosamente.
+    const printWin = window.open('', '_blank');
+    const mesInput = document.getElementById('presencaPdfMes');
+    if (!mesInput.value) mesInput.value = new Date().toISOString().slice(0, 7);
+    const { ano, mes, ultimoDia } = monthBounds(mesInput.value);
+    const mesPrefix = mesInput.value; // 'YYYY-MM' — 'data' é sempre 'YYYY-MM-DD'
+
+    const students = turmaStudents();
+    const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', cfg.id);
+
+    const byStudent = {};
+    (rows || []).filter(r => r.data && r.data.startsWith(mesPrefix)).forEach(r => {
+      byStudent[r.student_email] = byStudent[r.student_email] || {};
+      byStudent[r.student_email][r.data] = r.presente;
+    });
+
+    const pad = n => String(n).padStart(2, '0');
+    const dias = Array.from({ length: ultimoDia }, (_, i) => i + 1);
+
+    const linhas = students.map(u => {
+      const registros = byStudent[u.email] || {};
+      let diasComChamada = 0, faltas = 0;
+      const celulas = dias.map(d => {
+        const dataStr = `${ano}-${pad(mes)}-${pad(d)}`;
+        if (!(dataStr in registros)) return '<td>–</td>';
+        diasComChamada++;
+        const presente = registros[dataStr];
+        if (!presente) faltas++;
+        return `<td class="${presente ? 'presente' : 'falta'}">${presente ? 'P' : 'F'}</td>`;
+      }).join('');
+      const pct = diasComChamada > 0 ? Math.round(((diasComChamada - faltas) / diasComChamada) * 100) : null;
+      return `<tr><td class="aluno">${u.nome}</td>${celulas}<td class="pct">${pct === null ? '—' : pct + '%'}</td></tr>`;
+    }).join('');
+
+    const cabecalhoDias = dias.map(d => `<th>${d}</th>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Chamada — ${MESES_PT[mes - 1]} de ${ano}</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p.sub { font-size: 11px; color: #555; margin: 0 0 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 9px; }
+  th, td { border: 1px solid #999; padding: 2px 3px; text-align: center; }
+  th.aluno, td.aluno { text-align: left; white-space: nowrap; }
+  td.presente { color: #1a7a1a; }
+  td.falta { color: #b3261e; font-weight: bold; }
+  td.pct { font-weight: bold; }
+  p.legenda { margin-top: 10px; font-size: 10px; color: #555; }
+</style></head>
+<body>
+  <h1>Chamada — ${cfg.label} — ${MESES_PT[mes - 1]} de ${ano}</h1>
+  <p class="sub">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+  <table>
+    <thead><tr><th class="aluno">Aluno</th>${cabecalhoDias}<th>% Presença</th></tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>
+  <p class="legenda">P = presente · F = falta · – = sem chamada registrada nesse dia</p>
+</body></html>`;
+
+    if (!printWin) return;
+    printWin.document.write(html);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 250);
   }
 
   function calcMedia(n1, n2, n3, n4) {
@@ -2086,6 +2186,7 @@
         statusEl.textContent = 'Não foi possível copiar automaticamente — selecione e copie manualmente.';
       }
     });
+    document.getElementById('btnGerarPdfPresenca').addEventListener('click', gerarPdfChamadaMes);
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarTrilhaDatas').addEventListener('click', salvarTrilhaDatas);
