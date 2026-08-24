@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Inteligência Emocional e Relacionamentos: Teoria</title>
+<title>PixelForge Studios — Inovação e Resolução de Problemas: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -35,15 +35,15 @@
   .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
   .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
 
-  .uma-row{ display:flex; align-items:flex-start; gap:12px; }
-  .uma-avatar{
+  .bit-row{ display:flex; align-items:flex-start; gap:12px; }
+  .bit-avatar{
     font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(94,200,255,0.5));
   }
   .speech-bubble{
     background:var(--panel); border:1px solid var(--blue-dim); padding:16px 18px;
     font-size:14px; line-height:1.7; position:relative;
   }
-  .speech-bubble .uma-name{
+  .speech-bubble .bit-name{
     display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--blue);
     letter-spacing:1px; margin-bottom:6px;
   }
@@ -107,7 +107,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_emocional_teoria';
+  window.ACTIVITY_LOCATION = 'mundo_inovacao_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -123,7 +123,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — INTELIGÊNCIA EMOCIONAL (TEORIA)</div>
+    <div>JOGOS — INOVAÇÃO E RESOLUÇÃO DE PROBLEMAS (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
       <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></span>
@@ -139,97 +139,167 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_emocional_teoria_progress_${username}`;
+  const PROGRESS_KEY = `mundo_inovacao_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Oi! Eu sou a <b>Uma</b>, a coruja mentora da PixelForge Studios. Vamos falar de <b>inteligência emocional</b>, começando pelo <b>autocontrole</b>: a capacidade de perceber uma emoção forte (frustração, raiva, ansiedade) e escolher como reagir, em vez de simplesmente explodir no impulso. Não é "não sentir" a emoção — é sentir e ainda assim escolher uma resposta equilibrada.',
+      story: 'Oi, de novo! Eu sou o <b>Bit</b>, assistente de indústria 4.0 da PixelForge Studios. Vamos falar de <b>inovação</b>: inovar não é só "fazer diferente" — é criar ou melhorar algo de um jeito que gere <b>valor real</b>, resolvendo um problema de verdade. Trocar de ferramenta só porque ela é "mais nova", sem resolver problema nenhum, não é inovação — é só mudança por mudança. E toda decisão de inovar passa por <b>pensamento crítico</b>: questionar suposições e avaliar evidências antes de aceitar uma ideia como boa.',
       question: {
-        prompt: 'Um dev perde horas de trabalho porque esqueceu de salvar um arquivo. Ele sente uma raiva forte, respira, espera alguns minutos e só depois volta a mexer no código, evitando digitar algo por impulso. Isso é um exemplo de quê?',
+        prompt: 'A equipe de um estúdio troca o motor gráfico do jogo só porque "é mais novo e todo mundo tá usando", sem que isso resolva nenhum problema real do projeto. Isso é um exemplo de inovação de verdade?',
         options: [
-          'Autocontrole — perceber a emoção forte e escolher uma resposta equilibrada, em vez de agir por impulso',
-          'Falta de emoção — ele simplesmente não sentiu nenhuma raiva nesse exato momento do erro',
-          'Networking, já que ele estava pensando em pedir ajuda pra outras pessoas do time depois',
-          'Nenhuma habilidade emocional envolvida ali, foi só uma reação totalmente aleatória dele'
+          'Não — mudar algo sem resolver um problema real ou gerar valor não é inovação, é só mudança por mudança',
+          'Sim — qualquer mudança de ferramenta já conta como inovação, mesmo sem resolver nenhum problema real ali',
+          'Sim, porque ferramentas mais novas são sempre melhores que as antigas, independente do contexto atual',
+          'Não dá pra saber se é inovação sem antes perguntar diretamente pro cliente o que ele prefere usar'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Sentir a raiva e mesmo assim escolher esperar antes de agir, em vez de reagir por impulso, é exatamente autocontrole.'
+        explanation: 'Isso! Inovação exige gerar valor real resolvendo um problema — trocar de ferramenta sem motivo é só mudança, não inovação.'
       }
     },
     {
-      story: 'Já a <b>adaptabilidade</b> (ou flexibilidade emocional) é a capacidade de se ajustar bem diante de mudanças inesperadas, sem travar emocionalmente. Planos mudam o tempo todo — quem tem adaptabilidade consegue reorganizar as próprias expectativas rápido, em vez de ficar preso à frustração de "não era assim que eu tinha planejado".',
+      story: '<b>Melhoria contínua</b> é inovação em pequenas doses, aplicada aos <b>processos de trabalho</b>: em vez de esperar um grande salto, a equipe revisa constantemente como trabalha e ajusta pequenos pontos toda semana — o fluxo de testes, a forma de revisar código, a comunicação entre times. Com o tempo, esses ajustes pequenos somam um processo bem mais eficiente.',
       question: {
-        prompt: 'Um estagiário planejou terminar uma tarefa até sexta, mas o escopo muda no meio da semana. Em vez de travar de frustração, ele reorganiza rapidamente suas expectativas e ajusta o plano pra nova realidade. Isso ilustra qual habilidade?',
+        prompt: 'Toda sexta-feira, a equipe de um estúdio se reúne por 15 minutos só pra revisar o que travou durante a semana e ajustar um pequeno ponto do fluxo de trabalho. Isso é um exemplo de qual conceito?',
         options: [
-          'Adaptabilidade/flexibilidade emocional diante de mudanças inesperadas',
-          'Autocontrole, mas sem nenhuma relação direta com essa mudança de escopo',
-          'Networking com outras pessoas envolvidas no mesmo projeto',
-          'Feedback recebido de um colega sobre a qualidade da tarefa'
+          'Melhoria contínua — pequenos ajustes constantes no processo de trabalho',
+          'Inovação disruptiva — uma mudança radical e única, aplicada de uma vez só no processo',
+          'Gestão de conflitos entre a equipe, resolvendo divergências sobre como o trabalho é feito',
+          'Um processo interno qualquer, sem nenhuma relação real com inovação ou melhoria'
         ],
         correctIndex: 0,
-        explanation: 'Exato! Reorganizar expectativas rapidamente diante de uma mudança inesperada, sem travar, é a marca da adaptabilidade emocional.'
+        explanation: 'Exato! Pequenos ajustes recorrentes no processo, em vez de uma mudança radical de uma vez, são a essência da melhoria contínua.'
       }
     },
     {
-      story: 'A <b>empatia</b> conecta diretamente as suas <b>atitudes</b> ao <b>comportamento</b> das outras pessoas: quando você se coloca no lugar de alguém antes de agir, tende a escolher atitudes que geram um impacto melhor nos outros — e isso volta pra você em forma de relações mais saudáveis.',
+      story: 'Resolver problemas do dia a dia (não só no código!) usa a mesma lógica que vimos antes: <b>raciocínio indutivo</b> (observar vários casos e chegar numa regra geral) e <b>dedutivo</b> (partir de uma regra geral pra explicar um caso específico). A <b>criatividade</b> entra quando você combina esse raciocínio com <b>pesquisa</b> — buscar referências e exemplos antes de decidir o caminho.',
       question: {
-        prompt: 'Antes de dar um retorno duro sobre o trabalho de um colega, uma pessoa para e pensa em como ele provavelmente vai se sentir ao ouvir aquilo — e escolhe palavras mais cuidadosas, sem perder a honestidade. Que habilidade está sendo usada?',
+        prompt: 'Uma pessoa percebe que, nos últimos meses, todo dia que chove forte de manhã o ônibus dela atrasa mais de 20 minutos — e passa a sair mais cedo de casa nesses dias com base nessa observação repetida. Que tipo de raciocínio ela está aplicando?',
         options: [
-          'Empatia — pensar no impacto da própria atitude no comportamento/sentimento do outro',
-          'Autocontrole, sem nenhuma relação direta com o sentimento do outro colega ali',
-          'Networking, só porque a situação envolve conversar diretamente com outra pessoa',
-          'Nenhuma habilidade emocional envolvida ali, foi apenas educação básica bem comum'
+          'Raciocínio indutivo — várias observações particulares levaram a uma regra geral',
+          'Raciocínio dedutivo — uma regra geral foi aplicada a um caso específico',
+          'Nenhum raciocínio lógico estruturado — foi só coincidência ela ter reparado nisso',
+          'Raciocínio hipotético-dedutivo, porque ela testou uma hipótese em laboratório'
         ],
         correctIndex: 0,
-        explanation: 'Isso mesmo! Pensar em como sua atitude vai impactar o outro, antes de agir, é o núcleo da empatia.'
+        explanation: 'Isso! Observar vários casos repetidos (chuva forte → atraso) e chegar numa regra geral é justamente raciocínio indutivo, aplicado a um problema do cotidiano.'
       }
     },
     {
-      story: '<b>Dar e receber feedback</b> também exige inteligência emocional: pra dar, é preciso equilibrar honestidade com cuidado; pra receber, é preciso controlar a reação defensiva imediata e realmente escutar o que foi dito, mesmo quando dói um pouco.',
+      story: 'A <b>lógica de programação</b> também vira ferramenta de criatividade fora da tela: com uma placa <b>Arduino</b>, por exemplo, dá pra programar sensores e atuadores pra resolver problemas físicos do dia a dia — como um protótipo que liga uma luz automaticamente quando detecta pouca luminosidade no ambiente. É a mesma lógica de condicionais e loops usada em jogos, só que aplicada a um circuito real.',
       question: {
-        prompt: 'Um dev recebe uma crítica sobre a qualidade do seu código. Em vez de se defender imediatamente, ele respira, agradece o retorno e pergunta exemplos específicos pra entender melhor o que pode melhorar. Isso ilustra qual habilidade?',
+        prompt: 'Um grupo programa uma placa Arduino com um sensor de luminosidade: "se estiver escuro, ligue o LED; senão, mantenha apagado". Que tipo de raciocínio de programação está sendo aplicado nesse projeto físico criativo?',
         options: [
-          'Inteligência emocional ao receber feedback — controlar a reação defensiva e realmente escutar',
-          'Falta de autocontrole, já que ele hesitou um pouco antes de responder à crítica recebida',
-          'Networking, mesmo sem nenhuma relação real com o feedback recebido nesse momento',
-          'Adaptabilidade emocional, mas sem nenhuma relação direta com esse tipo de feedback'
+          'Lógica condicional aplicada a um projeto físico (hardware) pra resolver um problema real',
+          'Somente estética visual do circuito, sem nenhuma lógica de programação envolvida ali',
+          'Raciocínio dialético entre duas equipes rivais discutindo qual solução seria a melhor',
+          'Não é lógica de programação de verdade, já que o resultado não é um jogo digital'
         ],
         correctIndex: 0,
-        explanation: 'Perfeito! Controlar o impulso defensivo e buscar entender o feedback de verdade é inteligência emocional aplicada aos relacionamentos.'
+        explanation: 'Isso! "Se... senão..." é lógica condicional — a mesma usada em jogos, aqui aplicada de forma criativa a um projeto físico com Arduino.'
       }
     },
     {
-      story: 'Por fim, existem as <b>redes de relacionamento</b> (<b>networking</b>): cultivar conexões genuínas com outras pessoas, baseadas em interesse real e troca mútua — não em "usar" alguém só quando você precisa de algo. Uma boa rede se constrói com tempo, ajudando os outros também, não só pedindo ajuda quando é conveniente. Agora você já reconhece autocontrole, adaptabilidade, empatia, feedback com inteligência emocional e como construir relações genuínas!',
+      story: 'Por fim, resolver problemas complexos junta tudo isso: <b>estratégias de resolução de problema</b> (como decomposição), o processo de <b>debugging</b> (encontrar e corrigir erros) e o <b>raciocínio hipotético e inferencial</b> — formular hipóteses, testar e inferir conclusões a partir das evidências encontradas. Agora você já sabe reconhecer inovação de verdade e aplicar raciocínio lógico e criativo pra resolver problemas do cotidiano!',
       question: {
-        prompt: 'Uma pessoa mantém contato com colegas de outros projetos mesmo quando não precisa de nada deles, trocando ideias e ajudando quando pode. Meses depois, quando precisa de uma indicação, várias pessoas se dispõem a ajudar de volta. O que essa história ilustra?',
+        prompt: 'Um jogo trava só quando o jogador coleta o terceiro item de uma vez. O dev formula a hipótese "o inventário tem um limite de 2 itens simultâneos" e testa forçando a coleta de um quarto item pra confirmar. Que combinação de raciocínio está sendo usada?',
         options: [
-          'Networking genuíno — construir conexões reais com o tempo, não só quando é conveniente',
-          'Que ela só teve muita sorte, sem nenhuma habilidade emocional envolvida nessa história',
-          'Autocontrole, sem nenhuma relação direta com esse tipo de relacionamento profissional',
-          'Falta de empatia, já que ela ajudou várias pessoas diferentes ao mesmo tempo'
+          'Raciocínio hipotético (formulou uma hipótese testável) e inferencial (concluiu a partir das evidências do teste)',
+          'Só sorte — ele não seguiu nenhum raciocínio estruturado real pra chegar nessa conclusão específica',
+          'Raciocínio dedutivo puro, só aplicando uma regra já conhecida sem formular hipótese nenhuma antes',
+          'Apenas raciocínio indutivo, observando vários casos repetidos sem nenhum teste dirigido de propósito'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Construir conexões genuínas ao longo do tempo, sem interesse imediato, é exatamente o que sustenta um bom networking.'
+        explanation: 'Perfeito! Formular uma hipótese específica e testá-la de propósito, tirando conclusões das evidências, é raciocínio hipotético e inferencial trabalhando juntos no debugging.'
+      }
+    },
+    {
+      story: 'Voltando ao <b>pensamento crítico</b>: antes de aceitar uma ideia como boa (inovadora ou não), vale questionar as suposições por trás dela e checar se existem evidências reais sustentando aquilo — em vez de aceitar só porque "todo mundo tá fazendo assim" ou porque veio de alguém com cargo alto.',
+      question: {
+        prompt: 'Um gerente propõe adotar uma nova ferramenta "porque uma empresa famosa usa". Antes de aceitar, a equipe pede dados concretos de que essa ferramenta resolveria um problema real do time. Que postura é essa?',
+        options: [
+          'Pensamento crítico — questionar suposições e buscar evidências antes de aceitar',
+          'Resistência à mudança da equipe, sem nenhum motivo real por trás disso',
+          'Falta de liderança da equipe diante da proposta feita pelo gerente',
+          'Melhoria contínua aplicada ao processo de escolha de ferramentas do time'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Questionar a suposição por trás da proposta e pedir evidências concretas, em vez de aceitar de cara, é pensamento crítico em ação.'
+      }
+    },
+    {
+      story: 'Vimos o raciocínio indutivo (vários casos → regra geral). O <b>raciocínio dedutivo</b> vai no caminho oposto: parte de uma regra geral já conhecida e a aplica a um caso específico pra prever o que vai acontecer, sem precisar observar aquele caso específico antes.',
+      question: {
+        prompt: 'Sabendo que "toda função sem \'return\' devolve undefined em JavaScript" (regra geral já conhecida), um dev prevê, sem nem rodar o código, que uma função nova sem return vai devolver undefined. Que tipo de raciocínio é esse?',
+        options: [
+          'Raciocínio dedutivo — aplicar uma regra geral já conhecida a um caso específico',
+          'Raciocínio indutivo — observar vários casos diferentes pra chegar numa regra geral',
+          'Nenhum raciocínio lógico envolvido, foi só um palpite totalmente aleatório dele',
+          'Raciocínio hipotético, já que ele testou a hipótese rodando o código de verdade'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Partir de uma regra geral já sabida e aplicá-la a um caso específico, sem precisar testar, é raciocínio dedutivo.'
+      }
+    },
+    {
+      story: '<b>Inovação nos processos de trabalho</b> nem sempre muda o produto final — às vezes muda só COMO o time chega lá. Automatizar uma tarefa manual repetitiva, por exemplo, libera tempo do time pra focar em problemas mais complexos, mesmo sem o jogo em si mudar nada.',
+      question: {
+        prompt: 'Um estúdio cria um script que automatiza o empacotamento do jogo pra teste, tarefa que antes um dev fazia manualmente todo dia. O jogo em si não muda nada — mas o time ganha tempo. Que tipo de inovação é essa?',
+        options: [
+          'Inovação no processo de trabalho, não no produto final',
+          'Não é inovação, porque o jogo em si não mudou',
+          'Melhoria contínua, porque foi um ajuste pequeno e não uma automação',
+          'Gestão de conflitos, já que resolveu uma tarefa chata'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Inovar não é só mudar o produto — automatizar um processo de trabalho repetitivo também é inovação, mesmo sem alterar o jogo final.'
+      }
+    },
+    {
+      story: 'Quando um problema parece grande demais, uma estratégia poderosa é a <b>decomposição</b>: quebrar o problema complexo em pedaços menores e mais fáceis de resolver um de cada vez, em vez de tentar atacar tudo de uma vez só.',
+      question: {
+        prompt: 'Em vez de tentar consertar "o jogo todo travando" de uma vez, um dev separa o problema em partes menores — testa o carregamento, depois a física, depois o áudio — até achar exatamente onde trava. Que estratégia de resolução de problema é essa?',
+        options: [
+          'Decomposição — quebrar um problema grande em partes menores',
+          'Raciocínio dedutivo, aplicando uma regra geral já conhecida',
+          'Melhoria contínua, ajustando o processo aos poucos',
+          'Pensamento crítico, questionando a causa raiz sem testar nada'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Quebrar um problema grande em partes menores e testáveis, uma de cada vez, é a estratégia de decomposição.'
+      }
+    },
+    {
+      story: 'Por fim, <b>criatividade</b> de verdade raramente nasce do nada — ela costuma vir de <b>pesquisa</b>: olhar como outros já resolveram problemas parecidos (em outros jogos, áreas, até fora da tecnologia) e combinar essas referências de um jeito novo pro seu próprio contexto.',
+      question: {
+        prompt: 'Antes de criar o sistema de combate do jogo, a equipe pesquisa como outros jogos resolveram esse mesmo desafio e combina ideias de dois deles de um jeito novo, adaptado ao próprio projeto. Isso é um exemplo de quê?',
+        options: [
+          'Criatividade apoiada em pesquisa de referências',
+          'Cópia direta de outro jogo, sem nenhuma criatividade',
+          'Raciocínio dedutivo, aplicando uma regra pronta',
+          'Gestão de conflitos entre referências diferentes'
+        ],
+        correctIndex: 0,
+        explanation: 'Perfeito! Pesquisar referências e combiná-las de um jeito novo pro seu contexto é exatamente criatividade apoiada em pesquisa.'
       }
     }
   ];
 
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
-      capacidade: 'Identificar as habilidades socioemocionais que impactam nos relacionamentos interpessoais / Avaliar o impacto de atitudes e comportamentos próprios com relação às demais pessoas.',
+      title: 'Jogos — Inovação e Resolução de Problemas',
+      subtitle: 'Aula Teórica · Trilha Inovação e Resolução de Problemas · Turma Sistemas',
+      capacidade: 'Reconhecer a inovação como ferramenta de melhoria / Resolver problemas do cotidiano de forma criativa e inovadora.',
       steps: STEPS,
-      fileName: 'vida-emocional-teoria-slides.pptx',
+      fileName: 'mundo-inovacao-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central do Projeto de Vida: Inteligência Emocional" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
+      closingText: 'Abra o módulo "Prática — Central do Mundo do Trabalho: Inovação" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
     });
   };
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
+      title: 'Jogos — Inovação e Resolução de Problemas',
+      subtitle: 'Aula Teórica · Trilha Inovação e Resolução de Problemas · Turma Sistemas',
       items: STEPS.map((step, i) => ({
         number: i + 1,
         prompt: step.question.prompt,
@@ -237,7 +307,7 @@
         correctIndex: step.question.correctIndex,
         answer: step.question.options[step.question.correctIndex]
       })),
-      fileName: 'vida-emocional-teoria-gabarito.txt'
+      fileName: 'mundo-inovacao-teoria-gabarito.txt'
     });
   };
 
@@ -311,7 +381,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('vida_emocional_teoria', label, {
+      window.reportActivity('mundo_inovacao_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -322,16 +392,16 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[stepOrder[currentStepIndex]];
-    reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Jogos — Inovação e Resolução de Problemas — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
     const row = document.createElement('div');
-    row.className = 'uma-row';
+    row.className = 'bit-row';
     row.innerHTML = `
-      <div class="uma-avatar">🦉</div>
+      <div class="bit-avatar">🤖</div>
       <div class="speech-bubble">
-        <span class="uma-name">Uma, a Coruja Mentora</span>
+        <span class="bit-name">Bit, Assistente de Indústria 4.0</span>
         ${step.story}
       </div>
     `;
@@ -403,7 +473,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Jogos — Inovação e Resolução de Problemas — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -427,7 +497,7 @@
     const passed = reviewOnly ? true : pct >= 80;
     if (!reviewOnly) {
       saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: passed });
-      reportStep(`Projeto de Vida — Inteligência Emocional — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
+      reportStep(`Jogos — Inovação e Resolução de Problemas — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
     }
 
     progressFill.style.width = '100%';
@@ -436,10 +506,10 @@
     storyWrap.innerHTML = passed ? `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Inteligência Emocional concluída!</h2>
-        <p>Você já reconhece autocontrole, adaptabilidade emocional, empatia, feedback com inteligência emocional e o que sustenta um networking genuíno.</p>
+        <h2>Inovação e Resolução de Problemas concluídos!</h2>
+        <p>Você já reconhece o que é inovação de verdade, o papel da melhoria contínua e sabe aplicar raciocínio lógico, criatividade e debugging pra resolver problemas do cotidiano.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%).</div>
-        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Projeto de Vida.</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Mundo do Trabalho.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>

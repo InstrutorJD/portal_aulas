@@ -262,8 +262,175 @@ window.TURMA_CONFIG_SISTEMAS = {
     { key: 'internet-das-coisas', label: 'Internet das Coisas', trilhas: [] },
     { key: 'intro-dev-projetos', label: 'Introdução de Desenvolvimento de Projetos', trilhas: [] },
     { key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1', trilhas: [] },
-    { key: 'mundo-trabalho', label: 'Mundo do Trabalho', trilhas: [] },
-    { key: 'projeto-vida', label: 'Projeto de Vida', trilhas: [] },
+    {
+      // Mesmas atividades da turma Jogos Digitais (Projeto de Vida não é
+      // conteúdo técnico específico de nenhuma das duas turmas) — só copiadas
+      // pra turmas/sistemas/atividades/, com o rótulo de turma corrigido
+      // dentro de cada arquivo (Turma Jogos Digitais → Turma Sistemas).
+      key: 'projeto-vida', label: 'Projeto de Vida',
+      trilhas: [
+        {
+          key: 'vida-autoconhecimento',
+          label: 'Autoconhecimento e Valores Pessoais',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre motivadores, talentos, habilidades, competências, aptidões e valores pessoais.',
+          capacidade: 'Identificar características pessoais próprias tendo em vista o autoconhecimento.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Autoconhecimento e Valores Pessoais',
+              desc: 'Motivadores pessoais/profissionais, valores e crenças, talento x habilidade x competência, aptidões, forças/oportunidades de desenvolvimento e correlação entre valores e sucesso profissional.',
+              icon: '🦉', src: 'atividades/vida-autoconhecimento-teoria.html',
+              progressKey: 'vida_autoconhecimento_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Projeto de Vida: Autoconhecimento',
+              desc: 'Resolva pareceres identificando motivadores, talentos, habilidades, competências e aptidões em cada cenário.',
+              icon: '🔥', src: 'atividades/vida-autoconhecimento-pratica.html',
+              progressKey: 'vida_autoconhecimento_pratica_progress_', progressTotal: 5,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'vida-cidadania',
+          label: 'Cidadania e Convivência Social',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre urbanidade, direitos e deveres individuais/coletivos e valores na tomada de decisão.',
+          capacidade: 'Identificar normas e valores sociais relevantes à convivência cidadã.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Cidadania e Convivência Social',
+              desc: 'Urbanidade, direitos e deveres individuais e coletivos, respeito à diversidade de valores/crenças e sua influência na tomada de decisão.',
+              icon: '🦉', src: 'atividades/vida-cidadania-teoria.html',
+              progressKey: 'vida_cidadania_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Projeto de Vida: Cidadania',
+              desc: 'Resolva pareceres identificando urbanidade, direitos/deveres individuais e coletivos em cada cenário.',
+              icon: '🚌', src: 'atividades/vida-cidadania-pratica.html',
+              progressKey: 'vida_cidadania_pratica_progress_', progressTotal: 5,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'vida-emocional',
+          label: 'Inteligência Emocional e Relacionamentos',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre autocontrole, adaptabilidade, empatia, feedback e networking.',
+          capacidade: 'Identificar as habilidades socioemocionais que impactam nos relacionamentos interpessoais / Avaliar o impacto de atitudes e comportamentos próprios com relação às demais pessoas.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Inteligência Emocional e Relacionamentos',
+              desc: 'Autocontrole, adaptabilidade/flexibilidade emocional, empatia e comportamento, feedback com inteligência emocional e redes de relacionamento (networking).',
+              icon: '🦉', src: 'atividades/vida-emocional-teoria.html',
+              progressKey: 'vida_emocional_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Projeto de Vida: Inteligência Emocional',
+              desc: 'Resolva pareceres identificando autocontrole, adaptabilidade, empatia, feedback e networking em cada cenário.',
+              icon: '😤', src: 'atividades/vida-emocional-pratica.html',
+              progressKey: 'vida_emocional_pratica_progress_', progressTotal: 5,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'vida-equipe',
+          label: 'Colaboração e Compromisso em Equipe',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre colaboração, definição de papéis, compromisso com metas, comunicação e integração do trabalho em equipe.',
+          capacidade: 'Reconhecer as características do trabalho em equipe de forma colaborativa.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Colaboração e Compromisso em Equipe',
+              desc: 'Colaboração e cooperação, definição de papéis, compromisso com objetivos e metas, comunicação em equipe e integração do trabalho colaborativo.',
+              icon: '🦉', src: 'atividades/vida-equipe-teoria.html',
+              progressKey: 'vida_equipe_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Projeto de Vida: Colaboração em Equipe',
+              desc: 'Resolva pareceres identificando papéis, compromisso, comunicação e integração do trabalho em equipe em cada cenário.',
+              icon: '🎪', src: 'atividades/vida-equipe-pratica.html',
+              progressKey: 'vida_equipe_pratica_progress_', progressTotal: 5,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      // Idem: mesmo conteúdo da turma Jogos Digitais.
+      key: 'mundo-trabalho', label: 'Mundo do Trabalho',
+      trilhas: [
+        {
+          key: 'mundo-revolucao',
+          label: 'Revoluções Industriais e Indústria 4.0',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre as quatro revoluções industriais e as tecnologias habilitadoras da Indústria 4.0.',
+          capacidade: 'Reconhecer os marcos que alavancaram as revoluções industriais e seus impactos nas atividades de produção e no desenvolvimento do indivíduo / Reconhecer as tecnologias habilitadoras para indústria 4.0.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Revoluções Industriais e Indústria 4.0',
+              desc: '1ª, 2ª, 3ª e 4ª Revolução Industrial, impactos econômicos/sociais e tecnologias habilitadoras: nuvem, IoT, manufatura digital/aditiva, robótica, big data, segurança digital e integração de sistemas.',
+              icon: '🤖', src: 'atividades/mundo-revolucao-teoria.html',
+              progressKey: 'mundo_revolucao_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Revoluções Industriais',
+              desc: 'Resolva pareceres identificando a revolução industrial ou a tecnologia habilitadora certa em cada cenário.',
+              icon: '⚙️', src: 'atividades/mundo-revolucao-pratica.html',
+              progressKey: 'mundo_revolucao_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'mundo-inovacao',
+          label: 'Inovação e Resolução de Problemas',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre inovação, melhoria contínua, raciocínio lógico e resolução criativa de problemas do cotidiano.',
+          capacidade: 'Reconhecer a inovação como ferramenta de melhoria / Resolver problemas do cotidiano de forma criativa e inovadora.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Inovação e Resolução de Problemas',
+              desc: 'O que é inovação de verdade, melhoria contínua, raciocínio indutivo/dedutivo aplicado ao cotidiano, lógica de programação com Arduino e raciocínio hipotético/inferencial no debugging.',
+              icon: '🤖', src: 'atividades/mundo-inovacao-teoria.html',
+              progressKey: 'mundo_inovacao_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Inovação',
+              desc: 'Resolva pareceres identificando inovação, melhoria contínua e o raciocínio certo pra cada problema do cotidiano.',
+              icon: '💡', src: 'atividades/mundo-inovacao-pratica.html',
+              progressKey: 'mundo_inovacao_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'mundo-equipe',
+          label: 'Trabalho em Equipe e Colaboração',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre colaboração, liderança, gestão de conflitos, empatia e flexibilidade.',
+          capacidade: 'Atuar em equipes de forma colaborativa.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Trabalho em Equipe e Colaboração',
+              desc: 'Colaboração e cooperação, liderança que apoia o time, gestão de conflitos construtiva, empatia com escuta ativa e flexibilidade diante de mudanças.',
+              icon: '🤖', src: 'atividades/mundo-equipe-teoria.html',
+              progressKey: 'mundo_equipe_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Trabalho em Equipe',
+              desc: 'Resolva pareceres identificando a atitude certa de colaboração, liderança e gestão de conflitos em cada cenário.',
+              icon: '🤝', src: 'atividades/mundo-equipe-pratica.html',
+              progressKey: 'mundo_equipe_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
     { key: 'prog-aplicativos', label: 'Programação de Aplicativos', trilhas: [] }
   ],
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Central do Projeto de Vida</title>
+<title>PixelForge Studios — Jogos: Central do Mundo do Trabalho</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -125,7 +125,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_autoconhecimento_pratica';
+  window.ACTIVITY_LOCATION = 'mundo_inovacao_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -139,7 +139,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — CENTRAL (AUTOCONHECIMENTO)</div>
+    <div>JOGOS — CENTRAL DO MUNDO DO TRABALHO (INOVAÇÃO)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
@@ -153,7 +153,7 @@
       <div class="main-panel">
         <div class="challenge-header">
           <div class="ticket-row">
-            <div class="ticket-icon" id="ticketIcon">🦉</div>
+            <div class="ticket-icon" id="ticketIcon">🤖</div>
             <div class="ticket-status pending" id="ticketStatus">PENDENTE</div>
           </div>
           <h2 id="challengeTitle">--</h2>
@@ -184,65 +184,115 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_autoconhecimento_pratica_progress_${username}`;
+  const PROGRESS_KEY = `mundo_inovacao_pratica_progress_${username}`;
 
   const CHALLENGES = [
     {
       id: 1,
-      title: 'O que te move?',
-      icon: '🔥',
-      explanation: 'Motivadores pessoais e profissionais podem ser bem diferentes, e reconhecer os dois é parte essencial do autoconhecimento.',
-      desc: 'Uma pessoa adora criar coisas com as mãos nas horas livres (motivador pessoal), mas no trabalho o que mais a motiva é resolver problemas lógicos complexos (motivador profissional). O que isso mostra?',
-      hint: 'Pense se os dois tipos de motivador precisam ser sempre iguais.',
-      options: ['Motivadores pessoais e profissionais podem ser diferentes e ambos são válidos', 'Eles são sempre exatamente iguais, sem nenhuma diferença entre os dois', 'O motivador profissional sempre importa mais do que o pessoal, sem exceção', 'Motivador pessoal não existe de verdade — só o profissional conta de fato'],
+      title: 'Mudança por mudança?',
+      icon: '🔄',
+      explanation: 'Inovação exige gerar valor real resolvendo um problema — trocar algo sem motivo, só porque é "mais novo", não é inovação, é apenas mudança.',
+      desc: 'Um estúdio troca o motor gráfico do jogo só porque "é mais novo e todo mundo tá usando", sem resolver nenhum problema real do projeto. Isso é um exemplo de inovação de verdade?',
+      hint: 'Pense: essa mudança resolveu algum problema real ou gerou algum valor concreto?',
+      options: ['Não é inovação de verdade — não resolveu problema nenhum nem gerou valor real', 'Sim, qualquer mudança de ferramenta já conta como inovação por definição própria', 'Sim, porque ferramentas mais novas são sempre melhores que as antigas de qualquer jeito', 'Não dá pra saber se é inovação sem antes fazer uma votação formal com toda a equipe'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Do potencial ao resultado',
-      icon: '🎯',
-      explanation: 'Competência é a habilidade já treinada aplicada com sucesso em um contexto real, junto com conhecimento e atitude.',
-      desc: 'Uma pessoa teve facilidade natural com números, treinou lógica de programação por anos, e hoje aplica esse conhecimento com sucesso em projetos reais. Aplicar com sucesso em um contexto real representa qual conceito?',
-      hint: 'Não é o talento nem a aptidão — é a etapa final, onde o conhecimento gera resultado de verdade.',
-      options: ['Competência', 'Talento', 'Aptidão', 'Nenhum desses conceitos'],
+      title: 'Ajustes toda semana',
+      icon: '🔁',
+      explanation: 'Melhoria contínua é inovação em pequenas doses aplicada aos processos de trabalho: ajustes constantes e recorrentes, em vez de uma mudança radical de uma vez.',
+      desc: 'Toda sexta-feira, a equipe se reúne por 15 minutos só pra revisar o que travou na semana e ajustar um pequeno ponto do fluxo de trabalho. Que conceito é esse?',
+      hint: 'Não é uma revolução de uma vez só — é um hábito de ajustar pouco a pouco, sempre.',
+      options: ['Melhoria contínua nos processos de trabalho', 'Inovação disruptiva radical, feita de uma vez só', 'Gestão de conflitos dentro da equipe', 'Um processo qualquer sem relação com inovação'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Facilidade nunca treinada',
-      icon: '🌱',
-      explanation: 'Aptidão é um potencial natural ainda não desenvolvido em habilidade treinada — a diferença entre "ainda não treinei" e "já treinei".',
-      desc: 'Um aluno nunca programou antes, mas no primeiro contato com lógica resolve os exercícios com facilidade incomum, sem nunca ter treinado. Isso é melhor descrito como quê?',
-      hint: 'Ele nunca treinou isso antes — então não pode ser algo já desenvolvido.',
-      options: ['Aptidão, um potencial natural ainda não treinado', 'Habilidade, algo que ele já treinou bastante antes', 'Competência, aplicada com sucesso num contexto real', 'Só sorte, sem relação nenhuma com autoconhecimento'],
+      title: 'Chuva e atraso no ônibus',
+      icon: '🌧️',
+      explanation: 'Observar vários casos repetidos (chuva forte → atraso) e concluir uma regra geral é raciocínio indutivo, aplicado aqui a um problema do cotidiano, não de código.',
+      desc: 'Uma pessoa percebe que, nos últimos meses, todo dia que chove forte de manhã o ônibus atrasa mais de 20 minutos — e passa a sair mais cedo nesses dias com base nessa observação repetida. Que tipo de raciocínio é esse?',
+      hint: 'Vários casos observados repetidamente levando a uma regra geral — isso tem nome.',
+      options: ['Raciocínio indutivo', 'Raciocínio dedutivo', 'Nenhum raciocínio, é só sorte', 'Raciocínio dialético'],
       correctIndex: 0
     },
     {
       id: 4,
-      title: 'Onde investir energia',
-      icon: '🧭',
-      explanation: 'Mapear forças atuais (o que já se faz bem) e oportunidades de desenvolvimento (o que ainda pode crescer) dá clareza sobre onde investir energia.',
-      desc: 'Uma pessoa percebe que já é muito boa em resolver bugs sozinha (força atual), mas ainda precisa desenvolver a habilidade de explicar esses bugs pro time (área a desenvolver). O que ela está fazendo?',
-      hint: 'Não é autocrítica sem rumo — é um mapeamento com um propósito claro.',
-      options: ['Mapeando forças e oportunidades de desenvolvimento', 'Só se autocriticando sem nenhum propósito ou objetivo', 'Se comparando diretamente com outra pessoa da equipe', 'Definindo motivadores profissionais pro trabalho'],
+      title: 'LED que acende sozinho',
+      icon: '💡',
+      explanation: 'Lógica condicional ("se... senão...") é a mesma usada em jogos, aqui aplicada de forma criativa a um projeto físico com Arduino pra resolver um problema real.',
+      desc: 'Um grupo programa uma placa Arduino com um sensor de luminosidade: "se estiver escuro, ligue o LED; senão, mantenha apagado". Que tipo de raciocínio de programação está sendo aplicado?',
+      hint: 'Pense em "se isso, então aquilo" — um tipo de estrutura bem comum em qualquer linguagem de programação.',
+      options: ['Lógica condicional aplicada a um projeto físico (hardware)', 'Só estética visual do LED, sem lógica de programação envolvida', 'Raciocínio dialético entre duas equipes rivais discutindo hardware', 'Não é lógica de programação porque não é um jogo digital'],
       correctIndex: 0
     },
     {
       id: 5,
-      title: 'Salário alto, motivação baixa',
-      icon: '💭',
-      explanation: 'Quando o trabalho ignora os valores pessoais, a motivação tende a cair com o tempo — reforçando a correlação entre valores e sucesso profissional sustentável.',
-      desc: 'Uma pessoa valoriza trabalho colaborativo e criativo, mas aceita um emprego isolado e repetitivo só pelo salário mais alto. Com o tempo, fica cada vez mais desmotivada, mesmo ganhando bem. O que isso ilustra?',
-      hint: 'Pense na relação entre o que a pessoa valoriza de verdade e a satisfação a longo prazo no trabalho.',
-      options: ['A correlação entre valores pessoais e sucesso profissional sustentável', 'Que salário é o único fator relevante numa escolha de carreira profissional', 'Que motivadores pessoais não têm nenhuma relação real com o trabalho', 'Que essa pessoa simplesmente não gosta de trabalhar, independente do emprego'],
+      title: 'Hipótese sobre o inventário',
+      icon: '🧪',
+      explanation: 'Formular uma hipótese específica e testá-la de propósito, tirando conclusões a partir das evidências, é raciocínio hipotético e inferencial trabalhando juntos no debugging.',
+      desc: 'Um jogo trava só quando o jogador coleta o terceiro item de uma vez. O dev formula a hipótese "o inventário tem um limite de 2 itens simultâneos" e testa forçando a coleta de um quarto item pra confirmar. Que tipo de raciocínio é esse?',
+      hint: 'Tem uma suspeita específica (hipótese) sendo testada, e uma conclusão tirada a partir do resultado (inferência).',
+      options: ['Raciocínio hipotético e inferencial', 'Só sorte, sem raciocínio estruturado', 'Raciocínio dedutivo puro, sem hipótese', 'Apenas raciocínio indutivo, sem teste dirigido'],
+      correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Ferramenta "porque é famosa"',
+      icon: '🤔',
+      explanation: 'Questionar a suposição por trás de uma proposta e pedir evidências concretas, em vez de aceitar de cara, é pensamento crítico em ação.',
+      desc: 'Um gerente propõe adotar uma nova ferramenta "porque uma empresa famosa usa". Antes de aceitar, a equipe pede dados concretos de que ela resolveria um problema real do time. Que postura é essa?',
+      hint: 'Pense: a equipe aceitou de cara, ou pediu prova antes?',
+      options: ['Pensamento crítico', 'Resistência à mudança sem motivo', 'Falta de liderança da equipe', 'Melhoria contínua no processo de escolha'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Prever sem testar',
+      icon: '📐',
+      explanation: 'Partir de uma regra geral já sabida e aplicá-la a um caso específico, sem precisar testar, é raciocínio dedutivo.',
+      desc: 'Sabendo que "toda função sem return devolve undefined em JavaScript", um dev prevê, sem rodar o código, que uma função nova sem return vai devolver undefined. Que raciocínio é esse?',
+      hint: 'Ele partiu de uma regra já conhecida, ou observou vários casos antes de concluir?',
+      options: ['Raciocínio dedutivo', 'Raciocínio indutivo', 'Nenhum raciocínio, só palpite', 'Raciocínio hipotético, testando no código'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Script que economiza tempo',
+      icon: '⚙️',
+      explanation: 'Inovar não é só mudar o produto — automatizar um processo de trabalho repetitivo também é inovação, mesmo sem alterar o jogo final.',
+      desc: 'Um estúdio cria um script que automatiza o empacotamento do jogo pra teste, tarefa que antes um dev fazia manualmente todo dia. O jogo em si não muda nada. Que tipo de inovação é essa?',
+      hint: 'Pense: a inovação precisa mudar o produto, ou pode mudar só o processo de chegar lá?',
+      options: ['Inovação no processo de trabalho', 'Não é inovação, o jogo não mudou', 'Melhoria contínua, não automação', 'Gestão de conflitos'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Bug travando o jogo todo',
+      icon: '🧩',
+      explanation: 'Quebrar um problema grande em partes menores e testáveis, uma de cada vez, é a estratégia de decomposição.',
+      desc: 'Em vez de tentar consertar "o jogo todo travando" de uma vez, um dev separa o problema em partes — testa carregamento, física, áudio — até achar onde trava. Que estratégia é essa?',
+      hint: 'Pense em "dividir pra conquistar": um problema grande virando vários pequenos.',
+      options: ['Decomposição do problema', 'Raciocínio dedutivo', 'Melhoria contínua', 'Pensamento crítico sem testar nada'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Combate inspirado em referências',
+      icon: '🎨',
+      explanation: 'Pesquisar referências e combiná-las de um jeito novo pro seu contexto é exatamente criatividade apoiada em pesquisa.',
+      desc: 'Antes de criar o sistema de combate do jogo, a equipe pesquisa como outros jogos resolveram esse desafio e combina ideias de dois deles de um jeito novo. Isso é um exemplo de quê?',
+      hint: 'Não é copiar um só — é misturar referências pesquisadas de um jeito próprio.',
+      options: ['Criatividade apoiada em pesquisa', 'Cópia direta de outro jogo', 'Raciocínio dedutivo', 'Gestão de conflitos entre referências'],
       correctIndex: 0
     }
   ];
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida: Central — Autoconhecimento',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      title: 'Jogos: Central do Mundo do Trabalho — Inovação',
+      subtitle: 'Prática · Turma Sistemas',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
@@ -251,7 +301,7 @@
         correctIndex: c.correctIndex,
         answer: c.options[c.correctIndex]
       })),
-      fileName: 'vida-autoconhecimento-pratica-gabarito.txt'
+      fileName: 'mundo-inovacao-pratica-gabarito.txt'
     });
   };
 
@@ -295,7 +345,7 @@
       const isDone = completed.has(c.id);
       const item = document.createElement('div');
       item.className = 'challenge-item' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (!unlocked ? ' locked' : '');
-      const statusIcon = isDone ? '✅' : (unlocked ? '🦉' : '🔒');
+      const statusIcon = isDone ? '✅' : (unlocked ? '🤖' : '🔒');
       item.innerHTML = `<span class="status">${statusIcon}</span><span class="name">${c.icon} ${c.title}</span>`;
       if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
       challengeListEl.appendChild(item);
@@ -351,7 +401,7 @@
 
         const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
         if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de autoconhecimento!', 'success');
+          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de inovação!', 'success');
         } else {
           logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
           btnNext.style.display = 'inline-block';
@@ -360,8 +410,8 @@
 
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(
-            'vida_autoconhecimento_pratica',
-            `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
+            'mundo_inovacao_pratica',
+            `Jogos — Inovação — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
             { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
           );
         }
@@ -400,8 +450,8 @@
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
-        'vida_autoconhecimento_pratica',
-        `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title}`,
+        'mundo_inovacao_pratica',
+        `Jogos — Inovação — Parecer ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Inteligência Emocional e Relacionamentos: Teoria</title>
+<title>PixelForge Studios — Colaboração e Compromisso em Equipe: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -107,7 +107,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_emocional_teoria';
+  window.ACTIVITY_LOCATION = 'vida_equipe_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -123,7 +123,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — INTELIGÊNCIA EMOCIONAL (TEORIA)</div>
+    <div>PROJETO DE VIDA — COLABORAÇÃO E COMPROMISSO EM EQUIPE (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
       <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></span>
@@ -139,97 +139,97 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_emocional_teoria_progress_${username}`;
+  const PROGRESS_KEY = `vida_equipe_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Oi! Eu sou a <b>Uma</b>, a coruja mentora da PixelForge Studios. Vamos falar de <b>inteligência emocional</b>, começando pelo <b>autocontrole</b>: a capacidade de perceber uma emoção forte (frustração, raiva, ansiedade) e escolher como reagir, em vez de simplesmente explodir no impulso. Não é "não sentir" a emoção — é sentir e ainda assim escolher uma resposta equilibrada.',
+      story: 'Oi! Eu sou a <b>Uma</b>, a coruja mentora da PixelForge Studios. Hoje o assunto é <b>trabalho em equipe colaborativo</b> — vamos usar como exemplo um grupo organizando uma <b>game jam</b> comunitária (evento onde várias pessoas criam jogos juntas em pouco tempo). <b>Colaboração e cooperação</b> significam trabalhar junto rumo a um objetivo comum, ajudando os colegas quando precisam, mesmo que cada um tenha uma tarefa diferente.',
       question: {
-        prompt: 'Um dev perde horas de trabalho porque esqueceu de salvar um arquivo. Ele sente uma raiva forte, respira, espera alguns minutos e só depois volta a mexer no código, evitando digitar algo por impulso. Isso é um exemplo de quê?',
+        prompt: 'Num grupo organizando uma game jam, cada pessoa cuida de uma parte diferente (inscrições, local, prêmios), mas todos se ajudam quando alguma parte trava, mesmo sem ser sua responsabilidade direta. Isso é um exemplo de quê?',
         options: [
-          'Autocontrole — perceber a emoção forte e escolher uma resposta equilibrada, em vez de agir por impulso',
-          'Falta de emoção — ele simplesmente não sentiu nenhuma raiva nesse exato momento do erro',
-          'Networking, já que ele estava pensando em pedir ajuda pra outras pessoas do time depois',
-          'Nenhuma habilidade emocional envolvida ali, foi só uma reação totalmente aleatória dele'
+          'Colaboração e cooperação — trabalhar junto rumo a um objetivo comum, ajudando quando precisa',
+          'Cada um trabalhando isoladamente, sem nenhuma relação com o trabalho dos outros ali',
+          'Definição de papéis, sem nenhuma cooperação ou ajuda mútua envolvida no grupo',
+          'Gestão de conflitos, já que houve um problema técnico entre os membros do grupo'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Sentir a raiva e mesmo assim escolher esperar antes de agir, em vez de reagir por impulso, é exatamente autocontrole.'
+        explanation: 'Isso! Trabalhar em tarefas diferentes mas se ajudar mutuamente rumo ao mesmo objetivo é a essência da colaboração e cooperação.'
       }
     },
     {
-      story: 'Já a <b>adaptabilidade</b> (ou flexibilidade emocional) é a capacidade de se ajustar bem diante de mudanças inesperadas, sem travar emocionalmente. Planos mudam o tempo todo — quem tem adaptabilidade consegue reorganizar as próprias expectativas rápido, em vez de ficar preso à frustração de "não era assim que eu tinha planejado".',
+      story: 'Uma equipe funciona melhor com uma boa <b>definição de papéis</b>: cada pessoa assume uma função clara, de acordo com seu talento ou interesse — quem gosta de organizar cuida da logística, quem é bom com pessoas cuida da comunicação. Isso evita que duas pessoas façam a mesma coisa por engano e que outras tarefas fiquem sem ninguém responsável.',
       question: {
-        prompt: 'Um estagiário planejou terminar uma tarefa até sexta, mas o escopo muda no meio da semana. Em vez de travar de frustração, ele reorganiza rapidamente suas expectativas e ajusta o plano pra nova realidade. Isso ilustra qual habilidade?',
+        prompt: 'Antes de começar a organizar a game jam, o grupo se reúne e decide claramente: "você cuida das inscrições, eu cuido do local, ela cuida dos prêmios" — cada um sabendo exatamente sua responsabilidade. O que isso representa?',
         options: [
-          'Adaptabilidade/flexibilidade emocional diante de mudanças inesperadas',
-          'Autocontrole, mas sem nenhuma relação direta com essa mudança de escopo',
-          'Networking com outras pessoas envolvidas no mesmo projeto',
-          'Feedback recebido de um colega sobre a qualidade da tarefa'
+          'Definição de papéis — cada pessoa assume uma função clara na equipe',
+          'Falta de colaboração, já que cada um ficou trabalhando isolado do grupo',
+          'Compromisso com metas, sem nenhuma relação direta com definição de papéis',
+          'Comunicação em equipe, sem nenhuma relação direta com definição de papéis'
         ],
         correctIndex: 0,
-        explanation: 'Exato! Reorganizar expectativas rapidamente diante de uma mudança inesperada, sem travar, é a marca da adaptabilidade emocional.'
+        explanation: 'Exato! Decidir claramente quem faz o quê, de acordo com o talento de cada um, é justamente definição de papéis.'
       }
     },
     {
-      story: 'A <b>empatia</b> conecta diretamente as suas <b>atitudes</b> ao <b>comportamento</b> das outras pessoas: quando você se coloca no lugar de alguém antes de agir, tende a escolher atitudes que geram um impacto melhor nos outros — e isso volta pra você em forma de relações mais saudáveis.',
+      story: 'Uma equipe também precisa de <b>compromisso com objetivos e metas</b> compartilhadas: todo mundo sabe qual é o resultado final esperado e se compromete a fazer sua parte pra chegar lá, mesmo quando a tarefa fica chata ou cansativa no meio do caminho.',
       question: {
-        prompt: 'Antes de dar um retorno duro sobre o trabalho de um colega, uma pessoa para e pensa em como ele provavelmente vai se sentir ao ouvir aquilo — e escolhe palavras mais cuidadosas, sem perder a honestidade. Que habilidade está sendo usada?',
+        prompt: 'No meio da organização da game jam, uma das tarefas fica bem repetitiva e cansativa, mas a pessoa responsável continua fazendo, porque sabe que o evento todo depende dela cumprir sua parte. Isso ilustra qual conceito?',
         options: [
-          'Empatia — pensar no impacto da própria atitude no comportamento/sentimento do outro',
-          'Autocontrole, sem nenhuma relação direta com o sentimento do outro colega ali',
-          'Networking, só porque a situação envolve conversar diretamente com outra pessoa',
-          'Nenhuma habilidade emocional envolvida ali, foi apenas educação básica bem comum'
+          'Compromisso com objetivos e metas compartilhadas',
+          'Definição de papéis, sem relação direta com compromisso',
+          'Comunicação em equipe, sem relação direta com metas',
+          'Falta de motivação da pessoa responsável pela tarefa'
         ],
         correctIndex: 0,
-        explanation: 'Isso mesmo! Pensar em como sua atitude vai impactar o outro, antes de agir, é o núcleo da empatia.'
+        explanation: 'Isso mesmo! Continuar cumprindo sua parte mesmo quando cansa, porque o objetivo comum depende disso, é compromisso com metas compartilhadas.'
       }
     },
     {
-      story: '<b>Dar e receber feedback</b> também exige inteligência emocional: pra dar, é preciso equilibrar honestidade com cuidado; pra receber, é preciso controlar a reação defensiva imediata e realmente escutar o que foi dito, mesmo quando dói um pouco.',
+      story: 'Sem <b>comunicação em equipe</b> constante, mesmo papéis bem definidos e metas claras podem falhar: é preciso manter todo mundo informado sobre o progresso — o que já foi feito, o que está travado, o que ainda falta. Silêncio prolongado numa equipe costuma significar que algo não está indo bem.',
       question: {
-        prompt: 'Um dev recebe uma crítica sobre a qualidade do seu código. Em vez de se defender imediatamente, ele respira, agradece o retorno e pergunta exemplos específicos pra entender melhor o que pode melhorar. Isso ilustra qual habilidade?',
+        prompt: 'Uma pessoa do grupo percebe que vai atrasar na entrega da sua parte da game jam e avisa o grupo com antecedência, explicando o motivo, em vez de simplesmente sumir até o prazo estourar. Isso ilustra qual conceito?',
         options: [
-          'Inteligência emocional ao receber feedback — controlar a reação defensiva e realmente escutar',
-          'Falta de autocontrole, já que ele hesitou um pouco antes de responder à crítica recebida',
-          'Networking, mesmo sem nenhuma relação real com o feedback recebido nesse momento',
-          'Adaptabilidade emocional, mas sem nenhuma relação direta com esse tipo de feedback'
+          'Comunicação em equipe — manter todos informados sobre o progresso, inclusive atrasos',
+          'Falta de compromisso, já que ela sabia de antemão que ia atrasar essa entrega',
+          'Definição de papéis dentro do grupo, sem relação direta com comunicação nenhuma',
+          'Colaboração comum entre os membros, mas sem relação direta com comunicação alguma'
         ],
         correctIndex: 0,
-        explanation: 'Perfeito! Controlar o impulso defensivo e buscar entender o feedback de verdade é inteligência emocional aplicada aos relacionamentos.'
+        explanation: 'Perfeito! Avisar com antecedência sobre um atraso, em vez de sumir, é exatamente boa comunicação em equipe.'
       }
     },
     {
-      story: 'Por fim, existem as <b>redes de relacionamento</b> (<b>networking</b>): cultivar conexões genuínas com outras pessoas, baseadas em interesse real e troca mútua — não em "usar" alguém só quando você precisa de algo. Uma boa rede se constrói com tempo, ajudando os outros também, não só pedindo ajuda quando é conveniente. Agora você já reconhece autocontrole, adaptabilidade, empatia, feedback com inteligência emocional e como construir relações genuínas!',
+      story: 'Por fim, tudo isso se junta na <b>integração do trabalho colaborativo</b>: as partes individuais de cada membro (inscrições, local, prêmios, comunicação) precisam se encaixar num resultado único e coeso no final — um evento que parece ter sido pensado como um todo, não como pedaços soltos feitos por pessoas diferentes. Agora você já reconhece colaboração, definição de papéis, compromisso com metas, comunicação em equipe e integração do trabalho colaborativo!',
       question: {
-        prompt: 'Uma pessoa mantém contato com colegas de outros projetos mesmo quando não precisa de nada deles, trocando ideias e ajudando quando pode. Meses depois, quando precisa de uma indicação, várias pessoas se dispõem a ajudar de volta. O que essa história ilustra?',
+        prompt: 'No dia da game jam, as inscrições, o local, os prêmios e a comunicação com os participantes funcionam de forma alinhada, como se tivessem sido pensados por uma única pessoa, mesmo tendo sido feitos por gente diferente. O que isso representa?',
         options: [
-          'Networking genuíno — construir conexões reais com o tempo, não só quando é conveniente',
-          'Que ela só teve muita sorte, sem nenhuma habilidade emocional envolvida nessa história',
-          'Autocontrole, sem nenhuma relação direta com esse tipo de relacionamento profissional',
-          'Falta de empatia, já que ela ajudou várias pessoas diferentes ao mesmo tempo'
+          'Integração do trabalho colaborativo — as partes individuais se encaixando num resultado coeso',
+          'Sorte, sem nenhuma relação real com o trabalho da equipe que organizou o evento',
+          'Falta de definição de papéis dentro do grupo que organizou o evento inteiro',
+          'Um conflito bem resolvido, sem relação direta com integração do trabalho colaborativo'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Construir conexões genuínas ao longo do tempo, sem interesse imediato, é exatamente o que sustenta um bom networking.'
+        explanation: 'Isso! Quando as partes de cada pessoa se encaixam num resultado único e coerente, isso é integração do trabalho colaborativo.'
       }
     }
   ];
 
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
-      capacidade: 'Identificar as habilidades socioemocionais que impactam nos relacionamentos interpessoais / Avaliar o impacto de atitudes e comportamentos próprios com relação às demais pessoas.',
+      title: 'Projeto de Vida — Colaboração e Compromisso em Equipe',
+      subtitle: 'Aula Teórica · Trilha Colaboração e Compromisso em Equipe · Turma Sistemas',
+      capacidade: 'Reconhecer as características do trabalho em equipe de forma colaborativa.',
       steps: STEPS,
-      fileName: 'vida-emocional-teoria-slides.pptx',
+      fileName: 'vida-equipe-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central do Projeto de Vida: Inteligência Emocional" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
+      closingText: 'Abra o módulo "Prática — Central do Projeto de Vida: Colaboração em Equipe" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
     });
   };
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
+      title: 'Projeto de Vida — Colaboração e Compromisso em Equipe',
+      subtitle: 'Aula Teórica · Trilha Colaboração e Compromisso em Equipe · Turma Sistemas',
       items: STEPS.map((step, i) => ({
         number: i + 1,
         prompt: step.question.prompt,
@@ -237,7 +237,7 @@
         correctIndex: step.question.correctIndex,
         answer: step.question.options[step.question.correctIndex]
       })),
-      fileName: 'vida-emocional-teoria-gabarito.txt'
+      fileName: 'vida-equipe-teoria-gabarito.txt'
     });
   };
 
@@ -311,7 +311,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('vida_emocional_teoria', label, {
+      window.reportActivity('vida_equipe_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -322,7 +322,7 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[stepOrder[currentStepIndex]];
-    reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Projeto de Vida — Colaboração em Equipe — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
@@ -403,7 +403,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Projeto de Vida — Colaboração em Equipe — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -427,7 +427,7 @@
     const passed = reviewOnly ? true : pct >= 80;
     if (!reviewOnly) {
       saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: passed });
-      reportStep(`Projeto de Vida — Inteligência Emocional — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
+      reportStep(`Projeto de Vida — Colaboração em Equipe — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
     }
 
     progressFill.style.width = '100%';
@@ -436,8 +436,8 @@
     storyWrap.innerHTML = passed ? `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Inteligência Emocional concluída!</h2>
-        <p>Você já reconhece autocontrole, adaptabilidade emocional, empatia, feedback com inteligência emocional e o que sustenta um networking genuíno.</p>
+        <h2>Colaboração e Compromisso em Equipe concluídos!</h2>
+        <p>Você já reconhece colaboração, definição clara de papéis, compromisso com metas compartilhadas, comunicação em equipe e a integração do trabalho de todos num resultado coeso.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%).</div>
         <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Projeto de Vida.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">

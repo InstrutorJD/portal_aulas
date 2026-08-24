@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Central do Projeto de Vida</title>
+<title>PixelForge Studios — Jogos: Central do Mundo do Trabalho</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -125,7 +125,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_autoconhecimento_pratica';
+  window.ACTIVITY_LOCATION = 'mundo_revolucao_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -139,7 +139,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — CENTRAL (AUTOCONHECIMENTO)</div>
+    <div>JOGOS — CENTRAL DO MUNDO DO TRABALHO (REVOLUÇÕES INDUSTRIAIS)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
@@ -153,7 +153,7 @@
       <div class="main-panel">
         <div class="challenge-header">
           <div class="ticket-row">
-            <div class="ticket-icon" id="ticketIcon">🦉</div>
+            <div class="ticket-icon" id="ticketIcon">🤖</div>
             <div class="ticket-status pending" id="ticketStatus">PENDENTE</div>
           </div>
           <h2 id="challengeTitle">--</h2>
@@ -184,65 +184,115 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_autoconhecimento_pratica_progress_${username}`;
+  const PROGRESS_KEY = `mundo_revolucao_pratica_progress_${username}`;
 
   const CHALLENGES = [
     {
       id: 1,
-      title: 'O que te move?',
-      icon: '🔥',
-      explanation: 'Motivadores pessoais e profissionais podem ser bem diferentes, e reconhecer os dois é parte essencial do autoconhecimento.',
-      desc: 'Uma pessoa adora criar coisas com as mãos nas horas livres (motivador pessoal), mas no trabalho o que mais a motiva é resolver problemas lógicos complexos (motivador profissional). O que isso mostra?',
-      hint: 'Pense se os dois tipos de motivador precisam ser sempre iguais.',
-      options: ['Motivadores pessoais e profissionais podem ser diferentes e ambos são válidos', 'Eles são sempre exatamente iguais, sem nenhuma diferença entre os dois', 'O motivador profissional sempre importa mais do que o pessoal, sem exceção', 'Motivador pessoal não existe de verdade — só o profissional conta de fato'],
+      title: 'Tear a vapor',
+      icon: '⚙️',
+      explanation: 'A 1ª Revolução Industrial (final do século 18) é marcada pela máquina a vapor substituindo o trabalho manual/animal e pelo êxodo rural em direção às fábricas.',
+      desc: 'Uma oficina de tecelagem troca teares manuais por teares movidos a máquina a vapor, e os artesãos se mudam pra perto da fábrica pra trabalhar nela. Qual revolução industrial esse cenário representa?',
+      hint: 'Pense na fonte de energia: vapor é a marca da primeira onda de industrialização.',
+      options: ['1ª Revolução Industrial', '2ª Revolução Industrial', '3ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Do potencial ao resultado',
-      icon: '🎯',
-      explanation: 'Competência é a habilidade já treinada aplicada com sucesso em um contexto real, junto com conhecimento e atitude.',
-      desc: 'Uma pessoa teve facilidade natural com números, treinou lógica de programação por anos, e hoje aplica esse conhecimento com sucesso em projetos reais. Aplicar com sucesso em um contexto real representa qual conceito?',
-      hint: 'Não é o talento nem a aptidão — é a etapa final, onde o conhecimento gera resultado de verdade.',
-      options: ['Competência', 'Talento', 'Aptidão', 'Nenhum desses conceitos'],
+      title: 'Linha de montagem elétrica',
+      icon: '🔌',
+      explanation: 'A 2ª Revolução Industrial trouxe a eletricidade e a linha de montagem, com produção em massa e cada operário repetindo uma etapa específica do processo.',
+      desc: 'Uma fábrica de automóveis do início do século 20 organiza a produção em uma linha de montagem elétrica, onde cada operário repete sempre a mesma etapa. Que revolução é essa?',
+      hint: 'A energia elétrica e a produção em massa entram em cena aqui, não mais só o vapor.',
+      options: ['2ª Revolução Industrial', '1ª Revolução Industrial', '3ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Facilidade nunca treinada',
-      icon: '🌱',
-      explanation: 'Aptidão é um potencial natural ainda não desenvolvido em habilidade treinada — a diferença entre "ainda não treinei" e "já treinei".',
-      desc: 'Um aluno nunca programou antes, mas no primeiro contato com lógica resolve os exercícios com facilidade incomum, sem nunca ter treinado. Isso é melhor descrito como quê?',
-      hint: 'Ele nunca treinou isso antes — então não pode ser algo já desenvolvido.',
-      options: ['Aptidão, um potencial natural ainda não treinado', 'Habilidade, algo que ele já treinou bastante antes', 'Competência, aplicada com sucesso num contexto real', 'Só sorte, sem relação nenhuma com autoconhecimento'],
+      title: 'Robôs programáveis, mas isolados',
+      icon: '💾',
+      explanation: 'A 3ª Revolução Industrial trouxe a eletrônica e os computadores automatizando máquinas, mas ainda sem elas trocarem dados entre si em rede.',
+      desc: 'Uma fábrica passa a controlar máquinas por computadores e circuitos programáveis, reduzindo o trabalho manual — mas essas máquinas ainda não trocam dados entre si pela internet. Que revolução é essa?',
+      hint: 'Tem computador e automação aqui, mas ainda falta a peça da "conexão em rede em tempo real".',
+      options: ['3ª Revolução Industrial', '2ª Revolução Industrial', '1ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)'],
       correctIndex: 0
     },
     {
       id: 4,
-      title: 'Onde investir energia',
-      icon: '🧭',
-      explanation: 'Mapear forças atuais (o que já se faz bem) e oportunidades de desenvolvimento (o que ainda pode crescer) dá clareza sobre onde investir energia.',
-      desc: 'Uma pessoa percebe que já é muito boa em resolver bugs sozinha (força atual), mas ainda precisa desenvolver a habilidade de explicar esses bugs pro time (área a desenvolver). O que ela está fazendo?',
-      hint: 'Não é autocrítica sem rumo — é um mapeamento com um propósito claro.',
-      options: ['Mapeando forças e oportunidades de desenvolvimento', 'Só se autocriticando sem nenhum propósito ou objetivo', 'Se comparando diretamente com outra pessoa da equipe', 'Definindo motivadores profissionais pro trabalho'],
+      title: 'Fábrica conectada',
+      icon: '📡',
+      explanation: 'A 4ª Revolução Industrial (Indústria 4.0) conecta máquinas entre si e à internet em tempo real, formando sistemas ciber-físicos que ajustam a produção sozinhos.',
+      desc: 'Sensores instalados em máquinas de uma fábrica enviam dados em tempo real pela internet, e o sistema ajusta sozinho a produção com base nesses dados. Que revolução industrial é essa?',
+      hint: 'Máquinas "conversando" entre si pela internet em tempo real é a marca registrada dessa revolução.',
+      options: ['4ª Revolução Industrial (Indústria 4.0)', '3ª Revolução Industrial (eletrônica)', '2ª Revolução Industrial (eletricidade)', '1ª Revolução Industrial (vapor)'],
       correctIndex: 0
     },
     {
       id: 5,
-      title: 'Salário alto, motivação baixa',
-      icon: '💭',
-      explanation: 'Quando o trabalho ignora os valores pessoais, a motivação tende a cair com o tempo — reforçando a correlação entre valores e sucesso profissional sustentável.',
-      desc: 'Uma pessoa valoriza trabalho colaborativo e criativo, mas aceita um emprego isolado e repetitivo só pelo salário mais alto. Com o tempo, fica cada vez mais desmotivada, mesmo ganhando bem. O que isso ilustra?',
-      hint: 'Pense na relação entre o que a pessoa valoriza de verdade e a satisfação a longo prazo no trabalho.',
-      options: ['A correlação entre valores pessoais e sucesso profissional sustentável', 'Que salário é o único fator relevante numa escolha de carreira profissional', 'Que motivadores pessoais não têm nenhuma relação real com o trabalho', 'Que essa pessoa simplesmente não gosta de trabalhar, independente do emprego'],
+      title: 'Prevendo a quebra antes que aconteça',
+      icon: '📊',
+      explanation: 'Big Data é a tecnologia habilitadora da Indústria 4.0 usada pra analisar grandes volumes de dados históricos e prever eventos futuros, como a falha de uma peça.',
+      desc: 'Uma empresa analisa anos de histórico de sensores de uma máquina pra prever, com antecedência, quando uma peça provavelmente vai falhar. Qual tecnologia habilitadora da Indústria 4.0 está sendo usada aqui?',
+      hint: 'Não é sobre imprimir peças nem sobre robôs — é sobre analisar um grande volume de dados históricos.',
+      options: ['Big Data', 'Manufatura aditiva (impressão 3D)', 'Segurança digital', 'Robótica colaborativa'],
+      correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Estufa conectada',
+      icon: '🌱',
+      explanation: 'Sensores coletando dados em tempo real (IoT) e enviando pra um servidor remoto acessível de qualquer lugar (nuvem) formam a dupla clássica dessas tecnologias habilitadoras.',
+      desc: 'Uma estufa agrícola tem sensores de temperatura e umidade que enviam dados a cada minuto pra um servidor remoto, permitindo ao produtor acompanhar tudo pelo celular de qualquer lugar. Que dupla de tecnologias habilitadoras está em ação?',
+      hint: 'Pense em duas peças: quem coleta o dado no campo, e onde esse dado é guardado/processado remotamente.',
+      options: ['IoT e nuvem', 'Manufatura aditiva e robótica colaborativa', 'Big Data e segurança digital', 'Integração de sistemas, sem sensores envolvidos'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Peça impressa sob demanda',
+      icon: '🖨️',
+      explanation: 'Fabricar uma peça sob demanda, sem molde industrial pronto, é o uso clássico da manufatura digital/aditiva, como a impressão 3D.',
+      desc: 'Uma fábrica precisa de uma peça de reposição rara que não é mais produzida em série, então imprime a peça sob demanda numa impressora 3D industrial. Qual tecnologia habilitadora está sendo usada?',
+      hint: 'Não é sobre robôs nem sobre dados — é sobre fabricar algo físico sob demanda, sem molde pronto.',
+      options: ['Manufatura digital/aditiva', 'Big Data (análise preditiva)', 'Integração de sistemas', 'Segurança digital (proteção)'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Login em duas etapas na fábrica',
+      icon: '🔐',
+      explanation: 'Autenticação forte e criptografia de dados são medidas centrais de segurança digital, essenciais numa fábrica com muitos sistemas conectados.',
+      desc: 'Uma fábrica conectada exige autenticação em duas etapas pra acessar o painel de controle das máquinas e criptografa os dados entre sensores e servidor. Que tecnologia habilitadora é essa?',
+      hint: 'Pense em proteção contra invasões e acessos indevidos, não em produção física.',
+      options: ['Segurança digital', 'Manufatura aditiva', 'Robótica colaborativa', 'Big Data'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Estoque avisando a produção sozinho',
+      icon: '🔗',
+      explanation: 'Sistemas diferentes trocando dados automaticamente entre si, sem intervenção manual, é exatamente integração de sistemas.',
+      desc: 'O sistema de estoque de uma fábrica avisa automaticamente o sistema de produção quando a matéria-prima está acabando, sem nenhum funcionário copiando essa informação manualmente. Que tecnologia habilitadora é essa?',
+      hint: 'Pense em dois sistemas "conversando" entre si sozinhos, sem planilha copiada na mão.',
+      options: ['Integração de sistemas', 'Manufatura aditiva', 'Robótica colaborativa', 'Nuvem e IoT isoladamente'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Do botão ao painel digital',
+      icon: '📈',
+      explanation: 'A Indústria 4.0 exige aprendizado contínuo de competências digitais — a necessidade de se atualizar sempre, não só trocar de ferramenta uma vez.',
+      desc: 'Um operário que antes só apertava botões numa linha de montagem agora precisa aprender a interpretar dados de um painel digital e ajustar parâmetros num sistema conectado. Que impacto da Indústria 4.0 no desenvolvimento do indivíduo é esse?',
+      hint: 'Pense no que muda pra ELE, não pra fábrica: que tipo de aprendizado passa a ser necessário?',
+      options: ['Necessidade de desenvolver competências digitais continuamente', 'Fim total do trabalho humano nas fábricas, sem exceção nenhuma', 'Nenhum impacto real no trabalho dele, tudo continua igual', 'Obrigação de trocar de profissão completamente, sem alternativa'],
       correctIndex: 0
     }
   ];
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida: Central — Autoconhecimento',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      title: 'Jogos: Central do Mundo do Trabalho — Revoluções Industriais',
+      subtitle: 'Prática · Turma Sistemas',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
@@ -251,7 +301,7 @@
         correctIndex: c.correctIndex,
         answer: c.options[c.correctIndex]
       })),
-      fileName: 'vida-autoconhecimento-pratica-gabarito.txt'
+      fileName: 'mundo-revolucao-pratica-gabarito.txt'
     });
   };
 
@@ -295,7 +345,7 @@
       const isDone = completed.has(c.id);
       const item = document.createElement('div');
       item.className = 'challenge-item' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (!unlocked ? ' locked' : '');
-      const statusIcon = isDone ? '✅' : (unlocked ? '🦉' : '🔒');
+      const statusIcon = isDone ? '✅' : (unlocked ? '🤖' : '🔒');
       item.innerHTML = `<span class="status">${statusIcon}</span><span class="name">${c.icon} ${c.title}</span>`;
       if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
       challengeListEl.appendChild(item);
@@ -351,7 +401,7 @@
 
         const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
         if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de autoconhecimento!', 'success');
+          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de revoluções industriais!', 'success');
         } else {
           logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
           btnNext.style.display = 'inline-block';
@@ -360,8 +410,8 @@
 
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(
-            'vida_autoconhecimento_pratica',
-            `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
+            'mundo_revolucao_pratica',
+            `Jogos — Revoluções Industriais — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
             { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
           );
         }
@@ -400,8 +450,8 @@
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
-        'vida_autoconhecimento_pratica',
-        `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title}`,
+        'mundo_revolucao_pratica',
+        `Jogos — Revoluções Industriais — Parecer ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }

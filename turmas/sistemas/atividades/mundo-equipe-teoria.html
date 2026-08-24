@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Inteligência Emocional e Relacionamentos: Teoria</title>
+<title>PixelForge Studios — Trabalho em Equipe e Colaboração: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -35,15 +35,15 @@
   .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
   .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
 
-  .uma-row{ display:flex; align-items:flex-start; gap:12px; }
-  .uma-avatar{
+  .bit-row{ display:flex; align-items:flex-start; gap:12px; }
+  .bit-avatar{
     font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(94,200,255,0.5));
   }
   .speech-bubble{
     background:var(--panel); border:1px solid var(--blue-dim); padding:16px 18px;
     font-size:14px; line-height:1.7; position:relative;
   }
-  .speech-bubble .uma-name{
+  .speech-bubble .bit-name{
     display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--blue);
     letter-spacing:1px; margin-bottom:6px;
   }
@@ -107,7 +107,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_emocional_teoria';
+  window.ACTIVITY_LOCATION = 'mundo_equipe_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -123,7 +123,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — INTELIGÊNCIA EMOCIONAL (TEORIA)</div>
+    <div>JOGOS — TRABALHO EM EQUIPE E COLABORAÇÃO (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
       <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></span>
@@ -139,97 +139,167 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_emocional_teoria_progress_${username}`;
+  const PROGRESS_KEY = `mundo_equipe_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Oi! Eu sou a <b>Uma</b>, a coruja mentora da PixelForge Studios. Vamos falar de <b>inteligência emocional</b>, começando pelo <b>autocontrole</b>: a capacidade de perceber uma emoção forte (frustração, raiva, ansiedade) e escolher como reagir, em vez de simplesmente explodir no impulso. Não é "não sentir" a emoção — é sentir e ainda assim escolher uma resposta equilibrada.',
+      story: 'Oi! Eu sou o <b>Bit</b>, assistente de indústria 4.0 da PixelForge Studios — hoje vamos falar sobre <b>trabalho em equipe</b>. <b>Colaborar</b> é diferente de só "dividir tarefas e trabalhar cada um no seu canto": colaboração de verdade significa compartilhar conhecimento, ajudar o colega quando ele trava e buscar o resultado do time, não só a sua parte isolada. <b>Cooperação</b> é agir junto rumo a um objetivo comum, mesmo quando as tarefas de cada um são diferentes.',
       question: {
-        prompt: 'Um dev perde horas de trabalho porque esqueceu de salvar um arquivo. Ele sente uma raiva forte, respira, espera alguns minutos e só depois volta a mexer no código, evitando digitar algo por impulso. Isso é um exemplo de quê?',
+        prompt: 'Dois devs de um estúdio trabalham em partes diferentes do mesmo jogo. Quando um deles descobre uma solução útil pra um bug comum, avisa o outro e explica como resolveu, mesmo não sendo obrigado. Isso é um exemplo de quê?',
         options: [
-          'Autocontrole — perceber a emoção forte e escolher uma resposta equilibrada, em vez de agir por impulso',
-          'Falta de emoção — ele simplesmente não sentiu nenhuma raiva nesse exato momento do erro',
-          'Networking, já que ele estava pensando em pedir ajuda pra outras pessoas do time depois',
-          'Nenhuma habilidade emocional envolvida ali, foi só uma reação totalmente aleatória dele'
+          'Colaboração — compartilhar conhecimento e ajudar o colega em prol do resultado do time',
+          'Apenas divisão de tarefas — cada um trabalhando isoladamente, sem se ajudar de verdade',
+          'Competição saudável entre os dois devs, cada um tentando resolver o bug mais rápido',
+          'Gestão de conflitos, já que surgiu um problema técnico comum entre os dois devs'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Sentir a raiva e mesmo assim escolher esperar antes de agir, em vez de reagir por impulso, é exatamente autocontrole.'
+        explanation: 'Isso! Compartilhar conhecimento proativamente pra ajudar o time, mesmo sem obrigação, é a essência da colaboração de verdade.'
       }
     },
     {
-      story: 'Já a <b>adaptabilidade</b> (ou flexibilidade emocional) é a capacidade de se ajustar bem diante de mudanças inesperadas, sem travar emocionalmente. Planos mudam o tempo todo — quem tem adaptabilidade consegue reorganizar as próprias expectativas rápido, em vez de ficar preso à frustração de "não era assim que eu tinha planejado".',
+      story: '<b>Liderança</b> em uma equipe não é sobre mandar — é sobre facilitar o trabalho do time: distribuir tarefas de acordo com a força de cada pessoa, remover obstáculos e dar suporte quando alguém trava. Um bom líder também sabe <b>adaptar seu estilo</b> conforme a situação: às vezes precisa dar mais direção, às vezes precisa só confiar e deixar o time trabalhar (isso se chama <b>liderança situacional</b>).',
       question: {
-        prompt: 'Um estagiário planejou terminar uma tarefa até sexta, mas o escopo muda no meio da semana. Em vez de travar de frustração, ele reorganiza rapidamente suas expectativas e ajusta o plano pra nova realidade. Isso ilustra qual habilidade?',
+        prompt: 'Uma dev experiente vira líder técnica do time e passa a distribuir as tarefas conforme a força de cada colega, além de remover obstáculos que travam o trabalho deles — em vez de só dar ordens. Que tipo de liderança é essa?',
         options: [
-          'Adaptabilidade/flexibilidade emocional diante de mudanças inesperadas',
-          'Autocontrole, mas sem nenhuma relação direta com essa mudança de escopo',
-          'Networking com outras pessoas envolvidas no mesmo projeto',
-          'Feedback recebido de um colega sobre a qualidade da tarefa'
+          'Liderança que facilita o trabalho do time, distribuindo tarefas e removendo obstáculos',
+          'Liderança autoritária, focada só em dar ordens sem nunca ouvir o resto da equipe',
+          'Ausência de liderança, já que ela não está mandando em ninguém diretamente ali',
+          'Gestão de conflitos, porque ela estaria resolvendo um problema entre dois colegas'
         ],
         correctIndex: 0,
-        explanation: 'Exato! Reorganizar expectativas rapidamente diante de uma mudança inesperada, sem travar, é a marca da adaptabilidade emocional.'
+        explanation: 'Exato! Boa liderança facilita o trabalho do time — distribui tarefas conforme a força de cada um e remove obstáculos, em vez de só mandar.'
       }
     },
     {
-      story: 'A <b>empatia</b> conecta diretamente as suas <b>atitudes</b> ao <b>comportamento</b> das outras pessoas: quando você se coloca no lugar de alguém antes de agir, tende a escolher atitudes que geram um impacto melhor nos outros — e isso volta pra você em forma de relações mais saudáveis.',
+      story: '<b>Conflito</b> em equipe não é necessariamente ruim — o que importa é como ele é conduzido. <b>Gestão de conflitos construtiva</b> significa focar no <b>problema</b>, não na pessoa: em vez de "você errou", perguntar "o que podemos ajustar nesse processo pra isso não acontecer de novo?". Assim o conflito vira uma chance de melhorar, em vez de só gerar mágoa.',
       question: {
-        prompt: 'Antes de dar um retorno duro sobre o trabalho de um colega, uma pessoa para e pensa em como ele provavelmente vai se sentir ao ouvir aquilo — e escolhe palavras mais cuidadosas, sem perder a honestidade. Que habilidade está sendo usada?',
+        prompt: 'Dois devs discordam sobre como implementar uma feature. Em vez de discutir quem "está certo", eles param pra listar os prós e contras técnicos de cada abordagem e decidem juntos qual encaixa melhor no projeto. Isso é um exemplo de quê?',
         options: [
-          'Empatia — pensar no impacto da própria atitude no comportamento/sentimento do outro',
-          'Autocontrole, sem nenhuma relação direta com o sentimento do outro colega ali',
-          'Networking, só porque a situação envolve conversar diretamente com outra pessoa',
-          'Nenhuma habilidade emocional envolvida ali, foi apenas educação básica bem comum'
+          'Gestão de conflitos construtiva — focar no problema técnico, não em quem está certo',
+          'Falta de liderança na equipe, já que ninguém decidiu sozinho o rumo a seguir ali',
+          'Um conflito destrutivo, que já deveria ter sido evitado desde o início da discussão',
+          'Colaboração comum entre os dois devs, sem nenhuma relação real com conflito algum'
         ],
         correctIndex: 0,
-        explanation: 'Isso mesmo! Pensar em como sua atitude vai impactar o outro, antes de agir, é o núcleo da empatia.'
+        explanation: 'Isso! Focar nos prós e contras técnicos do problema, em vez de em quem "está certo", é exatamente gestão de conflitos construtiva.'
       }
     },
     {
-      story: '<b>Dar e receber feedback</b> também exige inteligência emocional: pra dar, é preciso equilibrar honestidade com cuidado; pra receber, é preciso controlar a reação defensiva imediata e realmente escutar o que foi dito, mesmo quando dói um pouco.',
+      story: '<b>Empatia</b> é se colocar no lugar do colega antes de julgar ou responder — praticar <b>escuta ativa</b>: ouvir de verdade o que a pessoa está dizendo, sem já estar pensando na sua resposta. Junto com isso vem a <b>flexibilidade</b>: estar aberto a mudar de ideia ou de plano quando a situação pede, sem se apegar demais à própria opinião inicial.',
       question: {
-        prompt: 'Um dev recebe uma crítica sobre a qualidade do seu código. Em vez de se defender imediatamente, ele respira, agradece o retorno e pergunta exemplos específicos pra entender melhor o que pode melhorar. Isso ilustra qual habilidade?',
+        prompt: 'Um colega reclama que uma tarefa está demorando mais que o esperado. Em vez de já rebater "mas era simples", a dev pergunta o que está travando e escuta a explicação completa antes de sugerir qualquer coisa. Isso é um exemplo de quê?',
         options: [
-          'Inteligência emocional ao receber feedback — controlar a reação defensiva e realmente escutar',
-          'Falta de autocontrole, já que ele hesitou um pouco antes de responder à crítica recebida',
-          'Networking, mesmo sem nenhuma relação real com o feedback recebido nesse momento',
-          'Adaptabilidade emocional, mas sem nenhuma relação direta com esse tipo de feedback'
+          'Empatia e escuta ativa — entender a perspectiva do colega antes de responder',
+          'Gestão de conflitos, mesmo sem ter havido nenhum atrito real entre os dois ali',
+          'Falta de liderança na equipe, já que ninguém está no comando dessa conversa',
+          'Flexibilidade da equipe, mas sem nenhuma relação direta com escuta ativa'
         ],
         correctIndex: 0,
-        explanation: 'Perfeito! Controlar o impulso defensivo e buscar entender o feedback de verdade é inteligência emocional aplicada aos relacionamentos.'
+        explanation: 'Isso mesmo! Ouvir a explicação completa antes de reagir, sem já rebater de cara, é a marca da empatia e da escuta ativa.'
       }
     },
     {
-      story: 'Por fim, existem as <b>redes de relacionamento</b> (<b>networking</b>): cultivar conexões genuínas com outras pessoas, baseadas em interesse real e troca mútua — não em "usar" alguém só quando você precisa de algo. Uma boa rede se constrói com tempo, ajudando os outros também, não só pedindo ajuda quando é conveniente. Agora você já reconhece autocontrole, adaptabilidade, empatia, feedback com inteligência emocional e como construir relações genuínas!',
+      story: 'Por fim, tudo isso se junta na <b>integração do trabalho colaborativo</b>: times ágeis mudam de prioridade com frequência, e um time maduro se adapta a isso com <b>flexibilidade</b>, mantendo a <b>comunicação</b> clara sobre o que mudou e por quê — em vez de só reclamar da mudança. Agora você já reconhece o que faz uma equipe colaborar bem: cooperação, liderança que apoia, conflitos bem conduzidos, empatia e flexibilidade!',
       question: {
-        prompt: 'Uma pessoa mantém contato com colegas de outros projetos mesmo quando não precisa de nada deles, trocando ideias e ajudando quando pode. Meses depois, quando precisa de uma indicação, várias pessoas se dispõem a ajudar de volta. O que essa história ilustra?',
+        prompt: 'No meio de uma sprint, o cliente pede uma mudança de prioridade. Em vez de resistir, o time se reúne rapidamente, entende o motivo da mudança, comunica o novo plano pra todos e ajusta o trabalho. Isso é um exemplo de quê?',
         options: [
-          'Networking genuíno — construir conexões reais com o tempo, não só quando é conveniente',
-          'Que ela só teve muita sorte, sem nenhuma habilidade emocional envolvida nessa história',
-          'Autocontrole, sem nenhuma relação direta com esse tipo de relacionamento profissional',
-          'Falta de empatia, já que ela ajudou várias pessoas diferentes ao mesmo tempo'
+          'Flexibilidade e comunicação integradas ao trabalho colaborativo da equipe',
+          'Falta de planejamento da equipe, que não previu essa mudança de prioridade',
+          'Um conflito mal resolvido entre o time e o cliente sobre prioridades',
+          'Liderança autoritária impondo a mudança pro time sem nenhuma explicação'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Construir conexões genuínas ao longo do tempo, sem interesse imediato, é exatamente o que sustenta um bom networking.'
+        explanation: 'Perfeito! Adaptar o plano com flexibilidade e comunicar claramente o motivo da mudança pra todo o time é exatamente integração do trabalho colaborativo.'
+      }
+    },
+    {
+      story: 'Times ágeis costumam fazer <b>retrospectivas</b>: encontros periódicos onde o time para pra refletir sobre o que funcionou bem e o que travou no período, dando <b>feedback aberto</b> sobre o processo — não sobre pessoas — pra ajustar o próximo ciclo de trabalho.',
+      question: {
+        prompt: 'Ao final de cada sprint, o time se reúne pra listar o que funcionou bem e o que atrapalhou, sem apontar culpados, só focando em ajustar o processo pro próximo ciclo. Que prática de trabalho em equipe é essa?',
+        options: [
+          'Retrospectiva com feedback aberto sobre o processo',
+          'Gestão de conflitos, porque alguém foi apontado como culpado',
+          'Liderança autoritária definindo sozinha o que vai mudar',
+          'Só uma reunião comum, sem relação com colaboração de equipe'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Refletir periodicamente sobre o processo (não sobre culpados) e ajustar o próximo ciclo é a essência da retrospectiva com feedback aberto.'
+      }
+    },
+    {
+      story: 'Quando um time cresce, ficar sem <b>papéis claros</b> gera retrabalho: duas pessoas mexendo na mesma parte sem saber, ou uma tarefa importante que ninguém assumiu. Definir quem é responsável por qual frente — mesmo que todos colaborem no restante — evita esse tipo de atrito.',
+      question: {
+        prompt: 'Num time de 5 devs, dois deles mexeram na mesma função ao mesmo tempo sem saber, gerando conflito no código. Depois disso, o time passa a definir claramente quem cuida de qual módulo antes de começar a sprint. Que prática está sendo adotada?',
+        options: [
+          'Definição clara de papéis e responsabilidades no time',
+          'Gestão de conflitos depois que o problema já aconteceu, sem prevenção',
+          'Falta de colaboração entre os devs do time',
+          'Liderança autoritária impondo tarefas sem consulta'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Definir com clareza quem é responsável por qual frente do projeto evita retrabalho e conflitos de quem mexeu em quê — isso é definição de papéis.'
+      }
+    },
+    {
+      story: 'Colaboração também aparece na <b>mentoria</b>: um dev mais experiente dedica tempo pra ensinar e revisar o trabalho de alguém mais júnior, não porque é obrigado, mas porque isso fortalece o time inteiro no longo prazo.',
+      question: {
+        prompt: 'Uma dev sênior reserva uma hora por semana pra revisar o código de um colega júnior junto com ele, explicando o porquê de cada sugestão, em vez de só corrigir sozinha e mandar de volta. Isso é um exemplo de quê?',
+        options: [
+          'Mentoria — colaboração fortalecendo o crescimento do time no longo prazo',
+          'Gestão de conflitos entre os dois devs, resolvendo um atrito técnico',
+          'Liderança autoritária, corrigindo o código sem explicar nada pro colega',
+          'Uma tarefa qualquer da rotina, sem nenhuma relação com colaboração de equipe'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Dedicar tempo pra ensinar e explicar, não só corrigir, é mentoria — uma forma de colaboração que fortalece o time no longo prazo.'
+      }
+    },
+    {
+      story: 'Times distribuídos em fusos horários diferentes não podem contar só com reuniões ao vivo. <b>Comunicação assíncrona</b> — documentar decisões por escrito, deixar contexto claro numa mensagem, sem esperar resposta imediata — garante que todo mundo se atualize no próprio horário, sem travar o trabalho dos outros.',
+      question: {
+        prompt: 'Um time com devs no Brasil e em Portugal documenta cada decisão técnica importante num canal escrito, com contexto completo, em vez de depender só de reuniões ao vivo que nem todo mundo consegue acompanhar. Que prática de equipe é essa?',
+        options: [
+          'Comunicação assíncrona bem documentada',
+          'Falta de comunicação entre os times',
+          'Gestão de conflitos por causa do fuso horário',
+          'Liderança centralizando toda decisão sozinha'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Documentar decisões por escrito, com contexto completo, pra quem não estava na hora, é comunicação assíncrona bem feita.'
+      }
+    },
+    {
+      story: 'Por fim, <b>reconhecer publicamente</b> o bom trabalho de um colega — e não só apontar erros — fortalece a colaboração: motiva quem foi reconhecido e mostra pro resto do time que esforço extra é notado, criando um ambiente mais colaborativo. Agora você já conhece várias facetas do trabalho em equipe: retrospectiva, papéis claros, mentoria, comunicação assíncrona e reconhecimento!',
+      question: {
+        prompt: 'Num daily, o líder técnico menciona publicamente que um dev resolveu um bug difícil sozinho durante o fim de semana, agradecendo o esforço na frente de todo o time. Que efeito essa atitude tende a gerar na equipe?',
+        options: [
+          'Fortalece a colaboração, motivando quem foi reconhecido e o resto do time',
+          'Gera conflito na equipe, já que só uma pessoa foi mencionada publicamente',
+          'Nenhum efeito relevante no time, é só um comentário qualquer no daily',
+          'Enfraquece a liderança, porque ele elogiou em vez de cobrar mais resultado'
+        ],
+        correctIndex: 0,
+        explanation: 'Perfeito! Reconhecer publicamente o esforço de um colega motiva quem foi reconhecido e reforça uma cultura colaborativa em todo o time.'
       }
     }
   ];
 
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
-      capacidade: 'Identificar as habilidades socioemocionais que impactam nos relacionamentos interpessoais / Avaliar o impacto de atitudes e comportamentos próprios com relação às demais pessoas.',
+      title: 'Jogos — Trabalho em Equipe e Colaboração',
+      subtitle: 'Aula Teórica · Trilha Trabalho em Equipe e Colaboração · Turma Sistemas',
+      capacidade: 'Atuar em equipes de forma colaborativa.',
       steps: STEPS,
-      fileName: 'vida-emocional-teoria-slides.pptx',
+      fileName: 'mundo-equipe-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central do Projeto de Vida: Inteligência Emocional" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
+      closingText: 'Abra o módulo "Prática — Central do Mundo do Trabalho: Trabalho em Equipe" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
     });
   };
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
+      title: 'Jogos — Trabalho em Equipe e Colaboração',
+      subtitle: 'Aula Teórica · Trilha Trabalho em Equipe e Colaboração · Turma Sistemas',
       items: STEPS.map((step, i) => ({
         number: i + 1,
         prompt: step.question.prompt,
@@ -237,7 +307,7 @@
         correctIndex: step.question.correctIndex,
         answer: step.question.options[step.question.correctIndex]
       })),
-      fileName: 'vida-emocional-teoria-gabarito.txt'
+      fileName: 'mundo-equipe-teoria-gabarito.txt'
     });
   };
 
@@ -311,7 +381,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('vida_emocional_teoria', label, {
+      window.reportActivity('mundo_equipe_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -322,16 +392,16 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[stepOrder[currentStepIndex]];
-    reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Jogos — Trabalho em Equipe — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
     const row = document.createElement('div');
-    row.className = 'uma-row';
+    row.className = 'bit-row';
     row.innerHTML = `
-      <div class="uma-avatar">🦉</div>
+      <div class="bit-avatar">🤖</div>
       <div class="speech-bubble">
-        <span class="uma-name">Uma, a Coruja Mentora</span>
+        <span class="bit-name">Bit, Assistente de Indústria 4.0</span>
         ${step.story}
       </div>
     `;
@@ -403,7 +473,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Jogos — Trabalho em Equipe — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -427,7 +497,7 @@
     const passed = reviewOnly ? true : pct >= 80;
     if (!reviewOnly) {
       saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: passed });
-      reportStep(`Projeto de Vida — Inteligência Emocional — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
+      reportStep(`Jogos — Trabalho em Equipe — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
     }
 
     progressFill.style.width = '100%';
@@ -436,10 +506,10 @@
     storyWrap.innerHTML = passed ? `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Inteligência Emocional concluída!</h2>
-        <p>Você já reconhece autocontrole, adaptabilidade emocional, empatia, feedback com inteligência emocional e o que sustenta um networking genuíno.</p>
+        <h2>Trabalho em Equipe concluído!</h2>
+        <p>Você já reconhece o que faz uma equipe colaborar bem: cooperação de verdade, liderança que apoia, conflitos conduzidos de forma construtiva, empatia com escuta ativa e flexibilidade diante de mudanças.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%).</div>
-        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Projeto de Vida.</p>
+        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Mundo do Trabalho.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">
           <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
         </div>

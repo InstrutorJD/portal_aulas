@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Central do Projeto de Vida</title>
+<title>PixelForge Studios — Jogos: Central do Mundo do Trabalho</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -125,7 +125,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_autoconhecimento_pratica';
+  window.ACTIVITY_LOCATION = 'mundo_equipe_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -139,7 +139,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — CENTRAL (AUTOCONHECIMENTO)</div>
+    <div>JOGOS — CENTRAL DO MUNDO DO TRABALHO (TRABALHO EM EQUIPE)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
@@ -153,7 +153,7 @@
       <div class="main-panel">
         <div class="challenge-header">
           <div class="ticket-row">
-            <div class="ticket-icon" id="ticketIcon">🦉</div>
+            <div class="ticket-icon" id="ticketIcon">🤖</div>
             <div class="ticket-status pending" id="ticketStatus">PENDENTE</div>
           </div>
           <h2 id="challengeTitle">--</h2>
@@ -184,65 +184,115 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_autoconhecimento_pratica_progress_${username}`;
+  const PROGRESS_KEY = `mundo_equipe_pratica_progress_${username}`;
 
   const CHALLENGES = [
     {
       id: 1,
-      title: 'O que te move?',
-      icon: '🔥',
-      explanation: 'Motivadores pessoais e profissionais podem ser bem diferentes, e reconhecer os dois é parte essencial do autoconhecimento.',
-      desc: 'Uma pessoa adora criar coisas com as mãos nas horas livres (motivador pessoal), mas no trabalho o que mais a motiva é resolver problemas lógicos complexos (motivador profissional). O que isso mostra?',
-      hint: 'Pense se os dois tipos de motivador precisam ser sempre iguais.',
-      options: ['Motivadores pessoais e profissionais podem ser diferentes e ambos são válidos', 'Eles são sempre exatamente iguais, sem nenhuma diferença entre os dois', 'O motivador profissional sempre importa mais do que o pessoal, sem exceção', 'Motivador pessoal não existe de verdade — só o profissional conta de fato'],
+      title: 'Avisar o colega sem ser pedido',
+      icon: '🤝',
+      explanation: 'Compartilhar conhecimento proativamente pra ajudar o time, mesmo sem ser obrigado, é a essência da colaboração de verdade — diferente de só dividir tarefas e trabalhar isolado.',
+      desc: 'Dois devs trabalham em partes diferentes do mesmo jogo. Quando um descobre uma solução útil pra um bug comum, avisa o outro e explica como resolveu, mesmo não sendo obrigado. Isso é um exemplo de quê?',
+      hint: 'Pense na diferença entre "cada um no seu canto" e "ajudar o time mesmo sem ser cobrado".',
+      options: ['Colaboração entre os dois devs', 'Apenas divisão de tarefas, sem ajuda mútua', 'Competição saudável entre os dois devs', 'Gestão de conflitos entre a equipe'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Do potencial ao resultado',
-      icon: '🎯',
-      explanation: 'Competência é a habilidade já treinada aplicada com sucesso em um contexto real, junto com conhecimento e atitude.',
-      desc: 'Uma pessoa teve facilidade natural com números, treinou lógica de programação por anos, e hoje aplica esse conhecimento com sucesso em projetos reais. Aplicar com sucesso em um contexto real representa qual conceito?',
-      hint: 'Não é o talento nem a aptidão — é a etapa final, onde o conhecimento gera resultado de verdade.',
-      options: ['Competência', 'Talento', 'Aptidão', 'Nenhum desses conceitos'],
+      title: 'Líder que remove obstáculos',
+      icon: '🧭',
+      explanation: 'Boa liderança facilita o trabalho do time — distribui tarefas conforme a força de cada pessoa e remove obstáculos, em vez de só dar ordens.',
+      desc: 'Uma dev vira líder técnica do time e passa a distribuir tarefas conforme a força de cada colega, além de remover obstáculos que travam o trabalho deles — em vez de só mandar. Que tipo de liderança é essa?',
+      hint: 'Pense em "facilitar o caminho do time" versus "só dar ordens".',
+      options: ['Liderança que facilita o trabalho e remove obstáculos', 'Liderança autoritária, focada apenas em dar ordens à equipe', 'Ausência de liderança, já que ninguém está no comando', 'Gestão de conflitos entre os membros do time'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Facilidade nunca treinada',
-      icon: '🌱',
-      explanation: 'Aptidão é um potencial natural ainda não desenvolvido em habilidade treinada — a diferença entre "ainda não treinei" e "já treinei".',
-      desc: 'Um aluno nunca programou antes, mas no primeiro contato com lógica resolve os exercícios com facilidade incomum, sem nunca ter treinado. Isso é melhor descrito como quê?',
-      hint: 'Ele nunca treinou isso antes — então não pode ser algo já desenvolvido.',
-      options: ['Aptidão, um potencial natural ainda não treinado', 'Habilidade, algo que ele já treinou bastante antes', 'Competência, aplicada com sucesso num contexto real', 'Só sorte, sem relação nenhuma com autoconhecimento'],
+      title: 'Discordância técnica bem conduzida',
+      icon: '⚖️',
+      explanation: 'Focar nos prós e contras técnicos do problema, em vez de em quem "está certo", é gestão de conflitos construtiva.',
+      desc: 'Dois devs discordam sobre como implementar uma feature. Em vez de discutir quem está certo, eles listam prós e contras técnicos de cada abordagem e decidem juntos. Isso é um exemplo de quê?',
+      hint: 'O foco está no problema técnico ou na pessoa que "errou"?',
+      options: ['Gestão de conflitos construtiva', 'Falta de liderança dentro da equipe', 'Um conflito destrutivo mal conduzido', 'Colaboração sem relação com conflito'],
       correctIndex: 0
     },
     {
       id: 4,
-      title: 'Onde investir energia',
-      icon: '🧭',
-      explanation: 'Mapear forças atuais (o que já se faz bem) e oportunidades de desenvolvimento (o que ainda pode crescer) dá clareza sobre onde investir energia.',
-      desc: 'Uma pessoa percebe que já é muito boa em resolver bugs sozinha (força atual), mas ainda precisa desenvolver a habilidade de explicar esses bugs pro time (área a desenvolver). O que ela está fazendo?',
-      hint: 'Não é autocrítica sem rumo — é um mapeamento com um propósito claro.',
-      options: ['Mapeando forças e oportunidades de desenvolvimento', 'Só se autocriticando sem nenhum propósito ou objetivo', 'Se comparando diretamente com outra pessoa da equipe', 'Definindo motivadores profissionais pro trabalho'],
+      title: 'Ouvir antes de rebater',
+      icon: '👂',
+      explanation: 'Ouvir a explicação completa do colega antes de reagir, sem já rebater de cara, é a marca da empatia e da escuta ativa.',
+      desc: 'Um colega reclama que uma tarefa está demorando mais que o esperado. Em vez de já rebater "mas era simples", a dev pergunta o que está travando e escuta a explicação completa antes de sugerir algo. Isso é um exemplo de quê?',
+      hint: 'Pense em quem fala primeiro: a pessoa que escuta, ou a que já rebate?',
+      options: ['Empatia e escuta ativa com o colega', 'Gestão de conflitos sem nenhum atrito real', 'Falta de liderança na conversa', 'Flexibilidade sem relação com escuta ativa'],
       correctIndex: 0
     },
     {
       id: 5,
-      title: 'Salário alto, motivação baixa',
-      icon: '💭',
-      explanation: 'Quando o trabalho ignora os valores pessoais, a motivação tende a cair com o tempo — reforçando a correlação entre valores e sucesso profissional sustentável.',
-      desc: 'Uma pessoa valoriza trabalho colaborativo e criativo, mas aceita um emprego isolado e repetitivo só pelo salário mais alto. Com o tempo, fica cada vez mais desmotivada, mesmo ganhando bem. O que isso ilustra?',
-      hint: 'Pense na relação entre o que a pessoa valoriza de verdade e a satisfação a longo prazo no trabalho.',
-      options: ['A correlação entre valores pessoais e sucesso profissional sustentável', 'Que salário é o único fator relevante numa escolha de carreira profissional', 'Que motivadores pessoais não têm nenhuma relação real com o trabalho', 'Que essa pessoa simplesmente não gosta de trabalhar, independente do emprego'],
+      title: 'Mudança de prioridade no meio da sprint',
+      icon: '🔀',
+      explanation: 'Adaptar o plano com flexibilidade e comunicar claramente o motivo da mudança pra todo o time é integração do trabalho colaborativo.',
+      desc: 'No meio de uma sprint, o cliente pede uma mudança de prioridade. O time se reúne rapidamente, entende o motivo, comunica o novo plano pra todos e ajusta o trabalho, em vez de resistir. Isso é um exemplo de quê?',
+      hint: 'Pense em duas coisas juntas: se adaptar à mudança e comunicar isso claramente pro time.',
+      options: ['Flexibilidade e comunicação integradas ao time', 'Falta de planejamento da equipe pra essa mudança', 'Um conflito mal resolvido com o cliente', 'Liderança autoritária impondo a mudança sem explicação'],
+      correctIndex: 0
+    },
+    {
+      id: 6,
+      title: 'Retrospectiva sem apontar culpados',
+      icon: '🔍',
+      explanation: 'Refletir periodicamente sobre o processo (não sobre culpados) e ajustar o próximo ciclo é a essência da retrospectiva com feedback aberto.',
+      desc: 'Ao final de cada sprint, o time se reúne pra listar o que funcionou bem e o que atrapalhou, sem apontar culpados, só ajustando o processo pro próximo ciclo. Que prática é essa?',
+      hint: 'O foco está em apontar quem errou, ou em ajustar o processo do time?',
+      options: ['Retrospectiva com feedback aberto', 'Gestão de conflitos apontando culpados', 'Liderança autoritária decidindo sozinha', 'Uma reunião comum, sem relação com colaboração'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Dois devs na mesma função',
+      icon: '🗂️',
+      explanation: 'Definir com clareza quem é responsável por qual frente do projeto evita retrabalho e conflitos de "quem mexeu em quê" — isso é definição de papéis.',
+      desc: 'Dois devs mexeram na mesma função ao mesmo tempo sem saber, gerando conflito no código. Depois disso, o time passa a definir claramente quem cuida de qual módulo antes da sprint. Que prática é essa?',
+      hint: 'Pense em prevenção: o time está evitando o retrabalho combinando algo antes de começar.',
+      options: ['Definição clara de papéis no time', 'Gestão de conflitos só depois do problema', 'Falta de colaboração entre os devs', 'Liderança impondo tarefas sem consulta'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Uma hora por semana ensinando',
+      icon: '🎓',
+      explanation: 'Dedicar tempo pra ensinar e explicar, não só corrigir, é mentoria — uma forma de colaboração que fortalece o time no longo prazo.',
+      desc: 'Uma dev sênior reserva uma hora por semana pra revisar o código de um colega júnior junto com ele, explicando cada sugestão, em vez de só corrigir sozinha. Isso é um exemplo de quê?',
+      hint: 'Repare que ela explica o "porquê", não só entrega a correção pronta.',
+      options: ['Mentoria entre colegas de equipe', 'Gestão de conflitos entre os dois', 'Liderança autoritária sem explicação', 'Uma tarefa qualquer, sem relação com colaboração'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Time em dois fusos horários',
+      icon: '🌍',
+      explanation: 'Documentar decisões por escrito, com contexto completo, pra quem não estava na hora, é comunicação assíncrona bem feita.',
+      desc: 'Um time com devs no Brasil e em Portugal documenta cada decisão técnica num canal escrito, com contexto completo, em vez de depender só de reuniões ao vivo. Que prática é essa?',
+      hint: 'Pense em como a informação chega pra quem estava dormindo na hora da decisão.',
+      options: ['Comunicação assíncrona bem documentada', 'Falta de comunicação entre os dois times distantes', 'Gestão de conflitos por causa do fuso horário diferente', 'Liderança centralizando toda decisão sozinha'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Elogio público no daily',
+      icon: '👏',
+      explanation: 'Reconhecer publicamente o esforço de um colega motiva quem foi reconhecido e reforça uma cultura colaborativa em todo o time.',
+      desc: 'Num daily, o líder técnico menciona publicamente que um dev resolveu um bug difícil sozinho no fim de semana, agradecendo na frente do time. Que efeito essa atitude tende a gerar?',
+      hint: 'Pense no efeito de reconhecer esforço em público, não em cobrar mais.',
+      options: ['Fortalece a colaboração e motiva o time', 'Gera conflito por só uma pessoa ser citada', 'Nenhum efeito relevante', 'Enfraquece a liderança por elogiar'],
       correctIndex: 0
     }
   ];
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida: Central — Autoconhecimento',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      title: 'Jogos: Central do Mundo do Trabalho — Trabalho em Equipe',
+      subtitle: 'Prática · Turma Sistemas',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
@@ -251,7 +301,7 @@
         correctIndex: c.correctIndex,
         answer: c.options[c.correctIndex]
       })),
-      fileName: 'vida-autoconhecimento-pratica-gabarito.txt'
+      fileName: 'mundo-equipe-pratica-gabarito.txt'
     });
   };
 
@@ -295,7 +345,7 @@
       const isDone = completed.has(c.id);
       const item = document.createElement('div');
       item.className = 'challenge-item' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (!unlocked ? ' locked' : '');
-      const statusIcon = isDone ? '✅' : (unlocked ? '🦉' : '🔒');
+      const statusIcon = isDone ? '✅' : (unlocked ? '🤖' : '🔒');
       item.innerHTML = `<span class="status">${statusIcon}</span><span class="name">${c.icon} ${c.title}</span>`;
       if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
       challengeListEl.appendChild(item);
@@ -351,7 +401,7 @@
 
         const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
         if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de autoconhecimento!', 'success');
+          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de trabalho em equipe!', 'success');
         } else {
           logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
           btnNext.style.display = 'inline-block';
@@ -360,8 +410,8 @@
 
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(
-            'vida_autoconhecimento_pratica',
-            `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
+            'mundo_equipe_pratica',
+            `Jogos — Trabalho em Equipe — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
             { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
           );
         }
@@ -400,8 +450,8 @@
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
-        'vida_autoconhecimento_pratica',
-        `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title}`,
+        'mundo_equipe_pratica',
+        `Jogos — Trabalho em Equipe — Parecer ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }

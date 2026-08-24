@@ -125,7 +125,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_autoconhecimento_pratica';
+  window.ACTIVITY_LOCATION = 'vida_equipe_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -139,7 +139,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — CENTRAL (AUTOCONHECIMENTO)</div>
+    <div>PROJETO DE VIDA — CENTRAL (COLABORAÇÃO EM EQUIPE)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
@@ -184,65 +184,65 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_autoconhecimento_pratica_progress_${username}`;
+  const PROGRESS_KEY = `vida_equipe_pratica_progress_${username}`;
 
   const CHALLENGES = [
     {
       id: 1,
-      title: 'O que te move?',
-      icon: '🔥',
-      explanation: 'Motivadores pessoais e profissionais podem ser bem diferentes, e reconhecer os dois é parte essencial do autoconhecimento.',
-      desc: 'Uma pessoa adora criar coisas com as mãos nas horas livres (motivador pessoal), mas no trabalho o que mais a motiva é resolver problemas lógicos complexos (motivador profissional). O que isso mostra?',
-      hint: 'Pense se os dois tipos de motivador precisam ser sempre iguais.',
-      options: ['Motivadores pessoais e profissionais podem ser diferentes e ambos são válidos', 'Eles são sempre exatamente iguais, sem nenhuma diferença entre os dois', 'O motivador profissional sempre importa mais do que o pessoal, sem exceção', 'Motivador pessoal não existe de verdade — só o profissional conta de fato'],
+      title: 'Ajudar mesmo sem ser sua tarefa',
+      icon: '🎪',
+      explanation: 'Trabalhar em tarefas diferentes mas se ajudar mutuamente rumo ao mesmo objetivo é a essência da colaboração e cooperação.',
+      desc: 'Num grupo organizando uma game jam, cada pessoa cuida de uma parte diferente, mas todos se ajudam quando alguma parte trava, mesmo sem ser sua responsabilidade direta. Isso é um exemplo de quê?',
+      hint: 'Pense em "cada um com sua tarefa, mas ninguém sozinho quando algo trava".',
+      options: ['Colaboração e cooperação entre a equipe', 'Cada um trabalhando isoladamente, sem se ajudar', 'Definição de papéis, sem nenhuma cooperação', 'Gestão de conflitos entre os membros'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Do potencial ao resultado',
-      icon: '🎯',
-      explanation: 'Competência é a habilidade já treinada aplicada com sucesso em um contexto real, junto com conhecimento e atitude.',
-      desc: 'Uma pessoa teve facilidade natural com números, treinou lógica de programação por anos, e hoje aplica esse conhecimento com sucesso em projetos reais. Aplicar com sucesso em um contexto real representa qual conceito?',
-      hint: 'Não é o talento nem a aptidão — é a etapa final, onde o conhecimento gera resultado de verdade.',
-      options: ['Competência', 'Talento', 'Aptidão', 'Nenhum desses conceitos'],
+      title: 'Quem faz o quê',
+      icon: '📋',
+      explanation: 'Decidir claramente quem faz o quê, de acordo com o talento de cada um, é definição de papéis.',
+      desc: 'Antes de começar, o grupo decide claramente: "você cuida das inscrições, eu cuido do local, ela cuida dos prêmios" — cada um sabendo sua responsabilidade. O que isso representa?',
+      hint: 'Pense em clareza sobre quem é responsável por cada parte.',
+      options: ['Definição de papéis dentro do grupo', 'Falta de colaboração entre os membros da equipe', 'Compromisso com metas, sem relação direta com papéis', 'Comunicação em equipe, sem relação direta com papéis'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Facilidade nunca treinada',
-      icon: '🌱',
-      explanation: 'Aptidão é um potencial natural ainda não desenvolvido em habilidade treinada — a diferença entre "ainda não treinei" e "já treinei".',
-      desc: 'Um aluno nunca programou antes, mas no primeiro contato com lógica resolve os exercícios com facilidade incomum, sem nunca ter treinado. Isso é melhor descrito como quê?',
-      hint: 'Ele nunca treinou isso antes — então não pode ser algo já desenvolvido.',
-      options: ['Aptidão, um potencial natural ainda não treinado', 'Habilidade, algo que ele já treinou bastante antes', 'Competência, aplicada com sucesso num contexto real', 'Só sorte, sem relação nenhuma com autoconhecimento'],
+      title: 'Tarefa cansativa, mas concluída',
+      icon: '💪',
+      explanation: 'Continuar cumprindo sua parte mesmo quando cansa, porque o objetivo comum depende disso, é compromisso com metas compartilhadas.',
+      desc: 'Uma tarefa da organização fica repetitiva e cansativa, mas a pessoa responsável continua fazendo, porque sabe que o evento todo depende dela. Isso ilustra qual conceito?',
+      hint: 'Pense na diferença entre desistir e continuar por causa do objetivo maior.',
+      options: ['Compromisso com objetivos e metas compartilhadas', 'Definição de papéis, sem relação com compromisso', 'Comunicação em equipe, sem relação com metas', 'Falta de motivação da pessoa responsável'],
       correctIndex: 0
     },
     {
       id: 4,
-      title: 'Onde investir energia',
-      icon: '🧭',
-      explanation: 'Mapear forças atuais (o que já se faz bem) e oportunidades de desenvolvimento (o que ainda pode crescer) dá clareza sobre onde investir energia.',
-      desc: 'Uma pessoa percebe que já é muito boa em resolver bugs sozinha (força atual), mas ainda precisa desenvolver a habilidade de explicar esses bugs pro time (área a desenvolver). O que ela está fazendo?',
-      hint: 'Não é autocrítica sem rumo — é um mapeamento com um propósito claro.',
-      options: ['Mapeando forças e oportunidades de desenvolvimento', 'Só se autocriticando sem nenhum propósito ou objetivo', 'Se comparando diretamente com outra pessoa da equipe', 'Definindo motivadores profissionais pro trabalho'],
+      title: 'Avisar antes do prazo estourar',
+      icon: '📢',
+      explanation: 'Avisar com antecedência sobre um atraso, em vez de sumir, é boa comunicação em equipe.',
+      desc: 'Uma pessoa percebe que vai atrasar sua parte e avisa o grupo com antecedência, explicando o motivo, em vez de simplesmente sumir até o prazo estourar. Isso ilustra qual conceito?',
+      hint: 'Pense na diferença entre avisar cedo e deixar todo mundo no escuro.',
+      options: ['Comunicação em equipe sobre o andamento', 'Falta de compromisso com o prazo combinado', 'Definição de papéis, sem relação com comunicação', 'Colaboração sem relação com comunicação'],
       correctIndex: 0
     },
     {
       id: 5,
-      title: 'Salário alto, motivação baixa',
-      icon: '💭',
-      explanation: 'Quando o trabalho ignora os valores pessoais, a motivação tende a cair com o tempo — reforçando a correlação entre valores e sucesso profissional sustentável.',
-      desc: 'Uma pessoa valoriza trabalho colaborativo e criativo, mas aceita um emprego isolado e repetitivo só pelo salário mais alto. Com o tempo, fica cada vez mais desmotivada, mesmo ganhando bem. O que isso ilustra?',
-      hint: 'Pense na relação entre o que a pessoa valoriza de verdade e a satisfação a longo prazo no trabalho.',
-      options: ['A correlação entre valores pessoais e sucesso profissional sustentável', 'Que salário é o único fator relevante numa escolha de carreira profissional', 'Que motivadores pessoais não têm nenhuma relação real com o trabalho', 'Que essa pessoa simplesmente não gosta de trabalhar, independente do emprego'],
+      title: 'Um evento que parece um só',
+      icon: '🧩',
+      explanation: 'Quando as partes de cada pessoa se encaixam num resultado único e coerente, isso é integração do trabalho colaborativo.',
+      desc: 'No dia do evento, inscrições, local, prêmios e comunicação funcionam de forma alinhada, como se tivessem sido pensados por uma única pessoa, mesmo feitos por gente diferente. O que isso representa?',
+      hint: 'Pense em "pedaços separados" versus "um todo coeso".',
+      options: ['Integração do trabalho colaborativo', 'Sorte, sem relação com trabalho em equipe', 'Falta de definição de papéis no grupo', 'Um conflito bem resolvido entre os membros'],
       correctIndex: 0
     }
   ];
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida: Central — Autoconhecimento',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      title: 'Projeto de Vida: Central — Colaboração em Equipe',
+      subtitle: 'Prática · Turma Sistemas',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
@@ -251,7 +251,7 @@
         correctIndex: c.correctIndex,
         answer: c.options[c.correctIndex]
       })),
-      fileName: 'vida-autoconhecimento-pratica-gabarito.txt'
+      fileName: 'vida-equipe-pratica-gabarito.txt'
     });
   };
 
@@ -351,7 +351,7 @@
 
         const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
         if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de autoconhecimento!', 'success');
+          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de colaboração em equipe!', 'success');
         } else {
           logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
           btnNext.style.display = 'inline-block';
@@ -360,8 +360,8 @@
 
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(
-            'vida_autoconhecimento_pratica',
-            `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
+            'vida_equipe_pratica',
+            `Projeto de Vida — Colaboração em Equipe — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
             { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
           );
         }
@@ -400,8 +400,8 @@
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
-        'vida_autoconhecimento_pratica',
-        `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title}`,
+        'vida_equipe_pratica',
+        `Projeto de Vida — Colaboração em Equipe — Parecer ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }

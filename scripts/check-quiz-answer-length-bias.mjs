@@ -48,14 +48,18 @@ function extractStrings(raw) {
 // qualquer turmas/*/atividades/*-teoria.html ou csharp-basico.html).
 const QUESTION_RE = /prompt:\s*(['"])((?:\\.|(?!\1).)*)\1[\s\S]*?options:\s*\[([\s\S]*?)\][\s\S]*?correctIndex:\s*(\d+)/g;
 
+// Atividades práticas de múltipla escolha (ex.: vida-*/mundo-*, redes-*)
+// usam CHALLENGES[] com o texto da pergunta em `desc`, não `prompt` — mesmo
+// padrão options/correctIndex logo depois.
+const CHALLENGE_RE = /desc:\s*(['"])((?:\\.|(?!\1).)*)\1[\s\S]*?options:\s*\[([\s\S]*?)\][\s\S]*?correctIndex:\s*(\d+)/g;
+
 function stripTags(s) { return s.replace(/<[^>]+>/g, ''); }
 
-function scanFile(path) {
-  const src = readFileSync(path, 'utf8');
+function scanWith(re, src) {
   const results = [];
   let m;
-  QUESTION_RE.lastIndex = 0;
-  while ((m = QUESTION_RE.exec(src))) {
+  re.lastIndex = 0;
+  while ((m = re.exec(src))) {
     const prompt = m[2];
     const optionsRaw = m[3];
     const correctIndex = Number(m[4]);
@@ -69,6 +73,11 @@ function scanFile(path) {
     results.push({ prompt, options, correctIndex, correctLen, maxOther, isLongest, margin: correctLen - maxOther });
   }
   return results;
+}
+
+function scanFile(path) {
+  const src = readFileSync(path, 'utf8');
+  return [...scanWith(QUESTION_RE, src), ...scanWith(CHALLENGE_RE, src)];
 }
 
 function main() {

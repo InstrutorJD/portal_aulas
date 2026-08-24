@@ -102,6 +102,20 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`redes_servicos_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`redes_armazenamento_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`redes_armazenamento_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`vida_autoconhecimento_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_autoconhecimento_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`vida_cidadania_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_cidadania_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`vida_emocional_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_emocional_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`vida_equipe_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_equipe_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`mundo_revolucao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`mundo_revolucao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+      localStorage.setItem(`mundo_inovacao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`mundo_inovacao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+      localStorage.setItem(`mundo_equipe_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`mundo_equipe_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
     }, 'alexandre.natal');
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');

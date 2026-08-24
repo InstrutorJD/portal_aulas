@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Inteligência Emocional e Relacionamentos: Teoria</title>
+<title>PixelForge Studios — Cidadania e Convivência Social: Teoria</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -107,7 +107,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_emocional_teoria';
+  window.ACTIVITY_LOCATION = 'vida_cidadania_teoria';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -123,7 +123,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — INTELIGÊNCIA EMOCIONAL (TEORIA)</div>
+    <div>PROJETO DE VIDA — CIDADANIA E CONVIVÊNCIA SOCIAL (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
       <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></span>
@@ -139,97 +139,97 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_emocional_teoria_progress_${username}`;
+  const PROGRESS_KEY = `vida_cidadania_teoria_progress_${username}`;
 
   const STEPS = [
     {
-      story: 'Oi! Eu sou a <b>Uma</b>, a coruja mentora da PixelForge Studios. Vamos falar de <b>inteligência emocional</b>, começando pelo <b>autocontrole</b>: a capacidade de perceber uma emoção forte (frustração, raiva, ansiedade) e escolher como reagir, em vez de simplesmente explodir no impulso. Não é "não sentir" a emoção — é sentir e ainda assim escolher uma resposta equilibrada.',
+      story: 'Oi de novo! Eu sou a <b>Uma</b>, a coruja mentora da PixelForge Studios. Agora vamos falar de <b>convivência cidadã</b>. <b>Urbanidade</b> é o conjunto de normas de boa convivência no dia a dia — coisas simples como respeitar filas, não fazer barulho excessivo à noite, ceder o lugar a quem precisa. Não são leis escritas, mas afetam diretamente a qualidade da convivência em qualquer comunidade, inclusive dentro de uma equipe de trabalho.',
       question: {
-        prompt: 'Um dev perde horas de trabalho porque esqueceu de salvar um arquivo. Ele sente uma raiva forte, respira, espera alguns minutos e só depois volta a mexer no código, evitando digitar algo por impulso. Isso é um exemplo de quê?',
+        prompt: 'Em um transporte público lotado, uma pessoa percebe alguém com dificuldade de se equilibrar e cede seu lugar, mesmo sem nenhuma lei obrigando isso. Que conceito essa atitude representa?',
         options: [
-          'Autocontrole — perceber a emoção forte e escolher uma resposta equilibrada, em vez de agir por impulso',
-          'Falta de emoção — ele simplesmente não sentiu nenhuma raiva nesse exato momento do erro',
-          'Networking, já que ele estava pensando em pedir ajuda pra outras pessoas do time depois',
-          'Nenhuma habilidade emocional envolvida ali, foi só uma reação totalmente aleatória dele'
+          'Urbanidade — norma de boa convivência que não é uma lei, mas melhora a vida em comunidade',
+          'Direito individual garantido por lei, que qualquer cidadão pode exigir a qualquer momento',
+          'Dever coletivo previsto em contrato, que obriga o grupo inteiro a cumprir',
+          'Nenhum desses conceitos se aplica a essa situação de convivência no transporte'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Sentir a raiva e mesmo assim escolher esperar antes de agir, em vez de reagir por impulso, é exatamente autocontrole.'
+        explanation: 'Isso! Ceder o lugar não é uma obrigação legal — é uma norma de urbanidade que melhora a convivência de todo mundo.'
       }
     },
     {
-      story: 'Já a <b>adaptabilidade</b> (ou flexibilidade emocional) é a capacidade de se ajustar bem diante de mudanças inesperadas, sem travar emocionalmente. Planos mudam o tempo todo — quem tem adaptabilidade consegue reorganizar as próprias expectativas rápido, em vez de ficar preso à frustração de "não era assim que eu tinha planejado".',
+      story: 'Já os <b>direitos e deveres individuais</b> são aquilo que cada pessoa tem garantido (ou deve cumprir) só por ser cidadã — como o direito de expressar sua opinião, e o dever de respeitar a opinião alheia. São "individuais" porque valem pra cada pessoa isoladamente, independente do grupo.',
       question: {
-        prompt: 'Um estagiário planejou terminar uma tarefa até sexta, mas o escopo muda no meio da semana. Em vez de travar de frustração, ele reorganiza rapidamente suas expectativas e ajusta o plano pra nova realidade. Isso ilustra qual habilidade?',
+        prompt: 'Um aluno tem o direito de discordar publicamente de uma decisão da equipe, mas também tem o dever de fazer isso com respeito, sem ofender ninguém. Isso ilustra qual conceito?',
         options: [
-          'Adaptabilidade/flexibilidade emocional diante de mudanças inesperadas',
-          'Autocontrole, mas sem nenhuma relação direta com essa mudança de escopo',
-          'Networking com outras pessoas envolvidas no mesmo projeto',
-          'Feedback recebido de um colega sobre a qualidade da tarefa'
+          'Direitos e deveres individuais — cada pessoa tem, isoladamente, um direito e um dever correspondente',
+          'Direitos e deveres coletivos, já que a decisão envolve a equipe inteira, não só uma pessoa',
+          'Urbanidade, já que é só uma questão de boa educação, sem relação com direitos e deveres',
+          'Nenhuma relação real com cidadania — é apenas uma discussão técnica bem comum'
         ],
         correctIndex: 0,
-        explanation: 'Exato! Reorganizar expectativas rapidamente diante de uma mudança inesperada, sem travar, é a marca da adaptabilidade emocional.'
+        explanation: 'Exato! O direito de discordar e o dever de fazer isso com respeito são garantias e obrigações que cada indivíduo carrega — daí serem individuais.'
       }
     },
     {
-      story: 'A <b>empatia</b> conecta diretamente as suas <b>atitudes</b> ao <b>comportamento</b> das outras pessoas: quando você se coloca no lugar de alguém antes de agir, tende a escolher atitudes que geram um impacto melhor nos outros — e isso volta pra você em forma de relações mais saudáveis.',
+      story: 'Já os <b>direitos e deveres coletivos</b> pertencem ao grupo como um todo, não só a uma pessoa — como o direito de uma comunidade a um espaço público limpo, e o dever coletivo de todos cuidarem desse espaço juntos. Ninguém sozinho garante isso: depende da ação conjunta de todos.',
       question: {
-        prompt: 'Antes de dar um retorno duro sobre o trabalho de um colega, uma pessoa para e pensa em como ele provavelmente vai se sentir ao ouvir aquilo — e escolhe palavras mais cuidadosas, sem perder a honestidade. Que habilidade está sendo usada?',
+        prompt: 'Uma equipe compartilha uma sala de reuniões e todos têm o dever conjunto de deixá-la organizada pro próximo grupo, além do direito coletivo de usá-la em boas condições. Que conceito é esse?',
         options: [
-          'Empatia — pensar no impacto da própria atitude no comportamento/sentimento do outro',
-          'Autocontrole, sem nenhuma relação direta com o sentimento do outro colega ali',
-          'Networking, só porque a situação envolve conversar diretamente com outra pessoa',
-          'Nenhuma habilidade emocional envolvida ali, foi apenas educação básica bem comum'
+          'Direitos e deveres coletivos — pertencem ao grupo como um todo, dependendo da ação conjunta',
+          'Direitos e deveres individuais, já que cada pessoa usa a sala sozinha em vários momentos',
+          'Urbanidade, sem nenhuma relação real com direitos ou deveres formais do grupo',
+          'Nenhuma relação com cidadania — é só uma questão prática de organização da sala'
         ],
         correctIndex: 0,
-        explanation: 'Isso mesmo! Pensar em como sua atitude vai impactar o outro, antes de agir, é o núcleo da empatia.'
+        explanation: 'Isso mesmo! Um espaço compartilhado que depende do cuidado conjunto de todos ilustra bem os direitos e deveres coletivos.'
       }
     },
     {
-      story: '<b>Dar e receber feedback</b> também exige inteligência emocional: pra dar, é preciso equilibrar honestidade com cuidado; pra receber, é preciso controlar a reação defensiva imediata e realmente escutar o que foi dito, mesmo quando dói um pouco.',
+      story: 'Numa convivência cidadã real, as pessoas trazem <b>valores e crenças</b> diferentes — e isso é normal. O desafio é conviver bem mesmo com essas diferenças, sem que ninguém precise abandonar quem é, mas também sem impor sua própria visão sobre os outros à força.',
       question: {
-        prompt: 'Um dev recebe uma crítica sobre a qualidade do seu código. Em vez de se defender imediatamente, ele respira, agradece o retorno e pergunta exemplos específicos pra entender melhor o que pode melhorar. Isso ilustra qual habilidade?',
+        prompt: 'Em um grupo com pessoas de crenças religiosas diferentes, todos concordam em respeitar as práticas de cada um, sem que ninguém tente convencer o outro a mudar de crença à força. Que princípio de convivência cidadã isso mostra?',
         options: [
-          'Inteligência emocional ao receber feedback — controlar a reação defensiva e realmente escutar',
-          'Falta de autocontrole, já que ele hesitou um pouco antes de responder à crítica recebida',
-          'Networking, mesmo sem nenhuma relação real com o feedback recebido nesse momento',
-          'Adaptabilidade emocional, mas sem nenhuma relação direta com esse tipo de feedback'
+          'Respeito à diversidade de valores e crenças como base da convivência cidadã',
+          'Que todo mundo deveria ter a mesma crença religiosa pra evitar qualquer conflito',
+          'Que valores e crenças diferentes não têm nenhuma relação com a convivência',
+          'Um dever coletivo previsto especificamente por uma lei sobre religião'
         ],
         correctIndex: 0,
-        explanation: 'Perfeito! Controlar o impulso defensivo e buscar entender o feedback de verdade é inteligência emocional aplicada aos relacionamentos.'
+        explanation: 'Isso! Respeitar valores e crenças diferentes, sem impor a própria visão, é justamente o que sustenta uma boa convivência cidadã.'
       }
     },
     {
-      story: 'Por fim, existem as <b>redes de relacionamento</b> (<b>networking</b>): cultivar conexões genuínas com outras pessoas, baseadas em interesse real e troca mútua — não em "usar" alguém só quando você precisa de algo. Uma boa rede se constrói com tempo, ajudando os outros também, não só pedindo ajuda quando é conveniente. Agora você já reconhece autocontrole, adaptabilidade, empatia, feedback com inteligência emocional e como construir relações genuínas!',
+      story: 'Por fim, nossos <b>valores e crenças</b> também moldam como <b>tomamos decisões</b> no dia a dia, mesmo em situações que parecem "só técnicas". Reconhecer isso ajuda a entender por que pessoas diferentes, com os mesmos dados na mão, às vezes chegam a conclusões diferentes: cada uma está aplicando seus próprios valores na hora de decidir. Agora você já reconhece urbanidade, direitos e deveres individuais/coletivos, e como valores influenciam a convivência e as decisões!',
       question: {
-        prompt: 'Uma pessoa mantém contato com colegas de outros projetos mesmo quando não precisa de nada deles, trocando ideias e ajudando quando pode. Meses depois, quando precisa de uma indicação, várias pessoas se dispõem a ajudar de volta. O que essa história ilustra?',
+        prompt: 'Diante da mesma informação sobre um atraso de entrega, uma pessoa decide priorizar avisar o cliente imediatamente (valoriza transparência), enquanto outra prefere só resolver o problema primeiro e avisar depois (valoriza eficiência). O que essa diferença de decisão ilustra?',
         options: [
-          'Networking genuíno — construir conexões reais com o tempo, não só quando é conveniente',
-          'Que ela só teve muita sorte, sem nenhuma habilidade emocional envolvida nessa história',
-          'Autocontrole, sem nenhuma relação direta com esse tipo de relacionamento profissional',
-          'Falta de empatia, já que ela ajudou várias pessoas diferentes ao mesmo tempo'
+          'Como valores e crenças pessoais influenciam a tomada de decisão, mesmo diante dos mesmos dados',
+          'Que uma das duas pessoas está claramente errada e a outra está totalmente certa nisso',
+          'Que decisões desse tipo nunca têm relação alguma com valores pessoais de ninguém envolvido',
+          'Um exemplo de direito coletivo previsto formalmente numa lei específica sobre entregas'
         ],
         correctIndex: 0,
-        explanation: 'Isso! Construir conexões genuínas ao longo do tempo, sem interesse imediato, é exatamente o que sustenta um bom networking.'
+        explanation: 'Perfeito! Pessoas diferentes, com os mesmos dados, podem decidir de formas diferentes porque aplicam valores pessoais distintos na hora de decidir.'
       }
     }
   ];
 
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
-      capacidade: 'Identificar as habilidades socioemocionais que impactam nos relacionamentos interpessoais / Avaliar o impacto de atitudes e comportamentos próprios com relação às demais pessoas.',
+      title: 'Projeto de Vida — Cidadania e Convivência Social',
+      subtitle: 'Aula Teórica · Trilha Cidadania e Convivência Social · Turma Sistemas',
+      capacidade: 'Identificar normas e valores sociais relevantes à convivência cidadã.',
       steps: STEPS,
-      fileName: 'vida-emocional-teoria-slides.pptx',
+      fileName: 'vida-cidadania-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central do Projeto de Vida: Inteligência Emocional" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
+      closingText: 'Abra o módulo "Prática — Central do Projeto de Vida: Cidadania" no Portal de Aulas para os alunos resolverem os pareceres de verdade.'
     });
   };
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida — Inteligência Emocional e Relacionamentos',
-      subtitle: 'Aula Teórica · Trilha Inteligência Emocional e Relacionamentos · Turma Jogos Digitais',
+      title: 'Projeto de Vida — Cidadania e Convivência Social',
+      subtitle: 'Aula Teórica · Trilha Cidadania e Convivência Social · Turma Sistemas',
       items: STEPS.map((step, i) => ({
         number: i + 1,
         prompt: step.question.prompt,
@@ -237,7 +237,7 @@
         correctIndex: step.question.correctIndex,
         answer: step.question.options[step.question.correctIndex]
       })),
-      fileName: 'vida-emocional-teoria-gabarito.txt'
+      fileName: 'vida-cidadania-teoria-gabarito.txt'
     });
   };
 
@@ -311,7 +311,7 @@
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('vida_emocional_teoria', label, {
+      window.reportActivity('vida_cidadania_teoria', label, {
         step: currentStepIndex + 1,
         total: STEPS.length,
         correctCount: correctCount
@@ -322,7 +322,7 @@
   function renderStory() {
     updateProgressBar();
     const step = STEPS[stepOrder[currentStepIndex]];
-    reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
+    reportStep(`Projeto de Vida — Cidadania — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
 
     storyWrap.innerHTML = '';
 
@@ -403,7 +403,7 @@
         card.appendChild(actions);
 
         saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Projeto de Vida — Inteligência Emocional — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
+        reportStep(`Projeto de Vida — Cidadania — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
 
         document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
           currentStepIndex++;
@@ -427,7 +427,7 @@
     const passed = reviewOnly ? true : pct >= 80;
     if (!reviewOnly) {
       saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: passed });
-      reportStep(`Projeto de Vida — Inteligência Emocional — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
+      reportStep(`Projeto de Vida — Cidadania — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
     }
 
     progressFill.style.width = '100%';
@@ -436,8 +436,8 @@
     storyWrap.innerHTML = passed ? `
       <div class="card finish-screen">
         <div class="trophy">🏆</div>
-        <h2>Inteligência Emocional concluída!</h2>
-        <p>Você já reconhece autocontrole, adaptabilidade emocional, empatia, feedback com inteligência emocional e o que sustenta um networking genuíno.</p>
+        <h2>Cidadania e Convivência Social concluídas!</h2>
+        <p>Você já reconhece urbanidade, direitos e deveres individuais/coletivos, e como valores e crenças moldam a convivência e as decisões do dia a dia.</p>
         <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%).</div>
         <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Projeto de Vida.</p>
         <div class="actions" style="justify-content:center; margin-top:12px;">

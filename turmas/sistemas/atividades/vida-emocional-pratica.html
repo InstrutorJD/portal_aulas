@@ -125,7 +125,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'vida_autoconhecimento_pratica';
+  window.ACTIVITY_LOCATION = 'vida_emocional_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -139,7 +139,7 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROJETO DE VIDA — CENTRAL (AUTOCONHECIMENTO)</div>
+    <div>PROJETO DE VIDA — CENTRAL (INTELIGÊNCIA EMOCIONAL)</div>
     <div>RESOLVIDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
@@ -184,65 +184,65 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `vida_autoconhecimento_pratica_progress_${username}`;
+  const PROGRESS_KEY = `vida_emocional_pratica_progress_${username}`;
 
   const CHALLENGES = [
     {
       id: 1,
-      title: 'O que te move?',
-      icon: '🔥',
-      explanation: 'Motivadores pessoais e profissionais podem ser bem diferentes, e reconhecer os dois é parte essencial do autoconhecimento.',
-      desc: 'Uma pessoa adora criar coisas com as mãos nas horas livres (motivador pessoal), mas no trabalho o que mais a motiva é resolver problemas lógicos complexos (motivador profissional). O que isso mostra?',
-      hint: 'Pense se os dois tipos de motivador precisam ser sempre iguais.',
-      options: ['Motivadores pessoais e profissionais podem ser diferentes e ambos são válidos', 'Eles são sempre exatamente iguais, sem nenhuma diferença entre os dois', 'O motivador profissional sempre importa mais do que o pessoal, sem exceção', 'Motivador pessoal não existe de verdade — só o profissional conta de fato'],
+      title: 'Respirar antes de reagir',
+      icon: '😤',
+      explanation: 'Sentir a emoção forte e mesmo assim escolher esperar antes de agir, em vez de reagir por impulso, é autocontrole.',
+      desc: 'Um dev perde horas de trabalho por esquecer de salvar um arquivo. Ele sente raiva, respira, espera alguns minutos e só depois volta a mexer no código. Isso é um exemplo de quê?',
+      hint: 'Ele não deixou de sentir a emoção — ele escolheu como reagir a ela.',
+      options: ['Autocontrole diante da frustração', 'Falta de emoção, sem sentir nada', 'Networking com outras pessoas', 'Nenhuma habilidade emocional envolvida'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Do potencial ao resultado',
-      icon: '🎯',
-      explanation: 'Competência é a habilidade já treinada aplicada com sucesso em um contexto real, junto com conhecimento e atitude.',
-      desc: 'Uma pessoa teve facilidade natural com números, treinou lógica de programação por anos, e hoje aplica esse conhecimento com sucesso em projetos reais. Aplicar com sucesso em um contexto real representa qual conceito?',
-      hint: 'Não é o talento nem a aptidão — é a etapa final, onde o conhecimento gera resultado de verdade.',
-      options: ['Competência', 'Talento', 'Aptidão', 'Nenhum desses conceitos'],
+      title: 'Escopo mudou de repente',
+      icon: '🔄',
+      explanation: 'Reorganizar expectativas rapidamente diante de uma mudança inesperada, sem travar, é adaptabilidade emocional.',
+      desc: 'Um estagiário planejava terminar uma tarefa até sexta, mas o escopo muda no meio da semana. Em vez de travar de frustração, ele reorganiza rapidamente suas expectativas. Isso ilustra qual habilidade?',
+      hint: 'Pense em se ajustar bem quando o plano muda, sem ficar preso à frustração.',
+      options: ['Adaptabilidade/flexibilidade emocional', 'Autocontrole, sem relação direta com essa mudança', 'Networking com os colegas do mesmo projeto', 'Feedback recebido de alguém sobre a tarefa'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Facilidade nunca treinada',
-      icon: '🌱',
-      explanation: 'Aptidão é um potencial natural ainda não desenvolvido em habilidade treinada — a diferença entre "ainda não treinei" e "já treinei".',
-      desc: 'Um aluno nunca programou antes, mas no primeiro contato com lógica resolve os exercícios com facilidade incomum, sem nunca ter treinado. Isso é melhor descrito como quê?',
-      hint: 'Ele nunca treinou isso antes — então não pode ser algo já desenvolvido.',
-      options: ['Aptidão, um potencial natural ainda não treinado', 'Habilidade, algo que ele já treinou bastante antes', 'Competência, aplicada com sucesso num contexto real', 'Só sorte, sem relação nenhuma com autoconhecimento'],
+      title: 'Escolher as palavras certas',
+      icon: '💬',
+      explanation: 'Pensar em como sua atitude vai impactar o outro, antes de agir, é o núcleo da empatia.',
+      desc: 'Antes de dar um retorno duro sobre um trabalho, uma pessoa pensa em como o colega vai se sentir ao ouvir aquilo e escolhe palavras mais cuidadosas, sem perder a honestidade. Que habilidade é essa?',
+      hint: 'Pense em "se colocar no lugar do outro" antes de agir.',
+      options: ['Empatia, ao pensar no sentimento do colega antes de falar', 'Autocontrole, sem nenhuma relação com o sentimento do outro colega', 'Networking, só porque a situação envolve conversar com outra pessoa', 'Nenhuma habilidade emocional envolvida aqui, foi só educação'],
       correctIndex: 0
     },
     {
       id: 4,
-      title: 'Onde investir energia',
-      icon: '🧭',
-      explanation: 'Mapear forças atuais (o que já se faz bem) e oportunidades de desenvolvimento (o que ainda pode crescer) dá clareza sobre onde investir energia.',
-      desc: 'Uma pessoa percebe que já é muito boa em resolver bugs sozinha (força atual), mas ainda precisa desenvolver a habilidade de explicar esses bugs pro time (área a desenvolver). O que ela está fazendo?',
-      hint: 'Não é autocrítica sem rumo — é um mapeamento com um propósito claro.',
-      options: ['Mapeando forças e oportunidades de desenvolvimento', 'Só se autocriticando sem nenhum propósito ou objetivo', 'Se comparando diretamente com outra pessoa da equipe', 'Definindo motivadores profissionais pro trabalho'],
+      title: 'Ouvir a crítica sem se defender',
+      icon: '🎧',
+      explanation: 'Controlar o impulso defensivo e buscar entender o feedback de verdade é inteligência emocional aplicada aos relacionamentos.',
+      desc: 'Um dev recebe uma crítica sobre a qualidade do seu código. Em vez de se defender, ele respira, agradece e pergunta exemplos específicos pra entender o que pode melhorar. Isso ilustra quê?',
+      hint: 'Pense na diferença entre reagir na defensiva e realmente escutar.',
+      options: ['Inteligência emocional ao receber feedback', 'Falta de autocontrole ao lidar com a crítica', 'Networking sem relação com feedback', 'Adaptabilidade sem relação com feedback'],
       correctIndex: 0
     },
     {
       id: 5,
-      title: 'Salário alto, motivação baixa',
-      icon: '💭',
-      explanation: 'Quando o trabalho ignora os valores pessoais, a motivação tende a cair com o tempo — reforçando a correlação entre valores e sucesso profissional sustentável.',
-      desc: 'Uma pessoa valoriza trabalho colaborativo e criativo, mas aceita um emprego isolado e repetitivo só pelo salário mais alto. Com o tempo, fica cada vez mais desmotivada, mesmo ganhando bem. O que isso ilustra?',
-      hint: 'Pense na relação entre o que a pessoa valoriza de verdade e a satisfação a longo prazo no trabalho.',
-      options: ['A correlação entre valores pessoais e sucesso profissional sustentável', 'Que salário é o único fator relevante numa escolha de carreira profissional', 'Que motivadores pessoais não têm nenhuma relação real com o trabalho', 'Que essa pessoa simplesmente não gosta de trabalhar, independente do emprego'],
+      title: 'Ajudar sem pedir nada em troca',
+      icon: '🌐',
+      explanation: 'Construir conexões genuínas ao longo do tempo, sem interesse imediato, é o que sustenta um bom networking.',
+      desc: 'Uma pessoa mantém contato com colegas de outros projetos mesmo sem precisar de nada, ajudando quando pode. Meses depois, quando precisa de uma indicação, várias pessoas se dispõem a ajudar de volta. O que isso ilustra?',
+      hint: 'Não é sorte — é o resultado de uma prática constante ao longo do tempo.',
+      options: ['Networking genuíno construído aos poucos', 'Pura sorte, sem nenhuma habilidade envolvida', 'Autocontrole, sem relação com relacionamento', 'Falta de empatia com os colegas de projeto'],
       correctIndex: 0
     }
   ];
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto de Vida: Central — Autoconhecimento',
-      subtitle: 'Prática · Turma Jogos Digitais',
+      title: 'Projeto de Vida: Central — Inteligência Emocional',
+      subtitle: 'Prática · Turma Sistemas',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,
@@ -251,7 +251,7 @@
         correctIndex: c.correctIndex,
         answer: c.options[c.correctIndex]
       })),
-      fileName: 'vida-autoconhecimento-pratica-gabarito.txt'
+      fileName: 'vida-emocional-pratica-gabarito.txt'
     });
   };
 
@@ -351,7 +351,7 @@
 
         const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
         if (isLast) {
-          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de autoconhecimento!', 'success');
+          logConsole('🏆 Parecer emitido! Você concluiu todos os pareceres de inteligência emocional!', 'success');
         } else {
           logConsole('✅ Parecer emitido! Próximo parecer liberado.', 'success');
           btnNext.style.display = 'inline-block';
@@ -360,8 +360,8 @@
 
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(
-            'vida_autoconhecimento_pratica',
-            `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
+            'vida_emocional_pratica',
+            `Projeto de Vida — Inteligência Emocional — Parecer ${challenge.id}: ${challenge.title} (resolvido)`,
             { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
           );
         }
@@ -400,8 +400,8 @@
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
-        'vida_autoconhecimento_pratica',
-        `Projeto de Vida — Autoconhecimento — Parecer ${challenge.id}: ${challenge.title}`,
+        'vida_emocional_pratica',
+        `Projeto de Vida — Inteligência Emocional — Parecer ${challenge.id}: ${challenge.title}`,
         { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size }
       );
     }
