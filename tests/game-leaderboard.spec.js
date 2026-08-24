@@ -113,6 +113,33 @@ test.describe('shared/game-leaderboard.js — Digitação', () => {
     // a linha da turma sistemas continua intacta, sem ser sobrescrita
     expect(rows.find(r => r.turma === 'sistemas')).toMatchObject({ score: 999 });
   });
+
+  // Regressão: a migração pra Supabase Auth passou a ler a turma da SESSÃO
+  // (profiles.turma) em vez da URL, quebrando o professor — mesmo login
+  // "admin" usado nos dois portais, então profiles.turma fica travado numa
+  // turma só (aqui, seedada como "jogos"), enquanto o portal que abriu o
+  // jogo (URL) é "sistemas". Sem respeitar a URL como contexto de exibição
+  // (igual games/jogo.html já fazia), o placar do professor sempre usava a
+  // turma errada e o Ranking da Turma parecia vazio.
+  test('professor com turma fixa no perfil usa a turma do PORTAL (URL) que abriu o jogo, não a do perfil', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      profiles: [{ id: 'fake-admin', email: 'admin', nome: 'Professor', role: 'professor', turma: 'jogos' }],
+      game_scores: [{ student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', game: 'digitacao', score: 70 }],
+    });
+    await page.goto('/games/digitacao.html?user=admin&role=professor&name=Professor&turma=sistemas');
+
+    const currentWord = await page.locator('.word.current').textContent();
+    await page.fill('#typeInput', currentWord + ' ');
+    await page.evaluate(() => window.endGame());
+    await page.waitForTimeout(200);
+
+    const rows = await page.evaluate(() => window.__FAKE_DB__.game_scores);
+    const adminRow = rows.find(r => r.student_email === 'admin');
+    expect(adminRow).toMatchObject({ turma: 'sistemas' }); // não "jogos" (turma do perfil)
+
+    await page.click('#btnRanking');
+    await expect(page.locator('#glOverlay')).toContainText('Alexandre Natal'); // colega de Sistemas aparece
+  });
 });
 
 test.describe('shared/game-leaderboard.js — Campo Minado', () => {

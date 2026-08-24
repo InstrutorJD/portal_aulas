@@ -188,7 +188,13 @@
   if (!user) return;
   const username = user.email;
   const displayName = user.nome || username;
-  const turma = user.turma || '';
+  // O professor abre o jogo a partir do portal de qualquer uma das duas
+  // turmas com o mesmo login — sem isso, o placar usa a turma fixa do
+  // perfil dele (ou nenhuma) em vez da turma do portal que abriu o jogo,
+  // e o Ranking da Turma nunca bate com o que os alunos daquele portal
+  // gravaram (ver games/jogo.html, que já fazia isso certo).
+  const urlParams = new URLSearchParams(window.location.search);
+  const turma = urlParams.get('turma') || user.turma || '';
 
   const WORD_BANK_TECNOLOGIA = [
     "commit","branch","merge","rebase","checkout","clone","fork","pull-request","push","repositorio",

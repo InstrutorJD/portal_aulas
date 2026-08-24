@@ -768,7 +768,13 @@
     if (!user) return;
     username = user.email;
     displayName = user.nome || username;
-    turma = user.turma || '';
+    // O professor abre o jogo a partir do portal de qualquer uma das duas
+    // turmas com o mesmo login — sem isso, a sessão do QuizRush é criada/
+    // procurada sob a turma fixa do perfil dele (ou nenhuma) em vez da
+    // turma do portal que abriu o jogo, e os alunos daquele portal nunca
+    // veem a partida (ver games/jogo.html, que já fazia isso certo).
+    const urlParams = new URLSearchParams(window.location.search);
+    turma = urlParams.get('turma') || user.turma || '';
     role = user.role;
     isHost = role === 'professor';
 
