@@ -87,6 +87,7 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`sql_join_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`sql_agregacao_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`sql_comentarios_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`db_conexao_supabase_pratica_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`devsis_apis_frameworks_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`devsis_apis_frameworks_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`devsis_requisitos_teoria_progress_${user}`, JSON.stringify({ completed: true }));
@@ -105,7 +106,8 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
 
-    // A trilha SQL fica dentro de Banco de Dados; ela é a primeira das 2 trilhas da matéria (select já começa nela).
+    // A trilha SQL fica dentro de Banco de Dados; com as 3 trilhas da matéria completas, elas ficam empatadas
+    // em status "concluída" e a ordem original do config.js prevalece — sql continua sendo a primeira mostrada.
     await page.click('.game-card:has-text("Banco de Dados")');
     await expect(page.locator('#moduleSelector_sql')).toBeVisible();
     const tabJogos = page.locator('#tabBtnJogos');

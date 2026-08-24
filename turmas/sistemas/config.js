@@ -70,6 +70,26 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasSlides: true, hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'db-conexao-supabase',
+          label: 'Conexão com Supabase',
+          desc: 'Projeto integrador: monte um sistema web de cadastro de clientes, do zero até a segurança com RLS, conectado a um banco de dados real no Supabase.',
+          capacidade: 'Aplicar procedimentos de segurança e backup no SGBD.',
+          modules: [
+            {
+              // Atividade não corrigível automaticamente pelo portal (usa
+              // GitHub Codespaces + um projeto Supabase próprio do aluno) —
+              // por isso progressMode 'flag' sem nenhum teste/quiz: o aluno
+              // só navega pelas etapas, e quem marca como concluída é o
+              // professor, dando "visto" com a própria credencial na etapa
+              // final (ver shared/professor-visto.js).
+              key: 'pratica', title: 'Prática — Sistema Web com HTML, JavaScript e Supabase',
+              desc: 'Cadastro de clientes de ponta a ponta: GitHub Codespaces, HTML/JS, criação do banco no Supabase, conexão via Data API, INSERT/SELECT e políticas de RLS. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🔌', src: 'atividades/db-conexao-supabase-pratica.html',
+              progressKey: 'db_conexao_supabase_pratica_progress_', progressMode: 'flag'
+            }
+          ]
         }
       ]
     },

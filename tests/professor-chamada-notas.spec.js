@@ -142,8 +142,9 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(row).toContainText('10.00'); // média B1
     await expect(row).toContainText('8.00');  // média B2
     await expect(row).toContainText('9.00');  // média geral (10 e 8, sem B3/B4)
-    // Banco de Dados tem 5 módulos ao todo (sql: teoria/basico/join/agregacao + sql-comentarios: teoria).
-    // 3 concluídos, 2 nunca abertos => 3/5 = 60%.
-    await expect(row).toContainText('60%');
+    // Banco de Dados tem 6 módulos ao todo (sql: teoria/basico/join/agregacao +
+    // sql-comentarios: teoria + db-conexao-supabase: pratica).
+    // 3 concluídos, 3 nunca abertos => 3/6 = 50%.
+    await expect(row).toContainText('50%');
   });
 });

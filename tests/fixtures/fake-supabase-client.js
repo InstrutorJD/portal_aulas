@@ -162,12 +162,22 @@
     return getStoredAuthUser();
   }
 
-  function createClient() {
+  // persistSession:false (usado pelo helper de "Dar visto" — ver
+  // shared/professor-visto.js) precisa de um client de verdade ISOLADO da
+  // sessão principal: no Supabase real, essa opção mantém a sessão só na
+  // memória desse client, nunca no localStorage compartilhado — sem isso
+  // aqui, um professor validando credenciais nesse fluxo "roubaria" a
+  // sessão do aluno logado na mesma aba/origem. memorySession simula
+  // exatamente esse isolamento pros testes conseguirem provar isso.
+  function createClient(_url, _key, options) {
+    const persist = !(options && options.auth && options.auth.persistSession === false);
+    let memorySession = null;
+
     return {
       from(name) { return makeQuery(name); },
       auth: {
         getUser() {
-          const user = resolveFakeAuthUser();
+          const user = persist ? resolveFakeAuthUser() : memorySession;
           return Promise.resolve({
             data: { user },
             error: user ? null : { message: 'not authenticated' },
@@ -180,11 +190,11 @@
             return Promise.resolve({ data: { user: null, session: null }, error: { message: 'Invalid login credentials' } });
           }
           const authUser = { id: match.id, email };
-          setStoredAuthUser(authUser);
+          if (persist) setStoredAuthUser(authUser); else memorySession = authUser;
           return Promise.resolve({ data: { user: authUser, session: { user: authUser } }, error: null });
         },
         signOut() {
-          setStoredAuthUser(null);
+          if (persist) setStoredAuthUser(null); else memorySession = null;
           return Promise.resolve({ error: null });
         },
       },
