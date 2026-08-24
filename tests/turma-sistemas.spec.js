@@ -138,12 +138,12 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     // §§§ do roteiro (extractCodeBlocks), não retranscrito à mão.
     expect(content).toContain('index.html — formulário completo');
     expect(content).toContain('<form id="formCadastro">');
-    expect(content).toContain('clientes — CREATE TABLE');
-    expect(content).toContain('create table clientes (');
-    expect(content).toContain('cadastrarCliente() — versão final');
+    expect(content).toContain('usuarios — CREATE TABLE');
+    expect(content).toContain('create table usuarios (');
+    expect(content).toContain('cadastrarUsuario() — versão final');
     // versão final (ETAPA 30, com validação), não a inicial da ETAPA 21/22.
     expect(content).toContain('mensagem.textContent = "Preencha o nome."');
-    expect(content).toContain('carregarClientes() — versão final');
+    expect(content).toContain('carregarUsuarios() — versão final');
     // versão final (ETAPA 27, desenhando a lista), não a inicial da ETAPA 18.
     expect(content).toContain('lista.appendChild(item)');
     expect(content).toContain('Policy de leitura');

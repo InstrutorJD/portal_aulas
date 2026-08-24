@@ -74,7 +74,7 @@ window.TURMA_CONFIG_SISTEMAS = {
         {
           key: 'db-conexao-supabase',
           label: 'Conexão com Supabase',
-          desc: 'Projeto integrador: monte um sistema web de cadastro de clientes, do zero até a segurança com RLS, conectado a um banco de dados real no Supabase.',
+          desc: 'Projeto integrador: monte a tela de cadastro de usuários do TikTak (rede social fictícia), do zero até a segurança com RLS, conectado a um banco de dados real no Supabase.',
           capacidade: 'Aplicar procedimentos de segurança e backup no SGBD.',
           modules: [
             {
@@ -85,7 +85,7 @@ window.TURMA_CONFIG_SISTEMAS = {
               // professor, dando "visto" com a própria credencial na etapa
               // final (ver shared/professor-visto.js).
               key: 'pratica', title: 'Prática — Sistema Web com HTML, JavaScript e Supabase',
-              desc: 'Cadastro de clientes de ponta a ponta: GitHub Codespaces, HTML/JS, criação do banco no Supabase, conexão via Data API, INSERT/SELECT e políticas de RLS. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              desc: 'Cadastro de usuários do TikTak de ponta a ponta: GitHub Codespaces, HTML/JS, criação do banco no Supabase, conexão via Data API, INSERT/SELECT e políticas de RLS. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
               icon: '🔌', src: 'atividades/db-conexao-supabase-pratica.html',
               progressKey: 'db_conexao_supabase_pratica_progress_', progressMode: 'flag',
               hasGabarito: true

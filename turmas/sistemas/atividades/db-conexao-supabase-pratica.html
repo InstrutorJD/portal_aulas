@@ -136,21 +136,23 @@
     {
       titulo: 'Apresentação',
       corpo: `
-Nesta atividade, você vai desenvolver um pequeno sistema web para **cadastro de clientes** — passo a passo, do zero até a segurança do banco de dados.
+Nesta atividade, você vai desenvolver a **tela de cadastro de usuários do TikTak** — uma rede social fictícia que vamos usar de exemplo — passo a passo, do zero até a segurança do banco de dados.
 
-Você vai começar criando uma página com **HTML, CSS e JavaScript**. Depois vai criar um banco de dados no **Supabase**. Por fim, vai conectar o seu sistema ao banco pra que os dados digitados no formulário sejam armazenados e consultados de verdade.
+Você vai começar criando uma página com **HTML, CSS e JavaScript**. Depois vai criar um banco de dados no **Supabase**. Por fim, vai conectar o seu sistema ao banco pra que os dados digitados no formulário sejam armazenados de verdade — e continuem lá mesmo depois de fechar a página.
 
 ### Situação-problema
 
-Uma pequena empresa precisa de um sistema pra cadastrar seus clientes. Atualmente, os funcionários anotam os dados manualmente, dificultando a organização das informações. Você foi escolhido pra desenvolver uma primeira versão do sistema.
+Você foi chamado pela equipe do **TikTak** pra construir a tela de cadastro: quando alguém baixa o app e cria uma conta pela primeira vez, é essa tela que recebe o nome, e-mail e telefone da pessoa.
+
+Por enquanto, seu sistema vai ser só a versão web desse cadastro — mas o problema de fundo é o mesmo de qualquer rede social de verdade: **os dados de cadastro precisam sobreviver ao fechar da aba**. Se você guardasse o nome da pessoa só numa variável do JavaScript (¤let usuario = "Maria"¤, por exemplo), esse dado desapareceria assim que a página recarregasse — a memória do navegador é apagada a cada visita. Pra alguém conseguir usar o TikTak depois, ou pra aparecer na lista de "quem já se cadastrou", os dados precisam morar em algum lugar que continue existindo entre uma visita e outra: um **banco de dados**.
 
 O sistema deverá permitir:
-- cadastrar clientes;
-- armazenar os dados no banco;
-- consultar os clientes cadastrados;
-- apresentar os clientes na página.
+- cadastrar um novo usuário;
+- armazenar os dados no banco, de forma permanente;
+- consultar os usuários já cadastrados;
+- apresentar a lista de usuários na página.
 
-Cada cliente terá: Nome, E-mail e Telefone.
+Cada usuário terá: Nome, E-mail e Telefone.
 
 ### Tecnologias utilizadas
 
@@ -171,9 +173,9 @@ Ao final, você deverá conseguir criar um projeto no GitHub, utilizar o GitHub 
 ### Como o projeto vai funcionar
 
 §§§text
-USUÁRIO
+NOVO USUÁRIO DO TIKTAK
    ↓
-FORMULÁRIO HTML
+FORMULÁRIO HTML (cadastro)
    ↓
 JAVASCRIPT
    ↓
@@ -183,7 +185,7 @@ DATA API
    ↓
 POSTGRESQL
    ↓
-TABELA clientes
+TABELA usuarios
 §§§
 
 > ⚠️ Importante: o portal não consegue verificar sozinho se você concluiu esta atividade corretamente — seu projeto vive no GitHub/Codespaces e num projeto Supabase seu, fora daqui. Avance pelas telas com os botões Voltar/Próximo, sem nenhuma correção automática. Na última tela, você vai chamar o professor pra conferir seu sistema funcionando de verdade e dar o visto.`
@@ -322,6 +324,8 @@ Abra a página no navegador. Verifique se:
       corpo: `
 ### ETAPA 6 — Criar o JavaScript
 
+Agora vamos dar vida ao formulário de cadastro do TikTak. Sozinho, um ¤<form>¤ HTML só sabe fazer uma coisa: recarregar a página quando o botão é clicado. Quem vai "escutar" esse envio, pegar os dados digitados e decidir o que fazer com eles é o **JavaScript**.
+
 Abra ¤script.js¤ (arquivo vazio) e digite exatamente este código:
 
 §§§javascript
@@ -332,11 +336,11 @@ formCadastro.addEventListener("submit", function (event) {
 });
 §§§
 
-¤document.getElementById()¤ localiza o formulário pelo ¤id¤; ¤addEventListener("submit", ...)¤ roda a função de dentro toda vez que o formulário for enviado (botão Cadastrar clicado).
+¤document.getElementById()¤ localiza o formulário pelo ¤id¤ (o mesmo ¤id="formCadastro"¤ que você deu no HTML); ¤addEventListener("submit", ...)¤ registra uma função que o navegador chama sozinho toda vez que esse formulário for enviado (botão "Cadastrar" clicado, ou Enter num campo).
 
 ### ETAPA 7 — Capturar os dados
 
-Agora você deverá capturar os valores digitados pelo usuário. Atualize a função de dentro do ¤addEventListener¤ pra ficar assim (adicionando as 3 linhas novas):
+Só saber que o formulário foi enviado não basta — precisamos pegar o que a pessoa realmente digitou: o nome, e-mail e telefone de quem está se cadastrando no TikTak. Atualize a função de dentro do ¤addEventListener¤ pra ficar assim (adicionando as 3 linhas novas):
 
 §§§javascript
 formCadastro.addEventListener("submit", function (event) {
@@ -348,11 +352,11 @@ formCadastro.addEventListener("submit", function (event) {
 });
 §§§
 
-¤.value¤ pega o texto que está dentro do campo naquele momento.
+¤.value¤ pega o texto que está dentro do campo naquele exato momento — se a pessoa ainda estiver digitando quando isso rodar, pega só o que já foi digitado até ali.
 
 ### ETAPA 8 — Testar o JavaScript
 
-Digite dados fictícios:
+Digite dados fictícios de um novo usuário do TikTak:
 
 §§§text
 Nome: João da Silva
@@ -361,6 +365,8 @@ Telefone: 64999999999
 §§§
 
 Ao enviar o formulário, mostre os dados no console. O resultado deverá permitir identificar Nome, E-mail e Telefone.
+
+Repare que, por enquanto, esses dados só existem dentro do JavaScript — se você recarregar a página, eles somem. É exatamente esse problema que as próximas etapas resolvem, guardando tudo num banco de dados de verdade.
 
 #### Checklist
 
@@ -374,12 +380,12 @@ Ao enviar o formulário, mostre os dados no console. O resultado deverá permiti
       corpo: `
 ### ETAPA 9 — Criar o projeto no Supabase
 
-Agora vamos criar o banco de dados. Acesse o Supabase e crie uma conta ou entre na sua conta existente.
+Chegou a hora de resolver o problema da ETAPA 6: fazer os dados de cadastro sobreviverem ao fechar da página. Vamos criar o banco de dados. Acesse o Supabase e crie uma conta ou entre na sua conta existente.
 
 Crie um novo projeto. Utilize um nome relacionado ao projeto, por exemplo:
 
 §§§text
-sistema-cadastro
+tiktak-cadastro
 §§§
 
 Aguarde a criação do projeto.
@@ -388,18 +394,22 @@ Aguarde a criação do projeto.
 
 Dentro do Supabase, localize a área de banco de dados. Você deverá encontrar recursos relacionados a: tabelas, SQL Editor, Data API, configurações do projeto e API Keys.
 
+Por baixo do capô, o Supabase é um banco **PostgreSQL** de verdade — o mesmo tipo de banco usado por sistemas grandes de produção — só que já vem pronto, na nuvem, com uma API automática por cima. Um banco de dados organiza informação em **tabelas** (parecidas com uma planilha: cada linha é um registro, cada coluna é um dado daquele registro) e garante que os dados fiquem lá, disponíveis pra consulta, não importa quantas pessoas acessem o sistema ou quantas vezes a página seja recarregada.
+
 #### Responda no seu caderno
 
 Com suas próprias palavras: **o que é um banco de dados?**
 
 ### ETAPA 11 — Criar a tabela
 
-Crie uma tabela chamada ¤clientes¤, com os campos ¤id¤ (bigint, chave primária, geração automática), ¤nome¤ (text), ¤email¤ (text) e ¤telefone¤ (text).
+Agora vamos criar o lugar onde cada novo usuário do TikTak vai ficar guardado: uma tabela chamada ¤usuarios¤, com os campos ¤id¤ (bigint, chave primária, geração automática), ¤nome¤ (text), ¤email¤ (text) e ¤telefone¤ (text).
+
+O ¤id¤ existe porque nomes e e-mails podem se repetir (duas pessoas podem se chamar "João Silva"), mas cada linha da tabela precisa de um jeito único e infalível de ser identificada — é pra isso que serve uma **chave primária**: um número que o próprio banco gera sozinho, sequencial, e nunca se repete.
 
 Você pode criar pela interface (Table Editor → New Table) ou digitando este código no **SQL Editor** do Supabase:
 
 §§§sql
-create table clientes (
+create table usuarios (
     id bigint generated always as identity primary key,
     nome text,
     email text,
@@ -407,10 +417,12 @@ create table clientes (
 );
 §§§
 
+¤create table¤ é o comando SQL que define a estrutura da tabela: o nome dela e, entre parênteses, cada coluna com seu tipo (¤text¤ pra texto livre, ¤bigint¤ pra número inteiro grande). Depois de criada, a tabela existe mesmo sem nenhum dado dentro — é como montar as prateleiras de um armário antes de guardar qualquer coisa nele.
+
 #### Resultado esperado
 
 §§§text
-clientes
+usuarios
 │
 ├── id
 ├── nome
@@ -420,7 +432,7 @@ clientes
 
 ### ETAPA 12 — Inserir um registro manualmente
 
-Antes de conectar o sistema, vamos verificar se a tabela está funcionando. Insira manualmente um cliente pelo próprio Supabase, com dados fictícios.
+Antes de conectar o sistema, vamos verificar se a tabela está funcionando. Insira manualmente um usuário pelo próprio Supabase, com dados fictícios — como se fosse a primeira pessoa a se cadastrar no TikTak.
 
 Exemplo:
 
@@ -444,7 +456,9 @@ Depois visualize a tabela.
       corpo: `
 ### ETAPA 13 — Conhecer a Data API
 
-O Supabase permite que aplicações utilizem a biblioteca JavaScript para consultar e alterar dados do PostgreSQL por meio da Data API.
+Até agora, o JavaScript só sabe conversar com a própria página (pegar valores de input, mostrar coisas no console). Pra ele conseguir ler e gravar na tabela ¤usuarios¤ que você acabou de criar, precisa de um jeito de "falar" com o Supabase pela internet — é isso que a **Data API** faz: ela transforma comandos de banco de dados em chamadas que o JavaScript do navegador consegue fazer.
+
+O Supabase permite que aplicações utilizem a biblioteca JavaScript para consultar e alterar dados do PostgreSQL por meio da Data API, sem você precisar escrever nenhuma chamada de rede manualmente.
 
 Nesta atividade, o JavaScript será utilizado para conversar com o banco. A biblioteca oficial ¤supabase-js¤ pode ser utilizada diretamente por CDN em uma página HTML.
 
@@ -474,7 +488,7 @@ A documentação atual do Supabase recomenda a **Publishable Key**, que normalme
 
 #### ⚠️ Atenção — Segurança
 
-A Publishable Key pode aparecer no código do frontend. Isso é esperado. Porém, ela **não deve ser confundida com uma chave secreta**.
+A Publishable Key pode aparecer no código do frontend. Isso é esperado — qualquer pessoa que abrir o "Ver código-fonte" da página do TikTak vai conseguir ler essa chave, e tudo bem. Porém, ela **não deve ser confundida com uma chave secreta**.
 
 Nunca coloque no JavaScript do navegador:
 
@@ -488,7 +502,7 @@ Também nunca coloque:
 service_role
 §§§
 
-A documentação do Supabase determina que chaves secretas e ¤service_role¤ não devem ser expostas no navegador, pois possuem privilégios elevados e podem ignorar o RLS.
+A documentação do Supabase determina que chaves secretas e ¤service_role¤ não devem ser expostas no navegador, pois possuem privilégios elevados e ignoram completamente o RLS que você vai configurar mais pra frente.
 
 ### ETAPA 16 — Criar o cliente Supabase
 
@@ -506,6 +520,8 @@ const supabase = window.supabase.createClient(
 §§§
 
 Substitua ¤SUA_URL¤ pela URL do seu projeto, e ¤SUA_PUBLISHABLE_KEY¤ pela sua Publishable Key.
+
+¤createClient()¤ monta um objeto (guardado aqui na variável ¤supabase¤) que já sabe pra qual projeto conversar e com qual chave se identificar — é ele que as próximas etapas vão usar toda vez que precisarem ler ou gravar na tabela ¤usuarios¤.
 
 ### ETAPA 17 — Testar a conexão
 
@@ -525,25 +541,29 @@ Abra o console do navegador. Se o objeto do Supabase aparecer, a biblioteca foi 
 - [ ] O objeto ¤supabase¤ aparece no console.`
     },
     {
-      titulo: 'Consultar os clientes (SELECT)',
+      titulo: 'Consultar os usuários (SELECT)',
       corpo: `
 ### ETAPA 18 — Fazer o primeiro SELECT
 
-Agora vamos consultar os clientes existentes. Crie uma função:
+Agora vamos trazer pro JavaScript os usuários do TikTak que já existem no banco (o que você inseriu manualmente na ETAPA 12). Isso é uma consulta — em SQL, o comando que lê dados sem alterar nada chama-se ¤SELECT¤. Crie uma função:
 
 §§§javascript
-async function carregarClientes() {
+async function carregarUsuarios() {
 
 }
 §§§
+
+¤async¤ existe porque conversar com o Supabase acontece pela internet, e isso leva um tempinho — a função precisa poder "esperar" a resposta chegar sem travar o resto da página.
 
 Dentro dela, faça uma consulta utilizando:
 
 §§§javascript
 const { data, error } = await supabase
-    .from("clientes")
+    .from("usuarios")
     .select("*");
 §§§
+
+¤.from("usuarios")¤ diz qual tabela consultar; ¤.select("*")¤ pede TODAS as colunas de TODAS as linhas. ¤await¤ pausa a função até a resposta do banco chegar; ¤data¤ traz os registros encontrados, ¤error¤ traz o motivo caso algo dê errado (os dois nunca vêm preenchidos ao mesmo tempo).
 
 Depois mostre o resultado (¤console.log(data)¤) e verifique possíveis erros (¤console.log(error)¤).
 
@@ -552,7 +572,7 @@ Depois mostre o resultado (¤console.log(data)¤) e verifique possíveis erros (
 Chame a função:
 
 §§§javascript
-carregarClientes();
+carregarUsuarios();
 §§§
 
 Atualize a página. Abra o console. Você deverá visualizar os registros existentes na tabela.
@@ -562,7 +582,7 @@ Atualize a página. Abra o console. Você deverá visualizar os registros existe
 Não altere várias coisas ao mesmo tempo. Leia a mensagem apresentada no console. Verifique: nome da tabela, URL, Publishable Key, acesso da Data API, RLS e policies.`
     },
     {
-      titulo: 'Cadastrar um cliente (INSERT)',
+      titulo: 'Cadastrar um usuário (INSERT)',
       corpo: `
 ### ETAPA 20 — Preparar o cadastro
 
@@ -578,20 +598,20 @@ Agora faremos:
 JavaScript → Banco
 §§§
 
-O formulário deverá enviar ¤nome¤, ¤email¤ e ¤telefone¤ para a tabela ¤clientes¤.
+O formulário deverá enviar ¤nome¤, ¤email¤ e ¤telefone¤ pra a tabela ¤usuarios¤ — é assim que uma pessoa "cria uma conta" no TikTak de verdade: os dados digitados no formulário viram uma linha nova na tabela.
 
 ### ETAPA 21 — Criar a função de cadastro
 
 Em ¤script.js¤, digite esta função nova (fora do ¤addEventListener¤, em qualquer lugar do arquivo):
 
 §§§javascript
-async function cadastrarCliente() {
+async function cadastrarUsuario() {
     const nome = document.getElementById("nome").value;
     const email = document.getElementById("email").value;
     const telefone = document.getElementById("telefone").value;
 
     const { data, error } = await supabase
-        .from("clientes")
+        .from("usuarios")
         .insert([
             {
                 nome: nome,
@@ -602,18 +622,20 @@ async function cadastrarCliente() {
 }
 §§§
 
+¤.insert([...])¤ recebe uma LISTA de objetos (por isso os colchetes ¤[ ]¤) — dá pra cadastrar vários usuários de uma vez só passando mais de um objeto na lista, embora aqui a gente sempre mande só um.
+
 ### ETAPA 22 — Verificar o resultado
 
-Adicione a checagem de erro no final da função ¤cadastrarCliente¤ (depois do ¤insert¤):
+Adicione a checagem de erro no final da função ¤cadastrarUsuario¤ (depois do ¤insert¤):
 
 §§§javascript
-async function cadastrarCliente() {
+async function cadastrarUsuario() {
     const nome = document.getElementById("nome").value;
     const email = document.getElementById("email").value;
     const telefone = document.getElementById("telefone").value;
 
     const { data, error } = await supabase
-        .from("clientes")
+        .from("usuarios")
         .insert([
             {
                 nome: nome,
@@ -625,7 +647,7 @@ async function cadastrarCliente() {
     if (error) {
         console.log(error);
     } else {
-        console.log("Cliente cadastrado com sucesso!");
+        console.log("Usuário cadastrado com sucesso!");
     }
 }
 §§§
@@ -635,17 +657,17 @@ async function cadastrarCliente() {
 Quando o cadastro funcionar, o console deverá apresentar:
 
 §§§text
-Cliente cadastrado com sucesso!
+Usuário cadastrado com sucesso!
 §§§
 
 ### ETAPA 23 — Ligar o formulário ao cadastro
 
-Agora troque o conteúdo do ¤addEventListener¤ criado na ETAPA 7 — em vez de só mostrar os dados no console, ele deve impedir a página de recarregar e chamar ¤cadastrarCliente()¤:
+Agora troque o conteúdo do ¤addEventListener¤ criado na ETAPA 7 — em vez de só mostrar os dados no console, ele deve impedir a página de recarregar e chamar ¤cadastrarUsuario()¤:
 
 §§§javascript
 formCadastro.addEventListener("submit", function (event) {
     event.preventDefault();
-    cadastrarCliente();
+    cadastrarUsuario();
 });
 §§§
 
@@ -653,7 +675,7 @@ formCadastro.addEventListener("submit", function (event) {
 
 ### ETAPA 24 — Fazer o primeiro cadastro pelo sistema
 
-Agora não utilize mais o Supabase para inserir manualmente. Utilize o seu formulário. Cadastre:
+Agora não utilize mais o Supabase para inserir manualmente. Utilize o seu formulário — como se você fosse o primeiro usuário de verdade criando uma conta no TikTak. Cadastre:
 
 §§§text
 Nome: Carlos Oliveira
@@ -661,18 +683,18 @@ E-mail: carlos@email.com
 Telefone: 64977777777
 §§§
 
-Depois abra a tabela ¤clientes¤ no Supabase.
+Depois abra a tabela ¤usuarios¤ no Supabase.
 
 #### Resultado esperado
 
-O novo cliente deverá aparecer no banco.`
+O novo usuário deverá aparecer no banco.`
     },
     {
-      titulo: 'Listar todos os clientes na página',
+      titulo: 'Listar todos os usuários na página',
       corpo: `
-### ETAPA 25 — Cadastrar cinco clientes
+### ETAPA 25 — Cadastrar cinco usuários
 
-Cadastre pelo menos cinco clientes fictícios. Exemplo:
+Cadastre pelo menos cinco usuários fictícios do TikTak. Exemplo:
 
 §§§text
 Ana
@@ -686,33 +708,33 @@ Utilize e-mails e telefones fictícios.
 
 #### Checklist
 
-- [ ] Primeiro cliente cadastrado.
-- [ ] Segundo cliente cadastrado.
-- [ ] Terceiro cliente cadastrado.
-- [ ] Quarto cliente cadastrado.
-- [ ] Quinto cliente cadastrado.
+- [ ] Primeiro usuário cadastrado.
+- [ ] Segundo usuário cadastrado.
+- [ ] Terceiro usuário cadastrado.
+- [ ] Quarto usuário cadastrado.
+- [ ] Quinto usuário cadastrado.
 - [ ] Os cinco aparecem no banco.
 
-### ETAPA 26 — Mostrar os clientes na página
+### ETAPA 26 — Mostrar os usuários na página
 
-Agora vamos retirar a dependência do console. No HTML, crie:
+Ficar abrindo o console pra ver quem já se cadastrou não é como um site de verdade funciona — vamos mostrar a lista direto na página, pra qualquer visitante ver quem já faz parte do TikTak. No HTML, crie:
 
 §§§html
-<h2>Clientes cadastrados</h2>
+<h2>Usuários cadastrados</h2>
 
-<div id="listaClientes"></div>
+<div id="listaUsuarios"></div>
 §§§
 
-No JavaScript, utilize os dados retornados pelo ¤SELECT¤ para preencher ¤listaClientes¤.
+No JavaScript, utilize os dados retornados pelo ¤SELECT¤ para preencher ¤listaUsuarios¤.
 
 ### ETAPA 27 — Criar a função de listagem
 
-Complete a função ¤carregarClientes¤ (criada na ETAPA 18) pra desenhar os clientes na página, em vez de só mostrar no console:
+Complete a função ¤carregarUsuarios¤ (criada na ETAPA 18) pra desenhar os usuários na página, em vez de só mostrar no console:
 
 §§§javascript
-async function carregarClientes() {
+async function carregarUsuarios() {
     const { data, error } = await supabase
-        .from("clientes")
+        .from("usuarios")
         .select("*");
 
     if (error) {
@@ -720,29 +742,29 @@ async function carregarClientes() {
         return;
     }
 
-    const lista = document.getElementById("listaClientes");
+    const lista = document.getElementById("listaUsuarios");
     lista.innerHTML = "";
 
-    data.forEach(function (cliente) {
+    data.forEach(function (usuario) {
         const item = document.createElement("p");
-        item.textContent = cliente.nome + " — " + cliente.email + " — " + cliente.telefone;
+        item.textContent = usuario.nome + " — " + usuario.email + " — " + usuario.telefone;
         lista.appendChild(item);
     });
 }
 
-carregarClientes();
+carregarUsuarios();
 §§§
 
-¤forEach()¤ percorre cada linha retornada pelo ¤SELECT¤; pra cada uma, cria um ¤<p>¤ novo e coloca dentro de ¤listaClientes¤. A última linha (¤carregarClientes();¤, fora da função) chama a função assim que a página carrega, pra lista já aparecer sem precisar de nenhum clique.
+¤forEach()¤ percorre cada linha retornada pelo ¤SELECT¤; pra cada uma, cria um ¤<p>¤ novo e coloca dentro de ¤listaUsuarios¤. A última linha (¤carregarUsuarios();¤, fora da função) chama a função assim que a página carrega, pra lista já aparecer sem precisar de nenhum clique.
 
 ### ETAPA 28 — Testar o sistema completo
 
 Agora o sistema deverá funcionar assim:
 
 §§§text
-1. Usuário abre a página
+1. Pessoa abre a página do TikTak
         ↓
-2. Preenche o formulário
+2. Preenche o formulário de cadastro
         ↓
 3. Clica em Cadastrar
         ↓
@@ -756,7 +778,7 @@ Agora o sistema deverá funcionar assim:
         ↓
 8. Sistema consulta os dados
         ↓
-9. Clientes aparecem na página
+9. Usuários aparecem na página
 §§§`
     },
     {
@@ -764,7 +786,7 @@ Agora o sistema deverá funcionar assim:
       corpo: `
 ### ETAPA 29 — Validar os campos
 
-Antes de enviar os dados ao banco, verifique se os campos estão preenchidos. A lógica é:
+Se alguém tentar criar uma conta no TikTak sem preencher o e-mail, por exemplo, o banco aceitaria um registro incompleto — melhor barrar isso ANTES de gastar uma viagem até o Supabase. Antes de enviar os dados ao banco, verifique se os campos estão preenchidos. A lógica é:
 
 §§§text
 SE nome estiver vazio
@@ -777,7 +799,7 @@ SENÃO SE telefone estiver vazio
     mostrar mensagem
 
 SENÃO
-    cadastrar cliente
+    cadastrar usuário
 §§§
 
 #### Testes
@@ -791,12 +813,12 @@ Teste:
 
 ### ETAPA 30 — Criar mensagens para o usuário
 
-Não utilize apenas o ¤console.log()¤ — o ¤<p id="mensagem"></p>¤ que você criou na ETAPA 4 é onde essas mensagens vão aparecer, usando ¤.textContent¤.
+Não utilize apenas o ¤console.log()¤ — ninguém que está se cadastrando no TikTak abre o console do navegador pra ver se deu certo. O ¤<p id="mensagem"></p>¤ que você criou na ETAPA 4 é onde essas mensagens vão aparecer de verdade, na tela, usando ¤.textContent¤.
 
-Juntando a validação (ETAPA 29) com as mensagens, a versão final de ¤cadastrarCliente¤ fica assim — digite ela por cima da versão da ETAPA 22:
+Juntando a validação (ETAPA 29) com as mensagens, a versão final de ¤cadastrarUsuario¤ fica assim — digite ela por cima da versão da ETAPA 22:
 
 §§§javascript
-async function cadastrarCliente() {
+async function cadastrarUsuario() {
     const nome = document.getElementById("nome").value;
     const email = document.getElementById("email").value;
     const telefone = document.getElementById("telefone").value;
@@ -816,7 +838,7 @@ async function cadastrarCliente() {
     }
 
     const { data, error } = await supabase
-        .from("clientes")
+        .from("usuarios")
         .insert([
             {
                 nome: nome,
@@ -829,28 +851,30 @@ async function cadastrarCliente() {
         mensagem.textContent = "Erro ao cadastrar. Veja o console (F12).";
         console.log(error);
     } else {
-        mensagem.textContent = "Cliente cadastrado com sucesso!";
-        carregarClientes();
+        mensagem.textContent = "Usuário cadastrado com sucesso! Bem-vindo ao TikTak.";
+        carregarUsuarios();
     }
 }
 §§§
 
-¤return;¤ dentro do ¤if¤ interrompe a função na hora — se o nome está vazio, nem chega a checar e-mail/telefone nem a tentar cadastrar. A última linha do bloco de sucesso (¤carregarClientes();¤) atualiza a lista da tela na hora, sem precisar recarregar a página.`
+¤return;¤ dentro do ¤if¤ interrompe a função na hora — se o nome está vazio, nem chega a checar e-mail/telefone nem a tentar cadastrar. A última linha do bloco de sucesso (¤carregarUsuarios();¤) atualiza a lista da tela na hora, sem precisar recarregar a página — a pessoa que acabou de se cadastrar já se vê na lista imediatamente.`
     },
     {
       titulo: 'Segurança: RLS e Policies',
       corpo: `
 ### ETAPA 31 — Entender o RLS
 
-Agora vamos estudar segurança. O Supabase utiliza o **Row Level Security (RLS)** para controlar quais registros podem ser acessados pelas aplicações.
+Pare um segundo pra pensar: agora que a Publishable Key pode aparecer no código do frontend (você já viu isso na ETAPA 15), o que estaria impedindo qualquer pessoa de abrir o código-fonte do TikTak, pegar essa chave e usar ela pra ler o telefone e o e-mail de TODOS os usuários cadastrados? Ou pior, apagar a tabela inteira?
+
+A resposta é o **Row Level Security (RLS)**: o Supabase utiliza o RLS para controlar quais registros podem ser acessados pelas aplicações — linha por linha, operação por operação. Sem RLS habilitado (ou sem nenhuma policy criada), o banco simplesmente recusa qualquer acesso pela Data API, mesmo com a chave certa.
 
 A documentação atual recomenda habilitar RLS nas tabelas expostas e criar policies que determinem quais operações cada usuário pode realizar.
 
-Pense no RLS como uma regra de segurança dentro do próprio banco.
+Pense no RLS como um segurança na porta de cada linha da tabela ¤usuarios¤: ele só deixa passar quem tem uma "autorização" (policy) pra aquela operação específica.
 
 ### ETAPA 32 — Verificar o RLS da tabela
 
-No Supabase, abra a tabela ¤clientes¤. Verifique a configuração de segurança.
+No Supabase, abra a tabela ¤usuarios¤. Verifique a configuração de segurança.
 
 #### Pergunta — responda no seu caderno
 
@@ -858,15 +882,17 @@ O que significa RLS?
 
 ### ETAPA 33 — Criar uma Policy para leitura
 
-Nesta atividade inicial, vamos permitir que a aplicação consiga consultar os clientes. No **SQL Editor** do Supabase, digite e execute:
+Nesta atividade inicial, vamos permitir que a aplicação consiga consultar os usuários cadastrados — é assim que a lista da ETAPA 27 volta a funcionar depois do RLS ligado. No **SQL Editor** do Supabase, digite e execute:
 
 §§§sql
 create policy "permitir leitura"
-on clientes
+on usuarios
 for select
 to anon
 using (true);
 §§§
+
+Essa policy diz: "pra operações de ¤select¤ (leitura), na tabela ¤usuarios¤, feitas por qualquer requisição não-autenticada (¤anon¤), sempre permita (¤using (true)¤)". Sem ela, mesmo com a Publishable Key certa, todo ¤SELECT¤ voltaria vazio ou com erro de permissão.
 
 A ideia é:
 
@@ -884,15 +910,17 @@ A documentação do Supabase utiliza policies com ¤TO anon¤ e ¤USING (true)¤
 
 ### ETAPA 34 — Criar uma Policy para inserção
 
-Agora o sistema também precisa cadastrar clientes. Digite e execute mais esta, também no SQL Editor:
+Agora o sistema também precisa cadastrar usuários novos. Digite e execute mais esta, também no SQL Editor:
 
 §§§sql
 create policy "permitir insercao"
-on clientes
+on usuarios
 for insert
 to anon
 with check (true);
 §§§
+
+Repare que essa é uma policy DIFERENTE da anterior: ¤for select¤ controla quem pode LER; ¤for insert¤ controla quem pode CRIAR linhas novas. São operações separadas — ter uma não dá automaticamente a outra. É assim que o RLS permite, por exemplo, deixar todo mundo se cadastrar mas só deixar cada usuário editar o PRÓPRIO cadastro (algo que dá pra explorar no desafio extra, mais pra frente).
 
 #### Atenção
 
@@ -902,13 +930,13 @@ Isso é uma configuração **didática** para um sistema de exercício sem auten
 
 Agora teste novamente:
 
-#### Teste 1 — Consultar clientes
+#### Teste 1 — Consultar usuários
 
-Resultado esperado: Clientes aparecem.
+Resultado esperado: Usuários aparecem.
 
-#### Teste 2 — Cadastrar cliente
+#### Teste 2 — Cadastrar usuário
 
-Resultado esperado: Cliente cadastrado.
+Resultado esperado: Usuário cadastrado.
 
 #### Teste 3 — Remover temporariamente uma policy de leitura
 
@@ -977,12 +1005,12 @@ O código deverá estar: organizado, indentado, comentado quando necessário, e 
 
 ### ETAPA 40 — Criar o README
 
-No arquivo ¤README.md¤, documente o projeto. Inclua:
+No arquivo ¤README.md¤, documente o projeto. Assim como o README de um projeto real do TikTak explicaria pra qualquer novo desenvolvedor da equipe do que se trata o sistema, o seu deve explicar isso pra quem nunca viu o código. Inclua:
 
 #### Nome
 
 §§§text
-Sistema de Cadastro de Clientes
+TikTak — Tela de Cadastro de Usuários
 §§§
 
 #### Descrição
@@ -995,7 +1023,7 @@ Liste: HTML, CSS, JavaScript, Supabase, PostgreSQL.
 
 #### Banco de dados
 
-Informe: Tabela ¤clientes¤.
+Informe: Tabela ¤usuarios¤.
 
 #### Campos
 
@@ -1028,15 +1056,15 @@ Se você terminou todas as etapas, escolha **uma** das opções:
 
 #### Opção A — Pesquisa
 
-Crie um campo para pesquisar clientes pelo nome.
+Crie um campo para pesquisar usuários do TikTak pelo nome.
 
 #### Opção B — Exclusão
 
-Crie um botão para excluir um cliente. Você deverá estudar a operação ¤DELETE¤ e criar a policy necessária.
+Crie um botão para excluir um usuário (simulando um "excluir minha conta"). Você deverá estudar a operação ¤DELETE¤ e criar a policy necessária.
 
 #### Opção C — Atualização
 
-Crie uma função para alterar os dados de um cliente. Você deverá estudar ¤UPDATE¤ e criar a policy necessária.
+Crie uma função para alterar os dados de um usuário (simulando "editar meu perfil"). Você deverá estudar ¤UPDATE¤ e criar a policy necessária.
 
 ### ETAPA 42 — Teste final
 
@@ -1108,7 +1136,7 @@ Banco
 #### Supabase
 
 - [ ] Projeto criado.
-- [ ] Tabela ¤clientes¤ criada.
+- [ ] Tabela ¤usuarios¤ criada.
 - [ ] Campo ¤id¤ criado.
 - [ ] Campo ¤nome¤ criado.
 - [ ] Campo ¤email¤ criado.
@@ -1157,9 +1185,9 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
   // "Responda no seu caderno" acima; sem options/correctIndex porque não
   // são de múltipla escolha (ver formato em shared/gabarito-generator.js).
   const NOTEBOOK_QUESTIONS = [
-    { prompt: 'O que você acha que o arquivo index.html faz?', answer: 'Estrutura da página (HTML): o formulário de cadastro, os campos e a lista de clientes.' },
+    { prompt: 'O que você acha que o arquivo index.html faz?', answer: 'Estrutura da página (HTML): o formulário de cadastro, os campos e a lista de usuários.' },
     { prompt: 'O que você acha que o arquivo style.css faz?', answer: 'Estilização visual da página (cores, espaçamento, aparência) — não tem estrutura nem lógica.' },
-    { prompt: 'O que você acha que o arquivo script.js faz?', answer: 'Comportamento e lógica: conecta com o Supabase, valida o formulário, cadastra e lista os clientes.' },
+    { prompt: 'O que você acha que o arquivo script.js faz?', answer: 'Comportamento e lógica: conecta com o Supabase, valida o formulário, cadastra e lista os usuários.' },
     { prompt: 'Com suas próprias palavras: o que é um banco de dados?', answer: 'Um sistema organizado para guardar, consultar e gerenciar dados de forma estruturada e persistente, geralmente em tabelas.' },
     { prompt: 'O que significa RLS?', answer: 'Row Level Security — uma regra de segurança dentro do próprio banco que controla quais linhas cada usuário pode ler/escrever.' },
     { prompt: 'ETAPA 37 — O que é RLS?', answer: 'Row Level Security — restringe o acesso às linhas de uma tabela conforme regras (policies) definidas no próprio banco.' },
@@ -1170,7 +1198,7 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
     { prompt: 'Reflexão final — Qual é a função do JavaScript?', answer: 'Dar comportamento à página: capturar eventos (como o clique), validar dados e se comunicar com o Supabase.' },
     { prompt: 'Reflexão final — Qual é a função do Supabase?', answer: 'Ser o banco de dados (e a API) que guarda os dados de verdade, fora do navegador do usuário.' },
     { prompt: 'Reflexão final — O que é uma tabela?', answer: 'Uma estrutura que organiza dados em linhas (registros) e colunas (campos), como uma planilha.' },
-    { prompt: 'Reflexão final — O que acontece quando o usuário clica em "Cadastrar"?', answer: 'O JavaScript lê os campos do formulário e envia um INSERT pra tabela clientes no Supabase, via Data API.' },
+    { prompt: 'Reflexão final — O que acontece quando o usuário clica em "Cadastrar"?', answer: 'O JavaScript lê os campos do formulário e envia um INSERT pra tabela usuarios no Supabase, via Data API.' },
     { prompt: 'Reflexão final — O que é RLS?', answer: 'Row Level Security — restringe o acesso às linhas de uma tabela conforme regras (policies) definidas no próprio banco.' },
     { prompt: 'Reflexão final — O que é uma Policy?', answer: 'Define exatamente quais operações uma role pode fazer numa tabela, e em que condições.' },
     { prompt: 'Reflexão final — Por que não podemos utilizar uma Secret Key no navegador?', answer: 'Porque o JavaScript roda no navegador do usuário e pode ser lido por qualquer um; a secret key ignora o RLS e dá acesso total ao banco.' }
@@ -1207,9 +1235,9 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
   // sobrescritas por ETAPA 30/27 —, a tabela e as duas policies).
   const CODE_REFERENCE = [
     { titulo: 'index.html — formulário completo (ETAPA 4)', code: extractCodeBlocks(STEPS[2].corpo, 'html')[0] },
-    { titulo: 'clientes — CREATE TABLE (ETAPA 11)', code: extractCodeBlocks(STEPS[4].corpo, 'sql')[0] },
-    { titulo: 'cadastrarCliente() — versão final, com validação (ETAPA 30)', code: extractCodeBlocks(STEPS[9].corpo, 'javascript')[0] },
-    { titulo: 'carregarClientes() — versão final, desenhando a lista (ETAPA 27)', code: extractCodeBlocks(STEPS[8].corpo, 'javascript')[0] },
+    { titulo: 'usuarios — CREATE TABLE (ETAPA 11)', code: extractCodeBlocks(STEPS[4].corpo, 'sql')[0] },
+    { titulo: 'cadastrarUsuario() — versão final, com validação (ETAPA 30)', code: extractCodeBlocks(STEPS[9].corpo, 'javascript')[0] },
+    { titulo: 'carregarUsuarios() — versão final, desenhando a lista (ETAPA 27)', code: extractCodeBlocks(STEPS[8].corpo, 'javascript')[0] },
     { titulo: 'Policy de leitura — "permitir leitura" (ETAPA 33)', code: extractCodeBlocks(STEPS[10].corpo, 'sql')[0] },
     { titulo: 'Policy de inserção — "permitir insercao" (ETAPA 34)', code: extractCodeBlocks(STEPS[10].corpo, 'sql')[1] },
   ];
