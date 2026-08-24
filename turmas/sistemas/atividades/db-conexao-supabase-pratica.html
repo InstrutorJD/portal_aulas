@@ -103,6 +103,7 @@
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
 <script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
 
@@ -1148,6 +1149,45 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
 8. Por que não podemos utilizar uma Secret Key no navegador?`
     }
   ];
+
+  // Atividade guiada, sem alternativas certo/errado — o "gabarito" aqui é
+  // a lista das perguntas de reflexão que o roteiro manda responder no
+  // caderno (não têm campo de resposta no portal), com uma resposta
+  // modelo pro professor conferir. Textos batem com o enunciado de cada
+  // "Responda no seu caderno" acima; sem options/correctIndex porque não
+  // são de múltipla escolha (ver formato em shared/gabarito-generator.js).
+  const NOTEBOOK_QUESTIONS = [
+    { prompt: 'O que você acha que o arquivo index.html faz?', answer: 'Estrutura da página (HTML): o formulário de cadastro, os campos e a lista de clientes.' },
+    { prompt: 'O que você acha que o arquivo style.css faz?', answer: 'Estilização visual da página (cores, espaçamento, aparência) — não tem estrutura nem lógica.' },
+    { prompt: 'O que você acha que o arquivo script.js faz?', answer: 'Comportamento e lógica: conecta com o Supabase, valida o formulário, cadastra e lista os clientes.' },
+    { prompt: 'Com suas próprias palavras: o que é um banco de dados?', answer: 'Um sistema organizado para guardar, consultar e gerenciar dados de forma estruturada e persistente, geralmente em tabelas.' },
+    { prompt: 'O que significa RLS?', answer: 'Row Level Security — uma regra de segurança dentro do próprio banco que controla quais linhas cada usuário pode ler/escrever.' },
+    { prompt: 'ETAPA 37 — O que é RLS?', answer: 'Row Level Security — restringe o acesso às linhas de uma tabela conforme regras (policies) definidas no próprio banco.' },
+    { prompt: 'ETAPA 37 — Para que serve uma Policy?', answer: 'Define exatamente quais operações (select/insert/update/delete) uma role pode fazer numa tabela, e em que condições — é a regra concreta que o RLS aplica.' },
+    { prompt: 'ETAPA 37 — Qual é a diferença entre anon e authenticated?', answer: 'anon é uma requisição sem login (usuário não autenticado); authenticated é uma requisição feita por um usuário já logado no Supabase Auth.' },
+    { prompt: 'ETAPA 37 — Por que uma chave sb_secret_... não deve estar no JavaScript?', answer: 'O JavaScript roda no navegador do usuário e pode ser lido por qualquer um (ver código-fonte). A secret key dá acesso total ao banco, ignorando o RLS — expô-la permite que qualquer pessoa leia ou apague todos os dados.' },
+    { prompt: 'Reflexão final — Qual é a função do HTML?', answer: 'Estruturar o conteúdo da página (formulário, textos, botões, listas).' },
+    { prompt: 'Reflexão final — Qual é a função do JavaScript?', answer: 'Dar comportamento à página: capturar eventos (como o clique), validar dados e se comunicar com o Supabase.' },
+    { prompt: 'Reflexão final — Qual é a função do Supabase?', answer: 'Ser o banco de dados (e a API) que guarda os dados de verdade, fora do navegador do usuário.' },
+    { prompt: 'Reflexão final — O que é uma tabela?', answer: 'Uma estrutura que organiza dados em linhas (registros) e colunas (campos), como uma planilha.' },
+    { prompt: 'Reflexão final — O que acontece quando o usuário clica em "Cadastrar"?', answer: 'O JavaScript lê os campos do formulário e envia um INSERT pra tabela clientes no Supabase, via Data API.' },
+    { prompt: 'Reflexão final — O que é RLS?', answer: 'Row Level Security — restringe o acesso às linhas de uma tabela conforme regras (policies) definidas no próprio banco.' },
+    { prompt: 'Reflexão final — O que é uma Policy?', answer: 'Define exatamente quais operações uma role pode fazer numa tabela, e em que condições.' },
+    { prompt: 'Reflexão final — Por que não podemos utilizar uma Secret Key no navegador?', answer: 'Porque o JavaScript roda no navegador do usuário e pode ser lido por qualquer um; a secret key ignora o RLS e dá acesso total ao banco.' }
+  ];
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Conexão com Supabase — Sistema Web com HTML, JavaScript e Supabase',
+      subtitle: 'Prática · Banco de Dados · Turma Sistemas',
+      items: NOTEBOOK_QUESTIONS.map((q, i) => ({
+        number: i + 1,
+        prompt: q.prompt,
+        answer: q.answer
+      })),
+      fileName: 'db-conexao-supabase-pratica-gabarito.txt'
+    });
+  };
 
   function loadProgress() {
     try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }

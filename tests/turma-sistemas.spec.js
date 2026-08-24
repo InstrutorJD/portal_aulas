@@ -105,4 +105,32 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(content).toContain('Turma Sistemas');
     expect(content).not.toContain('Jogos Digitais');
   });
+
+  // db-conexao-supabase-pratica.html não tem alternativas certo/errado (é
+  // um roteiro guiado com visto do professor) — o gabarito lista as
+  // perguntas de "Responda no seu caderno" com uma resposta modelo, pro
+  // professor conferir sem precisar abrir o roteiro inteiro de novo.
+  test('gabarito da atividade de Conexão com Supabase lista as perguntas do caderno com resposta modelo', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor&turma=sistemas');
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+
+    const row = page.locator('#gestaoGabaritoList > div', { hasText: 'Sistema Web com HTML, JavaScript e Supabase' });
+    await expect(row).toBeVisible();
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 15000 }),
+      row.locator('[data-gabarito-mod]').click(),
+    ]);
+    expect(download.suggestedFilename()).toBe('db-conexao-supabase-pratica-gabarito.txt');
+
+    const filePath = await download.path();
+    const fs = require('node:fs');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('GABARITO');
+    expect(content).toContain('O que significa RLS?');
+    expect(content).toContain('RESPOSTA ESPERADA: Row Level Security');
+    expect(content).toContain('Por que uma chave sb_secret_... não deve estar no JavaScript?');
+  });
 });

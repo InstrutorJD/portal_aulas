@@ -87,7 +87,8 @@ window.TURMA_CONFIG_SISTEMAS = {
               key: 'pratica', title: 'Prática — Sistema Web com HTML, JavaScript e Supabase',
               desc: 'Cadastro de clientes de ponta a ponta: GitHub Codespaces, HTML/JS, criação do banco no Supabase, conexão via Data API, INSERT/SELECT e políticas de RLS. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
               icon: '🔌', src: 'atividades/db-conexao-supabase-pratica.html',
-              progressKey: 'db_conexao_supabase_pratica_progress_', progressMode: 'flag'
+              progressKey: 'db_conexao_supabase_pratica_progress_', progressMode: 'flag',
+              hasGabarito: true
             }
           ]
         }
