@@ -70,3 +70,36 @@ o gerador reaproveite essa mesma consulta em vez de buscar tudo).
 - Reaproveitar a consulta existente de `attendance` filtrada por
   `turma` (já usada em `exibirResumoChamada`), só trocando o filtro de
   "tudo" pra "dias dentro do mês escolhido".
+
+## Bloquear jogos não tira o aluno de um jogo já aberto
+
+**Status:** pendente.
+
+**Onde:** `shared/platform-core.js`, `checkGamesUnlock()` (linha ~881) e
+`fetchTeacherOverride()`/`setupOverrideRealtime()` (linha ~906) — o
+realtime já existe (canal `postgres_changes` em `student_overrides`),
+mas o callback só chama `checkGamesUnlock()`, que só troca a classe/texto
+do botão `#tabBtnJogos`. Nenhum dos dois mexe em `currentGameKey` nem
+chama `closeGame()`.
+
+**Problema:** quando o professor revoga o acesso aos jogos (botão
+"Revogar" ou bloqueio da turma inteira, aba Gestão), o cadeado do botão
+"Jogos" até atualiza sozinho (é realtime) — mas se o aluno JÁ ESTÁ dentro
+de um jogo (`gameFrameArea` aberto, `currentGameKey` setado), esse jogo
+continua rodando normalmente: nada verifica o bloqueio enquanto o jogo já
+carregado está em execução. Só passa a valer se o aluno fechar o jogo e
+voltar pra lista (ou atualizar a página) — até lá, pode continuar jogando
+por muito tempo mesmo já bloqueado.
+
+**Próximos passos (ainda não decidido, discutir antes de implementar):**
+- Fazer `fetchTeacherOverride()` (chamado pelo realtime) checar se
+  `currentGameKey` está setado e `isUnlocked` virou `false`; se sim,
+  chamar `closeGame()` sozinho, com algum aviso pro aluno (ex.: toast
+  "O professor bloqueou os jogos") em vez de só fechar sem explicação.
+- Conferir se o mesmo vale pro QuizRush (`quizrush.html`), que também
+  roda dentro da aba Jogos.
+- Lembrar que `teacherUnlockOverride` é só um dos três critérios de
+  `isUnlocked` (`progressUnlocked || teacherUnlockOverride ||
+  role==='professor'`) — revogar o override não bloqueia quem já tem
+  `progressUnlocked` true (completou os módulos), então o fechamento
+  forçado só faz sentido nesse caso.
