@@ -118,6 +118,7 @@
 <script src="../../../shared/vendor/pptxgen.bundle.js"></script>
 <script src="../../../shared/slides-generator.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/quiz-teoria-engine.js"></script>
 </head>
 <body>
 
@@ -137,10 +138,6 @@
 </div>
 
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `mundo_revolucao_teoria_progress_${username}`;
-
   const STEPS = [
     {
       story: 'Olá! Eu sou o <b>Bit</b>, assistente de indústria 4.0 da PixelForge Studios — minha função é te mostrar como o mundo do trabalho chegou até aqui. Tudo começou na <b>1ª Revolução Industrial</b> (final do século 18), quando a <b>máquina a vapor</b> substituiu a força humana e animal nas fábricas de tecelagem. Artesãos que trabalhavam em casa migraram em massa pras cidades pra operar máquinas — o início do <b>êxodo rural</b> e das primeiras fábricas.',
@@ -311,236 +308,18 @@
     });
   };
 
-  const btnGenSlides = document.getElementById('btnGenSlides');
-  (async function () {
-    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
-    if (!user || user.role !== 'professor') return;
-    btnGenSlides.style.display = 'inline-block';
-    btnGenSlides.addEventListener('click', () => {
-      btnGenSlides.disabled = true;
-      btnGenSlides.textContent = '⏳ Gerando...';
-      setTimeout(() => {
-        window.generateSlidesForGestao();
-        btnGenSlides.disabled = false;
-        btnGenSlides.textContent = '🖨️ Gerar Slides (PPTX)';
-      }, 50);
-    });
-  })();
-
-  const storyWrap = document.getElementById('storyWrap');
-  const lblStepNum = document.getElementById('lblStepNum');
-  const lblStepTotal = document.getElementById('lblStepTotal');
-  const progressFill = document.getElementById('progressFill');
-
-  lblStepTotal.textContent = STEPS.length;
-
-  function loadProgress() {
-    try {
-      return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
-    } catch (e) {
-      return null;
+  window.PortalQuizTeoria.run({
+    activityLocation: "mundo_revolucao_teoria",
+    steps: STEPS,
+    reportLabel: "Jogos — Revoluções Industriais",
+    mentor: { rowClass: "bit", avatar: "🤖", name: "Bit, Assistente de Indústria 4.0" },
+    finishPassed: {
+      title: "Revoluções Industriais concluídas!",
+      introHtml: "<p>Você já reconhece os marcos das quatro revoluções industriais — da máquina a vapor até as fábricas conectadas — e as tecnologias que sustentam a Indústria 4.0: nuvem, IoT, manufatura digital, robótica, big data, segurança digital e integração de sistemas.</p>",
+      closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Mundo do Trabalho.</p>",
+      restartLabel: "🔁 Rever a teoria"
     }
-  }
-
-  function saveProgress(data) {
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
-  }
-
-  const ORDER_KEY = PROGRESS_KEY.replace('_progress_', '_order_');
-
-  function shuffleOrder() {
-    const arr = STEPS.map((_, i) => i);
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  function loadOrder() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(ORDER_KEY) || 'null');
-      if (Array.isArray(parsed) && parsed.length === STEPS.length && parsed.every(n => Number.isInteger(n) && n >= 0 && n < STEPS.length)) {
-        return parsed;
-      }
-    } catch (e) {}
-    return null;
-  }
-
-  const saved = loadProgress();
-  let stepOrder = (saved && !saved.completed) ? (loadOrder() || shuffleOrder()) : shuffleOrder();
-  localStorage.setItem(ORDER_KEY, JSON.stringify(stepOrder));
-  let currentStepIndex = (saved && !saved.completed) ? Math.min(saved.lastStepIndex || 0, STEPS.length - 1) : 0;
-  let correctCount = (saved && typeof saved.correctCount === 'number') ? saved.correctCount : 0;
-
-  function updateProgressBar() {
-    const pct = Math.round(((currentStepIndex) / STEPS.length) * 100);
-    progressFill.style.width = pct + '%';
-    lblStepNum.textContent = Math.min(currentStepIndex + 1, STEPS.length);
-  }
-
-  function reportStep(label) {
-    if (typeof window.reportActivity === 'function') {
-      window.reportActivity('mundo_revolucao_teoria', label, {
-        step: currentStepIndex + 1,
-        total: STEPS.length,
-        correctCount: correctCount
-      });
-    }
-  }
-
-  function renderStory() {
-    updateProgressBar();
-    const step = STEPS[stepOrder[currentStepIndex]];
-    reportStep(`Jogos — Revoluções Industriais — Etapa ${currentStepIndex + 1}/${STEPS.length}`);
-
-    storyWrap.innerHTML = '';
-
-    const row = document.createElement('div');
-    row.className = 'bit-row';
-    row.innerHTML = `
-      <div class="bit-avatar">🤖</div>
-      <div class="speech-bubble">
-        <span class="bit-name">Bit, Assistente de Indústria 4.0</span>
-        ${step.story}
-      </div>
-    `;
-    storyWrap.appendChild(row);
-
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    actions.innerHTML = `<button class="btn" id="btnNext">Próximo →</button>`;
-    storyWrap.appendChild(actions);
-
-    document.getElementById('btnNext').addEventListener('click', renderQuestion);
-  }
-
-  function renderQuestion() {
-    const step = STEPS[stepOrder[currentStepIndex]];
-    const q = step.question;
-
-    storyWrap.innerHTML = '';
-
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `<h2>❓ ${q.prompt}</h2>`;
-
-    const optionsWrap = document.createElement('div');
-    const letters = ['A', 'B', 'C', 'D'];
-    let answered = false;
-
-    const order = q.options.map((_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [order[i], order[j]] = [order[j], order[i]];
-    }
-    const correctPos = order.indexOf(q.correctIndex);
-
-    order.forEach((origIdx, pos) => {
-      const optText = q.options[origIdx];
-      const opt = document.createElement('div');
-      opt.className = 'option';
-      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
-      opt.addEventListener('click', () => {
-        if (answered) return;
-        answered = true;
-        selectAnswer(pos);
-      });
-      optionsWrap.appendChild(opt);
-
-      function selectAnswer(chosenIdx) {
-        const allOptionEls = optionsWrap.querySelectorAll('.option');
-        allOptionEls.forEach(el => el.classList.add('disabled'));
-
-        const isCorrect = chosenIdx === correctPos;
-        allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
-        if (!isCorrect) {
-          allOptionEls[correctPos].classList.add('correct');
-        }
-        if (isCorrect) correctCount++;
-
-        const feedback = document.createElement('div');
-        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-        feedback.innerHTML = isCorrect
-          ? `✅ Correto! ${q.explanation}`
-          : `❌ Não foi dessa vez. A resposta certa é "<b>${q.options[q.correctIndex]}</b>": ${q.explanation.replace(/^(Isso mesmo!|Isso!|Correto!|Exato!|Perfeito!|Correta!)\s*/i, '')}`;
-        card.appendChild(feedback);
-
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        actions.style.marginTop = '14px';
-        actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">Próximo →</button>`;
-        card.appendChild(actions);
-
-        saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-        reportStep(`Jogos — Revoluções Industriais — Etapa ${currentStepIndex + 1}/${STEPS.length} (respondida)`);
-
-        document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
-          currentStepIndex++;
-          if (currentStepIndex >= STEPS.length) {
-            finishJourney();
-          } else {
-            saveProgress({ lastStepIndex: currentStepIndex, correctCount, completed: false });
-            renderStory();
-          }
-        });
-      }
-    });
-
-    card.appendChild(optionsWrap);
-    storyWrap.innerHTML = '';
-    storyWrap.appendChild(card);
-  }
-
-  function finishJourney(reviewOnly) {
-    const pct = STEPS.length > 0 ? Math.round((correctCount / STEPS.length) * 100) : 0;
-    const passed = reviewOnly ? true : pct >= 80;
-    if (!reviewOnly) {
-      saveProgress({ lastStepIndex: STEPS.length, correctCount, completed: passed });
-      reportStep(`Jogos — Revoluções Industriais — ${passed ? 'Concluída' : 'Não concluída'} (${correctCount}/${STEPS.length})`);
-    }
-
-    progressFill.style.width = '100%';
-    lblStepNum.textContent = STEPS.length;
-
-    storyWrap.innerHTML = passed ? `
-      <div class="card finish-screen">
-        <div class="trophy">🏆</div>
-        <h2>Revoluções Industriais concluídas!</h2>
-        <p>Você já reconhece os marcos das quatro revoluções industriais — da máquina a vapor até as fábricas conectadas — e as tecnologias que sustentam a Indústria 4.0: nuvem, IoT, manufatura digital, robótica, big data, segurança digital e integração de sistemas.</p>
-        <div class="score">Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%).</div>
-        <p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central do Mundo do Trabalho.</p>
-        <div class="actions" style="justify-content:center; margin-top:12px;">
-          <button class="btn btn-secondary" id="btnRestart">🔁 Rever a teoria</button>
-        </div>
-      </div>
-    ` : `
-      <div class="card finish-screen">
-        <div class="trophy">📚</div>
-        <h2>Quase lá!</h2>
-        <p>Você acertou ${correctCount} de ${STEPS.length} perguntas (${pct}%) — é preciso pelo menos 80% de acerto para concluir esta atividade.</p>
-        <div class="actions" style="justify-content:center; margin-top:12px;">
-          <button class="btn" id="btnRestart">🔁 Tentar novamente</button>
-        </div>
-      </div>
-    `;
-
-    document.getElementById('btnRestart').addEventListener('click', () => {
-      currentStepIndex = 0;
-      correctCount = 0;
-      stepOrder = shuffleOrder();
-      localStorage.setItem(ORDER_KEY, JSON.stringify(stepOrder));
-      saveProgress({ lastStepIndex: 0, correctCount: 0, completed: false });
-      renderStory();
-    });
-  }
-
-  if (saved && saved.completed) {
-    currentStepIndex = STEPS.length;
-    finishJourney(true);
-  } else {
-    renderStory();
-  }
+  });
 </script>
 
 <script src="../../../shared/vlibras-widget.js"></script>
