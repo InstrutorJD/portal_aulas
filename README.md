@@ -2,6 +2,16 @@
 
 ## Diretrizes de conteúdo educacional
 
+### Pasta `Atividades/` — atividades a serem criadas
+Atividades novas (ainda não construídas no portal) ficam descritas em arquivos dentro de `Atividades/`, separadas por turma:
+
+- `Atividades/Jogos Digitais/` — atividades da turma Jogos Digitais (`turmas/jogos/`).
+- `Atividades/Desenvolvimento de Sistemas/` — atividades da turma Sistemas (`turmas/sistemas/`).
+
+Fluxo esperado: o arquivo descreve a atividade a construir; uma IA (Claude ou outra) lê essa descrição e cria o módulo de verdade em `turmas/<turma>/atividades/*.html` + a entrada correspondente em `turmas/<turma>/config.js`, seguindo as diretrizes desta seção (dicas, quiz de teoria etc.).
+
+**Depois de construir a atividade, marque o arquivo de origem como `CONSTRUÍDA`** — prefixe o nome do arquivo com `[CONSTRUÍDA] ` (ex.: `fundamentos-arrays.md` → `[CONSTRUÍDA] fundamentos-arrays.md`). Isso evita que a mesma atividade seja lida e construída de novo por engano numa sessão futura. Antes de começar a construir qualquer coisa a partir dessa pasta, confira se o arquivo já não está marcado como `CONSTRUÍDA`.
+
 ### Dicas (hints) nas atividades
 As dicas dos exercícios (`turmas/*/atividades/*.html`, campo `hint` de cada item em `CHALLENGES`) devem **dar o norte, não a resposta**:
 
