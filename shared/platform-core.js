@@ -37,6 +37,7 @@
   let librasLoadFailed = false; // ver setupVLibras — script de terceiro (vlibras.gov.br) pode ser bloqueado pelo navegador
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
+  let viewingStudentEmail = null; // não-nulo quando o PROFESSOR abriu o Perfil de um aluno (ver openStudentPerfil) — nunca setado pro aluno vendo o próprio
 
   // ---------- Alerta estilizado (substitui window.alert nativo, que sai feio
   // e fora do tema) ----------
@@ -168,8 +169,13 @@
 
           <div id="tabContentPerfil" class="tab-page" style="display:none;">
             <div class="card">
-              <h2 style="margin:0 0 4px;">Meu Progresso</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Acompanhe sua jornada em ${cfg.label}.</p>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                <div>
+                  <h2 id="perfilTituloPrincipal" style="margin:0 0 4px;">Meu Progresso</h2>
+                  <p id="perfilSubtitulo" style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Acompanhe sua jornada em ${cfg.label}.</p>
+                </div>
+                <button class="btn btn-secondary" id="btnVoltarPerfilAluno" style="display:none;" onclick="PortalCore.closeStudentPerfil()">← Voltar à Gestão</button>
+              </div>
               <div class="perfil-stats-row" id="perfilResumo"></div>
             </div>
 
@@ -1586,12 +1592,18 @@
 
   // Ranking do aluno dentro da própria turma, pelo % geral de conclusão
   // (student_module_progress). Calcula a posição de TODOS pra saber onde o
-  // aluno logado cai, mas só devolve a dele — nome/posição de colegas nunca
+  // aluno alvo cai, mas só devolve a dele — nome/posição de colegas nunca
   // chegam a aparecer na tela (só entram como chave de desempate no sort).
-  // Usada tanto pelo badge da statusbar (renderRankingBadge) quanto pela
-  // aba Perfil (renderPerfilTab).
-  async function computeRanking() {
-    if (currentUser.role !== 'aluno' || !sbClient) return null;
+  // Sem targetEmail, usa o usuário logado (paramUser) — é assim que o badge
+  // da statusbar (renderRankingBadge) e a própria aba Perfil do aluno usam.
+  // Com targetEmail explícito, calcula a posição de QUALQUER aluno da turma
+  // — é o que a Gestão usa pra abrir o Perfil de um aluno específico
+  // (openStudentPerfil). Não precisa mais checar `role === 'aluno'` aqui:
+  // paramUser de um professor nunca aparece em turmaStudents() (só
+  // role='aluno'), então o find abaixo já devolve null sozinho pra ele.
+  async function computeRanking(targetEmail) {
+    const email = targetEmail || paramUser;
+    if (!sbClient) return null;
 
     const students = turmaStudents();
     if (students.length === 0) return null;
@@ -1620,10 +1632,10 @@
     // alunos com desempenho diferente na mesma posição.
     scored.forEach((s, i) => { s.rank = i + 1; });
 
-    const myIndex = scored.findIndex(s => s.email === paramUser);
-    if (myIndex === -1) return null;
+    const idx = scored.findIndex(s => s.email === email);
+    if (idx === -1) return null;
 
-    return { posicao: scored[myIndex].rank, total: scored.length, pct: scored[myIndex].pctRounded };
+    return { posicao: scored[idx].rank, total: scored.length, pct: scored[idx].pctRounded };
   }
 
   async function renderRankingBadge() {
@@ -1674,16 +1686,34 @@
     const materiasEl = document.getElementById('perfilMaterias');
     if (!summaryEl || !materiasEl) return;
 
+    // Fora do modo "professor vendo o Perfil de um aluno" (viewingStudentEmail
+    // null), é sempre o próprio usuário logado — mesmo comportamento de antes.
+    const targetEmail = viewingStudentEmail || paramUser;
+    const tituloEl = document.getElementById('perfilTituloPrincipal');
+    const subtituloEl = document.getElementById('perfilSubtitulo');
+    const btnVoltar = document.getElementById('btnVoltarPerfilAluno');
+    if (btnVoltar) btnVoltar.style.display = viewingStudentEmail ? '' : 'none';
+    if (tituloEl && subtituloEl) {
+      if (viewingStudentEmail) {
+        const aluno = turmaStudentByEmail(viewingStudentEmail);
+        tituloEl.textContent = `Progresso de ${aluno ? aluno.nome : viewingStudentEmail}`;
+        subtituloEl.textContent = `O que ${aluno ? aluno.nome.split(' ')[0] : 'o aluno'} já concluiu em ${cfg.label}, e o que ainda falta.`;
+      } else {
+        tituloEl.textContent = 'Meu Progresso';
+        subtituloEl.textContent = `Acompanhe sua jornada em ${cfg.label}.`;
+      }
+    }
+
     if (!sbClient) {
-      summaryEl.innerHTML = `<div class="empty-state">Configure o Supabase (shared/supabase-config.js) para ver seu progresso aqui.</div>`;
+      summaryEl.innerHTML = `<div class="empty-state">Configure o Supabase (shared/supabase-config.js) para ver ${viewingStudentEmail ? 'o progresso do aluno' : 'seu progresso'} aqui.</div>`;
       materiasEl.innerHTML = '';
       renderPerfilBadges(0, 0);
       return;
     }
 
     const [{ data: myRows }, ranking] = await Promise.all([
-      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id).eq('student_email', paramUser),
-      computeRanking()
+      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id).eq('student_email', targetEmail),
+      computeRanking(targetEmail)
     ]);
     const rows = myRows || [];
 
@@ -1736,6 +1766,23 @@
         </div>
       `;
     }).join('');
+  }
+
+  // Abre o Perfil do aluno clicado (Gestão → Relatório de Inatividade) na
+  // MESMA tela que o aluno vê ao clicar em "Perfil" — reaproveita
+  // #tabContentPerfil/renderPerfilTab() por inteiro, só trocando de quem é
+  // o progresso mostrado (ver viewingStudentEmail em renderPerfilTab).
+  // Não existe botão "Perfil" pro professor na barra de abas, então essa é
+  // a única porta de entrada; closeStudentPerfil() é a saída (botão
+  // "← Voltar à Gestão" que só aparece nesse modo).
+  function openStudentPerfil(email) {
+    viewingStudentEmail = email;
+    switchTab('perfil');
+  }
+
+  function closeStudentPerfil() {
+    viewingStudentEmail = null;
+    switchTab('gestao');
   }
 
   async function renderRelatorioNotas() {
@@ -1832,7 +1879,7 @@
       const ultimaVez = activity && (activity.updated_at || activity.last_interaction_at)
         ? new Date(activity.updated_at || activity.last_interaction_at).toLocaleString('pt-BR')
         : '—';
-      return { nome: u.nome, status, ultimaVez };
+      return { email: u.email, nome: u.nome, status, ultimaVez };
     });
 
     // Quem precisa de atenção (nunca acessou / acessou sem fazer nada) sobe
@@ -1847,11 +1894,15 @@
 
     tbody.innerHTML = linhas.map(l => `
       <tr>
-        <td>${l.nome}</td>
+        <td><button class="aluno-nome-link" data-perfil-email="${l.email}" title="Ver o Perfil (progresso completo) deste aluno">${l.nome}</button></td>
         <td><span style="color:${l.status.color}; font-weight:800;">${l.status.label}</span></td>
         <td>${l.ultimaVez}</td>
       </tr>
     `).join('');
+
+    tbody.querySelectorAll('[data-perfil-email]').forEach(btn => {
+      btn.addEventListener('click', () => openStudentPerfil(btn.getAttribute('data-perfil-email')));
+    });
   }
 
   // "Concluiu alguma atividade hoje" olha completed_at (quando o módulo
@@ -2560,7 +2611,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, removeDailyRelease };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleStudentGamesTurma, toggleGestaoSection, removeDailyRelease, openStudentPerfil, closeStudentPerfil };
 
   document.addEventListener('DOMContentLoaded', init);
 })();

@@ -60,4 +60,55 @@ test.describe('Relatório de Inatividade — dentro do portal da turma', () => {
   // estado alcançável (mesmo motivo do teste equivalente removido em
   // tests/professor-relatorio-atividade-dia.spec.js) — login agora exige
   // Supabase Auth configurado.
+
+  test('clicar no nome do aluno abre o Perfil dele (mesma tela que o aluno vê), com botão pra voltar', async ({ page }) => {
+    await openGestao(page, {
+      student_activity: [
+        { student_email: 'bruno.gomes1', student_name: 'Bruno Gomes', turma: 'sistemas', status: 'active', location_label: 'SQL', updated_at: '2026-08-15T09:30:00.000Z' },
+      ],
+      student_module_progress: [
+        { student_email: 'bruno.gomes1', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    });
+    await expandGestaoSection(page, 'Relatórios');
+
+    await page.click('#inatividadeBody tr:has-text("Bruno Gomes") .aluno-nome-link');
+
+    await expect(page.locator('#tabContentPerfil')).toBeVisible();
+    await expect(page.locator('#tabContentGestao')).toBeHidden();
+    await expect(page.locator('#perfilTituloPrincipal')).toHaveText('Progresso de Bruno Gomes');
+    // "Atividades Concluídas": 1 módulo concluído de N na turma inteira.
+    await expect(page.locator('#perfilResumo')).toContainText('1/');
+
+    await expect(page.locator('#btnVoltarPerfilAluno')).toBeVisible();
+    await page.click('#btnVoltarPerfilAluno');
+
+    await expect(page.locator('#tabContentGestao')).toBeVisible();
+    await expect(page.locator('#tabContentPerfil')).toBeHidden();
+  });
+
+  test('trocar de aluno no relatório atualiza o Perfil mostrado, sem misturar progresso de outro aluno', async ({ page }) => {
+    await openGestao(page, {
+      student_activity: [
+        { student_email: 'bruno.gomes1', student_name: 'Bruno Gomes', turma: 'sistemas', status: 'active', updated_at: '2026-08-15T09:30:00.000Z' },
+        { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', status: 'active', updated_at: '2026-08-15T09:30:00.000Z' },
+      ],
+      student_module_progress: [
+        { student_email: 'bruno.gomes1', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    });
+    await expandGestaoSection(page, 'Relatórios');
+
+    await page.click('#inatividadeBody tr:has-text("Bruno Gomes") .aluno-nome-link');
+    await expect(page.locator('#perfilTituloPrincipal')).toHaveText('Progresso de Bruno Gomes');
+    await expect(page.locator('#perfilResumo')).toContainText('1/');
+
+    // Volta e abre o Perfil de outro aluno, sem nenhum progresso — a tela
+    // não pode continuar mostrando os dados do Bruno.
+    await page.click('#btnVoltarPerfilAluno');
+    await page.click('#inatividadeBody tr:has-text("Alexandre Natal") .aluno-nome-link');
+
+    await expect(page.locator('#perfilTituloPrincipal')).toHaveText('Progresso de Alexandre Natal');
+    await expect(page.locator('#perfilResumo')).toContainText('0/');
+  });
 });
