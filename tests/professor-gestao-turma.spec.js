@@ -157,6 +157,79 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#tabContentAulas')).toBeHidden();
   });
 
+  test('atalhos de acesso rápido (barra de navegação) só aparecem pro professor', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ALUNO_URL);
+    await expect(page.locator('#btnQuickAtividadeInatividade')).toHaveCount(0);
+    await expect(page.locator('#btnQuickToggleGames')).toHaveCount(0);
+    await expect(page.locator('#btnQuickToggleClipboard')).toHaveCount(0);
+  });
+
+  test('atalho "Atividade / Inatividade" abre a Gestão com as duas seções já expandidas, sem precisar navegar manualmente', async ({ page }) => {
+    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
+    await page.goto(JOGOS_URL);
+
+    // Ainda na aba Aulas & Atividades (tela padrão) — a Gestão nem foi aberta uma vez.
+    await expect(page.locator('#tabContentGestao')).toBeHidden();
+
+    await page.click('#btnQuickAtividadeInatividade');
+
+    await expect(page.locator('#tabContentGestao')).toBeVisible();
+    const relatorios = page.locator('.collapsible-card', { has: page.locator('h2', { hasText: 'Relatórios' }) });
+    const atividade = page.locator('.collapsible-card', { has: page.locator('h2', { hasText: 'Atividade em Tempo Real' }) });
+    await expect(relatorios).toHaveClass(/expanded/);
+    await expect(atividade).toHaveClass(/expanded/);
+    // Sub-seções de Relatórios (Inatividade é uma delas) ficam visíveis já expandidas.
+    await expect(page.locator('#inatividadeBody')).toBeVisible();
+    await expect(page.locator('#tblGestaoActivityBody')).toBeVisible();
+  });
+
+  test('atalho de jogos liga/desliga os jogos da turma inteira, e reflete o mesmo estado da tabela dentro da Gestão', async ({ page }) => {
+    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
+    await page.goto(JOGOS_URL);
+
+    // Estado inicial (ninguém liberado ainda) já carregado sem precisar abrir a Gestão.
+    await expect(page.locator('#btnQuickToggleGames')).toHaveText('🔓 Liberar Jogos');
+
+    await page.click('#btnQuickToggleGames');
+    await expect(page.locator('#btnQuickToggleGames')).toHaveText('🔒 Bloquear Jogos');
+
+    let rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
+    expect(rows.every(r => r.games_unlocked === true)).toBe(true);
+    expect(rows.some(r => r.student_email === 'breno.silva80')).toBe(true);
+
+    // A tabela de "Bloqueios e Liberações" (dentro da Gestão) mostra o mesmo estado.
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
+    await expect(page.locator('#tblGestaoStudentsBody')).toContainText('LIBERADO');
+    await expect(page.locator('#tblGestaoStudentsBody')).not.toContainText('BLOQUEADO');
+
+    // Clicar de novo bloqueia todo mundo outra vez.
+    await page.click('#btnQuickToggleGames');
+    await expect(page.locator('#btnQuickToggleGames')).toHaveText('🔓 Liberar Jogos');
+    rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
+    expect(rows.every(r => r.games_unlocked === false)).toBe(true);
+  });
+
+  test('atalho de Ctrl+C/V liga/desliga o bloqueio da turma, e reflete o mesmo estado do botão dentro da Gestão', async ({ page }) => {
+    await stubSupabaseFake(page, { classroom_settings: [] });
+    await page.goto(JOGOS_URL);
+
+    await expect(page.locator('#btnQuickToggleClipboard')).toHaveText('🔒 Bloquear Copiar/Colar');
+
+    await page.click('#btnQuickToggleClipboard');
+    await expect(page.locator('#btnQuickToggleClipboard')).toHaveText('🔓 Liberar Copiar/Colar');
+
+    const rows = await page.evaluate(() => window.__FAKE_DB__.classroom_settings || []);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: 'jogos', clipboard_blocked: true });
+
+    // O botão de dentro da Gestão reflete o mesmo estado.
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
+    await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
+  });
+
   test('atividade em tempo real mostra só alunos desta turma', async ({ page }) => {
     await stubSupabaseFake(page, {
       student_activity: [

@@ -70,6 +70,16 @@ body{
 .tab-btn.active{ background:var(--green); color:#04220a; border-color:var(--green); }
 .tab-btn.disabled{ opacity:0.3; cursor:not-allowed; border-color:var(--line) !important; color:var(--ink-dim) !important; background:transparent !important; }
 
+/* Botões de atalho (só professor) — mesma barra dos tabs, mas são AÇÕES
+   (abrem uma seção específica, ou ligam/desligam algo na hora), não
+   destinos de navegação — por isso não usam .tab-btn (ficariam marcados
+   como "active" incorretamente pela lógica de troca de aba). */
+.quick-action-btn{
+  font-family:inherit; font-weight:800; font-size:11px; letter-spacing:0.5px; text-transform:uppercase;
+  background:transparent; border:1px dashed var(--line); padding:7px 12px; cursor:pointer; border-radius:2px;
+}
+.quick-action-btn:hover{ border-style:solid; }
+
 /* Sub-navegação de trilha: 2+ trilhas viram um <select> só (mais conciso
    que uma fileira de botões, e usa o seletor nativo no celular); com 1
    trilha só, o JS esconde isso inteiro (ver renderTrilhas em platform-core.js) — não faz sentido escolher entre uma opção. */

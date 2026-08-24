@@ -122,7 +122,12 @@
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
           ${currentUser.role === 'aluno' ? '<button class="tab-btn" data-tab="perfil">Perfil 👤</button>' : ''}
-          ${currentUser.role === 'professor' ? '<button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>' : ''}
+          ${currentUser.role === 'professor' ? `
+            <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
+            <button class="quick-action-btn" id="btnQuickAtividadeInatividade" title="Ir direto pra Atividade em Tempo Real e Relatório de Inatividade">📡 Atividade / Inatividade</button>
+            <button class="quick-action-btn" id="btnQuickToggleGames" title="Liberar ou bloquear os jogos pra turma inteira">🔓 Liberar Jogos</button>
+            <button class="quick-action-btn" id="btnQuickToggleClipboard" title="Bloquear ou liberar Ctrl+C/Ctrl+V pra turma inteira">🔒 Bloquear Copiar/Colar</button>
+          ` : ''}
         </div>
 
         <div class="viewport-content">
@@ -1070,22 +1075,35 @@
   async function renderGestaoStudents() {
     await fetchGestaoOverrides();
     const tbody = document.getElementById('tblGestaoStudentsBody');
-    if (!tbody) return;
     const students = turmaStudents();
-    if (students.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`;
-      return;
+    if (tbody) {
+      tbody.innerHTML = students.length === 0
+        ? `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno cadastrado nessa turma.</td></tr>`
+        : students.map(u => {
+            const isUnl = !!gestaoOverridesCache[u.email];
+            return `
+              <tr>
+                <td>${u.nome}</td>
+                <td><span style="color:${isUnl ? 'var(--green)' : 'var(--blood-bright)'}">${isUnl ? 'LIBERADO' : 'BLOQUEADO'}</span></td>
+                <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.toggleStudentGamesTurma('${u.email}')">${isUnl ? 'Revogar' : 'Liberar'}</button></td>
+              </tr>
+            `;
+          }).join('');
     }
-    tbody.innerHTML = students.map(u => {
-      const isUnl = !!gestaoOverridesCache[u.email];
-      return `
-        <tr>
-          <td>${u.nome}</td>
-          <td><span style="color:${isUnl ? 'var(--green)' : 'var(--blood-bright)'}">${isUnl ? 'LIBERADO' : 'BLOQUEADO'}</span></td>
-          <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="PortalCore.toggleStudentGamesTurma('${u.email}')">${isUnl ? 'Revogar' : 'Liberar'}</button></td>
-        </tr>
-      `;
-    }).join('');
+    // Reflete o mesmo estado no atalho de liberar/bloquear jogos da barra
+    // de navegação — os dois sempre olham o mesmo gestaoOverridesCache.
+    updateQuickGamesToggleButton();
+  }
+
+  function updateQuickGamesToggleButton() {
+    const btn = document.getElementById('btnQuickToggleGames');
+    if (!btn) return;
+    const students = turmaStudents();
+    const allUnlocked = students.length > 0 && students.every(u => !!gestaoOverridesCache[u.email]);
+    btn.textContent = allUnlocked ? '🔒 Bloquear Jogos' : '🔓 Liberar Jogos';
+    btn.dataset.allUnlocked = allUnlocked ? '1' : '';
+    btn.style.color = allUnlocked ? 'var(--blood-bright)' : '';
+    btn.style.borderColor = allUnlocked ? 'var(--blood-bright)' : '';
   }
 
   async function toggleStudentGamesTurma(userKey) {
@@ -1224,16 +1242,42 @@
     renderGestaoDailyReleasesTable();
   }
 
+  // Atualiza tanto o botão de dentro da Gestão quanto o atalho da barra de
+  // navegação — os dois refletem o mesmo estado (gestaoClipboardBlocked).
   function renderClipboardButtonGestao() {
     const btn = document.getElementById('btnToggleClipboard');
-    if (!btn) return;
-    if (gestaoClipboardBlocked) {
-      btn.textContent = 'Copiar/Colar BLOQUEADO — Clique para liberar';
-      btn.classList.add('btn-danger');
-    } else {
-      btn.textContent = 'Bloquear Copiar/Colar';
-      btn.classList.remove('btn-danger');
+    if (btn) {
+      if (gestaoClipboardBlocked) {
+        btn.textContent = 'Copiar/Colar BLOQUEADO — Clique para liberar';
+        btn.classList.add('btn-danger');
+      } else {
+        btn.textContent = 'Bloquear Copiar/Colar';
+        btn.classList.remove('btn-danger');
+      }
     }
+
+    const quickBtn = document.getElementById('btnQuickToggleClipboard');
+    if (quickBtn) {
+      quickBtn.textContent = gestaoClipboardBlocked ? '🔓 Liberar Copiar/Colar' : '🔒 Bloquear Copiar/Colar';
+      quickBtn.style.color = gestaoClipboardBlocked ? 'var(--blood-bright)' : '';
+      quickBtn.style.borderColor = gestaoClipboardBlocked ? 'var(--blood-bright)' : '';
+    }
+  }
+
+  // Handler único do toggle de Ctrl+C/V — usado tanto pelo botão de dentro
+  // da Gestão quanto pelo atalho da barra de navegação.
+  async function toggleClipboardBlock() {
+    if (!sbClient) return;
+    const newValue = !gestaoClipboardBlocked;
+    const { error } = await sbClient.from('classroom_settings').upsert({
+      id: cfg.id, clipboard_blocked: newValue, updated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+    if (error) {
+      showAlert('Não foi possível salvar o bloqueio de copiar/colar: ' + error.message);
+      return;
+    }
+    gestaoClipboardBlocked = newValue;
+    renderClipboardButtonGestao();
   }
 
   async function fetchClipboardStateGestao() {
@@ -2146,34 +2190,60 @@
     }
   }
 
+  // Grava games_unlocked pra TODOS os alunos da turma de uma vez — usado
+  // tanto pelos botões "Liberar Todos"/"Bloquear Todos" de dentro da
+  // Gestão quanto pelo atalho de toggle da barra de navegação.
+  async function setGamesUnlockedForTurma(unlocked) {
+    if (!sbClient) return;
+    const rows = turmaStudents().map(u => ({ student_email: u.email, games_unlocked: unlocked, updated_at: new Date().toISOString() }));
+    if (rows.length) await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+  }
+
+  // Atalho da barra de navegação: mostra "🔓 Liberar Jogos" quando falta
+  // liberar ALGUÉM da turma, ou "🔒 Bloquear Jogos" quando todo mundo já
+  // está liberado — não existe uma coluna "turma inteira liberada" no
+  // banco (student_overrides é por aluno), então o estado (dataset.allUnlocked
+  // em updateQuickGamesToggleButton) é sempre recalculado a partir do
+  // roster + overrides atuais, nunca guardado à parte.
+  async function quickToggleGames() {
+    if (!sbClient) return;
+    const btn = document.getElementById('btnQuickToggleGames');
+    const allUnlocked = btn && btn.dataset.allUnlocked === '1';
+    await setGamesUnlockedForTurma(!allUnlocked);
+    renderGestaoStudents();
+  }
+
+  // Abre a Gestão já com "Atividade em Tempo Real" e "Relatórios" (onde
+  // mora o Relatório de Inatividade) expandidos, e rola até lá — evita o
+  // professor ter que procurar/abrir essas duas seções toda vez.
+  function openGestaoAtividadeInatividade() {
+    switchTab('gestao');
+    let scrollTarget = null;
+    document.querySelectorAll('.collapsible-card').forEach(card => {
+      const titulo = card.querySelector('.collapsible-head h2')?.textContent.trim();
+      if (titulo === 'Relatórios' || titulo === 'Atividade em Tempo Real') {
+        card.classList.add('expanded');
+        if (titulo === 'Relatórios') scrollTarget = card;
+      }
+    });
+    scrollTarget?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function setupGestaoButtons() {
     document.getElementById('btnUnlockGamesTurma').addEventListener('click', async () => {
-      if (!sbClient) return;
-      const rows = turmaStudents().map(u => ({ student_email: u.email, games_unlocked: true, updated_at: new Date().toISOString() }));
-      if (rows.length) await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+      await setGamesUnlockedForTurma(true);
       renderGestaoStudents();
     });
 
     document.getElementById('btnLockGamesTurma').addEventListener('click', async () => {
-      if (!sbClient) return;
-      const rows = turmaStudents().map(u => ({ student_email: u.email, games_unlocked: false, updated_at: new Date().toISOString() }));
-      if (rows.length) await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
+      await setGamesUnlockedForTurma(false);
       renderGestaoStudents();
     });
 
-    document.getElementById('btnToggleClipboard').addEventListener('click', async () => {
-      if (!sbClient) return;
-      const newValue = !gestaoClipboardBlocked;
-      const { error } = await sbClient.from('classroom_settings').upsert({
-        id: cfg.id, clipboard_blocked: newValue, updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
-      if (error) {
-        showAlert('Não foi possível salvar o bloqueio de copiar/colar: ' + error.message);
-        return;
-      }
-      gestaoClipboardBlocked = newValue;
-      renderClipboardButtonGestao();
-    });
+    document.getElementById('btnToggleClipboard').addEventListener('click', toggleClipboardBlock);
+    document.getElementById('btnQuickToggleClipboard').addEventListener('click', toggleClipboardBlock);
+    document.getElementById('btnQuickToggleGames').addEventListener('click', quickToggleGames);
+    document.getElementById('btnQuickAtividadeInatividade').addEventListener('click', openGestaoAtividadeInatividade);
 
     document.getElementById('dailyReleaseScope').addEventListener('change', () => {
       const isData = document.getElementById('dailyReleaseScope').value === 'data';
@@ -2521,6 +2591,14 @@
       fetchDailyReleases();
       setupDailyReleasesRealtime();
       renderRankingBadge();
+    }
+
+    if (currentUser.role === 'professor') {
+      // Estado inicial dos atalhos da barra de navegação — sem isso, os
+      // botões só mostrariam o texto certo depois da primeira vez que a
+      // aba Gestão fosse aberta (é lá que essas mesmas buscas já rodavam).
+      fetchClipboardStateGestao();
+      renderGestaoStudents();
     }
 
     checkGamesUnlock();
