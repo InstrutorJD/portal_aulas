@@ -70,9 +70,15 @@
     };
 
     try {
-      await sb.from('student_activity').upsert(payload, { onConflict: 'student_email' });
+      const { error } = await sb.from('student_activity').upsert(payload, { onConflict: 'student_email' });
+      // Best-effort de propósito (nunca deve travar a experiência do aluno
+      // por causa disso), mas o erro vai pro console — sem isso, uma policy
+      // de RLS faltando (foi exatamente o que aconteceu aqui) falha 100%
+      // das vezes em silêncio, e o painel do professor parece só "não
+      // atualizar", sem pista nenhuma do motivo real.
+      if (error) console.error('[activity-tracker] falha ao gravar heartbeat:', error);
     } catch (err) {
-      // presença é best-effort: nunca deve travar a experiência do aluno
+      console.error('[activity-tracker] erro inesperado ao gravar heartbeat:', err);
     }
   }
 

@@ -205,11 +205,19 @@ create index if not exists idx_student_activity_updated_at
 
 alter table public.student_activity enable row level security;
 
+-- O aluno precisa enxergar (não só escrever) a PRÓPRIA linha aqui — sem
+-- isso, o upsert do heartbeat (shared/activity-tracker.js, a cada 15s)
+-- nunca localiza a linha em conflito pra atualizar (ON CONFLICT DO UPDATE
+-- depende de conseguir "ver" a linha existente sob RLS), e a gravação
+-- falha silenciosamente (best-effort, sem erro visível pra ninguém) desde
+-- a migração pra Supabase Auth — é por isso que o painel "Atividade em
+-- Tempo Real" parou de atualizar pra todo mundo bem nessa época.
 drop policy if exists "student_activity_select_all" on public.student_activity;
 drop policy if exists "student_activity_select_professor" on public.student_activity;
-create policy "student_activity_select_professor"
+drop policy if exists "student_activity_select_self_or_professor" on public.student_activity;
+create policy "student_activity_select_self_or_professor"
   on public.student_activity for select
-  using (public.is_professor());
+  using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "student_activity_insert_all" on public.student_activity;
 drop policy if exists "student_activity_insert_self" on public.student_activity;
@@ -245,6 +253,18 @@ as $$
 declare
   v_gap_seconds numeric;
 begin
+  -- new.updated_at chega do cliente (shared/activity-tracker.js manda
+  -- new Date().toISOString() do PRÓPRIO navegador do aluno) — em vez de
+  -- confiar nesse valor, o gatilho sempre sobrescreve com now() do banco.
+  -- Sem isso, um computador de laboratório com relógio desacertado (comum
+  -- sem NTP) fazia o aluno aparecer sempre "Offline" no painel Atividade
+  -- em Tempo Real (a aba Gestão compara updated_at contra o relógio do
+  -- PROFESSOR — os dois relógios de cliente nunca precisavam bater antes
+  -- dessa correção) e também corrompia o cálculo de v_gap_seconds abaixo,
+  -- que já pretendia (mas não conseguia, por causa disso) usar só o
+  -- relógio do servidor.
+  new.updated_at := now();
+
   if tg_op = 'INSERT' then
     new.activity_date := current_date;
     new.active_seconds_today := 0;
