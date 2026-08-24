@@ -33,7 +33,12 @@ body{
 
 .a11y-bar{
   display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:4px 14px; border-bottom:1px solid var(--line); background:var(--panel2); flex-wrap:wrap; z-index:10;
+  padding:4px 14px; border-bottom:1px solid var(--line); background:var(--panel2); flex-wrap:wrap;
+  /* position:relative é o que faz o z-index valer (elemento estático ignora
+     z-index) — precisa ficar ACIMA do .module-frame-modal (z-index:600),
+     senão o modal da atividade cobre até o botão de fonte/Libras, que o
+     aluno precisa continuar alcançando com um módulo aberto. */
+  position:relative; z-index:700;
 }
 .a11y-bar .label{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; }
 .a11y-bar > div{ display:flex; align-items:center; gap:4px; }
@@ -197,9 +202,29 @@ input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--green); curs
 .badge-slot.unlocked .icon{ filter:drop-shadow(0 0 6px var(--green)); }
 .badge-slot.unlocked .label{ color:var(--green); font-weight:800; }
 
-.module-frame-header{ margin-bottom:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.module-frame-header{ margin-bottom:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; flex-shrink:0; }
 .game-frame-wrapper{ width:100%; height:100%; border:1px solid var(--line); background:#000; }
 iframe{ width:100%; height:100%; border:none; display:block; }
+
+/* Área de módulo (Aulas & Atividades) abre como modal quase em tela cheia
+   — enunciado e editor/console de uma atividade de código raramente cabem
+   decentemente lado a lado no espaço pequeno de antes. Resolvendo aqui,
+   num lugar só (não em cada arquivo de atividade), vale pra toda atividade
+   de toda turma sem precisar mexer arquivo por arquivo.
+   padding-top bem maior que o resto: a .a11y-bar fica por cima do modal
+   (position:relative + z-index:700 — o aluno precisa continuar alcançando
+   fonte/Libras com um módulo aberto), então o modal precisa de uma folga
+   no topo que nunca fique por baixo dela, em vez de confiar que a altura
+   de uma sempre vai coincidir com o padding da outra. */
+.module-frame-modal{
+  position:fixed; inset:0; z-index:600; background:rgba(0,0,0,0.75);
+  padding:56px 16px 16px; align-items:center; justify-content:center;
+}
+.module-frame-modal-box{
+  background:var(--bg); width:100%; height:100%; max-width:1400px;
+  display:flex; flex-direction:column; min-height:0;
+}
+.module-frame-modal .game-frame-wrapper{ flex:1; min-height:0; }
 
 /* Celular: menos moldura, mais espaço pra tela da aula em si. */
 @media (max-width:700px){
@@ -209,4 +234,5 @@ iframe{ width:100%; height:100%; border:none; display:block; }
   .card{ padding:11px; }
   .tab-btn{ padding:6px 11px; font-size:11px; }
   .subtabs select{ min-width:0; flex:1; }
+  .module-frame-modal{ padding:48px 6px 6px; }
 }

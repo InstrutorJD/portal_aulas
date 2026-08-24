@@ -116,40 +116,6 @@
   .console .line.success{ color:var(--green); font-weight:bold; }
   .console .line.warn{ color:var(--yellow); }
 
-  /* editor-block agrupa textarea+ações+console pra poder ser "teleportado"
-     pro modal em telas pequenas/baixas, sem duplicar os elementos (e seus
-     event listeners). Inline no main-panel ele fica do tamanho do conteúdo;
-     dentro do modal ele cresce pra ocupar a tela toda. */
-  .editor-block{ display:flex; flex-direction:column; gap:8px; flex:0 0 auto; min-height:0; }
-
-  .reopen-editor-btn{
-    display:none; font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
-    background:var(--green); color:#04220a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px; flex-shrink:0;
-  }
-
-  .editor-modal-overlay{
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:1000; padding:16px;
-  }
-  .editor-modal-overlay.show{ display:flex; }
-  .editor-modal{
-    flex:1; min-width:0; display:flex; flex-direction:column;
-    background:var(--panel); border:2px solid var(--green-dim); box-shadow:0 0 20px rgba(124,255,63,0.2);
-  }
-  .editor-modal-header{
-    flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
-    padding:8px 12px; border-bottom:1px solid var(--line);
-  }
-  .editor-modal-header .title{ font-size:11px; color:var(--green); text-transform:uppercase; letter-spacing:1px; }
-  .editor-modal-close{
-    font-family:inherit; font-size:11px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
-    background:transparent; color:var(--ink); border:1px solid var(--green-dim); padding:6px 12px; cursor:pointer; border-radius:2px;
-  }
-  .editor-modal-close:hover{ background:rgba(124,255,63,0.1); }
-  .editor-modal-body{ flex:1; min-height:0; display:flex; flex-direction:column; padding:12px; overflow:hidden; }
-  .editor-modal-body .editor-block{ flex:1 1 auto; height:100%; }
-  .editor-modal-body textarea#codeInput{ flex:1 1 auto; min-height:120px; }
-  .editor-modal-body .console{ flex:0 0 140px; min-height:100px; }
-
   /* Celular/telas estreitas: a barra lateral + painel lado a lado espreme
      demais o conteúdo (texto quebrando palavra a palavra). Empilha tudo
      numa coluna só e deixa a página inteira rolar, em vez de depender de
@@ -214,30 +180,16 @@
           <div class="hint-box" id="hintBox"></div>
         </div>
 
-        <button class="reopen-editor-btn" id="btnReopenEditor">⛶ Abrir editor de código</button>
+        <textarea id="codeInput" spellcheck="false"></textarea>
 
-        <div class="editor-block" id="editorBlock">
-          <textarea id="codeInput" spellcheck="false"></textarea>
-
-          <div class="actions">
-            <button class="btn" id="btnRun">⚔ Atacar!</button>
-            <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo duelo →</button>
-          </div>
-
-          <div class="console" id="consoleOutput"></div>
+        <div class="actions">
+          <button class="btn" id="btnRun">⚔ Atacar!</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo duelo →</button>
         </div>
+
+        <div class="console" id="consoleOutput"></div>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="editor-modal-overlay" id="editorModalOverlay">
-  <div class="editor-modal">
-    <div class="editor-modal-header">
-      <span class="title">⚔ Editor de código</span>
-      <button class="editor-modal-close" id="btnCloseEditorModal">✕ Fechar</button>
-    </div>
-    <div class="editor-modal-body" id="editorModalBody"></div>
   </div>
 </div>
 
@@ -456,61 +408,6 @@
   const consoleOutput = document.getElementById('consoleOutput');
   const lblProgress = document.getElementById('lblProgress');
 
-  const mainPanel = document.querySelector('.main-panel');
-  const editorBlock = document.getElementById('editorBlock');
-  const btnReopenEditor = document.getElementById('btnReopenEditor');
-  const editorModalOverlay = document.getElementById('editorModalOverlay');
-  const editorModalBody = document.getElementById('editorModalBody');
-  const btnCloseEditorModal = document.getElementById('btnCloseEditorModal');
-
-  // Em telas baixas/estreitas o editor+console não cabem com espaço decente
-  // ao lado do enunciado. Em vez de espremer tudo, "teleporta" o editor pra
-  // um modal em tela cheia — automático, sem exigir que o aluno clique em
-  // nada. O aluno pode fechar pra reler o enunciado e reabrir quando quiser.
-  const smallScreenQuery = window.matchMedia('(max-width: 700px), (max-height: 700px)');
-  let modalClosedByUser = false;
-
-  function openEditorModal() {
-    if (editorModalBody.contains(editorBlock)) return;
-    editorModalBody.appendChild(editorBlock);
-    editorModalOverlay.classList.add('show');
-    btnReopenEditor.style.display = 'none';
-  }
-
-  function closeEditorModal() {
-    if (mainPanel.contains(editorBlock)) return;
-    mainPanel.appendChild(editorBlock);
-    editorModalOverlay.classList.remove('show');
-  }
-
-  function syncEditorModal() {
-    if (smallScreenQuery.matches) {
-      if (modalClosedByUser) {
-        closeEditorModal();
-        btnReopenEditor.style.display = 'inline-block';
-      } else {
-        openEditorModal();
-      }
-    } else {
-      closeEditorModal();
-      btnReopenEditor.style.display = 'none';
-      modalClosedByUser = false;
-    }
-  }
-
-  btnCloseEditorModal.addEventListener('click', () => {
-    modalClosedByUser = true;
-    closeEditorModal();
-    btnReopenEditor.style.display = 'inline-block';
-  });
-
-  btnReopenEditor.addEventListener('click', () => {
-    modalClosedByUser = false;
-    openEditorModal();
-  });
-
-  smallScreenQuery.addEventListener('change', syncEditorModal);
-
   function getCompleted() {
     try {
       return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]'));
@@ -581,9 +478,6 @@
       logConsole(`Você já derrotou ${challenge.enemyName}. Pode reviver o duelo para treinar.`, 'info');
     }
     renderSidebar();
-
-    modalClosedByUser = false;
-    syncEditorModal();
 
     if (typeof window.reportActivity === 'function') {
       window.reportActivity(
