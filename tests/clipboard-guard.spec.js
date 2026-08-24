@@ -15,6 +15,14 @@ async function ctrlVPrevented(page) {
   });
 }
 
+async function contextMenuPrevented(page) {
+  return page.evaluate(() => {
+    const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+    document.dispatchEvent(ev);
+    return ev.defaultPrevented;
+  });
+}
+
 test.describe('shared/clipboard-guard.js', () => {
   test('bloqueia Ctrl+V na plataforma do aluno quando clipboard_blocked=true pra turma dele', async ({ page }) => {
     await stubSupabaseFake(page, {
@@ -54,6 +62,9 @@ test.describe('shared/clipboard-guard.js', () => {
     await page.waitForTimeout(100);
 
     expect(await ctrlVPrevented(page)).toBe(false);
+    // idem pro menu de botão direito — o guard nem chega a registrar o
+    // listener de contextmenu pro professor (retorna antes disso).
+    expect(await contextMenuPrevented(page)).toBe(false);
   });
 
   test('funciona também dentro de um jogo (documento separado em iframe)', async ({ page }) => {
@@ -78,5 +89,30 @@ test.describe('shared/clipboard-guard.js', () => {
 
     await expect.poll(() => ctrlVPrevented(page)).toBe(true);
     await expect(page.locator('#__clipboardGuardToast')).toBeVisible();
+  });
+
+  // "Pesquisar no Google por…" do botão direito não passa pelo evento
+  // 'copy' — o aluno selecionava o código, clicava com o botão direito,
+  // pesquisava e copiava o texto de volta na aba do Google, sem passar
+  // pelo Ctrl+C/V nenhuma vez. Bloquear o menu de contexto fecha essa
+  // brecha (também tira o "Copiar" nativo do próprio menu).
+  test('bloqueia o menu de botão direito (evita "Pesquisar no Google por…") quando clipboard_blocked=true', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      classroom_settings: [{ id: 'jogos', clipboard_blocked: true }],
+    });
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+
+    await expect.poll(() => contextMenuPrevented(page)).toBe(true);
+    await expect(page.locator('#__clipboardGuardToast')).toBeVisible();
+  });
+
+  test('não bloqueia o menu de botão direito quando clipboard_blocked=false', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      classroom_settings: [{ id: 'jogos', clipboard_blocked: false }],
+    });
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+    await page.waitForTimeout(100);
+
+    expect(await contextMenuPrevented(page)).toBe(false);
   });
 });

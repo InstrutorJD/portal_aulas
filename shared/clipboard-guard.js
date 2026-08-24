@@ -59,10 +59,23 @@
     showToast();
   }
 
+  // "Pesquisar no Google por…" do menu de botão direito não passa pelo
+  // evento 'copy' (é uma ação nativa do navegador que lê a seleção direto)
+  // — sem bloquear o menu em si, o aluno contornava o Ctrl+C selecionando
+  // o código e pesquisando: o texto selecionado vai inteiro pra barra de
+  // busca do Google numa aba nova, sem clipboard-guard nenhum rodando lá,
+  // e dá pra copiar dali à vontade.
+  function onContextMenu(e) {
+    if (!blocked) return;
+    e.preventDefault();
+    showToast();
+  }
+
   document.addEventListener('keydown', onKeydown, true);
   document.addEventListener('copy', onClipboardEvent, true);
   document.addEventListener('cut', onClipboardEvent, true);
   document.addEventListener('paste', onClipboardEvent, true);
+  document.addEventListener('contextmenu', onContextMenu, true);
 
   async function fetchState() {
     const { data } = await sb
