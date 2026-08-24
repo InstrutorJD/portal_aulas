@@ -65,4 +65,18 @@ test.describe('shared/clipboard-guard.js', () => {
 
     await expect.poll(() => ctrlVPrevented(page)).toBe(true);
   });
+
+  // A atividade de Conexão com Supabase depende MUITO de o aluno digitar o
+  // código na mão (não copiar/colar) — ver turmas/sistemas/atividades/
+  // db-conexao-supabase-pratica.html. Confirma que o guard também está de
+  // pé nela especificamente, não só nas páginas mais antigas.
+  test('bloqueia também na atividade de Conexão com Supabase', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      classroom_settings: [{ id: 'sistemas', clipboard_blocked: true }],
+    });
+    await page.goto('/turmas/sistemas/atividades/db-conexao-supabase-pratica.html?user=alexandre.natal&role=aluno&turma=sistemas');
+
+    await expect.poll(() => ctrlVPrevented(page)).toBe(true);
+    await expect(page.locator('#__clipboardGuardToast')).toBeVisible();
+  });
 });

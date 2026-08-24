@@ -250,55 +250,60 @@ sistema-cadastro/
 └── README.md
 §§§
 
-#### Responda
+#### Responda no seu caderno
 
-Qual será a função de cada arquivo?
+Antes de seguir, anote no caderno (não aqui no portal) o que você acha que cada arquivo faz — depois confira se acertou nas próximas etapas:
 
-§§§text
-index.html → ______________________________________
-
-style.css → _______________________________________
-
-script.js → _______________________________________
-§§§`
+- ¤index.html¤ → ?
+- ¤style.css¤ → ?
+- ¤script.js¤ → ?`
     },
     {
       titulo: 'Criar a página HTML e o formulário',
       corpo: `
 ### ETAPA 4 — Criar o HTML
 
-Abra o arquivo ¤index.html¤. Crie uma página HTML básica.
-
-A página deverá possuir: título, formulário, campo para nome, campo para e-mail, campo para telefone, botão de cadastro.
-
-O título deverá ser:
-
-§§§text
-Cadastro de Clientes
-§§§
-
-A estrutura do formulário deverá começar assim:
+Abra o arquivo ¤index.html¤. Digite exatamente este código (lembre-se: copiar/colar está bloqueado no portal — digite no Codespace):
 
 §§§html
-<form id="formCadastro">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Clientes</title>
+    <link rel="stylesheet" href ="style.css">
+</head>
+<body>
 
-</form>
+    <h1>Cadastro de Clientes</h1>
+
+    <form id="formCadastro">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome">
+
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" name="email">
+
+        <label for="telefone">Telefone:</label>
+        <input type="text" id="telefone" name="telefone">
+
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <p id="mensagem"></p>
+
+</body>
+</html>
 §§§
 
-Dentro do formulário, crie os campos necessários. Utilize os elementos HTML que você já conhece.
+O ¤<p id="mensagem"></p>¤ começa vazio — vai servir mais pra frente (ETAPA 30) pra mostrar avisos pro usuário, sem precisar do console.
 
-### ETAPA 5 — Criar o botão
+### ETAPA 5 — Conferir o formulário
 
-Dentro do formulário, crie um botão:
-
-§§§text
-Cadastrar
-§§§
-
-O botão deverá ser do tipo:
+O botão de cadastro já foi criado na etapa anterior, do tipo:
 
 §§§html
-<button type="submit">
+<button type="submit">Cadastrar</button>
 §§§
 
 #### Teste
@@ -316,31 +321,33 @@ Abra a página no navegador. Verifique se:
       corpo: `
 ### ETAPA 6 — Criar o JavaScript
 
-Abra ¤script.js¤. Agora vamos fazer o JavaScript identificar o formulário.
+Abra ¤script.js¤ (arquivo vazio) e digite exatamente este código:
 
-Utilize ¤document.getElementById()¤ para localizar ¤formCadastro¤.
+§§§javascript
+const formCadastro = document.getElementById("formCadastro");
 
-Depois, utilize ¤addEventListener()¤ para identificar quando o formulário for enviado.
-
-O objetivo desta etapa é fazer aparecer no console:
-
-§§§text
-Formulário enviado!
+formCadastro.addEventListener("submit", function (event) {
+    console.log("Formulário enviado!");
+});
 §§§
+
+¤document.getElementById()¤ localiza o formulário pelo ¤id¤; ¤addEventListener("submit", ...)¤ roda a função de dentro toda vez que o formulário for enviado (botão Cadastrar clicado).
 
 ### ETAPA 7 — Capturar os dados
 
-Agora você deverá capturar os valores digitados pelo usuário.
-
-Crie variáveis para: ¤nome¤, ¤email¤, ¤telefone¤.
-
-Para obter o conteúdo de um campo, utilize ¤.value¤. Por exemplo:
+Agora você deverá capturar os valores digitados pelo usuário. Atualize a função de dentro do ¤addEventListener¤ pra ficar assim (adicionando as 3 linhas novas):
 
 §§§javascript
-const nome = document.getElementById("nome").value;
+formCadastro.addEventListener("submit", function (event) {
+    const nome = document.getElementById("nome").value;
+    const email = document.getElementById("email").value;
+    const telefone = document.getElementById("telefone").value;
+
+    console.log(nome, email, telefone);
+});
 §§§
 
-Faça o mesmo para os outros campos.
+¤.value¤ pega o texto que está dentro do campo naquele momento.
 
 ### ETAPA 8 — Testar o JavaScript
 
@@ -380,30 +387,24 @@ Aguarde a criação do projeto.
 
 Dentro do Supabase, localize a área de banco de dados. Você deverá encontrar recursos relacionados a: tabelas, SQL Editor, Data API, configurações do projeto e API Keys.
 
-#### Responda
+#### Responda no seu caderno
 
-Com suas palavras:
-
-> O que é um banco de dados?
-
-§§§text
-____________________________________________________
-
-____________________________________________________
-§§§
+Com suas próprias palavras: **o que é um banco de dados?**
 
 ### ETAPA 11 — Criar a tabela
 
-Crie uma tabela chamada ¤clientes¤. A tabela deverá possuir os seguintes campos:
+Crie uma tabela chamada ¤clientes¤, com os campos ¤id¤ (bigint, chave primária, geração automática), ¤nome¤ (text), ¤email¤ (text) e ¤telefone¤ (text).
 
-| Campo | Tipo |
-|---|---|
-| id | bigint |
-| nome | text |
-| email | text |
-| telefone | text |
+Você pode criar pela interface (Table Editor → New Table) ou digitando este código no **SQL Editor** do Supabase:
 
-O campo ¤id¤ deverá ser a chave primária e possuir geração automática de valores.
+§§§sql
+create table clientes (
+    id bigint generated always as identity primary key,
+    nome text,
+    email text,
+    telefone text
+);
+§§§
 
 #### Resultado esperado
 
@@ -580,41 +581,51 @@ O formulário deverá enviar ¤nome¤, ¤email¤ e ¤telefone¤ para a tabela ¤
 
 ### ETAPA 21 — Criar a função de cadastro
 
-Crie uma função:
+Em ¤script.js¤, digite esta função nova (fora do ¤addEventListener¤, em qualquer lugar do arquivo):
 
 §§§javascript
 async function cadastrarCliente() {
+    const nome = document.getElementById("nome").value;
+    const email = document.getElementById("email").value;
+    const telefone = document.getElementById("telefone").value;
 
+    const { data, error } = await supabase
+        .from("clientes")
+        .insert([
+            {
+                nome: nome,
+                email: email,
+                telefone: telefone
+            }
+        ]);
 }
-§§§
-
-Dentro dela, obtenha os valores dos campos ¤nome¤, ¤email¤ e ¤telefone¤. Depois faça um ¤insert¤:
-
-§§§javascript
-const { data, error } = await supabase
-    .from("clientes")
-    .insert([
-        {
-            nome: nome,
-            email: email,
-            telefone: telefone
-        }
-    ]);
 §§§
 
 ### ETAPA 22 — Verificar o resultado
 
-Depois do ¤insert¤, verifique se ocorreu erro. Utilize:
+Adicione a checagem de erro no final da função ¤cadastrarCliente¤ (depois do ¤insert¤):
 
 §§§javascript
-if (error) {
+async function cadastrarCliente() {
+    const nome = document.getElementById("nome").value;
+    const email = document.getElementById("email").value;
+    const telefone = document.getElementById("telefone").value;
 
-    console.log(error);
+    const { data, error } = await supabase
+        .from("clientes")
+        .insert([
+            {
+                nome: nome,
+                email: email,
+                telefone: telefone
+            }
+        ]);
 
-} else {
-
-    console.log("Cliente cadastrado com sucesso!");
-
+    if (error) {
+        console.log(error);
+    } else {
+        console.log("Cliente cadastrado com sucesso!");
+    }
 }
 §§§
 
@@ -628,19 +639,16 @@ Cliente cadastrado com sucesso!
 
 ### ETAPA 23 — Ligar o formulário ao cadastro
 
-Agora o botão do formulário deverá chamar a função de cadastro. No evento de envio do formulário:
-
-1. impeça o comportamento padrão da página;
-2. capture os valores;
-3. chame ¤cadastrarCliente()¤.
-
-Utilize:
+Agora troque o conteúdo do ¤addEventListener¤ criado na ETAPA 7 — em vez de só mostrar os dados no console, ele deve impedir a página de recarregar e chamar ¤cadastrarCliente()¤:
 
 §§§javascript
-event.preventDefault();
+formCadastro.addEventListener("submit", function (event) {
+    event.preventDefault();
+    cadastrarCliente();
+});
 §§§
 
-para impedir que a página seja recarregada.
+¤event.preventDefault()¤ impede o comportamento padrão do formulário (recarregar a página), que apagaria tudo antes do JavaScript conseguir agir.
 
 ### ETAPA 24 — Fazer o primeiro cadastro pelo sistema
 
@@ -698,17 +706,33 @@ No JavaScript, utilize os dados retornados pelo ¤SELECT¤ para preencher ¤list
 
 ### ETAPA 27 — Criar a função de listagem
 
-Crie:
+Complete a função ¤carregarClientes¤ (criada na ETAPA 18) pra desenhar os clientes na página, em vez de só mostrar no console:
 
 §§§javascript
 async function carregarClientes() {
+    const { data, error } = await supabase
+        .from("clientes")
+        .select("*");
 
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    const lista = document.getElementById("listaClientes");
+    lista.innerHTML = "";
+
+    data.forEach(function (cliente) {
+        const item = document.createElement("p");
+        item.textContent = cliente.nome + " — " + cliente.email + " — " + cliente.telefone;
+        lista.appendChild(item);
+    });
 }
+
+carregarClientes();
 §§§
 
-A função deverá: consultar a tabela, receber os dados, percorrer os registros, criar o conteúdo HTML e mostrar os clientes na página.
-
-Você poderá utilizar ¤forEach()¤ para percorrer os resultados.
+¤forEach()¤ percorre cada linha retornada pelo ¤SELECT¤; pra cada uma, cria um ¤<p>¤ novo e coloca dentro de ¤listaClientes¤. A última linha (¤carregarClientes();¤, fora da função) chama a função assim que a página carrega, pra lista já aparecer sem precisar de nenhum clique.
 
 ### ETAPA 28 — Testar o sistema completo
 
@@ -739,9 +763,7 @@ Agora o sistema deverá funcionar assim:
       corpo: `
 ### ETAPA 29 — Validar os campos
 
-Agora vamos melhorar o sistema. Antes de enviar os dados ao banco, verifique se os campos estão preenchidos. Utilize ¤if¤.
-
-Exemplo de lógica:
+Antes de enviar os dados ao banco, verifique se os campos estão preenchidos. A lógica é:
 
 §§§text
 SE nome estiver vazio
@@ -768,23 +790,51 @@ Teste:
 
 ### ETAPA 30 — Criar mensagens para o usuário
 
-Não utilize apenas o ¤console.log()¤. Crie mensagens visíveis na página. Exemplos:
+Não utilize apenas o ¤console.log()¤ — o ¤<p id="mensagem"></p>¤ que você criou na ETAPA 4 é onde essas mensagens vão aparecer, usando ¤.textContent¤.
 
-§§§text
-Cliente cadastrado com sucesso!
+Juntando a validação (ETAPA 29) com as mensagens, a versão final de ¤cadastrarCliente¤ fica assim — digite ela por cima da versão da ETAPA 22:
+
+§§§javascript
+async function cadastrarCliente() {
+    const nome = document.getElementById("nome").value;
+    const email = document.getElementById("email").value;
+    const telefone = document.getElementById("telefone").value;
+    const mensagem = document.getElementById("mensagem");
+
+    if (nome === "") {
+        mensagem.textContent = "Preencha o nome.";
+        return;
+    }
+    if (email === "") {
+        mensagem.textContent = "Preencha o e-mail.";
+        return;
+    }
+    if (telefone === "") {
+        mensagem.textContent = "Preencha o telefone.";
+        return;
+    }
+
+    const { data, error } = await supabase
+        .from("clientes")
+        .insert([
+            {
+                nome: nome,
+                email: email,
+                telefone: telefone
+            }
+        ]);
+
+    if (error) {
+        mensagem.textContent = "Erro ao cadastrar. Veja o console (F12).";
+        console.log(error);
+    } else {
+        mensagem.textContent = "Cliente cadastrado com sucesso!";
+        carregarClientes();
+    }
+}
 §§§
 
-§§§text
-Preencha o nome.
-§§§
-
-§§§text
-Preencha o e-mail.
-§§§
-
-§§§text
-Preencha o telefone.
-§§§`
+¤return;¤ dentro do ¤if¤ interrompe a função na hora — se o nome está vazio, nem chega a checar e-mail/telefone nem a tentar cadastrar. A última linha do bloco de sucesso (¤carregarClientes();¤) atualiza a lista da tela na hora, sem precisar recarregar a página.`
     },
     {
       titulo: 'Segurança: RLS e Policies',
@@ -801,26 +851,20 @@ Pense no RLS como uma regra de segurança dentro do próprio banco.
 
 No Supabase, abra a tabela ¤clientes¤. Verifique a configuração de segurança.
 
-#### Pergunta
+#### Pergunta — responda no seu caderno
 
 O que significa RLS?
 
-§§§text
-____________________________________________________
-
-____________________________________________________
-
-____________________________________________________
-§§§
-
 ### ETAPA 33 — Criar uma Policy para leitura
 
-Nesta atividade inicial, vamos permitir que a aplicação consiga consultar os clientes. Crie uma policy de ¤SELECT¤ para a tabela ¤clientes¤.
-
-A lógica da policy deverá permitir a leitura dos registros para o papel que a aplicação está utilizando. Para uma atividade didática sem login, a policy pode utilizar a role ¤anon¤ e uma condição simples:
+Nesta atividade inicial, vamos permitir que a aplicação consiga consultar os clientes. No **SQL Editor** do Supabase, digite e execute:
 
 §§§sql
-using (true)
+create policy "permitir leitura"
+on clientes
+for select
+to anon
+using (true);
 §§§
 
 A ideia é:
@@ -839,12 +883,14 @@ A documentação do Supabase utiliza policies com ¤TO anon¤ e ¤USING (true)¤
 
 ### ETAPA 34 — Criar uma Policy para inserção
 
-Agora o sistema também precisa cadastrar clientes. Crie uma policy para ¤INSERT¤.
-
-A policy deverá permitir que a aplicação insira novos registros. Para esta atividade didática, a regra poderá permitir a inserção para ¤anon¤ com:
+Agora o sistema também precisa cadastrar clientes. Digite e execute mais esta, também no SQL Editor:
 
 §§§sql
-with check (true)
+create policy "permitir insercao"
+on clientes
+for insert
+to anon
+with check (true);
 §§§
 
 #### Atenção
@@ -889,18 +935,12 @@ A role ¤anon¤ representa uma requisição sem usuário autenticado. A role ¤a
 
 A Publishable Key, quando utilizada sem login, opera com a role ¤anon¤; quando existe autenticação, a requisição pode operar como ¤authenticated¤.
 
-### ETAPA 37 — Responder
+### ETAPA 37 — Responda no seu caderno
 
 1. O que é RLS?
 2. Para que serve uma Policy?
 3. Qual é a diferença entre ¤anon¤ e ¤authenticated¤?
-4. Por que uma chave ¤sb_secret_...¤ não deve estar no JavaScript?
-
-§§§text
-____________________________________________________
-
-____________________________________________________
-§§§`
+4. Por que uma chave ¤sb_secret_...¤ não deve estar no JavaScript?`
     },
     {
       titulo: 'Revisar, organizar e documentar',
@@ -1096,7 +1136,7 @@ Banco
     {
       titulo: 'Reflexão final',
       corpo: `
-Responda com suas próprias palavras (no seu README, ou onde o professor pedir):
+Responda no seu caderno, com suas próprias palavras (algumas dessas respostas também vão pro README do projeto — ver ETAPA 40):
 
 1. Qual é a função do HTML?
 2. Qual é a função do JavaScript?
