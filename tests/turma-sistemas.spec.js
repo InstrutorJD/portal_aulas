@@ -132,5 +132,23 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(content).toContain('O que significa RLS?');
     expect(content).toContain('RESPOSTA ESPERADA: Row Level Security');
     expect(content).toContain('Por que uma chave sb_secret_... não deve estar no JavaScript?');
+
+    // Além das perguntas de reflexão, o gabarito também traz o código
+    // completo que o roteiro manda digitar — puxado direto dos blocos
+    // §§§ do roteiro (extractCodeBlocks), não retranscrito à mão.
+    expect(content).toContain('index.html — formulário completo');
+    expect(content).toContain('<form id="formCadastro">');
+    expect(content).toContain('clientes — CREATE TABLE');
+    expect(content).toContain('create table clientes (');
+    expect(content).toContain('cadastrarCliente() — versão final');
+    // versão final (ETAPA 30, com validação), não a inicial da ETAPA 21/22.
+    expect(content).toContain('mensagem.textContent = "Preencha o nome."');
+    expect(content).toContain('carregarClientes() — versão final');
+    // versão final (ETAPA 27, desenhando a lista), não a inicial da ETAPA 18.
+    expect(content).toContain('lista.appendChild(item)');
+    expect(content).toContain('Policy de leitura');
+    expect(content).toContain('create policy "permitir leitura"');
+    expect(content).toContain('Policy de inserção');
+    expect(content).toContain('create policy "permitir insercao"');
   });
 });

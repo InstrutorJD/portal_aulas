@@ -1176,15 +1176,60 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
     { prompt: 'Reflexão final — Por que não podemos utilizar uma Secret Key no navegador?', answer: 'Porque o JavaScript roda no navegador do usuário e pode ser lido por qualquer um; a secret key ignora o RLS e dá acesso total ao banco.' }
   ];
 
+  // Puxa os blocos §§§lang...§§§ de dentro do corpo (mesmo texto/delimitador
+  // que mdToHtml() já converte pra <pre><code>) — usado só pra montar o
+  // código de referência do gabarito abaixo sem retranscrever nada à mão,
+  // pra nunca divergir do que está de fato escrito no roteiro acima.
+  function extractCodeBlocks(corpo, lang) {
+    const lines = corpo.replace(/\r\n/g, '\n').split('\n');
+    const blocks = [];
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line.startsWith('§§§')) {
+        const blockLang = line.slice(3);
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        if (blockLang === lang) blocks.push(codeLines.join('\n'));
+        continue;
+      }
+      i++;
+    }
+    return blocks;
+  }
+
+  // O gabarito só listava as perguntas de reflexão do caderno — pra
+  // conferir se o projeto do aluno está certo de verdade, o professor
+  // também precisa do código completo que o roteiro manda digitar (form
+  // HTML, as duas funções JS na versão FINAL — depois de ETAPA 22/18 serem
+  // sobrescritas por ETAPA 30/27 —, a tabela e as duas policies).
+  const CODE_REFERENCE = [
+    { titulo: 'index.html — formulário completo (ETAPA 4)', code: extractCodeBlocks(STEPS[2].corpo, 'html')[0] },
+    { titulo: 'clientes — CREATE TABLE (ETAPA 11)', code: extractCodeBlocks(STEPS[4].corpo, 'sql')[0] },
+    { titulo: 'cadastrarCliente() — versão final, com validação (ETAPA 30)', code: extractCodeBlocks(STEPS[9].corpo, 'javascript')[0] },
+    { titulo: 'carregarClientes() — versão final, desenhando a lista (ETAPA 27)', code: extractCodeBlocks(STEPS[8].corpo, 'javascript')[0] },
+    { titulo: 'Policy de leitura — "permitir leitura" (ETAPA 33)', code: extractCodeBlocks(STEPS[10].corpo, 'sql')[0] },
+    { titulo: 'Policy de inserção — "permitir insercao" (ETAPA 34)', code: extractCodeBlocks(STEPS[10].corpo, 'sql')[1] },
+  ];
+
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Conexão com Supabase — Sistema Web com HTML, JavaScript e Supabase',
       subtitle: 'Prática · Banco de Dados · Turma Sistemas',
-      items: NOTEBOOK_QUESTIONS.map((q, i) => ({
-        number: i + 1,
-        prompt: q.prompt,
-        answer: q.answer
-      })),
+      items: [
+        ...NOTEBOOK_QUESTIONS.map((q, i) => ({
+          number: i + 1,
+          prompt: q.prompt,
+          answer: q.answer
+        })),
+        ...CODE_REFERENCE.map((c, i) => ({
+          number: NOTEBOOK_QUESTIONS.length + i + 1,
+          prompt: c.titulo,
+          answer: c.code
+        }))
+      ],
       fileName: 'db-conexao-supabase-pratica-gabarito.txt'
     });
   };
