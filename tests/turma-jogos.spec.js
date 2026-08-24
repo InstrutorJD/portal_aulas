@@ -10,6 +10,40 @@ async function openMateria1(page) {
   await page.click('.game-card:has-text("Fundamentos de Programação")');
 }
 
+// Marca via localStorage todas as trilhas com conteúdo real de Jogos
+// Digitais como concluídas, pra allModulesComplete() (checkGamesUnlock)
+// destravar os jogos só pelo progresso, sem depender de override/professor.
+function seedAllModulesComplete(user) {
+  // Trilhas teoria+prática (10 perguntas cada) de todas as matérias com
+  // conteúdo, exceto Projeto de Vida (5 perguntas — ver [[project_jogos_5_perguntas_pratica]]).
+  const dez = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const cinco = [1, 2, 3, 4, 5];
+  const teoriaFlag = [
+    'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
+    'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
+    'projetos_metodos_teoria', 'projetos_fases_teoria',
+    'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
+    'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
+    'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria'
+  ];
+  teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
+  localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+
+  const praticaDez = [
+    'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
+    'projetos_metodos_pratica', 'projetos_fases_pratica',
+    'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
+    'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
+    'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
+  ];
+  praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
+  localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
+  localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dez));
+
+  const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
+  praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));
+}
+
 test.describe('turmas/jogos/plataforma.html', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, {});
@@ -72,36 +106,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
   });
 
   test('aba Jogos desbloqueia quando todos os módulos já foram concluídos', async ({ page }) => {
-    await page.addInitScript(user => {
-      // Trilhas teoria+prática (10 perguntas cada) de todas as matérias com
-      // conteúdo, exceto Projeto de Vida (5 perguntas — ver [[project_jogos_5_perguntas_pratica]]).
-      const dez = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      const cinco = [1, 2, 3, 4, 5];
-      const teoriaFlag = [
-        'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
-        'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
-        'projetos_metodos_teoria', 'projetos_fases_teoria',
-        'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
-        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
-        'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria'
-      ];
-      teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
-      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
-
-      const praticaDez = [
-        'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
-        'projetos_metodos_pratica', 'projetos_fases_pratica',
-        'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
-        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
-        'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
-      ];
-      praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
-      localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
-      localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dez));
-
-      const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
-      praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));
-    }, 'breno.silva80');
+    await page.addInitScript(seedAllModulesComplete, 'breno.silva80');
 
     await page.goto(URL);
     const tabJogos = page.locator('#tabBtnJogos');
@@ -111,6 +116,81 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await tabJogos.click();
     await expect(page.locator('#tabContentJogos')).toBeVisible();
     await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(4);
+  });
+});
+
+test.describe('turmas/jogos/plataforma.html — revogação de acesso em tempo real', () => {
+  test('professor revoga o acesso enquanto o aluno já está num jogo — fecha o jogo e avisa', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      student_overrides: [{ student_email: 'breno.silva80', games_unlocked: true }],
+    });
+    await page.goto(URL);
+
+    const tabJogos = page.locator('#tabBtnJogos');
+    await expect(tabJogos).not.toHaveClass(/disabled/); // desbloqueado só pelo override, sem progresso completo
+    await tabJogos.click();
+
+    await page.click('.game-card:has-text("Digitação")');
+    await expect(page.locator('#gameFrameArea')).toBeVisible();
+    await expect(page.locator('#gameSelector')).toBeHidden();
+
+    // Professor revoga o acesso (botão "Revogar"/bloqueio da turma, aba
+    // Gestão): grava no banco e dispara o realtime que o aluno já está
+    // inscrito (setupOverrideRealtime → fetchTeacherOverride → checkGamesUnlock).
+    await page.evaluate(() => {
+      window.__FAKE_DB__.student_overrides.find(r => r.student_email === 'breno.silva80').games_unlocked = false;
+      window.__fireFakeRealtime('student_overrides');
+    });
+
+    await expect(page.locator('#gameFrameArea')).toBeHidden();
+    await expect(page.locator('#gameSelector')).toBeVisible();
+    await expect(page.locator('#gameFrame')).toHaveAttribute('src', 'about:blank');
+    await expect(tabJogos).toHaveClass(/disabled/);
+
+    const toast = page.locator('.pf-toast');
+    await expect(toast).toBeVisible();
+    await expect(toast).toContainText('Jogos bloqueados');
+    await expect(toast).toContainText('retirado do jogo em andamento');
+  });
+
+  test('revogar o acesso sem nenhum jogo aberto só atualiza o cadeado, sem toast', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      student_overrides: [{ student_email: 'breno.silva80', games_unlocked: true }],
+    });
+    await page.goto(URL);
+    await expect(page.locator('#tabBtnJogos')).not.toHaveClass(/disabled/);
+
+    await page.evaluate(() => {
+      window.__FAKE_DB__.student_overrides.find(r => r.student_email === 'breno.silva80').games_unlocked = false;
+      window.__fireFakeRealtime('student_overrides');
+    });
+
+    await expect(page.locator('#tabBtnJogos')).toHaveClass(/disabled/);
+    await expect(page.locator('.pf-toast')).toHaveCount(0);
+  });
+
+  test('revogar só o override não fecha o jogo de quem já tem progresso completo (outro critério de desbloqueio)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      student_overrides: [{ student_email: 'breno.silva80', games_unlocked: true }],
+    });
+    await page.addInitScript(seedAllModulesComplete, 'breno.silva80');
+    await page.goto(URL);
+
+    const tabJogos = page.locator('#tabBtnJogos');
+    await expect(tabJogos).not.toHaveClass(/disabled/);
+    await tabJogos.click();
+    await page.click('.game-card:has-text("Digitação")');
+    await expect(page.locator('#gameFrameArea')).toBeVisible();
+
+    await page.evaluate(() => {
+      window.__FAKE_DB__.student_overrides.find(r => r.student_email === 'breno.silva80').games_unlocked = false;
+      window.__fireFakeRealtime('student_overrides');
+    });
+
+    // progressUnlocked continua true (não depende do override) — o jogo
+    // não deve ser fechado à força.
+    await expect(page.locator('#gameFrameArea')).toBeVisible();
+    await expect(tabJogos).not.toHaveClass(/disabled/);
   });
 });
 

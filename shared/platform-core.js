@@ -901,6 +901,21 @@
         ? 'Bloqueado: conclua a(s) atividade(s) liberada(s) pelo professor para hoje.'
         : 'Bloqueado: conclua as atividades ou aguarde a liberação do professor.';
     }
+
+    // O cadeado do botão já reage sozinho (acima), mas se o aluno JÁ ESTIVER
+    // dentro de um jogo (currentGameKey setado — inclusive QuizRush, é só
+    // mais um valor desse mesmo estado) quando o acesso é revogado em tempo
+    // real (override do professor, ou uma nova liberação diária que passa a
+    // exigir um módulo ainda não concluído), o jogo continuava rodando até o
+    // aluno fechar/recarregar sozinho. Centralizado aqui (não só em
+    // fetchTeacherOverride) porque qualquer chamada de checkGamesUnlock()
+    // pode ser a que descobre a virada unlocked→locked.
+    if (!isUnlocked && currentGameKey) {
+      closeGame();
+      showToast('🔒 Jogos bloqueados', 'O professor bloqueou o acesso aos jogos e você foi retirado do jogo em andamento.');
+    }
+
+    return isUnlocked;
   }
 
   async function fetchTeacherOverride() {
