@@ -326,7 +326,7 @@ const STEPS = [
     fnName: 'criarCobrinha', checkType: 'json',
     starter: 'function criarCobrinha() {\n  \n}',
     desc: 'Crie e retorne a cobrinha inicial: 3 partes, cabeça em <code>{x:7, y:7}</code>, e o corpo esticado pra esquerda dela — <code>{x:6, y:7}</code> e <code>{x:5, y:7}</code>, nessa ordem.',
-    hint: 'A cabeça é sempre o primeiro item do array. Lembre a ordem: cabeça, depois corpo.',
+    hint: 'A cabeça é sempre o primeiro item do array. Lembre a ordem: cabeça, depois corpo. Exemplo de uma lista de objetos parecida (outro contexto):<pre><code>const inventario = [{item:"espada"}, {item:"escudo"}];</code></pre>',
     tests: [ { args: [], expected: [{x:7,y:7},{x:6,y:7},{x:5,y:7}] } ]
   },
 
@@ -337,7 +337,11 @@ const STEPS = [
     fnName: 'teclaParaDirecao', checkType: 'json',
     starter: 'function teclaParaDirecao(tecla) {\n  \n}',
     desc: 'Crie a função que recebe o nome de uma tecla e devolve a direção correspondente: <code>ArrowUp</code> → <code>{dx:0, dy:-1}</code>, <code>ArrowDown</code> → <code>{dx:0, dy:1}</code>, <code>ArrowLeft</code> → <code>{dx:-1, dy:0}</code>, <code>ArrowRight</code> → <code>{dx:1, dy:0}</code>. Qualquer outra tecla, devolva <code>null</code>.',
-    hint: 'No eixo Y da tela, "pra cima" é um número NEGATIVO (y diminui indo pra cima).',
+    hint: `No eixo Y da tela, "pra cima" é um número NEGATIVO (y diminui indo pra cima). Exemplo do formato de função esperado (outro contexto):<pre><code>function traduzirComando(comando) {
+  if (comando === "norte") return {rumo:"N"};
+  if (comando === "sul") return {rumo:"S"};
+  return null;
+}</code></pre>`,
     tests: [
       { args: ['ArrowUp'], expected: {dx:0,dy:-1} },
       { args: ['ArrowDown'], expected: {dx:0,dy:1} },
@@ -353,7 +357,9 @@ const STEPS = [
     fnName: 'proximaPosicao', checkType: 'json',
     starter: 'function proximaPosicao(cabeca, direcao) {\n  \n}',
     desc: 'Crie a função que recebe a posição da cabeça e a direção, e devolve a nova posição: <code>{x: cabeca.x + direcao.dx, y: cabeca.y + direcao.dy}</code>.',
-    hint: 'É só uma soma de coordenadas — sem nenhum truque.',
+    hint: `É só uma soma de coordenadas — sem nenhum truque. Exemplo de uma função que também só devolve um cálculo simples com os parâmetros recebidos:<pre><code>function multiplicarPorDois(numero) {
+  return numero * 2;
+}</code></pre>`,
     tests: [
       { args: [{x:5,y:5},{dx:1,dy:0}], expected: {x:6,y:5} },
       { args: [{x:5,y:5},{dx:0,dy:-1}], expected: {x:5,y:4} },
@@ -367,7 +373,9 @@ const STEPS = [
     fnName: 'mover', checkType: 'json',
     starter: 'function mover(cobrinha, novaCabeca, cresce) {\n  \n}',
     desc: 'Crie a função que recebe a cobrinha (array), a nova posição da cabeça, e um "cresce" (true/false). Devolva um NOVO array: a nova cabeça na frente, seguida do resto da cobrinha — removendo o último item, a menos que <code>cresce</code> seja <code>true</code>.',
-    hint: 'Pesquise o método de array que junta um item novo no início de uma lista existente, e o método que corta a lista sem o último item.',
+    hint: `Pesquise o método de array que junta um item novo no início de uma lista existente, e o método que corta a lista sem o último item. Exemplo do primeiro (outro contexto):<pre><code>function empilhar(pilha, novoItem) {
+  return [novoItem, ...pilha];
+}</code></pre>`,
     tests: [
       { args: [[{x:5,y:5},{x:4,y:5}], {x:6,y:5}, false], expected: [{x:6,y:5},{x:5,y:5}] },
       { args: [[{x:5,y:5},{x:4,y:5}], {x:6,y:5}, true], expected: [{x:6,y:5},{x:5,y:5},{x:4,y:5}] }
@@ -380,7 +388,9 @@ const STEPS = [
     fnName: 'gerarComida', checkType: 'json',
     starter: 'function gerarComida(colunas, linhas, sorteio) {\n  \n}',
     desc: 'Crie a função que recebe o número de colunas, o número de linhas, e a função <code>sorteio</code> — e devolve uma posição <code>{x, y}</code>: x é <code>sorteio(0, colunas-1)</code>, y é <code>sorteio(0, linhas-1)</code>.',
-    hint: 'Chame sorteio() duas vezes: uma pro x, outra pro y — nessa ordem.',
+    hint: `Chame sorteio() duas vezes: uma pro x, outra pro y — nessa ordem. Exemplo de chamar uma função recebida por parâmetro (outro contexto):<pre><code>function girarRoleta(sorte) {
+  return sorte(1, 6);
+}</code></pre>`,
     tests: (() => {
       const sorteioMin = (min, max) => min;
       const sorteioMax = (min, max) => max;
@@ -397,7 +407,9 @@ const STEPS = [
     fnName: 'comeuComida', checkType: 'value',
     starter: 'function comeuComida(cabeca, comida) {\n  \n}',
     desc: 'Crie a função que recebe a cabeça e a comida, e devolve <code>true</code> se as posições forem iguais (mesmo x e mesmo y), ou <code>false</code> caso contrário.',
-    hint: 'Compare x com x, e y com y — os dois precisam bater ao mesmo tempo.',
+    hint: `Compare x com x, e y com y — os dois precisam bater ao mesmo tempo. Exemplo de comparar UMA propriedade entre dois objetos (outro contexto — aqui você precisa comparar DUAS, ligadas por "e"):<pre><code>function mesmaRua(casa1, casa2) {
+  return casa1.rua === casa2.rua;
+}</code></pre>`,
     tests: [
       { args: [{x:3,y:3},{x:3,y:3}], expected: true },
       { args: [{x:3,y:3},{x:3,y:4}], expected: false }
@@ -410,7 +422,9 @@ const STEPS = [
     fnName: 'atualizarPontuacao', checkType: 'value',
     starter: 'function atualizarPontuacao(pontuacaoAtual, comeu) {\n  \n}',
     desc: 'Crie a função que recebe a pontuação atual e se a cobrinha comeu (<code>true</code>/<code>false</code>) — devolva a pontuação atual +1 se comeu, ou a pontuação sem mudar caso contrário.',
-    hint: 'É um if simples: comeu ou não comeu.',
+    hint: `É um if simples: comeu ou não comeu. Exemplo do mesmo formato (outro contexto):<pre><code>function ajustarSaldo(saldoAtual, creditou) {
+  return creditou ? saldoAtual + 10 : saldoAtual;
+}</code></pre>`,
     tests: [
       { args: [0, true], expected: 1 },
       { args: [5, false], expected: 5 },
@@ -424,7 +438,9 @@ const STEPS = [
     fnName: 'bateuNaParede', checkType: 'value',
     starter: 'function bateuNaParede(posicao, colunas, linhas) {\n  \n}',
     desc: 'Crie a função que recebe a posição, o número de colunas e o número de linhas — devolva <code>true</code> se a posição estiver fora da grade (x&lt;0, x&gt;=colunas, y&lt;0 ou y&gt;=linhas).',
-    hint: 'São 4 condições possíveis, ligadas por "ou".',
+    hint: `São 4 condições possíveis, ligadas por "ou". Exemplo com só 2 condições, pra você ver o formato (aqui você vai precisar de 4, para x e para y):<pre><code>function foraDoAlcance(numero, minimo, maximo) {
+  return numero < minimo || numero > maximo;
+}</code></pre>`,
     tests: [
       { args: [{x:5,y:5},10,10], expected: false },
       { args: [{x:-1,y:5},10,10], expected: true },
@@ -439,7 +455,9 @@ const STEPS = [
     fnName: 'bateuNoProprioCorpo', checkType: 'value',
     starter: 'function bateuNoProprioCorpo(novaCabeca, cobrinha) {\n  \n}',
     desc: 'Crie a função que recebe a nova posição da cabeça e a cobrinha (array) — devolva <code>true</code> se essa posição bater com QUALQUER parte da cobrinha, ou <code>false</code> caso contrário.',
-    hint: 'Existe um método de array que testa "algum item da lista bate com essa condição?" — pesquise sobre ele.',
+    hint: `Existe um método de array que testa "algum item da lista bate com essa condição?" — pesquise sobre ele. Exemplo de uso (outro contexto):<pre><code>function existeNaLista(pessoa, lista) {
+  return lista.some(p => p.nome === pessoa.nome);
+}</code></pre>`,
     tests: [
       { args: [{x:5,y:5}, [{x:4,y:5},{x:3,y:5}]], expected: false },
       { args: [{x:4,y:5}, [{x:4,y:5},{x:3,y:5}]], expected: true }
@@ -452,7 +470,9 @@ const STEPS = [
     fnName: 'jogoAcabou', checkType: 'value',
     starter: 'function jogoAcabou(bateuParede, bateuCorpo) {\n  \n}',
     desc: 'Crie a função que recebe dois valores booleanos — <code>bateuParede</code> e <code>bateuCorpo</code> — e devolve <code>true</code> se pelo menos um dos dois for <code>true</code>.',
-    hint: 'Um operador lógico resolve isso numa linha só.',
+    hint: `Um operador lógico resolve isso numa linha só. Exemplo do mesmo formato (outro contexto):<pre><code>function podeEntrar(temIngresso, temConvite) {
+  return temIngresso || temConvite;
+}</code></pre>`,
     tests: [
       { args: [false,false], expected: false },
       { args: [true,false], expected: true },

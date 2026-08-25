@@ -54,6 +54,14 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
     await page.click('#btnContinuar');
 
     await expect(page.locator('#codeInput')).toBeVisible();
+
+    // A dica pode ter código de exemplo, mas nunca a resposta literal do
+    // desafio (README, seção "Dicas") — aqui confere que o bloco de código
+    // aparece (ajuda de verdade) sem usar o nome da função do desafio.
+    await page.click('#btnHint');
+    await expect(page.locator('.hint-box pre code')).toBeVisible();
+    await expect(page.locator('.hint-box')).not.toContainText('criarCobrinha');
+
     await page.fill('#codeInput', 'function criarCobrinha() { return []; }');
     await page.click('#btnRun');
     await expect(page.locator('.console')).toContainText('Ainda não');
