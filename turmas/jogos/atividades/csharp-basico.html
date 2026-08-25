@@ -141,7 +141,7 @@
 <script>
   const STEPS = [
     {
-      story: 'Olá! Eu sou o <b>Eri</b>, o C#arpão — o guardião curioso do oceano de código! Vim te contar minha história e a da linguagem que carrego no nome: o <b>C#</b>. Antes de mergulharmos fundo, vamos conhecer quem deu vida a essa linguagem.',
+      story: 'Olá! Eu sou o <b>Eri</b>, o C#arpão — o guardião curioso do oceano de código! Vim te apresentar o <b>C#</b>, uma linguagem criada pela Microsoft, no início dos anos 2000.',
       question: {
         prompt: 'Quem criou a linguagem C#?',
         options: ['A Microsoft', 'O Google', 'A Apple', 'A NASA'],
@@ -150,21 +150,12 @@
       }
     },
     {
-      story: 'O C# nasceu no início dos anos 2000, liderado por um engenheiro chamado <b>Anders Hejlsberg</b>. A Microsoft queria uma linguagem moderna, segura e poderosa para construir o futuro da programação — e assim eu, Eri, ganhei meu propósito!',
+      story: 'No mar dos jogos, o C# é usado por motores (game engines) famosos — inclusive o <b>Godot</b>, o motor que vamos usar nas próximas aulas práticas!',
       question: {
-        prompt: 'Em que período aproximado o C# foi lançado?',
-        options: ['Início dos anos 2000', 'Década de 1970', 'Ano 2020', 'Ano 1990'],
+        prompt: 'Qual motor de jogos (game engine) usa o C# como uma das linguagens de programação?',
+        options: ['Godot', 'Excel', 'Photoshop', 'Scratch'],
         correctIndex: 0,
-        explanation: 'Exato! O C# foi lançado oficialmente por volta de 2000/2002, junto com a plataforma .NET.'
-      }
-    },
-    {
-      story: 'Hoje eu nado por muitos mares diferentes: sites, aplicativos, sistemas empresariais... mas o mar que eu mais amo é o dos <b>jogos</b>! Muitos estúdios de games usam C# todos os dias.',
-      question: {
-        prompt: 'Qual motor de jogos (game engine) muito famoso usa o C# como linguagem principal de programação?',
-        options: ['Unity', 'Scratch', 'Excel', 'Photoshop'],
-        correctIndex: 0,
-        explanation: 'Isso! A Unity é um dos motores de jogos mais usados do mundo, e o C# é a linguagem oficial dela.'
+        explanation: 'Isso! O Godot aceita C# como uma das linguagens pra programar jogos — junto com o GDScript, que você vai conhecer em breve.'
       }
     },
     {
@@ -227,21 +218,21 @@
       }
     },
     {
-      story: 'Uma curiosidade sobre mim: eu levo bem a sério a diferença entre letras maiúsculas e minúsculas! Para o C#, "idade" e "Idade" são coisas completamente diferentes.',
+      story: 'Às vezes eu preciso decidir algo — tipo "se a vida chegar a zero, o jogo acaba". Pra isso, uso o comando <b>if</b>: ele só executa um bloco de código quando uma condição é verdadeira.',
       question: {
-        prompt: 'O C# diferencia letras maiúsculas de minúsculas (é "case sensitive")?',
-        options: ['Sim, sempre', 'Não, nunca', 'Só em alguns comandos', 'Só aos finais de semana'],
+        prompt: 'Qual comando em C# executa um bloco de código somente quando uma condição é verdadeira?',
+        options: ['if', 'print', 'var', 'class'],
         correctIndex: 0,
-        explanation: 'Isso! C# é case sensitive: "nome" e "Nome" seriam consideradas variáveis diferentes.'
+        explanation: 'Isso! O if testa uma condição — só quando ela é verdadeira, o bloco de código dentro dele é executado.'
       }
     },
     {
-      story: 'Por fim, no C#, quase tudo que eu faço mora dentro de uma estrutura chamada <b>classe</b> — como se fosse uma casinha organizando meu código e meus comportamentos.',
+      story: 'Quando preciso repetir uma ação várias vezes — tipo gerar 10 inimigos na tela — uso um <b>laço de repetição</b>, como o for, em vez de escrever a mesma linha dez vezes.',
       question: {
-        prompt: 'Em C#, o código geralmente fica organizado dentro de uma estrutura chamada:',
-        options: ['Classe', 'Planilha', 'Pasta zipada', 'Banco de dados'],
+        prompt: 'Qual comando em C# repete um bloco de código várias vezes?',
+        options: ['for', 'if', 'string', 'Console'],
         correctIndex: 0,
-        explanation: 'Isso! Classes são a forma como o C# organiza dados e comportamentos — um conceito fundamental da Programação Orientada a Objetos.'
+        explanation: 'Isso! O for (e também o while) repete um bloco de código enquanto uma condição continuar verdadeira.'
       }
     }
   ];
@@ -254,11 +245,11 @@
     return window.PortalSlides.generate({
       title: 'C# Básico — A Jornada do Eri',
       subtitle: 'Aula Teórica · Trilha C# · Turma Jogos Digitais',
-      capacidade: 'Reconhecer a origem, o propósito e a sintaxe básica da linguagem C# (variáveis, tipos de dados, comandos de saída e comentários).',
+      capacidade: 'Reconhecer a origem, o propósito e a sintaxe básica da linguagem C# (variáveis, tipos de dados, comandos de saída, comentários, condicionais e laços de repetição), como preparação para a prática em Godot.',
       steps: STEPS,
       fileName: 'csharp-basico-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Em breve, novos desafios práticos de código vão esperar os alunos no Portal de Aulas.'
+      closingText: 'Agora é hora de resolver os chamados da Central de Suporte — desafios práticos pra fixar C# antes da aula com o Godot.'
     });
   };
 
@@ -293,8 +284,8 @@
     mentor: { rowClass: "eri", avatar: "🦈", name: "Eri, o C#arpão" },
     finishPassed: {
       title: "Jornada do Eri concluída!",
-      introHtml: "<p>Você mergulhou fundo no oceano do C# e conheceu quem criou a linguagem, por que ela existe e seus primeiros conceitos de sintaxe.</p>",
-      closingHtml: "<p>Em breve, novos desafios práticos de código vão te esperar por aqui!</p>",
+      introHtml: "<p>Você mergulhou fundo no oceano do C# e conheceu quem criou a linguagem, por que ela existe e seus primeiros conceitos de sintaxe — incluindo condicionais e laços.</p>",
+      closingHtml: "<p>Agora vá até a Central de Suporte praticar esses conceitos — e depois conheça o GDScript, a outra linguagem do Godot!</p>",
       restartLabel: "🔁 Refazer a Jornada"
     }
   });
