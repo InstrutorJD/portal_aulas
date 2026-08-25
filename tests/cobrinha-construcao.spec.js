@@ -50,6 +50,8 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
 
     await expect(page.locator('.card h2')).toContainText('Sua missão');
     await page.click('#btnContinuar');
+    await expect(page.locator('.card h2')).toContainText('Como funciona');
+    await page.click('#btnContinuar');
     await expect(page.locator('.card h2')).toContainText('Criar o personagem');
     await page.click('#btnContinuar');
 
@@ -67,6 +69,12 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
     await expect(page.locator('.console')).toContainText('Ainda não');
     await expect(page.locator('#btnNext')).toHaveCount(0);
 
+    // Erro clássico de iniciante: esquecer o return. A mensagem precisa
+    // apontar isso, não só "esperado X, recebeu undefined".
+    await page.fill('#codeInput', 'function criarCobrinha() { const x = [{x:7,y:7},{x:6,y:7},{x:5,y:7}]; }');
+    await page.click('#btnRun');
+    await expect(page.locator('.console')).toContainText('você usou o return?');
+
     // Corrige e agora sim libera o próximo passo, sem perder a mensagem de sucesso.
     await page.fill('#codeInput', SAMPLE_CODE.criarCobrinha);
     await page.click('#btnRun');
@@ -80,8 +88,11 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
 
     await page.goto(URL);
 
-    // Tela de intro ("Sua missão") -> Continuar, antes do 1º par explicação/desafio
+    // Tela de intro ("Sua missão") -> Continuar
     await expect(page.locator('.card h2')).toContainText('Sua missão');
+    await page.click('#btnContinuar');
+    // Tela "Como funciona um desafio" -> Continuar, antes do 1º par explicação/desafio
+    await expect(page.locator('.card h2')).toContainText('Como funciona');
     await page.click('#btnContinuar');
 
     for (const fnName of FN_NAMES) {
