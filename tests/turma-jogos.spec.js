@@ -28,12 +28,14 @@ function seedAllModulesComplete(user) {
   ];
   teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
   localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+  localStorage.setItem(`gdscript_basico_progress_${user}`, JSON.stringify({ completed: true }));
 
   const praticaDez = [
     'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
     'projetos_metodos_pratica', 'projetos_fases_pratica',
     'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
     'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
+    'csharp_pratica', 'gdscript_pratica',
     'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
   ];
   praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));

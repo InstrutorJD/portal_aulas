@@ -19,14 +19,14 @@ test.describe('QuizRush — montagem pelo professor (aproveitando o gabarito)', 
     await page.selectOption('#selModule', { label: 'Básico — A Jornada do Eri' });
     await page.click('#btnFetchQuestions');
 
-    await expect(page.locator('#setupResultText')).toContainText('11 perguntas');
+    await expect(page.locator('#setupResultText')).toContainText('10 perguntas');
     await page.click('#btnCreateSession');
 
     await expect(page.locator('#scrLobby')).toBeVisible();
     const sessions = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions || []);
     expect(sessions.length).toBe(1);
     expect(sessions[0]).toMatchObject({ turma: 'jogos', status: 'lobby', created_by: 'admin' });
-    expect(sessions[0].questions.length).toBe(11);
+    expect(sessions[0].questions.length).toBe(10);
   });
 
   test('atividade prática de código não tem perguntas de múltipla escolha', async ({ page }) => {
