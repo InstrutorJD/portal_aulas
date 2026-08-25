@@ -154,6 +154,7 @@ test.describe('Liberação diária — visão do aluno', () => {
       teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`gdscript_basico_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`cobrinha_construcao_progress_${user}`, JSON.stringify({ completed: true }));
 
       const praticaDez = [
         'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',

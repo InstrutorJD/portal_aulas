@@ -360,6 +360,21 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'projeto-cobrinha',
+          label: 'Projeto: Construa seu Jogo',
+          desc: 'Saia do zero e construa, peça por peça, um jogo de Cobrinha de verdade — direto aqui no portal.',
+          capacidade: 'Aplicar, de forma integrada, lógica de programação, estruturas de dados e eventos de teclado na construção de um jogo completo em JavaScript.',
+          modules: [
+            {
+              key: 'construcao', title: 'Construa seu Jogo: Cobrinha',
+              desc: 'A PixelForge Studios te contratou! Cada desafio resolvido entra ao vivo no seu jogo. No final, apresente o jogo pronto pro professor.',
+              icon: '🐍', src: 'atividades/cobrinha-construcao.html',
+              progressKey: 'cobrinha_construcao_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },

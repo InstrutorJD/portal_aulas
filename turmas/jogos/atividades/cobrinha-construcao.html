@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Construa seu Jogo: Cobrinha</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:220px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .step-item{
+    display:flex; align-items:center; gap:8px; padding:7px 8px; margin-bottom:3px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:10.5px;
+  }
+  .step-item .status{ font-size:12px; width:16px; text-align:center; flex-shrink:0; }
+  .step-item.active{ border-color:var(--green); color:var(--green); }
+  .step-item.completed{ color:var(--ink); }
+  .step-item.locked{ opacity:0.4; cursor:not-allowed; }
+  .step-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:10px; height:100%; overflow-y:auto; }
+
+  .preview-box{
+    flex-shrink:0; display:flex; align-items:center; gap:14px; background:var(--panel);
+    border:1px solid var(--line); padding:10px; flex-wrap:wrap;
+  }
+  #gamePreview{ background:#141414; border:2px solid var(--green-dim); image-rendering:pixelated; flex-shrink:0; }
+  .preview-info{ font-size:11px; color:var(--ink-dim); line-height:1.7; }
+  .preview-info b{ color:var(--yellow); }
+  .preview-info .score{ font-size:16px; color:var(--green); font-weight:800; }
+  .preview-hint{ font-size:10.5px; color:var(--ink-dim); font-style:italic; }
+  .btn-restart{
+    font-family:inherit; font-size:10.5px; font-weight:800; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--green-dim); padding:6px 10px;
+    cursor:pointer; border-radius:2px;
+  }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:14px 16px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 10px; letter-spacing:1px;
+  }
+  .card p{ font-size:12.5px; line-height:1.7; margin:0 0 10px; }
+  .card code{ color:var(--yellow); }
+  .card pre{
+    background:#050805; border:1px solid var(--line); padding:8px 10px; margin:0 0 10px;
+    font-size:11.5px; line-height:1.5; color:var(--yellow); overflow-x:auto;
+  }
+
+  .desafio-desc{ background:#050805; border:1px solid var(--green-dim); padding:10px 12px; font-size:12.5px; line-height:1.6; margin-bottom:10px; }
+  .hint-toggle{
+    display:inline-block; margin-bottom:10px; font-size:10.5px; font-weight:700; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--green-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-box{ display:none; margin-bottom:10px; background:var(--panel2); border:1px dashed var(--yellow); padding:8px 10px; font-size:11.5px; line-height:1.5; }
+  .hint-box.show{ display:block; }
+
+  textarea#codeInput{
+    width:100%; min-height:150px; background:#050805; color:var(--ink); border:1px solid var(--line);
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; padding:10px; resize:vertical; margin-bottom:10px;
+  }
+  textarea#codeInput:focus{ outline:none; border-color:var(--green-dim); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; margin-top:4px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .console{
+    background:#060806; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    min-height:40px; max-height:140px; overflow-y:auto; line-height:1.6; margin-top:4px;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.fail{ color:var(--blood-bright); }
+  .console .line.success{ color:var(--green); font-weight:bold; }
+
+  .escolha-grid{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .escolha-opt{
+    border:1px solid var(--line); background:var(--panel2); padding:10px 12px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11px; width:120px;
+  }
+  .escolha-opt:hover{ border-color:var(--green-dim); }
+  .escolha-opt.selected{ border-color:var(--green); background:rgba(124,255,63,0.08); color:var(--green); }
+  .escolha-swatch{ width:100%; height:36px; border-radius:2px; }
+
+  .visto-box p{ font-size:13px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  @media (max-width: 800px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    .preview-box{ justify-content:center; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cobrinha_construcao';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>CODIFICAÇÃO — CONSTRUA SEU JOGO: COBRINHA</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">1</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Missões</div>
+        <div id="stepList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="preview-box">
+          <canvas id="gamePreview" width="280" height="280"></canvas>
+          <div class="preview-info">
+            <div>Seu jogo, ao vivo:</div>
+            <div class="score">🏆 <span id="previewScore">0</span> pontos</div>
+            <div class="preview-hint">Cada desafio resolvido entra aqui na hora.</div>
+            <button class="btn-restart" id="btnRestartGame" style="display:none;">🔁 Reiniciar jogo</button>
+          </div>
+        </div>
+
+        <div id="stepContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MOTOR DO JOGO — sempre rodando, independente da navegação.
+// As funções que o aluno valida em cada desafio são "encaixadas"
+// aqui (objeto `slots`); antes de validadas, aquele pedaço do
+// jogo simplesmente não existe ainda (sem crash, sem comida, sem
+// colisão — vai ganhando vida aos poucos).
+// ============================================================
+const GRID = 14, CELL = 20;
+const canvas = document.getElementById('gamePreview');
+const ctx = canvas.getContext('2d');
+const previewScoreEl = document.getElementById('previewScore');
+const btnRestartGame = document.getElementById('btnRestartGame');
+
+const slots = {};
+let snake = null, direction = { dx: 1, dy: 0 }, pendingDirection = null;
+let food = null, score = 0, gameOver = false;
+
+let tema = { bg: '#141414', head: '#7cff3f', body: '#4a9a2a', food: '#ff3b30', shape: 'square' };
+let somPreset = { wave: 'sine', base: 880 };
+
+function sorteio(min, max) { return min + Math.floor(Math.random() * (max - min + 1)); }
+
+function resetGame() {
+  snake = slots.criarCobrinha ? slots.criarCobrinha() : null;
+  direction = { dx: 1, dy: 0 };
+  pendingDirection = null;
+  score = 0;
+  gameOver = false;
+  food = (slots.gerarComida && snake) ? slots.gerarComida(GRID, GRID, sorteio) : null;
+  btnRestartGame.style.display = 'none';
+}
+
+window.addEventListener('keydown', (e) => {
+  if (gameOver) return;
+  if (!slots.teclaParaDirecao) return;
+  const d = slots.teclaParaDirecao(e.key);
+  if (d && !(d.dx === -direction.dx && d.dy === -direction.dy)) pendingDirection = d;
+});
+
+btnRestartGame.addEventListener('click', resetGame);
+
+function playSound(kind) {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const actx = new AudioCtx();
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = somPreset.wave;
+    const base = somPreset.base;
+    osc.frequency.setValueAtTime(kind === 'eat' ? base : base * 0.5, actx.currentTime);
+    if (kind === 'gameover') {
+      osc.frequency.exponentialRampToValueAtTime(base * 0.15, actx.currentTime + 0.4);
+    }
+    gain.gain.setValueAtTime(0.15, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + (kind === 'eat' ? 0.12 : 0.45));
+    osc.connect(gain).connect(actx.destination);
+    osc.start();
+    osc.stop(actx.currentTime + (kind === 'eat' ? 0.13 : 0.46));
+  } catch (e) {}
+}
+
+function tick() {
+  if (!gameOver && snake && slots.mover && slots.proximaPosicao) {
+    if (pendingDirection) { direction = pendingDirection; pendingDirection = null; }
+    const novaCabeca = slots.proximaPosicao(snake[0], direction);
+    const bateuParede = slots.bateuNaParede ? slots.bateuNaParede(novaCabeca, GRID, GRID) : false;
+    const bateuCorpo = slots.bateuNoProprioCorpo ? slots.bateuNoProprioCorpo(novaCabeca, snake) : false;
+    const acabou = slots.jogoAcabou ? slots.jogoAcabou(bateuParede, bateuCorpo) : false;
+    if (acabou) {
+      gameOver = true;
+      btnRestartGame.style.display = 'inline-block';
+      playSound('gameover');
+    } else {
+      const comeu = (slots.comeuComida && food) ? slots.comeuComida(novaCabeca, food) : false;
+      snake = slots.mover(snake, novaCabeca, comeu);
+      if (comeu) {
+        if (slots.atualizarPontuacao) score = slots.atualizarPontuacao(score, true);
+        if (slots.gerarComida) food = slots.gerarComida(GRID, GRID, sorteio);
+        playSound('eat');
+      }
+    }
+  }
+  render();
+}
+setInterval(tick, 160);
+
+function drawCell(pos, color) {
+  const px = pos.x * CELL, py = pos.y * CELL;
+  ctx.fillStyle = color;
+  if (tema.shape === 'circle') {
+    ctx.beginPath();
+    ctx.arc(px + CELL / 2, py + CELL / 2, CELL / 2 - 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+  }
+}
+
+function render() {
+  ctx.fillStyle = tema.bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!snake) {
+    ctx.fillStyle = '#3a4a3a';
+    ctx.font = '11px monospace';
+    ctx.fillText('seu personagem ainda não existe...', 14, 140);
+  } else {
+    snake.forEach((seg, i) => drawCell(seg, i === 0 ? tema.head : tema.body));
+  }
+  if (food) drawCell(food, tema.food);
+
+  if (gameOver) {
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ff3b30';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('FIM DE JOGO', 70, 140);
+  }
+
+  previewScoreEl.textContent = score;
+}
+render();
+
+// ============================================================
+// DADOS DAS ETAPAS
+// ============================================================
+const STEPS = [
+  {
+    id: 'intro', type: 'explicacao', title: '🎮 Sua missão',
+    corpo: `<p>A <b>PixelForge Studios</b> te contratou como desenvolvedor(a) júnior! Sua primeira missão: construir, peça por peça, um jogo de <b>Cobrinha</b> — direto aqui no portal.</p>
+      <p>Cada função que você programar corretamente entra <b>ao vivo</b> no jogo ali do lado, na hora. No fim, você chama o professor pra ver o jogo pronto rodando.</p>`
+  },
+
+  { id: 'personagem-exp', type: 'explicacao', title: 'Criar o personagem', corpo: `
+    <p>Todo jogo começa com um personagem. Aqui, a cobrinha é só uma <b>lista de posições</b> — cada posição é um quadradinho <code>{x, y}</code> na grade do jogo. O primeiro item da lista é sempre a <b>cabeça</b>.</p>
+    <p>Exemplo de uma cobrinha de 2 partes, cabeça em <code>{x:2, y:2}</code>, corpo em <code>{x:1, y:2}</code>:</p>
+    <pre><code>[{x:2, y:2}, {x:1, y:2}]</code></pre>` },
+  { id: 'personagem-des', type: 'desafio', title: 'Criar o personagem',
+    fnName: 'criarCobrinha', checkType: 'json',
+    starter: 'function criarCobrinha() {\n  \n}',
+    desc: 'Crie e retorne a cobrinha inicial: 3 partes, cabeça em <code>{x:7, y:7}</code>, e o corpo esticado pra esquerda dela — <code>{x:6, y:7}</code> e <code>{x:5, y:7}</code>, nessa ordem.',
+    hint: 'A cabeça é sempre o primeiro item do array. Lembre a ordem: cabeça, depois corpo.',
+    tests: [ { args: [], expected: [{x:7,y:7},{x:6,y:7},{x:5,y:7}] } ]
+  },
+
+  { id: 'tecla-exp', type: 'explicacao', title: 'Ler o teclado', corpo: `
+    <p>O jogador controla a cobrinha pelas setas do teclado. Sua função vai traduzir a tecla apertada num <b>vetor de direção</b>: <code>{dx, dy}</code> — quanto anda no eixo X e quanto anda no eixo Y.</p>
+    <p>Teclas possíveis: <code>ArrowUp</code>, <code>ArrowDown</code>, <code>ArrowLeft</code>, <code>ArrowRight</code>.</p>` },
+  { id: 'tecla-des', type: 'desafio', title: 'Ler o teclado',
+    fnName: 'teclaParaDirecao', checkType: 'json',
+    starter: 'function teclaParaDirecao(tecla) {\n  \n}',
+    desc: 'Crie a função que recebe o nome de uma tecla e devolve a direção correspondente: <code>ArrowUp</code> → <code>{dx:0, dy:-1}</code>, <code>ArrowDown</code> → <code>{dx:0, dy:1}</code>, <code>ArrowLeft</code> → <code>{dx:-1, dy:0}</code>, <code>ArrowRight</code> → <code>{dx:1, dy:0}</code>. Qualquer outra tecla, devolva <code>null</code>.',
+    hint: 'No eixo Y da tela, "pra cima" é um número NEGATIVO (y diminui indo pra cima).',
+    tests: [
+      { args: ['ArrowUp'], expected: {dx:0,dy:-1} },
+      { args: ['ArrowDown'], expected: {dx:0,dy:1} },
+      { args: ['ArrowLeft'], expected: {dx:-1,dy:0} },
+      { args: ['ArrowRight'], expected: {dx:1,dy:0} },
+      { args: ['a'], expected: null }
+    ]
+  },
+
+  { id: 'posicao-exp', type: 'explicacao', title: 'Calcular o próximo passo', corpo: `
+    <p>Com a direção em mãos, dá pra calcular onde a cabeça da cobrinha vai parar no próximo passo: basta somar a direção à posição atual.</p>` },
+  { id: 'posicao-des', type: 'desafio', title: 'Calcular o próximo passo',
+    fnName: 'proximaPosicao', checkType: 'json',
+    starter: 'function proximaPosicao(cabeca, direcao) {\n  \n}',
+    desc: 'Crie a função que recebe a posição da cabeça e a direção, e devolve a nova posição: <code>{x: cabeca.x + direcao.dx, y: cabeca.y + direcao.dy}</code>.',
+    hint: 'É só uma soma de coordenadas — sem nenhum truque.',
+    tests: [
+      { args: [{x:5,y:5},{dx:1,dy:0}], expected: {x:6,y:5} },
+      { args: [{x:5,y:5},{dx:0,dy:-1}], expected: {x:5,y:4} },
+      { args: [{x:0,y:0},{dx:-1,dy:0}], expected: {x:-1,y:0} }
+    ]
+  },
+
+  { id: 'mover-exp', type: 'explicacao', title: 'Fazer a cobrinha andar', corpo: `
+    <p>Andar é: colocar a nova cabeça na FRENTE da lista, e tirar o ÚLTIMO pedaço do rabo — como se cada parte "puxasse" a de trás. Mas se a cobrinha acabou de comer, o rabo NÃO sai (ela cresce).</p>` },
+  { id: 'mover-des', type: 'desafio', title: 'Fazer a cobrinha andar',
+    fnName: 'mover', checkType: 'json',
+    starter: 'function mover(cobrinha, novaCabeca, cresce) {\n  \n}',
+    desc: 'Crie a função que recebe a cobrinha (array), a nova posição da cabeça, e um "cresce" (true/false). Devolva um NOVO array: a nova cabeça na frente, seguida do resto da cobrinha — removendo o último item, a menos que <code>cresce</code> seja <code>true</code>.',
+    hint: 'Pesquise o método de array que junta um item novo no início de uma lista existente, e o método que corta a lista sem o último item.',
+    tests: [
+      { args: [[{x:5,y:5},{x:4,y:5}], {x:6,y:5}, false], expected: [{x:6,y:5},{x:5,y:5}] },
+      { args: [[{x:5,y:5},{x:4,y:5}], {x:6,y:5}, true], expected: [{x:6,y:5},{x:5,y:5},{x:4,y:5}] }
+    ]
+  },
+
+  { id: 'comida-exp', type: 'explicacao', title: 'Gerar a comida', corpo: `
+    <p>A comida aparece num quadrado aleatório da grade. Em vez de usar <code>Math.random()</code> direto, você recebe um "sorteador" pronto: uma função <code>sorteio(min, max)</code> que devolve um número inteiro entre min e max.</p>` },
+  { id: 'comida-des', type: 'desafio', title: 'Gerar a comida',
+    fnName: 'gerarComida', checkType: 'json',
+    starter: 'function gerarComida(colunas, linhas, sorteio) {\n  \n}',
+    desc: 'Crie a função que recebe o número de colunas, o número de linhas, e a função <code>sorteio</code> — e devolve uma posição <code>{x, y}</code>: x é <code>sorteio(0, colunas-1)</code>, y é <code>sorteio(0, linhas-1)</code>.',
+    hint: 'Chame sorteio() duas vezes: uma pro x, outra pro y — nessa ordem.',
+    tests: (() => {
+      const sorteioMin = (min, max) => min;
+      const sorteioMax = (min, max) => max;
+      return [
+        { args: [10, 10, sorteioMin], expected: {x:0,y:0} },
+        { args: [20, 8, sorteioMax], expected: {x:19,y:7} }
+      ];
+    })()
+  },
+
+  { id: 'comeu-exp', type: 'explicacao', title: 'Detectar se comeu', corpo: `
+    <p>A cobrinha "come" quando a cabeça cai exatamente em cima da comida.</p>` },
+  { id: 'comeu-des', type: 'desafio', title: 'Detectar se comeu',
+    fnName: 'comeuComida', checkType: 'value',
+    starter: 'function comeuComida(cabeca, comida) {\n  \n}',
+    desc: 'Crie a função que recebe a cabeça e a comida, e devolve <code>true</code> se as posições forem iguais (mesmo x e mesmo y), ou <code>false</code> caso contrário.',
+    hint: 'Compare x com x, e y com y — os dois precisam bater ao mesmo tempo.',
+    tests: [
+      { args: [{x:3,y:3},{x:3,y:3}], expected: true },
+      { args: [{x:3,y:3},{x:3,y:4}], expected: false }
+    ]
+  },
+
+  { id: 'pontuacao-exp', type: 'explicacao', title: 'Marcar pontos', corpo: `
+    <p>Cada vez que a cobrinha come, o placar sobe.</p>` },
+  { id: 'pontuacao-des', type: 'desafio', title: 'Marcar pontos',
+    fnName: 'atualizarPontuacao', checkType: 'value',
+    starter: 'function atualizarPontuacao(pontuacaoAtual, comeu) {\n  \n}',
+    desc: 'Crie a função que recebe a pontuação atual e se a cobrinha comeu (<code>true</code>/<code>false</code>) — devolva a pontuação atual +1 se comeu, ou a pontuação sem mudar caso contrário.',
+    hint: 'É um if simples: comeu ou não comeu.',
+    tests: [
+      { args: [0, true], expected: 1 },
+      { args: [5, false], expected: 5 },
+      { args: [9, true], expected: 10 }
+    ]
+  },
+
+  { id: 'parede-exp', type: 'explicacao', title: 'Detectar a parede', corpo: `
+    <p>O tabuleiro tem um limite. Se a cabeça sair da grade (x ou y negativo, ou maior/igual ao tamanho da grade), a cobrinha bateu na parede.</p>` },
+  { id: 'parede-des', type: 'desafio', title: 'Detectar a parede',
+    fnName: 'bateuNaParede', checkType: 'value',
+    starter: 'function bateuNaParede(posicao, colunas, linhas) {\n  \n}',
+    desc: 'Crie a função que recebe a posição, o número de colunas e o número de linhas — devolva <code>true</code> se a posição estiver fora da grade (x&lt;0, x&gt;=colunas, y&lt;0 ou y&gt;=linhas).',
+    hint: 'São 4 condições possíveis, ligadas por "ou".',
+    tests: [
+      { args: [{x:5,y:5},10,10], expected: false },
+      { args: [{x:-1,y:5},10,10], expected: true },
+      { args: [{x:10,y:5},10,10], expected: true },
+      { args: [{x:5,y:10},10,10], expected: true }
+    ]
+  },
+
+  { id: 'corpo-exp', type: 'explicacao', title: 'Detectar o próprio corpo', corpo: `
+    <p>Se a cabeça for parar em cima de qualquer outro pedaço do corpo da própria cobrinha, é game over.</p>` },
+  { id: 'corpo-des', type: 'desafio', title: 'Detectar o próprio corpo',
+    fnName: 'bateuNoProprioCorpo', checkType: 'value',
+    starter: 'function bateuNoProprioCorpo(novaCabeca, cobrinha) {\n  \n}',
+    desc: 'Crie a função que recebe a nova posição da cabeça e a cobrinha (array) — devolva <code>true</code> se essa posição bater com QUALQUER parte da cobrinha, ou <code>false</code> caso contrário.',
+    hint: 'Existe um método de array que testa "algum item da lista bate com essa condição?" — pesquise sobre ele.',
+    tests: [
+      { args: [{x:5,y:5}, [{x:4,y:5},{x:3,y:5}]], expected: false },
+      { args: [{x:4,y:5}, [{x:4,y:5},{x:3,y:5}]], expected: true }
+    ]
+  },
+
+  { id: 'fim-exp', type: 'explicacao', title: 'Decidir o fim de jogo', corpo: `
+    <p>O jogo acaba se a cobrinha bateu na parede OU bateu no próprio corpo.</p>` },
+  { id: 'fim-des', type: 'desafio', title: 'Decidir o fim de jogo',
+    fnName: 'jogoAcabou', checkType: 'value',
+    starter: 'function jogoAcabou(bateuParede, bateuCorpo) {\n  \n}',
+    desc: 'Crie a função que recebe dois valores booleanos — <code>bateuParede</code> e <code>bateuCorpo</code> — e devolve <code>true</code> se pelo menos um dos dois for <code>true</code>.',
+    hint: 'Um operador lógico resolve isso numa linha só.',
+    tests: [
+      { args: [false,false], expected: false },
+      { args: [true,false], expected: true },
+      { args: [false,true], expected: true }
+    ]
+  },
+
+  { id: 'visual-exp', type: 'explicacao', title: 'Escolher o visual', corpo: `
+    <p>Hora de dar a sua cara pro jogo! Escolha as cores e o formato da cobrinha e da comida.</p>` },
+  { id: 'visual-esc', type: 'escolha', title: 'Escolher o visual',
+    opcoes: [
+      { id: 'classica', label: 'Clássica', tema: { bg:'#141414', head:'#7cff3f', body:'#4a9a2a', food:'#ff3b30', shape:'square' } },
+      { id: 'neon', label: 'Neon', tema: { bg:'#0d0221', head:'#ff2ec4', body:'#8b2ec9', food:'#00f0ff', shape:'circle' } },
+      { id: 'retro', label: 'Retro', tema: { bg:'#1a1a1a', head:'#ffd23f', body:'#ee6c4d', food:'#ffffff', shape:'square' } },
+      { id: 'gelo', label: 'Gelo', tema: { bg:'#0a1a2a', head:'#8fd9ff', body:'#3a7ca5', food:'#f5f5f5', shape:'circle' } }
+    ]
+  },
+
+  { id: 'som-exp', type: 'explicacao', title: 'Escolher o som', corpo: `
+    <p>Agora o som dos efeitos: quando a cobrinha come, e quando o jogo acaba.</p>` },
+  { id: 'som-esc', type: 'escolha', title: 'Escolher o som',
+    opcoes: [
+      { id: 'agudo', label: 'Agudo (8-bit)', som: { wave:'square', base:1046 } },
+      { id: 'suave', label: 'Suave', som: { wave:'sine', base:660 } },
+      { id: 'grave', label: 'Grave', som: { wave:'triangle', base:392 } }
+    ]
+  }
+];
+
+// ============================================================
+// PROGRESSO / ESTADO
+// ============================================================
+const urlParams = new URLSearchParams(window.location.search);
+const username = urlParams.get('user') || 'anon';
+const PROGRESS_KEY = `cobrinha_construcao_progress_${username}`;
+const STATE_KEY = `cobrinha_construcao_state_${username}`;
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+}
+function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+    if (s && s.completedIds && s.savedCode) return s;
+  } catch (e) {}
+  return { completedIds: [], savedCode: {}, visualEscolha: null, somEscolha: null };
+}
+function saveState() { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+
+const state = loadState();
+const completed = new Set(state.completedIds);
+
+// Reaplica escolhas salvas (tema/som) e reconstrói os slots a partir do
+// código já validado antes, pra quem recarrega a página não perder nada.
+function rebuildFromState() {
+  STEPS.forEach(step => {
+    if (step.type === 'desafio' && completed.has(step.id) && state.savedCode[step.id]) {
+      const { fn } = runTests(step, state.savedCode[step.id]);
+      if (fn) slots[step.fnName] = fn;
+    }
+  });
+  if (state.visualEscolha) {
+    const opt = STEPS.find(s => s.id === 'visual-esc').opcoes.find(o => o.id === state.visualEscolha);
+    if (opt) tema = opt.tema;
+  }
+  if (state.somEscolha) {
+    const opt = STEPS.find(s => s.id === 'som-esc').opcoes.find(o => o.id === state.somEscolha);
+    if (opt) somPreset = opt.som;
+  }
+  resetGame();
+}
+
+// ============================================================
+// TESTE DE CÓDIGO (mesma lógica de sempre: new Function, roda
+// contra os testes, nunca deixa exceção do aluno escapar).
+// ============================================================
+function runTests(step, code) {
+  let fn;
+  try {
+    const factory = new Function(`${code}\nreturn typeof ${step.fnName} === 'function' ? ${step.fnName} : undefined;`);
+    fn = factory();
+  } catch (e) {
+    return { allPass: false, log: [{ ok:false, msg:'Erro no código: ' + e.message }], fn: null };
+  }
+  if (typeof fn !== 'function') {
+    return { allPass: false, log: [{ ok:false, msg:`A função '${step.fnName}' não foi criada.` }], fn: null };
+  }
+  let allPass = true;
+  const log = step.tests.map((t, i) => {
+    let result, errorMsg;
+    try { result = fn(...t.args); } catch (e) { errorMsg = e.message; }
+    const pass = !errorMsg && (step.checkType === 'json'
+      ? JSON.stringify(result) === JSON.stringify(t.expected)
+      : result === t.expected);
+    if (!pass) allPass = false;
+    return {
+      ok: pass,
+      msg: pass
+        ? `Teste ${i+1} ✅`
+        : errorMsg
+          ? `Teste ${i+1}: erro — ${errorMsg}`
+          : `Teste ${i+1}: esperado ${JSON.stringify(t.expected)}, recebeu ${JSON.stringify(result)}`
+    };
+  });
+  return { allPass, log, fn };
+}
+
+// ============================================================
+// NAVEGAÇÃO / RENDER DAS ETAPAS
+// ============================================================
+const stepListEl = document.getElementById('stepList');
+const stepContentEl = document.getElementById('stepContent');
+const lblStepNum = document.getElementById('lblStepNum');
+const lblStepTotal = document.getElementById('lblStepTotal');
+const progressFill = document.getElementById('progressFill');
+
+lblStepTotal.textContent = STEPS.length + 1;
+
+let selectedIndex = (() => {
+  const idx = STEPS.findIndex(s => !completed.has(s.id));
+  return idx === -1 ? STEPS.length : idx; // STEPS.length = tela de visto
+})();
+
+function isUnlocked(index) {
+  if (index === 0) return true;
+  return completed.has(STEPS[index - 1].id);
+}
+
+function renderSidebar() {
+  stepListEl.innerHTML = '';
+  STEPS.forEach((step, idx) => {
+    const unlocked = isUnlocked(idx);
+    const isDone = completed.has(step.id);
+    const item = document.createElement('div');
+    item.className = 'step-item'
+      + (idx === selectedIndex ? ' active' : '')
+      + (isDone ? ' completed' : '')
+      + (!unlocked ? ' locked' : '');
+    const icon = step.type === 'desafio' ? '💻' : step.type === 'escolha' ? '🎨' : '📖';
+    const status = isDone ? '✅' : (unlocked ? icon : '🔒');
+    item.innerHTML = `<span class="status">${status}</span><span class="name">${step.title}</span>`;
+    if (unlocked) item.addEventListener('click', () => selectStep(idx));
+    stepListEl.appendChild(item);
+  });
+
+  const vistoUnlocked = STEPS.every(s => completed.has(s.id));
+  const vistoItem = document.createElement('div');
+  vistoItem.className = 'step-item'
+    + (selectedIndex === STEPS.length ? ' active' : '')
+    + (!vistoUnlocked ? ' locked' : '');
+  vistoItem.innerHTML = `<span class="status">${vistoUnlocked ? '🧑‍🏫' : '🔒'}</span><span class="name">Entrega — Visto do professor</span>`;
+  if (vistoUnlocked) vistoItem.addEventListener('click', () => selectStep(STEPS.length));
+  stepListEl.appendChild(vistoItem);
+
+  const pct = Math.round((completed.size / STEPS.length) * 100);
+  progressFill.style.width = pct + '%';
+  lblStepNum.textContent = Math.min(selectedIndex + 1, STEPS.length + 1);
+}
+
+function selectStep(idx) {
+  if (idx < STEPS.length && !isUnlocked(idx)) return;
+  selectedIndex = idx;
+  renderSidebar();
+  if (idx >= STEPS.length) { renderVisto(); return; }
+  const step = STEPS[idx];
+  if (step.type === 'explicacao') renderExplicacao(step);
+  else if (step.type === 'desafio') renderDesafio(step);
+  else if (step.type === 'escolha') renderEscolha(step);
+
+  if (typeof window.reportActivity === 'function') {
+    window.reportActivity('cobrinha_construcao', `Construa seu Jogo: Cobrinha — ${step.title}`, { step: idx + 1, total: STEPS.length });
+  }
+}
+
+function markDone(id) {
+  completed.add(id);
+  state.completedIds = [...completed];
+  saveState();
+  renderSidebar();
+}
+
+function renderExplicacao(step) {
+  stepContentEl.innerHTML = `
+    <div class="card">
+      <h2>📖 ${step.title}</h2>
+      ${step.corpo}
+      <div class="actions"><button class="btn" id="btnContinuar">Vamos codificar →</button></div>
+    </div>
+  `;
+  document.getElementById('btnContinuar').addEventListener('click', () => {
+    markDone(step.id);
+    const idx = STEPS.findIndex(s => s.id === step.id);
+    if (idx + 1 <= STEPS.length) selectStep(idx + 1);
+  });
+}
+
+function renderDesafio(step) {
+  const already = completed.has(step.id);
+  const savedCode = state.savedCode[step.id] || step.starter;
+  stepContentEl.innerHTML = `
+    <div class="card">
+      <h2>💻 ${step.title}</h2>
+      <div class="desafio-desc">${step.desc}</div>
+      <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+      <div class="hint-box" id="hintBox">${step.hint}</div>
+      <textarea id="codeInput" spellcheck="false">${savedCode}</textarea>
+      <div class="actions">
+        <button class="btn" id="btnRun">▶ Executar</button>
+        ${already ? '<button class="btn btn-secondary" id="btnNext">Próximo →</button>' : ''}
+      </div>
+      <div class="console" id="consoleOutput"></div>
+    </div>
+  `;
+  const btnHint = document.getElementById('btnHint');
+  const hintBox = document.getElementById('hintBox');
+  btnHint.addEventListener('click', () => {
+    const showing = hintBox.classList.toggle('show');
+    btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
+  });
+
+  const codeInput = document.getElementById('codeInput');
+  const consoleOutput = document.getElementById('consoleOutput');
+
+  function logLine(msg, type) {
+    const line = document.createElement('div');
+    line.className = 'line ' + (type || 'info');
+    line.textContent = msg;
+    consoleOutput.appendChild(line);
+  }
+
+  function wireNextButton() {
+    const btnNext = document.getElementById('btnNext');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        const idx = STEPS.findIndex(s => s.id === step.id);
+        selectStep(idx + 1);
+      });
+    }
+  }
+
+  document.getElementById('btnRun').addEventListener('click', () => {
+    consoleOutput.innerHTML = '';
+    const code = codeInput.value;
+    state.savedCode[step.id] = code;
+    saveState();
+    const { allPass, log, fn } = runTests(step, code);
+    log.forEach(l => logLine(l.msg, l.ok ? 'success' : 'fail'));
+    if (allPass) {
+      slots[step.fnName] = fn;
+      if (!snake && step.fnName === 'criarCobrinha') resetGame();
+      logLine('🏆 Tudo certo! Essa parte já está funcionando no seu jogo.', 'success');
+      const wasNew = !completed.has(step.id);
+      markDone(step.id);
+      // Sem re-renderizar a tela inteira (isso apagaria o console de
+      // sucesso que acabou de ser escrito) — só injeta o botão Próximo
+      // se ele ainda não existir.
+      if (wasNew && !document.getElementById('btnNext')) {
+        const actionsEl = document.querySelector('#stepContent .actions');
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.id = 'btnNext';
+        btn.textContent = 'Próximo →';
+        actionsEl.appendChild(btn);
+        wireNextButton();
+      }
+    } else {
+      logLine('❌ Ainda não! Ajuste o código e tente de novo.', 'fail');
+    }
+  });
+
+  wireNextButton();
+}
+
+function renderEscolha(step) {
+  const savedId = step.id === 'visual-esc' ? state.visualEscolha : state.somEscolha;
+  stepContentEl.innerHTML = `
+    <div class="card">
+      <h2>🎨 ${step.title}</h2>
+      <div class="escolha-grid" id="escolhaGrid"></div>
+      <div class="actions"><button class="btn btn-secondary" id="btnNextEscolha" style="display:${savedId ? 'inline-block' : 'none'};">Próximo →</button></div>
+    </div>
+  `;
+  const grid = document.getElementById('escolhaGrid');
+  step.opcoes.forEach(opt => {
+    const el = document.createElement('div');
+    el.className = 'escolha-opt' + (opt.id === savedId ? ' selected' : '');
+    const swatchColor = opt.tema ? opt.tema.head : '#7cff3f';
+    el.innerHTML = `<div class="escolha-swatch" style="background:${swatchColor};"></div><div>${opt.label}</div>`;
+    el.addEventListener('click', () => {
+      if (opt.tema) { tema = opt.tema; state.visualEscolha = opt.id; }
+      if (opt.som) { somPreset = opt.som; state.somEscolha = opt.id; }
+      saveState();
+      markDone(step.id);
+      renderEscolha(step);
+    });
+    grid.appendChild(el);
+  });
+  const btnNextEscolha = document.getElementById('btnNextEscolha');
+  if (btnNextEscolha) {
+    btnNextEscolha.addEventListener('click', () => {
+      const idx = STEPS.findIndex(s => s.id === step.id);
+      selectStep(idx + 1);
+    });
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderVisto() {
+  progressFill.style.width = '100%';
+  lblStepNum.textContent = STEPS.length + 1;
+  if (typeof window.reportActivity === 'function') {
+    window.reportActivity('cobrinha_construcao', 'Construa seu Jogo: Cobrinha — Visto do professor', { step: STEPS.length + 1, total: STEPS.length });
+  }
+
+  const already = loadProgress();
+  if (already && already.completed) {
+    const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+    stepContentEl.innerHTML = `
+      <div class="card visto-box">
+        <h2>✅ Jogo entregue!</h2>
+        <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+      </div>
+    `;
+    return;
+  }
+
+  stepContentEl.innerHTML = `
+    <div class="card visto-box">
+      <h2>🧑‍🏫 Entrega — Visto do professor</h2>
+      <p>Seu jogo está pronto! Chame o professor, mostre ele jogando ali do lado (setas do teclado) e explique como cada função que você escreveu se encaixa no jogo.</p>
+      <p>Quando ele confirmar que está tudo certo, peça pra ele digitar a própria credencial de login do portal abaixo — é assim que a atividade é marcada como concluída.</p>
+      <div class="visto-form">
+        <label>Usuário do professor
+          <input type="text" id="vistoUser" autocomplete="off">
+        </label>
+        <label>Senha do professor
+          <input type="password" id="vistoSenha" autocomplete="off">
+        </label>
+        <button class="btn" id="btnDarVisto">Dar visto</button>
+        <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+      </div>
+    </div>
+  `;
+
+  const btnDarVisto = document.getElementById('btnDarVisto');
+  const vistoMsg = document.getElementById('vistoMsg');
+  btnDarVisto.addEventListener('click', async () => {
+    const u = document.getElementById('vistoUser').value;
+    const p = document.getElementById('vistoSenha').value;
+    vistoMsg.style.display = 'none';
+    if (!u || !p) {
+      vistoMsg.className = 'visto-msg erro';
+      vistoMsg.textContent = 'Informe usuário e senha do professor.';
+      vistoMsg.style.display = 'block';
+      return;
+    }
+    btnDarVisto.disabled = true;
+    btnDarVisto.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificar(u, p)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = result.erro;
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+        return;
+      }
+      saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+      renderVisto();
+    } catch (e) {
+      vistoMsg.className = 'visto-msg erro';
+      vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      vistoMsg.style.display = 'block';
+      btnDarVisto.disabled = false;
+      btnDarVisto.textContent = 'Dar visto';
+    }
+  });
+}
+
+window.generateGabaritoForGestao = function () {
+  return window.PortalGabarito.generate({
+    title: 'Construa seu Jogo: Cobrinha — Gabarito de referência',
+    subtitle: 'Prática · Trilha Codificação de Jogos · Turma Jogos Digitais',
+    items: STEPS.filter(s => s.type === 'desafio').map((s, i) => ({
+      number: i + 1,
+      title: s.title,
+      prompt: s.desc.replace(/<[^>]+>/g, ''),
+      options: [],
+      correctIndex: 0,
+      answer: `função ${s.fnName}(...) — ver testes no código-fonte da atividade`
+    })),
+    fileName: 'cobrinha-construcao-gabarito.txt'
+  });
+};
+
+rebuildFromState();
+renderSidebar();
+selectStep(selectedIndex);
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>
