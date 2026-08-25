@@ -65,3 +65,63 @@ ritmo, como as atividades atuais).
 - Vale entender melhor com o professor um ou dois exemplos concretos de
   "problema proposto" antes de desenhar qualquer coisa — o formato certo
   depende muito do que essa dinâmica precisa suportar na prática.
+
+## Correção mais flexível nos desafios de código de verdade
+
+**Status:** pendente — problema identificado pelo professor em sala
+(alunos travando nos desafios), ainda sem solução definida.
+
+**Onde:** todo módulo de prática onde o aluno escreve código de verdade
+num editor (não é múltipla escolha) roda a checagem por igualdade
+estrita, comparando o valor produzido pelo código do aluno com um
+`expected` fixo — mas com pelo menos 3 implementações bespoke diferentes
+hoje, cada uma com sua própria rigidez:
+
+- `turmas/jogos/atividades/js-basico.html`: exige uma variável com nome
+  **exato** (`resultVar`, sempre `'resultado'` nesse arquivo) — se o
+  aluno guardar o resultado numa variável chamada `soma` ou `total`
+  (nomes tão ou mais naturais que `resultado`), o desafio diz que a
+  variável não foi criada, mesmo com a lógica 100% correta.
+- `turmas/jogos/atividades/js-intermediario.html` e `cod-poo-pratica.html`:
+  mesma ideia, mas com nome de **função** exato (`fnName`).
+- `turmas/jogos/atividades/cod-linguagens-pratica.html`,
+  `cod-seguranca-debug-pratica.html`, `cod-agil-clean-pratica.html`,
+  `cod-seguranca-ia-pratica.html`, `fund-logica-pratica.html`,
+  `fund-prog2d-pratica.html`: variações do mesmo padrão.
+- `shared/js-challenge-engine.js` (usado só em
+  `turmas/sistemas/atividades/js-fundamentos-basico.html`/
+  `-intermediario.html`): já é compartilhado entre esses dois arquivos,
+  mas tem o mesmo problema de fundo — `check.type: 'console'` compara a
+  lista inteira de saídas de `console.log`/`alert` com
+  `JSON.stringify(result) === JSON.stringify(expected)`, texto exato,
+  então formatação/pontuação diferente da esperada também reprova mesmo
+  quando o raciocínio do aluno está certo.
+
+**Objetivo:** um aluno que resolveu o problema de um jeito correto, mas
+ligeiramente diferente do "gabarito" esperado (nome de variável/função
+diferente, texto de `console.log` com espaçamento/pontuação diferente,
+resultado certo por outro caminho de código), hoje é bloqueado sem
+conseguir avançar — o console só mostra "❌ Ainda não!" ou "a variável/
+função 'X' não foi criada", sem indicar que o problema é só o nome
+escolhido, não a lógica.
+
+**Próximos passos (ainda não decidido, discutir antes de implementar):**
+- Nome de variável/função: dá pra aceitar qualquer nome (inspecionando
+  todas as variáveis/funções declaradas no escopo em vez de procurar um
+  nome fixo) ou o exercício quer ensinar justamente a seguir um nome
+  combinado (ex.: convenção de equipe)? Se for o segundo caso, a solução
+  é melhorar a mensagem de erro pra deixar isso explícito, não afrouxar
+  a checagem.
+- Texto de `console.log`: normalizar espaços/maiúsculas/pontuação antes
+  de comparar resolveria a maior parte dos casos, sem abrir mão de
+  checar o conteúdo.
+- Isso é uma refatoração pra unificar as ~9 implementações bespoke da
+  turma Jogos numa engine só (aproveitando/estendendo
+  `shared/js-challenge-engine.js`, que já existe mas só é usado em 2
+  arquivos da turma Sistemas), ou dá pra resolver módulo a módulo sem
+  mexer na arquitetura?
+- Ficou definido, numa conversa anterior, **não** seguir pelo caminho de
+  uma IA avaliando a resposta do aluno — complexo demais pra manter de
+  graça com qualidade e consistência. A solução aqui deve continuar
+  sendo determinística (regras de normalização/inspeção de escopo), não
+  um modelo de linguagem.
