@@ -76,9 +76,9 @@ body{
    como "active" incorretamente pela lógica de troca de aba). */
 .quick-action-btn{
   font-family:inherit; font-weight:800; font-size:11px; letter-spacing:0.5px; text-transform:uppercase;
-  background:transparent; border:1px dashed var(--line); padding:7px 12px; cursor:pointer; border-radius:2px;
+  background:transparent; color:var(--ink-dim); border:1px dashed var(--line); padding:7px 12px; cursor:pointer; border-radius:2px;
 }
-.quick-action-btn:hover{ border-style:solid; }
+.quick-action-btn:hover{ color:var(--ink); border-style:solid; border-color:var(--ink-dim); }
 
 /* Sub-navegação de trilha: 2+ trilhas viram um <select> só (mais conciso
    que uma fileira de botões, e usa o seletor nativo no celular); com 1
