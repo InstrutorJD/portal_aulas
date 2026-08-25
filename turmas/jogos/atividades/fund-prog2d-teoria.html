@@ -145,9 +145,9 @@
         prompt: 'Um personagem se move UMA vez quando a tecla é pressionada, mas não continua andando enquanto o jogador segura a tecla. O que a lógica de movimentação provavelmente está tratando errado?',
         options: [
           'Ela só reage ao evento único de "tecla pressionada", em vez de checar o ESTADO da tecla a cada frame do game loop',
-          'O teclado do jogador está com defeito e só consegue registrar o primeiro toque de cada tecla',
-          'O personagem está sem um sprite de caminhada configurado, então a engine ignora o movimento',
-          'Isso é esperado — por padrão, todo personagem só deveria se mover uma vez a cada tecla pressionada'
+          'O teclado do jogador está com defeito e só consegue registrar o primeiro toque de cada tecla, nunca os seguintes',
+          'O personagem está sem um sprite de caminhada configurado, então a engine ignora completamente o comando do teclado',
+          'Isso é esperado — por padrão, todo personagem só deveria se mover uma vez a cada tecla pressionada no jogo'
         ],
         correctIndex: 0,
         explanation: 'Isso! Pra movimento contínuo, o jogo precisa checar "essa tecla está pressionada agora?" a cada frame, não só reagir ao evento único de tecla pressionada.'
@@ -159,9 +159,9 @@
         prompt: 'Num jogo do tipo "clique para mover", o que o código precisa capturar no momento do clique pra saber pra onde o personagem deve ir?',
         options: [
           'A posição (coordenadas X e Y) do cursor do mouse no momento do clique',
-          'A cor do pixel clicado',
-          'O nome do arquivo do sprite',
-          'A velocidade de rolagem da roda do mouse'
+          'A cor do pixel exato que foi clicado na tela do jogo naquele instante',
+          'O nome do arquivo de imagem usado pelo sprite atual do personagem',
+          'A velocidade de rolagem da roda do mouse durante o clique do jogador'
         ],
         correctIndex: 0,
         explanation: 'Exato! É a posição X, Y do clique que vira o destino do movimento (ou a direção de mira, dependendo do tipo de jogo).'
@@ -175,7 +175,7 @@
           'Os elementos não têm colisores configurados corretamente (ou os colisores não estão realmente se sobrepondo)',
           'O jogo está rodando rápido demais, e o motor gráfico pula frames de detecção pra manter o desempenho',
           'A cor dos sprites está errada, o que impede o motor de reconhecer os dois elementos como distintos',
-          'Colisão nunca pode ser detectada em jogos 2D, só funciona em jogos com física tridimensional'
+          'Colisão nunca pode ser detectada em jogos 2D, só funciona em jogos com física totalmente tridimensional'
         ],
         correctIndex: 0,
         explanation: 'Isso! Sem um colisor bem configurado (e de fato sobreposto), o motor do jogo não tem como saber que os dois elementos "se tocaram" — a aparência visual sozinha não conta.'
@@ -187,9 +187,9 @@
         prompt: 'Um inimigo deveria começar a perseguir o jogador assim que ele entra num raio de detecção, mas o inimigo nunca reage. Que peça do fluxo de eventos provavelmente está faltando?',
         options: [
           'Um evento de colisão/detecção (jogador entrou na área) que dispara a mudança de comportamento do inimigo',
-          'Uma nova textura para o inimigo, pra ele ficar visualmente mais ameaçador durante o combate',
-          'Mais luzes na cena, pra deixar a área de detecção mais visível pro jogador enxergar',
-          'Um botão de pausa que interrompe temporariamente a lógica de todos os inimigos da fase'
+          'Uma nova textura para o inimigo, pra ele ficar visualmente mais ameaçador durante o combate contra o jogador',
+          'Mais luzes na cena, pra deixar a área de detecção do inimigo mais visível pro jogador conseguir enxergar',
+          'Um botão de pausa que interrompe temporariamente a lógica de todos os inimigos presentes na fase atual'
         ],
         correctIndex: 0,
         explanation: 'Correto! Sem o evento de detecção disparando a mudança de estado do inimigo, ele nunca "sabe" que o jogador chegou perto.'
@@ -201,9 +201,9 @@
         prompt: 'Por que separar o código do jogo em "inicialização", "atualização" e "renderização", em vez de escrever tudo misturado num bloco só?',
         options: [
           'Porque fica mais fácil entender, manter e depurar cada responsabilidade separadamente',
-          'Porque isso deixa o jogo rodar em menos frames por segundo de propósito',
-          'Porque engines exigem por lei essa separação',
-          'Não existe vantagem real, é só estética'
+          'Porque isso deixa o jogo rodar em menos frames por segundo de propósito, economizando bateria',
+          'Porque as engines mais usadas do mercado exigem por lei essa separação de responsabilidades',
+          'Não existe vantagem real nisso, é só uma questão de estética visual do código-fonte'
         ],
         correctIndex: 0,
         explanation: 'Isso! Separar essas responsabilidades deixa o código muito mais organizado, fácil de entender e de corrigir quando algo dá errado.'
@@ -244,7 +244,7 @@
         options: [
           'Atualizar a representação visual (a barra de vida) a cada frame, lendo o valor de vida atual do objeto',
           'Aumentar o dano causado ao inimigo, pra vida cair mais rápido e o problema ficar menos perceptível',
-          'Trocar o sprite do inimigo por um modelo mais detalhado, sem relação com a barra de vida',
+          'Trocar o sprite do inimigo por um modelo bem mais detalhado, mesmo sem nenhuma relação com a barra de vida',
           'Remover o inimigo da cena assim que a vida chega a zero, sem nenhuma atualização durante o combate'
         ],
         correctIndex: 0,
@@ -257,9 +257,9 @@
         prompt: 'Um jogo cria e destrói centenas de projéteis por segundo durante tiroteios intensos, e a taxa de quadros despenca nesses momentos. Qual técnica ajudaria a resolver esse problema de desempenho?',
         options: [
           'Object pooling: reaproveitar um conjunto de projéteis já criados, em vez de criar/destruir a cada disparo',
-          'Aumentar o dano de cada projétil, pra precisar disparar menos vezes durante o combate',
-          'Reduzir a cor dos projéteis para preto e branco, economizando processamento de renderização',
-          'Remover o som dos disparos, já que áudio é o que mais pesa no desempenho de um tiroteio'
+          'Aumentar o dano de cada projétil, pra precisar disparar menos vezes durante o combate mais intenso',
+          'Reduzir a cor dos projéteis para preto e branco, economizando processamento de renderização gráfica',
+          'Remover o som dos disparos, já que áudio é sempre o que mais pesa no desempenho de um tiroteio'
         ],
         correctIndex: 0,
         explanation: 'Exato! Reaproveitar objetos existentes (object pooling) evita o custo repetido de criar e destruir instâncias, aliviando bastante o desempenho em momentos intensos.'
@@ -271,9 +271,9 @@
         prompt: 'Um jogo usa teclado (WASD) pra mover o personagem e mouse pra mirar ao mesmo tempo, mas só a mira do mouse funciona — o personagem não anda mais com o teclado. O que a lógica do game loop provavelmente está fazendo de errado?',
         options: [
           'Está processando só uma fonte de entrada por frame (mouse), em vez de checar teclado E mouse a cada volta do loop',
-          'O mouse está com defeito e está enviando sinais constantes que travam a leitura do teclado',
-          'É impossível usar teclado e mouse ao mesmo tempo — todo motor só lê uma entrada por frame',
-          'O teclado do jogador precisa ser trocado por um controle, já que teclados não combinam com mira'
+          'O mouse está com defeito e está enviando sinais constantes que travam completamente a leitura do teclado',
+          'É impossível usar teclado e mouse ao mesmo tempo — todo motor de jogo só lê uma entrada por frame',
+          'O teclado do jogador precisa ser trocado por um controle, já que teclados não combinam bem com mira'
         ],
         correctIndex: 0,
         explanation: 'Correto! O game loop precisa checar todas as entradas relevantes (teclado E mouse) a cada frame — se só uma for processada, a outra "trava".'

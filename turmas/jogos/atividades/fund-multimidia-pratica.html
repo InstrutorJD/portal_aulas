@@ -196,9 +196,9 @@
       hint: 'Pense no passo entre "arquivo dentro do projeto" e "elemento visível na cena".',
       options: [
         'Associar a imagem a um objeto do jogo e definir sua posição na cena, via código',
-        'Aumentar o brilho da imagem',
-        'Renomear o arquivo pra maiúsculas',
-        'Isso é impossível de resolver, é preciso trocar de engine'
+        'Aumentar o brilho da imagem nas configurações do projeto, sem alterar nenhuma linha de código',
+        'Renomear o arquivo pra letras maiúsculas antes de importar de novo pro projeto',
+        'Isso é impossível de resolver, é preciso trocar de engine pra uma mais recente'
       ],
       correctIndex: 0
     },
@@ -211,9 +211,9 @@
       hint: 'Pense em como você organizaria uma gaveta bagunçada com centenas de itens misturados.',
       options: [
         'Organizar os assets em pastas por categoria, com nomes descritivos',
-        'Apagar metade dos arquivos aleatoriamente',
-        'Comprimir tudo num único arquivo ZIP e nunca mais abrir',
-        'Aumentar a resolução de todas as imagens'
+        'Apagar metade dos arquivos aleatoriamente até sobrar só os mais recentes',
+        'Comprimir tudo num único arquivo ZIP e nunca mais abrir esse projeto',
+        'Aumentar a resolução de todas as imagens da pasta de uma vez'
       ],
       correctIndex: 0
     },
@@ -226,9 +226,9 @@
       hint: 'Pense em qual evento deveria "avisar" o sistema de áudio pra tocar o efeito.',
       options: [
         'O evento de colisão não está disparando a reprodução do efeito sonoro de dano',
-        'O volume geral do jogo está desligado',
-        'O arquivo de imagem do inimigo está corrompido',
-        'Efeitos sonoros de dano não são possíveis em jogos 2D'
+        'O volume geral do jogo está desligado nas configurações de áudio do sistema',
+        'O arquivo de imagem do inimigo está corrompido e precisa ser reimportado',
+        'Efeitos sonoros de dano não são tecnicamente possíveis em jogos 2D'
       ],
       correctIndex: 0
     },
@@ -241,9 +241,9 @@
       hint: 'Pense num "histórico" de pontos anteriores do projeto que se pode consultar ou restaurar.',
       options: [
         'Permitindo comparar ou voltar para um commit anterior que ainda funcionava',
-        'Apagando o bug automaticamente',
-        'Aumentando a velocidade do computador',
-        'O versionamento não ajuda nesse tipo de situação'
+        'Apagando o bug automaticamente assim que o commit for enviado ao repositório',
+        'Aumentando a velocidade de processamento do computador do desenvolvedor',
+        'O versionamento de código não ajuda nesse tipo de situação específica'
       ],
       correctIndex: 0
     },
@@ -256,9 +256,9 @@
       hint: 'O Git não resolve isso sozinho — pense em quem realmente precisa decidir.',
       options: [
         'Decidir manualmente qual mudança (ou combinação delas) deve ficar, antes de continuar',
-        'Apagar o projeto e recomeçar do zero',
-        'Ignorar o aviso e continuar trabalhando normalmente',
-        'Formatar o computador de um dos dois colegas'
+        'Apagar o projeto inteiro e recomeçar o desenvolvimento do zero',
+        'Ignorar o aviso do Git e continuar trabalhando normalmente no arquivo',
+        'Formatar o computador de um dos dois colegas envolvidos no conflito'
       ],
       correctIndex: 0
     },
@@ -271,9 +271,9 @@
       hint: 'Pense num flipbook: são vários quadros trocados rapidamente que criam a ilusão de movimento.',
       options: [
         'Trocar qual frame da spritesheet é exibido em intervalos regulares, criando a animação',
-        'Aumentar a velocidade de movimento do personagem',
-        'Trocar a cor do personagem',
-        'Redesenhar o sprite inteiro do zero'
+        'Aumentar a velocidade de movimento do personagem pelo cenário do jogo',
+        'Trocar a cor do personagem inteiro pra destacar ele melhor na tela do jogo',
+        'Redesenhar o sprite inteiro do zero, numa resolução bem maior que a atual'
       ],
       correctIndex: 0
     },
@@ -286,9 +286,9 @@
       hint: 'Pense na diferença entre "tocar uma vez" e "repetir sem parar" num player de áudio.',
       options: [
         'A opção de tocar a música em loop (repetir ao chegar no final)',
-        'O volume geral do jogo',
-        'A resolução do arquivo de áudio',
-        'A cor de fundo da tela'
+        'O volume geral do jogo nas configurações de áudio',
+        'A resolução do arquivo de áudio usado na trilha',
+        'A cor de fundo da tela durante a reprodução'
       ],
       correctIndex: 0
     },
@@ -301,9 +301,9 @@
       hint: 'Pense em isolar o trabalho "ainda não pronto" longe do código que todo mundo usa.',
       options: [
         'Desenvolver o recurso numa branch separada, só unindo à main quando estivesse pronto e testado',
-        'Trabalhar sempre sozinho, sem nunca usar Git em equipe',
-        'Apagar o código de um dos dois desenvolvedores',
-        'Isso não tem relação com branches'
+        'Trabalhar sempre sozinho no projeto, sem nunca usar Git em equipe com outras pessoas',
+        'Apagar o código de um dos dois desenvolvedores pra evitar o conflito',
+        'Isso não tem relação nenhuma com o uso de branches no Git'
       ],
       correctIndex: 0
     },
@@ -316,9 +316,9 @@
       hint: 'Pense num arquivo que diz ao Git "nunca versione isto aqui".',
       options: [
         'Listar a pasta de build num arquivo .gitignore, pra o Git nunca versionar esse conteúdo',
-        'Apagar o Git do projeto por completo',
-        'Compactar a pasta de build antes de cada commit',
-        'Isso é normal e não há como evitar'
+        'Apagar o Git do projeto por completo e recomeçar o versionamento do zero',
+        'Compactar a pasta de build inteira antes de cada commit pro repositório',
+        'Isso é completamente normal em qualquer projeto e não há como evitar'
       ],
       correctIndex: 0
     },
@@ -331,9 +331,9 @@
       hint: 'Pense no que uma mensagem de commit deveria descrever, além de só "corrigi algo".',
       options: [
         'Fazer commits menores e mais frequentes, com mensagens descritivas do que de fato mudou',
-        'Nunca fazer commits, só salvar localmente',
-        'Apagar o histórico de commits antigo',
-        'Commitar o projeto inteiro de uma vez só, no final'
+        'Nunca fazer commits, só salvar as alterações localmente no computador',
+        'Apagar o histórico de commits antigo pra deixar o repositório limpo',
+        'Commitar o projeto inteiro de uma vez só, sempre no final do dia'
       ],
       correctIndex: 0
     }

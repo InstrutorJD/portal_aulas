@@ -145,9 +145,9 @@
         prompt: 'Depois de importar a imagem de um personagem pro projeto, o que ainda falta pra ela realmente aparecer na posição certa, dentro do jogo em execução?',
         options: [
           'Associar a imagem a um objeto do jogo e definir sua posição/comportamento no código',
-          'Nada, a imagem aparece sozinha assim que é importada',
-          'Trocar o nome do arquivo pra "sprite.png"',
-          'Aumentar o zoom da engine'
+          'Nada, a imagem já aparece sozinha na tela assim que é importada pro projeto',
+          'Trocar o nome do arquivo de imagem pra "sprite.png" antes de importar',
+          'Aumentar o zoom da câmera da engine até a imagem aparecer'
         ],
         correctIndex: 0,
         explanation: 'Isso! Importar a imagem é só o primeiro passo — é o código que associa esse sprite a um objeto do jogo e define onde/como ele se comporta na tela.'
@@ -159,9 +159,9 @@
         prompt: 'Um projeto tem centenas de imagens soltas, todas na mesma pasta, com nomes tipo "img1.png", "img2.png"... e o time está perdendo tempo procurando cada asset. Qual prática de integração de assets resolveria isso?',
         options: [
           'Organizar os assets em pastas por categoria, com nomes descritivos e consistentes',
-          'Apagar metade das imagens sem critério',
-          'Aumentar a resolução de todas as imagens',
-          'Colocar todos os assets num único arquivo de texto'
+          'Apagar metade das imagens do projeto sem nenhum critério de escolha',
+          'Aumentar a resolução de todas as imagens da pasta de uma vez',
+          'Comprimir todos os assets soltos dentro de um único arquivo zip'
         ],
         correctIndex: 0,
         explanation: 'Exato! Organização em pastas por categoria, com nomes claros, é o que evita a bagunça de assets à medida que o projeto cresce.'
@@ -173,9 +173,9 @@
         prompt: 'Um jogo deveria tocar um som de "dano" toda vez que o personagem colide com um inimigo, mas o som nunca toca. Qual é a causa mais provável?',
         options: [
           'O evento de colisão não está disparando a reprodução do efeito sonoro correspondente',
-          'O arquivo de áudio está com a cor errada',
-          'O jogo está sem sprites',
-          'Sons de dano nunca podem ser implementados em jogos 2D'
+          'O arquivo de áudio de dano foi salvo com a extensão de arquivo errada',
+          'O jogo não tem nenhum sprite de personagem inimigo configurado ainda',
+          'Sons de dano nunca podem ser implementados corretamente em jogos 2D'
         ],
         correctIndex: 0,
         explanation: 'Isso mesmo! Assim como eventos disparam mudanças visuais, eles também precisam disparar a reprodução do som certo no momento certo.'
@@ -187,9 +187,9 @@
         prompt: 'Um desenvolvedor fez uma mudança grande no código, o jogo parou de funcionar, e ele não lembra exatamente o que mudou. Como o versionamento de código ajudaria nessa situação?',
         options: [
           'Permitindo comparar ou voltar para uma versão anterior (commit) que ainda funcionava',
-          'Apagando automaticamente o código com bug',
-          'Impedindo que erros aconteçam no futuro',
-          'Só serve pra times grandes, não ajuda em nada sozinho'
+          'Apagando automaticamente qualquer linha de código que tiver algum bug',
+          'Impedindo que qualquer tipo de erro de código aconteça no futuro',
+          'Só serve pra times grandes, não ajuda ninguém trabalhando sozinho'
         ],
         correctIndex: 0,
         explanation: 'Correto! O histórico de commits permite comparar versões e voltar pra um estado anterior funcional — uma rede de segurança essencial em qualquer projeto.'
@@ -201,9 +201,9 @@
         prompt: 'Dois colegas editaram a mesma linha do mesmo arquivo de código, cada um no seu computador, e agora o Git avisa sobre um "conflito de merge" ao tentar juntar as mudanças. O que isso significa?',
         options: [
           'É preciso decidir manualmente qual das duas mudanças (ou uma combinação delas) deve ficar, antes de continuar',
-          'O projeto foi corrompido de forma irreversível e precisa ser recriado do zero',
-          'Um dos dois computadores envolvidos na edição está com vírus',
-          'O Git sempre resolve esse tipo de conflito sozinho, sem precisar de intervenção humana'
+          'O projeto foi corrompido de forma irreversível pelo conflito e precisa ser recriado do zero',
+          'Um dos dois computadores envolvidos na edição foi infectado por vírus',
+          'O Git sempre resolve esse tipo de conflito automaticamente sozinho, sem nenhuma intervenção humana'
         ],
         correctIndex: 0,
         explanation: 'Isso! Um conflito de merge exige decisão humana — o Git avisa quando duas mudanças colidem, mas não escolhe sozinho qual delas deve prevalecer.'
@@ -215,9 +215,9 @@
         prompt: 'Um personagem se move pelo cenário, mas o sprite dele fica completamente parado, sem nenhuma animação de "andar". O que provavelmente falta?',
         options: [
           'Trocar qual frame da spritesheet é exibido em intervalos regulares, criando a animação de andar',
-          'Aumentar a velocidade de movimento do personagem',
-          'Trocar a cor do personagem',
-          'Isso é impossível de resolver sem redesenhar o sprite inteiro'
+          'Aumentar bastante a velocidade de movimento do personagem pelo cenário',
+          'Trocar a cor do personagem principal do jogo pra outra cor qualquer',
+          'Isso é impossível de resolver sem redesenhar o sprite do personagem inteiro'
         ],
         correctIndex: 0,
         explanation: 'Exato! Sem alternar os frames da spritesheet ao longo do tempo, o sprite fica estático mesmo se movendo pelo cenário — a animação depende dessa troca de quadros.'
@@ -229,9 +229,9 @@
         prompt: 'A música de fundo de um jogo toca normalmente, mas silencia completamente depois de alguns minutos, sem motivo aparente — o jogador percebe que era só a duração do arquivo. O que provavelmente não foi configurado?',
         options: [
           'A opção de tocar a música em loop (repetir ao chegar no final)',
-          'O volume geral do jogo',
-          'A resolução do arquivo de áudio',
-          'A cor de fundo da tela'
+          'O volume geral configurado nas opções de áudio do jogo',
+          'A resolução do arquivo de áudio usado na trilha sonora',
+          'A cor de fundo configurada na tela principal do jogo'
         ],
         correctIndex: 0,
         explanation: 'Isso! Música de fundo precisa ser configurada explicitamente pra repetir (loop) — sem isso, ela simplesmente para quando o arquivo termina.'
@@ -243,9 +243,9 @@
         prompt: 'Dois desenvolvedores editam código direto na branch principal (main) ao mesmo tempo, e um recurso ainda incompleto quebra o jogo pra todo mundo do time. O que uma estratégia de branches teria evitado?',
         options: [
           'Desenvolver o recurso novo numa branch separada, só unindo (merge) à main quando estivesse pronto e testado',
-          'Trabalhar sempre sozinho, sem nunca usar Git em equipe pra evitar esse tipo de conflito',
-          'Apagar o código de um dos dois desenvolvedores pra ficar só uma versão na main',
-          'Branches não têm relação nenhuma com esse tipo de problema de código incompleto'
+          'Trabalhar sempre sozinho, sem nunca usar Git em equipe, pra evitar esse tipo de conflito de código',
+          'Apagar o código de um dos dois desenvolvedores pra sobrar só uma versão na main',
+          'Branches não têm relação nenhuma com esse tipo específico de problema de código incompleto'
         ],
         correctIndex: 0,
         explanation: 'Correto! Isolar trabalho em progresso numa branch separada protege a main de ficar quebrada por código ainda incompleto.'
@@ -257,9 +257,9 @@
         prompt: 'O repositório de um projeto ficou enorme e lento porque a pasta inteira de "build" (gerada automaticamente a cada compilação) está sendo versionada junto com o código-fonte. Qual prática evitaria isso?',
         options: [
           'Listar a pasta de build num arquivo .gitignore, pra o Git nunca versionar esse conteúdo gerado',
-          'Apagar o Git do projeto por completo e parar de usar controle de versão',
-          'Compactar a pasta de build num arquivo zip antes de cada commit novo',
-          'Isso é normal em qualquer projeto e não há nenhuma forma de evitar'
+          'Apagar o Git do projeto por completo e parar de usar controle de versão nele',
+          'Compactar a pasta de build inteira num arquivo zip antes de cada commit novo',
+          'Isso é normal em qualquer projeto grande e não há nenhuma forma de evitar'
         ],
         correctIndex: 0,
         explanation: 'Isso! O .gitignore existe exatamente pra manter arquivos gerados/temporários fora do controle de versão, mantendo o repositório limpo e leve.'
@@ -271,9 +271,9 @@
         prompt: 'Um projeto tem um histórico de commits cheio de mensagens como "fix", "fix2", "ajustes finais v3" — e ninguém consegue entender o que mudou em cada um sem abrir o código inteiro. O que deveria ter sido feito diferente?',
         options: [
           'Fazer commits menores e mais frequentes, com mensagens descritivas do que de fato mudou',
-          'Nunca fazer commits, só salvar o projeto localmente',
-          'Apagar o histórico de commits antigo',
-          'Commitar o projeto inteiro de uma vez só, no final do desenvolvimento'
+          'Nunca fazer commits, só salvar o projeto localmente no computador',
+          'Apagar o histórico de commits antigo sempre que possível',
+          'Commitar o projeto inteiro de uma vez só, bem no final de todo o desenvolvimento'
         ],
         correctIndex: 0,
         explanation: 'Exato! Commits pequenos e bem descritos tornam o histórico do projeto uma ferramenta útil, não só uma obrigação — facilita entender e reverter mudanças específicas.'
