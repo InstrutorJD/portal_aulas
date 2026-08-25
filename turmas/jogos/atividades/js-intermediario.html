@@ -397,7 +397,9 @@
       starter: 'function retirarUltimo(linha) {\n  // retorne um NOVO array sem o ÚLTIMO item de linha\n\n}',
       explanation: 'O método <code>.slice()</code> recorta uma parte de um array, sem alterar o original. Com número negativo, ele conta a partir do FIM.<pre>let lista = [1, 2, 3, 4];\nlista.slice(0, -1);\n// [1, 2, 3] — todo mundo, menos o último</pre>',
       desc: 'O <b>Cronomante</b> ⏳ exige que você recue exatamente um passo no tempo. Complete <code>retirarUltimo(linha)</code> retornando um novo array com todos os itens de <code>linha</code>, EXCETO o último.',
-      hint: '<code>.slice(0, -1)</code> resolve isso numa linha só — o -1 marca "até antes do último".',
+      hint: `O método .slice() aceita onde começar e onde parar o recorte, e aceita índices negativos pra contar a partir do FIM. Exemplo de outro contexto (removendo o PRIMEIRO item, não o último):<pre><code>function semPrimeiro(lista) {
+  return lista.slice(1);
+}</code></pre>Pense em como adaptar isso pra remover o ÚLTIMO item em vez do primeiro.`,
       tests: [
         { args: [[1, 2, 3, 4]], expected: [1, 2, 3] },
         { args: [['a']], expected: [] },
