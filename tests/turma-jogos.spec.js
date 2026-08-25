@@ -18,6 +18,7 @@ function seedAllModulesComplete(user) {
   // conteúdo, exceto Projeto de Vida (5 perguntas — ver [[project_jogos_5_perguntas_pratica]]).
   const dez = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const cinco = [1, 2, 3, 4, 5];
+  const dezoito = Array.from({ length: 18 }, (_, i) => i + 1);
   const teoriaFlag = [
     'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
     'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
@@ -41,7 +42,7 @@ function seedAllModulesComplete(user) {
   ];
   praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
   localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
-  localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dez));
+  localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dezoito));
 
   const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
   praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));

@@ -486,7 +486,7 @@ window.TURMA_CONFIG_JOGOS = {
               key: 'intermediario', title: 'Intermediário — Desafios de JavaScript',
               desc: 'Vença cada adversário em ordem para avançar. Derrotar um duelo libera o próximo.',
               icon: '🟧', src: 'atividades/js-intermediario.html',
-              progressKey: 'js_intermediario_progress_', progressTotal: 10,
+              progressKey: 'js_intermediario_progress_', progressTotal: 18,
               hasGabarito: true
             }
           ]

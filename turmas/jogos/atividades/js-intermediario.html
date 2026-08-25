@@ -343,6 +343,132 @@
     },
     {
       id: 10,
+      title: 'Invocar um Aliado',
+      enemyName: 'Espectro Sem Forma',
+      enemyEmoji: '👻',
+      fnName: 'invocarAliado',
+      starter: 'function invocarAliado(nome, vida) {\n  // retorne um objeto com as propriedades nome e vida\n\n}',
+      explanation: 'Um <b>objeto</b> guarda várias informações relacionadas numa coisa só, cada uma com um nome (chave) e um valor.<pre>let produto = { titulo: "Poção", preco: 20 };\n// produto.titulo é "Poção"</pre>Pra criar um objeto, use chaves <code>{ }</code> com pares <code>chave: valor</code> separados por vírgula.',
+      desc: 'O <b>Espectro Sem Forma</b> 👻 só assume um corpo sólido se você invocar um aliado de verdade. Complete <code>invocarAliado(nome, vida)</code> retornando um <b>objeto</b> com duas propriedades: <code>nome</code> (igual ao parâmetro recebido) e <code>vida</code> (igual ao parâmetro recebido).',
+      hint: 'Um objeto pode ter propriedades com o MESMO nome dos parâmetros. Exemplo de outro contexto:<pre><code>function criarItem(titulo, preco) {\n  return { titulo: titulo, preco: preco };\n}</code></pre>',
+      tests: [
+        { args: ['Kael', 100], expected: { nome: 'Kael', vida: 100 } },
+        { args: ['Lyra', 80], expected: { nome: 'Lyra', vida: 80 } },
+        { args: ['Bram', 1], expected: { nome: 'Bram', vida: 1 } }
+      ]
+    },
+    {
+      id: 11,
+      title: 'Consultar o Aliado',
+      enemyName: 'Guardião do Pergaminho',
+      enemyEmoji: '📜',
+      fnName: 'consultarAliado',
+      starter: 'function consultarAliado(aliado) {\n  // retorne só a vida do aliado (a propriedade vida do objeto)\n\n}',
+      explanation: 'Pra ler uma propriedade de um objeto, use um ponto entre o objeto e o nome da propriedade.<pre>let produto = { titulo: "Poção", preco: 20 };\nproduto.preco;   // 20</pre>',
+      desc: 'O <b>Guardião do Pergaminho</b> 📜 só revela o segredo se você souber ler a ficha certa. Complete <code>consultarAliado(aliado)</code> — ele recebe um objeto com <code>nome</code> e <code>vida</code> — retornando só o valor da propriedade <code>vida</code>.',
+      hint: 'Use o ponto pra acessar a propriedade certa dentro do objeto recebido. Exemplo de outro contexto:<pre><code>function precoDoItem(item) {\n  return item.preco;\n}</code></pre>',
+      tests: [
+        { args: [{ nome: 'Kael', vida: 100 }], expected: 100 },
+        { args: [{ nome: 'Lyra', vida: 80 }], expected: 80 }
+      ]
+    },
+    {
+      id: 12,
+      title: 'Reforço na Linha de Frente',
+      enemyName: 'Vanguarda Sombria',
+      enemyEmoji: '🏴',
+      fnName: 'reforcarLinha',
+      starter: 'function reforcarLinha(linha, novoGuerreiro) {\n  // retorne um NOVO array com novoGuerreiro na FRENTE, seguido do resto de linha\n\n}',
+      explanation: 'O operador <b>spread</b> (<code>...</code>) espalha os itens de um array dentro de um array novo. Combinado com um item extra, dá pra montar uma lista nova sem alterar a original.<pre>let fila = [2, 3];\nlet novaFila = [1, ...fila];\n// novaFila é [1, 2, 3]</pre>',
+      desc: 'A <b>Vanguarda Sombria</b> 🏴 só recua se um novo guerreiro assumir a linha de frente. Complete <code>reforcarLinha(linha, novoGuerreiro)</code> retornando um NOVO array com <code>novoGuerreiro</code> na frente, seguido de todos os itens de <code>linha</code>, nessa ordem.',
+      hint: 'Combine um item novo com o spread do array existente, dentro de colchetes. Exemplo de outro contexto:<pre><code>function empilhar(pilha, item) {\n  return [item, ...pilha];\n}</code></pre>',
+      tests: [
+        { args: [[2, 3], 1], expected: [1, 2, 3] },
+        { args: [[], 9], expected: [9] },
+        { args: [['b', 'c'], 'a'], expected: ['a', 'b', 'c'] }
+      ]
+    },
+    {
+      id: 13,
+      title: 'Retirada do Último Soldado',
+      enemyName: 'Cronomante',
+      enemyEmoji: '⏳',
+      fnName: 'retirarUltimo',
+      starter: 'function retirarUltimo(linha) {\n  // retorne um NOVO array sem o ÚLTIMO item de linha\n\n}',
+      explanation: 'O método <code>.slice()</code> recorta uma parte de um array, sem alterar o original. Com número negativo, ele conta a partir do FIM.<pre>let lista = [1, 2, 3, 4];\nlista.slice(0, -1);\n// [1, 2, 3] — todo mundo, menos o último</pre>',
+      desc: 'O <b>Cronomante</b> ⏳ exige que você recue exatamente um passo no tempo. Complete <code>retirarUltimo(linha)</code> retornando um novo array com todos os itens de <code>linha</code>, EXCETO o último.',
+      hint: '<code>.slice(0, -1)</code> resolve isso numa linha só — o -1 marca "até antes do último".',
+      tests: [
+        { args: [[1, 2, 3, 4]], expected: [1, 2, 3] },
+        { args: [['a']], expected: [] },
+        { args: [[5, 6]], expected: [5] }
+      ]
+    },
+    {
+      id: 14,
+      title: 'Duplo Selo',
+      enemyName: 'Portão dos Dois Selos',
+      enemyEmoji: '🔐',
+      fnName: 'abrirPortao',
+      starter: 'function abrirPortao(temChave, temSenha) {\n  // retorne true SÓ SE os dois parâmetros forem true\n\n}',
+      explanation: 'O operador <code>&amp;&amp;</code> ("e") só resulta em <code>true</code> quando AMBOS os lados são verdadeiros.<pre>let podeEntrar = temIngresso &amp;&amp; temIdade;</pre>Se qualquer um dos dois for <code>false</code>, o resultado já é <code>false</code>.',
+      desc: 'O <b>Portão dos Dois Selos</b> 🔐 só abre com as DUAS condições satisfeitas ao mesmo tempo. Complete <code>abrirPortao(temChave, temSenha)</code> retornando <b>true</b> somente se os dois parâmetros forem <code>true</code>.',
+      hint: 'Existe um operador lógico que exige as duas condições verdadeiras ao mesmo tempo — pesquise sobre ele (símbolo duplo).',
+      tests: [
+        { args: [true, true], expected: true },
+        { args: [true, false], expected: false },
+        { args: [false, false], expected: false }
+      ]
+    },
+    {
+      id: 15,
+      title: 'Alarme de Perigo',
+      enemyName: 'Sentinela Alarmista',
+      enemyEmoji: '🚨',
+      fnName: 'soarAlarme',
+      starter: 'function soarAlarme(feridoGrave, semMunicao) {\n  // retorne true se PELO MENOS UM dos dois parâmetros for true\n\n}',
+      explanation: 'O operador <code>||</code> ("ou") resulta em <code>true</code> quando PELO MENOS UM dos lados é verdadeiro.<pre>let emApuros = estaPerdido || estaFerido;</pre>',
+      desc: 'A <b>Sentinela Alarmista</b> 🚨 dispara o alarme se qualquer sinal de perigo aparecer. Complete <code>soarAlarme(feridoGrave, semMunicao)</code> retornando <b>true</b> se pelo menos um dos dois parâmetros for <code>true</code>.',
+      hint: 'Existe um operador lógico que já basta UMA condição verdadeira — pesquise sobre ele (símbolo duplo, diferente do "e").',
+      tests: [
+        { args: [true, false], expected: true },
+        { args: [false, false], expected: false },
+        { args: [true, true], expected: true }
+      ]
+    },
+    {
+      id: 16,
+      title: 'Sentinela Atenta',
+      enemyName: 'Vigia das Sombras',
+      enemyEmoji: '👁️',
+      fnName: 'existeAmeaca',
+      starter: 'function existeAmeaca(inimigos) {\n  // retorne true se ALGUM inimigo do array tiver forca maior que 50\n\n}',
+      explanation: 'O método <code>.some()</code> verifica se PELO MENOS UM item de um array passa num teste, devolvendo <code>true</code> ou <code>false</code>.<pre>let numeros = [1, 2, 10];\nlet temGrande = numeros.some(n => n > 5);\n// temGrande é true</pre>',
+      desc: 'A <b>Vigia das Sombras</b> 👁️ só soa o alarme se detectar UMA ameaça real. Complete <code>existeAmeaca(inimigos)</code> — recebe um array de objetos <code>{ forca: número }</code> — retornando <b>true</b> se PELO MENOS UM deles tiver <code>forca</code> maior que 50.',
+      hint: 'Existe um método de array que testa "algum item passa nessa condição?" e já devolve true/false — pesquise sobre ele. Exemplo de outro contexto:<pre><code>function existeAdulto(pessoas) {\n  return pessoas.some(p => p.idade >= 18);\n}</code></pre>',
+      tests: [
+        { args: [[{ forca: 10 }, { forca: 60 }]], expected: true },
+        { args: [[{ forca: 10 }, { forca: 20 }]], expected: false },
+        { args: [[]], expected: false }
+      ]
+    },
+    {
+      id: 17,
+      title: 'Convocar à Distância',
+      enemyName: 'Oráculo Distante',
+      enemyEmoji: '🔮',
+      fnName: 'consultarOraculo',
+      starter: 'function consultarOraculo(pergunta, oraculo) {\n  // chame oraculo passando pergunta, e retorne o resultado\n\n}',
+      explanation: 'Uma função pode receber OUTRA função como parâmetro, e chamá-la por dentro. Isso é super comum em JavaScript.<pre>function pedirAjuda(especialista) {\n  return especialista();\n}\npedirAjuda(() => "Estou aqui!");\n// "Estou aqui!"</pre>',
+      desc: 'O <b>Oráculo Distante</b> 🔮 só responde através de um mensageiro. Complete <code>consultarOraculo(pergunta, oraculo)</code> — <code>oraculo</code> é uma função — chamando <code>oraculo</code> com <code>pergunta</code> como argumento, e retornando o que ela devolver.',
+      hint: 'Pra chamar uma função guardada num parâmetro, use parênteses nele, igual faria com qualquer outra função. Exemplo de outro contexto:<pre><code>function processarTexto(texto, transformador) {\n  return transformador(texto);\n}</code></pre>',
+      tests: [
+        { args: ['Qual seu nome?', (p) => 'Recebi: ' + p], expected: 'Recebi: Qual seu nome?' },
+        { args: [5, (n) => n * 2], expected: 10 }
+      ]
+    },
+    {
+      id: 18,
       title: 'BOSS FINAL: Fúria Combinada',
       enemyName: 'Dragão Binário',
       enemyEmoji: '🐉',
@@ -486,6 +612,10 @@
   function deepEqual(a, b) {
     if (Array.isArray(a) && Array.isArray(b)) {
       return a.length === b.length && a.every((v, i) => deepEqual(v, b[i]));
+    }
+    if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+      const keysA = Object.keys(a), keysB = Object.keys(b);
+      return keysA.length === keysB.length && keysA.every(k => deepEqual(a[k], b[k]));
     }
     return a === b;
   }
