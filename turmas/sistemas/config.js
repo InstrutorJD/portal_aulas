@@ -163,6 +163,25 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'js-fundamentos',
+          label: 'JavaScript',
+          desc: 'Desafios práticos pra treinar a base da lógica de programação em JavaScript: variáveis, operações, funções e decisões.',
+          capacidade: 'Aplicar lógica de programação usando a linguagem JavaScript.',
+          modules: [
+            {
+              // Sem módulo de teoria separado, de propósito — cada desafio já
+              // traz uma mini-explicação embutida (ver CHALLENGES no próprio
+              // arquivo), mesmo formato usado em turmas/jogos/atividades/
+              // js-basico.html (também sem teoria à parte).
+              key: 'pratica', title: 'Prática — Desafios de JavaScript',
+              desc: 'Declarar variáveis, somar, dividir, mostrar resultados no console, criar funções, retornar valores e usar if/else.',
+              icon: '🟨', src: 'atividades/js-fundamentos-pratica.html',
+              progressKey: 'js_fundamentos_pratica_progress_', progressTotal: 7,
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },
