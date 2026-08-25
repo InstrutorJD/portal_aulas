@@ -200,6 +200,9 @@
       enemyName: 'Slime de Bits',
       enemyEmoji: '🟢',
       fnName: 'contraAtaque',
+      solution: `function contraAtaque(poderInimigo) {
+  return poderInimigo + 1;
+}`,
       starter: 'function contraAtaque(poderInimigo) {\n  // retorne um valor MAIOR que poderInimigo\n\n}',
       explanation: 'Uma <b>função</b> é um bloco de código reutilizável. Ela pode receber valores, chamados de <b>parâmetros</b>, e devolver um resultado com a palavra <code>return</code>.<pre>function dobrar(numero) {\n  return numero * 2;\n}</pre>Aqui, <code>dobrar</code> é o nome da função e <code>numero</code> é o parâmetro que ela recebe. Neste duelo, complete <code>contraAtaque(poderInimigo)</code> — ela já recebe o poder do inimigo como parâmetro, chamado <code>poderInimigo</code> dentro da função.',
       desc: 'O <b>Slime de Bits</b> 🟢 lança um feitiço de poder <code>poderInimigo</code>. Complete <code>contraAtaque(poderInimigo)</code> retornando um número <b>maior</b> que o poder recebido, para superá-lo.',
@@ -216,6 +219,9 @@
       enemyName: 'Bruxo Reverso',
       enemyEmoji: '🔮',
       fnName: 'inverterFeitico',
+      solution: `function inverterFeitico(n) {
+  return Math.abs(n);
+}`,
       starter: 'function inverterFeitico(n) {\n  // devolva o valor absoluto (positivo) de n\n\n}',
       explanation: 'JavaScript já vem com funções prontas para usar. Uma delas é <code>Math.abs()</code>, que transforma qualquer número em positivo.<pre>Math.abs(-5)   // resultado: 5\nMath.abs(3)    // resultado: 3</pre>Você pode usar o resultado dela dentro do seu <code>return</code>.',
       desc: 'O <b>Bruxo Reverso</b> 🔮 tenta drenar seu poder com números negativos. Complete <code>inverterFeitico(n)</code> retornando o valor absoluto (positivo) de <code>n</code>, neutralizando o feitiço.',
@@ -233,6 +239,9 @@
       enemyName: 'Guardião Binário',
       enemyEmoji: '🛡️',
       fnName: 'escudoAtivo',
+      solution: `function escudoAtivo(n) {
+  return n % 2 === 0;
+}`,
       starter: 'function escudoAtivo(n) {\n  // retorne true se n for par, false se for ímpar\n\n}',
       explanation: 'O operador <code>%</code> (resto da divisão) devolve o que sobra de uma divisão.<pre>10 % 2   // resultado: 0 (divisão exata, é par)\n7 % 2    // resultado: 1 (sobra 1, é ímpar)</pre>Uma comparação com <code>===</code> já resulta em <code>true</code> ou <code>false</code> sozinha — você pode devolver esse resultado direto com <code>return</code>, sem precisar de <code>if/else</code>.',
       desc: 'O <b>Guardião Binário</b> 🛡️ só fica vulnerável quando a energia recebida é <b>par</b>. Complete <code>escudoAtivo(n)</code> retornando <b>true</b> se n for par e <b>false</b> se for ímpar.',
@@ -250,6 +259,9 @@
       enemyName: 'Legião de Sombras',
       enemyEmoji: '👥',
       fnName: 'liderDoExercito',
+      solution: `function liderDoExercito(poderes) {
+  return Math.max(...poderes);
+}`,
       starter: 'function liderDoExercito(poderes) {\n  // retorne o maior valor do array poderes\n\n}',
       explanation: 'Um <b>array</b> é uma lista de valores guardada em uma única variável.<pre>let numeros = [3, 7, 2];</pre>Para achar o maior valor de um array, você pode usar <code>Math.max(...numeros)</code> — o <code>...</code> espalha os itens do array como se fossem parâmetros separados.',
       desc: 'A <b>Legião de Sombras</b> 👥 invoca um exército com vários níveis de poder. Complete <code>liderDoExercito(poderes)</code> retornando o maior valor do array — o líder que vai lutar por você.',
@@ -266,6 +278,13 @@
       enemyName: 'Exército Ancestral',
       enemyEmoji: '⚔️',
       fnName: 'invocarTropas',
+      solution: `function invocarTropas(n) {
+  let lista = [];
+  for (let i = 1; i <= n; i++) {
+    lista.push(i);
+  }
+  return lista;
+}`,
       starter: 'function invocarTropas(n) {\n  // retorne um array com os números de 1 até n (IDs das tropas)\n\n}',
       explanation: 'Um <b>laço</b> <code>for</code> repete um trecho de código várias vezes. Você pode usar isso para ir montando um array aos poucos com <code>.push()</code>, que adiciona um item ao final.<pre>let lista = [];\nfor (let i = 1; i <= 3; i++) {\n  lista.push(i);\n}\n// lista agora é [1, 2, 3]</pre>',
       desc: 'Para enfrentar o <b>Exército Ancestral</b> ⚔️ você precisa invocar tropas. Complete <code>invocarTropas(n)</code> retornando um array com os números de <b>1</b> até <b>n</b>, representando os IDs das tropas invocadas.',
@@ -282,6 +301,9 @@
       enemyName: 'Coletivo de Mana',
       enemyEmoji: '🔷',
       fnName: 'poderTotal',
+      solution: `function poderTotal(poderes) {
+  return poderes.reduce((soma, item) => soma + item, 0);
+}`,
       starter: 'function poderTotal(poderes) {\n  // retorne a soma de todos os valores do array\n\n}',
       explanation: 'Para somar todos os itens de um array, você pode usar um laço somando um por um, ou o método pronto <code>.reduce()</code>:<pre>let numeros = [10, 20, 30];\nlet total = numeros.reduce((soma, item) => soma + item, 0);\n// total é 60</pre>',
       desc: 'O <b>Coletivo de Mana</b> 🔷 só cai se você calcular corretamente a soma total do poder do seu time. Complete <code>poderTotal(poderes)</code> retornando a soma de todos os valores do array.',
@@ -299,6 +321,9 @@
       enemyName: 'Necromante Filtrador',
       enemyEmoji: '☠️',
       fnName: 'sobreviventes',
+      solution: `function sobreviventes(vidas) {
+  return vidas.filter(n => n > 0);
+}`,
       starter: 'function sobreviventes(vidas) {\n  // retorne um array só com os valores MAIORES que 0\n\n}',
       explanation: 'O método <code>.filter()</code> cria um novo array só com os itens que passam num teste.<pre>let numeros = [1, -2, 3, -4];\nlet positivos = numeros.filter(n => n > 0);\n// positivos é [1, 3]</pre>',
       desc: 'O <b>Necromante Filtrador</b> ☠️ só permite passar quem ainda tem vida. Complete <code>sobreviventes(vidas)</code> retornando um novo array contendo apenas os valores de <code>vidas</code> que forem <b>maiores que 0</b>.',
@@ -315,6 +340,9 @@
       enemyName: 'Feiticeira Duplicadora',
       enemyEmoji: '✨',
       fnName: 'encantarTropas',
+      solution: `function encantarTropas(poderes) {
+  return poderes.map(n => n * 2);
+}`,
       starter: 'function encantarTropas(poderes) {\n  // retorne um novo array com cada valor de poderes DOBRADO\n\n}',
       explanation: 'O método <code>.map()</code> cria um novo array transformando cada item com uma função.<pre>let numeros = [1, 2, 3];\nlet triplicado = numeros.map(n => n * 3);\n// triplicado é [3, 6, 9]</pre>',
       desc: 'A <b>Feiticeira Duplicadora</b> ✨ só cai se cada tropa tiver seu poder dobrado. Complete <code>encantarTropas(poderes)</code> retornando um novo array com cada valor de <code>poderes</code> multiplicado por <b>2</b>.',
@@ -331,6 +359,9 @@
       enemyName: 'Sentinela Coletiva',
       enemyEmoji: '🛡️',
       fnName: 'guardaCompleta',
+      solution: `function guardaCompleta(vidas) {
+  return vidas.every(n => n > 0);
+}`,
       starter: 'function guardaCompleta(vidas) {\n  // retorne true se TODOS os valores de vidas forem maiores que 0\n\n}',
       explanation: 'O método <code>.every()</code> verifica se TODOS os itens de um array passam num teste, devolvendo <code>true</code> ou <code>false</code>.<pre>let numeros = [2, 4, 6];\nlet todosPares = numeros.every(n => n % 2 === 0);\n// todosPares é true</pre>',
       desc: 'A <b>Sentinela Coletiva</b> 🛡️ só confia na guarda se TODOS os membros estiverem com vida. Complete <code>guardaCompleta(vidas)</code> retornando <b>true</b> se todos os valores do array forem maiores que 0, ou <b>false</b> caso contrário.',
@@ -347,6 +378,9 @@
       enemyName: 'Espectro Sem Forma',
       enemyEmoji: '👻',
       fnName: 'invocarAliado',
+      solution: `function invocarAliado(nome, vida) {
+  return { nome: nome, vida: vida };
+}`,
       starter: 'function invocarAliado(nome, vida) {\n  // retorne um objeto com as propriedades nome e vida\n\n}',
       explanation: 'Um <b>objeto</b> guarda várias informações relacionadas numa coisa só, cada uma com um nome (chave) e um valor.<pre>let produto = { titulo: "Poção", preco: 20 };\n// produto.titulo é "Poção"</pre>Pra criar um objeto, use chaves <code>{ }</code> com pares <code>chave: valor</code> separados por vírgula.',
       desc: 'O <b>Espectro Sem Forma</b> 👻 só assume um corpo sólido se você invocar um aliado de verdade. Complete <code>invocarAliado(nome, vida)</code> retornando um <b>objeto</b> com duas propriedades: <code>nome</code> (igual ao parâmetro recebido) e <code>vida</code> (igual ao parâmetro recebido).',
@@ -363,6 +397,9 @@
       enemyName: 'Guardião do Pergaminho',
       enemyEmoji: '📜',
       fnName: 'consultarAliado',
+      solution: `function consultarAliado(aliado) {
+  return aliado.vida;
+}`,
       starter: 'function consultarAliado(aliado) {\n  // retorne só a vida do aliado (a propriedade vida do objeto)\n\n}',
       explanation: 'Pra ler uma propriedade de um objeto, use um ponto entre o objeto e o nome da propriedade.<pre>let produto = { titulo: "Poção", preco: 20 };\nproduto.preco;   // 20</pre>',
       desc: 'O <b>Guardião do Pergaminho</b> 📜 só revela o segredo se você souber ler a ficha certa. Complete <code>consultarAliado(aliado)</code> — ele recebe um objeto com <code>nome</code> e <code>vida</code> — retornando só o valor da propriedade <code>vida</code>.',
@@ -378,6 +415,9 @@
       enemyName: 'Vanguarda Sombria',
       enemyEmoji: '🏴',
       fnName: 'reforcarLinha',
+      solution: `function reforcarLinha(linha, novoGuerreiro) {
+  return [novoGuerreiro, ...linha];
+}`,
       starter: 'function reforcarLinha(linha, novoGuerreiro) {\n  // retorne um NOVO array com novoGuerreiro na FRENTE, seguido do resto de linha\n\n}',
       explanation: 'O operador <b>spread</b> (<code>...</code>) espalha os itens de um array dentro de um array novo. Combinado com um item extra, dá pra montar uma lista nova sem alterar a original.<pre>let fila = [2, 3];\nlet novaFila = [1, ...fila];\n// novaFila é [1, 2, 3]</pre>',
       desc: 'A <b>Vanguarda Sombria</b> 🏴 só recua se um novo guerreiro assumir a linha de frente. Complete <code>reforcarLinha(linha, novoGuerreiro)</code> retornando um NOVO array com <code>novoGuerreiro</code> na frente, seguido de todos os itens de <code>linha</code>, nessa ordem.',
@@ -394,6 +434,9 @@
       enemyName: 'Cronomante',
       enemyEmoji: '⏳',
       fnName: 'retirarUltimo',
+      solution: `function retirarUltimo(linha) {
+  return linha.slice(0, -1);
+}`,
       starter: 'function retirarUltimo(linha) {\n  // retorne um NOVO array sem o ÚLTIMO item de linha\n\n}',
       explanation: 'O método <code>.slice()</code> recorta uma parte de um array, sem alterar o original. Com número negativo, ele conta a partir do FIM.<pre>let lista = [1, 2, 3, 4];\nlista.slice(0, -1);\n// [1, 2, 3] — todo mundo, menos o último</pre>',
       desc: 'O <b>Cronomante</b> ⏳ exige que você recue exatamente um passo no tempo. Complete <code>retirarUltimo(linha)</code> retornando um novo array com todos os itens de <code>linha</code>, EXCETO o último.',
@@ -412,6 +455,9 @@
       enemyName: 'Portão dos Dois Selos',
       enemyEmoji: '🔐',
       fnName: 'abrirPortao',
+      solution: `function abrirPortao(temChave, temSenha) {
+  return temChave && temSenha;
+}`,
       starter: 'function abrirPortao(temChave, temSenha) {\n  // retorne true SÓ SE os dois parâmetros forem true\n\n}',
       explanation: 'O operador <code>&amp;&amp;</code> ("e") só resulta em <code>true</code> quando AMBOS os lados são verdadeiros.<pre>let podeEntrar = temIngresso &amp;&amp; temIdade;</pre>Se qualquer um dos dois for <code>false</code>, o resultado já é <code>false</code>.',
       desc: 'O <b>Portão dos Dois Selos</b> 🔐 só abre com as DUAS condições satisfeitas ao mesmo tempo. Complete <code>abrirPortao(temChave, temSenha)</code> retornando <b>true</b> somente se os dois parâmetros forem <code>true</code>.',
@@ -428,6 +474,9 @@
       enemyName: 'Sentinela Alarmista',
       enemyEmoji: '🚨',
       fnName: 'soarAlarme',
+      solution: `function soarAlarme(feridoGrave, semMunicao) {
+  return feridoGrave || semMunicao;
+}`,
       starter: 'function soarAlarme(feridoGrave, semMunicao) {\n  // retorne true se PELO MENOS UM dos dois parâmetros for true\n\n}',
       explanation: 'O operador <code>||</code> ("ou") resulta em <code>true</code> quando PELO MENOS UM dos lados é verdadeiro.<pre>let emApuros = estaPerdido || estaFerido;</pre>',
       desc: 'A <b>Sentinela Alarmista</b> 🚨 dispara o alarme se qualquer sinal de perigo aparecer. Complete <code>soarAlarme(feridoGrave, semMunicao)</code> retornando <b>true</b> se pelo menos um dos dois parâmetros for <code>true</code>.',
@@ -444,6 +493,9 @@
       enemyName: 'Vigia das Sombras',
       enemyEmoji: '👁️',
       fnName: 'existeAmeaca',
+      solution: `function existeAmeaca(inimigos) {
+  return inimigos.some(i => i.forca > 50);
+}`,
       starter: 'function existeAmeaca(inimigos) {\n  // retorne true se ALGUM inimigo do array tiver forca maior que 50\n\n}',
       explanation: 'O método <code>.some()</code> verifica se PELO MENOS UM item de um array passa num teste, devolvendo <code>true</code> ou <code>false</code>.<pre>let numeros = [1, 2, 10];\nlet temGrande = numeros.some(n => n > 5);\n// temGrande é true</pre>',
       desc: 'A <b>Vigia das Sombras</b> 👁️ só soa o alarme se detectar UMA ameaça real. Complete <code>existeAmeaca(inimigos)</code> — recebe um array de objetos <code>{ forca: número }</code> — retornando <b>true</b> se PELO MENOS UM deles tiver <code>forca</code> maior que 50.',
@@ -460,6 +512,9 @@
       enemyName: 'Oráculo Distante',
       enemyEmoji: '🔮',
       fnName: 'consultarOraculo',
+      solution: `function consultarOraculo(pergunta, oraculo) {
+  return oraculo(pergunta);
+}`,
       starter: 'function consultarOraculo(pergunta, oraculo) {\n  // chame oraculo passando pergunta, e retorne o resultado\n\n}',
       explanation: 'Uma função pode receber OUTRA função como parâmetro, e chamá-la por dentro. Isso é super comum em JavaScript.<pre>function pedirAjuda(especialista) {\n  return especialista();\n}\npedirAjuda(() => "Estou aqui!");\n// "Estou aqui!"</pre>',
       desc: 'O <b>Oráculo Distante</b> 🔮 só responde através de um mensageiro. Complete <code>consultarOraculo(pergunta, oraculo)</code> — <code>oraculo</code> é uma função — chamando <code>oraculo</code> com <code>pergunta</code> como argumento, e retornando o que ela devolver.',
@@ -475,6 +530,9 @@
       enemyName: 'Dragão Binário',
       enemyEmoji: '🐉',
       fnName: 'furiaFinal',
+      solution: `function furiaFinal(poderes) {
+  return poderes.reduce((soma, item) => soma + item, 0) > 100;
+}`,
       starter: 'function furiaFinal(poderes) {\n  // retorne true se a soma dos poderes for MAIOR que 100\n\n}',
       explanation: 'Este duelo combina duas coisas que você já aprendeu: somar os itens de um array (como no duelo anterior, com <code>.reduce()</code>) e comparar o resultado com <code>&gt;</code>.',
       desc: 'BOSS FINAL: o <b>Dragão Binário</b> 🐉 só é derrotado se a soma do poder do seu time ultrapassar <b>100</b>. Complete <code>furiaFinal(poderes)</code> retornando <b>true</b> se a soma dos valores do array for maior que 100, ou <b>false</b> caso contrário.',
@@ -505,7 +563,7 @@
           const inputs = (t.args || []).map(a => JSON.stringify(a)).join(', ');
           const exp = ('expected' in t) ? JSON.stringify(t.expected) : (t.expectedLabel || 'ver critério no código-fonte');
           return `${c.fnName}(${inputs}) deve retornar ${exp}`;
-        }).join('\n')
+        }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
       })),
       fileName: 'js-intermediario-gabarito.txt'
     });

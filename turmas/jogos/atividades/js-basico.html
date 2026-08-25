@@ -205,6 +205,7 @@
       enemyName: 'Pixel Adormecido',
       enemyEmoji: '💤',
       resultVar: 'resultado',
+      solution: `let resultado = 100;`,
       givenVars: [],
       starter: '// crie uma variável chamada resultado com o valor 100\n\n',
       explanation: 'Uma <b>variável</b> é como uma caixinha com um nome, onde você guarda um valor para usar depois. Para criar uma, use a palavra <code>let</code>, dê um nome, um sinal de igual <code>=</code> e o valor.<pre>let idade = 10;</pre>Isso cria uma caixinha chamada <code>idade</code> guardando o número 10.',
@@ -220,6 +221,7 @@
       enemyName: 'Duende Somador',
       enemyEmoji: '➕',
       resultVar: 'resultado',
+      solution: `let resultado = a + b;`,
       givenVars: ['a', 'b'],
       starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com a soma de a e b\n\n',
       explanation: 'Você pode somar dois números com o sinal <code>+</code>. Se já existem duas variáveis, por exemplo <code>x</code> e <code>y</code>, é só somar:<pre>let total = x + y;</pre>',
@@ -237,6 +239,7 @@
       enemyName: 'Fantasma Subtrator',
       enemyEmoji: '➖',
       resultVar: 'resultado',
+      solution: `let resultado = a - b;`,
       givenVars: ['a', 'b'],
       starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com a subtração de a por b\n\n',
       explanation: 'Para subtrair, use o sinal <code>-</code>:<pre>let sobra = x - y;</pre>',
@@ -254,6 +257,7 @@
       enemyName: 'Clone Multiplicador',
       enemyEmoji: '✖️',
       resultVar: 'resultado',
+      solution: `let resultado = a * b;`,
       givenVars: ['a', 'b'],
       starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com a multiplicação de a por b\n\n',
       explanation: 'Para multiplicar, use o sinal <code>*</code>:<pre>let dobro = x * 2;</pre>',
@@ -271,6 +275,7 @@
       enemyName: 'Feiticeiro Divisor',
       enemyEmoji: '➗',
       resultVar: 'resultado',
+      solution: `let resultado = a / b;`,
       givenVars: ['a', 'b'],
       starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com a divisão de a por b\n\n',
       explanation: 'Para dividir, use o sinal <code>/</code>:<pre>let metade = x / 2;</pre>',
@@ -288,6 +293,7 @@
       enemyName: 'Sentinela Balança',
       enemyEmoji: '⚖️',
       resultVar: 'resultado',
+      solution: `let resultado = a > b;`,
       givenVars: ['a', 'b'],
       starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado que seja true se a for maior que b, ou false caso contrário\n\n',
       explanation: 'JavaScript tem operadores de comparação que já devolvem <code>true</code> ou <code>false</code>. Por exemplo, <code>x &lt; y</code> resulta em <code>true</code> se x for menor que y.<pre>let cabe = x &lt; 10;</pre>',
@@ -305,6 +311,7 @@
       enemyName: 'Espírito do Resto',
       enemyEmoji: '🌀',
       resultVar: 'resultado',
+      solution: `let resultado = a % b;`,
       givenVars: ['a', 'b'],
       starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com o resto da divisão de a por b\n\n',
       explanation: 'O operador de resto (módulo) devolve o que sobra de uma divisão inteira.<pre>let sobra = 10 % 3; // sobra vale 1</pre>',
@@ -322,6 +329,7 @@
       enemyName: 'Eco Sussurrante',
       enemyEmoji: '🗣️',
       resultVar: 'resultado',
+      solution: `let resultado = nome + ' ' + titulo;`,
       givenVars: ['nome', 'titulo'],
       starter: '// as variáveis nome e titulo já existem\n// crie uma variável chamada resultado juntando nome e titulo, com um espaço entre eles\n\n',
       explanation: 'Strings (textos) também podem ser combinadas com o sinal <code>+</code>. Isso se chama <b>concatenação</b>.<pre>let frase = "Olá" + " " + "mundo"; // "Olá mundo"</pre>',
@@ -339,6 +347,7 @@
       enemyName: 'Golem Crescente',
       enemyEmoji: '🗿',
       resultVar: 'resultado',
+      solution: `let resultado = pontos + 10;`,
       givenVars: ['pontos'],
       starter: '// a variável pontos já existe\n// crie uma variável chamada resultado somando 10 ao valor de pontos\n\n',
       explanation: 'Você pode combinar soma com atribuição usando <code>+=</code>, que soma um valor à variável e já guarda o resultado nela mesma.<pre>let vida = 5;\nvida += 3; // vida agora vale 8</pre>Também dá pra criar uma variável nova a partir de outra, só com <code>+</code>.',
@@ -356,6 +365,12 @@
       enemyName: 'Oráculo Binário',
       enemyEmoji: '🔯',
       resultVar: 'resultado',
+      solution: `let resultado;
+if (vida > 0) {
+  resultado = 'vitoria';
+} else {
+  resultado = 'derrota';
+}`,
       givenVars: ['vida'],
       starter: '// a variável vida já existe\n// crie uma variável chamada resultado com o texto \'vitoria\' se vida for maior que 0, ou \'derrota\' caso contrário\n\n',
       explanation: 'Um bloco <code>if/else</code> permite escolher entre dois caminhos dependendo de uma condição.<pre>let status;\nif (energia &gt; 0) {\n  status = \'ativo\';\n} else {\n  status = \'inativo\';\n}</pre>',
@@ -386,7 +401,7 @@
           const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
           const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
           return `${prefix} → ${c.resultVar} deve ser ${JSON.stringify(t.expected)}`;
-        }).join('\n')
+        }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
       })),
       fileName: 'js-basico-gabarito.txt'
     });

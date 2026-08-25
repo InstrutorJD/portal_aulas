@@ -332,6 +332,9 @@ const STEPS = [
     <pre><code>[{x:2, y:2}, {x:1, y:2}]</code></pre>` },
   { id: 'personagem-des', type: 'desafio', title: 'Criar o personagem',
     fnName: 'criarCobrinha', checkType: 'json',
+    solution: `function criarCobrinha() {
+  return [{x:7,y:7}, {x:6,y:7}, {x:5,y:7}];
+}`,
     starter: 'function criarCobrinha() {\n  // não esqueça do return!\n}',
     desc: 'Crie e retorne a cobrinha inicial: 3 partes, cabeça em <code>{x:7, y:7}</code>, e o corpo esticado pra esquerda dela — <code>{x:6, y:7}</code> e <code>{x:5, y:7}</code>, nessa ordem.',
     hint: 'A cabeça é sempre o primeiro item do array. Lembre a ordem: cabeça, depois corpo. Exemplo de uma lista de objetos parecida (outro contexto):<pre><code>const inventario = [{item:"espada"}, {item:"escudo"}];</code></pre>',
@@ -343,6 +346,13 @@ const STEPS = [
     <p>Teclas possíveis: <code>ArrowUp</code>, <code>ArrowDown</code>, <code>ArrowLeft</code>, <code>ArrowRight</code>.</p>` },
   { id: 'tecla-des', type: 'desafio', title: 'Ler o teclado',
     fnName: 'teclaParaDirecao', checkType: 'json',
+    solution: `function teclaParaDirecao(tecla) {
+  if (tecla === 'ArrowUp') return {dx:0, dy:-1};
+  if (tecla === 'ArrowDown') return {dx:0, dy:1};
+  if (tecla === 'ArrowLeft') return {dx:-1, dy:0};
+  if (tecla === 'ArrowRight') return {dx:1, dy:0};
+  return null;
+}`,
     starter: 'function teclaParaDirecao(tecla) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe o nome de uma tecla e devolve a direção correspondente: <code>ArrowUp</code> → <code>{dx:0, dy:-1}</code>, <code>ArrowDown</code> → <code>{dx:0, dy:1}</code>, <code>ArrowLeft</code> → <code>{dx:-1, dy:0}</code>, <code>ArrowRight</code> → <code>{dx:1, dy:0}</code>. Qualquer outra tecla, devolva <code>null</code>.',
     hint: `No eixo Y da tela, "pra cima" é um número NEGATIVO (y diminui indo pra cima). Exemplo do formato de função esperado (outro contexto):<pre><code>function traduzirComando(comando) {
@@ -363,6 +373,9 @@ const STEPS = [
     <p>Com a direção em mãos, dá pra calcular onde a cabeça da cobrinha vai parar no próximo passo: basta somar a direção à posição atual.</p>` },
   { id: 'posicao-des', type: 'desafio', title: 'Calcular o próximo passo',
     fnName: 'proximaPosicao', checkType: 'json',
+    solution: `function proximaPosicao(cabeca, direcao) {
+  return {x: cabeca.x + direcao.dx, y: cabeca.y + direcao.dy};
+}`,
     starter: 'function proximaPosicao(cabeca, direcao) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe a posição da cabeça e a direção, e devolve a nova posição: <code>{x: cabeca.x + direcao.dx, y: cabeca.y + direcao.dy}</code>.',
     hint: `É só uma soma de coordenadas — sem nenhum truque. Exemplo de uma função que também só devolve um cálculo simples com os parâmetros recebidos:<pre><code>function multiplicarPorDois(numero) {
@@ -379,6 +392,12 @@ const STEPS = [
     <p>Andar é: colocar a nova cabeça na FRENTE da lista, e tirar o ÚLTIMO pedaço do rabo — como se cada parte "puxasse" a de trás. Mas se a cobrinha acabou de comer, o rabo NÃO sai (ela cresce).</p>` },
   { id: 'mover-des', type: 'desafio', title: 'Fazer a cobrinha andar',
     fnName: 'mover', checkType: 'json',
+    solution: `function mover(cobrinha, novaCabeca, cresce) {
+  if (cresce) {
+    return [novaCabeca, ...cobrinha];
+  }
+  return [novaCabeca, ...cobrinha.slice(0, -1)];
+}`,
     starter: 'function mover(cobrinha, novaCabeca, cresce) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe a cobrinha (array), a nova posição da cabeça, e um "cresce" (true/false). Devolva um NOVO array: a nova cabeça na frente, seguida do resto da cobrinha — removendo o último item, a menos que <code>cresce</code> seja <code>true</code>.',
     hint: `Pesquise o método de array que junta um item novo no início de uma lista existente, e o método que corta a lista sem o último item. Exemplo do primeiro (outro contexto):<pre><code>function empilhar(pilha, novoItem) {
@@ -394,6 +413,9 @@ const STEPS = [
     <p>A comida aparece num quadrado aleatório da grade. Em vez de usar <code>Math.random()</code> direto, você recebe um "sorteador" pronto: uma função <code>sorteio(min, max)</code> que devolve um número inteiro entre min e max.</p>` },
   { id: 'comida-des', type: 'desafio', title: 'Gerar a comida',
     fnName: 'gerarComida', checkType: 'json',
+    solution: `function gerarComida(colunas, linhas, sorteio) {
+  return {x: sorteio(0, colunas - 1), y: sorteio(0, linhas - 1)};
+}`,
     starter: 'function gerarComida(colunas, linhas, sorteio) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe o número de colunas, o número de linhas, e a função <code>sorteio</code> — e devolve uma posição <code>{x, y}</code>: x é <code>sorteio(0, colunas-1)</code>, y é <code>sorteio(0, linhas-1)</code>.',
     hint: `Chame sorteio() duas vezes: uma pro x, outra pro y — nessa ordem. Exemplo de chamar uma função recebida por parâmetro (outro contexto):<pre><code>function girarRoleta(sorte) {
@@ -413,6 +435,9 @@ const STEPS = [
     <p>A cobrinha "come" quando a cabeça cai exatamente em cima da comida.</p>` },
   { id: 'comeu-des', type: 'desafio', title: 'Detectar se comeu',
     fnName: 'comeuComida', checkType: 'value',
+    solution: `function comeuComida(cabeca, comida) {
+  return cabeca.x === comida.x && cabeca.y === comida.y;
+}`,
     starter: 'function comeuComida(cabeca, comida) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe a cabeça e a comida, e devolve <code>true</code> se as posições forem iguais (mesmo x e mesmo y), ou <code>false</code> caso contrário.',
     hint: `Compare x com x, e y com y — os dois precisam bater ao mesmo tempo. Exemplo de comparar UMA propriedade entre dois objetos (outro contexto — aqui você precisa comparar DUAS, ligadas por "e"):<pre><code>function mesmaRua(casa1, casa2) {
@@ -428,6 +453,9 @@ const STEPS = [
     <p>Cada vez que a cobrinha come, o placar sobe.</p>` },
   { id: 'pontuacao-des', type: 'desafio', title: 'Marcar pontos',
     fnName: 'atualizarPontuacao', checkType: 'value',
+    solution: `function atualizarPontuacao(pontuacaoAtual, comeu) {
+  return comeu ? pontuacaoAtual + 1 : pontuacaoAtual;
+}`,
     starter: 'function atualizarPontuacao(pontuacaoAtual, comeu) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe a pontuação atual e se a cobrinha comeu (<code>true</code>/<code>false</code>) — devolva a pontuação atual +1 se comeu, ou a pontuação sem mudar caso contrário.',
     hint: `É um if simples: comeu ou não comeu. Exemplo do mesmo formato (outro contexto):<pre><code>function ajustarSaldo(saldoAtual, creditou) {
@@ -444,6 +472,9 @@ const STEPS = [
     <p>O tabuleiro tem um limite. Se a cabeça sair da grade (x ou y negativo, ou maior/igual ao tamanho da grade), a cobrinha bateu na parede.</p>` },
   { id: 'parede-des', type: 'desafio', title: 'Detectar a parede',
     fnName: 'bateuNaParede', checkType: 'value',
+    solution: `function bateuNaParede(posicao, colunas, linhas) {
+  return posicao.x < 0 || posicao.x >= colunas || posicao.y < 0 || posicao.y >= linhas;
+}`,
     starter: 'function bateuNaParede(posicao, colunas, linhas) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe a posição, o número de colunas e o número de linhas — devolva <code>true</code> se a posição estiver fora da grade (x&lt;0, x&gt;=colunas, y&lt;0 ou y&gt;=linhas).',
     hint: `São 4 condições possíveis, ligadas por "ou". Exemplo com só 2 condições, pra você ver o formato (aqui você vai precisar de 4, para x e para y):<pre><code>function foraDoAlcance(numero, minimo, maximo) {
@@ -461,6 +492,9 @@ const STEPS = [
     <p>Se a cabeça for parar em cima de qualquer outro pedaço do corpo da própria cobrinha, é game over.</p>` },
   { id: 'corpo-des', type: 'desafio', title: 'Detectar o próprio corpo',
     fnName: 'bateuNoProprioCorpo', checkType: 'value',
+    solution: `function bateuNoProprioCorpo(novaCabeca, cobrinha) {
+  return cobrinha.some(s => s.x === novaCabeca.x && s.y === novaCabeca.y);
+}`,
     starter: 'function bateuNoProprioCorpo(novaCabeca, cobrinha) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe a nova posição da cabeça e a cobrinha (array) — devolva <code>true</code> se essa posição bater com QUALQUER parte da cobrinha, ou <code>false</code> caso contrário.',
     hint: `Existe um método de array que testa "algum item da lista bate com essa condição?" — pesquise sobre ele. Exemplo de uso (outro contexto):<pre><code>function existeNaLista(pessoa, lista) {
@@ -476,6 +510,9 @@ const STEPS = [
     <p>O jogo acaba se a cobrinha bateu na parede OU bateu no próprio corpo.</p>` },
   { id: 'fim-des', type: 'desafio', title: 'Decidir o fim de jogo',
     fnName: 'jogoAcabou', checkType: 'value',
+    solution: `function jogoAcabou(bateuParede, bateuCorpo) {
+  return bateuParede || bateuCorpo;
+}`,
     starter: 'function jogoAcabou(bateuParede, bateuCorpo) {\n  // não esqueça do return!\n}',
     desc: 'Crie a função que recebe dois valores booleanos — <code>bateuParede</code> e <code>bateuCorpo</code> — e devolve <code>true</code> se pelo menos um dos dois for <code>true</code>.',
     hint: `Um operador lógico resolve isso numa linha só. Exemplo do mesmo formato (outro contexto):<pre><code>function podeEntrar(temIngresso, temConvite) {
@@ -882,7 +919,7 @@ window.generateGabaritoForGestao = function () {
       prompt: s.desc.replace(/<[^>]+>/g, ''),
       options: [],
       correctIndex: 0,
-      answer: `função ${s.fnName}(...) — ver testes no código-fonte da atividade`
+      answer: `Código de referência (não é a única forma correta):\n${s.solution}`
     })),
     fileName: 'cobrinha-construcao-gabarito.txt'
   });
