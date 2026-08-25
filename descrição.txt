@@ -1,0 +1,170 @@
+PORTAL DE AULAS — PixelForge Studios
+======================================
+
+O QUE É
+
+O Portal de Aulas é uma plataforma web de ensino usada pelas turmas do
+SENAI de Jogos Digitais e Desenvolvimento de Sistemas. Cada turma tem
+seu próprio portal (mesma estrutura, conteúdo diferente), ambientado
+sob o tema fictício "PixelForge Studios" — um estúdio de jogos que serve
+de pano de fundo narrativo pras aulas e desafios, deixando o aprendizado
+mais parecido com jogar do que com estudar.
+
+O aluno acessa com usuário e senha (autenticação real via Supabase Auth,
+não senha fixa em JS) e cai direto na plataforma da sua turma, com abas
+para Aulas, Perfil e Jogos (professor tem uma aba extra, Gestão).
+
+
+COMO O CONTEÚDO É ORGANIZADO
+
+O currículo segue uma hierarquia de 3 níveis, alinhada à metodologia
+MSEP do SENAI (organizada em torno de capacidades a desenvolver):
+
+  Matéria → Trilha → Módulo
+
+- Matéria é o currículo real da turma (ex.: "Fundamentos de Programação",
+  "Codificação de Jogos", "Projeto de Vida").
+- Trilha é uma capacidade específica dentro da matéria (ex.: a trilha
+  "C#" ensina a sintaxe básica da linguagem).
+- Módulo é a unidade concreta que o aluno abre: normalmente uma Teoria
+  seguida de uma ou mais Práticas, com a prática travada até a teoria
+  ser concluída.
+
+Cada trilha pode ter data de início e prazo definidos pelo professor,
+o que organiza automaticamente a lista em "Em aberto", "Em atraso" e
+"Concluídas" pro aluno, sem precisar de nenhuma ação manual quando um
+bimestre termina.
+
+
+FORMATOS DE ATIVIDADE
+
+- TEORIA ("história + quiz"): um mascote da turma conta um conceito em
+  forma de história curta e faz uma pergunta de múltipla escolha logo
+  em seguida. As perguntas são embaralhadas a cada tentativa, e o aluno
+  precisa de pelo menos 80% de acerto pra concluir (sem nunca revelar a
+  resposta certa durante o percurso — só reiniciando o quiz inteiro).
+
+- PRÁTICA — "Central de Suporte" (chamados/pareceres): o aluno resolve
+  uma série de cenários de múltipla escolha, cada um com uma explicação
+  de apoio, uma dica opcional e feedback imediato. Usado em conceitos
+  que não dá pra testar rodando código de verdade (ex.: C#, GDScript,
+  metodologia ágil, segurança da informação).
+
+- PRÁTICA — Desafios de código de verdade: o aluno escreve JavaScript
+  num editor dentro da própria página e roda contra casos de teste reais
+  (variável criada, função retornando o valor certo, texto exibido no
+  console). Progressão em ordem: resolver um desafio libera o próximo.
+
+Cada trilha pode gerar automaticamente, com um clique do professor:
+- Slides (.pptx) prontos pra apresentar a aula teórica em sala, mesmo
+  sem internet no dia — a resposta certa de cada pergunta fica só nas
+  anotações do apresentador, nunca no slide.
+- Gabarito (.txt) com pergunta e resposta esperada de cada item, pro
+  professor conferir/corrigir sem precisar abrir o módulo.
+
+
+ÁREA DO ALUNO
+
+- Aulas: navegação por matéria → trilha → módulo, com progresso salvo
+  (sincronizado com o Supabase, não só no navegador).
+- Perfil: progresso geral e por matéria/trilha, insígnias conquistadas
+  (de "Iniciante" a "Lendário", por % de conclusão geral) e posição no
+  ranking da turma.
+- Jogos: minigames liberados só depois que o aluno completa os módulos
+  (ou recebe liberação manual do professor) — ver seção de jogos abaixo.
+
+
+ÁREA DO PROFESSOR (aba "Gestão")
+
+Tudo que é administrativo mora dentro do próprio portal da turma, sem
+misturar dado entre as duas turmas:
+
+- Chamada: marcação de presença por aula, com relatório de frequência
+  por aluno e geração de PDF mensal (tabela aluno × dia) direto do
+  navegador, sem lib externa.
+- Notas: lançamento por bimestre, média calculada automaticamente, e
+  relatório com % de conclusão por matéria.
+- Liberação de jogos: individual ou pra turma inteira, com atalho rápido
+  na barra de navegação; revogar em tempo real tira o aluno do jogo na
+  hora, com aviso.
+- Bloqueio de copiar/colar: liga/desliga por turma, evita cola durante
+  avaliação.
+- Atividade em tempo real: o que cada aluno está fazendo agora, e
+  relatório de inatividade — clicando no nome, o professor vê o mesmo
+  painel de progresso que o aluno vê no próprio Perfil.
+- Trilhas — início e prazo: datas de liberação de cada trilha definidas
+  numa tela só, sem precisar editar código.
+- Geração de slides e gabaritos: lista de todas as aulas com esse
+  recurso disponível, gerando o arquivo sem precisar abrir cada módulo.
+
+
+JOGOS E GAMIFICAÇÃO
+
+- Minigames (Digitação, Campo Minado) com placar da turma em tempo real
+  (Realtime do Supabase) — Campo Minado é progressão infinita, cada
+  bandeira aumenta a dificuldade do próximo campo; no Campo Minado, o
+  código do aluno controla um robô que "sente" o ambiente (mina, parede,
+  distância até a bandeira) e decide o próximo passo, em vez de seguir
+  uma lista de movimentos decidida de antemão.
+- QuizRush: quiz ao vivo pra turma inteira, com cronômetro e pontuação
+  por velocidade + acerto. As perguntas vêm automaticamente do gabarito
+  de qualquer aula teórica já existente — o professor não cadastra nada
+  na mão, só escolhe qual aula usar.
+- Insígnias progressivas no Perfil, calculadas a partir do progresso
+  real sincronizado (não é só decoração — reflete conclusão de verdade).
+
+
+ACESSIBILIDADE
+
+Botão de alternância de fonte (tradicional/pixelada) que se propaga pra
+dentro de cada módulo automaticamente, e widget VLibras (tradução em
+Libras) disponível nas páginas de atividade.
+
+
+POR QUE O PORTAL TORNA A AULA MAIS EFICIENTE
+
+- Correção automática e instantânea: em quiz e desafio de código, o
+  aluno sabe na hora se acertou, sem fila esperando o professor corrigir
+  um por um — o tempo de aula vira tempo de dúvida e prática, não de
+  correção manual.
+- Zero preparo repetido: uma vez que a aula teórica existe no portal,
+  slides e gabarito saem prontos com um clique — o professor não perde
+  tempo montando apresentação e resposta à parte pra cada turma/ano.
+- Progressão travada substitui supervisão constante: como a prática só
+  libera depois da teoria (e um desafio só libera o próximo), o aluno
+  não avança "no chute" sem entender o passo anterior, sem o professor
+  precisar checar aluno por aluno.
+- Visão em tempo real da turma inteira: o painel de Atividade mostra o
+  que cada aluno está fazendo agora e quem está parado, então o
+  professor sabe onde intervir sem precisar circular checando tela por
+  tela.
+- Chamada e notas sem papel: presença e média calculadas e relatadas
+  automaticamente, incluindo PDF do mês pronto pra imprimir/arquivar —
+  elimina o trabalho manual de planilha depois da aula.
+- Datas de liberação cuidam do calendário sozinhas: trilha some da tela
+  antes do início e migra pra "Em atraso" sozinha depois do prazo, sem o
+  professor precisar lembrar de liberar/bloquear conteúdo bimestre a
+  bimestre.
+- Plano B pra falta de estrutura: slides gerados funcionam sem internet
+  no dia da aula, e o QuizRush reaproveita perguntas que já existem — dá
+  pra criar uma dinâmica ao vivo pra turma toda sem nenhum preparo extra
+  de véspera.
+- Motivação sem esforço extra do professor: ranking, insígnias e placar
+  dos minigames rodam sozinhos a partir do progresso real — o incentivo
+  de competição/conquista existe sem o professor precisar gerenciar
+  nada disso manualmente.
+- Integridade da avaliação: bloqueio de copiar/colar por turma evita
+  cola durante atividade avaliativa, sem depender de fiscalização visual
+  o tempo todo.
+
+
+TECNOLOGIA
+
+Frontend em HTML/CSS/JavaScript puro (sem framework, sem build step),
+com lógica compartilhada entre turmas em arquivos centrais (ex.: motor
+de quiz de teoria, motor de desafios de código, gerador de slides,
+guarda de clipboard, rastreador de atividade). Backend no Supabase:
+autenticação real (Auth), banco de dados Postgres com Row Level Security
+por papel (aluno/professor), e Realtime pra tudo que precisa atualizar
+ao vivo (placar de jogos, QuizRush, liberação de trilhas). Suite de
+testes end-to-end com Playwright cobrindo os principais fluxos.
