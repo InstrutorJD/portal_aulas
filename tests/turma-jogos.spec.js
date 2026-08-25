@@ -143,9 +143,15 @@ test.describe('turmas/jogos/plataforma.html — revogação de acesso em tempo r
     });
 
     await expect(page.locator('#gameFrameArea')).toBeHidden();
-    await expect(page.locator('#gameSelector')).toBeVisible();
     await expect(page.locator('#gameFrame')).toHaveAttribute('src', 'about:blank');
     await expect(tabJogos).toHaveClass(/disabled/);
+
+    // Não basta fechar o jogo específico — o aluno não pode continuar na
+    // aba Jogos livre pra escolher outro da lista (#gameSelector também
+    // mora lá dentro). Precisa ser tirado da aba inteira, de volta pra Aulas.
+    await expect(page.locator('#tabContentJogos')).toBeHidden();
+    await expect(page.locator('#gameSelector')).toBeHidden();
+    await expect(page.locator('#tabContentAulas')).toBeVisible();
 
     const toast = page.locator('.pf-toast');
     await expect(toast).toBeVisible();

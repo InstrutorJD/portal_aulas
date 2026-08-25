@@ -931,6 +931,13 @@
     if (!isUnlocked && currentGameKey) {
       closeGame();
       showToast('🔒 Jogos bloqueados', 'O professor bloqueou o acesso aos jogos e você foi retirado do jogo em andamento.');
+      // closeGame() só troca a TELA (jogo → seletor de jogos) — sozinho,
+      // isso deixaria o aluno ainda DENTRO da aba Jogos, livre pra escolher
+      // outro jogo da lista. switchTab('aulas') tira ele da aba de vez; é
+      // seguro chamar aqui porque switchTab() chama checkGamesUnlock() nesse
+      // meio-tempo (currentGameKey já está null pelo closeGame() acima), então
+      // a chamada aninhada não re-entra nesse mesmo bloco.
+      switchTab('aulas');
     }
 
     return isUnlocked;
