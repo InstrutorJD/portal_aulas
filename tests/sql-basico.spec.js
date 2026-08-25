@@ -94,7 +94,8 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`devsis_requisitos_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`devsis_linguagem_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`devsis_linguagem_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
-      localStorage.setItem(`js_fundamentos_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7]));
+      localStorage.setItem(`js_fundamentos_basico_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+      localStorage.setItem(`js_fundamentos_intermediario_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]));
       localStorage.setItem(`redes_conexao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`redes_conexao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`redes_resolucao_teoria_progress_${user}`, JSON.stringify({ completed: true }));

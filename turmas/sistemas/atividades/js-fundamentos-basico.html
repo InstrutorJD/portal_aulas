@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desenvolvimento de Sistemas — JavaScript: Fundamentos (Básico)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:190px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .challenge-item{
+    display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
+  }
+  .challenge-item .status{ font-size:13px; width:16px; text-align:center; flex-shrink:0; }
+  .challenge-item.active{ border-color:var(--green); color:var(--green); }
+  .challenge-item.completed{ color:var(--ink); }
+  .challenge-item.locked{ opacity:0.4; cursor:not-allowed; }
+  .challenge-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; overflow-y:auto; }
+
+  .challenge-header{ flex:1 1 0%; min-height:90px; overflow-y:auto; background:var(--panel); border:1px solid var(--line); padding:10px 14px; }
+  .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 8px; letter-spacing:1px; }
+  .challenge-header p{ font-size:14px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
+  .challenge-header code{ color:var(--yellow); }
+
+  .explanation-box{
+    background:#081208; border:1px solid var(--green-dim); padding:10px 12px;
+    font-size:11.5px; color:var(--ink); line-height:1.6;
+  }
+  .explanation-box .exp-title{
+    color:var(--green); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
+  }
+  .explanation-box code{ color:var(--yellow); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--yellow); white-space:pre;
+  }
+
+  .given-vars{ font-size:10.5px; color:var(--ink-dim); margin-top:8px; }
+  .given-vars b{ color:var(--yellow); }
+
+  .hint-toggle{
+    display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--green-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-toggle:hover{ background:rgba(212,200,106,0.1); }
+  .hint-box{
+    display:none; margin-top:8px; background:var(--panel2); border:1px dashed var(--yellow);
+    padding:8px 10px; font-size:11.5px; color:var(--ink); line-height:1.5;
+  }
+  .hint-box.show{ display:block; }
+  .hint-box b{ color:var(--yellow); }
+
+  textarea#codeInput{
+    width:100%; flex:0 0 230px; min-height:140px; resize:vertical; background:#000; color:var(--green);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5;
+  }
+  textarea#codeInput:focus{ border-color:var(--green); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .console{
+    background:#060806; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    flex:0 0 100px; min-height:70px; overflow-y:auto; line-height:1.6;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--green); }
+  .console .line.fail{ color:var(--blood-bright); }
+  .console .line.success{ color:var(--green); font-weight:bold; }
+  .console .line.warn{ color:var(--yellow); }
+
+  /* Celular/telas estreitas: a barra lateral + painel lado a lado espreme
+     demais o conteúdo (texto quebrando palavra a palavra). Empilha tudo
+     numa coluna só e deixa a página inteira rolar, em vez de depender de
+     várias regiões de scroll aninhadas. */
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:200px; }
+    .console{ flex:none; max-height:160px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'js_fundamentos_basico';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/js-challenge-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>JAVASCRIPT — DESAFIOS DE FUNDAMENTOS (BÁSICO)</div>
+    <div>CONCLUÍDOS: <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Desafios</div>
+        <div id="challengeList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="challenge-header">
+          <h2 id="challengeTitle">--</h2>
+
+          <div class="explanation-box">
+            <div class="exp-title">📖 Como funciona</div>
+            <div id="explanationText"></div>
+          </div>
+
+          <p id="challengeDesc"></p>
+          <div class="given-vars" id="givenVarsLabel" style="display:none;"></div>
+
+          <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+
+        <textarea id="codeInput" spellcheck="false"></textarea>
+
+        <div class="actions">
+          <button class="btn" id="btnRun">▶ Executar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo desafio →</button>
+        </div>
+
+        <div class="console" id="consoleOutput"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Bloco 1 — Variável (5 desafios): declarar número/texto, somar, dividir,
+  // atualizar uma variável a partir de outra já existente.
+  // Bloco 2 — Console e Alert (5 desafios): console.log, alert, e mostrar
+  // o resultado de uma conta ou várias mensagens em sequência.
+  const CHALLENGES = [
+    {
+      id: 1,
+      title: 'Guardando um número',
+      givenVars: [],
+      starter: '// crie uma variável chamada resultado com o valor 100\n\n',
+      explanation: 'Uma <b>variável</b> é como uma caixinha com um nome, onde você guarda um valor para usar depois. Para criar uma, use a palavra <code>let</code>, dê um nome, um sinal de igual <code>=</code> e o valor, terminando com <code>;</code>.<pre>let idade = 10;</pre>',
+      desc: 'Crie uma variável chamada <code>resultado</code> guardando o valor <b>100</b>.',
+      hint: 'Use <code>let</code>, o nome exato pedido pra variável e o valor certo, seguido de ponto e vírgula.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: {}, expected: 100 }
+      ]
+    },
+    {
+      id: 2,
+      title: 'Guardando um texto',
+      givenVars: [],
+      starter: '// crie uma variável chamada resultado com o texto "JavaScript"\n\n',
+      explanation: 'Um texto (chamado de <b>string</b>) precisa ficar entre aspas — simples <code>\'</code> ou duplas <code>"</code>.<pre>let nome = "Ana";</pre>',
+      desc: 'Crie uma variável chamada <code>resultado</code> guardando o texto <code>"JavaScript"</code>.',
+      hint: 'Coloque o texto entre aspas, exatamente como pedido (maiúsculas/minúsculas importam).',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: {}, expected: 'JavaScript' }
+      ]
+    },
+    {
+      id: 3,
+      title: 'Somando duas variáveis',
+      givenVars: ['a', 'b'],
+      starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com a soma de a e b\n\n',
+      explanation: 'Para somar dois números, use o sinal <code>+</code>.<pre>let total = x + y;</pre>',
+      desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável chamada <code>resultado</code> com a soma delas.',
+      hint: 'Qual operador matemático soma dois valores? Aplique ele entre <code>a</code> e <code>b</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 2, b: 3 }, expected: 5 },
+        { values: { a: 10, b: 15 }, expected: 25 },
+        { values: { a: 0, b: 0 }, expected: 0 }
+      ]
+    },
+    {
+      id: 4,
+      title: 'Dividindo duas variáveis',
+      givenVars: ['a', 'b'],
+      starter: '// as variáveis a e b já existem\n// crie uma variável chamada resultado com a divisão de a por b\n\n',
+      explanation: 'Para dividir, use o sinal <code>/</code>.<pre>let metade = x / 2;</pre>',
+      desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável chamada <code>resultado</code> com o valor de <code>a</code> dividido por <code>b</code>.',
+      hint: 'Qual sinal representa divisão em JavaScript? Repare na ordem: é <code>a</code> dividido por <code>b</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 10, b: 2 }, expected: 5 },
+        { values: { a: 9, b: 3 }, expected: 3 },
+        { values: { a: 7, b: 2 }, expected: 3.5 }
+      ]
+    },
+    {
+      id: 5,
+      title: 'Atualizando uma variável',
+      givenVars: ['pontos'],
+      starter: '// a variável pontos já existe\n// crie uma variável chamada resultado somando 10 ao valor de pontos\n\n',
+      explanation: 'Você pode criar uma variável nova a partir do valor de outra que já existe, usando qualquer operador — aqui, soma.<pre>let vida = 5;\nlet vidaExtra = vida + 3; // vidaExtra vale 8</pre>',
+      desc: 'A variável <code>pontos</code> já existe. Crie <code>resultado</code> com o valor de <code>pontos</code> mais <b>10</b>.',
+      hint: 'Pense em como aumentar um valor existente em uma quantia fixa — some <code>10</code> ao valor de <code>pontos</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { pontos: 0 }, expected: 10 },
+        { values: { pontos: 5 }, expected: 15 },
+        { values: { pontos: -10 }, expected: 0 }
+      ]
+    },
+    {
+      id: 6,
+      title: 'Mostrando uma variável no console',
+      givenVars: ['idade'],
+      starter: '// a variável idade já existe\n// use console.log para mostrar o valor de idade\n\n',
+      explanation: 'O comando <code>console.log(...)</code> mostra qualquer valor na tela (no console do navegador) — é a forma mais comum de exibir um resultado.<pre>console.log(idade);</pre>',
+      desc: 'A variável <code>idade</code> já existe. Use <code>console.log</code> para mostrar o valor dela.',
+      hint: '<code>console.log(valor)</code> mostra o que estiver dentro dos parênteses — passe a variável <code>idade</code> pra ele.',
+      check: { type: 'console' },
+      tests: [
+        { values: { idade: 10 }, expected: [10] },
+        { values: { idade: 25 }, expected: [25] },
+        { values: { idade: 0 }, expected: [0] }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Mostrando um texto fixo',
+      givenVars: [],
+      starter: '// use console.log para mostrar o texto "Olá, mundo!"\n\n',
+      explanation: 'Você também pode mostrar um texto direto, sem precisar de uma variável.<pre>console.log("Bem-vindo!");</pre>',
+      desc: 'Use <code>console.log</code> para mostrar o texto <code>"Olá, mundo!"</code>.',
+      hint: 'Coloque o texto entre aspas, exatamente como pedido, dentro dos parênteses do <code>console.log</code>.',
+      check: { type: 'console' },
+      tests: [
+        { values: {}, expected: ['Olá, mundo!'] }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Usando o alert',
+      givenVars: ['nome'],
+      starter: '// a variável nome já existe\n// use alert para mostrar o valor de nome\n\n',
+      explanation: '<code>alert(...)</code> é outra forma de mostrar uma mensagem — em vez de aparecer no console, abre um aviso na tela pro usuário ver. Funciona parecido com <code>console.log</code>.<pre>alert("Atenção!");</pre>',
+      desc: 'A variável <code>nome</code> já existe (um texto). Use <code>alert</code> para mostrar o valor dela.',
+      hint: '<code>alert(valor)</code> mostra o que está dentro dos parênteses num aviso — passe a variável <code>nome</code> pra ele.',
+      check: { type: 'console' },
+      tests: [
+        { values: { nome: 'Ana' }, expected: ['Ana'] },
+        { values: { nome: 'Rafael' }, expected: ['Rafael'] },
+        { values: { nome: 'Zed' }, expected: ['Zed'] }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Mostrando o resultado de uma conta',
+      givenVars: ['a', 'b'],
+      starter: '// as variáveis a e b já existem\n// mostre no console a soma delas\n\n',
+      explanation: 'Não precisa guardar numa variável antes — dá pra mostrar o resultado de uma conta direto dentro do <code>console.log</code>.<pre>console.log(x + y);</pre>',
+      desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Use <code>console.log</code> para mostrar a soma delas, sem precisar criar outra variável.',
+      hint: 'Some <code>a</code> e <code>b</code> direto dentro dos parênteses do <code>console.log</code>.',
+      check: { type: 'console' },
+      tests: [
+        { values: { a: 2, b: 3 }, expected: [5] },
+        { values: { a: 10, b: 15 }, expected: [25] },
+        { values: { a: 1, b: 1 }, expected: [2] }
+      ]
+    },
+    {
+      id: 10,
+      title: 'Mostrando duas mensagens',
+      givenVars: ['total'],
+      starter: '// a variável total já existe\n// mostre "Total:" e depois o valor de total, em duas chamadas de console.log\n\n',
+      explanation: 'Você pode chamar <code>console.log</code> várias vezes seguidas — cada chamada aparece numa linha nova, na ordem em que o código roda.<pre>console.log("Nome:");\nconsole.log(nome);</pre>',
+      desc: 'A variável <code>total</code> já existe. Use <code>console.log</code> duas vezes: primeiro mostre o texto <code>"Total:"</code>, depois mostre o valor de <code>total</code>.',
+      hint: 'Duas linhas separadas, cada uma com seu próprio <code>console.log(...)</code> — a primeira com o texto, a segunda com a variável.',
+      check: { type: 'console' },
+      tests: [
+        { values: { total: 50 }, expected: ['Total:', 50] },
+        { values: { total: 0 }, expected: ['Total:', 0] },
+        { values: { total: 100 }, expected: ['Total:', 100] }
+      ]
+    }
+  ];
+
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + critério de avaliação (testes) de cada
+  // desafio — aqui não existe UM código certo, e sim um valor esperado por
+  // combinação de entradas, então o gabarito lista os casos de teste.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'JavaScript — Fundamentos (Básico)',
+      subtitle: 'Prática · Desenvolvimento de Sistemas 1 · Turma Sistemas',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        answer: c.tests.map(t => {
+          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
+          if (c.check.type === 'console') {
+            return `${prefix} → console/alert deve mostrar ${JSON.stringify(t.expected)}`;
+          }
+          return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
+        }).join('\n')
+      })),
+      fileName: 'js-fundamentos-basico-gabarito.txt'
+    });
+  };
+
+  window.PortalJsChallenges.run({
+    activityLocation: 'js_fundamentos_basico',
+    challenges: CHALLENGES,
+    reportLabel: 'JavaScript — Fundamentos (Básico)'
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

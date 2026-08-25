@@ -167,18 +167,26 @@ window.TURMA_CONFIG_SISTEMAS = {
         {
           key: 'js-fundamentos',
           label: 'JavaScript',
-          desc: 'Desafios práticos pra treinar a base da lógica de programação em JavaScript: variáveis, operações, funções e decisões.',
+          desc: 'Desafios práticos pra treinar a base da lógica de programação em JavaScript: variáveis, console/alert, funções, decisões e laços.',
           capacidade: 'Aplicar lógica de programação usando a linguagem JavaScript.',
           modules: [
             {
               // Sem módulo de teoria separado, de propósito — cada desafio já
               // traz uma mini-explicação embutida (ver CHALLENGES no próprio
-              // arquivo), mesmo formato usado em turmas/jogos/atividades/
-              // js-basico.html (também sem teoria à parte).
-              key: 'pratica', title: 'Prática — Desafios de JavaScript',
-              desc: 'Declarar variáveis, somar, dividir, mostrar resultados no console, criar funções, retornar valores e usar if/else.',
-              icon: '🟨', src: 'atividades/js-fundamentos-pratica.html',
-              progressKey: 'js_fundamentos_pratica_progress_', progressTotal: 7,
+              // arquivo). Mesmo formato (e mesmos nomes de módulo) de
+              // turmas/jogos/atividades/js-basico.html/js-intermediario.html
+              // — os dois usam shared/js-challenge-engine.js por baixo.
+              key: 'basico', title: 'Básico — Desafios de JavaScript',
+              desc: 'Variáveis (declarar, somar, dividir, atualizar) e Console/Alert (mostrar valores, textos e resultados na tela).',
+              icon: '🟨', src: 'atividades/js-fundamentos-basico.html',
+              progressKey: 'js_fundamentos_basico_progress_', progressTotal: 10,
+              hasGabarito: true
+            },
+            {
+              key: 'intermediario', title: 'Intermediário — Desafios de JavaScript',
+              desc: 'Funções (criar e retornar valores), If/Else (decisões) e Laços (repetir com for).',
+              icon: '🟧', src: 'atividades/js-fundamentos-intermediario.html',
+              progressKey: 'js_fundamentos_intermediario_progress_', progressTotal: 15,
               hasGabarito: true
             }
           ]

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desenvolvimento de Sistemas — JavaScript: Fundamentos (Intermediário)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:190px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .challenge-item{
+    display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
+  }
+  .challenge-item .status{ font-size:13px; width:16px; text-align:center; flex-shrink:0; }
+  .challenge-item.active{ border-color:var(--green); color:var(--green); }
+  .challenge-item.completed{ color:var(--ink); }
+  .challenge-item.locked{ opacity:0.4; cursor:not-allowed; }
+  .challenge-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; overflow-y:auto; }
+
+  .challenge-header{ flex:1 1 0%; min-height:90px; overflow-y:auto; background:var(--panel); border:1px solid var(--line); padding:10px 14px; }
+  .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 8px; letter-spacing:1px; }
+  .challenge-header p{ font-size:14px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
+  .challenge-header code{ color:var(--yellow); }
+
+  .explanation-box{
+    background:#081208; border:1px solid var(--green-dim); padding:10px 12px;
+    font-size:11.5px; color:var(--ink); line-height:1.6;
+  }
+  .explanation-box .exp-title{
+    color:var(--green); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
+  }
+  .explanation-box code{ color:var(--yellow); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--yellow); white-space:pre;
+  }
+
+  .given-vars{ font-size:10.5px; color:var(--ink-dim); margin-top:8px; }
+  .given-vars b{ color:var(--yellow); }
+
+  .hint-toggle{
+    display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--green-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-toggle:hover{ background:rgba(212,200,106,0.1); }
+  .hint-box{
+    display:none; margin-top:8px; background:var(--panel2); border:1px dashed var(--yellow);
+    padding:8px 10px; font-size:11.5px; color:var(--ink); line-height:1.5;
+  }
+  .hint-box.show{ display:block; }
+  .hint-box b{ color:var(--yellow); }
+
+  textarea#codeInput{
+    width:100%; flex:0 0 230px; min-height:140px; resize:vertical; background:#000; color:var(--green);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5;
+  }
+  textarea#codeInput:focus{ border-color:var(--green); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .console{
+    background:#060806; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    flex:0 0 100px; min-height:70px; overflow-y:auto; line-height:1.6;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--green); }
+  .console .line.fail{ color:var(--blood-bright); }
+  .console .line.success{ color:var(--green); font-weight:bold; }
+  .console .line.warn{ color:var(--yellow); }
+
+  /* Celular/telas estreitas: a barra lateral + painel lado a lado espreme
+     demais o conteúdo (texto quebrando palavra a palavra). Empilha tudo
+     numa coluna só e deixa a página inteira rolar, em vez de depender de
+     várias regiões de scroll aninhadas. */
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:200px; }
+    .console{ flex:none; max-height:160px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'js_fundamentos_intermediario';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/js-challenge-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>JAVASCRIPT — DESAFIOS DE FUNDAMENTOS (INTERMEDIÁRIO)</div>
+    <div>CONCLUÍDOS: <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Desafios</div>
+        <div id="challengeList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="challenge-header">
+          <h2 id="challengeTitle">--</h2>
+
+          <div class="explanation-box">
+            <div class="exp-title">📖 Como funciona</div>
+            <div id="explanationText"></div>
+          </div>
+
+          <p id="challengeDesc"></p>
+          <div class="given-vars" id="givenVarsLabel" style="display:none;"></div>
+
+          <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+
+        <textarea id="codeInput" spellcheck="false"></textarea>
+
+        <div class="actions">
+          <button class="btn" id="btnRun">▶ Executar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo desafio →</button>
+        </div>
+
+        <div class="console" id="consoleOutput"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Bloco 1 — Função (5 desafios): criar função sem parâmetro, com um
+  // parâmetro, e com dois parâmetros, sempre retornando um valor com return.
+  // Bloco 2 — If/Else (5 desafios): decisões de dois caminhos, com
+  // operadores de comparação diferentes a cada desafio.
+  // Bloco 3 — Laços (5 desafios): for simples, repetindo até um valor fixo
+  // ou variável, acumulando um total, contando com uma condição, e a
+  // tabuada — sempre um único for, sem aninhar laços.
+  const CHALLENGES = [
+    {
+      id: 1,
+      title: 'Criando uma função',
+      givenVars: [],
+      starter: 'function saudacao() {\n\n}\n',
+      explanation: 'Uma <b>função</b> é um bloco de código com nome, que você pode chamar (executar) sempre que precisar. Para criar uma, use a palavra <code>function</code>, o nome, parênteses <code>()</code> e chaves <code>{ }</code> envolvendo o que ela faz. Dentro, <code>return</code> devolve um valor pra quem chamou.<pre>function saudacao() {\n  return "Olá!";\n}</pre>',
+      desc: 'Crie uma função chamada <code>saudacao</code>, sem parâmetros, que retorna o texto <code>"Olá!"</code> quando chamada.',
+      hint: 'A palavra <code>function</code>, o nome <code>saudacao</code>, parênteses vazios <code>()</code> e chaves <code>{ }</code> por volta do corpo. Dentro, use <code>return</code> seguido do texto exato pedido.',
+      check: { type: 'function', name: 'saudacao' },
+      tests: [
+        { args: [], expected: 'Olá!' }
+      ]
+    },
+    {
+      id: 2,
+      title: 'Função com um parâmetro',
+      givenVars: [],
+      starter: 'function dobro(n) {\n\n}\n',
+      explanation: 'Uma função pode receber um <b>parâmetro</b> — um valor que muda a cada chamada. Ele fica disponível dentro da função como se fosse uma variável.<pre>function dobro(n) {\n  return n * 2;\n}</pre>Quem chamar <code>dobro(5)</code> recebe <code>10</code> de volta.',
+      desc: 'Crie uma função chamada <code>dobro</code> que recebe um parâmetro <code>n</code> e retorna o dobro desse valor (<code>n</code> vezes 2).',
+      hint: 'O parâmetro <code>n</code> já está disponível dentro da função — multiplique ele por <code>2</code> e use <code>return</code> pra devolver o resultado.',
+      check: { type: 'function', name: 'dobro' },
+      tests: [
+        { args: [5], expected: 10 },
+        { args: [0], expected: 0 },
+        { args: [-3], expected: -6 }
+      ]
+    },
+    {
+      id: 3,
+      title: 'Outra função com parâmetro',
+      givenVars: [],
+      starter: 'function aumentar(n) {\n\n}\n',
+      explanation: 'Assim como antes, o parâmetro pode ser combinado com qualquer operação — aqui, soma em vez de multiplicação.<pre>function maisDez(n) {\n  return n + 10;\n}</pre>',
+      desc: 'Crie uma função chamada <code>aumentar</code> que recebe um parâmetro <code>n</code> e retorna <code>n</code> mais <b>10</b>.',
+      hint: 'Some <code>10</code> ao parâmetro <code>n</code> e use <code>return</code> pra devolver o resultado.',
+      check: { type: 'function', name: 'aumentar' },
+      tests: [
+        { args: [0], expected: 10 },
+        { args: [5], expected: 15 },
+        { args: [-10], expected: 0 }
+      ]
+    },
+    {
+      id: 4,
+      title: 'Função com dois parâmetros',
+      givenVars: [],
+      starter: 'function soma(a, b) {\n\n}\n',
+      explanation: 'Uma função pode receber mais de um parâmetro — é só separar por vírgula, tanto na hora de declarar quanto na hora de chamar.<pre>function soma(a, b) {\n  return a + b;\n}</pre>Quem chamar <code>soma(2, 3)</code> recebe <code>5</code> de volta.',
+      desc: 'Crie uma função chamada <code>soma</code> que recebe dois parâmetros, <code>a</code> e <code>b</code>, e retorna a soma deles.',
+      hint: 'Os parâmetros <code>a</code> e <code>b</code> já estão disponíveis dentro da função — some os dois e use <code>return</code>.',
+      check: { type: 'function', name: 'soma' },
+      tests: [
+        { args: [2, 3], expected: 5 },
+        { args: [10, 15], expected: 25 },
+        { args: [0, 0], expected: 0 }
+      ]
+    },
+    {
+      id: 5,
+      title: 'Outra função com dois parâmetros',
+      givenVars: [],
+      starter: 'function multiplica(a, b) {\n\n}\n',
+      explanation: 'Mesma ideia de dois parâmetros, com outra operação.<pre>function multiplica(a, b) {\n  return a * b;\n}</pre>',
+      desc: 'Crie uma função chamada <code>multiplica</code> que recebe dois parâmetros, <code>a</code> e <code>b</code>, e retorna a multiplicação deles.',
+      hint: 'Multiplique <code>a</code> por <code>b</code> e use <code>return</code> pra devolver o resultado.',
+      check: { type: 'function', name: 'multiplica' },
+      tests: [
+        { args: [3, 4], expected: 12 },
+        { args: [5, 0], expected: 0 },
+        { args: [-2, 3], expected: -6 }
+      ]
+    },
+    {
+      id: 6,
+      title: 'Maioridade',
+      givenVars: ['idade'],
+      starter: '// a variável idade já existe\n// crie uma variável chamada resultado usando if/else\n\n',
+      explanation: 'Um bloco <code>if/else</code> escolhe entre dois caminhos, dependendo de uma condição.<pre>if (idade &gt;= 18) {\n  resultado = "maior de idade";\n} else {\n  resultado = "menor de idade";\n}</pre>',
+      desc: 'A variável <code>idade</code> já existe. Crie uma variável chamada <code>resultado</code> com o texto <code>"maior de idade"</code> se <code>idade</code> for maior ou igual a 18, ou <code>"menor de idade"</code> caso contrário.',
+      hint: '<code>if (condição) { ... } else { ... }</code> — a condição usa um operador de "maior ou igual" entre <code>idade</code> e <code>18</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { idade: 18 }, expected: 'maior de idade' },
+        { values: { idade: 17 }, expected: 'menor de idade' },
+        { values: { idade: 0 }, expected: 'menor de idade' }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Par ou ímpar',
+      givenVars: ['numero'],
+      starter: '// a variável numero já existe\n// crie uma variável chamada resultado usando if/else\n\n',
+      explanation: 'O operador de resto (módulo) <code>%</code> devolve o que sobra de uma divisão inteira. Um número é par quando o resto da divisão por 2 é zero.<pre>if (numero % 2 === 0) {\n  resultado = "par";\n} else {\n  resultado = "ímpar";\n}</pre>',
+      desc: 'A variável <code>numero</code> já existe. Crie <code>resultado</code> com o texto <code>"par"</code> se <code>numero</code> for par, ou <code>"ímpar"</code> caso contrário.',
+      hint: 'Use <code>numero % 2 === 0</code> como condição do <code>if</code> — se o resto da divisão por 2 for zero, o número é par.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { numero: 4 }, expected: 'par' },
+        { values: { numero: 7 }, expected: 'ímpar' },
+        { values: { numero: 0 }, expected: 'par' }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Aprovado ou reprovado',
+      givenVars: ['nota'],
+      starter: '// a variável nota já existe\n// crie uma variável chamada resultado usando if/else\n\n',
+      explanation: 'A mesma estrutura de <code>if/else</code> serve pra qualquer condição de comparação — aqui, uma nota mínima.<pre>if (nota &gt;= 6) {\n  resultado = "aprovado";\n} else {\n  resultado = "reprovado";\n}</pre>',
+      desc: 'A variável <code>nota</code> já existe. Crie <code>resultado</code> com o texto <code>"aprovado"</code> se <code>nota</code> for maior ou igual a 6, ou <code>"reprovado"</code> caso contrário.',
+      hint: 'A condição do <code>if</code> é <code>nota &gt;= 6</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { nota: 6 }, expected: 'aprovado' },
+        { values: { nota: 5.9 }, expected: 'reprovado' },
+        { values: { nota: 10 }, expected: 'aprovado' }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Positivo ou não',
+      givenVars: ['numero'],
+      starter: '// a variável numero já existe\n// crie uma variável chamada resultado usando if/else\n\n',
+      explanation: 'Repare que zero NÃO é maior que zero — então zero cai no <code>else</code> deste desafio.<pre>if (numero &gt; 0) {\n  resultado = "positivo";\n} else {\n  resultado = "não positivo";\n}</pre>',
+      desc: 'A variável <code>numero</code> já existe. Crie <code>resultado</code> com o texto <code>"positivo"</code> se <code>numero</code> for maior que 0, ou <code>"não positivo"</code> caso contrário.',
+      hint: 'A condição do <code>if</code> é <code>numero &gt; 0</code> — sem o "ou igual" dessa vez.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { numero: 5 }, expected: 'positivo' },
+        { values: { numero: 0 }, expected: 'não positivo' },
+        { values: { numero: -3 }, expected: 'não positivo' }
+      ]
+    },
+    {
+      id: 10,
+      title: 'Saldo suficiente',
+      givenVars: ['saldo', 'preco'],
+      starter: '// as variáveis saldo e preco já existem\n// crie uma variável chamada resultado usando if/else\n\n',
+      explanation: 'A condição de um <code>if</code> também pode comparar duas variáveis entre si, não só uma variável com um número fixo.<pre>if (saldo &gt;= preco) {\n  resultado = "liberado";\n} else {\n  resultado = "insuficiente";\n}</pre>',
+      desc: 'As variáveis <code>saldo</code> e <code>preco</code> já existem. Crie <code>resultado</code> com o texto <code>"liberado"</code> se <code>saldo</code> for maior ou igual a <code>preco</code>, ou <code>"insuficiente"</code> caso contrário.',
+      hint: 'A condição do <code>if</code> é <code>saldo &gt;= preco</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { saldo: 100, preco: 100 }, expected: 'liberado' },
+        { values: { saldo: 50, preco: 100 }, expected: 'insuficiente' },
+        { values: { saldo: 200, preco: 100 }, expected: 'liberado' }
+      ]
+    },
+    {
+      id: 11,
+      title: 'Repetindo um número de vezes fixo',
+      givenVars: [],
+      starter: '// use um for para mostrar no console os números de 1 até 5\n\n',
+      explanation: 'Um <b>laço</b> (ou "loop") repete um bloco de código várias vezes, sem você precisar escrever a mesma linha de novo. O mais comum é o <code>for</code>, que tem 3 partes separadas por ponto e vírgula: <b>início</b> (cria um contador), <b>condição</b> (o laço continua enquanto ela for verdadeira) e <b>passo</b> (o que muda o contador a cada volta).<pre>for (let i = 1; i <= 5; i++) {\n  console.log(i);\n}</pre>Isso mostra <code>1</code>, <code>2</code>, <code>3</code>, <code>4</code> e <code>5</code>, um por linha: <code>i</code> começa em 1; enquanto <code>i</code> for menor ou igual a 5 o bloco roda; <code>i++</code> soma 1 em <code>i</code> a cada volta, até a condição parar de ser verdadeira.',
+      desc: 'Use um <code>for</code> para mostrar no console os números de <b>1</b> até <b>5</b>, um de cada vez.',
+      hint: 'Copie a estrutura <code>for (let i = 1; i <= 5; i++) { console.log(i); }</code> — ela já resolve exatamente isso.',
+      check: { type: 'console' },
+      tests: [
+        { values: {}, expected: [1, 2, 3, 4, 5] }
+      ]
+    },
+    {
+      id: 12,
+      title: 'Repetindo até um valor variável',
+      givenVars: ['limite'],
+      starter: '// a variável limite já existe\n// use um for para mostrar os números de 1 até limite\n\n',
+      explanation: 'A condição do <code>for</code> não precisa ser um número fixo — pode usar uma variável, e o laço se ajusta sozinho.<pre>for (let i = 1; i <= limite; i++) {\n  console.log(i);\n}</pre>',
+      desc: 'A variável <code>limite</code> já existe. Use um <code>for</code> para mostrar no console os números de <b>1</b> até <code>limite</code>.',
+      hint: 'Troque o número fixo do desafio anterior pela variável <code>limite</code> na condição do <code>for</code>.',
+      check: { type: 'console' },
+      tests: [
+        { values: { limite: 3 }, expected: [1, 2, 3] },
+        { values: { limite: 5 }, expected: [1, 2, 3, 4, 5] },
+        { values: { limite: 1 }, expected: [1] }
+      ]
+    },
+    {
+      id: 13,
+      title: 'Somando com um laço',
+      givenVars: ['n'],
+      starter: '// a variável n já existe\n// use um for para somar os números de 1 até n, guardando em resultado\n\n',
+      explanation: 'Pra "acumular" um total dentro de um laço, crie a variável ANTES do <code>for</code> começando em zero, e vá somando a cada volta.<pre>let resultado = 0;\nfor (let i = 1; i <= n; i++) {\n  resultado = resultado + i;\n}</pre>',
+      desc: 'A variável <code>n</code> já existe. Use um <code>for</code> para somar todos os números inteiros de <b>1</b> até <code>n</code>, guardando o total em <code>resultado</code>.',
+      hint: 'Comece com <code>let resultado = 0;</code> antes do <code>for</code>, e dentro do laço faça <code>resultado = resultado + i;</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { n: 3 }, expected: 6 },
+        { values: { n: 5 }, expected: 15 },
+        { values: { n: 1 }, expected: 1 }
+      ]
+    },
+    {
+      id: 14,
+      title: 'Contando com uma condição',
+      givenVars: ['n'],
+      starter: '// a variável n já existe\n// use um for (com if dentro) para contar os números pares de 1 até n\n\n',
+      explanation: 'Dá pra combinar um <code>if</code> DENTRO de um <code>for</code> — a cada volta, só soma no total quando a condição do <code>if</code> for verdadeira.<pre>let resultado = 0;\nfor (let i = 1; i <= n; i++) {\n  if (i % 2 === 0) {\n    resultado = resultado + 1;\n  }\n}</pre>',
+      desc: 'A variável <code>n</code> já existe. Use um <code>for</code> para contar quantos números PARES existem entre <b>1</b> e <code>n</code> (incluindo o próprio <code>n</code>, se for par), guardando a quantidade em <code>resultado</code>.',
+      hint: 'Comece com <code>let resultado = 0;</code>, e dentro do <code>for</code> use <code>if (i % 2 === 0) { resultado = resultado + 1; }</code>.',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { n: 5 }, expected: 2 },
+        { values: { n: 10 }, expected: 5 },
+        { values: { n: 1 }, expected: 0 }
+      ]
+    },
+    {
+      id: 15,
+      title: 'Tabuada',
+      givenVars: ['numero'],
+      starter: '// a variável numero já existe\n// use um for para mostrar a tabuada de numero, de 1 até 5\n\n',
+      explanation: 'Dentro do laço, você pode usar o contador (<code>i</code>) em qualquer conta — não só pra mostrar ele mesmo.<pre>for (let i = 1; i <= 5; i++) {\n  console.log(numero * i);\n}</pre>',
+      desc: 'A variável <code>numero</code> já existe. Use um <code>for</code> para mostrar no console a tabuada de <code>numero</code>, do <b>1</b> até o <b>5</b> (ou seja, <code>numero</code> vezes 1, <code>numero</code> vezes 2, ..., <code>numero</code> vezes 5).',
+      hint: 'Um <code>for</code> de <code>i = 1</code> até <code>5</code>, mostrando <code>numero * i</code> em cada volta.',
+      check: { type: 'console' },
+      tests: [
+        { values: { numero: 2 }, expected: [2, 4, 6, 8, 10] },
+        { values: { numero: 3 }, expected: [3, 6, 9, 12, 15] },
+        { values: { numero: 10 }, expected: [10, 20, 30, 40, 50] }
+      ]
+    }
+  ];
+
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com enunciado + critério de avaliação (testes) de cada
+  // desafio — aqui não existe UM código certo, e sim um valor esperado por
+  // combinação de entradas, então o gabarito lista os casos de teste.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'JavaScript — Fundamentos (Intermediário)',
+      subtitle: 'Prática · Desenvolvimento de Sistemas 1 · Turma Sistemas',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        answer: c.tests.map(t => {
+          if (c.check.type === 'function') {
+            const argsStr = t.args.map(a => JSON.stringify(a)).join(', ');
+            return `${c.check.name}(${argsStr}) deve retornar ${JSON.stringify(t.expected)}`;
+          }
+          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
+          if (c.check.type === 'console') {
+            return `${prefix} → console/alert deve mostrar ${JSON.stringify(t.expected)}`;
+          }
+          return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
+        }).join('\n')
+      })),
+      fileName: 'js-fundamentos-intermediario-gabarito.txt'
+    });
+  };
+
+  window.PortalJsChallenges.run({
+    activityLocation: 'js_fundamentos_intermediario',
+    challenges: CHALLENGES,
+    reportLabel: 'JavaScript — Fundamentos (Intermediário)'
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>
