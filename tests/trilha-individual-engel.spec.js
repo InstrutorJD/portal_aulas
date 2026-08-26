@@ -102,4 +102,27 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
     await expect(frame.locator('.console')).toContainText('Acertou');
     await expect(frame.locator('#btnNext')).toBeVisible();
   });
+
+  test('emojis grandes das palavras conhecidas aparecem no desafio, e somem quando não há palavra conhecida', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.addInitScript(() => {
+      localStorage.setItem('js_basico_adaptado_engel_progress_engel.fraga', JSON.stringify([1, 2, 3, 4, 5]));
+    });
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await page.selectOption('#trilhaSelect', 'js-adaptado-engel');
+    await page.click('#moduleSelector_js-adaptado-engel .game-card');
+
+    const frame = page.frameLocator('#moduleFrame_js-adaptado-engel');
+    await expect(frame.locator('#challengeTitle')).toContainText('Multiplicar');
+    await expect(frame.locator('#vocabRow')).toBeVisible();
+    await expect(frame.locator('#vocabRow')).toContainText('🐱');
+    await expect(frame.locator('#vocabRow')).toContainText('gato');
+    await expect(frame.locator('#vocabRow')).toContainText('🐶');
+    await expect(frame.locator('#vocabRow')).toContainText('cachorro');
+
+    await frame.locator('.step-icon').first().click();
+    await expect(frame.locator('#challengeTitle')).toContainText('Guardar');
+    await expect(frame.locator('#vocabRow')).toBeHidden();
+  });
 });

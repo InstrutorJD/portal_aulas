@@ -58,6 +58,15 @@
   }
   .challenge-header p{ font-size:18px; color:var(--ink); margin:0; line-height:1.5; }
 
+  .vocab-row{
+    display:flex; justify-content:center; align-items:center; gap:18px;
+    margin:2px 0 12px; flex-wrap:wrap;
+  }
+  .vocab-item{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .vocab-item .emoji{ font-size:44px; line-height:1; }
+  .vocab-item .word{ font-size:14px; color:var(--yellow); font-weight:800; }
+  .vocab-op{ font-size:30px; color:var(--green); }
+
   .example-box{
     background:#050805; border:1px solid var(--green-dim); padding:12px 16px;
     font-size:16px; color:var(--yellow); text-align:center; font-family:'JetBrains Mono', monospace;
@@ -132,6 +141,7 @@
         <div class="challenge-header">
           <div class="big-icon" id="stepIcon">💻</div>
           <h2 id="challengeTitle">--</h2>
+          <div class="vocab-row" id="vocabRow" style="display:none;"></div>
           <p id="challengeDesc"></p>
         </div>
 
@@ -162,6 +172,13 @@
   // texto reduzido ao mínimo (o professor explica ao vivo antes de cada
   // passo). Mesmo motor de checagem de sempre (resultVar), só a interface
   // e o texto que mudam.
+  // Palavras que o Engel já reconhece, cada uma com um emoji GRANDE
+  // correspondente — reforça o significado por imagem, não só por leitura.
+  const VOCAB_EMOJI = {
+    gato: '🐱', cachorro: '🐶', casa: '🏠', escola: '🏫', moto: '🏍️',
+    carro: '🚗', macaco: '🐵', pato: '🦆', rato: '🐭', agua: '💧', vida: '❤️'
+  };
+
   const CHALLENGES = [
     {
       id: 1,
@@ -240,14 +257,14 @@
       title: 'Multiplicar',
       icon: '✖️',
       resultVar: 'resultado',
-      givenVars: ['a', 'b'],
+      givenVars: ['gato', 'cachorro'],
       starter: '\n\n',
-      example: 'let total = x * y;',
-      desc: 'Multiplique a por b.',
+      example: 'let resultado = gato + cachorro;',
+      desc: 'Multiplique gato por cachorro.',
       hint: 'Use o sinal *.',
       tests: [
-        { values: { a: 3, b: 4 }, expected: 12 },
-        { values: { a: 5, b: 2 }, expected: 10 }
+        { values: { gato: 3, cachorro: 4 }, expected: 12 },
+        { values: { gato: 5, cachorro: 2 }, expected: 10 }
       ]
     },
     {
@@ -255,14 +272,14 @@
       title: 'Dividir',
       icon: '➗',
       resultVar: 'resultado',
-      givenVars: ['a', 'b'],
+      givenVars: ['gato', 'cachorro'],
       starter: '\n\n',
-      example: 'let total = x / y;',
-      desc: 'Divida a por b.',
+      example: 'let resultado = gato - cachorro;',
+      desc: 'Divida gato por cachorro.',
       hint: 'Use o sinal /.',
       tests: [
-        { values: { a: 10, b: 2 }, expected: 5 },
-        { values: { a: 9, b: 3 }, expected: 3 }
+        { values: { gato: 10, cachorro: 2 }, expected: 5 },
+        { values: { gato: 9, cachorro: 3 }, expected: 3 }
       ]
     },
     {
@@ -270,14 +287,14 @@
       title: 'Sobra',
       icon: '🌀',
       resultVar: 'resultado',
-      givenVars: ['a', 'b'],
+      givenVars: ['gato', 'cachorro'],
       starter: '\n\n',
-      example: 'let total = x % y;',
-      desc: 'O que sobra de a dividido por b?',
+      example: 'let resultado = gato * cachorro;',
+      desc: 'O que sobra de gato dividido por cachorro?',
       hint: 'Use o sinal %.',
       tests: [
-        { values: { a: 10, b: 3 }, expected: 1 },
-        { values: { a: 9, b: 3 }, expected: 0 }
+        { values: { gato: 10, cachorro: 3 }, expected: 1 },
+        { values: { gato: 9, cachorro: 3 }, expected: 0 }
       ]
     },
     {
@@ -285,14 +302,14 @@
       title: 'Juntar',
       icon: '🔤',
       resultVar: 'resultado',
-      givenVars: ['nome', 'sobrenome'],
+      givenVars: ['casa', 'escola'],
       starter: '\n\n',
-      example: 'let total = primeiro + " " + ultimo;',
-      desc: 'Junte nome e sobrenome, com espaço.',
+      example: 'let resultado = casa + escola;',
+      desc: 'Junte casa e escola, com espaço.',
       hint: 'Use o sinal + duas vezes.',
       tests: [
-        { values: { nome: 'Ana', sobrenome: 'Silva' }, expected: 'Ana Silva' },
-        { values: { nome: 'Bea', sobrenome: 'Lima' }, expected: 'Bea Lima' }
+        { values: { casa: 'Vila', escola: 'Nova' }, expected: 'Vila Nova' },
+        { values: { casa: 'Rua', escola: 'Bela' }, expected: 'Rua Bela' }
       ]
     },
     {
@@ -300,14 +317,89 @@
       title: 'Decidir de novo',
       icon: '🚦',
       resultVar: 'resultado',
-      givenVars: ['pontos'],
-      starter: 'let resultado;\nif (pontos < 10) {\n  resultado = \'\';\n} else {\n  resultado = \'\';\n}',
-      example: 'if (idade < 18) {\n  status = "nao";\n} else {\n  status = "sim";\n}',
-      desc: 'pontos < 10 → "nao". Senão → "sim".',
+      givenVars: ['agua'],
+      starter: 'let resultado;\nif (agua < 10) {\n  resultado = \'\';\n} else {\n  resultado = \'\';\n}',
+      example: 'if (agua > 10) {\n  resultado = "sim";\n} else {\n  resultado = "nao";\n}',
+      desc: 'agua < 10 → "nao". Senão → "sim".',
       hint: 'Complete os dois espaços vazios.',
       tests: [
-        { values: { pontos: 5 }, expected: 'nao' },
-        { values: { pontos: 20 }, expected: 'sim' }
+        { values: { agua: 5 }, expected: 'nao' },
+        { values: { agua: 20 }, expected: 'sim' }
+      ]
+    },
+    {
+      id: 11,
+      title: 'Menor',
+      icon: '🏍️',
+      resultVar: 'resultado',
+      givenVars: ['moto', 'carro'],
+      starter: '\n\n',
+      example: 'let resultado = moto > carro;',
+      desc: 'moto é menor que carro?',
+      hint: 'Use o sinal <.',
+      tests: [
+        { values: { moto: 3, carro: 8 }, expected: true },
+        { values: { moto: 10, carro: 2 }, expected: false }
+      ]
+    },
+    {
+      id: 12,
+      title: 'Igual',
+      icon: '🟰',
+      resultVar: 'resultado',
+      givenVars: ['gato', 'rato'],
+      starter: '\n\n',
+      example: 'let resultado = gato > rato;',
+      desc: 'gato é igual a rato?',
+      hint: 'Use o sinal ===.',
+      tests: [
+        { values: { gato: 4, rato: 4 }, expected: true },
+        { values: { gato: 4, rato: 5 }, expected: false }
+      ]
+    },
+    {
+      id: 13,
+      title: 'Maior ou igual',
+      icon: '📏',
+      resultVar: 'resultado',
+      givenVars: ['macaco', 'pato'],
+      starter: '\n\n',
+      example: 'let resultado = macaco > pato;',
+      desc: 'macaco é maior ou igual a pato?',
+      hint: 'Use o sinal >=.',
+      tests: [
+        { values: { macaco: 5, pato: 5 }, expected: true },
+        { values: { macaco: 3, pato: 5 }, expected: false }
+      ]
+    },
+    {
+      id: 14,
+      title: 'Nomes iguais',
+      icon: '👥',
+      resultVar: 'resultado',
+      givenVars: ['gato', 'cachorro'],
+      starter: '\n\n',
+      example: 'let resultado = gato > cachorro;',
+      desc: 'gato é igual a cachorro?',
+      hint: 'Use o sinal ===.',
+      tests: [
+        { values: { gato: 'Rex', cachorro: 'Rex' }, expected: true },
+        { values: { gato: 'Rex', cachorro: 'Bolt' }, expected: false }
+      ]
+    },
+    {
+      id: 15,
+      title: 'Entrada certa',
+      icon: '🔑',
+      resultVar: 'resultado',
+      givenVars: ['rato'],
+      starter: 'let resultado;\nif (rato === 4) {\n  resultado = \'\';\n} else {\n  resultado = \'\';\n}',
+      example: 'if (rato > 4) {\n  resultado = "entrou";\n} else {\n  resultado = "errado";\n}',
+      desc: 'rato === 4 → "entrou". Senão → "errado".',
+      hint: 'Complete os dois espaços vazios.',
+      tests: [
+        { values: { rato: 4 }, expected: 'entrou' },
+        { values: { rato: 9 }, expected: 'errado' }
       ]
     }
   ];
@@ -334,6 +426,7 @@
   const stepIconEl = document.getElementById('stepIcon');
   const challengeTitleEl = document.getElementById('challengeTitle');
   const challengeDescEl = document.getElementById('challengeDesc');
+  const vocabRowEl = document.getElementById('vocabRow');
   const exampleBoxEl = document.getElementById('exampleBox');
   const codeInput = document.getElementById('codeInput');
   const btnRun = document.getElementById('btnRun');
@@ -388,6 +481,17 @@
     stepIconEl.textContent = challenge.icon;
     challengeTitleEl.textContent = challenge.title;
     challengeDescEl.textContent = challenge.desc;
+
+    const vocabWords = challenge.givenVars.filter(v => VOCAB_EMOJI[v]);
+    if (vocabWords.length) {
+      vocabRowEl.innerHTML = vocabWords.map(v =>
+        `<div class="vocab-item"><span class="emoji">${VOCAB_EMOJI[v]}</span><span class="word">${v}</span></div>`
+      ).join('<span class="vocab-op">·</span>');
+      vocabRowEl.style.display = 'flex';
+    } else {
+      vocabRowEl.style.display = 'none';
+    }
+
     exampleBoxEl.textContent = challenge.example;
     codeInput.value = challenge.starter;
     btnNext.style.display = 'none';
