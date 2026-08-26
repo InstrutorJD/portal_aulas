@@ -36,6 +36,33 @@
   .story-card b{ color:var(--amber); }
   .story-card .whisper{ color:var(--ink-dim); font-style:italic; font-size:12.5px; }
 
+  .scene-row{ display:flex; align-items:flex-start; gap:14px; }
+  .char-avatar{
+    flex-shrink:0; width:64px; height:64px; border-radius:50%; background:var(--panel2);
+    border:2px solid var(--amber-dim); display:flex; align-items:center; justify-content:center;
+    font-size:32px; box-shadow:0 0 10px rgba(224,168,58,0.15);
+  }
+  .speech-bubble{
+    flex:1; background:var(--panel); border:1px solid var(--amber-dim); padding:16px 18px;
+    position:relative;
+  }
+  .speech-bubble::before{
+    content:''; position:absolute; left:-9px; top:22px; width:0; height:0;
+    border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:9px solid var(--amber-dim);
+  }
+  .speech-bubble .char-name{
+    display:block; font-family:'VT323', monospace; font-size:16px; color:var(--amber);
+    letter-spacing:1px; margin-bottom:6px; text-transform:uppercase;
+  }
+  .speech-bubble p{ font-size:14px; line-height:1.75; margin:0 0 10px; }
+  .speech-bubble p:last-child{ margin-bottom:0; }
+  .speech-bubble b{ color:var(--amber); }
+  .speech-bubble .whisper{ display:block; margin-top:10px; color:var(--ink-dim); font-style:italic; font-size:12.5px; }
+
+  @media (max-width: 480px) {
+    .char-avatar{ width:48px; height:48px; font-size:24px; }
+  }
+
   h1.gametitle{ font-family:'VT323', monospace; font-size:38px; color:var(--amber); margin:0 0 4px; letter-spacing:1px; text-shadow:0 0 10px rgba(224,168,58,.3); }
   h2.prompt{ font-family:'VT323', monospace; font-size:22px; color:var(--ink); margin:0 0 4px; letter-spacing:.5px; }
 
@@ -594,9 +621,32 @@
     render();
   }
 
-  function renderChoice(node) {
+  const LUCAS_AVATAR = '🧑';
+
+  // Cena: boneco + balão de diálogo, sozinhos na tela — as opções só
+  // aparecem depois que o jogador clica em "Continuar", pra não parecer
+  // uma atividade de múltipla escolha desde o primeiro instante.
+  function renderScene(bodyHtml, onContinue, whisperHtml) {
     stage.innerHTML = `
-      <div class="story-card">${node.story()}</div>
+      <div class="scene-row">
+        <div class="char-avatar">${LUCAS_AVATAR}</div>
+        <div class="speech-bubble">
+          <span class="char-name">Lucas</span>
+          ${bodyHtml}
+          ${whisperHtml ? `<span class="whisper">${whisperHtml}</span>` : ''}
+        </div>
+      </div>
+      <div class="actions"><button class="btn" id="btnNext">Continuar →</button></div>
+    `;
+    document.getElementById('btnNext').addEventListener('click', onContinue);
+  }
+
+  function renderChoice(node) {
+    renderScene(node.story(), () => renderChoiceOptions(node));
+  }
+
+  function renderChoiceOptions(node) {
+    stage.innerHTML = `
       <h2 class="prompt">${node.prompt}</h2>
       <div class="options" id="optionsWrap"></div>
     `;
@@ -633,15 +683,14 @@
   function renderTwist(node) {
     if (typeof node.onEnter === 'function') node.onEnter();
     saveState(state);
-    stage.innerHTML = `
-      <div class="story-card">${node.story()}</div>
-      <div class="reaction"><b>${node.whisper()}</b></div>
-      <div class="actions"><button class="btn" id="btnNext">Continuar →</button></div>
-    `;
-    document.getElementById('btnNext').addEventListener('click', advance);
+    renderScene(node.story(), advance, node.whisper());
   }
 
   function renderCofre(node) {
+    renderScene(node.intro(), () => renderCofreOptions(node), `Cofre ${node.cofreNum} — uma pergunta, sem sorte envolvida.`);
+  }
+
+  function renderCofreOptions(node) {
     const correct = node.correctText();
     const allOptions = [correct, ...node.distractors];
     const order = allOptions.map((_, i) => i);
@@ -652,7 +701,6 @@
     const letters = ['A', 'B', 'C', 'D'];
 
     stage.innerHTML = `
-      <div class="story-card">${node.intro()}<p class="whisper">Cofre ${node.cofreNum} — uma pergunta, sem sorte envolvida.</p></div>
       <h2 class="prompt">${node.question}</h2>
       <div class="options" id="optionsWrap"></div>
     `;
@@ -680,11 +728,20 @@
         <h2>${ending.title}</h2>
         <p>${ending.text}</p>
       </div>
-      <div class="story-card">
-        <p>${hasTag('ajudou_colega')
-          ? 'Dez anos depois, Lucas cruza com Duda por acaso — os dois riem lembrando dessa época, ainda próximos, mesmo com o tempo que passou.'
-          : 'Dez anos depois, Lucas não sabe mais muito bem por onde anda Duda — os caminhos, sem querer, se separaram ao longo do tempo.'}</p>
-      </div>
+      <div class="actions"><button class="btn" id="btnNext">Continuar →</button></div>
+    `;
+    document.getElementById('btnNext').addEventListener('click', renderEpilogueScene);
+  }
+
+  function renderEpilogueScene() {
+    const epilogo = hasTag('ajudou_colega')
+      ? '<p>Dez anos depois, Lucas cruza com Duda por acaso — os dois riem lembrando dessa época, ainda próximos, mesmo com o tempo que passou.</p>'
+      : '<p>Dez anos depois, Lucas não sabe mais muito bem por onde anda Duda — os caminhos, sem querer, se separaram ao longo do tempo.</p>';
+    renderScene(epilogo, renderEpilogueOptions);
+  }
+
+  function renderEpilogueOptions() {
+    stage.innerHTML = `
       <h2 class="prompt">Olhando pra trás, o que Lucas pensa da própria trajetória?</h2>
       <div class="options" id="optionsWrap"></div>
     `;
