@@ -451,6 +451,17 @@
     return (cfg.materias || []).flatMap(m => m.trilhas || []);
   }
 
+  // Trilha restrita (trilha.visibleFor) visível pra ESSE e-mail específico —
+  // independe de quem está navegando agora (diferente do bypass de professor
+  // em trilhaStatus/visibleTrilhas). Usado nos cálculos de %/contagem que
+  // percorrem o progresso de um aluno que pode não ser quem está logado
+  // (ranking, relatório de notas, Perfil de outro aluno) — sem isso, uma
+  // trilha individual conta no denominador de TODO MUNDO, mesmo de quem
+  // nunca vai poder vê-la nem completá-la.
+  function isTrilhaVisibleToEmail(trilha, email) {
+    return !Array.isArray(trilha.visibleFor) || trilha.visibleFor.includes(email);
+  }
+
   function renderMaterias() {
     const grid = document.getElementById('materiaCardGrid');
     const materias = cfg.materias || [];
@@ -638,6 +649,15 @@
   // terminada) — mesmo comportamento de antes dessas datas existirem.
   function trilhaStatus(trilha) {
     const hoje = todayStr();
+    // Trilha restrita a alunos específicos (trilha.visibleFor, array de
+    // e-mails/usernames) — pra atividade individual (ex.: material
+    // adaptado pra um aluno) sem criar mecanismo novo: reaproveita o
+    // status 'futura' (esconde do aluno de fora da lista, sempre visível
+    // pro professor, e já sai de fora do gate de allModulesComplete()
+    // pra não travar o resto da turma por algo que não pode nem ver).
+    if (currentUser.role === 'aluno' && Array.isArray(trilha.visibleFor) && !trilha.visibleFor.includes(paramUser)) {
+      return 'futura';
+    }
     const { inicio, prazo } = trilhaDates(trilha);
     if (inicio && inicio > hoje) return 'futura';
     const modules = trilha.modules || [];
@@ -1612,8 +1632,10 @@
   // 0%/100%). Lê direto de cfg.materias, então recalcula sozinho sempre que
   // o professor adiciona uma trilha/módulo novo — nenhuma tabela guarda o %,
   // só o progresso bruto por módulo (student_module_progress).
-  function materiaPercentForStudent(materia, progressRows) {
-    const modules = (materia.trilhas || []).flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+  function materiaPercentForStudent(materia, progressRows, studentEmail) {
+    const modules = (materia.trilhas || [])
+      .filter(t => isTrilhaVisibleToEmail(t, studentEmail))
+      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
     modules.forEach(({ trilhaKey, mod }) => {
@@ -1628,8 +1650,10 @@
   // Mesma conta do materiaPercentForStudent acima, só que achatada pra TODAS
   // as trilhas da turma (não uma matéria por vez) — dá um % geral de
   // conclusão por aluno, usado só pra calcular o ranking (ver renderRankingBadge).
-  function overallProgressForStudent(progressRows) {
-    const modules = allTrilhas().flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+  function overallProgressForStudent(progressRows, studentEmail) {
+    const modules = allTrilhas()
+      .filter(t => isTrilhaVisibleToEmail(t, studentEmail))
+      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
     modules.forEach(({ trilhaKey, mod }) => {
@@ -1666,7 +1690,7 @@
 
     const scored = students
       .map(u => {
-        const pct = overallProgressForStudent(byStudent[u.email] || []);
+        const pct = overallProgressForStudent(byStudent[u.email] || [], u.email);
         return pct === null ? null : { email: u.email, pct, pctRounded: Math.round(pct) };
       })
       .filter(Boolean)
@@ -1768,8 +1792,8 @@
     ]);
     const rows = myRows || [];
 
-    const overallPct = Math.round(overallProgressForStudent(rows) || 0);
-    const totalModules = allTrilhas().flatMap(t => t.modules || []).length;
+    const overallPct = Math.round(overallProgressForStudent(rows, targetEmail) || 0);
+    const totalModules = allTrilhas().filter(t => isTrilhaVisibleToEmail(t, targetEmail)).flatMap(t => t.modules || []).length;
     const completedModules = rows.filter(r => r.completed).length;
 
     renderPerfilBadges(overallPct, completedModules);
@@ -1796,9 +1820,9 @@
     }
 
     materiasEl.innerHTML = materias.map(m => {
-      const pct = materiaPercentForStudent(m, rows);
+      const pct = materiaPercentForStudent(m, rows, targetEmail);
       const pctDisplay = pct === null ? 0 : pct;
-      const trilhasHtml = (m.trilhas || []).map(t => {
+      const trilhasHtml = (m.trilhas || []).filter(t => isTrilhaVisibleToEmail(t, targetEmail)).map(t => {
         const mods = t.modules || [];
         const doneCount = mods.filter(mod => {
           const r = rows.find(rr => rr.trilha_key === t.key && rr.module_key === mod.key);
@@ -1872,7 +1896,7 @@
 
       const pRows = progressByStudent[u.email] || [];
       const materiaCells = materias.map(m => {
-        const pct = materiaPercentForStudent(m, pRows);
+        const pct = materiaPercentForStudent(m, pRows, u.email);
         return `<td>${pct === null ? '—' : pct + '%'}</td>`;
       }).join('');
 

@@ -534,6 +534,24 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'basico', hasGabarito: true
             }
           ]
+        },
+        {
+          // Trilha individual, adaptada — só aparece pro aluno listado em
+          // visibleFor (professor sempre vê, pra acompanhar/gerar gabarito).
+          // Ver trilhaStatus() em shared/platform-core.js.
+          key: 'js-adaptado-engel',
+          label: 'JavaScript Básico (Engel)',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'basico', title: 'JavaScript Básico — Adaptado',
+              desc: '5 passos curtos: guardar número, somar, subtrair, comparar, decidir.',
+              icon: '🟢', src: 'atividades/js-basico-adaptado-engel.html',
+              progressKey: 'js_basico_adaptado_engel_progress_', progressTotal: 5,
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },

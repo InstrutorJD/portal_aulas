@@ -106,8 +106,12 @@ test.describe('Ranking do aluno na turma', () => {
     };
 
     // Caso A: gabriella tem os mesmos 2 módulos concluídos (via SEED, ela
-    // não está logada nesta passagem) e engel.fraga loga com o MESMO
+    // não está logada nesta passagem) e breno.silva80 loga com o MESMO
     // progresso exato semeado no localStorage dela — mesmo % exato dos dois.
+    // (Não usa "engel.fraga" de propósito: esse usuário tem uma trilha
+    // individual extra em turmas/jogos/config.js — visibleFor —, que muda o
+    // denominador só dele e quebraria a paridade exata que este teste
+    // depende. Ver shared/platform-core.js, isTrilhaVisibleToEmail.)
     await stubSupabaseFake(page, {
       profiles: jogosAlunoProfiles(),
       student_module_progress: [
@@ -119,9 +123,9 @@ test.describe('Ranking do aluno na turma', () => {
     await page.addInitScript(user => {
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
-    }, 'engel.fraga');
-    await page.goto('/turmas/jogos/plataforma.html?user=engel.fraga&ip=192.168.1.12&saldo=2100.12&role=aluno&turma=jogos');
-    // "engel.fraga" vem antes de "gabriella.borges5" em ordem alfabética.
+    }, 'breno.silva80');
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.12&saldo=2100.12&role=aluno&turma=jogos');
+    // "breno.silva80" vem antes de "gabriella.borges5" em ordem alfabética.
     await expect(page.locator('#rankingBadge')).toHaveText('🏆 2º');
   });
 
@@ -135,13 +139,15 @@ test.describe('Ranking do aluno na turma', () => {
     };
 
     // Caso B: agora quem loga é gabriella.borges5, com o mesmo % exato de
-    // engel.fraga (que fica pelo SEED, sem logar nesta passagem).
+    // breno.silva80 (que fica pelo SEED, sem logar nesta passagem). Mesmo
+    // motivo do teste anterior pra não usar "engel.fraga" aqui: ele tem uma
+    // trilha individual extra (visibleFor) que mudaria só o denominador dele.
     await stubSupabaseFake(page, {
       profiles: jogosAlunoProfiles(),
       student_module_progress: [
         ...baseSeed.student_module_progress,
-        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
-        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     });
     await page.addInitScript(user => {
@@ -149,8 +155,8 @@ test.describe('Ranking do aluno na turma', () => {
       localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
     }, 'gabriella.borges5');
     await page.goto('/turmas/jogos/plataforma.html?user=gabriella.borges5&ip=192.168.1.13&saldo=1420.13&role=aluno&turma=jogos');
-    // Mesmo % exato de engel, mas "gabriella.borges5" perde o desempate
-    // alfabético — fica uma posição atrás dela (3º), nunca empatada em 2º.
+    // Mesmo % exato de breno, mas "gabriella.borges5" perde o desempate
+    // alfabético — fica uma posição atrás dele (3º), nunca empatada em 2º.
     await expect(page.locator('#rankingBadge')).toHaveText('🏆 3º');
   });
 });
