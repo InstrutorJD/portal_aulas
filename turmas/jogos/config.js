@@ -546,9 +546,9 @@ window.TURMA_CONFIG_JOGOS = {
           modules: [
             {
               key: 'basico', title: 'JavaScript Básico — Adaptado',
-              desc: '5 passos curtos: guardar número, somar, subtrair, comparar, decidir.',
+              desc: '10 passos curtos: guardar número, somar, subtrair, comparar, decidir, multiplicar, dividir, sobra, juntar, decidir de novo.',
               icon: '🟢', src: 'atividades/js-basico-adaptado-engel.html',
-              progressKey: 'js_basico_adaptado_engel_progress_', progressTotal: 5,
+              progressKey: 'js_basico_adaptado_engel_progress_', progressTotal: 10,
               hasGabarito: true
             }
           ]

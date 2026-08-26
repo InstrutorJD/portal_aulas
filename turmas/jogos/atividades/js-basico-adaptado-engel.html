@@ -234,6 +234,81 @@
         { values: { vida: 10 }, expected: 'sim' },
         { values: { vida: 0 }, expected: 'nao' }
       ]
+    },
+    {
+      id: 6,
+      title: 'Multiplicar',
+      icon: '✖️',
+      resultVar: 'resultado',
+      givenVars: ['a', 'b'],
+      starter: '\n\n',
+      example: 'let total = x * y;',
+      desc: 'Multiplique a por b.',
+      hint: 'Use o sinal *.',
+      tests: [
+        { values: { a: 3, b: 4 }, expected: 12 },
+        { values: { a: 5, b: 2 }, expected: 10 }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Dividir',
+      icon: '➗',
+      resultVar: 'resultado',
+      givenVars: ['a', 'b'],
+      starter: '\n\n',
+      example: 'let total = x / y;',
+      desc: 'Divida a por b.',
+      hint: 'Use o sinal /.',
+      tests: [
+        { values: { a: 10, b: 2 }, expected: 5 },
+        { values: { a: 9, b: 3 }, expected: 3 }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Sobra',
+      icon: '🌀',
+      resultVar: 'resultado',
+      givenVars: ['a', 'b'],
+      starter: '\n\n',
+      example: 'let total = x % y;',
+      desc: 'O que sobra de a dividido por b?',
+      hint: 'Use o sinal %.',
+      tests: [
+        { values: { a: 10, b: 3 }, expected: 1 },
+        { values: { a: 9, b: 3 }, expected: 0 }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Juntar',
+      icon: '🔤',
+      resultVar: 'resultado',
+      givenVars: ['nome', 'sobrenome'],
+      starter: '\n\n',
+      example: 'let total = primeiro + " " + ultimo;',
+      desc: 'Junte nome e sobrenome, com espaço.',
+      hint: 'Use o sinal + duas vezes.',
+      tests: [
+        { values: { nome: 'Ana', sobrenome: 'Silva' }, expected: 'Ana Silva' },
+        { values: { nome: 'Bea', sobrenome: 'Lima' }, expected: 'Bea Lima' }
+      ]
+    },
+    {
+      id: 10,
+      title: 'Decidir de novo',
+      icon: '🚦',
+      resultVar: 'resultado',
+      givenVars: ['pontos'],
+      starter: 'let resultado;\nif (pontos < 10) {\n  resultado = \'\';\n} else {\n  resultado = \'\';\n}',
+      example: 'if (idade < 18) {\n  status = "nao";\n} else {\n  status = "sim";\n}',
+      desc: 'pontos < 10 → "nao". Senão → "sim".',
+      hint: 'Complete os dois espaços vazios.',
+      tests: [
+        { values: { pontos: 5 }, expected: 'nao' },
+        { values: { pontos: 20 }, expected: 'sim' }
+      ]
     }
   ];
 
