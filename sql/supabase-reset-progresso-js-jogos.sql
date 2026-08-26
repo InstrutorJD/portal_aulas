@@ -18,6 +18,16 @@
 --   • student_module_progress — só as linhas de turma='jogos' e
 --     trilha_key='js' (módulos 'basico' e 'intermediario')
 --
+-- ⚠️ ARMADILHA COMUM — trilha_key e module_key são colunas SEPARADAS:
+--   A trilha inteira de JavaScript é uma coisa só, trilha_key='js', pros
+--   dois módulos. NÃO existe 'js-basico' nem 'js-intermediario' como
+--   valor de trilha_key — quem diferencia Básico de Intermediário é a
+--   coluna module_key ('basico' ou 'intermediario'). Uma consulta tipo
+--     where trilha_key = 'js-basico'
+--   não dá erro nenhum (SQL válido), só não bate com nenhuma linha —
+--   "sucesso" na tela, mas 0 resultados, e é fácil achar que o SQL "não
+--   funcionou" quando na verdade é só o valor errado no filtro.
+--
 -- O QUE NÃO É TOCADO:
 --   • Qualquer outra trilha/matéria (C#, GDScript, Cobrinha, etc.),
 --     jogos, chamada, notas, liberação de jogos, turma Sistemas
@@ -40,6 +50,18 @@
 --      turmas.
 --   3) Rode a consulta de PRÉVIA primeiro, confira quem vai ser
 --      afetado, e só depois descomente e rode o DELETE.
+--   4) ORDEM IMPORTA — pra o reset não "voltar" sozinho:
+--      a) Peça pro aluno FECHAR a aba do portal (ou não recarregar).
+--      b) Rode o DELETE aqui no Supabase.
+--      c) Aluno limpa o progresso local (PASSO 2, no final deste
+--         arquivo) ANTES de abrir o portal de novo.
+--      d) Só então ele reabre. Se ele reabrir o portal ENTRE o passo
+--         (b) e o (c), o app relê o localStorage antigo (ainda com o
+--         progresso velho) e reenvia ele pro Supabase sozinho — a
+--         linha que você acabou de apagar volta, sem erro nenhum, e
+--         parece que o DELETE "não funcionou". Se isso acontecer,
+--         rode o DELETE de novo depois de confirmar que o passo (c)
+--         foi feito.
 -- ============================================================
 
 -- PRÉVIA — rode isto primeiro e confira a lista antes de apagar:
@@ -47,6 +69,13 @@ select student_email, module_key, progress_current, progress_total, completed, u
 from public.student_module_progress
 where turma = 'jogos' and trilha_key = 'js'
 order by student_email, module_key;
+
+-- PRÉVIA de só um módulo (se quiser conferir Básico ou Intermediário
+-- separado, em vez dos dois juntos como acima):
+-- select * from public.student_module_progress
+-- where turma = 'jogos' and trilha_key = 'js' and module_key = 'basico';
+-- select * from public.student_module_progress
+-- where turma = 'jogos' and trilha_key = 'js' and module_key = 'intermediario';
 
 -- RESET — descomente as 2 linhas abaixo e rode depois de conferir a prévia:
 -- delete from public.student_module_progress
