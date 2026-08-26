@@ -1,0 +1,165 @@
+ESTRUTURA IDEAL — envio de uma trilha nova pro portal
+=======================================================
+
+Regra de ouro (ver README.md, seção "Trilha por capacidade (MSEP)"):
+a CAPACIDADE nunca é inventada por mim. Você (professor) fornece a
+capacidade real da MSEP, e todo o conteúdo abaixo — teoria e prática —
+precisa estar embasado nela. Quanto mais completo você preencher este
+arquivo, menos eu preciso adivinhar.
+
+-------------------------------------------------------
+1) LOCALIZAÇÃO NA HIERARQUIA (Matéria → Trilha → Módulo)
+-------------------------------------------------------
+Matéria: <matéria já existente (ex.: "Fundamentos de Programação",
+  key: fundamentos-programacao) OU nome de uma matéria nova ainda sem
+  key/label cadastrado>
+
+Turma: <Jogos Digitais | Sistemas | outra>
+
+Bimestre/posição no currículo: <em que ponto do ano essa trilha entra>
+
+-------------------------------------------------------
+2) CAPACIDADE (MSEP) — obrigatório, texto oficial
+-------------------------------------------------------
+Capacidade a ser desenvolvida/verificada:
+  "<texto EXATO da capacidade, copiado do documento da MSEP —
+  é isso que vai pro campo `capacidade` da trilha e aparece pro
+  aluno no topo dela>"
+
+Código/identificador da capacidade na MSEP (se houver): <ex.: nº do
+  item no referencial>
+
+Por que essa capacidade importa nesse ponto do curso (contexto/motivação
+  que você queira registrar): <opcional, mas ajuda a calibrar exemplos>
+
+-------------------------------------------------------
+3) IDENTIDADE DA TRILHA
+-------------------------------------------------------
+key (identificador técnico, curto, sem espaço/acento): <ex.: vida-emocional>
+label (nome exibido pro aluno): <ex.: "Inteligência Emocional e Relacionamentos">
+desc (1-2 frases, resume o que o aluno vai fazer — aparece no card da
+  trilha): <texto>
+Ícone/emoji representativo (opcional, usado nos módulos): <emoji>
+
+-------------------------------------------------------
+4) MÓDULO DE TEORIA (formato "história + quiz")
+-------------------------------------------------------
+Título do módulo: <ex.: "Teoria — Inteligência Emocional e Relacionamentos">
+Descrição curta do módulo: <texto>
+
+Lista de CONCEITOS a ensinar, na ordem, cada um ligado à capacidade
+do item 2 (isso vira um STEP por conceito — narrador/mascote conta uma
+história curta, depois 1 pergunta de múltipla escolha):
+
+  Conceito 1: <nome do conceito>
+    - História/explicação (o que o narrador conta antes da pergunta):
+      <texto ou rascunho>
+    - Pergunta de verificação (múltipla escolha, 4 alternativas,
+      1 certa + 3 distratores plausíveis do mesmo domínio — ver regras
+      de comprimento/distratores no README, seção sobre quizzes):
+      <pergunta + as 4 opções, indicando qual é a certa>
+    - Explicação exibida após responder: <texto>
+
+  Conceito 2: <repita a estrutura acima>
+  Conceito 3: <...>
+  (quantos conceitos forem necessários pra cobrir a capacidade)
+
+Meta de acerto pra concluir: <padrão é 80% — avise se for diferente>
+Gera slides (.pptx) pro professor apresentar em aula? <sim/não>
+Tem gabarito pro professor consultar? <sim/não>
+
+-------------------------------------------------------
+5) MÓDULO(S) DE PRÁTICA (formato "desafios")
+-------------------------------------------------------
+Título do módulo: <ex.: "Prática — Central do Projeto de Vida: ...">
+Descrição curta do módulo: <texto>
+Este módulo exige o módulo de teoria concluído antes? <sim/não>
+
+Tipo de desafio (escolha um, decide o motor usado):
+  [ ] Parecer/cenário de múltipla escolha (mesmo motor da teoria,
+      aplicado a situações novas)
+  [ ] Código real em JavaScript, verificando uma VARIÁVEL pelo nome
+  [ ] Código real em JavaScript, verificando uma FUNÇÃO (retorno)
+  [ ] Código real em JavaScript, verificando saídas de console.log/alert
+  [ ] Consulta SQL (SELECT/JOIN/agregação), comparando com uma
+      solução de referência
+
+Lista de DESAFIOS, na ordem (progressão trancada — resolver libera o
+próximo), cada um exercitando a capacidade do item 2, não só "código
+genérico":
+
+  Desafio 1:
+    - Título: <curto>
+    - Enunciado/descrição pro aluno: <texto>
+    - Dica (aparece se o aluno pedir ajuda, ilustra o conceito SEM
+      resolver o desafio — ver regra em README/PENDENCIAS): <texto>
+    - Código inicial (starter, se houver): <trecho ou "vazio">
+    - O que precisa ser verificado (nome exato de variável/função
+      esperado, OU a consulta SQL de referência, OU as mensagens de
+      console esperadas, na ordem): <detalhe>
+    - Caso de teste / valores esperados: <ex.: entradas a=2,b=3 →
+      resultado=5>
+
+  Desafio 2: <repita a estrutura acima>
+  Desafio 3: <...>
+  (informe quantos desafios no total)
+
+Tem gabarito pro professor consultar? <sim/não>
+
+-------------------------------------------------------
+6) DATAS E DEPENDÊNCIAS (opcional)
+-------------------------------------------------------
+Início (a trilha só aparece pro aluno a partir desta data,
+  'YYYY-MM-DD'): <data ou "sem início definido">
+Prazo (depois desta data sem concluir, entra em "⚠️ Em atraso",
+  'YYYY-MM-DD'): <data ou "sem prazo definido">
+Pré-requisito de OUTRA trilha/módulo antes desta (se houver): <qual>
+Restrita a aluno(s) específico(s) (trilha individual, ex.: adaptação —
+  ver campo visibleFor e a seção 7 abaixo): <lista de e-mails ou "não,
+  vale pra turma toda">
+
+-------------------------------------------------------
+7) TRILHA INDIVIDUAL / ADAPTADA (ex.: ENGEL) — só quando aplicável
+-------------------------------------------------------
+Preencha esta seção só quando a trilha for pra UM aluno específico
+(adaptação), não pra turma toda.
+
+ENGEL (Engel Fraga, e-mail engel.fraga) é o caso de referência hoje:
+  - Ele é aluno **apenas da turma Jogos Digitais**. Nunca criar/replicar
+    trilha ou conteúdo dele em `turmas/sistemas/config.js` — só em
+    `turmas/jogos/config.js`.
+  - A trilha adaptada dele (`key: 'js-adaptado-engel'`) usa
+    `visibleFor: ['engel.fraga']` — só ele (e o professor, que sempre
+    vê tudo, pra acompanhar/gerar gabarito) enxerga essa trilha. Nenhum
+    outro aluno da turma vê nem é afetado por ela.
+  - Adaptação de conteúdo usada pra ele: passos mais curtos, vocabulário
+    e exemplos do cotidiano dele (gato, cachorro, moto, carro...), no
+    lugar dos exemplos genéricos da versão regular da trilha.
+
+Pra uma trilha individual/adaptada NOVA (pra Engel ou outro aluno),
+preencha:
+  - Aluno (nome + e-mail de login): <quem>
+  - Turma(s) em que esse aluno está matriculado hoje: <confirme antes
+    de cadastrar — a trilha só deve entrar no config.js da(s) turma(s)
+    onde ele realmente está>
+  - Trilha regular equivalente (se houver) que serve de base de
+    capacidade: <ex.: "JavaScript Básico", key 'js'>
+  - Qual é a adaptação necessária (vocabulário mais simples, passos
+    mais curtos, outro tipo de exercício, apoio visual, mais tempo,
+    etc.): <descreva>
+  - A capacidade trabalhada continua a MESMA da trilha regular
+    equivalente (só muda o jeito de ensinar/testar), ou é uma
+    capacidade diferente, adaptada ao momento desse aluno? <explique>
+
+-------------------------------------------------------
+8) EXTRAS (se aplicável)
+-------------------------------------------------------
+Insígnia/conquista ao concluir (nome + critério): <opcional>
+Referência a outro módulo/arquivo já existente que sirva de modelo
+  de tom/dificuldade: <ex.: "igual csharp-basico.html">
+Qualquer restrição de acessibilidade, tempo de aula disponível ou
+  outro contexto que deva moldar o tamanho/ritmo da trilha: <texto>
+
+=======================================================
+Quanto mais completos os itens 2, 4 e 5, mais fiel o resultado final
+fica à capacidade real — esses três nunca devem ficar em branco.

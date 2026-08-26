@@ -1,5 +1,62 @@
 # Pendências
 
+## Timer mínimo antes de liberar resposta nos quizzes/desafios
+
+**Status:** pendente — ideia do professor, ainda não implementada.
+
+**Onde:** hoje, ao renderizar uma pergunta, as opções de resposta (ou o
+editor/botão "Executar", nos desafios de código) já ficam clicáveis/
+disponíveis de imediato — nada impede responder em 1-2 segundos.
+`shared/quiz-teoria-engine.js` (teoria, ~20 aulas) e
+`shared/js-challenge-engine.js` (prática de código, 2 arquivos da turma
+Sistemas) são motores compartilhados, então uma mudança em cada um já
+cobre a maior parte do conteúdo. As ~9 telas de "pareceres" bespoke da
+turma Jogos (padrão antigo, sem motor compartilhado — ver pendência
+"Correção mais flexível nos desafios de código de verdade" abaixo)
+exigiriam repetir a mudança arquivo por arquivo.
+
+**Objetivo:** o professor percebeu alunos tirando print da pergunta,
+mandando pra uma IA (ChatGPT) e respondendo tudo muito rápido, sem ler.
+A ideia é um timer mínimo (ex.: 10-15s) antes de liberar o clique nas
+opções/botão de resposta, com contagem regressiva visível, pra reduzir
+esse padrão de resposta reflexa.
+
+**Observação importante (mesmo espírito do aviso já existente em
+`shared/clipboard-guard.js`):** isso é um **desincentivo pedagógico, não
+segurança de verdade** — trava só a resposta por reflexo dentro do
+portal; não impede o aluno de tirar print, esperar o timer zerar
+enquanto conversa com uma IA em outra aba, e só depois responder.
+
+**Próximos passos (ainda não decidido, discutir antes de implementar):**
+- Duração do timer (10s? 15s? variar por tamanho da pergunta/desafio?).
+- Timer conta a partir de quando a pergunta aparece, ou some por completo
+  se a resposta já veio antes de acabar? (mostrar contagem regressiva é
+  mais transparente pro aluno do que só desabilitar sem explicação).
+- Vale aplicar nas ~9 telas bespoke de pareceres da turma Jogos agora, ou
+  só nos dois motores compartilhados por enquanto (cobre a maior parte
+  do conteúdo com bem menos esforço)?
+
+## Relatório de capacidade trabalhada por matéria/dia
+
+**Status:** pendente — ainda é só uma ideia a avaliar, não uma decisão de
+implementar.
+
+**Onde:** hoje os relatórios existentes (chamada/notas, inatividade) não
+registram qual **capacidade** (ver seção "Trilha por capacidade (MSEP)" do
+README) foi trabalhada em cada matéria em cada dia de aula.
+
+**Objetivo:** nos relatórios, incluir um relatório de **capacidade**
+trabalhada em cada **matéria** naquele dia.
+
+**Próximos passos (ainda não decidido, discutir antes de implementar):**
+- Como registrar isso: automático a partir dos módulos abertos/concluídos
+  naquele dia (cruzando com a trilha/capacidade de cada módulo), manual
+  (o professor marca qual capacidade foi trabalhada), ou os dois?
+- Onde esse relatório aparece: junto dos relatórios já existentes na aba
+  Gestão do professor, ou uma tela nova?
+- Granularidade: por matéria+dia é suficiente, ou também precisa por
+  turma/aluno?
+
 ## Documentação das linguagens dentro do portal
 
 **Status:** pendente.
