@@ -103,6 +103,28 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'vida-metas-carreira',
+          label: 'Metas e Objetivos de Carreira',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre como definir metas de desenvolvimento pessoal e profissional, inclusive usando IA para estruturar um plano de estudos.',
+          capacidade: 'Definir metas claras de desenvolvimento pessoal e profissional.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Metas e Objetivos de Carreira',
+              desc: 'Metas e objetivos pessoais, e como usar uma ferramenta de IA (como o GitHub Copilot) para estruturar um plano de estudos de novas linguagens baseado nos seus objetivos.',
+              icon: '🦉', src: 'atividades/vida-metas-carreira-teoria.html',
+              progressKey: 'vida_metas_carreira_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Projeto de Vida: Metas e Carreira',
+              desc: 'Resolva pareceres identificando se uma meta de desenvolvimento foi definida com clareza, inclusive com apoio de IA para estruturar o plano de estudos.',
+              icon: '🎯', src: 'atividades/vida-metas-carreira-pratica.html',
+              progressKey: 'vida_metas_carreira_pratica_progress_', progressTotal: 1,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
       ]
     },
@@ -171,6 +193,28 @@ window.TURMA_CONFIG_JOGOS = {
               desc: 'Resolva pareceres identificando a atitude certa de colaboração, liderança e gestão de conflitos em cada cenário.',
               icon: '🤝', src: 'atividades/mundo-equipe-pratica.html',
               progressKey: 'mundo_equipe_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'mundo-comprometimento',
+          label: 'Comprometimento e Autocontrole no Trabalho',
+          desc: 'Aprenda a teoria e depois resolva pareceres sobre comprometimento com metas e prazos, mesmo sob pressão de tempo.',
+          capacidade: 'Demonstrar conduta de comprometimento com metas e prazos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Comprometimento e Autocontrole no Trabalho',
+              desc: 'Compromisso com metas e prazos, e autocontrole diante de pressão de tempo.',
+              icon: '🤖', src: 'atividades/mundo-comprometimento-teoria.html',
+              progressKey: 'mundo_comprometimento_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central do Mundo do Trabalho: Comprometimento',
+              desc: 'Resolva pareceres identificando comprometimento com metas e prazos sob pressão de tempo.',
+              icon: '⏱️', src: 'atividades/mundo-comprometimento-pratica.html',
+              progressKey: 'mundo_comprometimento_pratica_progress_', progressTotal: 1,
               requires: 'teoria', hasGabarito: true
             }
           ]

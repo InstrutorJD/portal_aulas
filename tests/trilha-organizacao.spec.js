@@ -50,7 +50,7 @@ test.describe('Organização das trilhas (em aberto / em atraso / concluídas)',
     await page.click('.game-card:has-text("Projeto de Vida")');
 
     const select = page.locator('#trilhaSelect');
-    await expect(select.locator('option')).toHaveCount(3); // 4 trilhas - 1 futura
+    await expect(select.locator('option')).toHaveCount(4); // 5 trilhas - 1 futura
     await expect(select).not.toContainText('Cidadania e Convivência Social');
   });
 
@@ -61,7 +61,7 @@ test.describe('Organização das trilhas (em aberto / em atraso / concluídas)',
     await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
     await page.click('.game-card:has-text("Projeto de Vida")');
 
-    await expect(page.locator('#trilhaSelect option')).toHaveCount(4);
+    await expect(page.locator('#trilhaSelect option')).toHaveCount(5);
     await expect(page.locator('#trilhaSelect')).toContainText('Cidadania e Convivência Social');
   });
 
@@ -75,8 +75,8 @@ test.describe('Organização das trilhas (em aberto / em atraso / concluídas)',
 
     const select = page.locator('#trilhaSelect');
     await expect(select.locator('optgroup[label="✅ Concluídas"] option')).toHaveText(['Colaboração e Compromisso em Equipe']);
-    // grupo "aberta" continua com as outras 3 trilhas não concluídas.
-    await expect(select.locator('optgroup[label="🟢 Em aberto"] option')).toHaveCount(3);
+    // grupo "aberta" continua com as outras 4 trilhas não concluídas.
+    await expect(select.locator('optgroup[label="🟢 Em aberto"] option')).toHaveCount(4);
 
     await select.selectOption('vida-equipe');
     await expect(page.locator('#moduleSelector_vida-equipe h2')).toContainText('Concluída');

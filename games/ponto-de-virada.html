@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ponto de Virada — Portal de Aulas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0d0a08; --panel:#181310; --panel2:#130f0c; --line:#2e241c;
+    --amber:#e0a83a; --amber-dim:#8a6423; --blood:#7a1010; --blood-bright:#ff4b3e;
+    --ink:#ece2d4; --ink-dim:#8a7c6a;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:'JetBrains Mono', monospace; min-height:100vh;
+  }
+  .env{
+    max-width:760px; margin:0 auto; border:2px solid var(--amber-dim); background:#0a0806;
+    box-shadow:0 0 18px rgba(224,168,58,0.12); min-height:calc(100vh - 20px);
+    display:flex; flex-direction:column;
+  }
+  .topbar{
+    padding:10px 16px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; font-size:11px;
+    color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; flex-shrink:0;
+  }
+  .topbar .chapter{ color:var(--amber); font-weight:800; }
+  .stage{ flex:1; padding:22px 20px; display:flex; flex-direction:column; gap:16px; }
+
+  .story-card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .story-card p{ font-size:14px; line-height:1.75; margin:0 0 10px; }
+  .story-card p:last-child{ margin-bottom:0; }
+  .story-card b{ color:var(--amber); }
+  .story-card .whisper{ color:var(--ink-dim); font-style:italic; font-size:12.5px; }
+
+  h1.gametitle{ font-family:'VT323', monospace; font-size:38px; color:var(--amber); margin:0 0 4px; letter-spacing:1px; text-shadow:0 0 10px rgba(224,168,58,.3); }
+  h2.prompt{ font-family:'VT323', monospace; font-size:22px; color:var(--ink); margin:0 0 4px; letter-spacing:.5px; }
+
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option-btn{
+    display:flex; align-items:flex-start; gap:12px; text-align:left; cursor:pointer;
+    background:var(--panel2); border:1px solid var(--line); padding:13px 16px; font-size:13px;
+    color:var(--ink); font-family:inherit; line-height:1.5;
+  }
+  .option-btn:hover{ border-color:var(--amber-dim); background:#16110d; }
+  .option-btn .letter{
+    flex-shrink:0; width:24px; height:24px; border:1px solid var(--amber-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--amber);
+  }
+
+  .reaction{ border:1px dashed var(--line); padding:12px 14px; font-size:12.5px; line-height:1.6; color:var(--ink-dim); }
+  .reaction b{ color:var(--amber); }
+
+  .actions{ display:flex; justify-content:flex-end; gap:8px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--amber); color:#241a06; border:none; padding:11px 22px; cursor:pointer;
+  }
+  button.btn:hover{ filter:brightness(1.08); }
+  button.btn-secondary{ background:transparent; color:var(--amber); border:1px solid var(--amber-dim); }
+
+  .ending-card{ text-align:center; }
+  .ending-card .trophy{ font-size:44px; margin-bottom:6px; }
+  .ending-card h2{ font-family:'VT323', monospace; font-size:28px; color:var(--amber); margin:0 0 12px; }
+  .ending-card p{ font-size:13.5px; line-height:1.7; color:var(--ink); text-align:left; }
+
+  .summary-table{ width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  .summary-table th, .summary-table td{ border:1px solid var(--line); padding:6px 8px; text-align:left; }
+  .summary-table th{ color:var(--amber-dim); text-transform:uppercase; font-size:10.5px; }
+
+  .start-screen{ text-align:center; }
+  .start-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.7; max-width:560px; margin:0 auto 16px; }
+
+  @media (max-width: 640px) {
+    .env{ margin:0; min-height:100vh; }
+    .stage{ padding:16px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PONTO DE VIRADA</div>
+    <div class="chapter" id="lblChapter">—</div>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const STORAGE_KEY = `ponto_de_virada_state_${username}`;
+
+  const stage = document.getElementById('stage');
+  const lblChapter = document.getElementById('lblChapter');
+
+  // ---------------------------------------------------------------
+  // Estado do jogo — tudo local (localStorage), sem nenhuma chamada
+  // ao Supabase: este jogo é experimental e deve poder ser removido
+  // sem deixar rastro em nenhuma tabela do banco.
+  // ---------------------------------------------------------------
+  function freshState() {
+    return {
+      stepIndex: 0,
+      tags: [],
+      scores: { planejamento: 0, relacoes: 0, critico: 0, responsabilidade: 0 },
+      analiticaChapterUsed: {},
+      finished: false,
+      endingId: null
+    };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      parsed.tags = new Set(parsed.tags || []);
+      return parsed;
+    } catch (e) { return null; }
+  }
+
+  function saveState(state) {
+    const toSave = Object.assign({}, state, { tags: [...state.tags] });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  }
+
+  let state = null;
+
+  function hasTag(t) { return state.tags.has(t); }
+  function addTag(t) { if (t) state.tags.add(t); }
+
+  // Bônus/penalidades genéricos: qualquer decisão A/B/C gera uma tag de
+  // estratégia (impulsiva/conservadora/analítica) — regra fixa do
+  // blueprint (Correção 3.1). Duas consequências automáticas:
+  //  - nas 3 decisões financeiras (D5, D10, D18 — ver nota abaixo),
+  //    analítica soma e impulsiva tira ponto de Planejamento;
+  //  - a PRIMEIRA escolha analítica de cada capítulo soma Pensamento
+  //    Crítico (no máximo uma vez por capítulo, teto de 5 no total).
+  // NOTA: o blueprint original (seção 3.2) cita "D5, D10, D22" para o
+  // bônus financeiro, mas D22 é o Cofre 2 (matriz da Correção 4), uma
+  // decisão sem opções A/B/C — não financeira. Tratamos isso como um
+  // typo de transcrição do próprio blueprint e usamos D18 ("Vender
+  // algo", Cap. 3, dimensão Planejamento) no lugar, por ser a única
+  // outra decisão financeira com estrutura A/B/C ainda não usada nessa
+  // regra. Sinalizado ao professor para confirmar.
+  const FINANCIAL_IDS = [5, 10, 18];
+
+  function applyStrategy(decisionId, chapter, strategy) {
+    if (strategy === 'analitica') {
+      if (FINANCIAL_IDS.includes(decisionId)) state.scores.planejamento += 1;
+      if (!state.analiticaChapterUsed[chapter]) {
+        state.scores.critico += 1;
+        state.analiticaChapterUsed[chapter] = true;
+      }
+    }
+    if (strategy === 'impulsiva' && FINANCIAL_IDS.includes(decisionId)) {
+      state.scores.planejamento -= 1;
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // As 28 decisões (D1–D28), em 5 capítulos — estrutura, tags e
+  // dimensões seguem a Matriz da Correção 4 do blueprint. O texto de
+  // cada cena (história, falas, opções) foi escrito a partir dos
+  // rótulos da matriz — não existia texto pronto em nenhum documento.
+  // Convenção fixa de narração (Correção 5): Lucas é sempre tratado na
+  // 3ª pessoa, nunca "você"/"sua família" — o jogador decide POR ele,
+  // observando de fora.
+  // ---------------------------------------------------------------
+  const CHAPTERS = {
+    1: 'Capítulo 1 — Rotina',
+    2: 'Capítulo 2 — Pressão',
+    3: 'Capítulo 3 — Rachaduras',
+    4: 'Capítulo 4 — Consequências',
+    5: 'Capítulo 5 — Ponto de Virada'
+  };
+
+  const DECISIONS = [
+    // ---------------- CAPÍTULO 1 ----------------
+    {
+      id: 1, chapter: 1, type: 'choice',
+      story: () => `<p>Lucas está no último ano do curso técnico. Toda semana é o mesmo malabarismo: aula, estudo, ajudar em casa, e o pouco tempo que sobra pra respirar.</p><p>É segunda-feira de manhã. Como Lucas organiza a semana que começa?</p>`,
+      prompt: 'Como Lucas encara a rotina dessa semana?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Não planeja nada — vai decidindo hora a hora, conforme o dia permitir.', tag: null, reaction: 'A semana começa sem rumo. Lucas até dá conta das coisas mais urgentes, mas vive correndo atrás do prejuízo.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Monta um horário fixo, rígido, e segue à risca — sem abrir exceção pra nada.', tag: null, reaction: 'A rotina rígida ajuda a não perder o fio, mas qualquer imprevisto (uma prova extra, um pedido de ajuda) já derruba o plano inteiro.' },
+        { letter: 'C', strategy: 'analitica', text: 'Planeja a semana com prioridades claras, mas deixa espaço pra imprevisto.', tag: 'priorizou_rotina', reaction: 'O plano de Lucas sobrevive ao primeiro imprevisto sem desmoronar — ele sabe o que é essencial e o que pode esperar.' }
+      ]
+    },
+    {
+      id: 2, chapter: 1, type: 'choice',
+      story: () => `<p>No intervalo, Duda — colega de turma, sempre no mesmo ritmo de Lucas nos trabalhos em grupo — se aproxima travada num exercício que precisa entregar em uma hora.</p><p>Lucas também está atrasado com o próprio material.</p>`,
+      prompt: 'O que Lucas faz com o pedido de ajuda de Duda?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Diz que não tem tempo agora e volta pro próprio material.', tag: null, reaction: 'Duda entrega o exercício sozinha, do jeito que dá. Lucas ganha o próprio tempo de volta.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Dá uma força rápida, só o mínimo, sem se desviar muito do que estava fazendo.', tag: null, reaction: 'A ajuda de Lucas resolve uma dúvida pontual, mas Duda ainda fica boa parte do tempo por conta própria.' },
+        { letter: 'C', strategy: 'analitica', text: 'Para o que está fazendo e ajuda Duda a entender de verdade, mesmo perdendo um tempo precioso.', tag: 'ajudou_colega', reaction: 'Duda termina o exercício bem mais tranquila. Lucas perde um tempo que não tinha sobrando — mas ganha uma dívida de gratidão que, mais pra frente, pode pesar a favor dele.' }
+      ]
+    },
+    {
+      id: 3, chapter: 1, type: 'choice',
+      story: () => `<p>A prova de uma disciplina importante volta com uma nota bem abaixo do que Lucas esperava. Ninguém em casa sabe ainda.</p>`,
+      prompt: 'O que Lucas faz com a prova?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Esconde a prova no fundo da mochila, torcendo pra ninguém perguntar.', tag: 'escondeu_nota', reaction: 'A prova some no fundo da mochila. O alívio dura só até o boletim sair.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Não fala nada, mas também não esconde de propósito — só evita o assunto.', tag: null, reaction: 'Lucas não mente, mas também não conta. O assunto fica pairando, sem resolução.' },
+        { letter: 'C', strategy: 'analitica', text: 'Mostra a nota em casa e já chega com um plano de como vai recuperar.', tag: 'assumiu_responsabilidade', reaction: 'Não é uma conversa fácil, mas Lucas sai dela com um plano combinado — e sem nada pesando escondido.' }
+      ]
+    },
+    {
+      id: 4, chapter: 1, type: 'choice',
+      story: () => `<p>Um conhecido do bairro comenta de um "bico" rápido: testar fases de um joguinho indie por umas horas na semana, pago por tarefa. Dinheiro de verdade, mas tempo que sairia do estudo.</p>`,
+      prompt: 'Lucas topa o bico?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Topa na hora, animado com o dinheiro, sem calcular direito quantas horas isso vai tomar.', tag: 'comecou_bico', reaction: 'O primeiro pagamento cai na conta rápido. Só depois Lucas percebe o tanto de hora de sono que isso custou.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa — prefere focar só nos estudos por enquanto.', tag: null, reaction: 'Lucas mantém a rotina como estava, sem o dinheiro extra, mas também sem a pressão de mais um compromisso.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita, mas negocia um número fixo de horas por semana que não invade o período de estudo.', tag: 'comecou_bico', reaction: 'O acordo é justo dos dois lados — Lucas ganha o dinheiro extra sem abrir mão do que já tinha planejado.' }
+      ]
+    },
+    {
+      id: 5, chapter: 1, type: 'choice',
+      story: () => `<p>${sceneComecouBico()} chega o primeiro dinheiro de verdade que Lucas ganhou por conta própria.</p>`,
+      prompt: 'O que Lucas faz com esse dinheiro?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Gasta rápido em algo que queria há tempos, sem pensar muito.', tag: null, reaction: 'O dinheiro dura pouco. A sensação boa também.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Guarda tudo, sem gastar nada, nem o pouco que faria diferença agora.', tag: 'guardou_dinheiro', reaction: 'O valor guardado cresce devagar — Lucas não toca nele por nada.' },
+        { letter: 'C', strategy: 'analitica', text: 'Guarda a maior parte como reserva e separa um pouco, de forma consciente, pra algo que realmente importa.', tag: 'guardou_dinheiro', reaction: 'Lucas sente que tem controle sobre o próprio dinheiro pela primeira vez — sabe exatamente pra onde cada parte foi.' }
+      ]
+    },
+    {
+      id: 6, chapter: 1, type: 'choice',
+      story: () => `<p>Na oficina de projetos da escola, um profissional convidado — todo mundo só chama de <b>"o Mentor"</b> — se interessa pelo projeto de Lucas e oferece orientação informal, fora do horário de aula.</p>`,
+      prompt: 'Como Lucas recebe essa aproximação do Mentor?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Confia de cara, animado com a atenção, e passa a seguir tudo que o Mentor sugere.', tag: 'confiou_mentor_cedo', reaction: 'A orientação parece ótima no começo. Lucas nem para pra pensar em quem, de fato, é essa pessoa.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Aceita a ajuda, mas mantém distância — nada de levar tudo ao pé da letra.', tag: null, reaction: 'Lucas escuta as sugestões do Mentor, mas segue confiando mais no próprio julgamento.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita a orientação, mas primeiro pergunta por aí quem é essa pessoa e o que ela faz.', tag: null, reaction: 'Ninguém conhece o Mentor muito bem, mas as referências que Lucas encontra são positivas — segue com um pé atrás saudável.' }
+      ]
+    },
+
+    // ---------------- CAPÍTULO 2 ----------------
+    {
+      id: 7, chapter: 2, type: 'choice',
+      story: () => `<p>Uma loja de games do bairro oferece a Lucas uma vaga de meio período — pagamento melhor que o bico, mas com horários pesados justo no período de provas.</p>`,
+      prompt: 'Lucas aceita a vaga?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Aceita na hora, animado com o salário fixo.', tag: 'pegou_emprego_cedo', reaction: 'O primeiro contracheque impressiona. As primeiras semanas de sono cortado, nem tanto.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa — prioriza terminar o ano escolar tranquilo primeiro.', tag: null, reaction: 'Lucas segue sem esse dinheiro extra, mas com a cabeça livre pra estudar.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita, mas negocia um período de experiência com horário reduzido antes de assumir tudo.', tag: 'pegou_emprego_cedo', reaction: 'O acordo dá certo — Lucas entra aos poucos, sem atropelar o resto da vida de uma vez.' }
+      ]
+    },
+    {
+      id: 8, chapter: 2, type: 'choice',
+      story: () => `<p>O Mentor comenta de um curso pago, avançado, que ele mesmo indica — "praticamente obrigatório" pra quem quer se destacar na área, segundo ele.</p>`,
+      prompt: 'O que Lucas faz com a indicação do curso?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Se inscreve na hora, confiando de olhos fechados na palavra do Mentor.', tag: 'fez_curso_mentor', reaction: 'A matrícula sai no mesmo dia. Lucas nem procurou saber se existiam outras opções.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa por desconfiança, sem se aprofundar no motivo.', tag: null, reaction: 'Lucas segue sem o curso, guiado só por um "não sei, prefiro não" que nem ele sabe explicar direito.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pesquisa o conteúdo do curso e a reputação de quem o vende antes de decidir.', tag: 'pesquisou_curso', reaction: 'A pesquisa não encontra nada alarmante — mas Lucas decide com mais base do que só a palavra do Mentor.' }
+      ]
+    },
+    {
+      id: 9, chapter: 2, type: 'choice',
+      story: () => `<p>Entre o bico, o trabalho e o curso, sobrou pouco tempo pra estudar. Numa prova importante, Lucas percebe que dá pra ver a folha do colega ao lado sem ninguém notar.</p>`,
+      prompt: 'Lucas cola?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Cola, sem pensar duas vezes — o cansaço fala mais alto.', tag: 'colou_prova', reaction: 'A nota sai boa. O nó no estômago também.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Não cola, mas entrega a prova incompleta, sem tentar nada além do que já sabe.', tag: null, reaction: 'A nota vem baixa, mas Lucas não carrega nenhum peso extra por causa dela.' },
+        { letter: 'C', strategy: 'analitica', text: 'Não cola e, no fim da prova, pede ao professor um prazo extra pra revisar um ponto que não entendeu bem.', tag: null, reaction: 'O professor aceita revisar com ele depois da aula — a nota melhora um pouco, sem atalho nenhum.' }
+      ]
+    },
+    {
+      id: 10, chapter: 2, type: 'choice',
+      story: () => `<p>Entre o curso pago e menos horas de bico (por causa da prova), o orçamento de Lucas aperta. Um aplicativo de empréstimo rápido aparece como solução fácil.</p>`,
+      prompt: 'Lucas pega o empréstimo?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Pega o valor máximo oferecido, sem ler os termos com atenção.', tag: 'pegou_emprestimo', reaction: 'O dinheiro cai na hora. Os juros, Lucas só vai entender direito bem mais tarde.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa e aperta o orçamento de outro jeito, cortando gastos.', tag: null, reaction: 'É mais apertado no dia a dia, mas Lucas não fica devendo a ninguém.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pesquisa as condições, pega só o valor mínimo necessário e já planeja como pagar.', tag: 'pegou_emprestimo', reaction: 'O valor é pequeno e o plano de pagamento parece dar certo — se nada mais sair do controle.' }
+      ]
+    },
+    {
+      id: 11, chapter: 2, type: 'choice',
+      story: () => `<p>${sceneEmprestimo()} A mãe de Lucas pergunta, de passagem, se está faltando dinheiro pra alguma coisa em casa.</p>`,
+      prompt: 'O que Lucas conta pra mãe?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Diz que está tudo bem, na lata, sem pensar muito na resposta.', tag: 'mentiu_pais', reaction: 'A conversa acaba ali. Lucas sente um alívio rápido — e uma pontinha de culpa que ignora.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Conta uma parte, só o suficiente pra não parecer estranho, mas omite os detalhes que mais pesam.', tag: 'mentiu_pais', reaction: 'A mãe fica com uma versão incompleta da situação — tranquila demais pro tamanho real do problema.' },
+        { letter: 'C', strategy: 'analitica', text: 'Conta a real, com calma, incluindo o empréstimo.', tag: 'contou_pais_emprestimo', reaction: 'A conversa é desconfortável, mas a mãe agradece por Lucas ter contado antes de virar bola de neve.' }
+      ]
+    },
+    {
+      id: 12, chapter: 2, type: 'choice',
+      story: () => `<p>Um sábado importante da escola (apresentação de projeto) cai no mesmo horário de um turno extra no trabalho que o chefe pediu de última hora.</p>`,
+      prompt: 'Como Lucas resolve esse conflito de agenda?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Falta à escola pro trabalho, sem avisar ninguém com antecedência.', tag: null, reaction: 'O chefe fica satisfeito. A escola, nem tanto — a falta pega mal na hora errada.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Falta ao trabalho e vai à escola, sem tentar negociar nada com o chefe.', tag: null, reaction: 'O projeto sai bem. No trabalho, Lucas perde um pouco de credibilidade por sumir sem aviso.' },
+        { letter: 'C', strategy: 'analitica', text: 'Negocia com o chefe pra sair mais cedo e consegue ir aos dois compromissos.', tag: 'negociou_horario', reaction: 'Dá tudo certo nos dois lugares — mas custou uma conversa desconfortável pra conseguir esse encaixe.' }
+      ]
+    },
+
+    // ---------------- CAPÍTULO 3 ----------------
+    {
+      id: 13, chapter: 3, type: 'cofre',
+      cofreNum: 1,
+      intro: () => `<p>Numa gaveta velha, Lucas guarda uma lata de latão que era do avô — um hábito bobo de guardar bilhetes e lembranças ali dentro. Antes de seguir, vale abrir a lata e olhar pra trás com clareza.</p>`,
+      question: 'O que fez a confiança de Lucas no Mentor crescer tão rápido, sem desconfiar de nada?',
+      correctText: () => hasTag('confiou_mentor_cedo')
+        ? 'Ele aceitou a orientação do Mentor de cara, sem checar direito quem era essa pessoa antes.'
+        : 'Mesmo desconfiado no início, foi se aproximando aos poucos, sem perceber o quanto passou a depender da opinião do Mentor.',
+      distractors: [
+        'O cansaço da rotina corrida da primeira semana.',
+        'A pressão de uma prova importante se aproximando.',
+        'O convite de um bico que apareceu bem na hora certa.'
+      ],
+      passTag: 'passou_cofre1',
+      onCorrect: 'A lata fecha de novo. Lucas entende um pouco melhor o próprio caminho até aqui.',
+      onWrong: 'A resposta não bate exatamente com o que aconteceu — mas o exercício de olhar pra trás já vale por si só.'
+    },
+    {
+      id: 14, chapter: 3, type: 'twist',
+      story: () => `<p>Numa conversa entre professores que Lucas ouve por acaso, alguém comenta que o Mentor recebe uma comissão de cada aluno que se matricula naquele curso pago que ele tanto recomenda.</p><p>${hasTag('fez_curso_mentor') ? 'Lucas fez exatamente esse curso — pago do próprio bolso, confiando na indicação.' : 'Lucas não chegou a fazer esse curso, mas sentiu na pele o quanto a palavra do Mentor pesava nas próprias decisões.'}</p>`,
+      onEnter: () => addTag('descobriu_mentor'),
+      whisper: () => 'Nem toda orientação é desinteressada — às vezes vale perguntar quem ganha o quê.'
+    },
+    {
+      id: 15, chapter: 3, type: 'choice',
+      story: () => `<p>Com a descoberta ainda fresca, Lucas encontra o Mentor no corredor, sozinho.</p>`,
+      prompt: 'O que Lucas faz com essa informação?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Confronta o Mentor ali mesmo, na base da raiva.', tag: null, reaction: 'O Mentor se defende, a conversa esquenta e ninguém sai dali com nada resolvido.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Ignora o assunto e finge que não ouviu nada.', tag: null, reaction: 'A dúvida fica engasgada. Lucas segue a orientação do Mentor com um pé atrás que nunca vira conversa.' },
+        { letter: 'C', strategy: 'analitica', text: 'Investiga com calma antes de tirar conclusões — busca mais contexto, conversa com outros alunos.', tag: 'confrontou_mentor', reaction: 'O quadro fica mais claro: o interesse financeiro existe, mas a orientação em si não era mentira — só não era tão neutra quanto parecia.' }
+      ]
+    },
+    {
+      id: 16, chapter: 3, type: 'choice',
+      story: () => `<p>Com a cabeça em outro lugar, Lucas percebe tarde demais que esqueceu completamente de uma prova marcada pra essa manhã.</p>`,
+      prompt: 'O que Lucas faz?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Falta, sem avisar a coordenação.', tag: 'faltou_prova', reaction: 'A falta conta como zero, sem chance de segunda chamada — ninguém sabia que havia um motivo.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Vai correndo mesmo sem preparo, tenta na base do que lembra.', tag: null, reaction: 'A nota sai baixa, mas ao menos Lucas não perde a prova por completo.' },
+        { letter: 'C', strategy: 'analitica', text: 'Liga pra coordenação assim que percebe o esquecimento e negocia uma segunda chamada.', tag: null, reaction: 'A coordenação entende e remarca — Lucas ganha uma segunda chance de fazer a prova direito.' }
+      ]
+    },
+    {
+      id: 17, chapter: 3, type: 'choice',
+      story: () => `<p>Entre trabalho, curso, empréstimo e a cabeça cheia com o Mentor, Lucas está no limite. Duda percebe e pergunta se está tudo bem.</p>`,
+      prompt: 'Como Lucas reage a essa abertura de Duda?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Diz que está tudo certo e tenta resolver tudo sozinho, no susto.', tag: null, reaction: 'Lucas segue sobrecarregado, sem dividir o peso com ninguém.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Agradece a preocupação, mas recusa qualquer ajuda por orgulho — prefere se virar sozinho.', tag: 'recusou_ajuda_d17', reaction: 'Duda respeita a resposta, mas fica de olho, sem insistir.' },
+        { letter: 'C', strategy: 'analitica', text: 'Abre o jogo com Duda e aceita a ajuda que ela oferece pra organizar as coisas.', tag: 'pediu_ajuda_duda', reaction: 'Só de dividir o peso com alguém, uma parte da pressão já diminui — e Duda ajuda a organizar as prioridades.' }
+      ]
+    },
+    {
+      id: 18, chapter: 3, type: 'choice',
+      story: () => `<p>A parcela do empréstimo mais o curso deixam o orçamento no vermelho. Lucas pensa no console antigo do avô, guardado no armário — dá pra vender por um bom valor.</p>`,
+      prompt: 'Lucas vende o console do avô?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Vende pelo primeiro preço que oferecerem, só pra resolver logo.', tag: 'vendeu_pertence', reaction: 'O dinheiro cai rápido — só depois Lucas descobre que valia bem mais do que recebeu.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Decide não vender de jeito nenhum, mesmo que o aperto continue.', tag: null, reaction: 'O console fica guardado. O orçamento continua apertado, mas essa lembrança do avô segue intacta.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pesquisa o valor justo antes de vender, com calma, pra ninguém levar vantagem.', tag: 'vendeu_pertence', reaction: 'A venda demora um pouco mais, mas Lucas consegue um preço justo — e não se sente enganado depois.' }
+      ]
+    },
+
+    // ---------------- CAPÍTULO 4 ----------------
+    {
+      id: 19, chapter: 4, type: 'choice',
+      story: () => `<p>${hasTag('escondeu_nota') ? 'O boletim chega em casa antes de Lucas conseguir interceptar. A nota escondida meses atrás finalmente aparece pra família.' : 'Um comentário solto da escola, numa reunião de pais, acaba revelando um detalhe que Lucas vinha guardando pra si.'}</p>`,
+      prompt: 'Como Lucas reage quando a verdade aparece sem ele ter contado antes?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Nega, discute, tenta minimizar na hora.', tag: 'pais_descobriram', reaction: 'A discussão esquenta mais do que precisava. Ninguém sai bem dessa conversa.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Fica em silêncio, sem se explicar.', tag: 'pais_descobriram', reaction: 'O silêncio de Lucas deixa tudo mais pesado do que já estava.' },
+        { letter: 'C', strategy: 'analitica', text: 'Senta pra conversar com calma e explica o que estava acontecendo.', tag: 'pais_descobriram', reaction: 'Não é fácil, mas a conversa sai mais tranquila do que Lucas esperava.' }
+      ]
+    },
+    {
+      id: 20, chapter: 4, type: 'twist',
+      story: () => familiaSofreu()
+        ? `<p>Aos poucos, Lucas percebe um detalhe que passou batido: a mãe começou a fazer um segundo turno de trabalho, sem falar muito sobre isso, mais ou menos desde a época em que o empréstimo apareceu.</p><p>Ela nunca cobrou nada — só foi, silenciosamente, cobrindo o buraco que Lucas tentou esconder.</p>`
+        : `<p>Dessa vez, não existe nenhum custo escondido pesando sobre a família — o que aconteceu, aconteceu às claras, e todo mundo em casa sabia o tamanho real do aperto.</p><p>Ainda assim, Lucas percebe que decisões que pareciam só dele sempre acabam custando algo pra quem está por perto.</p>`,
+      onEnter: () => { if (familiaSofreu()) addTag('familia_sofreu'); },
+      whisper: () => 'Nem todo custo aparece na hora — alguns só se percebem tempo depois, olhando pra trás.'
+    },
+    {
+      id: 21, chapter: 4, type: 'choice',
+      story: () => `<p>Com tudo isso na mesa, Lucas precisa decidir o que fazer com o próprio erro.</p>`,
+      prompt: 'Como Lucas encara o que fez?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Pede desculpa na hora, emocionado, sem muito plano do que fazer depois.', tag: 'pediu_desculpa', reaction: 'A desculpa é sincera, mas some no dia seguinte sem nenhuma mudança prática.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Se justifica, explica os motivos, mas evita admitir o erro de frente.', tag: null, reaction: 'As explicações fazem sentido, mas ninguém em casa sente que Lucas realmente assumiu o que fez.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pede desculpa e já chega com um plano concreto de como vai resolver e evitar que se repita.', tag: 'pediu_desculpa', reaction: 'A desculpa vem acompanhada de ação — isso pesa muito mais do que só a palavra.' }
+      ]
+    },
+    {
+      id: 22, chapter: 4, type: 'cofre',
+      cofreNum: 2,
+      intro: () => `<p>De volta à lata de latão do avô — mais um bilhete, mais uma pausa pra organizar os fatos antes de seguir.</p>`,
+      question: 'Por que a dívida de Lucas cresceu tanto sem que a família percebesse a tempo?',
+      correctText: () => hasTag('mentiu_pais')
+        ? 'Porque Lucas escondeu o aperto financeiro da família em vez de contar cedo.'
+        : 'Mesmo tendo contado, o problema já tinha crescido mais rápido do que a conversa conseguiu acompanhar.',
+      distractors: [
+        'O valor do curso que o Mentor recomendou.',
+        'O tempo perdido negociando horário entre escola e trabalho.',
+        'A prova que ele quase perdeu por esquecimento.'
+      ],
+      passTag: 'passou_cofre2',
+      onCorrect: 'Lucas fecha a lata com um pouco mais de clareza sobre a própria história.',
+      onWrong: 'Não foi bem essa a causa principal — mas vale seguir prestando atenção no que realmente pesou.'
+    },
+    {
+      id: 23, chapter: 4, type: 'choice',
+      story: () => `<p>Um edital de bolsa de estudos pro curso técnico avançado que Lucas sempre quis fazer é divulgado na escola. A concorrência é grande, e a inscrição pede uma redação.</p>`,
+      prompt: 'Lucas tenta a bolsa?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Escreve a redação de última hora, na correria, sem revisar.', tag: 'tentou_bolsa', reaction: 'Lucas envia em cima do prazo, sem muita certeza do resultado.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Desiste antes de tentar, achando que não tem chance mesmo.', tag: null, reaction: 'Lucas nem participa — a vaga vai pra quem tentou.' },
+        { letter: 'C', strategy: 'analitica', text: 'Se prepara com calma e pede pra alguém revisar a redação antes de enviar.', tag: 'tentou_bolsa', reaction: 'A redação sai bem mais forte depois da revisão — Lucas sente que deu o melhor de si.' }
+      ]
+    },
+    {
+      id: 24, chapter: 4, type: 'twist',
+      story: () => hasTag('colou_prova')
+        ? `<p>A cola do Capítulo 2 finalmente vem à tona: o professor revisa as provas daquele dia e percebe respostas idênticas demais entre Lucas e o colega ao lado.</p><p>Não há como negar — a escola já tem as duas provas lado a lado.</p>`
+        : `<p>Como Lucas não colou naquela prova, esse capítulo passa em branco — não há nada aqui pra ser descoberto.</p>`,
+      onEnter: () => { if (hasTag('colou_prova')) addTag('colou_descoberto'); },
+      whisper: () => hasTag('colou_prova')
+        ? 'Um atalho tomado sob pressão, meses atrás, cobra a conta agora — bem depois de parecer resolvido.'
+        : 'Nem toda pressão precisa virar atalho — às vezes o caminho mais simples também é o mais tranquilo depois.'
+    },
+
+    // ---------------- CAPÍTULO 5 ----------------
+    {
+      id: 25, chapter: 5, type: 'cofre',
+      cofreNum: 3,
+      intro: () => `<p>Última pausa com a lata de latão do avô. ${(hasTag('passou_cofre1') && hasTag('descobriu_mentor')) ? 'Depois de tudo que já foi entendido até aqui, essa pergunta parece mais clara do que as anteriores.' : 'Mesmo sem ter juntado todas as peças antes, vale tentar responder com o que dá pra enxergar agora.'}</p>`,
+      question: 'O que mais pesou na vida da família de Lucas por causa das escolhas dele?',
+      correctText: () => hasTag('familia_sofreu')
+        ? 'A mãe de Lucas passou a assumir um segundo turno de trabalho pra cobrir o que faltava.'
+        : 'Uma decisão financeira ruim que a mãe já tinha revelado bem antes, na conversa sobre o aperto do orçamento.',
+      distractors: [
+        'O tempo que Lucas passou longe de casa por causa do bico.',
+        'A discussão sobre a prova que ele quase perdeu.',
+        'O curso pago que o Mentor recomendou.'
+      ],
+      passTag: 'passou_cofre3',
+      onCorrect: 'A lata fecha pela última vez. Lucas sente que finalmente entende o tamanho real do que aconteceu.',
+      onWrong: 'Não foi exatamente isso — mas o exercício de olhar pra trás, mesmo errando, já vale a pena.'
+    },
+    {
+      id: 26, chapter: 5, type: 'twist',
+      story: () => hasTag('pegou_emprestimo')
+        ? `<p>Uma mensagem do aplicativo de empréstimo chega com um tom bem mais sério do que o normal: o valor cresceu, e agora existe um prazo real, com consequência de verdade se não for resolvido.</p><p>Não dá mais pra empurrar essa conversa com a barriga.</p>`
+        : `<p>Como Lucas nunca chegou a pegar aquele empréstimo, não existe nenhuma cobrança pendente agora — esse capítulo do "e se" simplesmente não aconteceu na história dele.</p>`,
+      onEnter: () => { if (hasTag('pegou_emprestimo')) addTag('revelacao_cofre'); },
+      whisper: () => 'Dívida que não se encara não desaparece — só espera o momento de cobrar mais caro.'
+    },
+    {
+      id: 27, chapter: 5, type: 'choice',
+      story: () => `<p>Com tudo o que aconteceu até aqui — o Mentor, a prova, o empréstimo, a família — Lucas precisa decidir como fecha esse capítulo da própria vida.</p>`,
+      prompt: 'Qual é a última escolha de Lucas?',
+      options: [
+        { letter: 'A', strategy: 'impulsiva', text: 'Aceita a primeira ajuda que aparece, sem pensar muito no acordo.', tag: 'aceitou_ajuda_final', reaction: 'A ajuda vem rápido, resolve o mais urgente — sem muito plano além disso.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa qualquer ajuda e insiste em resolver tudo sozinho, mesmo sem tempo suficiente.', tag: 'recusou_ajuda_d27', reaction: 'Lucas segue tentando dar conta sozinho — e o prazo aperta mais do que ele esperava.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita ajuda combinando um plano claro com quem se dispõe a ajudar.', tag: 'aceitou_ajuda_final', reaction: 'Com um plano acertado, o que parecia impossível de resolver sozinho começa, enfim, a fazer sentido.' }
+      ]
+    }
+  ];
+
+  // Auxiliares de texto condicional usados dentro de DECISIONS acima.
+  function sceneComecouBico() {
+    return hasTag('comecou_bico') ? 'Depois de algumas semanas de bico,' : 'Mesmo sem o bico,';
+  }
+  function sceneEmprestimo() {
+    return hasTag('pegou_emprestimo') ? 'Com o empréstimo já contratado, ' : 'Mesmo sem empréstimo nenhum, ';
+  }
+  function familiaSofreu() {
+    return hasTag('pegou_emprestimo') && hasTag('mentiu_pais');
+  }
+
+  // ---------------------------------------------------------------
+  // Fórmula de fechamento (Correção 3.2 a 3.5 do blueprint) — calculada
+  // uma única vez, depois da Decisão 27, lendo o conjunto final de tags.
+  // Os bônus/penalidades de estratégia (analítica/impulsiva) já foram
+  // somados em tempo real, em applyStrategy(), durante o jogo.
+  // ---------------------------------------------------------------
+  function finalizeScores() {
+    if (hasTag('ajudou_colega')) state.scores.relacoes += 1;
+    if (hasTag('pediu_ajuda_duda')) state.scores.relacoes += 1;
+    if (hasTag('aceitou_ajuda_final')) state.scores.relacoes += 1;
+    if (hasTag('recusou_ajuda_d17') && hasTag('recusou_ajuda_d27')) state.scores.relacoes -= 1;
+
+    if (hasTag('confrontou_mentor')) state.scores.critico += 1;
+    if (hasTag('confiou_mentor_cedo') && !hasTag('pesquisou_curso')) state.scores.critico -= 1;
+
+    if (hasTag('assumiu_responsabilidade')) state.scores.responsabilidade += 1;
+    if (hasTag('contou_pais_emprestimo')) state.scores.responsabilidade += 1;
+    if (hasTag('pediu_desculpa')) state.scores.responsabilidade += 1;
+    if (hasTag('escondeu_nota')) state.scores.responsabilidade -= 1;
+    if (hasTag('mentiu_pais')) state.scores.responsabilidade -= 1;
+    if (hasTag('colou_descoberto')) state.scores.responsabilidade -= 1;
+
+    if (hasTag('guardou_dinheiro')) state.scores.planejamento += 1;
+    if (hasTag('pegou_emprestimo') && !hasTag('passou_cofre1')) state.scores.planejamento -= 1;
+  }
+
+  function faixa(v) { return v <= 0 ? 'baixo' : (v <= 2 ? 'medio' : 'alto'); }
+
+  const ENDINGS = {
+    1: { title: 'Final 1 — Reconstrução', text: 'Lucas não teve todas as respostas na hora certa, mas nunca parou de tentar entender o que estava acontecendo, com ajuda das pessoas certas. Anos depois, reconstruiu a relação com quem mais machucou — mais devagar do que gostaria, mas de um jeito que durou.' },
+    2: { title: 'Final 2 — Independência', text: 'Lucas aprendeu a se planejar sozinho, cedo, e isso resolveu boa parte dos seus problemas práticos. O preço foi ficar cada vez mais fechado: quando alguém tentava se aproximar, ele já tinha um plano B que não incluía ninguém.' },
+    3: { title: 'Final 3 — Segunda Chance', text: 'Lucas cometeu erros que poderiam ter custado caro, mas teve gente disposta a dar uma segunda chance quando ele mais precisou. Não assumiu tudo sozinho como talvez devesse, mas aprendeu, com apoio dos outros, o que significa merecer confiança de novo.' },
+    4: { title: 'Final 4 — O Ciclo', text: 'Lucas ficou muito bom em analisar situações e prever problemas — mas raramente assumia a própria parte quando dava errado. Sem perceber, repetiu com outras pessoas o mesmo padrão que o machucou: usar a inteligência pra justificar, em vez de reparar.' },
+    5: { title: 'Final 5 — Bolsa Conquistada', text: 'Lucas conseguiu a bolsa e seguiu pro curso que sempre quis — o esforço concreto valeu a pena. Mas chegou lá meio no impulso, sem entender direito os próprios porquês, e passou um tempo descobrindo se aquilo era mesmo o que queria.' },
+    6: { title: 'Final 6 — Vitória com Custo', text: 'Lucas conquistou o que queria no fim das contas, mas deixou um rastro de coisas mal resolvidas pelo caminho — promessas, desculpas que não vieram, gente que ficou esperando. A vitória é real, mas ele sabe que não foi limpa.' },
+    7: { title: 'Final 7 — Rede de Apoio', text: 'Lucas nunca foi o mais organizado, e viveu apagando incêndio o tempo todo — mas construiu, sem perceber, uma rede de gente disposta a segurar a barra junto com ele. O que faltou em planejamento sobrou em gente por perto.' },
+    8: { title: 'Final 8 — Caminho Solitário', text: 'Lucas seguiu em frente do jeito que sempre soube fazer melhor: pensando com a própria cabeça, resolvendo problema por problema. Funcionou, na maior parte das vezes — mas quando as coisas apertaram de verdade, ele percebeu o quanto tinha se acostumado a fazer isso sozinho.' },
+    9: { title: 'Final 9 — Dívida', text: 'A cobrança que Lucas tentou empurrar com a barriga não desapareceu — só cresceu. Anos depois, ainda paga por uma dívida que poderia ter sido resolvida bem antes, se ele tivesse admitido o problema a tempo de pedir ajuda.' },
+    10: { title: 'Final 10 — Confiança Perdida', text: 'Colar na prova e depois esconder isso não foi só um deslize — foi a primeira rachadura de uma confiança que Lucas levou anos pra reconstruir, com a família e consigo mesmo.' }
+  };
+
+  function resolveEnding() {
+    finalizeScores();
+
+    // Overrides (checados antes de qualquer tabela — Correção 3.4).
+    const dividaNaoResolvida = !(hasTag('aceitou_ajuda_final'));
+    if (hasTag('revelacao_cofre') && dividaNaoResolvida) return 9;
+    if (hasTag('colou_descoberto') && hasTag('mentiu_pais')) return 10;
+
+    const s = state.scores;
+    const dims = [
+      { key: 'planejamento', v: s.planejamento },
+      { key: 'relacoes', v: s.relacoes },
+      { key: 'critico', v: s.critico },
+      { key: 'responsabilidade', v: s.responsabilidade }
+    ];
+
+    // Desempate fixo (Correção 3.5): Responsabilidade como dominante, Relações como mais fraca.
+    const priorityDominant = ['responsabilidade', 'planejamento', 'critico', 'relacoes'];
+    const priorityWeak = ['relacoes', 'critico', 'planejamento', 'responsabilidade'];
+
+    let dominant = dims.slice().sort((a, b) => b.v - a.v || priorityDominant.indexOf(a.key) - priorityDominant.indexOf(b.key))[0];
+    let weakest = dims.slice().sort((a, b) => a.v - b.v || priorityWeak.indexOf(a.key) - priorityWeak.indexOf(b.key))[0];
+
+    const dominantFaixa = faixa(dominant.v);
+    const weakestFaixa = faixa(weakest.v);
+
+    if (dims.every(d => faixa(d.v) === 'medio')) return 8;
+    if (dominantFaixa !== 'alto' || weakestFaixa !== 'baixo') {
+      // Sem alto claro dominando e baixo claro mais fraco: cai no final neutro-padrão.
+      return 8;
+    }
+
+    const TABLE = {
+      planejamento: { relacoes: 2, critico: 5, responsabilidade: 6 },
+      relacoes: { planejamento: 7, critico: 1, responsabilidade: 3 },
+      critico: { planejamento: 5, relacoes: 8, responsabilidade: 4 },
+      responsabilidade: { planejamento: 6, relacoes: 3, critico: 1 }
+    };
+    const row = TABLE[dominant.key];
+    return (row && row[weakest.key]) || 8;
+  }
+
+  // ---------------------------------------------------------------
+  // Motor de tela — story/choice, cofre (4 opções dinâmicas), twist
+  // (narrativo, sem escolha) e telas de início/fim.
+  // ---------------------------------------------------------------
+  function render() {
+    if (state.finished) return renderEnding();
+    const node = DECISIONS[state.stepIndex];
+    lblChapter.textContent = CHAPTERS[node.chapter];
+
+    if (node.type === 'choice') return renderChoice(node);
+    if (node.type === 'cofre') return renderCofre(node);
+    if (node.type === 'twist') return renderTwist(node);
+  }
+
+  function advance() {
+    state.stepIndex += 1;
+    if (state.stepIndex >= DECISIONS.length) {
+      state.endingId = resolveEnding();
+      state.finished = true;
+    }
+    saveState(state);
+    render();
+  }
+
+  function renderChoice(node) {
+    stage.innerHTML = `
+      <div class="story-card">${node.story()}</div>
+      <h2 class="prompt">${node.prompt}</h2>
+      <div class="options" id="optionsWrap"></div>
+    `;
+    const wrap = document.getElementById('optionsWrap');
+    node.options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerHTML = `<span class="letter">${opt.letter}</span><span>${opt.text}</span>`;
+      btn.addEventListener('click', () => {
+        addTag(opt.tag);
+        applyStrategy(node.id, node.chapter, opt.strategy);
+        saveState(state);
+        renderReaction(opt.reaction);
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderReaction(text) {
+    const card = document.createElement('div');
+    card.className = 'reaction';
+    card.innerHTML = text;
+    stage.appendChild(card);
+    document.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; b.style.opacity = '0.45'; b.style.cursor = 'default'; });
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.style.marginTop = '4px';
+    actions.innerHTML = `<button class="btn" id="btnNext">Continuar →</button>`;
+    stage.appendChild(actions);
+    document.getElementById('btnNext').addEventListener('click', advance);
+  }
+
+  function renderTwist(node) {
+    if (typeof node.onEnter === 'function') node.onEnter();
+    saveState(state);
+    stage.innerHTML = `
+      <div class="story-card">${node.story()}</div>
+      <div class="reaction"><b>${node.whisper()}</b></div>
+      <div class="actions"><button class="btn" id="btnNext">Continuar →</button></div>
+    `;
+    document.getElementById('btnNext').addEventListener('click', advance);
+  }
+
+  function renderCofre(node) {
+    const correct = node.correctText();
+    const allOptions = [correct, ...node.distractors];
+    const order = allOptions.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    const letters = ['A', 'B', 'C', 'D'];
+
+    stage.innerHTML = `
+      <div class="story-card">${node.intro()}<p class="whisper">Cofre ${node.cofreNum} — uma pergunta, sem sorte envolvida.</p></div>
+      <h2 class="prompt">${node.question}</h2>
+      <div class="options" id="optionsWrap"></div>
+    `;
+    const wrap = document.getElementById('optionsWrap');
+    order.forEach((origIdx, pos) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerHTML = `<span class="letter">${letters[pos]}</span><span>${allOptions[origIdx]}</span>`;
+      btn.addEventListener('click', () => {
+        const isCorrect = origIdx === 0;
+        if (isCorrect) addTag(node.passTag);
+        saveState(state);
+        renderReaction(isCorrect ? node.onCorrect : node.onWrong);
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderEnding() {
+    lblChapter.textContent = 'Epílogo';
+    const ending = ENDINGS[state.endingId];
+    stage.innerHTML = `
+      <div class="story-card ending-card">
+        <div class="trophy">🎭</div>
+        <h2>${ending.title}</h2>
+        <p>${ending.text}</p>
+      </div>
+      <div class="story-card">
+        <p>${hasTag('ajudou_colega')
+          ? 'Dez anos depois, Lucas cruza com Duda por acaso — os dois riem lembrando dessa época, ainda próximos, mesmo com o tempo que passou.'
+          : 'Dez anos depois, Lucas não sabe mais muito bem por onde anda Duda — os caminhos, sem querer, se separaram ao longo do tempo.'}</p>
+      </div>
+      <h2 class="prompt">Olhando pra trás, o que Lucas pensa da própria trajetória?</h2>
+      <div class="options" id="optionsWrap"></div>
+    `;
+    const options = [
+      { letter: 'A', text: 'Reconhece, sem culpa, que os caminhos foram esses — e que aprendeu no processo.' },
+      { letter: 'B', text: 'Comenta, sem dramatizar, o que faria diferente com o que sabe hoje.' },
+      { letter: 'C', text: 'As duas coisas — reconhece o caminho e também o que mudaria.' }
+    ];
+    const wrap = document.getElementById('optionsWrap');
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerHTML = `<span class="letter">${opt.letter}</span><span>${opt.text}</span>`;
+      btn.addEventListener('click', () => {
+        addTag('reconheceu_trajetoria');
+        saveState(state);
+        renderSummary();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderSummary() {
+    lblChapter.textContent = 'Fim de jogo';
+    const s = state.scores;
+    stage.innerHTML = `
+      <div class="story-card">
+        <p>Essa foi a trajetória de Lucas nas mãos de quem jogou. Vale levar esse resultado pra uma roda de conversa com o professor — não existe caminho "certo" único aqui, cada dimensão conta uma parte diferente da história.</p>
+        <table class="summary-table">
+          <tr><th>Dimensão</th><th>Nível</th></tr>
+          <tr><td>Planejamento</td><td>${faixa(s.planejamento)}</td></tr>
+          <tr><td>Relações</td><td>${faixa(s.relacoes)}</td></tr>
+          <tr><td>Pensamento Crítico</td><td>${faixa(s.critico)}</td></tr>
+          <tr><td>Responsabilidade</td><td>${faixa(s.responsabilidade)}</td></tr>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="btnRestart">↻ Jogar de novo</button>
+      </div>
+    `;
+    document.getElementById('btnRestart').addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      state = freshState();
+      state.tags = new Set();
+      renderStart();
+    });
+  }
+
+  function renderStart(resuming) {
+    lblChapter.textContent = '—';
+    stage.innerHTML = `
+      <div class="story-card start-screen">
+        <h1 class="gametitle">Ponto de Virada</h1>
+        <p>Lucas está no último ano do curso técnico, tentando equilibrar estudo, dinheiro e as próprias escolhas. Cada decisão importante deste jogo é sua — não de Lucas: você decide <b>por</b> ele, observando a história de fora.</p>
+        <p>São 28 decisões em 5 capítulos. Não existe resposta perfeita — só consequências diferentes, que se acumulam até o final.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnStart">${resuming ? 'Continuar de onde parei' : 'Começar'}</button>
+          ${resuming ? '<button class="btn btn-secondary" id="btnFresh">Recomeçar do zero</button>' : ''}
+        </div>
+      </div>
+    `;
+    document.getElementById('btnStart').addEventListener('click', render);
+    const btnFresh = document.getElementById('btnFresh');
+    if (btnFresh) {
+      btnFresh.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        state = freshState();
+        state.tags = new Set();
+        renderStart(false);
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------
+  const existing = loadState();
+  if (existing && !existing.finished) {
+    state = existing;
+    renderStart(true);
+  } else {
+    state = freshState();
+    state.tags = new Set();
+    renderStart(false);
+  }
+})();
+</script>
+
+<script src="../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

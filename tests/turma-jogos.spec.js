@@ -21,7 +21,8 @@ function seedAllModulesComplete(user) {
   const dezoito = Array.from({ length: 18 }, (_, i) => i + 1);
   const teoriaFlag = [
     'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
-    'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria',
+    'vida_metas_carreira_teoria',
+    'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria', 'mundo_comprometimento_teoria',
     'projetos_metodos_teoria', 'projetos_fases_teoria',
     'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
     'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
@@ -46,6 +47,9 @@ function seedAllModulesComplete(user) {
 
   const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
   praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));
+
+  localStorage.setItem(`vida_metas_carreira_pratica_progress_${user}`, JSON.stringify([1]));
+  localStorage.setItem(`mundo_comprometimento_pratica_progress_${user}`, JSON.stringify([1]));
 }
 
 test.describe('turmas/jogos/plataforma.html', () => {
@@ -119,7 +123,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
     await tabJogos.click();
     await expect(page.locator('#tabContentJogos')).toBeVisible();
-    await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(4);
+    await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(5);
   });
 });
 
