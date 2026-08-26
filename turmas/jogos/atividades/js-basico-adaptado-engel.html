@@ -97,6 +97,21 @@
   button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
   button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
 
+  .skip-form{
+    display:none; flex-direction:column; gap:8px; max-width:320px; margin:10px auto 0;
+    background:var(--panel2); border:1px dashed var(--yellow); padding:12px 14px; flex-shrink:0;
+  }
+  .skip-form.show{ display:flex; }
+  .skip-form label{ display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .skip-form input{
+    font-family:inherit; font-size:14px; padding:8px 9px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .skip-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .skip-msg{ font-size:12px; padding:6px 8px; border:1px dashed var(--line); display:none; }
+  .skip-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); display:block; }
+  .skip-msg.ok{ border-color:var(--green); color:var(--green); display:block; }
+
   .console{
     background:#060806; border:1px solid var(--line); padding:10px 14px; font-size:15px;
     flex:0 0 70px; min-height:60px; overflow-y:auto; line-height:1.7; text-align:center;
@@ -123,6 +138,7 @@
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
@@ -155,6 +171,18 @@
         <div class="actions">
           <button class="btn" id="btnRun">▶️ Testar</button>
           <button class="btn btn-secondary" id="btnNext" style="display:none;">➡️ Próximo</button>
+          <button class="btn btn-secondary" id="btnSkip">⏭️ Pular (professor)</button>
+        </div>
+
+        <div class="skip-form" id="skipForm">
+          <label>Usuário do professor
+            <input type="text" id="skipUser" autocomplete="off">
+          </label>
+          <label>Senha do professor
+            <input type="password" id="skipSenha" autocomplete="off">
+          </label>
+          <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
+          <div class="skip-msg" id="skipMsg"></div>
         </div>
 
         <div class="console" id="consoleOutput"></div>
@@ -257,14 +285,14 @@
       title: 'Multiplicar',
       icon: '✖️',
       resultVar: 'resultado',
-      givenVars: ['gato', 'cachorro'],
+      givenVars: ['gato'],
       starter: '\n\n',
-      example: 'let resultado = gato + cachorro;',
-      desc: 'Multiplique gato por cachorro.',
+      example: 'let resultado = gato + 2;',
+      desc: 'Multiplique gato por 2.',
       hint: 'Use o sinal *.',
       tests: [
-        { values: { gato: 3, cachorro: 4 }, expected: 12 },
-        { values: { gato: 5, cachorro: 2 }, expected: 10 }
+        { values: { gato: 3 }, expected: 6 },
+        { values: { gato: 5 }, expected: 10 }
       ]
     },
     {
@@ -272,14 +300,14 @@
       title: 'Dividir',
       icon: '➗',
       resultVar: 'resultado',
-      givenVars: ['gato', 'cachorro'],
+      givenVars: ['carro'],
       starter: '\n\n',
-      example: 'let resultado = gato - cachorro;',
-      desc: 'Divida gato por cachorro.',
+      example: 'let resultado = carro - 2;',
+      desc: 'Divida carro por 2.',
       hint: 'Use o sinal /.',
       tests: [
-        { values: { gato: 10, cachorro: 2 }, expected: 5 },
-        { values: { gato: 9, cachorro: 3 }, expected: 3 }
+        { values: { carro: 10 }, expected: 5 },
+        { values: { carro: 8 }, expected: 4 }
       ]
     },
     {
@@ -287,14 +315,14 @@
       title: 'Sobra',
       icon: '🌀',
       resultVar: 'resultado',
-      givenVars: ['gato', 'cachorro'],
+      givenVars: ['macaco'],
       starter: '\n\n',
-      example: 'let resultado = gato * cachorro;',
-      desc: 'O que sobra de gato dividido por cachorro?',
+      example: 'let resultado = macaco * 3;',
+      desc: 'O que sobra de macaco dividido por 3?',
       hint: 'Use o sinal %.',
       tests: [
-        { values: { gato: 10, cachorro: 3 }, expected: 1 },
-        { values: { gato: 9, cachorro: 3 }, expected: 0 }
+        { values: { macaco: 10 }, expected: 1 },
+        { values: { macaco: 9 }, expected: 0 }
       ]
     },
     {
@@ -435,6 +463,22 @@
   const hintBox = document.getElementById('hintBox');
   const consoleOutput = document.getElementById('consoleOutput');
   const lblProgress = document.getElementById('lblProgress');
+  const btnSkip = document.getElementById('btnSkip');
+  const skipForm = document.getElementById('skipForm');
+  const skipUser = document.getElementById('skipUser');
+  const skipSenha = document.getElementById('skipSenha');
+  const btnConfirmSkip = document.getElementById('btnConfirmSkip');
+  const skipMsg = document.getElementById('skipMsg');
+
+  function hideSkipForm() {
+    skipForm.classList.remove('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    skipUser.value = '';
+    skipSenha.value = '';
+    btnConfirmSkip.disabled = false;
+    btnConfirmSkip.textContent = 'Confirmar e pular';
+  }
 
   function getCompleted() {
     try { return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')); }
@@ -495,6 +539,7 @@
     exampleBoxEl.textContent = challenge.example;
     codeInput.value = challenge.starter;
     btnNext.style.display = 'none';
+    hideSkipForm();
 
     hintBox.textContent = challenge.hint || '';
     hintBox.classList.remove('show');
@@ -549,11 +594,69 @@
     }
   }
 
+  // "Pular etapa": pro professor avançar o Engel quando vir que ele está
+  // travado num passo — exige a credencial do professor (mesma verificação
+  // do "Dar visto" em shared/professor-visto.js), pra não virar um botão
+  // que qualquer aluno usa pra pular sozinho.
+  function skipCurrentChallenge(nomeProfessor) {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    completed.add(challenge.id);
+    saveCompleted(completed);
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    logConsole(`⏭️ Pulado pelo professor (${nomeProfessor}).`, 'success');
+    if (!isLast) btnNext.style.display = 'inline-block';
+    renderSidebar();
+    hideSkipForm();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('js_basico_adaptado_engel', `JS Básico (Engel) — ${challenge.title} (pulado pelo professor)`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, skipped: true });
+    }
+  }
+
   btnHint.addEventListener('click', () => {
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar' : '💡 Dica';
   });
   btnRun.addEventListener('click', runChallenge);
+  btnSkip.addEventListener('click', () => {
+    skipForm.classList.toggle('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+  });
+  btnConfirmSkip.addEventListener('click', async () => {
+    const u = skipUser.value;
+    const p = skipSenha.value;
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    if (!u || !p) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Informe usuário e senha do professor.';
+      return;
+    }
+    btnConfirmSkip.disabled = true;
+    btnConfirmSkip.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificar(u, p)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        skipMsg.className = 'skip-msg erro';
+        skipMsg.textContent = result.erro;
+        btnConfirmSkip.disabled = false;
+        btnConfirmSkip.textContent = 'Confirmar e pular';
+        return;
+      }
+      skipCurrentChallenge(result.nome);
+    } catch (e) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      btnConfirmSkip.disabled = false;
+      btnConfirmSkip.textContent = 'Confirmar e pular';
+    }
+  });
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);
     const next = CHALLENGES[idx + 1];

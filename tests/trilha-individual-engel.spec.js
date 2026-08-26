@@ -16,6 +16,17 @@ async function openFundamentos(page) {
   await page.click('.game-card:has-text("Fundamentos de Programação")');
 }
 
+// Seed com credencial de professor pro fake client validar o "Pular
+// (professor)" — mesmo par usado em db-conexao-supabase.spec.js.
+const SEED_PROFESSOR = {
+  __authCredentials: [
+    { id: 'fake-admin', email: 'admin@aluno.portal.local', password: 'jd4532' },
+  ],
+  profiles: [
+    { id: 'fake-admin', email: 'admin', nome: 'Instrutor / Professor', role: 'professor', turma: 'all' },
+  ],
+};
+
 test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
   test('professor sempre vê a trilha, mesmo não estando na lista de visibleFor', async ({ page }) => {
     await stubSupabaseFake(page, {});
@@ -118,11 +129,36 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
     await expect(frame.locator('#vocabRow')).toBeVisible();
     await expect(frame.locator('#vocabRow')).toContainText('🐱');
     await expect(frame.locator('#vocabRow')).toContainText('gato');
-    await expect(frame.locator('#vocabRow')).toContainText('🐶');
-    await expect(frame.locator('#vocabRow')).toContainText('cachorro');
 
     await frame.locator('.step-icon').first().click();
     await expect(frame.locator('#challengeTitle')).toContainText('Guardar');
     await expect(frame.locator('#vocabRow')).toBeHidden();
+  });
+
+  test('botão "Pular (professor)" exige credencial válida de professor antes de pular a etapa', async ({ page }) => {
+    await stubSupabaseFake(page, SEED_PROFESSOR);
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await page.selectOption('#trilhaSelect', 'js-adaptado-engel');
+    await page.click('#moduleSelector_js-adaptado-engel .game-card');
+
+    const frame = page.frameLocator('#moduleFrame_js-adaptado-engel');
+    await expect(frame.locator('#challengeTitle')).toContainText('Guardar um número');
+
+    // Senha errada não pula a etapa.
+    await frame.locator('#btnSkip').click();
+    await expect(frame.locator('#skipForm')).toBeVisible();
+    await frame.locator('#skipUser').fill('admin');
+    await frame.locator('#skipSenha').fill('senha-errada');
+    await frame.locator('#btnConfirmSkip').click();
+    await expect(frame.locator('#skipMsg')).toContainText('incorretos');
+    await expect(frame.locator('#btnNext')).toBeHidden();
+
+    // Credencial correta de professor pula a etapa sem rodar o código.
+    await frame.locator('#skipUser').fill('admin');
+    await frame.locator('#skipSenha').fill('jd4532');
+    await frame.locator('#btnConfirmSkip').click();
+    await expect(frame.locator('.console')).toContainText('Pulado pelo professor');
+    await expect(frame.locator('#btnNext')).toBeVisible();
   });
 });
