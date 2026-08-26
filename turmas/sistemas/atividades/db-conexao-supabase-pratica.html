@@ -1433,13 +1433,10 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
       <div class="card visto-box">
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
         <p>Chame o professor pra conferir seu repositório no GitHub, o Codespace e o sistema funcionando de verdade com o Supabase (cadastro, listagem e as policies de RLS).</p>
-        <p>Quando ele confirmar que está tudo certo, peça pra ele digitar a própria credencial de login do portal abaixo — é assim que a atividade é marcada como concluída.</p>
+        <p>Quando ele confirmar que está tudo certo, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
         <div class="visto-form">
-          <label>Usuário do professor
-            <input type="text" id="vistoUser" autocomplete="off">
-          </label>
-          <label>Senha do professor
-            <input type="password" id="vistoSenha" autocomplete="off">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
           </label>
           <button class="btn" id="btnDarVisto">Dar visto</button>
           <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
@@ -1452,12 +1449,11 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
     const btnDarVisto = document.getElementById('btnDarVisto');
     const vistoMsg = document.getElementById('vistoMsg');
     btnDarVisto.addEventListener('click', async () => {
-      const u = document.getElementById('vistoUser').value;
-      const p = document.getElementById('vistoSenha').value;
+      const t = document.getElementById('vistoToken').value;
       vistoMsg.style.display = 'none';
-      if (!u || !p) {
+      if (!t) {
         vistoMsg.className = 'visto-msg erro';
-        vistoMsg.textContent = 'Informe usuário e senha do professor.';
+        vistoMsg.textContent = 'Informe o token do professor.';
         vistoMsg.style.display = 'block';
         return;
       }
@@ -1465,7 +1461,7 @@ Responda no seu caderno, com suas próprias palavras (algumas dessas respostas t
       btnDarVisto.textContent = 'Verificando...';
       try {
         const result = window.PortalProfessorVisto
-          ? await window.PortalProfessorVisto.verificar(u, p)
+          ? await window.PortalProfessorVisto.verificarToken(t)
           : { ok: false, erro: 'Verificação indisponível nesta tela.' };
         if (!result.ok) {
           vistoMsg.className = 'visto-msg erro';

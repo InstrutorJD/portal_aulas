@@ -3,19 +3,22 @@
 // Digitais) — jogo de Cobrinha construído peça por peça dentro do próprio
 // portal. Cada desafio testa uma função de lógica isolada (sem múltipla
 // escolha); ao passar, a função entra ao vivo no motor do jogo (canvas
-// sempre visível). Termina com escolha de visual/som e visto do professor
-// (shared/professor-visto.js).
+// sempre visível). Termina com escolha de visual/som e visto do professor,
+// autorizado por um TOKEN temporário (shared/professor-visto.js) — não
+// mais a credencial real do professor.
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/jogos/atividades/cobrinha-construcao.html?user=smoketest';
 
+const TOKEN_VALIDO = '482913';
+
 const SEED = {
-  __authCredentials: [
-    { id: 'fake-admin', email: 'admin@aluno.portal.local', password: 'jd4532' },
-  ],
   profiles: [
     { id: 'fake-admin', email: 'admin', nome: 'Instrutor / Professor', role: 'professor', turma: 'all' },
+  ],
+  professor_tokens: [
+    { token: TOKEN_VALIDO, created_by: 'fake-admin', created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() },
   ],
 };
 
@@ -120,16 +123,15 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
     await page.click('#btnNextEscolha');
 
     // Tela de visto
-    await expect(page.locator('#vistoUser')).toBeVisible();
-    await page.fill('#vistoUser', 'admin');
-    await page.fill('#vistoSenha', 'jd4532');
+    await expect(page.locator('#vistoToken')).toBeVisible();
+    await page.fill('#vistoToken', TOKEN_VALIDO);
     await page.click('#btnDarVisto');
     await expect(page.locator('.visto-box')).toContainText('Jogo entregue', { timeout: 5000 });
 
     expect(consoleErrors, 'não deveria haver erros de JS: ' + consoleErrors.join(' | ')).toEqual([]);
   });
 
-  test('"Pular (professor)" exige credencial válida e libera a etapa mesmo sem código correto', async ({ page }) => {
+  test('"Pular (professor)" exige token válido e libera a etapa mesmo sem código correto', async ({ page }) => {
     await page.goto(URL);
 
     await page.click('#btnContinuar'); // Sua missão
@@ -137,18 +139,16 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
     await page.click('#btnContinuar'); // explicação do 1º desafio
     await expect(page.locator('#codeInput')).toBeVisible();
 
-    // Sem resolver o desafio, tenta pular com senha errada primeiro.
+    // Sem resolver o desafio, tenta pular com token errado primeiro.
     await page.click('#btnSkipStep');
     await expect(page.locator('#skipForm')).toBeVisible();
-    await page.fill('#skipUser', 'admin');
-    await page.fill('#skipSenha', 'senha-errada');
+    await page.fill('#skipToken', '000000');
     await page.click('#btnConfirmSkip');
-    await expect(page.locator('#skipMsg')).toContainText('incorretos');
+    await expect(page.locator('#skipMsg')).toContainText('inválido ou expirado');
     await expect(page.locator('#btnNext')).toHaveCount(0);
 
-    // Credencial correta pula a etapa sem o código passar no teste.
-    await page.fill('#skipUser', 'admin');
-    await page.fill('#skipSenha', 'jd4532');
+    // Token correto pula a etapa sem o código passar no teste.
+    await page.fill('#skipToken', TOKEN_VALIDO);
     await page.click('#btnConfirmSkip');
     await expect(page.locator('.console')).toContainText('pulada pelo professor');
     await expect(page.locator('#btnNext')).toBeVisible();

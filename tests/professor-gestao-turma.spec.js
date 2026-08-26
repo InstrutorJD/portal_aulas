@@ -106,6 +106,36 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     expect(rows[0]).toMatchObject({ id: 'jogos', clipboard_blocked: true });
   });
 
+  // Token temporário do professor pra "Dar visto"/"Pular etapa" dentro de
+  // uma atividade (shared/professor-visto.js) — substitui digitar a senha
+  // real numa tela que é fisicamente do aluno (ver PENDENCIAS.md).
+  test('gerar token do professor mostra um código de 6 dígitos com prazo, e reabrir a Gestão mantém o mesmo token', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Token — Dar Visto / Pular Etapa');
+
+    await expect(page.locator('#professorTokenValue')).toHaveText('------');
+    await page.click('#btnGerarProfessorToken');
+
+    await expect(page.locator('#professorTokenValue')).toHaveText(/^\d{6}$/);
+    await expect(page.locator('#professorTokenStatus')).toContainText('Expira em');
+
+    const tokenGerado = await page.locator('#professorTokenValue').textContent();
+    const rows = await page.evaluate(() => window.__FAKE_DB__.professor_tokens || []);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ token: tokenGerado, created_by: 'fake-admin' });
+
+    // Trocar de aba e voltar pra Gestão não gera um token novo — mostra o
+    // mesmo, senão qualquer navegação do professor invalidaria o token que
+    // um aluno já pode estar digitando em outra atividade.
+    await page.click('#mainNavTabs .tab-btn[data-tab="aulas"]');
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expect(page.locator('#professorTokenValue')).toHaveText(tokenGerado);
+  });
+
   test('Apresentações (Slides) lista a aula teórica e gera o .pptx com um clique, sem abrir o módulo', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(JOGOS_URL);

@@ -228,6 +228,40 @@
         if (name === 'quizrush_server_now') {
           return Promise.resolve({ data: new Date().toISOString(), error: null });
         }
+        // Token temporário do professor pra "Dar visto"/"Pular etapa" —
+        // ver sql/supabase-setup-completo.sql bloco 13 e
+        // shared/professor-visto.js. gerar_professor_token/
+        // professor_token_atual só funcionam pro professor (mesma
+        // checagem de role que is_professor() faz de verdade);
+        // verificar_professor_token é público, qualquer papel pode
+        // chamar (é o que a tela do aluno usa).
+        if (name === 'gerar_professor_token' || name === 'professor_token_atual') {
+          const authUser = resolveFakeAuthUser();
+          const profile = authUser && table('profiles').find(p => p.id === authUser.id);
+          if (!profile || profile.role !== 'professor') {
+            return Promise.resolve({ data: null, error: { message: 'Só o professor pode gerenciar o token.' } });
+          }
+          const now = Date.now();
+          if (name === 'gerar_professor_token') {
+            db().professor_tokens = table('professor_tokens').filter(r => new Date(r.expires_at).getTime() <= now);
+            const token = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+            const expiresAt = new Date(now + 30 * 60 * 1000).toISOString();
+            table('professor_tokens').push({ token, expires_at: expiresAt, created_by: authUser.id, created_at: new Date(now).toISOString() });
+            return Promise.resolve({ data: [{ token, expires_at: expiresAt }], error: null });
+          }
+          const validRows = table('professor_tokens')
+            .filter(r => new Date(r.expires_at).getTime() > now)
+            .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          const current = validRows[0];
+          return Promise.resolve({ data: current ? [{ token: current.token, expires_at: current.expires_at }] : [], error: null });
+        }
+        if (name === 'verificar_professor_token') {
+          const now = Date.now();
+          const row = table('professor_tokens').find(r => r.token === params.p_token && new Date(r.expires_at).getTime() > now);
+          if (!row) return Promise.resolve({ data: [{ valido: false, nome: null }], error: null });
+          const profile = table('profiles').find(p => p.id === row.created_by);
+          return Promise.resolve({ data: [{ valido: true, nome: profile ? profile.nome : null }], error: null });
+        }
         return Promise.resolve({ data: null, error: null });
       },
     };

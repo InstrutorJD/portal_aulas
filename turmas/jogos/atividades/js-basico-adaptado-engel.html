@@ -175,11 +175,8 @@
         </div>
 
         <div class="skip-form" id="skipForm">
-          <label>Usuário do professor
-            <input type="text" id="skipUser" autocomplete="off">
-          </label>
-          <label>Senha do professor
-            <input type="password" id="skipSenha" autocomplete="off">
+          <label>Token do professor
+            <input type="text" id="skipToken" inputmode="numeric" maxlength="6" autocomplete="off">
           </label>
           <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
           <div class="skip-msg" id="skipMsg"></div>
@@ -465,8 +462,7 @@
   const lblProgress = document.getElementById('lblProgress');
   const btnSkip = document.getElementById('btnSkip');
   const skipForm = document.getElementById('skipForm');
-  const skipUser = document.getElementById('skipUser');
-  const skipSenha = document.getElementById('skipSenha');
+  const skipToken = document.getElementById('skipToken');
   const btnConfirmSkip = document.getElementById('btnConfirmSkip');
   const skipMsg = document.getElementById('skipMsg');
 
@@ -474,8 +470,7 @@
     skipForm.classList.remove('show');
     skipMsg.className = 'skip-msg';
     skipMsg.style.display = 'none';
-    skipUser.value = '';
-    skipSenha.value = '';
+    skipToken.value = '';
     btnConfirmSkip.disabled = false;
     btnConfirmSkip.textContent = 'Confirmar e pular';
   }
@@ -627,20 +622,19 @@
     skipMsg.style.display = 'none';
   });
   btnConfirmSkip.addEventListener('click', async () => {
-    const u = skipUser.value;
-    const p = skipSenha.value;
+    const t = skipToken.value;
     skipMsg.className = 'skip-msg';
     skipMsg.style.display = 'none';
-    if (!u || !p) {
+    if (!t) {
       skipMsg.className = 'skip-msg erro';
-      skipMsg.textContent = 'Informe usuário e senha do professor.';
+      skipMsg.textContent = 'Informe o token do professor.';
       return;
     }
     btnConfirmSkip.disabled = true;
     btnConfirmSkip.textContent = 'Verificando...';
     try {
       const result = window.PortalProfessorVisto
-        ? await window.PortalProfessorVisto.verificar(u, p)
+        ? await window.PortalProfessorVisto.verificarToken(t)
         : { ok: false, erro: 'Verificação indisponível nesta tela.' };
       if (!result.ok) {
         skipMsg.className = 'skip-msg erro';

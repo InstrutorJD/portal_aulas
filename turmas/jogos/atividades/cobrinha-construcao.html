@@ -739,11 +739,8 @@ function renderDesafio(step) {
         <button class="btn btn-secondary" id="btnSkipStep">⏭️ Pular (professor)</button>
       </div>
       <div class="visto-form" id="skipForm" style="display:none;">
-        <label>Usuário do professor
-          <input type="text" id="skipUser" autocomplete="off">
-        </label>
-        <label>Senha do professor
-          <input type="password" id="skipSenha" autocomplete="off">
+        <label>Token do professor
+          <input type="text" id="skipToken" inputmode="numeric" maxlength="6" autocomplete="off">
         </label>
         <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
         <div class="visto-msg" id="skipMsg" style="display:none;"></div>
@@ -778,7 +775,7 @@ function renderDesafio(step) {
     }
   }
 
-  // "Pular (professor)": mesma verificação de credencial do "Dar visto"
+  // "Pular (professor)": mesma verificação por token do "Dar visto"
   // (shared/professor-visto.js) — o professor pula a etapa atual sem o
   // aluno precisar passar no teste. O jogo continua funcionando porque
   // rebuildFromState()/skipDesafioComProfessor() ligam o slot da função
@@ -786,8 +783,7 @@ function renderDesafio(step) {
   // incompleto) do aluno.
   const btnSkipStep = document.getElementById('btnSkipStep');
   const skipForm = document.getElementById('skipForm');
-  const skipUser = document.getElementById('skipUser');
-  const skipSenha = document.getElementById('skipSenha');
+  const skipToken = document.getElementById('skipToken');
   const btnConfirmSkip = document.getElementById('btnConfirmSkip');
   const skipMsg = document.getElementById('skipMsg');
 
@@ -797,12 +793,11 @@ function renderDesafio(step) {
   });
 
   btnConfirmSkip.addEventListener('click', async () => {
-    const u = skipUser.value;
-    const p = skipSenha.value;
+    const t = skipToken.value;
     skipMsg.style.display = 'none';
-    if (!u || !p) {
+    if (!t) {
       skipMsg.className = 'visto-msg erro';
-      skipMsg.textContent = 'Informe usuário e senha do professor.';
+      skipMsg.textContent = 'Informe o token do professor.';
       skipMsg.style.display = 'block';
       return;
     }
@@ -810,7 +805,7 @@ function renderDesafio(step) {
     btnConfirmSkip.textContent = 'Verificando...';
     try {
       const result = window.PortalProfessorVisto
-        ? await window.PortalProfessorVisto.verificar(u, p)
+        ? await window.PortalProfessorVisto.verificarToken(t)
         : { ok: false, erro: 'Verificação indisponível nesta tela.' };
       if (!result.ok) {
         skipMsg.className = 'visto-msg erro';
@@ -947,13 +942,10 @@ function renderVisto() {
     <div class="card visto-box">
       <h2>🧑‍🏫 Entrega — Visto do professor</h2>
       <p>Seu jogo está pronto! Chame o professor, mostre ele jogando ali do lado (setas do teclado) e explique como cada função que você escreveu se encaixa no jogo.</p>
-      <p>Quando ele confirmar que está tudo certo, peça pra ele digitar a própria credencial de login do portal abaixo — é assim que a atividade é marcada como concluída.</p>
+      <p>Quando ele confirmar que está tudo certo, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
       <div class="visto-form">
-        <label>Usuário do professor
-          <input type="text" id="vistoUser" autocomplete="off">
-        </label>
-        <label>Senha do professor
-          <input type="password" id="vistoSenha" autocomplete="off">
+        <label>Token do professor
+          <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
         </label>
         <button class="btn" id="btnDarVisto">Dar visto</button>
         <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
@@ -964,12 +956,11 @@ function renderVisto() {
   const btnDarVisto = document.getElementById('btnDarVisto');
   const vistoMsg = document.getElementById('vistoMsg');
   btnDarVisto.addEventListener('click', async () => {
-    const u = document.getElementById('vistoUser').value;
-    const p = document.getElementById('vistoSenha').value;
+    const t = document.getElementById('vistoToken').value;
     vistoMsg.style.display = 'none';
-    if (!u || !p) {
+    if (!t) {
       vistoMsg.className = 'visto-msg erro';
-      vistoMsg.textContent = 'Informe usuário e senha do professor.';
+      vistoMsg.textContent = 'Informe o token do professor.';
       vistoMsg.style.display = 'block';
       return;
     }
@@ -977,7 +968,7 @@ function renderVisto() {
     btnDarVisto.textContent = 'Verificando...';
     try {
       const result = window.PortalProfessorVisto
-        ? await window.PortalProfessorVisto.verificar(u, p)
+        ? await window.PortalProfessorVisto.verificarToken(t)
         : { ok: false, erro: 'Verificação indisponível nesta tela.' };
       if (!result.ok) {
         vistoMsg.className = 'visto-msg erro';

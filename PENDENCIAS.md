@@ -181,3 +181,33 @@ simples sobre os 44 arquivos) esbarrou em arquivos com final de linha
 CRLF vs LF misturado no repositório — precisa normalizar isso antes
 (ou tratar os dois casos no script) pra não quebrar arquivo nenhum.
 Nenhuma mudança chegou a ser commitada.
+
+## Token do professor em "Dar visto"/"Pular etapa" — proteção contra força bruta
+
+**Status:** pendente — risco residual aceito conscientemente, não uma
+falha esquecida.
+
+**Onde:** o token de 6 dígitos que substituiu login/senha reais em
+"Dar visto"/"Pular etapa" (`shared/professor-visto.js`,
+`verificar_professor_token` em `sql/supabase-setup-completo.sql`, bloco
+13) é validado só por RLS/RPC do Postgres — sem nenhum rate limit. Um
+aluno mal-intencionado poderia tentar várias combinações de 6 dígitos
+seguidas (1 milhão de possibilidades) enquanto o token está válido (até
+30min) sem ser bloqueado.
+
+**Objetivo:** hoje isso já é uma melhora enorme sobre o problema
+original (senha real, válida pra sempre até alguém trocar manualmente,
+digitada num dispositivo do aluno) — mas continua sendo uma senha
+numérica curta sem limite de tentativas, então força bruta ainda é
+teoricamente possível dentro da janela de 30 minutos.
+
+**Próximos passos (não implementado — precisaria de mais infra do que
+o projeto tem hoje):**
+- Rate limit por IP/sessão exigiria uma camada além de RLS puro (ex.:
+  Edge Function do Supabase contando tentativas, ou uma tabela de
+  tentativas falhas com bloqueio temporário) — fora do escopo de
+  "só SQL + RPC" que o resto do projeto usa.
+- Alternativa mais simples: token mais longo (8+ caracteres
+  alfanuméricos em vez de 6 dígitos) aumenta o espaço de busca sem
+  precisar de infraestrutura nova — troca simplicidade de digitar por
+  mais segurança.

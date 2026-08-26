@@ -3,27 +3,29 @@
 // integrador que o portal não corrige sozinho (GitHub Codespaces + um
 // Supabase próprio do aluno). O aluno só navega pelas telas com
 // Voltar/Próximo; quem marca como concluída é o professor, dando "visto"
-// com a própria credencial na tela final (shared/professor-visto.js).
+// com um TOKEN temporário (não mais a própria credencial — ver
+// shared/professor-visto.js e PENDENCIAS.md: a senha real chegou a vazar
+// pros alunos por esse fluxo antigo).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
 const ACTIVITY_URL = '/turmas/sistemas/atividades/db-conexao-supabase-pratica.html?user=alexandre.natal&role=aluno&turma=sistemas';
 const AUTH_STORAGE_KEY = '__fake_supabase_session';
 
+const TOKEN_VALIDO = '482913';
+
 const SEED = {
-  __authCredentials: [
-    { id: 'fake-alexandre.natal', email: 'alexandre.natal@aluno.portal.local', password: 'natal2026' },
-    { id: 'fake-admin', email: 'admin@aluno.portal.local', password: 'jd4532' },
-  ],
   profiles: [
     { id: 'fake-alexandre.natal', email: 'alexandre.natal', nome: 'Alexandre Natal', role: 'aluno', turma: 'sistemas' },
     { id: 'fake-admin', email: 'admin', nome: 'Instrutor / Professor', role: 'professor', turma: 'all' },
   ],
+  professor_tokens: [
+    { token: TOKEN_VALIDO, created_by: 'fake-admin', created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() },
+  ],
 };
 
-async function darVisto(page, user, senha) {
-  await page.fill('#vistoUser', user);
-  await page.fill('#vistoSenha', senha);
+async function darVisto(page, token) {
+  await page.fill('#vistoToken', token);
   await page.click('#btnDarVisto');
 }
 
@@ -63,25 +65,31 @@ test.describe('turmas/sistemas — trilha Conexão com Supabase', () => {
     await expect(page.locator('#btnDarVisto')).toBeVisible();
   });
 
-  test('credenciais erradas mostram erro e não concluem a atividade', async ({ page }) => {
+  test('token errado mostra erro e não conclui a atividade', async ({ page }) => {
     await page.goto(ACTIVITY_URL);
     const total = await page.evaluate(() => STEPS.length);
     for (let i = 0; i < total; i++) await page.click('#btnNext');
 
-    await darVisto(page, 'admin', 'senha-errada');
-    await expect(page.locator('#vistoMsg')).toContainText('incorretos');
+    await darVisto(page, '000000');
+    await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
     const progress = await page.evaluate(u => localStorage.getItem(`db_conexao_supabase_pratica_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
-  test('credenciais de aluno (não professor) são recusadas', async ({ page }) => {
+  test('token expirado é recusado mesmo com o valor certo', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.__FAKE_DB__ = window.__FAKE_DB__ || {};
+      window.__FAKE_DB__.professor_tokens = [
+        { token: '482913', created_by: 'fake-admin', created_at: new Date(Date.now() - 40 * 60 * 1000).toISOString(), expires_at: new Date(Date.now() - 10 * 60 * 1000).toISOString() },
+      ];
+    });
     await page.goto(ACTIVITY_URL);
     const total = await page.evaluate(() => STEPS.length);
     for (let i = 0; i < total; i++) await page.click('#btnNext');
 
-    await darVisto(page, 'alexandre.natal', 'natal2026');
-    await expect(page.locator('#vistoMsg')).toContainText('não são de um professor');
+    await darVisto(page, TOKEN_VALIDO);
+    await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
   });
 
   test('visto do professor conclui a atividade sem trocar a sessão do aluno', async ({ page }) => {
@@ -94,7 +102,7 @@ test.describe('turmas/sistemas — trilha Conexão com Supabase', () => {
     const total = await page.evaluate(() => STEPS.length);
     for (let i = 0; i < total; i++) await page.click('#btnNext');
 
-    await darVisto(page, 'admin', 'jd4532');
+    await darVisto(page, TOKEN_VALIDO);
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
@@ -121,8 +129,7 @@ test.describe('turmas/sistemas — trilha Conexão com Supabase', () => {
     const frame = page.frameLocator('#moduleFrame_db-conexao-supabase');
     const total = await frame.locator('body').evaluate(() => STEPS.length);
     for (let i = 0; i < total; i++) await frame.locator('#btnNext').click();
-    await frame.locator('#vistoUser').fill('admin');
-    await frame.locator('#vistoSenha').fill('jd4532');
+    await frame.locator('#vistoToken').fill(TOKEN_VALIDO);
     await frame.locator('#btnDarVisto').click();
     await expect(frame.locator('.visto-box h2')).toContainText('Atividade concluída');
 

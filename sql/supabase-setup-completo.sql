@@ -13,8 +13,9 @@
 -- rede da turma Sistemas, chamada / notas / progresso de trilha
 -- (relatórios da aba Gestão), datas de início/prazo por trilha, o
 -- placar competitivo dos minigames (Digitação, Campo Minado), a
--- liberação diária de atividades, o QuizRush e a sincronização de
--- progresso entre dispositivos.
+-- liberação diária de atividades, o QuizRush, a sincronização de
+-- progresso entre dispositivos e o token temporário de "Dar visto"/
+-- "Pular etapa" do professor.
 --
 -- PRÉ-REQUISITO: as tabelas network_nodes, node_permissions e
 -- node_shields precisam já existir no seu projeto Supabase (foram
@@ -1377,13 +1378,126 @@ create policy "student_activity_state_update_self"
   with check (student_email = public.current_email());
 
 -- ============================================================
+-- BLOCO 13 — Token temporário do professor pra "Dar visto"/"Pular etapa"
+-- dentro de uma atividade (cobrinha-construcao.html, db-conexao-supabase-
+-- pratica.html, js-basico-adaptado-engel.html — ver shared/professor-
+-- visto.js). Substitui o fluxo antigo, que pedia usuário e senha REAIS do
+-- professor numa tela que fisicamente é do aluno — foi assim que a senha
+-- vazou uma vez (ver PENDENCIAS.md). Em vez disso, só o professor (via
+-- gerar_professor_token(), chamado da aba Gestão) gera um código de 6
+-- dígitos válido por 30 minutos; a tela do aluno só verifica esse código
+-- (verificar_professor_token(), sem nunca saber a senha de verdade).
+--
+-- Sem policy nenhuma pra select/insert direto: nada aqui é lido/escrito
+-- por fora das três functions abaixo, todas SECURITY DEFINER — mesmo
+-- padrão de profiles (bloco 0), current_email()/is_professor() por trás.
+-- ============================================================
+
+create table if not exists public.professor_tokens (
+  id uuid primary key default gen_random_uuid(),
+  token text not null,
+  created_by uuid references auth.users(id) on delete set null,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_professor_tokens_token on public.professor_tokens (token);
+
+alter table public.professor_tokens enable row level security;
+
+-- Gera um token novo (6 dígitos, válido 30min) e invalida qualquer token
+-- ainda válido antes de criar — só existe UM token "atual" por vez.
+create or replace function public.gerar_professor_token()
+returns table(token text, expires_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_token text;
+  v_expires timestamptz;
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode gerar um token.';
+  end if;
+
+  delete from public.professor_tokens where expires_at > now();
+
+  v_token := lpad(floor(random() * 1000000)::numeric, 6, '0');
+  v_expires := now() + interval '30 minutes';
+
+  insert into public.professor_tokens (token, expires_at, created_by)
+  values (v_token, v_expires, auth.uid());
+
+  return query select v_token, v_expires;
+end;
+$$;
+
+-- Devolve o token ainda válido (se houver), sem gerar um novo — pra
+-- reabrir a aba Gestão (ou abrir em outro dispositivo) mostrar o mesmo
+-- código que os alunos já podem estar digitando, em vez de trocar toda
+-- vez que a tela é aberta.
+create or replace function public.professor_token_atual()
+returns table(token text, expires_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode ver o token atual.';
+  end if;
+
+  return query
+    select pt.token, pt.expires_at
+    from public.professor_tokens pt
+    where pt.expires_at > now()
+    order by pt.created_at desc
+    limit 1;
+end;
+$$;
+
+-- Chamada pela TELA DO ALUNO (qualquer papel, por isso o grant pra anon
+-- também) — confere se o token digitado bate com o token válido atual, e
+-- devolve o nome de quem gerou (pra manter o "Visto dado por Fulano" que
+-- já existia). Nunca expõe a lista de tokens, só um sim/não + nome.
+create or replace function public.verificar_professor_token(p_token text)
+returns table(valido boolean, nome text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_created_by uuid;
+begin
+  select pt.created_by into v_created_by
+  from public.professor_tokens pt
+  where pt.token = p_token and pt.expires_at > now()
+  order by pt.created_at desc
+  limit 1;
+
+  if v_created_by is null then
+    return query select false, null::text;
+    return;
+  end if;
+
+  return query select true, p.nome from public.profiles p where p.id = v_created_by;
+end;
+$$;
+
+grant execute on function public.gerar_professor_token() to authenticated;
+grant execute on function public.professor_token_atual() to authenticated;
+grant execute on function public.verificar_professor_token(text) to anon, authenticated;
+
+
+-- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, trilha_release_dates, game_scores,
--- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers
--- e student_activity_state foram criadas, se network_nodes ganhou as
--- colunas current_ip e turma, e se network_nodes/node_permissions/
--- node_shields aparecem com RLS habilitado (ícone de cadeado no Table
--- Editor). Se profiles estiver vazia, rode
--- scripts/migrate-users-to-auth.mjs antes de testar login.
+-- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers,
+-- student_activity_state e professor_tokens foram criadas, se
+-- network_nodes ganhou as colunas current_ip e turma, e se
+-- network_nodes/node_permissions/node_shields aparecem com RLS
+-- habilitado (ícone de cadeado no Table Editor). Se profiles estiver
+-- vazia, rode scripts/migrate-users-to-auth.mjs antes de testar login.
 -- ============================================================

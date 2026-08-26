@@ -285,6 +285,23 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Token — Dar Visto / Pular Etapa</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Código temporário que substitui digitar sua senha real dentro de uma atividade — peça pro aluno digitar esse token nas telas "Dar visto"/"Pular (professor)". Válido por 30 minutos; gere um novo quando quiser invalidar o atual.
+                </p>
+                <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+                  <div id="professorTokenValue" style="font-family:'JetBrains Mono', monospace; font-size:32px; font-weight:800; letter-spacing:6px;">------</div>
+                  <span class="status-msg" id="professorTokenStatus"></span>
+                  <button class="btn" id="btnGerarProfessorToken">Gerar novo token</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Apresentações (Slides)</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -2186,8 +2203,78 @@
     headEl.closest('.collapsible-card').classList.toggle('expanded');
   }
 
+  // Token temporário do professor pra "Dar visto"/"Pular etapa" dentro de
+  // uma atividade (shared/professor-visto.js) — substitui digitar a senha
+  // real numa tela que fisicamente é do aluno. gerar_professor_token()/
+  // professor_token_atual() (sql/supabase-setup-completo.sql, bloco 13) só
+  // funcionam pra quem é professor.
+  let professorTokenCountdownInterval = null;
+  let professorTokenExpiresAtMs = null;
+
+  function formatMMSS(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  function showProfessorToken(token, expiresAt) {
+    const valueEl = document.getElementById('professorTokenValue');
+    const statusEl = document.getElementById('professorTokenStatus');
+    if (!valueEl || !statusEl) return;
+
+    if (professorTokenCountdownInterval) clearInterval(professorTokenCountdownInterval);
+    professorTokenExpiresAtMs = expiresAt ? new Date(expiresAt).getTime() : null;
+    valueEl.textContent = token || '------';
+
+    if (!token || !professorTokenExpiresAtMs) {
+      statusEl.textContent = '';
+      return;
+    }
+
+    const tick = () => {
+      const restante = professorTokenExpiresAtMs - Date.now();
+      if (restante <= 0) {
+        statusEl.textContent = 'Expirado — gere um novo.';
+        valueEl.textContent = '------';
+        clearInterval(professorTokenCountdownInterval);
+        return;
+      }
+      statusEl.textContent = `Expira em ${formatMMSS(restante)}`;
+    };
+    tick();
+    professorTokenCountdownInterval = setInterval(tick, 1000);
+  }
+
+  async function renderProfessorTokenBox() {
+    if (!sbClient || currentUser.role !== 'professor') return;
+    const { data, error } = await sbClient.rpc('professor_token_atual');
+    if (error) return;
+    const row = Array.isArray(data) ? data[0] : data;
+    showProfessorToken(row ? row.token : null, row ? row.expires_at : null);
+  }
+
+  async function gerarProfessorToken() {
+    if (!sbClient) return;
+    const btn = document.getElementById('btnGerarProfessorToken');
+    const statusEl = document.getElementById('professorTokenStatus');
+    btn.disabled = true;
+    try {
+      const { data, error } = await sbClient.rpc('gerar_professor_token');
+      if (error) {
+        statusEl.textContent = 'Não foi possível gerar o token.';
+        return;
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      showProfessorToken(row ? row.token : null, row ? row.expires_at : null);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   function renderGestaoTab() {
     renderGestaoStudents();
+    renderProfessorTokenBox();
     renderGestaoTrilhas();
     renderGestaoDailyReleases();
     renderGestaoLogs();
@@ -2272,6 +2359,7 @@
     });
 
     document.getElementById('btnToggleClipboard').addEventListener('click', toggleClipboardBlock);
+    document.getElementById('btnGerarProfessorToken').addEventListener('click', gerarProfessorToken);
     document.getElementById('btnQuickToggleClipboard').addEventListener('click', toggleClipboardBlock);
     document.getElementById('btnQuickToggleGames').addEventListener('click', quickToggleGames);
     document.getElementById('btnQuickAtividadeInatividade').addEventListener('click', openGestaoAtividadeInatividade);

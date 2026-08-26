@@ -1,50 +1,45 @@
-// "Dar visto": verifica usuário/senha de PROFESSOR dentro de uma atividade
-// que o portal não consegue corrigir sozinho (ex.: projeto no GitHub
-// Codespaces + Supabase) — o professor confere o resultado pessoalmente e
-// autoriza a conclusão digitando a própria credencial na tela do aluno.
+// "Dar visto" / "Pular etapa": confirma que quem está mexendo na tela é
+// o professor SEM pedir login/senha reais dentro de uma atividade que o
+// portal não consegue corrigir sozinha — a versão anterior pedia usuário
+// e senha de verdade numa tela que fisicamente é do aluno, e foi assim
+// que a senha do professor vazou uma vez (ver PENDENCIAS.md).
 //
-// Cuidado central: NUNCA usar window.PortalSession.signIn() aqui. Aquele
-// client é o mesmo da sessão principal (persiste em localStorage) — logar
-// como professor por ali trocaria a sessão do aluno pela do professor na
-// aba/origem inteira. Este helper cria um client Supabase à parte, com
-// persistSession:false, só pra validar a senha e o papel — a sessão dele
-// nunca é salva e é encerrada (signOut) logo depois de checar, sucesso ou
-// não. shared/session.js e supabase-js precisam já estar carregados antes
-// deste arquivo.
+// Em vez disso, o professor gera um TOKEN de 6 dígitos (válido por 30
+// minutos) na própria sessão dele — aba Gestão, gerarProfessorToken()/
+// professorTokenAtual() em shared/platform-core.js — e só digita esse
+// token aqui. A verificação roda pela RPC verificar_professor_token
+// (sql/supabase-setup-completo.sql, bloco 13), que nunca expõe a lista
+// de tokens nem qualquer credencial — só devolve se o token bate e o
+// nome de quem gerou.
+//
+// Sem client separado nem persistSession:false: como não há mais
+// signInWithPassword aqui, não existe risco de "roubar" a sessão do
+// aluno logado na mesma aba — a RPC é só uma consulta, usando o client
+// principal (window.PortalSession.client()).
+//
+// Inclua depois de supabase-config.js, da lib @supabase/supabase-js e
+// de shared/session.js.
 window.PortalProfessorVisto = (function () {
-  async function verificar(username, senha) {
-    if (!window.supabase || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+  async function verificarToken(token) {
+    const tokenLimpo = (token || '').trim();
+    if (!tokenLimpo) {
+      return { ok: false, erro: 'Informe o token do professor.' };
+    }
+    const sb = window.PortalSession ? window.PortalSession.client() : null;
+    if (!sb) {
       return { ok: false, erro: 'Supabase não configurado nesta atividade.' };
     }
-    if (!window.PortalSession || !username || !senha) {
-      return { ok: false, erro: 'Informe usuário e senha do professor.' };
+
+    const { data, error } = await sb.rpc('verificar_professor_token', { p_token: tokenLimpo });
+    if (error) {
+      return { ok: false, erro: 'Não foi possível verificar o token agora. Tente de novo.' };
     }
-
-    const temp = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const email = window.PortalSession.authEmailFromUsername(username.trim().toLowerCase());
-    const { data: authData, error: authError } = await temp.auth.signInWithPassword({ email, password: senha });
-    if (authError || !authData || !authData.user) {
-      return { ok: false, erro: 'Usuário ou senha incorretos.' };
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row || !row.valido) {
+      return { ok: false, erro: 'Token inválido ou expirado. Peça um token novo ao professor.' };
     }
-
-    const { data: profile, error: profileError } = await temp
-      .from('profiles').select('role, nome').eq('id', authData.user.id).maybeSingle();
-
-    // Sempre desloga o client temporário antes de devolver o resultado —
-    // best-effort, não deve travar a resposta se falhar.
-    try { await temp.auth.signOut(); } catch (e) {}
-
-    if (profileError || !profile) {
-      return { ok: false, erro: 'Não foi possível confirmar o perfil dessa conta.' };
-    }
-    if (profile.role !== 'professor') {
-      return { ok: false, erro: 'Essas credenciais não são de um professor.' };
-    }
-    return { ok: true, nome: profile.nome };
+    return { ok: true, nome: row.nome };
   }
 
-  return { verificar };
+  return { verificarToken };
 })();

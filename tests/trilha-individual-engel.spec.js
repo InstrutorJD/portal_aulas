@@ -16,14 +16,16 @@ async function openFundamentos(page) {
   await page.click('.game-card:has-text("Fundamentos de Programação")');
 }
 
-// Seed com credencial de professor pro fake client validar o "Pular
-// (professor)" — mesmo par usado em db-conexao-supabase.spec.js.
+// Seed com token de professor pro fake client validar o "Pular
+// (professor)" — mesmo padrão usado em db-conexao-supabase.spec.js e
+// cobrinha-construcao.spec.js.
+const TOKEN_VALIDO = '482913';
 const SEED_PROFESSOR = {
-  __authCredentials: [
-    { id: 'fake-admin', email: 'admin@aluno.portal.local', password: 'jd4532' },
-  ],
   profiles: [
     { id: 'fake-admin', email: 'admin', nome: 'Instrutor / Professor', role: 'professor', turma: 'all' },
+  ],
+  professor_tokens: [
+    { token: TOKEN_VALIDO, created_by: 'fake-admin', created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() },
   ],
 };
 
@@ -135,7 +137,7 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
     await expect(frame.locator('#vocabRow')).toBeHidden();
   });
 
-  test('botão "Pular (professor)" exige credencial válida de professor antes de pular a etapa', async ({ page }) => {
+  test('botão "Pular (professor)" exige token válido antes de pular a etapa', async ({ page }) => {
     await stubSupabaseFake(page, SEED_PROFESSOR);
     await page.goto(ENGEL_URL);
     await openFundamentos(page);
@@ -145,18 +147,16 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
     const frame = page.frameLocator('#moduleFrame_js-adaptado-engel');
     await expect(frame.locator('#challengeTitle')).toContainText('Guardar um número');
 
-    // Senha errada não pula a etapa.
+    // Token errado não pula a etapa.
     await frame.locator('#btnSkip').click();
     await expect(frame.locator('#skipForm')).toBeVisible();
-    await frame.locator('#skipUser').fill('admin');
-    await frame.locator('#skipSenha').fill('senha-errada');
+    await frame.locator('#skipToken').fill('000000');
     await frame.locator('#btnConfirmSkip').click();
-    await expect(frame.locator('#skipMsg')).toContainText('incorretos');
+    await expect(frame.locator('#skipMsg')).toContainText('inválido ou expirado');
     await expect(frame.locator('#btnNext')).toBeHidden();
 
-    // Credencial correta de professor pula a etapa sem rodar o código.
-    await frame.locator('#skipUser').fill('admin');
-    await frame.locator('#skipSenha').fill('jd4532');
+    // Token correto do professor pula a etapa sem rodar o código.
+    await frame.locator('#skipToken').fill(TOKEN_VALIDO);
     await frame.locator('#btnConfirmSkip').click();
     await expect(frame.locator('.console')).toContainText('Pulado pelo professor');
     await expect(frame.locator('#btnNext')).toBeVisible();
