@@ -125,3 +125,59 @@ escolhido, não a lógica.
   graça com qualidade e consistência. A solução aqui deve continuar
   sendo determinística (regras de normalização/inspeção de escopo), não
   um modelo de linguagem.
+
+## Desbloquear todas as etapas das atividades para o professor
+
+**Status:** pendente — pedido do professor, ainda não implementado.
+
+**Onde:** o bloqueio por **módulo/trilha** (navegação entre matérias) já
+libera tudo pro professor — `isModuleLocked()` em
+`shared/platform-core.js` retorna `false` de cara quando
+`currentUser.role === 'professor'`, e o mesmo vale pra trava da aba de
+Jogos e pra visibilidade de trilha (`trilhaStatus`). O que falta é o
+bloqueio **dentro** de cada atividade, entre uma etapa/desafio e o
+próximo: hoje toda atividade de código (`CHALLENGES`/`STEPS` com
+progressão trancada) usa a mesma lógica —
+
+```js
+function isUnlocked(challenge) {
+  const idx = CHALLENGES.findIndex(c => c.id === challenge.id);
+  if (idx === 0) return true;
+  return completed.has(CHALLENGES[idx - 1].id);
+}
+```
+
+— sem nenhuma exceção pro professor, então mesmo logado como professor
+só dá pra abrir a 1ª etapa até "resolver" cada uma em sequência. Esse
+exato padrão está duplicado (bespoke, sem função compartilhada) em ~44
+arquivos: todas as `*-pratica.html` das duas turmas (jogos e sistemas),
+`js-basico.html`, `js-intermediario.html`,
+`js-basico-adaptado-engel.html`, `csharp-pratica.html`,
+`gdscript-pratica.html`, `sql-basico.html`, `sql-join.html`,
+`sql-agregacao.html`. Além desses, dois casos com assinatura levemente
+diferente:
+- `turmas/jogos/atividades/cobrinha-construcao.html`: `isUnlocked(index)`
+  sobre `STEPS` (não `CHALLENGES`), mais uma trava separada pro passo
+  final (`vistoUnlocked = STEPS.every(s => completed.has(s.id))`).
+- `shared/js-challenge-engine.js`: mesma lógica, mas já centralizada
+  numa engine compartilhada (só usada por
+  `turmas/sistemas/atividades/js-fundamentos-basico.html` e
+  `-intermediario.html`) — corrigir esse arquivo já resolve os dois de
+  uma vez.
+
+**Objetivo:** o professor conseguir abrir/navegar livremente por
+qualquer etapa de qualquer atividade prática, sem precisar "resolver"
+as anteriores em ordem — pra poder revisar, demonstrar ou testar
+qualquer parte do conteúdo. Não muda nada pro aluno.
+
+**Caminho já mapeado (não implementado ainda):** em cada arquivo, checar
+`(await window.PortalSession.getUser())?.role === 'professor'` (mesmo
+`shared/session.js` que toda atividade já inclui) uma vez no carregamento,
+guardar num flag (`isProfessor`), e fazer `isUnlocked(...)` retornar
+`true` de cara quando o flag estiver ligado — como a checagem é
+assíncrona, a etapa fica travada até a resposta chegar e então a
+sidebar é re-renderizada. Uma tentativa de aplicar isso em lote (regex
+simples sobre os 44 arquivos) esbarrou em arquivos com final de linha
+CRLF vs LF misturado no repositório — precisa normalizar isso antes
+(ou tratar os dois casos no script) pra não quebrar arquivo nenhum.
+Nenhuma mudança chegou a ser commitada.

@@ -128,4 +128,41 @@ test.describe('turmas/jogos/atividades/cobrinha-construcao.html', () => {
 
     expect(consoleErrors, 'não deveria haver erros de JS: ' + consoleErrors.join(' | ')).toEqual([]);
   });
+
+  test('"Pular (professor)" exige credencial válida e libera a etapa mesmo sem código correto', async ({ page }) => {
+    await page.goto(URL);
+
+    await page.click('#btnContinuar'); // Sua missão
+    await page.click('#btnContinuar'); // Como funciona
+    await page.click('#btnContinuar'); // explicação do 1º desafio
+    await expect(page.locator('#codeInput')).toBeVisible();
+
+    // Sem resolver o desafio, tenta pular com senha errada primeiro.
+    await page.click('#btnSkipStep');
+    await expect(page.locator('#skipForm')).toBeVisible();
+    await page.fill('#skipUser', 'admin');
+    await page.fill('#skipSenha', 'senha-errada');
+    await page.click('#btnConfirmSkip');
+    await expect(page.locator('#skipMsg')).toContainText('incorretos');
+    await expect(page.locator('#btnNext')).toHaveCount(0);
+
+    // Credencial correta pula a etapa sem o código passar no teste.
+    await page.fill('#skipUser', 'admin');
+    await page.fill('#skipSenha', 'jd4532');
+    await page.click('#btnConfirmSkip');
+    await expect(page.locator('.console')).toContainText('pulada pelo professor');
+    await expect(page.locator('#btnNext')).toBeVisible();
+
+    // O jogo continua funcionando (usa a solução de referência por trás),
+    // então o slot da função pulada foi ligado mesmo sem o código do aluno.
+    const wired = await page.evaluate(() => typeof slots.criarCobrinha === 'function');
+    expect(wired).toBe(true);
+
+    // Avança e recarrega a página: a etapa pulada continua concluída, e o
+    // jogo continua funcional a partir da solução de referência salva.
+    await page.click('#btnNext');
+    await page.reload();
+    const stillWired = await page.evaluate(() => typeof slots.criarCobrinha === 'function');
+    expect(stillWired).toBe(true);
+  });
 });

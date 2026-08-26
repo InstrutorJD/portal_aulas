@@ -576,10 +576,15 @@ const completed = new Set(state.completedIds);
 // código já validado antes, pra quem recarrega a página não perder nada.
 function rebuildFromState() {
   STEPS.forEach(step => {
-    if (step.type === 'desafio' && completed.has(step.id) && state.savedCode[step.id]) {
-      const { fn } = runTests(step, state.savedCode[step.id]);
-      if (fn) slots[step.fnName] = fn;
-    }
+    if (step.type !== 'desafio' || !completed.has(step.id)) return;
+    const { fn } = state.savedCode[step.id] ? runTests(step, state.savedCode[step.id]) : {};
+    if (fn) { slots[step.fnName] = fn; return; }
+    // Etapa concluída mas o código salvo não passa mais nos testes — só
+    // acontece quando o professor pulou a etapa (ver "Pular (professor)"
+    // em renderDesafio). Usa a solução de referência pra o jogo continuar
+    // funcionando de ponta a ponta mesmo sem o código do aluno.
+    const { fn: refFn } = runTests(step, step.solution);
+    if (refFn) slots[step.fnName] = refFn;
   });
   if (state.visualEscolha) {
     const opt = STEPS.find(s => s.id === 'visual-esc').opcoes.find(o => o.id === state.visualEscolha);
@@ -731,6 +736,17 @@ function renderDesafio(step) {
       <div class="actions">
         <button class="btn" id="btnRun">▶ Executar</button>
         ${already ? '<button class="btn btn-secondary" id="btnNext">Próximo →</button>' : ''}
+        <button class="btn btn-secondary" id="btnSkipStep">⏭️ Pular (professor)</button>
+      </div>
+      <div class="visto-form" id="skipForm" style="display:none;">
+        <label>Usuário do professor
+          <input type="text" id="skipUser" autocomplete="off">
+        </label>
+        <label>Senha do professor
+          <input type="password" id="skipSenha" autocomplete="off">
+        </label>
+        <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
+        <div class="visto-msg" id="skipMsg" style="display:none;"></div>
       </div>
       <div class="console" id="consoleOutput"></div>
     </div>
@@ -759,6 +775,80 @@ function renderDesafio(step) {
         const idx = STEPS.findIndex(s => s.id === step.id);
         selectStep(idx + 1);
       });
+    }
+  }
+
+  // "Pular (professor)": mesma verificação de credencial do "Dar visto"
+  // (shared/professor-visto.js) — o professor pula a etapa atual sem o
+  // aluno precisar passar no teste. O jogo continua funcionando porque
+  // rebuildFromState()/skipDesafioComProfessor() ligam o slot da função
+  // usando step.solution (a referência), não o código (possivelmente
+  // incompleto) do aluno.
+  const btnSkipStep = document.getElementById('btnSkipStep');
+  const skipForm = document.getElementById('skipForm');
+  const skipUser = document.getElementById('skipUser');
+  const skipSenha = document.getElementById('skipSenha');
+  const btnConfirmSkip = document.getElementById('btnConfirmSkip');
+  const skipMsg = document.getElementById('skipMsg');
+
+  btnSkipStep.addEventListener('click', () => {
+    skipForm.style.display = skipForm.style.display === 'none' ? 'flex' : 'none';
+    skipMsg.style.display = 'none';
+  });
+
+  btnConfirmSkip.addEventListener('click', async () => {
+    const u = skipUser.value;
+    const p = skipSenha.value;
+    skipMsg.style.display = 'none';
+    if (!u || !p) {
+      skipMsg.className = 'visto-msg erro';
+      skipMsg.textContent = 'Informe usuário e senha do professor.';
+      skipMsg.style.display = 'block';
+      return;
+    }
+    btnConfirmSkip.disabled = true;
+    btnConfirmSkip.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificar(u, p)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        skipMsg.className = 'visto-msg erro';
+        skipMsg.textContent = result.erro;
+        skipMsg.style.display = 'block';
+        btnConfirmSkip.disabled = false;
+        btnConfirmSkip.textContent = 'Confirmar e pular';
+        return;
+      }
+      skipDesafioComProfessor(step, result.nome);
+    } catch (e) {
+      skipMsg.className = 'visto-msg erro';
+      skipMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      skipMsg.style.display = 'block';
+      btnConfirmSkip.disabled = false;
+      btnConfirmSkip.textContent = 'Confirmar e pular';
+    }
+  });
+
+  function skipDesafioComProfessor(step, nomeProfessor) {
+    const { fn } = runTests(step, step.solution);
+    if (fn) {
+      slots[step.fnName] = fn;
+      if (!snake && step.fnName === 'criarCobrinha') resetGame();
+    }
+    consoleOutput.innerHTML = '';
+    logLine(`⏭️ Etapa pulada pelo professor (${nomeProfessor}).`, 'success');
+    const wasNew = !completed.has(step.id);
+    markDone(step.id);
+    skipForm.style.display = 'none';
+    if (wasNew && !document.getElementById('btnNext')) {
+      const actionsEl = document.querySelector('#stepContent .actions');
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary';
+      btn.id = 'btnNext';
+      btn.textContent = 'Próximo →';
+      actionsEl.insertBefore(btn, btnSkipStep);
+      wireNextButton();
     }
   }
 
