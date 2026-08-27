@@ -125,6 +125,26 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          // Trilha individual, adaptada — só aparece pro aluno listado em
+          // visibleFor (professor sempre vê, pra acompanhar). Ver
+          // trilhaStatus() em shared/platform-core.js. Versão reduzida do
+          // jogo "Ponto de Virada" (games/ponto-de-virada.html): 6 cenas,
+          // 2 escolhas por cena (em vez de 3), pouco texto e emoji grande
+          // por escolha.
+          key: 'ponto-de-virada-engel',
+          label: 'Ponto de Virada (Engel)',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'jogo', title: 'Ponto de Virada — Adaptado',
+              desc: '6 cenas curtas da vida do Lucas, cada uma com 2 escolhas (emoji grande + palavra curta). Sem certo ou errado.',
+              icon: '🎭', src: 'atividades/ponto-de-virada-engel.html',
+              progressKey: 'ponto_de_virada_engel_progress_', progressMode: 'flag'
+            }
+          ]
         }
       ]
     },

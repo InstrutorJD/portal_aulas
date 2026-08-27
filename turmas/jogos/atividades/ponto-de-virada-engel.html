@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Ponto de Virada (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); min-height:100vh;
+  }
+
+  .env{
+    max-width:760px; margin:0 auto; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+    min-height:calc(100vh - 20px);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; }
+
+  .steps{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+  .step-dot{
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    font-size:17px; border:2px solid var(--line); background:var(--panel2); border-radius:8px;
+  }
+  .step-dot.active{ border-color:var(--green); }
+  .step-dot.done{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+
+  .scene{
+    background:var(--panel); border:1px solid var(--line); padding:22px; text-align:center;
+  }
+  .scene .big-icon{ font-size:64px; line-height:1; margin-bottom:10px; }
+  .scene p{ font-size:19px; line-height:1.6; margin:0; color:var(--ink); }
+
+  .question{
+    font-family:'VT323', monospace; font-size:26px; color:var(--green); text-align:center; margin:0;
+  }
+
+  .choices{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .choice-btn{
+    flex:1 1 200px; max-width:260px; display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:var(--panel2); border:2px solid var(--green-dim); border-radius:10px;
+    padding:20px 12px; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .choice-btn:hover{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .choice-btn .emoji{ font-size:56px; line-height:1; }
+  .choice-btn .label{ font-size:17px; font-weight:800; text-align:center; }
+  .choice-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .reaction{
+    display:none; background:var(--panel2); border:2px dashed var(--yellow);
+    padding:16px; text-align:center; font-size:19px; color:var(--ink); line-height:1.6;
+  }
+  .reaction.show{ display:block; }
+  .reaction .emoji{ font-size:40px; display:block; margin-bottom:6px; }
+
+  .actions{ display:flex; justify-content:center; margin-top:auto; padding-top:6px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:18px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 28px; cursor:pointer; border-radius:8px;
+  }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .end-card{ text-align:center; }
+  .end-card .big-icon{ font-size:72px; margin-bottom:8px; }
+  .end-card h2{ font-family:'VT323', monospace; font-size:30px; color:var(--green); margin:0 0 10px; }
+  .end-card p{ font-size:19px; color:var(--ink); line-height:1.6; margin:0 0 16px; }
+  .recap{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; font-size:38px; margin-bottom:18px; }
+
+  .start-screen{ text-align:center; margin:auto 0; }
+  .start-screen .big-icon{ font-size:72px; margin-bottom:10px; }
+  .start-screen h1{ font-family:'VT323', monospace; font-size:34px; color:var(--green); margin:0 0 10px; }
+  .start-screen p{ font-size:19px; color:var(--ink-dim); line-height:1.6; margin:0 0 18px; }
+
+  @media (max-width: 600px) {
+    .choices{ flex-direction:column; align-items:stretch; }
+    .choice-btn{ max-width:none; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'ponto_de_virada_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🎭 PONTO DE VIRADA</div>
+    <div>✅ <span id="lblProgress">0/6</span></div>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `ponto_de_virada_engel_progress_${username}`;
+
+  const stage = document.getElementById('stage');
+  const lblProgress = document.getElementById('lblProgress');
+
+  // Versão adaptada pro Engel: mesmo espírito do jogo "Ponto de Virada"
+  // (decidir por Lucas), mas reduzida a 6 cenas, 2 escolhas por cena (em
+  // vez de 3), pouquíssimo texto e um emoji GRANDE por escolha — mesma
+  // lógica de apoio visual usada em js-basico-adaptado-engel.html. Sem
+  // pontuação/finais múltiplos: cada escolha só leva a uma reação curta,
+  // nenhuma opção é "a certa".
+  const SCENES = [
+    {
+      icon: '🎒', text: 'Lucas vai pra escola.',
+      question: 'Como ele vai?',
+      choices: [
+        { emoji: '🚶', label: 'A pé', reaction: 'Lucas anda. Chega cansado, mas na hora.' },
+        { emoji: '🚌', label: 'De ônibus', reaction: 'Lucas pega o ônibus. Chega rápido e descansado.' }
+      ]
+    },
+    {
+      icon: '👫', text: 'Um amigo pede ajuda na tarefa.',
+      question: 'O que Lucas faz?',
+      choices: [
+        { emoji: '🤝', label: 'Ajuda o amigo', reaction: 'Lucas ajuda. O amigo fica feliz.' },
+        { emoji: '📖', label: 'Termina a sua', reaction: 'Lucas termina a própria tarefa primeiro.' }
+      ]
+    },
+    {
+      icon: '💰', text: 'Lucas ganhou um dinheiro.',
+      question: 'O que ele faz com o dinheiro?',
+      choices: [
+        { emoji: '🛍️', label: 'Gasta', reaction: 'Lucas compra algo que queria.' },
+        { emoji: '🐷', label: 'Guarda', reaction: 'Lucas guarda o dinheiro pra depois.' }
+      ]
+    },
+    {
+      icon: '📝', text: 'A prova foi difícil. A nota veio baixa.',
+      question: 'O que Lucas faz?',
+      choices: [
+        { emoji: '🤫', label: 'Não conta', reaction: 'Lucas guarda pra si, por enquanto.' },
+        { emoji: '🗣️', label: 'Conta pra família', reaction: 'Lucas conta. A família ajuda ele a estudar.' }
+      ]
+    },
+    {
+      icon: '😴', text: 'Lucas está cansado, mas tem tarefa pra fazer.',
+      question: 'O que ele faz?',
+      choices: [
+        { emoji: '😴', label: 'Descansa', reaction: 'Lucas descansa. Faz a tarefa depois, com mais força.' },
+        { emoji: '✏️', label: 'Faz a tarefa', reaction: 'Lucas faz a tarefa. Fica cansado, mas termina.' }
+      ]
+    },
+    {
+      icon: '🎉', text: 'Um amigo pede desculpa por uma briga.',
+      question: 'O que Lucas faz?',
+      choices: [
+        { emoji: '🤗', label: 'Perdoa', reaction: 'Lucas perdoa. Os dois ficam bem de novo.' },
+        { emoji: '🙅', label: 'Fica bravo', reaction: 'Lucas fica bravo mais um tempo. Depois conversam.' }
+      ]
+    }
+  ];
+
+  function loadPicks() {
+    try { return JSON.parse(localStorage.getItem(`ponto_de_virada_engel_picks_${username}`) || '[]'); }
+    catch (e) { return []; }
+  }
+  function savePicks(picks) {
+    localStorage.setItem(`ponto_de_virada_engel_picks_${username}`, JSON.stringify(picks));
+  }
+
+  let picks = loadPicks();
+  let stepIndex = picks.length;
+
+  function renderSteps() {
+    let html = '<div class="steps">';
+    SCENES.forEach((s, i) => {
+      const done = i < picks.length;
+      const active = i === stepIndex;
+      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : s.icon}</div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function report(label, extra) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('ponto_de_virada_engel', `Ponto de Virada (Engel) — ${label}`, Object.assign({ total: SCENES.length, completed: picks.length }, extra || {}));
+    }
+  }
+
+  function renderScene() {
+    lblProgress.textContent = `${picks.length}/${SCENES.length}`;
+    if (stepIndex >= SCENES.length) return renderEnd();
+
+    const scene = SCENES[stepIndex];
+    stage.innerHTML = `
+      ${renderSteps()}
+      <div class="scene">
+        <div class="big-icon">${scene.icon}</div>
+        <p>${scene.text}</p>
+      </div>
+      <h2 class="question">${scene.question}</h2>
+      <div class="choices" id="choicesWrap"></div>
+      <div class="reaction" id="reactionBox"></div>
+      <div class="actions" id="actionsWrap"></div>
+    `;
+    const wrap = document.getElementById('choicesWrap');
+    scene.choices.forEach((c, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.label}</span>`;
+      btn.addEventListener('click', () => pickChoice(scene, idx));
+      wrap.appendChild(btn);
+    });
+    report(`Cena ${stepIndex + 1}`);
+  }
+
+  function pickChoice(scene, idx) {
+    const choice = scene.choices[idx];
+    document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+    const box = document.getElementById('reactionBox');
+    box.innerHTML = `<span class="emoji">${choice.emoji}</span>${choice.reaction}`;
+    box.classList.add('show');
+
+    picks.push({ scene: stepIndex, choice: idx, emoji: choice.emoji });
+    savePicks(picks);
+    report(`Cena ${stepIndex + 1} (escolheu: ${choice.label})`, { choiceLabel: choice.label });
+
+    const actions = document.getElementById('actionsWrap');
+    actions.innerHTML = `<button class="btn" id="btnNext">Próximo ➡️</button>`;
+    document.getElementById('btnNext').addEventListener('click', () => {
+      stepIndex += 1;
+      renderScene();
+    });
+  }
+
+  function renderEnd() {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ completed: true }));
+    report('Concluído', { finished: true });
+
+    const recap = picks.map(p => p.emoji).join(' ');
+    stage.innerHTML = `
+      ${renderSteps()}
+      <div class="end-card">
+        <div class="big-icon">🏁</div>
+        <h2>Fim de jogo!</h2>
+        <div class="recap">${recap}</div>
+        <p>Lucas fez 6 escolhas. Não existe certo ou errado — só escolhas diferentes. 🎭</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="btnRestart">↻ Jogar de novo</button>
+      </div>
+    `;
+    document.getElementById('btnRestart').addEventListener('click', () => {
+      picks = [];
+      savePicks(picks);
+      stepIndex = 0;
+      renderStart(false);
+    });
+  }
+
+  function renderStart(resuming) {
+    stage.innerHTML = `
+      <div class="start-screen">
+        <div class="big-icon">🎭</div>
+        <h1>Ponto de Virada</h1>
+        <p>Você decide por Lucas. 6 cenas. 2 escolhas em cada uma.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnStart">${resuming ? 'Continuar' : 'Começar'}</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnStart').addEventListener('click', renderScene);
+  }
+
+  if (picks.length > 0 && picks.length < SCENES.length) {
+    renderStart(true);
+  } else if (picks.length >= SCENES.length) {
+    stepIndex = SCENES.length;
+    renderScene();
+  } else {
+    renderStart(false);
+  }
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>
