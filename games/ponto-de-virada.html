@@ -224,9 +224,9 @@
       story: () => `<p>Lucas está no último ano do curso técnico. Toda semana é o mesmo malabarismo: aula, estudo, ajudar em casa, e o pouco tempo que sobra pra respirar.</p><p>É segunda-feira de manhã. Como Lucas organiza a semana que começa?</p>`,
       prompt: 'Como Lucas encara a rotina dessa semana?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Não planeja nada — vai decidindo hora a hora, conforme o dia permitir.', tag: null, reaction: 'A semana começa sem rumo. Lucas até dá conta das coisas mais urgentes, mas vive correndo atrás do prejuízo.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Monta um horário fixo, rígido, e segue à risca — sem abrir exceção pra nada.', tag: null, reaction: 'A rotina rígida ajuda a não perder o fio, mas qualquer imprevisto (uma prova extra, um pedido de ajuda) já derruba o plano inteiro.' },
-        { letter: 'C', strategy: 'analitica', text: 'Planeja a semana com prioridades claras, mas deixa espaço pra imprevisto.', tag: 'priorizou_rotina', reaction: 'O plano de Lucas sobrevive ao primeiro imprevisto sem desmoronar — ele sabe o que é essencial e o que pode esperar.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Não fixa um plano — vai decidindo cada coisa conforme o dia permite, sem amarrar a semana com antecedência.', tag: null, reaction: 'A semana acaba sendo mais leve do que parecia: sem plano fixo, Lucas se adapta rápido a qualquer urgência. O que sobra é a sensação de nunca saber, de véspera, o que vem pela frente.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Monta um horário fixo pra semana inteira e decide seguir à risca, sem abrir exceção.', tag: null, reaction: 'A rotina rígida dá segurança — Lucas sempre sabe o que fazer a seguir. Só que quando aparece um imprevisto (uma prova extra, um pedido de ajuda), encaixar custa mais caro do que devia.' },
+        { letter: 'C', strategy: 'analitica', text: 'Planeja a semana com prioridades claras, reservando um tempo pra pensar no que pode dar errado.', tag: 'priorizou_rotina', reaction: 'O plano sobrevive ao primeiro imprevisto sem desmoronar. Só que montar essa margem toma um tempo de planejamento que os outros dois caminhos não gastam — tempo que também fazia falta em outro lugar.' }
       ]
     },
     {
@@ -234,9 +234,9 @@
       story: () => `<p>No intervalo, Duda — colega de turma, sempre no mesmo ritmo de Lucas nos trabalhos em grupo — se aproxima travada num exercício que precisa entregar em uma hora.</p><p>Lucas também está atrasado com o próprio material.</p>`,
       prompt: 'O que Lucas faz com o pedido de ajuda de Duda?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Diz que não tem tempo agora e volta pro próprio material.', tag: null, reaction: 'Duda entrega o exercício sozinha, do jeito que dá. Lucas ganha o próprio tempo de volta.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Dá uma força rápida, só o mínimo, sem se desviar muito do que estava fazendo.', tag: null, reaction: 'A ajuda de Lucas resolve uma dúvida pontual, mas Duda ainda fica boa parte do tempo por conta própria.' },
-        { letter: 'C', strategy: 'analitica', text: 'Para o que está fazendo e ajuda Duda a entender de verdade, mesmo perdendo um tempo precioso.', tag: 'ajudou_colega', reaction: 'Duda termina o exercício bem mais tranquila. Lucas perde um tempo que não tinha sobrando — mas ganha uma dívida de gratidão que, mais pra frente, pode pesar a favor dele.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Diz que não tem tempo agora e segue com o próprio material.', tag: null, reaction: 'Duda dá um jeito sozinha, do jeito dela. Lucas cumpre o próprio prazo tranquilo — só que da próxima vez que precisar de uma mão, também vai estar por conta própria.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Dá uma força rápida — tira a dúvida principal e volta pro que estava fazendo.', tag: null, reaction: 'A ajuda de Lucas resolve o ponto mais urgente, mas Duda ainda passa boa parte do tempo por conta própria. Nenhum dos dois perde muito, nenhum dos dois ganha muito.' },
+        { letter: 'C', strategy: 'analitica', text: 'Para o que está fazendo pra ajudar Duda a entender de verdade, mesmo sabendo que vai perder tempo.', tag: 'ajudou_colega', reaction: 'Duda sai da conversa bem mais segura. Lucas entrega o próprio material apressado, com menos capricho do que queria — a ajuda valeu, mas saiu do bolso dele.' }
       ]
     },
     {
@@ -244,9 +244,9 @@
       story: () => `<p>A prova de uma disciplina importante volta com uma nota bem abaixo do que Lucas esperava. Ninguém em casa sabe ainda.</p>`,
       prompt: 'O que Lucas faz com a prova?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Esconde a prova no fundo da mochila, torcendo pra ninguém perguntar.', tag: 'escondeu_nota', reaction: 'A prova some no fundo da mochila. O alívio dura só até o boletim sair.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Não fala nada, mas também não esconde de propósito — só evita o assunto.', tag: null, reaction: 'Lucas não mente, mas também não conta. O assunto fica pairando, sem resolução.' },
-        { letter: 'C', strategy: 'analitica', text: 'Mostra a nota em casa e já chega com um plano de como vai recuperar.', tag: 'assumiu_responsabilidade', reaction: 'Não é uma conversa fácil, mas Lucas sai dela com um plano combinado — e sem nada pesando escondido.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Guarda a prova no fundo da mochila e não comenta nada em casa.', tag: 'escondeu_nota', reaction: 'Ninguém pergunta nada por enquanto — Lucas ganha um tempo sem aquela conversa difícil. Fica só a aposta de que dá pra melhorar a nota antes que o boletim apareça.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Não esconde a prova de propósito, mas também não toca no assunto em casa.', tag: null, reaction: 'Lucas não mente — só não abre o assunto sozinho. Ninguém cobra nada agora, mas ele sabe que só está adiando a conversa, não evitando ela.' },
+        { letter: 'C', strategy: 'analitica', text: 'Mostra a nota em casa e já chega com uma ideia de como pretende recuperar.', tag: 'assumiu_responsabilidade', reaction: 'A conversa é dura na hora — ninguém gosta de ver aquela nota. Mas Lucas sai dela com um plano combinado, e sem nada escondido pesando.' }
       ]
     },
     {
@@ -254,9 +254,9 @@
       story: () => `<p>Um conhecido do bairro comenta de um "bico" rápido: testar fases de um joguinho indie por umas horas na semana, pago por tarefa. Dinheiro de verdade, mas tempo que sairia do estudo.</p>`,
       prompt: 'Lucas topa o bico?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Topa na hora, animado com o dinheiro, sem calcular direito quantas horas isso vai tomar.', tag: 'comecou_bico', reaction: 'O primeiro pagamento cai na conta rápido. Só depois Lucas percebe o tanto de hora de sono que isso custou.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Recusa — prefere focar só nos estudos por enquanto.', tag: null, reaction: 'Lucas mantém a rotina como estava, sem o dinheiro extra, mas também sem a pressão de mais um compromisso.' },
-        { letter: 'C', strategy: 'analitica', text: 'Aceita, mas negocia um número fixo de horas por semana que não invade o período de estudo.', tag: 'comecou_bico', reaction: 'O acordo é justo dos dois lados — Lucas ganha o dinheiro extra sem abrir mão do que já tinha planejado.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Topa o bico na hora, animado com o dinheiro, sem calcular quantas horas por semana isso vai tomar.', tag: 'comecou_bico', reaction: 'O primeiro pagamento cai rápido e dá um alívio real no bolso. Só depois vem a conta: um tanto de hora de sono que ninguém tinha combinado gastar.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa o bico — prefere manter o foco só nos estudos por enquanto.', tag: null, reaction: 'Lucas mantém a rotina como estava, sem o dinheiro extra, mas também sem mais um compromisso puxando a semana.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita o bico, mas primeiro negocia um número fixo de horas por semana.', tag: 'comecou_bico', reaction: 'O combinado é justo, mas também é menor: com poucas horas fixas por semana, o dinheiro entra mais devagar do que podia — em troca de não brigar com o resto da rotina.' }
       ]
     },
     {
@@ -264,9 +264,9 @@
       story: () => `<p>${sceneComecouBico()} chega o primeiro dinheiro de verdade que Lucas ganhou por conta própria.</p>`,
       prompt: 'O que Lucas faz com esse dinheiro?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Gasta rápido em algo que queria há tempos, sem pensar muito.', tag: null, reaction: 'O dinheiro dura pouco. A sensação boa também.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Guarda tudo, sem gastar nada, nem o pouco que faria diferença agora.', tag: 'guardou_dinheiro', reaction: 'O valor guardado cresce devagar — Lucas não toca nele por nada.' },
-        { letter: 'C', strategy: 'analitica', text: 'Guarda a maior parte como reserva e separa um pouco, de forma consciente, pra algo que realmente importa.', tag: 'guardou_dinheiro', reaction: 'Lucas sente que tem controle sobre o próprio dinheiro pela primeira vez — sabe exatamente pra onde cada parte foi.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Gasta o dinheiro rápido em algo que queria há tempos.', tag: null, reaction: 'O que Lucas queria comprar há tempos finalmente é dele — a alegria é real, ainda que curta. Quando o dinheiro acaba, não sobra nada guardado pra próxima necessidade.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Guarda tudo, sem tocar em nada, nem no pouco que faria diferença agora.', tag: 'guardou_dinheiro', reaction: 'O valor guardado cresce, intacto. Só que Lucas também abre mão de qualquer coisa que faria diferença agora — inclusive coisas que não voltam, como um passeio que só rolava naquela semana.' },
+        { letter: 'C', strategy: 'analitica', text: 'Guarda a maior parte como reserva e separa uma parte pequena, escolhida com cuidado, pra algo que importa.', tag: 'guardou_dinheiro', reaction: 'O controle é real — Lucas sabe exatamente pra onde foi cada parte. Mas o quanto sobra pra ele mesmo, agora, é bem menor do que seria se tivesse soltado a mão.' }
       ]
     },
     {
@@ -274,9 +274,9 @@
       story: () => `<p>Na oficina de projetos da escola, um profissional convidado — todo mundo só chama de <b>"o Mentor"</b> — se interessa pelo projeto de Lucas e oferece orientação informal, fora do horário de aula.</p>`,
       prompt: 'Como Lucas recebe essa aproximação do Mentor?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Confia de cara, animado com a atenção, e passa a seguir tudo que o Mentor sugere.', tag: 'confiou_mentor_cedo', reaction: 'A orientação parece ótima no começo. Lucas nem para pra pensar em quem, de fato, é essa pessoa.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Aceita a ajuda, mas mantém distância — nada de levar tudo ao pé da letra.', tag: null, reaction: 'Lucas escuta as sugestões do Mentor, mas segue confiando mais no próprio julgamento.' },
-        { letter: 'C', strategy: 'analitica', text: 'Aceita a orientação, mas primeiro pergunta por aí quem é essa pessoa e o que ela faz.', tag: null, reaction: 'Ninguém conhece o Mentor muito bem, mas as referências que Lucas encontra são positivas — segue com um pé atrás saudável.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Confia de cara na orientação do Mentor, animado com a atenção, e passa a seguir tudo que ele sugere.', tag: 'confiou_mentor_cedo', reaction: 'A orientação acelera o projeto de um jeito que sozinho ia levar semanas. Lucas nem para pra pensar em quem, de fato, é essa pessoa — só sente que finalmente alguém enxergou o potencial dele.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Aceita a ajuda, mas sem se entregar de vez — mantém uma certa distância.', tag: null, reaction: 'Lucas escuta as sugestões, mas segue confiando mais no próprio julgamento. Ganha segurança, mas talvez perca parte do que o Mentor de fato tinha pra oferecer.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita a orientação, mas antes pergunta por aí quem é essa pessoa e o que ela faz.', tag: null, reaction: 'A pergunta atrasa um pouco o começo da orientação, e nem sempre é confortável investigar alguém pelas costas. Mas as referências que Lucas encontra são positivas, e ele segue com uma base mais sólida.' }
       ]
     },
 
@@ -286,9 +286,9 @@
       story: () => `<p>Uma loja de games do bairro oferece a Lucas uma vaga de meio período — pagamento melhor que o bico, mas com horários pesados justo no período de provas.</p>`,
       prompt: 'Lucas aceita a vaga?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Aceita na hora, animado com o salário fixo.', tag: 'pegou_emprego_cedo', reaction: 'O primeiro contracheque impressiona. As primeiras semanas de sono cortado, nem tanto.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Recusa — prioriza terminar o ano escolar tranquilo primeiro.', tag: null, reaction: 'Lucas segue sem esse dinheiro extra, mas com a cabeça livre pra estudar.' },
-        { letter: 'C', strategy: 'analitica', text: 'Aceita, mas negocia um período de experiência com horário reduzido antes de assumir tudo.', tag: 'pegou_emprego_cedo', reaction: 'O acordo dá certo — Lucas entra aos poucos, sem atropelar o resto da vida de uma vez.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Aceita a vaga na hora, animado com o salário fixo.', tag: 'pegou_emprego_cedo', reaction: 'O primeiro contracheque impressiona — dinheiro de verdade, todo mês. O preço vem em semanas de sono cortado bem no meio das provas.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa a vaga — prioriza terminar o ano escolar tranquilo primeiro.', tag: null, reaction: 'Lucas segue sem esse dinheiro extra, mas com a cabeça livre pra estudar. A vaga, claro, pode não estar mais lá quando ele quiser tentar de novo.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita, mas negocia um período de experiência com horário reduzido antes de assumir tudo.', tag: 'pegou_emprego_cedo', reaction: 'O período de experiência funciona — Lucas entra aos poucos, sem atropelar o resto. Em troca, o salário cheio demora mais pra vir do que se tivesse topado tudo de uma vez.' }
       ]
     },
     {
@@ -296,9 +296,9 @@
       story: () => `<p>O Mentor comenta de um curso pago, avançado, que ele mesmo indica — "praticamente obrigatório" pra quem quer se destacar na área, segundo ele.</p>`,
       prompt: 'O que Lucas faz com a indicação do curso?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Se inscreve na hora, confiando de olhos fechados na palavra do Mentor.', tag: 'fez_curso_mentor', reaction: 'A matrícula sai no mesmo dia. Lucas nem procurou saber se existiam outras opções.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Recusa por desconfiança, sem se aprofundar no motivo.', tag: null, reaction: 'Lucas segue sem o curso, guiado só por um "não sei, prefiro não" que nem ele sabe explicar direito.' },
-        { letter: 'C', strategy: 'analitica', text: 'Pesquisa o conteúdo do curso e a reputação de quem o vende antes de decidir.', tag: 'pesquisou_curso', reaction: 'A pesquisa não encontra nada alarmante — mas Lucas decide com mais base do que só a palavra do Mentor.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Se inscreve na hora, confiando na palavra do Mentor, sem comparar com outras opções.', tag: 'fez_curso_mentor', reaction: 'A matrícula sai no mesmo dia — e o curso realmente entrega um conteúdo que ajuda no projeto. O que Lucas não fez foi checar se existia alguma opção melhor ou mais barata antes de decidir.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa a indicação, sem se aprofundar muito no motivo.', tag: null, reaction: 'Lucas guarda o dinheiro e segue sem o curso, mesmo sem saber explicar direito por que preferiu recusar. Só bem mais tarde vai descobrir se essa desconfiança tinha fundamento.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pesquisa o conteúdo do curso e a reputação de quem o vende antes de decidir.', tag: 'pesquisou_curso', reaction: 'A pesquisa toma um tempo que Lucas não tinha sobrando, e não encontra nada que desabone o curso. A decisão que ele toma no fim pode até ser igual à dos outros caminhos — mas agora com uma base real por trás.' }
       ]
     },
     {
@@ -306,9 +306,9 @@
       story: () => `<p>Entre o bico, o trabalho e o curso, sobrou pouco tempo pra estudar. Numa prova importante, Lucas percebe que dá pra ver a folha do colega ao lado sem ninguém notar.</p>`,
       prompt: 'Lucas cola?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Cola, sem pensar duas vezes — o cansaço fala mais alto.', tag: 'colou_prova', reaction: 'A nota sai boa. O nó no estômago também.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Não cola, mas entrega a prova incompleta, sem tentar nada além do que já sabe.', tag: null, reaction: 'A nota vem baixa, mas Lucas não carrega nenhum peso extra por causa dela.' },
-        { letter: 'C', strategy: 'analitica', text: 'Não cola e, no fim da prova, pede ao professor um prazo extra pra revisar um ponto que não entendeu bem.', tag: null, reaction: 'O professor aceita revisar com ele depois da aula — a nota melhora um pouco, sem atalho nenhum.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Cola, sem pensar duas vezes — o cansaço fala mais alto.', tag: 'colou_prova', reaction: 'A nota sai boa, resolvendo um problema real de tempo e cansaço. O nó no estômago que fica depois também é real.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Não cola — entrega a prova só com o que já sabia, sem forçar nada além disso.', tag: null, reaction: 'A nota vem baixa, mas Lucas não carrega nenhum peso extra por causa dela.' },
+        { letter: 'C', strategy: 'analitica', text: 'Não cola e, no fim da prova, pede ao professor um prazo extra pra revisar um ponto que não entendeu bem.', tag: null, reaction: 'Pedir ajuda expõe, na hora, que Lucas não sabia aquele ponto — nem todo professor toparia revisar depois da aula. Esse aceitou, e a nota melhora um pouco, sem atalho nenhum.' }
       ]
     },
     {
@@ -316,9 +316,9 @@
       story: () => `<p>Entre o curso pago e menos horas de bico (por causa da prova), o orçamento de Lucas aperta. Um aplicativo de empréstimo rápido aparece como solução fácil.</p>`,
       prompt: 'Lucas pega o empréstimo?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Pega o valor máximo oferecido, sem ler os termos com atenção.', tag: 'pegou_emprestimo', reaction: 'O dinheiro cai na hora. Os juros, Lucas só vai entender direito bem mais tarde.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Recusa e aperta o orçamento de outro jeito, cortando gastos.', tag: null, reaction: 'É mais apertado no dia a dia, mas Lucas não fica devendo a ninguém.' },
-        { letter: 'C', strategy: 'analitica', text: 'Pesquisa as condições, pega só o valor mínimo necessário e já planeja como pagar.', tag: 'pegou_emprestimo', reaction: 'O valor é pequeno e o plano de pagamento parece dar certo — se nada mais sair do controle.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Pega o valor máximo oferecido, sem ler os termos com atenção.', tag: 'pegou_emprestimo', reaction: 'O dinheiro cai na hora e resolve, de uma vez, o aperto que vinha se acumulando. O tamanho real dos juros só vai aparecer bem mais tarde, quando a parcela crescer.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa o empréstimo e aperta o orçamento de outro jeito, cortando gastos.', tag: null, reaction: 'É mais apertado no dia a dia, mas Lucas não fica devendo a ninguém.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pesquisa as condições, pega só o valor mínimo necessário e já planeja como pagar.', tag: 'pegou_emprestimo', reaction: 'O valor é pequeno e vem com juros que Lucas já entende de antemão. Mas também resolve só parte do aperto, não tudo — o resto ele ainda vai ter que dar um jeito sozinho.' }
       ]
     },
     {
@@ -326,9 +326,9 @@
       story: () => `<p>${sceneEmprestimo()} A mãe de Lucas pergunta, de passagem, se está faltando dinheiro pra alguma coisa em casa.</p>`,
       prompt: 'O que Lucas conta pra mãe?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Diz que está tudo bem, na lata, sem pensar muito na resposta.', tag: 'mentiu_pais', reaction: 'A conversa acaba ali. Lucas sente um alívio rápido — e uma pontinha de culpa que ignora.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Conta uma parte, só o suficiente pra não parecer estranho, mas omite os detalhes que mais pesam.', tag: 'mentiu_pais', reaction: 'A mãe fica com uma versão incompleta da situação — tranquila demais pro tamanho real do problema.' },
-        { letter: 'C', strategy: 'analitica', text: 'Conta a real, com calma, incluindo o empréstimo.', tag: 'contou_pais_emprestimo', reaction: 'A conversa é desconfortável, mas a mãe agradece por Lucas ter contado antes de virar bola de neve.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Diz que está tudo bem, na lata, sem pensar muito na resposta.', tag: 'mentiu_pais', reaction: 'A conversa acaba ali, rápido e sem drama. Fica só uma pontinha de culpa que Lucas escolhe ignorar por enquanto.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Conta uma parte, só o suficiente pra não parecer estranho, mas deixa de fora os detalhes que mais pesam.', tag: 'mentiu_pais', reaction: 'A mãe fica com uma versão incompleta da situação — tranquila demais pro tamanho real do problema. A conversa não vira briga, mas também não resolve nada.' },
+        { letter: 'C', strategy: 'analitica', text: 'Conta a real, com calma, incluindo o empréstimo.', tag: 'contou_pais_emprestimo', reaction: 'A conversa é dura — a mãe fica preocupada, e um pouco decepcionada. Mas agradece, no fim, por Lucas ter contado antes de a bola de neve crescer mais.' }
       ]
     },
     {
@@ -338,7 +338,7 @@
       options: [
         { letter: 'A', strategy: 'impulsiva', text: 'Falta à escola pro trabalho, sem avisar ninguém com antecedência.', tag: null, reaction: 'O chefe fica satisfeito. A escola, nem tanto — a falta pega mal na hora errada.' },
         { letter: 'B', strategy: 'conservadora', text: 'Falta ao trabalho e vai à escola, sem tentar negociar nada com o chefe.', tag: null, reaction: 'O projeto sai bem. No trabalho, Lucas perde um pouco de credibilidade por sumir sem aviso.' },
-        { letter: 'C', strategy: 'analitica', text: 'Negocia com o chefe pra sair mais cedo e consegue ir aos dois compromissos.', tag: 'negociou_horario', reaction: 'Dá tudo certo nos dois lugares — mas custou uma conversa desconfortável pra conseguir esse encaixe.' }
+        { letter: 'C', strategy: 'analitica', text: 'Tenta negociar com o chefe pra sair mais cedo e conseguir ir aos dois compromissos.', tag: 'negociou_horario', reaction: 'Dá tudo certo nos dois lugares — mas custou uma conversa desconfortável pra conseguir esse encaixe.' }
       ]
     },
 
@@ -371,9 +371,9 @@
       story: () => `<p>Com a descoberta ainda fresca, Lucas encontra o Mentor no corredor, sozinho.</p>`,
       prompt: 'O que Lucas faz com essa informação?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Confronta o Mentor ali mesmo, na base da raiva.', tag: null, reaction: 'O Mentor se defende, a conversa esquenta e ninguém sai dali com nada resolvido.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Ignora o assunto e finge que não ouviu nada.', tag: null, reaction: 'A dúvida fica engasgada. Lucas segue a orientação do Mentor com um pé atrás que nunca vira conversa.' },
-        { letter: 'C', strategy: 'analitica', text: 'Investiga com calma antes de tirar conclusões — busca mais contexto, conversa com outros alunos.', tag: 'confrontou_mentor', reaction: 'O quadro fica mais claro: o interesse financeiro existe, mas a orientação em si não era mentira — só não era tão neutra quanto parecia.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Confronta o Mentor ali mesmo, na hora, ainda com a raiva fresca.', tag: null, reaction: 'Lucas tira aquilo do peito na hora — o alívio de finalmente falar é real. Mas o Mentor se defende, a conversa esquenta, e nada fica resolvido de fato.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Ignora o assunto e segue como se não tivesse ouvido nada.', tag: null, reaction: 'Lucas evita o desgaste de um confronto e segue recebendo uma orientação que continua sendo útil pro projeto. A dúvida, porém, fica engasgada — sem nunca virar conversa.' },
+        { letter: 'C', strategy: 'analitica', text: 'Investiga com calma antes de tirar conclusões — busca mais contexto, conversa com outros alunos.', tag: 'confrontou_mentor', reaction: 'Leva mais tempo — juntar contexto antes de qualquer coisa. Mas o quadro fica mais claro: o interesse financeiro existe, e a orientação em si não era mentira, só não era tão neutra quanto parecia.' }
       ]
     },
     {
@@ -381,9 +381,9 @@
       story: () => `<p>Com a cabeça em outro lugar, Lucas percebe tarde demais que esqueceu completamente de uma prova marcada pra essa manhã.</p>`,
       prompt: 'O que Lucas faz?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Falta, sem avisar a coordenação.', tag: 'faltou_prova', reaction: 'A falta conta como zero, sem chance de segunda chamada — ninguém sabia que havia um motivo.' },
+        { letter: 'A', strategy: 'impulsiva', text: 'Falta, sem avisar a coordenação.', tag: 'faltou_prova', reaction: 'Pelo menos Lucas não passa pelo aperto de tentar uma prova sem ter estudado nada. Em troca, a falta vira zero direto, sem segunda chamada — ninguém sabia que havia um motivo.' },
         { letter: 'B', strategy: 'conservadora', text: 'Vai correndo mesmo sem preparo, tenta na base do que lembra.', tag: null, reaction: 'A nota sai baixa, mas ao menos Lucas não perde a prova por completo.' },
-        { letter: 'C', strategy: 'analitica', text: 'Liga pra coordenação assim que percebe o esquecimento e negocia uma segunda chamada.', tag: null, reaction: 'A coordenação entende e remarca — Lucas ganha uma segunda chance de fazer a prova direito.' }
+        { letter: 'C', strategy: 'analitica', text: 'Liga pra coordenação assim que percebe o esquecimento e negocia uma segunda chamada.', tag: null, reaction: 'Ligar significa admitir, na hora, que esqueceu — nem toda coordenação toparia remarcar por isso. Essa aceitou, e Lucas ganha a chance de fazer a prova direito.' }
       ]
     },
     {
@@ -391,9 +391,9 @@
       story: () => `<p>Entre trabalho, curso, empréstimo e a cabeça cheia com o Mentor, Lucas está no limite. Duda percebe e pergunta se está tudo bem.</p>`,
       prompt: 'Como Lucas reage a essa abertura de Duda?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Diz que está tudo certo e tenta resolver tudo sozinho, no susto.', tag: null, reaction: 'Lucas segue sobrecarregado, sem dividir o peso com ninguém.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Agradece a preocupação, mas recusa qualquer ajuda por orgulho — prefere se virar sozinho.', tag: 'recusou_ajuda_d17', reaction: 'Duda respeita a resposta, mas fica de olho, sem insistir.' },
-        { letter: 'C', strategy: 'analitica', text: 'Abre o jogo com Duda e aceita a ajuda que ela oferece pra organizar as coisas.', tag: 'pediu_ajuda_duda', reaction: 'Só de dividir o peso com alguém, uma parte da pressão já diminui — e Duda ajuda a organizar as prioridades.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Diz que está tudo certo e tenta resolver tudo sozinho.', tag: null, reaction: 'Lucas mantém as próprias dificuldades só pra si — ninguém mais fica sabendo do tanto que está pesando. Segue sobrecarregado, mas também no controle de quem sabe o quê.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Agradece a preocupação, mas recusa qualquer ajuda — prefere se virar sozinho.', tag: 'recusou_ajuda_d17', reaction: 'Duda respeita a resposta, mas fica de olho, sem insistir.' },
+        { letter: 'C', strategy: 'analitica', text: 'Abre o jogo com Duda e aceita a ajuda que ela oferece pra organizar as coisas.', tag: 'pediu_ajuda_duda', reaction: 'Dividir o peso com alguém ajuda de verdade, e Duda entra disposta a organizar as prioridades junto. Só que agora Lucas também carrega, sem querer, a sensação de dever alguma coisa em troca.' }
       ]
     },
     {
@@ -401,9 +401,9 @@
       story: () => `<p>A parcela do empréstimo mais o curso deixam o orçamento no vermelho. Lucas pensa no console antigo do avô, guardado no armário — dá pra vender por um bom valor.</p>`,
       prompt: 'Lucas vende o console do avô?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Vende pelo primeiro preço que oferecerem, só pra resolver logo.', tag: 'vendeu_pertence', reaction: 'O dinheiro cai rápido — só depois Lucas descobre que valia bem mais do que recebeu.' },
+        { letter: 'A', strategy: 'impulsiva', text: 'Vende pelo primeiro preço que oferecerem, só pra resolver logo.', tag: 'vendeu_pertence', reaction: 'O dinheiro cai rápido e resolve o aperto sem enrolação. Só depois Lucas descobre que o console valia bem mais do que recebeu por ele.' },
         { letter: 'B', strategy: 'conservadora', text: 'Decide não vender de jeito nenhum, mesmo que o aperto continue.', tag: null, reaction: 'O console fica guardado. O orçamento continua apertado, mas essa lembrança do avô segue intacta.' },
-        { letter: 'C', strategy: 'analitica', text: 'Pesquisa o valor justo antes de vender, com calma, pra ninguém levar vantagem.', tag: 'vendeu_pertence', reaction: 'A venda demora um pouco mais, mas Lucas consegue um preço justo — e não se sente enganado depois.' }
+        { letter: 'C', strategy: 'analitica', text: 'Pesquisa o valor justo antes de vender, com calma, pra ninguém levar vantagem.', tag: 'vendeu_pertence', reaction: 'A pesquisa demora, e o aperto no orçamento continua enquanto isso. Mas quando a venda sai, é por um preço justo, e Lucas não se sente enganado depois.' }
       ]
     },
 
@@ -413,8 +413,8 @@
       story: () => `<p>${hasTag('escondeu_nota') ? 'O boletim chega em casa antes de Lucas conseguir interceptar. A nota escondida meses atrás finalmente aparece pra família.' : 'Um comentário solto da escola, numa reunião de pais, acaba revelando um detalhe que Lucas vinha guardando pra si.'}</p>`,
       prompt: 'Como Lucas reage quando a verdade aparece sem ele ter contado antes?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Nega, discute, tenta minimizar na hora.', tag: 'pais_descobriram', reaction: 'A discussão esquenta mais do que precisava. Ninguém sai bem dessa conversa.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Fica em silêncio, sem se explicar.', tag: 'pais_descobriram', reaction: 'O silêncio de Lucas deixa tudo mais pesado do que já estava.' },
+        { letter: 'A', strategy: 'impulsiva', text: 'Nega, discute, tenta minimizar na hora.', tag: 'pais_descobriram', reaction: 'Negar compra alguns segundos antes de a coisa desandar de vez. A discussão esquenta mais do que precisava, e ninguém sai bem dessa conversa.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Fica em silêncio, sem se explicar.', tag: 'pais_descobriram', reaction: 'O silêncio evita que Lucas diga, no calor da hora, algo que pioraria tudo. Mas também deixa a situação mais pesada — ninguém sabe o que ele está pensando.' },
         { letter: 'C', strategy: 'analitica', text: 'Senta pra conversar com calma e explica o que estava acontecendo.', tag: 'pais_descobriram', reaction: 'Não é fácil, mas a conversa sai mais tranquila do que Lucas esperava.' }
       ]
     },
@@ -431,9 +431,9 @@
       story: () => `<p>Com tudo isso na mesa, Lucas precisa decidir o que fazer com o próprio erro.</p>`,
       prompt: 'Como Lucas encara o que fez?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Pede desculpa na hora, emocionado, sem muito plano do que fazer depois.', tag: 'pediu_desculpa', reaction: 'A desculpa é sincera, mas some no dia seguinte sem nenhuma mudança prática.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Se justifica, explica os motivos, mas evita admitir o erro de frente.', tag: null, reaction: 'As explicações fazem sentido, mas ninguém em casa sente que Lucas realmente assumiu o que fez.' },
-        { letter: 'C', strategy: 'analitica', text: 'Pede desculpa e já chega com um plano concreto de como vai resolver e evitar que se repita.', tag: 'pediu_desculpa', reaction: 'A desculpa vem acompanhada de ação — isso pesa muito mais do que só a palavra.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Pede desculpa na hora, emocionado, sem muito plano do que fazer depois.', tag: 'pediu_desculpa', reaction: 'A desculpa é sincera na hora, e isso conta — todo mundo sente. Sem nenhum passo prático por trás, porém, ela some no dia seguinte sem virar mudança de verdade.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Se justifica, explica os motivos, mas evita admitir o erro de frente.', tag: null, reaction: 'As explicações ajudam a família a entender o contexto — não foi só irresponsabilidade, teve pressão real envolvida. Mas ninguém sente que Lucas assumiu, de fato, o que fez.' },
+        { letter: 'C', strategy: 'analitica', text: 'Pede desculpa e já chega com um plano concreto de como vai resolver e evitar que se repita.', tag: 'pediu_desculpa', reaction: 'Montar um plano de verdade leva mais tempo do que só pedir desculpa, e demora a virar mudança visível. Mas quando vem acompanhada de ação, a desculpa pesa muito mais do que só a palavra.' }
       ]
     },
     {
@@ -458,9 +458,9 @@
       story: () => `<p>Um edital de bolsa de estudos pro curso técnico avançado que Lucas sempre quis fazer é divulgado na escola. A concorrência é grande, e a inscrição pede uma redação.</p>`,
       prompt: 'Lucas tenta a bolsa?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Escreve a redação de última hora, na correria, sem revisar.', tag: 'tentou_bolsa', reaction: 'Lucas envia em cima do prazo, sem muita certeza do resultado.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Desiste antes de tentar, achando que não tem chance mesmo.', tag: null, reaction: 'Lucas nem participa — a vaga vai pra quem tentou.' },
-        { letter: 'C', strategy: 'analitica', text: 'Se prepara com calma e pede pra alguém revisar a redação antes de enviar.', tag: 'tentou_bolsa', reaction: 'A redação sai bem mais forte depois da revisão — Lucas sente que deu o melhor de si.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Escreve a redação de última hora, na correria, sem revisar.', tag: 'tentou_bolsa', reaction: 'Sai correndo, mas sai — Lucas entrega dentro do prazo, com o que deu pra escrever na pressa. Não tem muita certeza do resultado, mas pelo menos tentou.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Desiste antes de tentar, achando que não tem chance mesmo.', tag: null, reaction: 'Lucas evita o risco de tentar e não conseguir, e usa aquele tempo em outra coisa mais garantida. Só que, sem nem participar, a vaga com certeza vai pra quem tentou.' },
+        { letter: 'C', strategy: 'analitica', text: 'Se prepara com calma e pede pra alguém revisar a redação antes de enviar.', tag: 'tentou_bolsa', reaction: 'Pedir revisão expõe o texto antes da hora — nem sempre é confortável. Mas a redação sai bem mais forte depois, e Lucas sente que deu o melhor que tinha, mesmo sem garantia nenhuma do resultado.' }
       ]
     },
     {
@@ -505,9 +505,9 @@
       story: () => `<p>Com tudo o que aconteceu até aqui — o Mentor, a prova, o empréstimo, a família — Lucas precisa decidir como fecha esse capítulo da própria vida.</p>`,
       prompt: 'Qual é a última escolha de Lucas?',
       options: [
-        { letter: 'A', strategy: 'impulsiva', text: 'Aceita a primeira ajuda que aparece, sem pensar muito no acordo.', tag: 'aceitou_ajuda_final', reaction: 'A ajuda vem rápido, resolve o mais urgente — sem muito plano além disso.' },
-        { letter: 'B', strategy: 'conservadora', text: 'Recusa qualquer ajuda e insiste em resolver tudo sozinho, mesmo sem tempo suficiente.', tag: 'recusou_ajuda_d27', reaction: 'Lucas segue tentando dar conta sozinho — e o prazo aperta mais do que ele esperava.' },
-        { letter: 'C', strategy: 'analitica', text: 'Aceita ajuda combinando um plano claro com quem se dispõe a ajudar.', tag: 'aceitou_ajuda_final', reaction: 'Com um plano acertado, o que parecia impossível de resolver sozinho começa, enfim, a fazer sentido.' }
+        { letter: 'A', strategy: 'impulsiva', text: 'Aceita a primeira ajuda que aparece, sem examinar muito o acordo.', tag: 'aceitou_ajuda_final', reaction: 'A ajuda vem rápido e resolve o mais urgente — exatamente o que fazia falta com o prazo apertando. O acordo em si fica vago, sem muito plano do que vem depois.' },
+        { letter: 'B', strategy: 'conservadora', text: 'Recusa qualquer ajuda e insiste em resolver tudo sozinho, mesmo sem tempo suficiente.', tag: 'recusou_ajuda_d27', reaction: 'Lucas resolve do jeito que sempre soube fazer: sozinho, sem dever nada a ninguém. Só que sem essa ajuda, o prazo aperta bem mais do que ele esperava dar conta.' },
+        { letter: 'C', strategy: 'analitica', text: 'Aceita ajuda, mas primeiro combina um plano claro com quem se dispõe a ajudar.', tag: 'aceitou_ajuda_final', reaction: 'Negociar um plano claro antes de aceitar toma um tempo que o prazo mal permitia. Mas com o acordo certo, o que parecia impossível de resolver sozinho começa, enfim, a fazer sentido.' }
       ]
     }
   ];
@@ -671,8 +671,21 @@
     renderScene(node.story(), () => renderChoiceOptions(node));
   }
 
+  // Embaralha a ordem de exibição das opções e reatribui as letras (A/B/C)
+  // conforme a nova posição — assim a letra nunca denuncia a estratégia por
+  // trás dela (impulsiva/conservadora/analítica sempre mudam de lugar).
+  function shuffleOptions(options) {
+    const arr = options.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    const letters = ['A', 'B', 'C', 'D'];
+    return arr.map((opt, idx) => Object.assign({}, opt, { letter: letters[idx] }));
+  }
+
   function renderChoiceOptions(node) {
-    renderDecisionForm(node.prompt, node.options, (opt) => {
+    renderDecisionForm(node.prompt, shuffleOptions(node.options), (opt) => {
       addTag(opt.tag);
       applyStrategy(node.id, node.chapter, opt.strategy);
       saveState(state);
@@ -745,11 +758,11 @@
   }
 
   function renderEpilogueOptions() {
-    const options = [
-      { letter: 'A', text: 'Reconhece, sem culpa, que os caminhos foram esses — e que aprendeu no processo.' },
-      { letter: 'B', text: 'Comenta, sem dramatizar, o que faria diferente com o que sabe hoje.' },
-      { letter: 'C', text: 'As duas coisas — reconhece o caminho e também o que mudaria.' }
-    ];
+    const options = shuffleOptions([
+      { text: 'Reconhece, sem culpa, que os caminhos foram esses — e que aprendeu no processo.' },
+      { text: 'Comenta, sem dramatizar, o que faria diferente com o que sabe hoje.' },
+      { text: 'As duas coisas — reconhece o caminho e também o que mudaria.' }
+    ]);
     renderDecisionForm('Olhando pra trás, o que Lucas pensa da própria trajetória?', options, () => {
       addTag('reconheceu_trajetoria');
       saveState(state);
