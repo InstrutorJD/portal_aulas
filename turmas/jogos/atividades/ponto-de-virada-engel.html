@@ -122,76 +122,109 @@
   // Versão adaptada pro Engel: mesmo espírito do jogo "Ponto de Virada"
   // (decidir por Lucas), mas reduzida a 6 cenas, 2 escolhas por cena (em
   // vez de 3), pouquíssimo texto e um emoji GRANDE por escolha — mesma
-  // lógica de apoio visual usada em js-basico-adaptado-engel.html. Sem
-  // pontuação/finais múltiplos: cada escolha só leva a uma reação curta,
-  // nenhuma opção é "a certa".
+  // lógica de apoio visual usada em js-basico-adaptado-engel.html.
+  //
+  // Diferente da 1ª versão (cenas isoladas, sem consequência nenhuma):
+  // 3 escolhas aqui deixam uma "tag" que muda o texto e o resultado de uma
+  // cena mais à frente (ex.: guardar dinheiro agora ajuda a consertar a
+  // bicicleta depois) — versão bem simplificada do hasTag() do jogo
+  // original (games/ponto-de-virada.html). No fim, o final também muda
+  // conforme o padrão das escolhas. Continua sem "resposta certa": os dois
+  // finais são apresentados como igualmente válidos.
   const SCENES = [
     {
-      icon: '🎒', text: 'Lucas vai pra escola.',
+      icon: '🎒',
+      text: () => 'Lucas vai pra escola.',
       question: 'Como ele vai?',
       choices: [
-        { emoji: '🚶', label: 'A pé', reaction: 'Lucas anda. Chega cansado, mas na hora.' },
-        { emoji: '🚌', label: 'De ônibus', reaction: 'Lucas pega o ônibus. Chega rápido e descansado.' }
+        { emoji: '🚶', label: 'A pé', tag: 'andou', reaction: () => 'Lucas anda. Chega cansado, mas na hora.' },
+        { emoji: '🚌', label: 'De ônibus', tag: null, reaction: () => 'Lucas pega o ônibus. Chega rápido e descansado.' }
       ]
     },
     {
-      icon: '👫', text: 'Um amigo pede ajuda na tarefa.',
+      icon: '👫',
+      text: () => 'Um amigo pede ajuda na tarefa.',
       question: 'O que Lucas faz?',
       choices: [
-        { emoji: '🤝', label: 'Ajuda o amigo', reaction: 'Lucas ajuda. O amigo fica feliz.' },
-        { emoji: '📖', label: 'Termina a sua', reaction: 'Lucas termina a própria tarefa primeiro.' }
+        { emoji: '🤝', label: 'Ajuda o amigo', tag: 'ajudou', reaction: () => 'Lucas ajuda. O amigo fica feliz.' },
+        { emoji: '📖', label: 'Termina a sua', tag: null, reaction: () => 'Lucas termina a própria tarefa primeiro.' }
       ]
     },
     {
-      icon: '💰', text: 'Lucas ganhou um dinheiro.',
+      icon: '💰',
+      text: () => 'Lucas ganhou um dinheiro.',
       question: 'O que ele faz com o dinheiro?',
       choices: [
-        { emoji: '🛍️', label: 'Gasta', reaction: 'Lucas compra algo que queria.' },
-        { emoji: '🐷', label: 'Guarda', reaction: 'Lucas guarda o dinheiro pra depois.' }
+        { emoji: '🛍️', label: 'Gasta', tag: null, reaction: () => 'Lucas gasta tudo. Fica sem nada guardado.' },
+        { emoji: '🐷', label: 'Guarda', tag: 'guardou', reaction: () => 'Lucas guarda o dinheiro. 🐷' }
       ]
     },
     {
-      icon: '📝', text: 'A prova foi difícil. A nota veio baixa.',
-      question: 'O que Lucas faz?',
-      choices: [
-        { emoji: '🤫', label: 'Não conta', reaction: 'Lucas guarda pra si, por enquanto.' },
-        { emoji: '🗣️', label: 'Conta pra família', reaction: 'Lucas conta. A família ajuda ele a estudar.' }
-      ]
-    },
-    {
-      icon: '😴', text: 'Lucas está cansado, mas tem tarefa pra fazer.',
+      icon: '🚲',
+      text: (tags) => tags.has('guardou')
+        ? 'A bicicleta de Lucas quebrou. Ele tem dinheiro guardado. 🐷'
+        : 'A bicicleta de Lucas quebrou. Ele gastou o dinheiro antes. 💸',
       question: 'O que ele faz?',
       choices: [
-        { emoji: '😴', label: 'Descansa', reaction: 'Lucas descansa. Faz a tarefa depois, com mais força.' },
-        { emoji: '✏️', label: 'Faz a tarefa', reaction: 'Lucas faz a tarefa. Fica cansado, mas termina.' }
+        {
+          emoji: '🔧', label: 'Conserta', tag: null,
+          reaction: (tags) => tags.has('guardou') ? 'Lucas usa a reserva e conserta rápido. 🔧✅' : 'Lucas pede emprestado pra conseguir consertar. 🙏'
+        },
+        { emoji: '🚶', label: 'Anda a pé', tag: null, reaction: () => 'Lucas anda a pé até resolver, mais devagar.' }
       ]
     },
     {
-      icon: '🎉', text: 'Um amigo pede desculpa por uma briga.',
+      icon: '😴',
+      text: (tags) => tags.has('andou')
+        ? 'Lucas andou bastante hoje e está com bastante sono. 😮‍💨'
+        : 'Lucas está com um pouco de sono.',
+      question: 'O que ele faz, mesmo com tarefa pra fazer?',
+      choices: [
+        { emoji: '😴', label: 'Descansa', tag: null, reaction: () => 'Lucas descansa. Faz a tarefa depois, com mais força.' },
+        {
+          emoji: '✏️', label: 'Faz a tarefa', tag: null,
+          reaction: (tags) => tags.has('andou') ? 'Lucas insiste, cansado. A tarefa sai, mas com esforço. 😮‍💨' : 'Lucas faz a tarefa tranquilo. ✅'
+        }
+      ]
+    },
+    {
+      icon: '🤝',
+      text: (tags) => tags.has('ajudou')
+        ? 'Lucas ajudou um amigo antes. Agora esse amigo quer ajudar ele. 😊'
+        : 'Lucas precisa de uma ajuda agora, mas não tem muita gente por perto. 😕',
       question: 'O que Lucas faz?',
       choices: [
-        { emoji: '🤗', label: 'Perdoa', reaction: 'Lucas perdoa. Os dois ficam bem de novo.' },
-        { emoji: '🙅', label: 'Fica bravo', reaction: 'Lucas fica bravo mais um tempo. Depois conversam.' }
+        {
+          emoji: '🙌', label: 'Aceita ajuda', tag: 'teveAjuda',
+          reaction: (tags) => tags.has('ajudou') ? 'O amigo ajuda de volta. Os dois terminam rápido. 🙌😊' : 'Lucas pede, e alguém topa ajudar mesmo assim. 🙏😊'
+        },
+        { emoji: '💪', label: 'Sozinho', tag: null, reaction: () => 'Lucas prefere resolver sozinho, do jeito dele.' }
       ]
     }
   ];
 
-  function loadPicks() {
-    try { return JSON.parse(localStorage.getItem(`ponto_de_virada_engel_picks_${username}`) || '[]'); }
-    catch (e) { return []; }
+  function freshState() { return { stepIndex: 0, tags: [], picks: [] }; }
+
+  function loadState() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(`ponto_de_virada_engel_state_${username}`) || 'null');
+      if (!raw) return null;
+      return { stepIndex: raw.stepIndex || 0, tags: new Set(raw.tags || []), picks: raw.picks || [] };
+    } catch (e) { return null; }
   }
-  function savePicks(picks) {
-    localStorage.setItem(`ponto_de_virada_engel_picks_${username}`, JSON.stringify(picks));
+  function saveState() {
+    const toSave = { stepIndex: state.stepIndex, tags: [...state.tags], picks: state.picks };
+    localStorage.setItem(`ponto_de_virada_engel_state_${username}`, JSON.stringify(toSave));
   }
 
-  let picks = loadPicks();
-  let stepIndex = picks.length;
+  let state = loadState() || freshState();
+  if (!(state.tags instanceof Set)) state.tags = new Set(state.tags || []);
 
   function renderSteps() {
     let html = '<div class="steps">';
     SCENES.forEach((s, i) => {
-      const done = i < picks.length;
-      const active = i === stepIndex;
+      const done = i < state.picks.length;
+      const active = i === state.stepIndex;
       html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : s.icon}</div>`;
     });
     html += '</div>';
@@ -200,20 +233,20 @@
 
   function report(label, extra) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('ponto_de_virada_engel', `Ponto de Virada (Engel) — ${label}`, Object.assign({ total: SCENES.length, completed: picks.length }, extra || {}));
+      window.reportActivity('ponto_de_virada_engel', `Ponto de Virada (Engel) — ${label}`, Object.assign({ total: SCENES.length, completed: state.picks.length }, extra || {}));
     }
   }
 
   function renderScene() {
-    lblProgress.textContent = `${picks.length}/${SCENES.length}`;
-    if (stepIndex >= SCENES.length) return renderEnd();
+    lblProgress.textContent = `${state.picks.length}/${SCENES.length}`;
+    if (state.stepIndex >= SCENES.length) return renderEnd();
 
-    const scene = SCENES[stepIndex];
+    const scene = SCENES[state.stepIndex];
     stage.innerHTML = `
       ${renderSteps()}
       <div class="scene">
         <div class="big-icon">${scene.icon}</div>
-        <p>${scene.text}</p>
+        <p>${scene.text(state.tags)}</p>
       </div>
       <h2 class="question">${scene.question}</h2>
       <div class="choices" id="choicesWrap"></div>
@@ -228,50 +261,66 @@
       btn.addEventListener('click', () => pickChoice(scene, idx));
       wrap.appendChild(btn);
     });
-    report(`Cena ${stepIndex + 1}`);
+    report(`Cena ${state.stepIndex + 1}`);
   }
 
   function pickChoice(scene, idx) {
     const choice = scene.choices[idx];
     document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
 
+    if (choice.tag) state.tags.add(choice.tag);
+
     const box = document.getElementById('reactionBox');
-    box.innerHTML = `<span class="emoji">${choice.emoji}</span>${choice.reaction}`;
+    box.innerHTML = `<span class="emoji">${choice.emoji}</span>${choice.reaction(state.tags)}`;
     box.classList.add('show');
 
-    picks.push({ scene: stepIndex, choice: idx, emoji: choice.emoji });
-    savePicks(picks);
-    report(`Cena ${stepIndex + 1} (escolheu: ${choice.label})`, { choiceLabel: choice.label });
+    state.picks.push({ scene: state.stepIndex, choice: idx, emoji: choice.emoji });
+    saveState();
+    report(`Cena ${state.stepIndex + 1} (escolheu: ${choice.label})`, { choiceLabel: choice.label });
 
     const actions = document.getElementById('actionsWrap');
     actions.innerHTML = `<button class="btn" id="btnNext">Próximo ➡️</button>`;
     document.getElementById('btnNext').addEventListener('click', () => {
-      stepIndex += 1;
+      state.stepIndex += 1;
+      saveState();
       renderScene();
     });
+  }
+
+  // Final muda conforme o padrão das escolhas — quanto mais "guardou",
+  // "ajudou" e "teveAjuda" (ajuda de volta) o jogador juntou, mais o final
+  // é sobre ter gente por perto; senão, é sobre ter resolvido sozinho. Os
+  // dois são positivos — não existe final "ruim".
+  function resolveEnding() {
+    const cooperativeTags = ['guardou', 'ajudou', 'teveAjuda'];
+    const score = cooperativeTags.filter(t => state.tags.has(t)).length;
+    return score >= 2
+      ? { icon: '🌟', text: 'Lucas terminou o dia com gente ao lado e as coisas em ordem.' }
+      : { icon: '💪', text: 'Lucas deu conta do dia do jeito dele, resolvendo tudo sozinho.' };
   }
 
   function renderEnd() {
     localStorage.setItem(PROGRESS_KEY, JSON.stringify({ completed: true }));
     report('Concluído', { finished: true });
 
-    const recap = picks.map(p => p.emoji).join(' ');
+    const ending = resolveEnding();
+    const recap = state.picks.map(p => p.emoji).join(' ');
     stage.innerHTML = `
       ${renderSteps()}
       <div class="end-card">
-        <div class="big-icon">🏁</div>
+        <div class="big-icon">${ending.icon}</div>
         <h2>Fim de jogo!</h2>
         <div class="recap">${recap}</div>
-        <p>Lucas fez 6 escolhas. Não existe certo ou errado — só escolhas diferentes. 🎭</p>
+        <p>${ending.text}</p>
       </div>
       <div class="actions">
         <button class="btn btn-secondary" id="btnRestart">↻ Jogar de novo</button>
       </div>
     `;
     document.getElementById('btnRestart').addEventListener('click', () => {
-      picks = [];
-      savePicks(picks);
-      stepIndex = 0;
+      state = freshState();
+      state.tags = new Set();
+      saveState();
       renderStart(false);
     });
   }
@@ -281,7 +330,7 @@
       <div class="start-screen">
         <div class="big-icon">🎭</div>
         <h1>Ponto de Virada</h1>
-        <p>Você decide por Lucas. 6 cenas. 2 escolhas em cada uma.</p>
+        <p>Você decide por Lucas. 6 cenas. 2 escolhas em cada uma — e cada uma pode mudar o que vem depois.</p>
         <div class="actions" style="justify-content:center;">
           <button class="btn" id="btnStart">${resuming ? 'Continuar' : 'Começar'}</button>
         </div>
@@ -290,10 +339,10 @@
     document.getElementById('btnStart').addEventListener('click', renderScene);
   }
 
-  if (picks.length > 0 && picks.length < SCENES.length) {
+  if (state.picks.length > 0 && state.picks.length < SCENES.length) {
     renderStart(true);
-  } else if (picks.length >= SCENES.length) {
-    stepIndex = SCENES.length;
+  } else if (state.picks.length >= SCENES.length) {
+    state.stepIndex = SCENES.length;
     renderScene();
   } else {
     renderStart(false);
