@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelCode</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --accent:#3aa0ff; --accent-dim:#2b6ba3; --ink:#d6e2ec; --ink-dim:#6c8698;
+    --ok:#4fd67a; --err:#ff5b4d; --warn:#e0c46a;
+  }
+  *{box-sizing:border-box;}
+  html,body{ height:100%; margin:0; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'JetBrains Mono', monospace;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  .topbar{
+    height:42px; flex-shrink:0; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+  }
+  .topbar .brand{ font-weight:800; letter-spacing:1px; color:var(--accent); font-size:14px; }
+  .topbar .brand small{ color:var(--ink-dim); font-weight:500; margin-left:8px; font-size:11px; }
+  .topbar .actions{ display:flex; gap:8px; }
+
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:0.5px; text-transform:uppercase;
+    background:var(--accent); color:#04150c; border:none; padding:8px 14px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:hover{ background:#5cb3ff; }
+  button.btn-secondary{ background:transparent; color:var(--accent); border:1px solid var(--accent-dim); }
+  button.btn-secondary:hover{ background:rgba(58,160,255,0.1); }
+
+  .workspace{ flex:1; min-height:0; display:flex; }
+  .editor-pane{ flex:1 1 65%; min-width:0; display:flex; flex-direction:column; }
+  #editor{ flex:1; min-height:0; }
+
+  .console-pane{
+    flex:1 1 35%; min-width:260px; max-width:520px; display:flex; flex-direction:column;
+    background:var(--panel); border-left:1px solid var(--line);
+  }
+  .console-header{
+    height:32px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+    padding:0 12px; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px;
+    border-bottom:1px solid var(--line);
+  }
+  .console-header button{
+    background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:11px;
+    font-family:inherit; text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .console-header button:hover{ color:var(--accent); }
+
+  .console-body{
+    flex:1; overflow-y:auto; padding:10px 12px; font-size:12px; line-height:1.6;
+  }
+  .console-body .line{ white-space:pre-wrap; word-break:break-word; margin-bottom:4px; padding-bottom:4px; border-bottom:1px dashed rgba(255,255,255,0.05); }
+  .console-body .line.log{ color:var(--ink); }
+  .console-body .line.warn{ color:var(--warn); }
+  .console-body .line.error{ color:var(--err); }
+  .console-body .line.info{ color:var(--ink-dim); font-style:italic; }
+  .console-body .empty{ color:var(--ink-dim); font-style:italic; }
+
+  @media (max-width: 800px) {
+    .workspace{ flex-direction:column; }
+    .console-pane{ max-width:none; border-left:none; border-top:1px solid var(--line); max-height:35vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">PixelCode <small>editor + console de JavaScript</small></div>
+  <div class="actions">
+    <button class="btn-secondary btn" id="btnClear">Limpar console</button>
+    <button class="btn" id="btnRun">▶ Executar (Ctrl+Enter)</button>
+  </div>
+</div>
+
+<div class="workspace">
+  <div class="editor-pane">
+    <div id="editor"></div>
+  </div>
+  <div class="console-pane">
+    <div class="console-header">
+      <span>Console</span>
+    </div>
+    <div class="console-body" id="consoleBody">
+      <div class="empty">Nada executado ainda. Escreva um código e clique em "Executar".</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+<script>
+  const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs';
+
+  // Monaco usa Web Workers pra recursos como diagnóstico de sintaxe. Como
+  // aqui a página é servida sem bundler (só CDN), o worker é montado num
+  // blob que importa o script do próprio CDN — padrão usual pra rodar o
+  // Monaco "solto", sem servidor de assets dedicado.
+  window.MonacoEnvironment = {
+    getWorkerUrl: function () {
+      return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(
+        `self.MonacoEnvironment = { baseUrl: '${MONACO_BASE}/../' };\n` +
+        `importScripts('${MONACO_BASE}/base/worker/workerMain.js');`
+      );
+    }
+  };
+
+  require.config({ paths: { vs: MONACO_BASE } });
+
+  require(['vs/editor/editor.main'], function () {
+    const editor = monaco.editor.create(document.getElementById('editor'), {
+      value: [
+        '// Escreva JavaScript e clique em "Executar".',
+        'function somar(a, b) {',
+        '  return a + b;',
+        '}',
+        '',
+        'console.log(somar(2, 3));',
+        ''
+      ].join('\n'),
+      language: 'javascript',
+      theme: 'vs-dark',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 13,
+      minimap: { enabled: false },
+      automaticLayout: true,
+      scrollBeyondLastLine: false,
+    });
+
+    const consoleBody = document.getElementById('consoleBody');
+    const btnRun = document.getElementById('btnRun');
+    const btnClear = document.getElementById('btnClear');
+
+    function formatArg(arg) {
+      if (typeof arg === 'string') return arg;
+      if (arg instanceof Error) return arg.stack || arg.message;
+      try {
+        return JSON.stringify(arg, null, 2);
+      } catch (e) {
+        return String(arg);
+      }
+    }
+
+    function logLine(text, type) {
+      const empty = consoleBody.querySelector('.empty');
+      if (empty) empty.remove();
+      const line = document.createElement('div');
+      line.className = 'line ' + (type || 'log');
+      line.textContent = text;
+      consoleBody.appendChild(line);
+      consoleBody.scrollTop = consoleBody.scrollHeight;
+    }
+
+    function clearConsole() {
+      consoleBody.innerHTML = '<div class="empty">Nada executado ainda. Escreva um código e clique em "Executar".</div>';
+    }
+
+    // Debugger simples de propósito, só pra testar o editor: sem
+    // breakpoints/step-by-line ainda, só captura o que foi logado e,
+    // se o código quebrar, mostra a mensagem de erro (com linha, quando o
+    // motor JS informa) em vez de deixar a exceção sumir no console real
+    // do navegador.
+    function runCode() {
+      clearConsole();
+      consoleBody.innerHTML = '';
+
+      const fakeConsole = {
+        log: (...args) => logLine(args.map(formatArg).join(' '), 'log'),
+        warn: (...args) => logLine(args.map(formatArg).join(' '), 'warn'),
+        error: (...args) => logLine(args.map(formatArg).join(' '), 'error'),
+        info: (...args) => logLine(args.map(formatArg).join(' '), 'info'),
+      };
+
+      const code = editor.getValue();
+      try {
+        const fn = new Function('console', code);
+        fn(fakeConsole);
+        if (!consoleBody.children.length) {
+          logLine('Código executado sem erros — nada foi exibido (use console.log(...)).', 'info');
+        }
+      } catch (err) {
+        const location = (err instanceof SyntaxError)
+          ? ''
+          : (err.stack || '').split('\n').find(l => l.includes('<anonymous>')) || '';
+        logLine(`${err.name}: ${err.message}${location ? '\n  ' + location.trim() : ''}`, 'error');
+      }
+    }
+
+    btnRun.addEventListener('click', runCode);
+    btnClear.addEventListener('click', clearConsole);
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, runCode);
+  });
+</script>
+
+</body>
+</html>
