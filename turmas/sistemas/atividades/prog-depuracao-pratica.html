@@ -169,9 +169,9 @@
         <div class="explanation-box">
           <div class="exp-title">📘 Como praticar</div>
           <ol>
-            <li>Digite o código abaixo, à mão, num arquivo <code>.js</code> no seu Codespace — copiar e colar não ajuda a fixar a sintaxe, e o portal não deixa copiar de propósito.</li>
-            <li>Rode com <code>node arquivo.js</code> — o resultado que aparece está errado de propósito.</li>
-            <li>Use o <b>Run and Debug</b> (breakpoint + Step Over + painel Variables) pra achar e corrigir o bug.</li>
+            <li>Digite o código abaixo, à mão, no <b>PixelCode</b> (💻 no topo do portal) — copiar e colar não ajuda a fixar a sintaxe, e o portal não deixa copiar de propósito.</li>
+            <li>Clique em <b>Executar</b> (ou Ctrl+Enter) — o resultado que aparece no console está errado de propósito.</li>
+            <li>Leia a mensagem de erro (ou o valor errado) no console e use <code>console.log(...)</code> extras pra investigar o valor das variáveis até achar e corrigir o bug.</li>
             <li>Rode de novo e digite abaixo, exatamente, o que o console mostrar depois da correção.</li>
           </ol>
         </div>
@@ -210,13 +210,13 @@
 
   // Prática de depuração de verdade: o código abaixo tem um bug real e
   // FIXO (não é escrito pelo aluno, nem executado aqui no navegador) — o
-  // aluno copia pro próprio Codespace (GitHub), roda com Node.js, usa o
-  // depurador (breakpoint/Step Over/painel Variables — ensinado no módulo
-  // de teoria) pra achar a causa, corrige e digita aqui o valor exato que
-  // o console mostra depois da correção. `expectedOutput` é comparado
-  // (trim + minúsculas) com o que o aluno digitar — não existe execução de
-  // código nenhuma dentro do portal nessa tela, de propósito: validar
-  // assim obriga o aluno a realmente rodar e depurar no Codespace, não só
+  // aluno digita no PixelCode (editor+console do próprio portal), roda,
+  // usa o console (erro mostrado + console.log extras — ensinado no
+  // módulo de teoria) pra achar a causa, corrige e digita aqui o valor
+  // exato que o console mostra depois da correção. `expectedOutput` é
+  // comparado (trim + minúsculas) com o que o aluno digitar — não existe
+  // execução de código nenhuma dentro desta TELA, de propósito: validar
+  // assim obriga o aluno a realmente rodar e depurar no PixelCode, não só
   // ler o código e "advinhar" a resposta.
   const CHALLENGES = [
     {
@@ -251,6 +251,16 @@
     },
     {
       id: 4,
+      title: 'Dobro errado',
+      icon: '✖️',
+      desc: 'Essa função deveria devolver o DOBRO do número recebido.',
+      code: 'function dobro(numero) {\n  return numero + 1;\n}\n\nconsole.log(dobro(5));',
+      hint: '"Dobro" significa multiplicar por 2 — confira a operação usada dentro da função.',
+      bugExplanation: 'A função somava 1 (<code>numero + 1</code>) em vez de multiplicar por 2 (<code>numero * 2</code>) — o dobro de um número é ele vezes 2, não ele mais 1.',
+      expectedOutput: '10'
+    },
+    {
+      id: 5,
       title: 'Acesso liberado?',
       icon: '🚪',
       desc: 'Essa função deveria liberar o acesso só quando a idade for maior ou igual a 18, e bloquear caso contrário.',
@@ -260,7 +270,7 @@
       expectedOutput: 'bloqueado'
     },
     {
-      id: 5,
+      id: 6,
       title: 'Conceito da nota',
       icon: '📊',
       desc: 'Essa função deveria classificar a nota num conceito: A (≥9), B (≥7), C (≥5) ou D (abaixo de 5).',
@@ -270,7 +280,7 @@
       expectedOutput: 'A'
     },
     {
-      id: 6,
+      id: 7,
       title: 'Metade errada',
       icon: '➗',
       desc: 'Essa função deveria devolver a metade do número recebido, reaproveitando uma função genérica de divisão.',
@@ -280,7 +290,7 @@
       expectedOutput: '5'
     },
     {
-      id: 7,
+      id: 8,
       title: 'Faixa etária',
       icon: '🎂',
       desc: 'Essa função deveria classificar a idade em "adulto" (≥18), "adolescente" (≥12) ou "crianca" (abaixo de 12).',
@@ -290,7 +300,7 @@
       expectedOutput: 'adulto'
     },
     {
-      id: 8,
+      id: 9,
       title: 'Dia seguinte',
       icon: '📅',
       desc: 'Essa função deveria devolver o nome do dia da semana IMEDIATAMENTE seguinte ao número recebido (1 = segunda).',
@@ -300,7 +310,7 @@
       expectedOutput: 'quinta'
     },
     {
-      id: 9,
+      id: 10,
       title: 'Contagem de aprovados',
       icon: '✅',
       desc: 'Essa função deveria contar quantas notas são de aprovação — ou seja, maiores OU IGUAIS a 6.',
@@ -437,7 +447,7 @@
         );
       }
     } else {
-      logConsole('❌ Ainda não é esse valor. Volte pro Codespace, confirme o resultado no console e tente de novo.', 'fail');
+      logConsole('❌ Ainda não é esse valor. Volte pro PixelCode, confirme o resultado no console e tente de novo.', 'fail');
     }
   }
 
@@ -469,7 +479,7 @@
     if (alreadyDone) {
       logConsole(`Você já resolveu este chamado. ${challenge.bugExplanation}`, 'info');
     } else {
-      logConsole('Digite o código no seu Codespace, depure e digite o resultado corrigido.', 'info');
+      logConsole('Digite o código no PixelCode, depure e digite o resultado corrigido.', 'info');
     }
     renderSidebar();
 

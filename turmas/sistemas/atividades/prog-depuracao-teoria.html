@@ -270,79 +270,79 @@
       }
     },
     {
-      story: 'O <b>GitHub Codespaces</b> é um ambiente de desenvolvimento completo (o mesmo VS Code que você já conhece) rodando DENTRO do navegador, na nuvem — sem precisar instalar nada na sua máquina. Ele abre a partir de um repositório do GitHub.',
+      story: 'O <b>PixelCode</b> é o editor de JavaScript do próprio portal: um editor de código de um lado e um console do outro, direto no navegador — sem precisar instalar nada na sua máquina. Ele abre no botão <b>"💻 PixelCode"</b>, no topo do portal.',
       question: {
-        prompt: 'Um aluno quer testar um código em outro computador, sem instalar editor, compilador nem nada, só abrindo o navegador. Que ferramenta resolve isso?',
+        prompt: 'Um aluno quer testar um código sem instalar editor, compilador nem nada, só usando o que o portal já oferece. Que ferramenta resolve isso?',
         options: [
-          'Um Codespace, aberto a partir de um repositório no GitHub',
+          'O PixelCode, aberto pelo botão no topo do portal',
           'Um editor de texto qualquer, sem nenhuma configuração',
-          'Isso só é possível reinstalando tudo naquele computador',
+          'Isso só é possível instalando um programa na máquina',
           'Um aplicativo de celular específico pra cada linguagem'
         ],
         correctIndex: 0,
-        explanation: 'Isso! O Codespace entrega um ambiente completo, no navegador, sem instalar nada — só precisa de um repositório no GitHub.'
+        explanation: 'Isso! O PixelCode entrega um editor completo com console, no navegador, sem instalar nada — só clicar no botão no topo do portal.'
       }
     },
     {
-      story: 'Pra abrir um Codespace novo: dentro do repositório no GitHub, clique no botão verde <b>"Code"</b>, vá na aba <b>"Codespaces"</b> e clique em <b>"Create codespace on main"</b>. Depois de alguns segundos, um VS Code completo abre, já dentro do navegador.',
+      story: 'Pra abrir o PixelCode: no topo do portal, clique no botão <b>"💻 PixelCode"</b> — ele abre numa aba nova, já com um editor pronto pra escrever JavaScript.',
       question: {
-        prompt: 'Um colega nunca abriu um Codespace e não sabe por onde começar, dentro de um repositório do GitHub. Por onde ele deve procurar?',
+        prompt: 'Um colega nunca abriu o PixelCode e não sabe por onde começar. Por onde ele deve procurar?',
         options: [
-          'No botão verde "Code", na aba "Codespaces"',
-          'No menu de configurações da própria conta do GitHub',
-          'Isso só é possível pelo aplicativo de celular do GitHub',
-          'Dentro da aba "Settings" do repositório'
+          'No botão "💻 PixelCode", no topo do portal',
+          'No menu de configurações da própria conta',
+          'Isso só é possível pelo aplicativo de celular',
+          'Dentro da aba "Perfil" do portal'
         ],
         correctIndex: 0,
-        explanation: 'Exato! O botão verde "Code" tem uma aba própria "Codespaces", com a opção de criar um novo.'
+        explanation: 'Exato! O botão "💻 PixelCode" fica no topo do portal e abre o editor numa aba nova.'
       }
     },
     {
-      story: 'Dentro do Codespace, use o <b>terminal integrado</b> (menu Terminal → New Terminal) pra rodar um arquivo com Node.js: <code>node nome-do-arquivo.js</code>. Tudo que o código imprimir com <code>console.log(...)</code> aparece ali, no terminal.',
+      story: 'Dentro do PixelCode, digite o código no editor à esquerda e clique em <b>"▶ Executar"</b> (ou Ctrl+Enter) pra rodar. Tudo que o código imprimir com <code>console.log(...)</code> aparece no <b>Console</b>, à direita.',
       question: {
-        prompt: 'Você colou um código dentro de um arquivo chamado <code>depurar.js</code>, dentro do Codespace. Qual comando, no terminal integrado, roda esse arquivo com Node.js?',
+        prompt: 'Você digitou um código no editor do PixelCode e quer rodá-lo pra ver o resultado. O que você faz?',
         options: [
-          'node depurar.js',
-          'run depurar.js',
-          'python depurar.js',
-          'open depurar.js'
+          'Clica em "▶ Executar" (ou usa Ctrl+Enter)',
+          'Salva o arquivo e espera o resultado aparecer sozinho',
+          'Recarrega a página inteira do portal',
+          'Copia o código pra barra de endereço do navegador'
         ],
         correctIndex: 0,
-        explanation: 'Isso! O comando "node" roda um arquivo JavaScript com Node.js, imprimindo tudo que os console.log() do código mandarem pro terminal.'
+        explanation: 'Isso! O botão "▶ Executar" (ou o atalho Ctrl+Enter) roda o código e manda tudo que os console.log() imprimirem pro Console ao lado.'
       }
     },
     {
-      story: 'Quando o resultado sai errado (erro de lógica), rodar de novo do mesmo jeito não ajuda — é hora de <b>depurar de verdade</b>. No painel <b>"Run and Debug"</b> (ícone de inseto na barra lateral), clique à esquerda do número de uma linha pra criar um <b>breakpoint</b>: um ponto onde a execução PAUSA, antes de rodar aquela linha.',
+      story: 'Quando o resultado sai errado (erro de lógica), rodar de novo do mesmo jeito não ajuda — é hora de <b>depurar de verdade</b>. Como o PixelCode não tem breakpoint, a técnica é outra: espalhe <code>console.log(...)</code> extras entre as linhas do código, pra ver o valor de cada variável NAQUELE ponto exato da execução.',
       question: {
-        prompt: 'Uma função só devolve o valor errado na 3ª vez que é chamada, e você quer pausar a execução bem nesse ponto pra investigar. O que você cria naquela linha?',
+        prompt: 'Uma função devolve um valor errado e você quer ver o que uma variável vale no meio da execução, sem breakpoint disponível. O que você faz?',
         options: [
-          'Um breakpoint, clicando à esquerda do número da linha',
-          'Um comentário longo explicando onde está o problema',
-          'Uma cópia inteira da função, só pra comparação',
-          'Um novo arquivo separado, só com essa linha'
+          'Adiciona um console.log(variavel) logo depois daquele ponto',
+          'Só fica olhando o código, sem rodar de novo',
+          'Apaga a variável e espera o erro sumir sozinho',
+          'Não dá pra investigar isso sem um depurador com breakpoint'
         ],
         correctIndex: 0,
-        explanation: 'Isso! O breakpoint pausa a execução exatamente naquela linha, antes dela rodar — o ponto de partida pra investigar o que está acontecendo.'
+        explanation: 'Isso! Um console.log(variavel) extra, no ponto certo do código, mostra o valor real da variável naquele instante — é a versão "na mão" de olhar um breakpoint.'
       }
     },
     {
-      story: 'Com a execução pausada num breakpoint, use <b>Step Over</b> (F10) pra avançar linha por linha, e olhe o painel <b>Variables</b> pra ver o valor de cada variável NAQUELE momento exato — é assim que você encontra onde o valor esperado começa a divergir do valor real.',
+      story: 'Quando o código quebra de verdade (erro de sintaxe ou de execução), o PixelCode mostra a mensagem de erro em VERMELHO no Console — o nome do erro, a mensagem e, quando possível, até a linha. Leia essa mensagem com atenção: ela costuma apontar direto pra causa do bug.',
       question: {
-        prompt: 'Parado num breakpoint, você quer saber que valor uma variável específica tem exatamente naquele momento da execução. Onde você olha?',
+        prompt: 'Você rodou um código no PixelCode e o console mostrou uma linha vermelha com "ReferenceError: joao is not defined". O que essa mensagem indica?',
         options: [
-          'No painel "Variables" do Run and Debug',
-          'No histórico de commits salvos no Git',
-          'No arquivo README do projeto, no topo',
-          'Não dá pra saber isso sem adivinhar'
+          'Um erro de execução: o código usou uma variável que não existe',
+          'Um aviso sem importância, que pode ser ignorado',
+          'Que o PixelCode travou e precisa recarregar a página',
+          'Que o código rodou certo, só demorou mais que o normal'
         ],
         correctIndex: 0,
-        explanation: 'Exato! O painel Variables mostra o valor real de cada variável, congelado no instante em que a execução pausou.'
+        explanation: 'Exato! ReferenceError indica que o código tentou usar uma variável (ou nome) que não foi declarada — a mensagem em vermelho já aponta a causa.'
       }
     },
     {
-      story: 'Resumindo o fluxo de prática: leia o que o código DEVERIA fazer, rode com <code>node arquivo.js</code>, compare com o que ele REALMENTE faz e, se estiver errado, use breakpoints pra rastrear onde a lógica diverge. Corrija, rode de novo, e só então confirme o valor certo no console. Agora você já sabe o que é compilação, os tipos de erro, e como depurar de verdade dentro de um Codespace!',
+      story: 'Resumindo o fluxo de prática: leia o que o código DEVERIA fazer, rode no PixelCode, compare com o que ele REALMENTE faz e, se estiver errado, leia a mensagem de erro (ou adicione console.log() extras) pra rastrear onde a lógica diverge. Corrija, rode de novo, e só então confirme o valor certo no console. Agora você já sabe o que é compilação, os tipos de erro, e como depurar de verdade no PixelCode!',
       question: {
-        prompt: 'Depois de corrigir um bug e rodar o código de novo dentro do Codespace, qual é o próximo passo antes de responder no portal?',
+        prompt: 'Depois de corrigir um bug e rodar o código de novo no PixelCode, qual é o próximo passo antes de responder no portal?',
         options: [
           'Conferir, no console, o valor que o código imprime agora',
           'Responder de cabeça, sem rodar o código outra vez',
@@ -363,7 +363,7 @@
       steps: STEPS,
       fileName: 'prog-depuracao-teoria-slides.pptx',
       closingTitle: 'Hora da prática!',
-      closingText: 'Abra o módulo "Prática — Central de Sistemas: Depuração" no Portal de Aulas para os alunos corrigirem bugs de verdade num Codespace.'
+      closingText: 'Abra o módulo "Prática — Central de Sistemas: Depuração" no Portal de Aulas para os alunos corrigirem bugs de verdade no PixelCode.'
     });
   };
 
@@ -392,7 +392,7 @@
     mentor: { rowClass: "eri", avatar: "🧑‍💻", name: "Bit, Mentor de Código" },
     finishPassed: {
       title: "Compilação e Depuração concluídos!",
-      introHtml: "<p>Você já sabe diferenciar erro de sintaxe, execução e lógica, revisou os pontos de sintaxe que mais escondem bugs — desde os mais básicos (string sem aspas, nome de variável errado) até atribuição x comparação, switch/break, ordem de argumentos, ordem de if/else if e operadores de comparação — e sabe usar breakpoints dentro de um Codespace pra rastrear um bug até a causa raiz.</p>",
+      introHtml: "<p>Você já sabe diferenciar erro de sintaxe, execução e lógica, revisou os pontos de sintaxe que mais escondem bugs — desde os mais básicos (string sem aspas, nome de variável errado) até atribuição x comparação, switch/break, ordem de argumentos, ordem de if/else if e operadores de comparação — e sabe usar o PixelCode (rodar, ler mensagens de erro e console.log extras) pra rastrear um bug até a causa raiz.</p>",
       closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Sistemas — lá você vai corrigir bugs de verdade.</p>",
       restartLabel: "🔁 Rever a teoria"
     }

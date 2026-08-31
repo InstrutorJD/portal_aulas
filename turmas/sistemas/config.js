@@ -509,21 +509,21 @@ window.TURMA_CONFIG_SISTEMAS = {
         {
           key: 'prog-depuracao',
           label: 'Compilação e Depuração de Código',
-          desc: 'Aprenda a teoria e depois corrija bugs de verdade, depurando num GitHub Codespace.',
+          desc: 'Aprenda a teoria e depois corrija bugs de verdade, depurando no PixelCode.',
           capacidade: 'Identificar erros de acordo com o requisito do programa e linguagem; Utilizar o ambiente de desenvolvimento (IDE) para rastreabilidade do código.',
           modules: [
             {
               key: 'teoria', title: 'Teoria — Compilação e Depuração',
-              desc: 'Tipos de erro (sintaxe, execução, lógica), o que é depurar de verdade, revisão de sintaxe do mais básico (string sem aspas, nome de variável errado) ao intermediário (atribuição x comparação, switch/break, ordem de argumentos, ordem de if/else if, operadores de comparação) e como usar GitHub Codespaces: criar um Codespace, rodar com Node.js, breakpoints, Step Over e o painel Variables.',
+              desc: 'Tipos de erro (sintaxe, execução, lógica), o que é depurar de verdade, revisão de sintaxe do mais básico (string sem aspas, nome de variável errado) ao intermediário (atribuição x comparação, switch/break, ordem de argumentos, ordem de if/else if, operadores de comparação) e como usar o PixelCode: escrever, executar e ler erros e valores no console.',
               icon: '🧑‍💻', src: 'atividades/prog-depuracao-teoria.html',
               progressKey: 'prog_depuracao_teoria_progress_', progressMode: 'flag',
               hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de Sistemas: Depuração',
-              desc: 'Nove chamados com bugs de verdade, do bem básico (string sem aspas, nome de variável errado) até funções, if/else e switch/case — digite o código no seu Codespace, depure, e digite o resultado corrigido do console.',
+              desc: 'Dez chamados com bugs de verdade, subindo aos poucos do bem básico (string sem aspas, nome de variável errado) até funções, if/else e switch/case — digite o código no PixelCode, depure, e digite o resultado corrigido do console.',
               icon: '🐛', src: 'atividades/prog-depuracao-pratica.html',
-              progressKey: 'prog_depuracao_pratica_progress_', progressTotal: 9,
+              progressKey: 'prog_depuracao_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]
