@@ -121,6 +121,7 @@
         <div class="tabs" id="mainNavTabs">
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
+          <button class="quick-action-btn" id="btnOpenPixelCode" title="Abrir o PixelCode (editor de JavaScript) numa aba nova">💻 PixelCode</button>
           ${currentUser.role === 'aluno' ? '<button class="tab-btn" data-tab="perfil">Perfil 👤</button>' : ''}
           ${currentUser.role === 'professor' ? `
             <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
@@ -2769,6 +2770,10 @@
         }
         switchTab(tabTarget);
       });
+    });
+
+    document.getElementById('btnOpenPixelCode').addEventListener('click', () => {
+      window.open('../../pixelcode.html', '_blank');
     });
 
     document.getElementById('btnLogout').addEventListener('click', async () => {
