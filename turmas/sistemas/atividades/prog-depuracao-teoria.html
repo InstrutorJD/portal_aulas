@@ -131,7 +131,7 @@
     <div>PROGRAMAÇÃO DE APLICATIVOS — CENTRAL DE SISTEMAS (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">14</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -176,13 +176,83 @@
       question: {
         prompt: 'Um desenvolvedor vai mudando linhas ao acaso até o erro sumir da tela, sem entender por que aquilo resolveu. Isso é depurar de verdade?',
         options: [
-          'Não — depurar de verdade exige entender a causa raiz do problema',
+          'Não — exige entender a causa raiz do problema',
           'Sim, o objetivo é só fazer o erro sumir, não importa como',
           'Sim, sempre que o programa "roda" o processo terminou',
           'Depurar e testar por tentativa e erro são a mesma coisa'
         ],
         correctIndex: 0,
         explanation: 'Isso! Sem entender a causa, a "correção" pode só estar escondendo o problema — ele volta (ou aparece outro) mais tarde.'
+      }
+    },
+    {
+      story: 'Antes de partir pra prática, vale revisar 5 pontos de sintaxe que costumam esconder erros de lógica — são exatamente os tipos de bug que você vai caçar nos próximos desafios. O primeiro: <code>=</code> ATRIBUI um valor a uma variável; <code>==</code>, <code>===</code>, <code>&gt;</code> e <code>&gt;=</code> COMPARAM dois valores. Confundir os dois é um dos erros mais comuns — e mais traiçoeiros, porque o código continua rodando sem travar.',
+      question: {
+        prompt: 'No trecho <code>if (nota = 10) { aprovado = true; }</code>, o que esse código realmente faz, em vez de comparar se nota é igual a 10?',
+        options: [
+          'Atribui o valor 10 e o if quase sempre entra',
+          'Compara se nota é realmente igual a 10',
+          'Gera um erro de sintaxe, o código nem roda',
+          'Não faz nada — a linha inteira é ignorada'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! <code>=</code> atribui — o resultado da atribuição é o próprio valor (10), que o if trata como "verdadeiro", então o bloco quase sempre roda, não importa o que nota tinha antes.'
+      }
+    },
+    {
+      story: 'Segundo ponto: dentro de um <code>switch</code>, depois que um <code>case</code> é escolhido, a execução CONTINUA rodando os próximos <code>case</code> também, um atrás do outro — só um <code>break;</code> interrompe essa sequência. Esquecer o <code>break</code> é um bug clássico de switch.',
+      question: {
+        prompt: 'Sem nenhum break, no trecho <code>switch (x) { case 1: y = "um"; case 2: y = "dois"; default: y = "outro"; }</code>, se x for 1, qual é o valor final de y?',
+        options: [
+          '"outro" — a execução cai em todos os cases até o fim',
+          '"um" — só o case escolhido chega a rodar',
+          '"dois" — o switch pula direto pro segundo case',
+          'Nenhum — falta de break quebra o código'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Sem break, depois de entrar no case 1 a execução continua pros próximos também, sobrescrevendo y até chegar no fim do switch.'
+      }
+    },
+    {
+      story: 'Terceiro ponto: os parâmetros de uma função são preenchidos pela POSIÇÃO em que os argumentos são passados, não pelo nome. Chamar <code>funcao(a, b)</code> não é o mesmo que <code>funcao(b, a)</code> — trocar a ordem muda o resultado sempre que a operação não é comutativa.',
+      question: {
+        prompt: 'Dada a função <code>function subtrair(a, b) { return a - b; }</code>, qual é a diferença entre chamar <code>subtrair(10, 3)</code> e <code>subtrair(3, 10)</code>?',
+        options: [
+          'O resultado muda (7 e -7) — a ordem dos argumentos importa',
+          'O resultado é sempre igual, JavaScript reordena sozinho',
+          'A segunda chamada gera erro, por inverter a ordem',
+          'Só a primeira chamada é considerada válida'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Cada argumento preenche o parâmetro daquela posição — inverter a ordem muda completamente o resultado quando a operação (como subtração ou divisão) não é comutativa.'
+      }
+    },
+    {
+      story: 'Quarto ponto: numa cadeia de <code>if / else if / else if</code>, o JavaScript testa as condições NA ORDEM escrita e para na PRIMEIRA que for verdadeira — mesmo que uma condição mais abaixo também fosse verdadeira. Por isso, condições que se sobrepõem precisam vir da mais restritiva pra mais ampla.',
+      question: {
+        prompt: 'No trecho <code>if (nota >= 0) resultado = "valido"; else if (nota >= 5) resultado = "aprovado";</code>, para nota igual a 8, qual é o valor final de resultado?',
+        options: [
+          '"valido" — a primeira condição já captura o caso',
+          '"aprovado" — a condição mais específica vence',
+          'As duas rodam, e o valor final vira "aprovado"',
+          'Nenhuma roda, pois nota é maior que cinco'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Como "nota >= 0" já é verdadeiro pra 8, o else if seguinte nunca chega a ser testado — por isso a ordem, da mais restritiva pra mais ampla, evita esse bloco "inalcançável".'
+      }
+    },
+    {
+      story: 'Quinto e último ponto: operadores de comparação parecem parecidos, mas incluem limites diferentes. <code>&gt;</code> (maior que) EXCLUI o valor exato do limite; <code>&gt;=</code> (maior ou igual) INCLUI esse valor. Trocar um pelo outro é um erro sutil — o código roda normalmente, só erra bem na borda.',
+      question: {
+        prompt: 'Uma regra diz que a nota 6, exatamente, já conta como aprovação. Qual comparação representa essa regra corretamente pra uma variável nota?',
+        options: [
+          'nota >= 6',
+          'nota > 6',
+          'nota == 7',
+          'nota <= 6'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Como o próprio 6 já conta como aprovado, a comparação precisa incluir esse valor — por isso >=, e não apenas >.'
       }
     },
     {
@@ -233,9 +303,9 @@
         prompt: 'Uma função só devolve o valor errado na 3ª vez que é chamada, e você quer pausar a execução bem nesse ponto pra investigar. O que você cria naquela linha?',
         options: [
           'Um breakpoint, clicando à esquerda do número da linha',
-          'Um comentário explicando o problema',
-          'Uma cópia da função inteira',
-          'Um novo arquivo separado só com aquela linha'
+          'Um comentário longo explicando onde está o problema',
+          'Uma cópia inteira da função, só pra comparação',
+          'Um novo arquivo separado, só com essa linha'
         ],
         correctIndex: 0,
         explanation: 'Isso! O breakpoint pausa a execução exatamente naquela linha, antes dela rodar — o ponto de partida pra investigar o que está acontecendo.'
@@ -247,9 +317,9 @@
         prompt: 'Parado num breakpoint, você quer saber que valor uma variável específica tem exatamente naquele momento da execução. Onde você olha?',
         options: [
           'No painel "Variables" do Run and Debug',
-          'No histórico de commits do Git',
-          'No arquivo README do projeto',
-          'Não dá pra saber sem adivinhar'
+          'No histórico de commits salvos no Git',
+          'No arquivo README do projeto, no topo',
+          'Não dá pra saber isso sem adivinhar'
         ],
         correctIndex: 0,
         explanation: 'Exato! O painel Variables mostra o valor real de cada variável, congelado no instante em que a execução pausou.'
@@ -260,10 +330,10 @@
       question: {
         prompt: 'Depois de corrigir um bug e rodar o código de novo dentro do Codespace, qual é o próximo passo antes de responder no portal?',
         options: [
-          'Conferir, no console, o valor exato que o código imprime agora',
-          'Responder de cabeça, sem rodar o código de novo',
-          'Apagar o código inteiro e reescrever do zero',
-          'Pular a prática, já que o erro foi corrigido'
+          'Conferir, no console, o valor que o código imprime agora',
+          'Responder de cabeça, sem rodar o código outra vez',
+          'Apagar todo o código e reescrever tudo do zero',
+          'Pular a prática, já que o erro parece corrigido'
         ],
         correctIndex: 0,
         explanation: 'Isso! Só o valor que realmente aparece no console, depois da correção, garante que o bug foi mesmo resolvido — não o que parece "fazer sentido" de cabeça.'
@@ -308,7 +378,7 @@
     mentor: { rowClass: "eri", avatar: "🧑‍💻", name: "Bit, Mentor de Código" },
     finishPassed: {
       title: "Compilação e Depuração concluídos!",
-      introHtml: "<p>Você já sabe diferenciar erro de sintaxe, execução e lógica, e como usar breakpoints dentro de um Codespace pra rastrear um bug até a causa raiz.</p>",
+      introHtml: "<p>Você já sabe diferenciar erro de sintaxe, execução e lógica, revisou os 5 pontos de sintaxe que mais escondem bugs (atribuição x comparação, switch/break, ordem de argumentos, ordem de if/else if e operadores de comparação), e sabe usar breakpoints dentro de um Codespace pra rastrear um bug até a causa raiz.</p>",
       closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Sistemas — lá você vai corrigir bugs de verdade.</p>",
       restartLabel: "🔁 Rever a teoria"
     }

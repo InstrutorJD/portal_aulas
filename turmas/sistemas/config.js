@@ -514,7 +514,7 @@ window.TURMA_CONFIG_SISTEMAS = {
           modules: [
             {
               key: 'teoria', title: 'Teoria — Compilação e Depuração',
-              desc: 'Tipos de erro (sintaxe, execução, lógica), o que é depurar de verdade, e como usar GitHub Codespaces: criar um Codespace, rodar com Node.js, breakpoints, Step Over e o painel Variables.',
+              desc: 'Tipos de erro (sintaxe, execução, lógica), o que é depurar de verdade, revisão de sintaxe (atribuição x comparação, switch/break, ordem de argumentos, ordem de if/else if, operadores de comparação) e como usar GitHub Codespaces: criar um Codespace, rodar com Node.js, breakpoints, Step Over e o painel Variables.',
               icon: '🧑‍💻', src: 'atividades/prog-depuracao-teoria.html',
               progressKey: 'prog_depuracao_teoria_progress_', progressMode: 'flag',
               hasSlides: true, hasGabarito: true

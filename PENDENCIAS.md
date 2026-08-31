@@ -185,16 +185,20 @@ escolhido, não a lógica.
 
 ## Desbloquear todas as etapas das atividades para o professor
 
-**Status:** pendente — pedido do professor, ainda não implementado.
+**Status:** parcialmente resolvido. O motor compartilhado da teoria
+(`shared/quiz-teoria-engine.js`) e a prática nova de Depuração
+(`turmas/sistemas/atividades/prog-depuracao-pratica.html`) já liberam
+tudo pro professor — ver "Já resolvido" abaixo. Os outros ~43 arquivos
+bespoke (lista original) continuam pendentes.
 
 **Onde:** o bloqueio por **módulo/trilha** (navegação entre matérias) já
 libera tudo pro professor — `isModuleLocked()` em
 `shared/platform-core.js` retorna `false` de cara quando
 `currentUser.role === 'professor'`, e o mesmo vale pra trava da aba de
-Jogos e pra visibilidade de trilha (`trilhaStatus`). O que falta é o
+Jogos e pra visibilidade de trilha (`trilhaStatus`). O que faltava era o
 bloqueio **dentro** de cada atividade, entre uma etapa/desafio e o
-próximo: hoje toda atividade de código (`CHALLENGES`/`STEPS` com
-progressão trancada) usa a mesma lógica —
+próximo: toda atividade de código (`CHALLENGES`/`STEPS` com progressão
+trancada) usa a mesma lógica —
 
 ```js
 function isUnlocked(challenge) {
@@ -205,10 +209,10 @@ function isUnlocked(challenge) {
 ```
 
 — sem nenhuma exceção pro professor, então mesmo logado como professor
-só dá pra abrir a 1ª etapa até "resolver" cada uma em sequência. Esse
-exato padrão está duplicado (bespoke, sem função compartilhada) em ~44
-arquivos: todas as `*-pratica.html` das duas turmas (jogos e sistemas),
-`js-basico.html`, `js-intermediario.html`,
+só dava pra abrir a 1ª etapa até "resolver" cada uma em sequência. Esse
+exato padrão ainda está duplicado (bespoke, sem função compartilhada) em
+~43 arquivos: todas as outras `*-pratica.html` das duas turmas (jogos e
+sistemas), `js-basico.html`, `js-intermediario.html`,
 `js-basico-adaptado-engel.html`, `csharp-pratica.html`,
 `gdscript-pratica.html`, `sql-basico.html`, `sql-join.html`,
 `sql-agregacao.html`. Além desses, dois casos com assinatura levemente
@@ -227,17 +231,30 @@ qualquer etapa de qualquer atividade prática, sem precisar "resolver"
 as anteriores em ordem — pra poder revisar, demonstrar ou testar
 qualquer parte do conteúdo. Não muda nada pro aluno.
 
-**Caminho já mapeado (não implementado ainda):** em cada arquivo, checar
+**Já resolvido:**
+- `shared/quiz-teoria-engine.js` (todas as ~20 telas "história + quiz",
+  incluindo `prog-depuracao-teoria.html`): a tela de pergunta ganhou um
+  botão "⏭️ Pular (professor)", visível só quando `isProfessor` (checado
+  uma vez, assíncrono, via `PortalSession.getUser()`) estiver ligado —
+  ele avança sem exigir clique numa opção. Como é assíncrono, a 1ª
+  pergunta pode renderizar antes do botão aparecer; da 2ª em diante já
+  aparece direto.
+- `turmas/sistemas/atividades/prog-depuracao-pratica.html`: mesmo padrão
+  aplicado em `isUnlocked(challenge)` — com `isProfessor` ligado, todo
+  chamado conta como desbloqueado; a sidebar é re-renderizada assim que
+  a checagem assíncrona resolve.
+
+**Caminho mapeado pros ~43 arquivos restantes:** em cada um, checar
 `(await window.PortalSession.getUser())?.role === 'professor'` (mesmo
 `shared/session.js` que toda atividade já inclui) uma vez no carregamento,
 guardar num flag (`isProfessor`), e fazer `isUnlocked(...)` retornar
 `true` de cara quando o flag estiver ligado — como a checagem é
 assíncrona, a etapa fica travada até a resposta chegar e então a
-sidebar é re-renderizada. Uma tentativa de aplicar isso em lote (regex
-simples sobre os 44 arquivos) esbarrou em arquivos com final de linha
+sidebar é re-renderizada (mesmo padrão dos dois arquivos já corrigidos
+acima). Uma tentativa anterior de aplicar isso em lote (regex simples
+sobre os 44 arquivos originais) esbarrou em arquivos com final de linha
 CRLF vs LF misturado no repositório — precisa normalizar isso antes
 (ou tratar os dois casos no script) pra não quebrar arquivo nenhum.
-Nenhuma mudança chegou a ser commitada.
 
 ## Token do professor em "Dar visto"/"Pular etapa" — proteção contra força bruta
 

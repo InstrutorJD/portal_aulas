@@ -33,6 +33,18 @@
 
     lblStepTotal.textContent = steps.length;
 
+    // Bypass pro professor: ele quer revisar/projetar o conteúdo em aula sem
+    // precisar responder cada pergunta pra avançar (ver PENDENCIAS.md,
+    // "Desbloquear todas as etapas das atividades para o professor"). A
+    // checagem é assíncrona — a 1ª pergunta pode renderizar antes dela
+    // resolver, mas a partir da 2ª (renderQuestion roda de novo a cada
+    // etapa) o botão de pular já aparece.
+    let isProfessor = false;
+    (async function () {
+      const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+      isProfessor = !!(user && user.role === 'professor');
+    })();
+
     function loadProgress() {
       try {
         return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null');
@@ -176,8 +188,28 @@
       });
 
       card.appendChild(optionsWrap);
+
+      if (isProfessor) {
+        const profActions = document.createElement('div');
+        profActions.className = 'actions';
+        profActions.style.marginTop = '10px';
+        profActions.innerHTML = `<button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>`;
+        card.appendChild(profActions);
+      }
+
       storyWrap.innerHTML = '';
       storyWrap.appendChild(card);
+
+      if (isProfessor) {
+        document.getElementById('btnSkipProfessor').addEventListener('click', () => {
+          window.currentStepIndex++;
+          if (window.currentStepIndex >= steps.length) {
+            finishJourney(true);
+          } else {
+            renderStory();
+          }
+        });
+      }
     }
 
     function finishJourney(reviewOnly) {
