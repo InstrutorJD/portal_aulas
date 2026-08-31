@@ -78,6 +78,15 @@ as $$
   select email from public.profiles where id = auth.uid();
 $$;
 
+-- 'admin' é tratado como equivalente a 'professor' aqui de propósito — os
+-- guards do lado do cliente (shared/clipboard-guard.js,
+-- shared/activity-tracker.js, shared/progress-sync.js, shared/
+-- exam-proctor.js) já fazem `role === 'professor' || role === 'admin'`
+-- desde antes desta função existir; sem essa mesma equivalência aqui, uma
+-- conta com role 'admin' passa pelos guards do cliente mas todo RPC/RLS
+-- gated por is_professor() (Dar Visto, Chamada, Notas, liberação de jogos,
+-- datas de trilha, liberação diária, QuizRush — 40+ usos neste arquivo)
+-- devolve 400 "Só o professor pode..." pra essa conta.
 create or replace function public.is_professor()
 returns boolean
 language sql
@@ -85,7 +94,7 @@ security definer
 stable
 set search_path = public
 as $$
-  select exists (select 1 from public.profiles where id = auth.uid() and role = 'professor');
+  select exists (select 1 from public.profiles where id = auth.uid() and role in ('professor', 'admin'));
 $$;
 
 -- O ranking de progresso (computeRanking/renderRankingBadge em
@@ -1421,7 +1430,11 @@ begin
     raise exception 'Só o professor pode gerar um token.';
   end if;
 
-  delete from public.professor_tokens where expires_at > now();
+  -- Qualificado com o nome da tabela de propósito: "expires_at" sem
+  -- qualificador é AMBÍGUO aqui (erro 42702) — RETURNS TABLE(token text,
+  -- expires_at timestamptz) cria um parâmetro de saída chamado
+  -- "expires_at" que colide com a coluna public.professor_tokens.expires_at.
+  delete from public.professor_tokens where public.professor_tokens.expires_at > now();
 
   v_token := lpad(floor(random() * 1000000)::numeric, 6, '0');
   v_expires := now() + interval '30 minutes';

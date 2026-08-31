@@ -289,7 +289,51 @@ window.TURMA_CONFIG_SISTEMAS = {
     },
     { key: 'internet-das-coisas', label: 'Internet das Coisas', trilhas: [] },
     { key: 'intro-dev-projetos', label: 'Introdução de Desenvolvimento de Projetos', trilhas: [] },
-    { key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1', trilhas: [] },
+    {
+      key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1',
+      trilhas: [
+        {
+          key: 'modelagem-dados-requisitos',
+          label: 'Modelagem de Dados e Requisitos',
+          desc: 'Pesquise e monte uma apresentação (Canva/Slides) sobre modelagem de dados e requisitos funcionais/não funcionais, entregue pro professor por e-mail e depois responda o questionário.',
+          // TODO(professor): capacidade PROVISÓRIA — troque pelo texto real
+          // da capacidade MSEP antes de liberar pra turma (ver README,
+          // seção "Trilha por capacidade (MSEP)": "a capacidade não pode
+          // ser inventada").
+          capacidade: 'Elaborar modelo de dados e definir requisitos funcionais e não funcionais de um sistema.',
+          modules: [
+            {
+              // Sem correção automática (o "produto" é um PDF exportado de
+              // fora do portal — Canva/Slides/PowerPoint) — o aluno só
+              // navega pelas etapas (contexto, os 2 blocos de conteúdo
+              // obrigatórios, critérios de formatação e como entregar) e o
+              // professor dá o visto na última etapa, depois de conferir
+              // que o PDF chegou por e-mail (ver shared/professor-visto.js).
+              key: 'trabalho', title: 'Trabalho — Apresentação: Modelagem de Dados e Requisitos',
+              desc: 'Monte uma apresentação (Canva, Google Slides ou PowerPoint) sobre modelagem de dados e requisitos funcionais/não funcionais, seguindo critérios de fonte, cor e padrão de texto. Exporte em PDF e envie por e-mail pro professor.',
+              icon: '🖼️', src: 'atividades/modelagem-dados-requisitos-trabalho.html',
+              progressKey: 'modelagem_dados_requisitos_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              // Quiz "história + quiz" padrão (shared/quiz-teoria-engine.js),
+              // mas só libera depois do visto no trabalho (requires:
+              // 'trabalho') e roda atrás de uma trava extra de integridade:
+              // se o aluno sair da aba/janela durante o questionário, recebe
+              // uma advertência; na 2ª, a atividade é bloqueada até o
+              // professor liberar de novo com o token de visto (ver
+              // shared/exam-proctor.js). As perguntas cobrem só os assuntos
+              // que o módulo "trabalho" pediu pra pesquisar.
+              key: 'questionario', title: 'Questionário — Modelagem de Dados e Requisitos',
+              desc: 'Responda sobre o que você pesquisou no trabalho: entidade, atributo, relacionamento, cardinalidade, chaves, normalização, DER/MER e requisitos funcionais/não funcionais. Atenção: sair da aba durante o questionário gera advertência — na 2ª, a atividade é bloqueada.',
+              icon: '📝', src: 'atividades/modelagem-dados-requisitos-questionario.html',
+              progressKey: 'modelagem_dados_requisitos_questionario_progress_', progressMode: 'flag',
+              requires: 'trabalho', hasSlides: true, hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
     {
       // Mesmas atividades da turma Jogos Digitais (Projeto de Vida não é
       // conteúdo técnico específico de nenhuma das duas turmas) — só copiadas
