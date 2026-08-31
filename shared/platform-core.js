@@ -2771,8 +2771,48 @@
       });
     });
 
-    document.getElementById('btnLogout').addEventListener('click', () => {
+    document.getElementById('btnLogout').addEventListener('click', async () => {
       logAction('Efetuou logout', currentUser.nome);
+
+      // Garante que o progresso feito até agora chegue no Supabase ANTES
+      // de sair. Sem isso, um upsert best-effort ainda em voo (disparado
+      // por shared/progress-sync.js dentro do <iframe> do módulo, ou pelo
+      // próprio syncModuleProgress) podia ser interrompido pela navegação
+      // pra index.html — o aluno já tinha terminado a atividade, só não
+      // deu tempo de sincronizar, e o progresso ficava só na máquina dele
+      // (foi reportado como inconsistência entre o que o aluno via e o
+      // que o relatório do professor mostrava). localStorage é do mesmo
+      // domínio pro <iframe> e pra esta página, então a escrita mais
+      // recente do módulo já está visível aqui — só falta mandar pro
+      // Supabase de novo, desta vez esperando terminar.
+      //
+      // Timeout de segurança: nunca trava o logout esperando a rede —
+      // pior caso (rede fora do ar), sai sem confirmar sincronização,
+      // igual já acontecia antes desta garantia existir.
+      if (currentUser.role === 'aluno' && sbClient) {
+        const btnLogout = document.getElementById('btnLogout');
+        const textoOriginal = btnLogout.textContent;
+        btnLogout.disabled = true;
+        btnLogout.textContent = 'Saindo...';
+        await Promise.race([
+          syncAllModulesProgress(),
+          new Promise(resolve => setTimeout(resolve, 4000))
+        ]).catch(() => {});
+        btnLogout.disabled = false;
+        btnLogout.textContent = textoOriginal;
+      }
+
+      // Gancho só pra teste (window.__testAfterLogoutSync, ver
+      // tests/logout-sync-progresso.spec.js) — inexistente em produção, é
+      // um no-op ali. Sem ele, não dá pra inspecionar o resultado do sync
+      // acima: o Chromium desmonta o documento atual assim que
+      // window.location.href é atribuído, ANTES da navegação terminar de
+      // verdade, então nenhum page.evaluate() depois do clique consegue
+      // mais ler nada daqui.
+      if (typeof window.__testAfterLogoutSync === 'function') {
+        await window.__testAfterLogoutSync();
+      }
+
       sessionStorage.clear();
       window.location.href = '../../index.html';
     });
