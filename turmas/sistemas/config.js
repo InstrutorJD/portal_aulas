@@ -503,7 +503,33 @@ window.TURMA_CONFIG_SISTEMAS = {
         }
       ]
     },
-    { key: 'prog-aplicativos', label: 'Programação de Aplicativos', trilhas: [] }
+    {
+      key: 'prog-aplicativos', label: 'Programação de Aplicativos',
+      trilhas: [
+        {
+          key: 'prog-depuracao',
+          label: 'Compilação e Depuração de Código',
+          desc: 'Aprenda a teoria e depois corrija bugs de verdade, depurando num GitHub Codespace.',
+          capacidade: 'Identificar erros de acordo com o requisito do programa e linguagem; Utilizar o ambiente de desenvolvimento (IDE) para rastreabilidade do código.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Compilação e Depuração',
+              desc: 'Tipos de erro (sintaxe, execução, lógica), o que é depurar de verdade, e como usar GitHub Codespaces: criar um Codespace, rodar com Node.js, breakpoints, Step Over e o painel Variables.',
+              icon: '🧑‍💻', src: 'atividades/prog-depuracao-teoria.html',
+              progressKey: 'prog_depuracao_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Sistemas: Depuração',
+              desc: 'Seis chamados com bugs de verdade (funções, if/else, switch/case) — copie o código pro seu Codespace, depure, e digite o resultado corrigido do console.',
+              icon: '🐛', src: 'atividades/prog-depuracao-pratica.html',
+              progressKey: 'prog_depuracao_pratica_progress_', progressTotal: 6,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        }
+      ]
+    }
   ],
 
   // Insígnias da trilha "Curso de Desenvolvimento de Sistemas" (ver aba

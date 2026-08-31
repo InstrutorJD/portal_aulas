@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Compilação e Depuração: Teoria</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --green:#3aa0ff; --green-dim:#2b6ba3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#d6e2ec; --ink-dim:#6c8698;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050a10;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(58,160,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
+
+  .eri-row{ display:flex; align-items:flex-start; gap:12px; }
+  .eri-avatar{
+    font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(58,160,255,0.5));
+  }
+  .speech-bubble{
+    background:var(--panel); border:1px solid var(--green-dim); padding:16px 18px;
+    font-size:14px; line-height:1.7; position:relative;
+  }
+  .speech-bubble .eri-name{
+    display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--green);
+    letter-spacing:1px; margin-bottom:6px;
+  }
+  .speech-bubble pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:8px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--yellow); white-space:pre;
+  }
+  .speech-bubble code{ color:var(--yellow); }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--green); background:rgba(58,160,255,0.08); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,91,77,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+  .feedback b{ color:var(--yellow); }
+
+  .actions{ display:flex; justify-content:flex-end; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04150c; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  .btn-topbar{
+    font-family:inherit; font-size:10px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:5px 10px;
+    cursor:pointer; border-radius:2px;
+  }
+  .btn-topbar:hover{ background:rgba(58,160,255,0.1); }
+  .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .speech-bubble{ padding:12px 14px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'prog_depuracao_teoria';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/vendor/pptxgen.bundle.js"></script>
+<script src="../../../shared/slides-generator.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/quiz-teoria-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PROGRAMAÇÃO DE APLICATIVOS — CENTRAL DE SISTEMAS (TEORIA)</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></span>
+    </div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="storyWrap"></div>
+  </div>
+</div>
+
+<script>
+  const STEPS = [
+    {
+      story: 'Nem todo problema no código avisa que existe. Um <b>erro de sintaxe</b> (ex.: esquecer um parêntese) impede o código de sequer rodar. Um <b>erro de execução</b> (ex.: chamar uma função que não existe) quebra o programa NO MEIO da execução. Mas o mais traiçoeiro é o <b>erro de lógica</b>: o código roda inteiro, sem travar nada — só que devolve o resultado ERRADO.',
+      question: {
+        prompt: 'Uma função calcula o troco de uma compra, roda sem nenhum erro no console, mas devolve um valor incorreto. Que tipo de erro é esse?',
+        options: [
+          'Erro de lógica',
+          'Erro de sintaxe',
+          'Erro de execução',
+          'Não é um erro, é o comportamento normal'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Como o código roda sem travar, mas o resultado sai errado, é um erro de LÓGICA — o mais difícil de perceber, porque nada "quebra" pra avisar.'
+      }
+    },
+    {
+      story: 'Erro de sintaxe é o mais fácil de perceber: o próprio ambiente recusa RODAR o código e aponta a linha do problema — geralmente algo como parênteses ou chaves que não foram fechados.',
+      question: {
+        prompt: 'Um aluno esquece de fechar uma chave <code>{</code> ao escrever uma função e tenta rodar o arquivo. O que acontece?',
+        options: [
+          'O programa nem chega a rodar — o erro aparece antes de qualquer execução',
+          'O programa roda normalmente até o fim, sem nenhum aviso',
+          'O programa roda, mas só ignora a função com problema',
+          'Nada acontece — o erro só aparece na próxima vez que o arquivo for aberto'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Erro de sintaxe barra a execução logo de cara — o código sequer chega a começar a rodar.'
+      }
+    },
+    {
+      story: '<b>Depurar</b> (debugar) não é só "trocar linhas até o erro sumir" — é o processo de ENTENDER por que o código está se comportando diferente do esperado, achar a causa raiz, e só então corrigir. Mudar código no escuro, sem entender o motivo, costuma trocar um bug por outro.',
+      question: {
+        prompt: 'Um desenvolvedor vai mudando linhas ao acaso até o erro sumir da tela, sem entender por que aquilo resolveu. Isso é depurar de verdade?',
+        options: [
+          'Não — depurar de verdade exige entender a causa raiz do problema',
+          'Sim, o objetivo é só fazer o erro sumir, não importa como',
+          'Sim, sempre que o programa "roda" o processo terminou',
+          'Depurar e testar por tentativa e erro são a mesma coisa'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Sem entender a causa, a "correção" pode só estar escondendo o problema — ele volta (ou aparece outro) mais tarde.'
+      }
+    },
+    {
+      story: 'O <b>GitHub Codespaces</b> é um ambiente de desenvolvimento completo (o mesmo VS Code que você já conhece) rodando DENTRO do navegador, na nuvem — sem precisar instalar nada na sua máquina. Ele abre a partir de um repositório do GitHub.',
+      question: {
+        prompt: 'Um aluno quer testar um código em outro computador, sem instalar editor, compilador nem nada, só abrindo o navegador. Que ferramenta resolve isso?',
+        options: [
+          'Um Codespace, aberto a partir de um repositório no GitHub',
+          'Um editor de texto qualquer, sem nenhuma configuração',
+          'Isso só é possível reinstalando tudo naquele computador',
+          'Um aplicativo de celular específico pra cada linguagem'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O Codespace entrega um ambiente completo, no navegador, sem instalar nada — só precisa de um repositório no GitHub.'
+      }
+    },
+    {
+      story: 'Pra abrir um Codespace novo: dentro do repositório no GitHub, clique no botão verde <b>"Code"</b>, vá na aba <b>"Codespaces"</b> e clique em <b>"Create codespace on main"</b>. Depois de alguns segundos, um VS Code completo abre, já dentro do navegador.',
+      question: {
+        prompt: 'Um colega nunca abriu um Codespace e não sabe por onde começar, dentro de um repositório do GitHub. Por onde ele deve procurar?',
+        options: [
+          'No botão verde "Code", na aba "Codespaces"',
+          'No menu de configurações da própria conta do GitHub',
+          'Isso só é possível pelo aplicativo de celular do GitHub',
+          'Dentro da aba "Settings" do repositório'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! O botão verde "Code" tem uma aba própria "Codespaces", com a opção de criar um novo.'
+      }
+    },
+    {
+      story: 'Dentro do Codespace, use o <b>terminal integrado</b> (menu Terminal → New Terminal) pra rodar um arquivo com Node.js: <code>node nome-do-arquivo.js</code>. Tudo que o código imprimir com <code>console.log(...)</code> aparece ali, no terminal.',
+      question: {
+        prompt: 'Você colou um código dentro de um arquivo chamado <code>depurar.js</code>, dentro do Codespace. Qual comando, no terminal integrado, roda esse arquivo com Node.js?',
+        options: [
+          'node depurar.js',
+          'run depurar.js',
+          'python depurar.js',
+          'open depurar.js'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O comando "node" roda um arquivo JavaScript com Node.js, imprimindo tudo que os console.log() do código mandarem pro terminal.'
+      }
+    },
+    {
+      story: 'Quando o resultado sai errado (erro de lógica), rodar de novo do mesmo jeito não ajuda — é hora de <b>depurar de verdade</b>. No painel <b>"Run and Debug"</b> (ícone de inseto na barra lateral), clique à esquerda do número de uma linha pra criar um <b>breakpoint</b>: um ponto onde a execução PAUSA, antes de rodar aquela linha.',
+      question: {
+        prompt: 'Uma função só devolve o valor errado na 3ª vez que é chamada, e você quer pausar a execução bem nesse ponto pra investigar. O que você cria naquela linha?',
+        options: [
+          'Um breakpoint, clicando à esquerda do número da linha',
+          'Um comentário explicando o problema',
+          'Uma cópia da função inteira',
+          'Um novo arquivo separado só com aquela linha'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O breakpoint pausa a execução exatamente naquela linha, antes dela rodar — o ponto de partida pra investigar o que está acontecendo.'
+      }
+    },
+    {
+      story: 'Com a execução pausada num breakpoint, use <b>Step Over</b> (F10) pra avançar linha por linha, e olhe o painel <b>Variables</b> pra ver o valor de cada variável NAQUELE momento exato — é assim que você encontra onde o valor esperado começa a divergir do valor real.',
+      question: {
+        prompt: 'Parado num breakpoint, você quer saber que valor uma variável específica tem exatamente naquele momento da execução. Onde você olha?',
+        options: [
+          'No painel "Variables" do Run and Debug',
+          'No histórico de commits do Git',
+          'No arquivo README do projeto',
+          'Não dá pra saber sem adivinhar'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! O painel Variables mostra o valor real de cada variável, congelado no instante em que a execução pausou.'
+      }
+    },
+    {
+      story: 'Resumindo o fluxo de prática: leia o que o código DEVERIA fazer, rode com <code>node arquivo.js</code>, compare com o que ele REALMENTE faz e, se estiver errado, use breakpoints pra rastrear onde a lógica diverge. Corrija, rode de novo, e só então confirme o valor certo no console. Agora você já sabe o que é compilação, os tipos de erro, e como depurar de verdade dentro de um Codespace!',
+      question: {
+        prompt: 'Depois de corrigir um bug e rodar o código de novo dentro do Codespace, qual é o próximo passo antes de responder no portal?',
+        options: [
+          'Conferir, no console, o valor exato que o código imprime agora',
+          'Responder de cabeça, sem rodar o código de novo',
+          'Apagar o código inteiro e reescrever do zero',
+          'Pular a prática, já que o erro foi corrigido'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Só o valor que realmente aparece no console, depois da correção, garante que o bug foi mesmo resolvido — não o que parece "fazer sentido" de cabeça.'
+      }
+    }
+  ];
+
+  window.generateSlidesForGestao = function () {
+    return window.PortalSlides.generate({
+      title: 'Dev Sistemas — Compilação e Depuração',
+      subtitle: 'Aula Teórica · Trilha Compilação e Depuração de Código · Turma Sistemas',
+      capacidade: 'Identificar erros de acordo com o requisito do programa e linguagem; Utilizar o ambiente de desenvolvimento (IDE) para rastreabilidade do código.',
+      steps: STEPS,
+      fileName: 'prog-depuracao-teoria-slides.pptx',
+      closingTitle: 'Hora da prática!',
+      closingText: 'Abra o módulo "Prática — Central de Sistemas: Depuração" no Portal de Aulas para os alunos corrigirem bugs de verdade num Codespace.'
+    });
+  };
+
+  // Mesmo esquema do generateSlidesForGestao acima: exposto sempre pra a aba
+  // "Gestão" poder chamar remotamente, num iframe oculto, e baixar um .txt
+  // com pergunta + resposta esperada de cada etapa.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Dev Sistemas — Compilação e Depuração',
+      subtitle: 'Aula Teórica · Trilha Compilação e Depuração de Código · Turma Sistemas',
+      items: STEPS.map((step, i) => ({
+        number: i + 1,
+        prompt: step.question.prompt,
+        options: step.question.options,
+        correctIndex: step.question.correctIndex,
+        answer: step.question.options[step.question.correctIndex]
+      })),
+      fileName: 'prog-depuracao-teoria-gabarito.txt'
+    });
+  };
+
+  window.PortalQuizTeoria.run({
+    activityLocation: "prog_depuracao_teoria",
+    steps: STEPS,
+    reportLabel: "Dev Sistemas — Compilação e Depuração",
+    mentor: { rowClass: "eri", avatar: "🧑‍💻", name: "Bit, Mentor de Código" },
+    finishPassed: {
+      title: "Compilação e Depuração concluídos!",
+      introHtml: "<p>Você já sabe diferenciar erro de sintaxe, execução e lógica, e como usar breakpoints dentro de um Codespace pra rastrear um bug até a causa raiz.</p>",
+      closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Sistemas — lá você vai corrigir bugs de verdade.</p>",
+      restartLabel: "🔁 Rever a teoria"
+    }
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>
