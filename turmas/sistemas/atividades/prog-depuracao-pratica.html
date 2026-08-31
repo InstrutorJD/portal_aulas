@@ -33,10 +33,18 @@
   .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
 
   .sidebar{
-    width:200px; flex-shrink:0; height:100%; overflow-y:auto;
+    width:110px; flex-shrink:0; height:100%; overflow-y:auto; transition:width 0.15s ease;
     background:var(--panel); border:1px solid var(--line); padding:8px;
   }
-  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .sidebar.expanded{ width:200px; }
+  .sidebar-title{
+    display:flex; align-items:center; gap:4px; width:100%; margin:0 0 8px; padding:6px 2px;
+    font-family:inherit; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px;
+    background:none; border:none; cursor:pointer; white-space:nowrap;
+  }
+  .sidebar-title:hover{ color:var(--ink); }
+  #challengeList{ display:none; }
+  .sidebar.expanded #challengeList{ display:block; }
   .challenge-item{
     display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
     border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
@@ -62,15 +70,11 @@
   .challenge-header code{ color:var(--yellow); }
 
   .explanation-box{
-    background:#050a10; border:1px solid var(--green-dim); padding:10px 12px;
-    font-size:11.5px; color:var(--ink); line-height:1.6; flex-shrink:0;
+    background:#050a10; border:1px solid var(--green-dim); padding:7px 12px;
+    font-size:11px; color:var(--ink-dim); line-height:1.5; flex-shrink:0;
   }
-  .explanation-box .exp-title{
-    color:var(--green); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
-  }
+  .explanation-box b{ color:var(--green); }
   .explanation-box code{ color:var(--yellow); }
-  .explanation-box ol{ margin:4px 0 0; padding-left:18px; }
-  .explanation-box li{ margin-bottom:2px; }
 
   .hint-toggle{
     display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
@@ -123,7 +127,8 @@
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
     .stage{ overflow:visible; padding:8px; }
     .layout{ flex-direction:column; height:auto; }
-    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .sidebar{ width:100%; height:auto; }
+    .sidebar.expanded{ width:100%; max-height:200px; overflow-y:auto; }
     .main-panel{ height:auto; overflow-y:visible; }
     .console{ flex:none; max-height:160px; }
   }
@@ -150,8 +155,8 @@
 
   <div class="stage">
     <div class="layout">
-      <div class="sidebar">
-        <div class="sidebar-title">Chamados de bug</div>
+      <div class="sidebar" id="sidebarPanel">
+        <button type="button" class="sidebar-title" id="sidebarToggle">▸ Atividades</button>
         <div id="challengeList"></div>
       </div>
 
@@ -166,18 +171,12 @@
         </div>
 
         <div class="explanation-box">
-          <div class="exp-title">📘 Como praticar</div>
-          <ol>
-            <li>Leia o código com bug acima, com atenção — ele não pode ser copiado.</li>
-            <li>No campo abaixo, digite a versão CORRIGIDA do código inteiro, do zero.</li>
-            <li>Clique em <b>Executar</b> (ou Ctrl+Enter) pra rodar seu código e ver o resultado no console.</li>
-            <li>Se o resultado bater com o esperado, o chamado é resolvido na hora — se não, ajuste e rode de novo.</li>
-          </ol>
+          📘 Leia o bug abaixo, digite a correção no editor e clique em <b>Executar</b> (Ctrl+Enter).
         </div>
 
         <div class="code-panel">
           <div class="code-title">
-            <span>Código com bug (não pode copiar)</span>
+            <span>Código com bug</span>
           </div>
           <pre class="code-box" id="codeBox"></pre>
           <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
@@ -185,7 +184,7 @@
         </div>
 
         <div class="answer-panel">
-          <label for="answerCode">Digite abaixo o código corrigido, do zero</label>
+          <label for="answerCode">Sua correção</label>
           <div id="answerCode" class="code-editor"></div>
         </div>
 
@@ -374,6 +373,8 @@
     });
   };
 
+  const sidebarPanel = document.getElementById('sidebarPanel');
+  const sidebarToggle = document.getElementById('sidebarToggle');
   const challengeListEl = document.getElementById('challengeList');
   const challengeTitleEl = document.getElementById('challengeTitle');
   const challengeDescEl = document.getElementById('challengeDesc');
@@ -565,7 +566,7 @@
     if (alreadyDone) {
       logConsole(`Você já resolveu este chamado. ${challenge.bugExplanation}`, 'info');
     } else {
-      logConsole('Digite abaixo o código corrigido e clique em Executar.', 'info');
+      logConsole('Digite a correção e clique em Executar.', 'info');
     }
     renderSidebar();
 
@@ -578,6 +579,10 @@
     }
   }
 
+  sidebarToggle.addEventListener('click', () => {
+    const expanded = sidebarPanel.classList.toggle('expanded');
+    sidebarToggle.textContent = (expanded ? '▾' : '▸') + ' Atividades';
+  });
   btnHint.addEventListener('click', () => {
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
