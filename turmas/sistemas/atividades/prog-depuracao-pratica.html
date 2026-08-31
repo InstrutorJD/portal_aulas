@@ -221,6 +221,36 @@
   const CHALLENGES = [
     {
       id: 1,
+      title: 'Nome sem aspas',
+      icon: '📛',
+      desc: 'Esse código deveria mostrar uma mensagem de boas-vindas usando o nome guardado numa variável.',
+      code: 'let nome = joao;\nconsole.log("Bem-vindo, " + nome);',
+      hint: 'Texto (string) em JavaScript precisa ficar entre aspas — sem elas, o computador tenta achar uma VARIÁVEL chamada joao, que não existe.',
+      bugExplanation: 'Faltavam aspas em <code>joao</code> — sem elas, o JavaScript tenta usar joao como o NOME de uma variável (que não existe), em vez de tratar como texto. Com aspas (<code>"joao"</code>), vira uma string de verdade.',
+      expectedOutput: 'Bem-vindo, joao'
+    },
+    {
+      id: 2,
+      title: 'Idade com erro de digitação',
+      icon: '🔤',
+      desc: 'Esse código deveria mostrar a idade da pessoa daqui a 1 ano.',
+      code: 'let idade = 15;\nconsole.log(idad + 1);',
+      hint: 'Confira se o nome da variável usada no <code>console.log</code> é exatamente igual ao nome declarado com <code>let</code>.',
+      bugExplanation: 'A variável foi declarada como <code>idade</code>, mas usada como <code>idad</code> (faltando uma letra) — nomes de variável precisam ser IDÊNTICOS, letra por letra, em todo o código.',
+      expectedOutput: '16'
+    },
+    {
+      id: 3,
+      title: 'Maiúscula ou minúscula?',
+      icon: '🔡',
+      desc: 'Esse código deveria mostrar o nome guardado na variável.',
+      code: 'let Nome = "Maria";\nconsole.log(nome);',
+      hint: 'JavaScript diferencia letra maiúscula de minúscula no nome das variáveis — "Nome" e "nome" não são a mesma coisa.',
+      bugExplanation: 'A variável foi declarada com N maiúsculo (<code>Nome</code>), mas usada com n minúsculo (<code>nome</code>) — pra JavaScript, maiúsculas e minúsculas tornam o nome completamente diferente.',
+      expectedOutput: 'Maria'
+    },
+    {
+      id: 4,
       title: 'Acesso liberado?',
       icon: '🚪',
       desc: 'Essa função deveria liberar o acesso só quando a idade for maior ou igual a 18, e bloquear caso contrário.',
@@ -230,7 +260,7 @@
       expectedOutput: 'bloqueado'
     },
     {
-      id: 2,
+      id: 5,
       title: 'Conceito da nota',
       icon: '📊',
       desc: 'Essa função deveria classificar a nota num conceito: A (≥9), B (≥7), C (≥5) ou D (abaixo de 5).',
@@ -240,7 +270,7 @@
       expectedOutput: 'A'
     },
     {
-      id: 3,
+      id: 6,
       title: 'Metade errada',
       icon: '➗',
       desc: 'Essa função deveria devolver a metade do número recebido, reaproveitando uma função genérica de divisão.',
@@ -250,7 +280,7 @@
       expectedOutput: '5'
     },
     {
-      id: 4,
+      id: 7,
       title: 'Faixa etária',
       icon: '🎂',
       desc: 'Essa função deveria classificar a idade em "adulto" (≥18), "adolescente" (≥12) ou "crianca" (abaixo de 12).',
@@ -260,7 +290,7 @@
       expectedOutput: 'adulto'
     },
     {
-      id: 5,
+      id: 8,
       title: 'Dia seguinte',
       icon: '📅',
       desc: 'Essa função deveria devolver o nome do dia da semana IMEDIATAMENTE seguinte ao número recebido (1 = segunda).',
@@ -270,7 +300,7 @@
       expectedOutput: 'quinta'
     },
     {
-      id: 6,
+      id: 9,
       title: 'Contagem de aprovados',
       icon: '✅',
       desc: 'Essa função deveria contar quantas notas são de aprovação — ou seja, maiores OU IGUAIS a 6.',
