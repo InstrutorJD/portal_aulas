@@ -245,7 +245,7 @@
           if (name === 'gerar_professor_token') {
             db().professor_tokens = table('professor_tokens').filter(r => new Date(r.expires_at).getTime() <= now);
             const token = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
-            const expiresAt = new Date(now + 30 * 60 * 1000).toISOString();
+            const expiresAt = new Date(now + 10 * 60 * 1000).toISOString();
             table('professor_tokens').push({ token, expires_at: expiresAt, created_by: authUser.id, created_at: new Date(now).toISOString() });
             return Promise.resolve({ data: [{ token, expires_at: expiresAt }], error: null });
           }

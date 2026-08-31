@@ -250,13 +250,13 @@ falha esquecida.
 13) é validado só por RLS/RPC do Postgres — sem nenhum rate limit. Um
 aluno mal-intencionado poderia tentar várias combinações de 6 dígitos
 seguidas (1 milhão de possibilidades) enquanto o token está válido (até
-30min) sem ser bloqueado.
+10min) sem ser bloqueado.
 
 **Objetivo:** hoje isso já é uma melhora enorme sobre o problema
 original (senha real, válida pra sempre até alguém trocar manualmente,
 digitada num dispositivo do aluno) — mas continua sendo uma senha
 numérica curta sem limite de tentativas, então força bruta ainda é
-teoricamente possível dentro da janela de 30 minutos.
+teoricamente possível dentro da janela de 10 minutos.
 
 **Próximos passos (não implementado — precisaria de mais infra do que
 o projeto tem hoje):**

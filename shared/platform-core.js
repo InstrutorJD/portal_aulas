@@ -290,7 +290,7 @@
               </div>
               <div class="collapsible-body">
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Código temporário que substitui digitar sua senha real dentro de uma atividade — peça pro aluno digitar esse token nas telas "Dar visto"/"Pular (professor)". Válido por 30 minutos; gere um novo quando quiser invalidar o atual.
+                  Código temporário que substitui digitar sua senha real dentro de uma atividade — peça pro aluno digitar esse token nas telas "Dar visto"/"Pular (professor)". Válido por 10 minutos; gere um novo quando quiser invalidar o atual.
                 </p>
                 <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
                   <div id="professorTokenValue" style="font-family:'JetBrains Mono', monospace; font-size:32px; font-weight:800; letter-spacing:6px;">------</div>

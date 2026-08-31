@@ -1394,7 +1394,7 @@ create policy "student_activity_state_update_self"
 -- professor numa tela que fisicamente é do aluno — foi assim que a senha
 -- vazou uma vez (ver PENDENCIAS.md). Em vez disso, só o professor (via
 -- gerar_professor_token(), chamado da aba Gestão) gera um código de 6
--- dígitos válido por 30 minutos; a tela do aluno só verifica esse código
+-- dígitos válido por 10 minutos; a tela do aluno só verifica esse código
 -- (verificar_professor_token(), sem nunca saber a senha de verdade).
 --
 -- Sem policy nenhuma pra select/insert direto: nada aqui é lido/escrito
@@ -1414,7 +1414,7 @@ create index if not exists idx_professor_tokens_token on public.professor_tokens
 
 alter table public.professor_tokens enable row level security;
 
--- Gera um token novo (6 dígitos, válido 30min) e invalida qualquer token
+-- Gera um token novo (6 dígitos, válido 10min) e invalida qualquer token
 -- ainda válido antes de criar — só existe UM token "atual" por vez.
 create or replace function public.gerar_professor_token()
 returns table(token text, expires_at timestamptz)
@@ -1440,7 +1440,7 @@ begin
   -- ::text explícito aqui, o Postgres não acha nenhuma sobrecarga da
   -- função que bata (erro 42883).
   v_token := lpad(floor(random() * 1000000)::int::text, 6, '0');
-  v_expires := now() + interval '30 minutes';
+  v_expires := now() + interval '10 minutes';
 
   insert into public.professor_tokens (token, expires_at, created_by)
   values (v_token, v_expires, auth.uid());
