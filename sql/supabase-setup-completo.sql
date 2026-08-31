@@ -1436,7 +1436,10 @@ begin
   -- "expires_at" que colide com a coluna public.professor_tokens.expires_at.
   delete from public.professor_tokens where public.professor_tokens.expires_at > now();
 
-  v_token := lpad(floor(random() * 1000000)::numeric, 6, '0');
+  -- lpad() só aceita texto (não numeric) como 1º argumento — sem o
+  -- ::text explícito aqui, o Postgres não acha nenhuma sobrecarga da
+  -- função que bata (erro 42883).
+  v_token := lpad(floor(random() * 1000000)::int::text, 6, '0');
   v_expires := now() + interval '30 minutes';
 
   insert into public.professor_tokens (token, expires_at, created_by)
