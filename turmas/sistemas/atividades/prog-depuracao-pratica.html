@@ -94,12 +94,6 @@
     overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--yellow);
     white-space:pre; line-height:1.6;
   }
-  .btn-copy{
-    font-family:inherit; font-size:10px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
-    background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:4px 9px; cursor:pointer; border-radius:2px;
-  }
-  .btn-copy:hover{ background:rgba(58,160,255,0.1); }
-
   .answer-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
   .answer-panel label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
   .answer-row{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -175,8 +169,7 @@
         <div class="explanation-box">
           <div class="exp-title">📘 Como praticar</div>
           <ol>
-            <li>Copie o código abaixo.</li>
-            <li>Abra (ou reaproveite) um <b>Codespace</b> no GitHub e cole num arquivo <code>.js</code>.</li>
+            <li>Digite o código abaixo, à mão, num arquivo <code>.js</code> no seu Codespace — copiar e colar não ajuda a fixar a sintaxe, e o portal não deixa copiar de propósito.</li>
             <li>Rode com <code>node arquivo.js</code> — o resultado que aparece está errado de propósito.</li>
             <li>Use o <b>Run and Debug</b> (breakpoint + Step Over + painel Variables) pra achar e corrigir o bug.</li>
             <li>Rode de novo e digite abaixo, exatamente, o que o console mostrar depois da correção.</li>
@@ -185,8 +178,7 @@
 
         <div class="code-panel">
           <div class="code-title">
-            <span>Código com bug</span>
-            <button class="btn-copy" id="btnCopy">📋 Copiar código</button>
+            <span>Código com bug (digite, não copie)</span>
           </div>
           <pre class="code-box" id="codeBox"></pre>
           <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
@@ -311,7 +303,6 @@
   const challengeTitleEl = document.getElementById('challengeTitle');
   const challengeDescEl = document.getElementById('challengeDesc');
   const codeBoxEl = document.getElementById('codeBox');
-  const btnCopy = document.getElementById('btnCopy');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
   const answerInput = document.getElementById('answerInput');
@@ -436,7 +427,7 @@
     if (alreadyDone) {
       logConsole(`Você já resolveu este chamado. ${challenge.bugExplanation}`, 'info');
     } else {
-      logConsole('Copie o código, depure no seu Codespace e digite o resultado corrigido.', 'info');
+      logConsole('Digite o código no seu Codespace, depure e digite o resultado corrigido.', 'info');
     }
     renderSidebar();
 
@@ -449,16 +440,6 @@
     }
   }
 
-  btnCopy.addEventListener('click', async () => {
-    const challenge = CHALLENGES.find(c => c.id === selectedId);
-    if (!challenge) return;
-    try {
-      await navigator.clipboard.writeText(challenge.code);
-      logConsole('📋 Código copiado — cole num arquivo .js no seu Codespace.', 'info');
-    } catch (e) {
-      logConsole('Não foi possível copiar automaticamente — selecione o código manualmente.', 'fail');
-    }
-  });
   btnHint.addEventListener('click', () => {
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
