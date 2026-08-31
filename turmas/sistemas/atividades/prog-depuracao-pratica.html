@@ -97,12 +97,8 @@
   .answer-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
   .answer-panel label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
   .code-editor{
-    width:100%; min-height:120px; resize:vertical; font-family:'JetBrains Mono', monospace; font-size:12.5px;
-    padding:10px 12px; background:#000; color:var(--green); border:1px solid var(--line); border-radius:2px;
-    line-height:1.6; white-space:pre;
+    width:100%; height:200px; border:1px solid var(--line); border-radius:2px; overflow:hidden;
   }
-  .code-editor:focus{ outline:none; border-color:var(--green); }
-  .code-editor:disabled{ opacity:0.6; }
 
   .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
   button.btn{
@@ -142,6 +138,7 @@
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/code-editor-widget.js"></script>
 </head>
 <body>
 
@@ -189,7 +186,7 @@
 
         <div class="answer-panel">
           <label for="answerCode">Digite abaixo o código corrigido, do zero</label>
-          <textarea id="answerCode" class="code-editor" autocomplete="off" spellcheck="false" placeholder="// Digite aqui o código corrigido..."></textarea>
+          <div id="answerCode" class="code-editor"></div>
         </div>
 
         <div class="actions">
@@ -383,8 +380,9 @@
   const codeBoxEl = document.getElementById('codeBox');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
-  const answerCodeEl = document.getElementById('answerCode');
+  const answerCodeContainer = document.getElementById('answerCode');
   const btnRun = document.getElementById('btnRun');
+  let codeEditor = null; // instância do Monaco, criada de forma assíncrona — ver initEditor()
   const btnNext = document.getElementById('btnNext');
   const btnHint = document.getElementById('btnHint');
   const hintBox = document.getElementById('hintBox');
@@ -485,7 +483,7 @@
   }
 
   function handleRun(challenge) {
-    const code = answerCodeEl.value;
+    const code = codeEditor.getValue();
     if (!code.trim()) {
       logConsole('Digite o código corrigido antes de executar.', 'fail');
       return;
@@ -508,7 +506,7 @@
     const matched = loggedTexts.includes(normalize(challenge.expectedOutput));
 
     if (matched) {
-      answerCodeEl.disabled = true;
+      codeEditor.updateOptions({ readOnly: true });
       btnRun.disabled = true;
 
       completed.add(challenge.id);
@@ -559,8 +557,8 @@
     ticketStatusEl.classList.toggle('done', alreadyDone);
     ticketStatusEl.classList.toggle('pending', !alreadyDone);
 
-    answerCodeEl.value = '';
-    answerCodeEl.disabled = alreadyDone;
+    codeEditor.setValue('');
+    codeEditor.updateOptions({ readOnly: alreadyDone });
     btnRun.disabled = alreadyDone;
 
     clearConsole();
@@ -588,19 +586,29 @@
     const challenge = CHALLENGES.find(c => c.id === selectedId);
     if (challenge) handleRun(challenge);
   });
-  answerCodeEl.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !btnRun.disabled) {
-      handleRun(CHALLENGES.find(c => c.id === selectedId));
-    }
-  });
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);
     const next = CHALLENGES[idx + 1];
     if (next) selectChallenge(next.id);
   });
 
+  // Monaco carrega de forma assíncrona (via CDN) — só depois que o editor
+  // estiver pronto é que dá pra popular/travar o campo de resposta, então
+  // selectChallenge() só roda depois que initEditor() resolver.
+  function initEditor() {
+    return window.PortalCodeEditor.create(answerCodeContainer, { value: '' }).then((editor) => {
+      codeEditor = editor;
+      codeEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        if (!btnRun.disabled) handleRun(CHALLENGES.find(c => c.id === selectedId));
+      });
+    });
+  }
+
+  consoleOutput.innerHTML = '<div class="line info">Carregando editor de código...</div>';
   renderSidebar();
-  selectChallenge(selectedId);
+  initEditor().then(() => {
+    selectChallenge(selectedId);
+  });
 </script>
 
 <script src="../../../shared/vlibras-widget.js"></script>
