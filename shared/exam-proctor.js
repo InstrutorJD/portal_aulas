@@ -86,11 +86,17 @@ window.PortalExamGuard = (function () {
     };
 
     if (window.PortalSession) {
-      const user = await window.PortalSession.getUser();
-      if (user && user.role !== 'professor' && user.role !== 'admin' && user.email) {
-        instance.username = user.email;
-        instance.sb = window.PortalSession.client();
-      }
+      // getUser() pode rejeitar (Supabase fora do ar, mal configurado etc.)
+      // — nesse caso trata igual a "sem sessão reconhecida" (guarda
+      // desligada) em vez de deixar a Promise de create() rejeitar e travar
+      // a atividade inteira numa tela em branco pro aluno.
+      try {
+        const user = await window.PortalSession.getUser();
+        if (user && user.role !== 'professor' && user.role !== 'admin' && user.email) {
+          instance.username = user.email;
+          instance.sb = window.PortalSession.client();
+        }
+      } catch (e) { /* segue com instance.username null — vira disabled abaixo */ }
     }
 
     // Sem sessão de aluno reconhecida (professor espiando pela Gestão pra
@@ -134,12 +140,21 @@ window.PortalExamGuard = (function () {
   // onBlocked() roda na 2ª (a instância já está com blocked:true antes de
   // chamar). Não faz nada se a instância estiver desligada, já bloqueada,
   // ou já armada (evita listener duplicado).
-  function arm(instance, { onWarning, onBlocked } = {}) {
+  //
+  // `isCompleted` é opcional — por padrão usa quizCompleted() (progresso no
+  // formato `{ completed: true }` do quiz-teoria-engine). Atividades com
+  // outro formato de progresso (ex.: array de ids resolvidos, como a
+  // prática de Depuração) podem passar sua própria função pra reconhecer
+  // "já terminei tudo, sair da aba não é mais risco" nesse formato.
+  function arm(instance, { onWarning, onBlocked, isCompleted } = {}) {
     if (instance.disabled || instance.blocked || instance.armed) return;
     instance.armed = true;
+    const hasFinished = typeof isCompleted === 'function'
+      ? isCompleted
+      : () => quizCompleted(instance.activityLocation, instance.username);
     instance._handler = function () {
       if (!document.hidden) return; // só conta ao SAIR, não ao voltar
-      if (quizCompleted(instance.activityLocation, instance.username)) return;
+      if (hasFinished()) return;
 
       instance.warnings++;
       if (instance.warnings >= 2) {
