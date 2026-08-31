@@ -96,13 +96,13 @@
   }
   .answer-panel{ background:var(--panel); border:1px solid var(--line); padding:10px 14px; flex-shrink:0; }
   .answer-panel label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
-  .answer-row{ display:flex; gap:8px; flex-wrap:wrap; }
-  .answer-row input{
-    flex:1; min-width:160px; font-family:inherit; font-size:14px; padding:9px 10px;
-    background:#000; color:var(--green); border:1px solid var(--line); border-radius:2px;
+  .code-editor{
+    width:100%; min-height:120px; resize:vertical; font-family:'JetBrains Mono', monospace; font-size:12.5px;
+    padding:10px 12px; background:#000; color:var(--green); border:1px solid var(--line); border-radius:2px;
+    line-height:1.6; white-space:pre;
   }
-  .answer-row input:focus{ outline:none; border-color:var(--green); }
-  .answer-row input:disabled{ opacity:0.6; }
+  .code-editor:focus{ outline:none; border-color:var(--green); }
+  .code-editor:disabled{ opacity:0.6; }
 
   .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
   button.btn{
@@ -117,6 +117,8 @@
     flex:1; min-height:50px; overflow-y:auto; line-height:1.6;
   }
   .console .line.info{ color:var(--ink-dim); }
+  .console .line.log{ color:var(--ink); }
+  .console .line.warn{ color:var(--yellow); }
   .console .line.fail{ color:var(--blood-bright); }
   .console .line.success{ color:var(--green); font-weight:bold; }
 
@@ -169,16 +171,16 @@
         <div class="explanation-box">
           <div class="exp-title">📘 Como praticar</div>
           <ol>
-            <li>Digite o código abaixo, à mão, no <b>PixelCode</b> (💻 no topo do portal) — copiar e colar não ajuda a fixar a sintaxe, e o portal não deixa copiar de propósito.</li>
-            <li>Clique em <b>Executar</b> (ou Ctrl+Enter) — o resultado que aparece no console está errado de propósito.</li>
-            <li>Leia a mensagem de erro (ou o valor errado) no console e use <code>console.log(...)</code> extras pra investigar o valor das variáveis até achar e corrigir o bug.</li>
-            <li>Rode de novo e digite abaixo, exatamente, o que o console mostrar depois da correção.</li>
+            <li>Leia o código com bug acima, com atenção — ele não pode ser copiado.</li>
+            <li>No campo abaixo, digite a versão CORRIGIDA do código inteiro, do zero.</li>
+            <li>Clique em <b>Executar</b> (ou Ctrl+Enter) pra rodar seu código e ver o resultado no console.</li>
+            <li>Se o resultado bater com o esperado, o chamado é resolvido na hora — se não, ajuste e rode de novo.</li>
           </ol>
         </div>
 
         <div class="code-panel">
           <div class="code-title">
-            <span>Código com bug (digite, não copie)</span>
+            <span>Código com bug (não pode copiar)</span>
           </div>
           <pre class="code-box" id="codeBox"></pre>
           <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
@@ -186,14 +188,12 @@
         </div>
 
         <div class="answer-panel">
-          <label for="answerInput">O que o console mostra depois de corrigido?</label>
-          <div class="answer-row">
-            <input type="text" id="answerInput" autocomplete="off" spellcheck="false" placeholder="Digite o valor exato do console...">
-            <button class="btn" id="btnVerify">Verificar</button>
-          </div>
+          <label for="answerCode">Digite abaixo o código corrigido, do zero</label>
+          <textarea id="answerCode" class="code-editor" autocomplete="off" spellcheck="false" placeholder="// Digite aqui o código corrigido..."></textarea>
         </div>
 
         <div class="actions">
+          <button class="btn" id="btnRun">▶ Executar</button>
           <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo chamado →</button>
         </div>
 
@@ -208,16 +208,14 @@
   const username = urlParams.get('user') || 'anon';
   const PROGRESS_KEY = `prog_depuracao_pratica_progress_${username}`;
 
-  // Prática de depuração de verdade: o código abaixo tem um bug real e
-  // FIXO (não é escrito pelo aluno, nem executado aqui no navegador) — o
-  // aluno digita no PixelCode (editor+console do próprio portal), roda,
-  // usa o console (erro mostrado + console.log extras — ensinado no
-  // módulo de teoria) pra achar a causa, corrige e digita aqui o valor
-  // exato que o console mostra depois da correção. `expectedOutput` é
-  // comparado (trim + minúsculas) com o que o aluno digitar — não existe
-  // execução de código nenhuma dentro desta TELA, de propósito: validar
-  // assim obriga o aluno a realmente rodar e depurar no PixelCode, não só
-  // ler o código e "advinhar" a resposta.
+  // Prática de code review de verdade: o `code` abaixo (mostrado, mas não
+  // copiável) tem um bug real e FIXO. O aluno lê, digita do zero a versão
+  // corrigida no textarea de resposta e clica em Executar — o código
+  // digitado roda de verdade aqui (sandbox via `new Function`, igual ao
+  // PixelCode), e o console mostra a saída real ou o erro lançado. O
+  // chamado só é dado como resolvido quando algum console.log(...) do
+  // código do aluno bate (trim + minúsculas) com `expectedOutput` — não
+  // é comparação de texto "de olho", é execução de verdade.
   const CHALLENGES = [
     {
       id: 1,
@@ -318,6 +316,46 @@
       hint: 'Uma nota exatamente igual a 6 deveria contar como aprovada. O operador de comparação usado está incluindo esse caso?',
       bugExplanation: 'O <code>if</code> usava <code>&gt;</code> (maior que) em vez de <code>&gt;=</code> (maior ou igual) — isso deixava de contar a nota 6 como aprovada, mesmo ela sendo exatamente o limite de aprovação.',
       expectedOutput: '3'
+    },
+    {
+      id: 11,
+      title: 'Senha correta?',
+      icon: '🔑',
+      desc: 'Essa função deveria liberar acesso só quando a senha digitada for igual à senha correta.',
+      code: 'function senhaCorreta(digitada, correta) {\n  if (digitada = correta) {\n    return "acesso liberado";\n  }\n  return "senha incorreta";\n}\n\nconsole.log(senhaCorreta("1234", "5678"));',
+      hint: 'De novo o <code>=</code> dentro do <code>if</code> — compare com o que você aprendeu no chamado "Acesso liberado?".',
+      bugExplanation: 'O <code>if</code> usava <code>=</code> (atribuição) em vez de <code>===</code> (comparação) — isso troca o valor de <code>digitada</code> pelo de <code>correta</code>, e como o resultado é uma string não vazia, o <code>if</code> é sempre "verdadeiro", liberando o acesso mesmo com a senha errada.',
+      expectedOutput: 'senha incorreta'
+    },
+    {
+      id: 12,
+      title: 'Turno do dia',
+      icon: '🌗',
+      desc: 'Essa função deveria classificar a hora em "manhã" (a partir das 5h), "tarde" (a partir das 12h) ou "noite" (a partir das 18h).',
+      code: 'function turnoDoDia(hora) {\n  if (hora >= 5) {\n    return "manha";\n  } else if (hora >= 12) {\n    return "tarde";\n  } else if (hora >= 18) {\n    return "noite";\n  }\n  return "madrugada";\n}\n\nconsole.log(turnoDoDia(19));',
+      hint: 'Mesmo problema do chamado "Faixa etária" — confira a ORDEM das condições no <code>if/else if</code>.',
+      bugExplanation: 'As condições estavam na ordem errada: como <code>hora &gt;= 5</code> já é verdadeiro às 19h, ela captura o caso primeiro e as condições seguintes nunca são testadas. A ordem certa é da mais restritiva pra menos restritiva: <code>&gt;= 18</code>, depois <code>&gt;= 12</code>, depois <code>&gt;= 5</code>.',
+      expectedOutput: 'noite'
+    },
+    {
+      id: 13,
+      title: 'Categoria do pedido',
+      icon: '📦',
+      desc: 'Essa função deveria classificar o peso do pedido em "leve" (até 1kg), "medio" (até 5kg) ou "pesado" (acima de 5kg).',
+      code: 'function categoriaPedido(peso) {\n  let categoria;\n  switch (true) {\n    case peso <= 1:\n      categoria = "leve";\n    case peso <= 5:\n      categoria = "medio";\n    default:\n      categoria = "pesado";\n  }\n  return categoria;\n}\n\nconsole.log(categoriaPedido(0.5));',
+      hint: 'Mesmo problema do chamado "Conceito da nota" — falta algo depois de cada atribuição dentro do <code>switch</code>.',
+      bugExplanation: 'Faltava <code>break;</code> depois de cada atribuição dentro do <code>switch</code> — sem ele, mesmo entrando no <code>case</code> certo (peso 0.5 é "leve"), a execução continua caindo nos próximos e sobrescrevendo <code>categoria</code> até o <code>default</code>.',
+      expectedOutput: 'leve'
+    },
+    {
+      id: 14,
+      title: 'Reprovados por falta',
+      icon: '🧮',
+      desc: 'Essa função deveria contar quantos alunos têm 4 faltas ou MAIS (reprovados por falta).',
+      code: 'function contarReprovados(faltas) {\n  let total = 0;\n  for (let i = 0; i < faltas.length; i++) {\n    if (faltas[i] > 4) {\n      total++;\n    }\n  }\n  return total;\n}\n\nconsole.log(contarReprovados([2, 4, 5, 1, 4, 6]));',
+      hint: 'Mesmo problema do chamado "Contagem de aprovados" — o limite de 4 faltas deveria contar, e o operador usado está deixando esse caso de fora.',
+      bugExplanation: 'O <code>if</code> usava <code>&gt;</code> (maior que) em vez de <code>&gt;=</code> (maior ou igual) — isso deixava de contar quem tem exatamente 4 faltas, mesmo esse sendo o limite de reprovação.',
+      expectedOutput: '4'
     }
   ];
 
@@ -345,8 +383,8 @@
   const codeBoxEl = document.getElementById('codeBox');
   const ticketIconEl = document.getElementById('ticketIcon');
   const ticketStatusEl = document.getElementById('ticketStatus');
-  const answerInput = document.getElementById('answerInput');
-  const btnVerify = document.getElementById('btnVerify');
+  const answerCodeEl = document.getElementById('answerCode');
+  const btnRun = document.getElementById('btnRun');
   const btnNext = document.getElementById('btnNext');
   const btnHint = document.getElementById('btnHint');
   const hintBox = document.getElementById('hintBox');
@@ -413,15 +451,65 @@
     return String(text ?? '').trim().toLowerCase();
   }
 
-  function handleVerify(challenge) {
-    const value = answerInput.value;
-    if (!value.trim()) {
-      logConsole('Digite o valor que o console mostrou antes de verificar.', 'fail');
+  function formatArg(arg) {
+    if (typeof arg === 'string') return arg;
+    if (arg instanceof Error) return arg.stack || arg.message;
+    try {
+      return JSON.stringify(arg, null, 2);
+    } catch (e) {
+      return String(arg);
+    }
+  }
+
+  // Roda o código do aluno num sandbox simples (mesmo esquema do PixelCode:
+  // `new Function` recebendo um console falso) — nunca deixa uma exceção do
+  // código do aluno escapar pra fora, vira `error` com nome+mensagem.
+  function runStudentCode(code) {
+    const logs = [];
+    const fakeConsole = {
+      log: (...args) => logs.push({ type: 'log', text: args.map(formatArg).join(' ') }),
+      warn: (...args) => logs.push({ type: 'warn', text: args.map(formatArg).join(' ') }),
+      error: (...args) => logs.push({ type: 'error', text: args.map(formatArg).join(' ') }),
+      info: (...args) => logs.push({ type: 'info', text: args.map(formatArg).join(' ') }),
+    };
+    try {
+      const fn = new Function('console', code);
+      fn(fakeConsole);
+      return { logs, error: null };
+    } catch (err) {
+      const location = (err instanceof SyntaxError)
+        ? ''
+        : (err.stack || '').split('\n').find(l => l.includes('<anonymous>')) || '';
+      return { logs, error: `${err.name}: ${err.message}${location ? '\n  ' + location.trim() : ''}` };
+    }
+  }
+
+  function handleRun(challenge) {
+    const code = answerCodeEl.value;
+    if (!code.trim()) {
+      logConsole('Digite o código corrigido antes de executar.', 'fail');
       return;
     }
-    if (normalize(value) === normalize(challenge.expectedOutput)) {
-      answerInput.disabled = true;
-      btnVerify.disabled = true;
+
+    clearConsole();
+    const { logs, error } = runStudentCode(code);
+    logs.forEach(l => logConsole(l.text, l.type === 'error' ? 'fail' : l.type));
+
+    if (error) {
+      logConsole(error, 'fail');
+      return;
+    }
+    if (logs.length === 0) {
+      logConsole('Seu código rodou sem erros, mas não exibiu nada — use console.log(...).', 'warn');
+      return;
+    }
+
+    const loggedTexts = logs.filter(l => l.type === 'log').map(l => normalize(l.text));
+    const matched = loggedTexts.includes(normalize(challenge.expectedOutput));
+
+    if (matched) {
+      answerCodeEl.disabled = true;
+      btnRun.disabled = true;
 
       completed.add(challenge.id);
       saveCompleted(completed);
@@ -447,7 +535,7 @@
         );
       }
     } else {
-      logConsole('❌ Ainda não é esse valor. Volte pro PixelCode, confirme o resultado no console e tente de novo.', 'fail');
+      logConsole('❌ Ainda não é esse resultado. Revise a lógica e execute de novo.', 'fail');
     }
   }
 
@@ -471,15 +559,15 @@
     ticketStatusEl.classList.toggle('done', alreadyDone);
     ticketStatusEl.classList.toggle('pending', !alreadyDone);
 
-    answerInput.value = '';
-    answerInput.disabled = alreadyDone;
-    btnVerify.disabled = alreadyDone;
+    answerCodeEl.value = '';
+    answerCodeEl.disabled = alreadyDone;
+    btnRun.disabled = alreadyDone;
 
     clearConsole();
     if (alreadyDone) {
       logConsole(`Você já resolveu este chamado. ${challenge.bugExplanation}`, 'info');
     } else {
-      logConsole('Digite o código no PixelCode, depure e digite o resultado corrigido.', 'info');
+      logConsole('Digite abaixo o código corrigido e clique em Executar.', 'info');
     }
     renderSidebar();
 
@@ -496,12 +584,14 @@
     const showing = hintBox.classList.toggle('show');
     btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
   });
-  btnVerify.addEventListener('click', () => {
+  btnRun.addEventListener('click', () => {
     const challenge = CHALLENGES.find(c => c.id === selectedId);
-    if (challenge) handleVerify(challenge);
+    if (challenge) handleRun(challenge);
   });
-  answerInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !btnVerify.disabled) handleVerify(CHALLENGES.find(c => c.id === selectedId));
+  answerCodeEl.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !btnRun.disabled) {
+      handleRun(CHALLENGES.find(c => c.id === selectedId));
+    }
   });
   btnNext.addEventListener('click', () => {
     const idx = CHALLENGES.findIndex(c => c.id === selectedId);

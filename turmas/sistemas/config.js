@@ -521,9 +521,9 @@ window.TURMA_CONFIG_SISTEMAS = {
             },
             {
               key: 'pratica', title: 'Prática — Central de Sistemas: Depuração',
-              desc: 'Dez chamados com bugs de verdade, subindo aos poucos até funções e switch/case — digite o código no PixelCode, rode e corrija.',
+              desc: 'Quatorze chamados com bugs de verdade, subindo aos poucos até funções e switch/case — leia o código, digite a correção e rode direto na atividade.',
               icon: '🐛', src: 'atividades/prog-depuracao-pratica.html',
-              progressKey: 'prog_depuracao_pratica_progress_', progressTotal: 10,
+              progressKey: 'prog_depuracao_pratica_progress_', progressTotal: 14,
               requires: 'teoria', hasGabarito: true
             }
           ]
