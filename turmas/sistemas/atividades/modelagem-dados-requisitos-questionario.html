@@ -176,7 +176,7 @@
       story: 'Bit aqui de novo! Vamos falar de <b>Modelagem de Dados</b> — o primeiro passo antes de programar qualquer sistema. Tudo começa identificando as <b>entidades</b>: uma entidade é uma pessoa, objeto ou conceito relevante pro sistema, que vira uma tabela no banco de dados. Numa locadora de jogos, por exemplo, "Cliente" e "Jogo" são entidades.',
       question: {
         prompt: 'Num sistema de biblioteca, qual das opções abaixo é um exemplo de ENTIDADE?',
-        options: ['Livro', 'Emprestar um livro', 'Data de devolução em atraso', '15 (quantidade de livros emprestados)'],
+        options: ['O livro do acervo', 'O título do livro', 'Emprestar um livro', 'A data de devolução'],
         correctIndex: 0,
         explanation: 'Isso! "Livro" é um objeto relevante pro sistema — vira uma tabela. As outras opções são ação, característica e valor, não entidades.'
       }
@@ -185,7 +185,7 @@
       story: 'Depois de identificar a entidade, é hora dos <b>atributos</b>: as características DAQUELA entidade, que viram as colunas da tabela. A entidade "Livro" pode ter atributos como título, autor e ano de publicação.',
       question: {
         prompt: 'Qual das opções abaixo é um ATRIBUTO da entidade "Aluno"?',
-        options: ['Data de nascimento', 'Matricular-se numa turma', 'Turma (entidade separada)', 'Sistema de biblioteca'],
+        options: ['Data de nascimento do aluno', 'A turma em que o aluno estuda', 'A matrícula do aluno numa turma', 'O sistema de biblioteca'],
         correctIndex: 0,
         explanation: 'Exato! Data de nascimento é uma característica do próprio Aluno — vira uma coluna da tabela Aluno.'
       }
@@ -194,7 +194,7 @@
       story: 'Entidades sozinhas não contam a história toda — é preciso saber como elas se conectam. Isso é um <b>relacionamento</b>: por exemplo, um Cliente FAZ um Pedido, ou um Aluno MATRICULA-SE numa Turma.',
       question: {
         prompt: 'Qual das opções abaixo descreve um RELACIONAMENTO entre duas entidades?',
-        options: ['Um Professor LECIONA uma Disciplina', 'O nome do Professor', 'O valor de um Pedido', 'A cor de fundo do sistema'],
+        options: ['Um Professor LECIONA uma Disciplina', 'O nome completo de um Professor', 'O valor total de um Pedido feito', 'A cor de fundo escolhida pro sistema'],
         correctIndex: 0,
         explanation: 'Isso! "Leciona" conecta as entidades Professor e Disciplina — é um relacionamento.'
       }
@@ -203,7 +203,7 @@
       story: 'Todo relacionamento tem uma <b>cardinalidade</b>: quantos registros de um lado se conectam a quantos do outro. As três formas básicas são 1:1, 1:N e N:N. Um Pedido tem VÁRIOS Itens, mas cada Item pertence a UM só Pedido — isso é 1:N.',
       question: {
         prompt: 'Um Aluno pode se matricular em VÁRIAS Turmas, e uma Turma tem VÁRIOS Alunos matriculados. Qual é a cardinalidade desse relacionamento?',
-        options: ['N:N (muitos para muitos)', '1:1 (um para um)', '1:N (um para muitos)', 'Não existe cardinalidade nesse caso'],
+        options: ['N:N — muitos pra muitos, dos dois lados', '1:1 — sempre um pra um, nunca mais', '1:N — um pra muitos, só de um lado', 'Não existe cardinalidade nesse caso'],
         correctIndex: 0,
         explanation: 'Correto! Quando os dois lados podem ter vários do outro lado, é N:N — normalmente resolvido com uma tabela extra no banco.'
       }
@@ -212,7 +212,7 @@
       story: 'Toda tabela precisa de um jeito único de identificar cada linha — é pra isso que serve a <b>chave primária</b>: um valor que nunca se repete e nunca fica vazio, geralmente um <code>id</code> gerado automaticamente pelo banco.',
       question: {
         prompt: 'Por que uma tabela precisa de uma chave primária?',
-        options: ['Pra identificar cada registro de forma única, mesmo que outros dados se repitam', 'Pra deixar a tabela mais bonita', 'Só é obrigatória em tabelas muito grandes', 'Pra guardar a senha do usuário'],
+        options: ['Identifica cada registro de forma única, sem repetir', 'Deixa a tabela mais bonita e organizada visualmente', 'Só é obrigatória em tabelas realmente muito grandes', 'Serve pra guardar a senha de acesso do sistema'],
         correctIndex: 0,
         explanation: 'Isso! Nome e e-mail podem, teoricamente, coincidir entre duas pessoas — a chave primária garante que cada linha tenha uma identidade única e confiável.'
       }
@@ -221,7 +221,7 @@
       story: 'É a <b>chave estrangeira</b> que efetivamente cria um relacionamento entre duas tabelas: ela é uma coluna que guarda o valor da chave primária de OUTRA tabela. Um Pedido guarda o <code>id</code> do Cliente que fez ele — essa coluna é a chave estrangeira.',
       question: {
         prompt: 'Qual é o papel de uma CHAVE ESTRANGEIRA?',
-        options: ['Referenciar a chave primária de outra tabela, ligando as duas', 'Gerar um valor aleatório pra cada linha nova', 'Impedir que a tabela tenha mais de uma coluna', 'Guardar o nome da tabela'],
+        options: ['Referenciar a chave primária de outra tabela, ligando as duas', 'Gerar automaticamente um valor aleatório pra cada linha nova', 'Impedir que a tabela tenha qualquer coluna repetida', 'Guardar apenas o nome que a tabela recebeu'],
         correctIndex: 0,
         explanation: 'Exato! A chave estrangeira aponta pra chave primária de outra tabela — é o mecanismo real por trás de todo relacionamento no banco.'
       }
@@ -230,7 +230,7 @@
       story: 'Uma tabela mal modelada repete dado à toa: se cada Pedido guardasse o NOME e o TELEFONE inteiros do cliente de novo a cada linha, um mesmo cliente apareceria escrito várias vezes — e se ele mudar o telefone, seria preciso atualizar TODAS as linhas. <b>Normalizar</b> é organizar os dados pra evitar essa repetição, separando em tabelas diferentes (Cliente de um lado, Pedido do outro, ligados por chave estrangeira).',
       question: {
         prompt: 'Qual situação abaixo é um exemplo de tabela MAL normalizada (com redundância)?',
-        options: ['Uma tabela de Pedidos que repete nome e telefone do cliente em toda linha, em vez de referenciar uma tabela Cliente separada', 'Uma tabela Cliente separada de uma tabela Pedido, ligadas por chave estrangeira', 'Uma tabela com uma chave primária só', 'Uma tabela com poucas colunas'],
+        options: ['Pedidos repetem nome e telefone do cliente em cada linha, sem tabela própria', 'Clientes ficam numa tabela própria, ligados a Pedidos por chave estrangeira', 'Toda tabela tem uma chave primária única pra cada linha', 'Cada tabela guarda só as colunas que realmente precisa'],
         correctIndex: 0,
         explanation: 'Isso! Repetir nome/telefone em toda linha de Pedido é redundância — a normalização resolve isso separando Cliente numa tabela própria.'
       }
@@ -239,7 +239,7 @@
       story: 'Antes de criar as tabelas de verdade no banco, é comum desenhar um <b>DER (Diagrama de Entidade-Relacionamento)</b> — também chamado de MER (Modelo de Entidade-Relacionamento): um desenho que mostra as entidades, os atributos de cada uma e como elas se relacionam, tudo antes de escrever qualquer <code>CREATE TABLE</code>.',
       question: {
         prompt: 'Pra que serve montar um DER/MER antes de começar a programar?',
-        options: ['Pra planejar visualmente as entidades, atributos e relacionamentos antes de criar as tabelas de verdade', 'Pra decidir a cor do sistema', 'Só serve depois que o sistema já está pronto', 'Pra escrever o código da interface do usuário'],
+        options: ['Planejar entidades, atributos e relações antes das tabelas', 'Decidir a paleta de cores que o sistema vai usar', 'Só serve depois que o sistema inteiro já estiver pronto', 'Escrever o código da interface visual do usuário'],
         correctIndex: 0,
         explanation: 'Correto! O DER/MER é o planejamento visual dos dados — evita erros de modelagem que seriam caros de corrigir depois de o banco já estar em uso.'
       }
@@ -248,7 +248,7 @@
       story: 'Agora, <b>Requisitos</b>: um requisito funcional é uma AÇÃO concreta que o sistema executa. Numa locadora de jogos, por exemplo: "o sistema deve permitir registrar o empréstimo de um jogo pra um cliente".',
       question: {
         prompt: 'Qual das opções abaixo é um exemplo de REQUISITO FUNCIONAL?',
-        options: ['"O sistema deve permitir cadastrar um novo jogo no catálogo"', '"O sistema deve responder em menos de 2 segundos"', '"O sistema deve ficar disponível 24h por dia"', '"O sistema deve funcionar em qualquer navegador"'],
+        options: ['"Permitir cadastrar um novo jogo no catálogo"', '"Responder a qualquer ação em menos de 2 segundos"', '"Ficar disponível 24 horas por dia, todo dia"', '"Funcionar corretamente em qualquer navegador"'],
         correctIndex: 0,
         explanation: 'Isso! Cadastrar um jogo é uma AÇÃO que o sistema executa — típico requisito funcional.'
       }
@@ -257,7 +257,7 @@
       story: 'Já um requisito não funcional descreve uma QUALIDADE de como o sistema se comporta, não uma ação específica. "O sistema deve suportar 500 usuários simultâneos" não é UMA funcionalidade — é uma característica de TODO o sistema.',
       question: {
         prompt: 'Qual das opções abaixo é um exemplo de REQUISITO NÃO FUNCIONAL?',
-        options: ['"O sistema deve permanecer disponível mesmo com muitos acessos ao mesmo tempo"', '"O sistema deve permitir cancelar um empréstimo de jogo"', '"O sistema deve enviar um e-mail de confirmação ao cliente"', '"O sistema deve gerar um relatório de jogos alugados no mês"'],
+        options: ['"Permanecer disponível mesmo com muitos acessos"', '"Permitir cancelar um empréstimo de jogo feito"', '"Enviar um e-mail de confirmação ao cliente"', '"Gerar um relatório de jogos alugados no mês"'],
         correctIndex: 0,
         explanation: 'Exato! Disponibilidade sob carga é uma QUALIDADE do sistema — não uma ação específica. É por isso que é não funcional.'
       }
@@ -266,7 +266,7 @@
       story: 'Por fim: um requisito, funcional ou não, só é útil se estiver <b>documentado</b> de um jeito que o time inteiro entenda — seja numa lista simples, numa tabela, ou no formato "user story": "Como [tipo de usuário], eu quero [ação], para [motivo]".',
       question: {
         prompt: 'Qual das opções abaixo está escrita no formato "user story"?',
-        options: ['"Como cliente da locadora, eu quero ver meu histórico de aluguéis, para saber quais jogos já peguei antes"', '"O sistema tem 12 tabelas"', '"Requisito número 4"', '"O banco de dados fica na nuvem"'],
+        options: ['"Como cliente, eu quero ver meu histórico de aluguéis, para saber o que já peguei"', '"O sistema possui, ao todo, doze tabelas diferentes no banco"', '"Este é o requisito número quatro da lista de exigências"', '"O banco de dados do sistema fica hospedado na nuvem"'],
         correctIndex: 0,
         explanation: 'Isso! Segue exatamente o formato Como [usuário], eu quero [ação], para [motivo] — uma forma clara e padronizada de documentar um requisito.'
       }
