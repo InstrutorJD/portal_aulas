@@ -549,7 +549,19 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         }
       ]
-    }
+    },
+    // Matéria "Prova" — ainda sem trilhas (conteúdo específico desta turma
+    // entra depois). Toda atividade avaliativa colocada aqui deve usar a
+    // regra "sair da tela = advertência, saiu de novo = bloqueio": inclua
+    // shared/professor-visto.js + shared/exam-proctor.js e chame
+    // window.PortalExamGuard.create()/arm() — mesmo mecanismo já usado em
+    // turmas/sistemas/atividades/modelagem-dados-requisitos-questionario.html
+    // (formato quiz, `{completed:true}`) e prog-depuracao-pratica.html
+    // (formato lista de ids resolvidos, via `isCompleted` customizado em
+    // arm()). Nenhum motor novo é necessário — exam-proctor.js já é
+    // genérico pra isso. Desbloqueio: token de 6 dígitos do professor
+    // (mesmo de "Dar visto"/"Pular etapa", shared/professor-visto.js).
+    { key: 'prova', label: 'Prova', trilhas: [] }
   ],
 
   // Insígnias da trilha "Curso de Desenvolvimento de Sistemas" (ver aba
