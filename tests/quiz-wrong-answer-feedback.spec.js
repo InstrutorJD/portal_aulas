@@ -9,37 +9,33 @@
 // certo, sem precisar ter aprendido nada (ver shared/quiz-teoria-engine.js).
 //
 // A ordem de exibição das opções (A/B/C/D) é embaralhada a cada renderização
-// da pergunta (ver renderQuestion() em shared/quiz-teoria-engine.js), então os
-// testes não podem assumir que um índice fixo é sempre certo/errado. Em vez
-// disso, recarregam a página e clicam sempre na opção 0 até bater no
-// resultado desejado — como cada recarga sorteia uma ordem nova e
-// independente, isso converge rápido sem depender de nenhum detalhe interno
-// do algoritmo de embaralhamento.
+// da pergunta (ver renderQuestion() em shared/quiz-teoria-engine.js), então o
+// teste não pode assumir que um índice fixo é sempre certo/errado. Em vez de
+// recarregar a página repetidas vezes até calhar de errar/acertar (o que
+// dependia do furo corrigido em tests/quiz-retry-lockout.spec.js — recarregar
+// não repete mais a mesma pergunta), lê a resposta certa da PRÓPRIA pergunta
+// atual (STEPS[stepOrder[currentStepIndex]], globais expostos por
+// shared/quiz-teoria-engine.js) e clica deliberadamente na opção certa ou
+// errada pelo texto — mesma técnica de tests/quiz-80-percent-threshold.spec.js.
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
 const URL = '/turmas/sistemas/atividades/sql-basico-teoria.html?user=alexandre.natal&role=aluno';
-const MAX_ATTEMPTS = 40;
 
-async function answerFirstQuestion(page) {
-  await page.goto(URL);
-  await page.click('#btnNext');
-  await page.locator('.option').first().click();
-
-  const incorrect = page.locator('.feedback.incorrect');
-  if (await incorrect.count()) return { kind: 'incorrect', locator: incorrect };
-
-  const correct = page.locator('.feedback.correct');
-  await expect(correct).toBeVisible();
-  return { kind: 'correct', locator: correct };
-}
-
-async function answerUntil(page, wantedKind) {
-  for (let i = 0; i < MAX_ATTEMPTS; i++) {
-    const result = await answerFirstQuestion(page);
-    if (result.kind === wantedKind) return result.locator;
+async function answerCurrentQuestion(page, correct) {
+  const correctText = await page.evaluate(() => {
+    const q = STEPS[stepOrder[currentStepIndex]].question;
+    return q.options[q.correctIndex];
+  });
+  const options = page.locator('.option');
+  const count = await options.count();
+  let idx = -1;
+  for (let j = 0; j < count; j++) {
+    const text = await options.nth(j).innerText();
+    const isMatch = text.includes(correctText);
+    if (correct ? isMatch : !isMatch) { idx = j; break; }
   }
-  return null;
+  await options.nth(idx).click();
 }
 
 test.describe('Feedback de resposta errada no quiz de teoria', () => {
@@ -48,9 +44,11 @@ test.describe('Feedback de resposta errada no quiz de teoria', () => {
   });
 
   test('mensagem de erro não revela qual era a resposta certa', async ({ page }) => {
-    const feedback = await answerUntil(page, 'incorrect');
-    expect(feedback, `nenhuma resposta errada em ${MAX_ATTEMPTS} tentativas — algo mudou na estrutura da pergunta`).not.toBeNull();
+    await page.goto(URL);
+    await page.click('#btnNext');
+    await answerCurrentQuestion(page, false);
 
+    const feedback = page.locator('.feedback.incorrect');
     await expect(feedback).toBeVisible();
     await expect(feedback).toContainText('Não foi dessa vez');
     await expect(feedback).not.toContainText('A resposta certa é');
@@ -62,9 +60,10 @@ test.describe('Feedback de resposta errada no quiz de teoria', () => {
   });
 
   test('mensagem de acerto continua normal (não afetada pela correção)', async ({ page }) => {
-    const feedback = await answerUntil(page, 'correct');
-    expect(feedback, `nenhuma resposta certa em ${MAX_ATTEMPTS} tentativas — algo mudou na estrutura da pergunta`).not.toBeNull();
+    await page.goto(URL);
+    await page.click('#btnNext');
+    await answerCurrentQuestion(page, true);
 
-    await expect(feedback).toContainText('✅ Correto!');
+    await expect(page.locator('.feedback.correct')).toContainText('✅ Correto!');
   });
 });

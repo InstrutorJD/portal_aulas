@@ -9,6 +9,19 @@
 // ficar abaixo de 80% de acerto (finishJourney/#btnRestart) — como a
 // resposta nunca foi revelada durante o percurso, esse reinício continua
 // medindo compreensão de verdade, em vez de decoreba.
+//
+// Trava contra "responder até acertar" recarregando a página: o progresso
+// salvo carrega um flag `answered` junto do `lastStepIndex` — se a pergunta
+// salva já tinha sido respondida (certo OU errado), sair/voltar pula pra
+// PRÓXIMA pergunta em vez de reexibir a mesma (ver resumeIndex() abaixo).
+// Sem isso, dava pra responder, ver que errou, recarregar a página (o save
+// anterior gravava o MESMO índice, sem marcar que já tinha sido respondida)
+// e tentar de novo à vontade — e o mesmo furo também deixava inflar
+// `correctCount` além de `steps.length` (respondendo a MESMA pergunta certa
+// repetidas vezes recarregando logo depois de acertar), o que fazia o %
+// final passar de 100%. Só sem responder nada (saiu no meio da pergunta,
+// sem clicar em nenhuma opção) é que volta na mesma pergunta, do jeito que
+// sempre foi.
 (function () {
   function shuffleIndexes(length) {
     const arr = Array.from({ length }, (_, i) => i);
@@ -77,8 +90,16 @@
     // via page.evaluate() como globais da página.
     window.stepOrder = (saved && !saved.completed) ? (loadOrder() || shuffleOrder()) : shuffleOrder();
     localStorage.setItem(ORDER_KEY, JSON.stringify(window.stepOrder));
-    window.currentStepIndex = (saved && !saved.completed) ? Math.min(saved.lastStepIndex || 0, steps.length - 1) : 0;
     let correctCount = (saved && typeof saved.correctCount === 'number') ? saved.correctCount : 0;
+
+    // Pergunta salva já respondida (saved.answered) -> resume na PRÓXIMA.
+    // Ainda sem resposta -> resume na mesma, como sempre foi.
+    if (saved && !saved.completed) {
+      const savedIndex = Math.min(saved.lastStepIndex || 0, steps.length - 1);
+      window.currentStepIndex = saved.answered ? savedIndex + 1 : savedIndex;
+    } else {
+      window.currentStepIndex = 0;
+    }
 
     function updateProgressBar() {
       const pct = Math.round((window.currentStepIndex / steps.length) * 100);
@@ -172,7 +193,7 @@
           actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">Próximo →</button>`;
           card.appendChild(actions);
 
-          saveProgress({ lastStepIndex: window.currentStepIndex, correctCount, completed: false });
+          saveProgress({ lastStepIndex: window.currentStepIndex, correctCount, completed: false, answered: true });
           reportStep(`${reportLabel} — Etapa ${window.currentStepIndex + 1}/${steps.length} (respondida)`);
 
           document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
@@ -180,7 +201,7 @@
             if (window.currentStepIndex >= steps.length) {
               finishJourney();
             } else {
-              saveProgress({ lastStepIndex: window.currentStepIndex, correctCount, completed: false });
+              saveProgress({ lastStepIndex: window.currentStepIndex, correctCount, completed: false, answered: false });
               renderStory();
             }
           });
@@ -213,7 +234,13 @@
     }
 
     function finishJourney(reviewOnly) {
-      const pct = steps.length > 0 ? Math.round((correctCount / steps.length) * 100) : 0;
+      // Math.min defensivo: com resumeIndex fechando o furo de recarregar-e-
+      // responder-de-novo (ver comentário no topo do arquivo), correctCount
+      // não deveria mais passar de steps.length — mas o clamp aqui garante
+      // que o % exibido nunca estoura 100 mesmo se algum estado antigo (de
+      // antes dessa correção) ainda estiver salvo no localStorage/Supabase
+      // de algum aluno.
+      const pct = steps.length > 0 ? Math.min(Math.round((correctCount / steps.length) * 100), 100) : 0;
       const passed = reviewOnly ? true : pct >= 80;
       if (!reviewOnly) {
         saveProgress({ lastStepIndex: steps.length, correctCount, completed: passed });
@@ -276,6 +303,12 @@
     if (saved && saved.completed) {
       window.currentStepIndex = steps.length;
       finishJourney(true);
+    } else if (window.currentStepIndex >= steps.length) {
+      // resumeIndex empurrou pra depois da última pergunta — o aluno
+      // respondeu tudo e saiu antes de ver a tela de resultado. Não sobrou
+      // pergunta nova pra mostrar, então fecha a jornada de verdade agora
+      // (não reviewOnly: decide completed conforme o % de acerto de sempre).
+      finishJourney();
     } else {
       renderStory();
     }
