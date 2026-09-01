@@ -647,6 +647,15 @@
   // hardcoded na própria trilha (turmas/<turma>/config.js) como fallback —
   // dá pra já nascer com uma data padrão no código e ainda assim deixar o
   // professor mudar depois sem precisar de deploy novo.
+  // Passou do prazo, sem levar em conta se algum módulo específico já foi
+  // concluído (isso quem decide é moduleLockReason) — só compara a data
+  // contra o dia de hoje. Usada tanto pro cadeado de módulo (prazo vencido
+  // trava quem ainda não fez) quanto pro rótulo "🔒 Prazo encerrado".
+  function isTrilhaPastDeadline(trilha) {
+    const { prazo } = trilhaDates(trilha);
+    return !!(prazo && prazo < todayStr());
+  }
+
   function trilhaDates(trilha) {
     const override = trilhaDatesCache[trilha.key] || {};
     return {
@@ -865,18 +874,33 @@
     await syncAllModulesProgress();
   }
 
-  function isModuleLocked(trilha, mod) {
-    if (currentUser.role === 'professor') return false;
+  // Por que um módulo está travado (ou null, se não estiver) — motivo
+  // separado do boolean isModuleLocked() abaixo pra dar pra mostrar uma
+  // mensagem diferente pra cada caso (buildModuleCardsHtml) sem duplicar a
+  // regra em dois lugares.
+  //  'prazo'    -> a trilha passou do prazo e ESTE módulo ainda não foi
+  //                concluído (garante que o aluno não "aproveite" uma
+  //                atividade antiga muito depois do previsto — módulo já
+  //                concluído antes do prazo continua aberto, pra revisão).
+  //  'requires' -> o módulo pré-requisito (mod.requires) ainda não foi
+  //                concluído.
+  function moduleLockReason(trilha, mod) {
+    if (currentUser.role === 'professor') return null;
     // Liberação diária pra ESTE módulo hoje destrava ele por cima de
-    // qualquer outro bloqueio (trilha inteira travada ou pré-requisito) —
-    // é o professor dizendo explicitamente "faça isso hoje". Sem essa
-    // checagem aqui, uma atividade liberada continuava inacessível se a
-    // trilha dela estivesse bloqueada — a liberação só afetava o cadeado
-    // dos jogos, nunca se dava pra abrir o módulo em si.
-    if (releasesForToday(paramUser).some(r => r.trilha_key === trilha.key && r.module_key === mod.key)) return false;
-    if (!mod.requires) return false;
+    // qualquer outro bloqueio (trilha inteira travada, pré-requisito ou
+    // prazo vencido) — é o professor dizendo explicitamente "faça isso
+    // hoje". Sem essa checagem aqui, uma atividade liberada continuava
+    // inacessível se a trilha dela estivesse bloqueada — a liberação só
+    // afetava o cadeado dos jogos, nunca se dava pra abrir o módulo em si.
+    if (releasesForToday(paramUser).some(r => r.trilha_key === trilha.key && r.module_key === mod.key)) return null;
+    if (isTrilhaPastDeadline(trilha) && !isModuleComplete(mod)) return 'prazo';
+    if (!mod.requires) return null;
     const requiredMod = (trilha.modules || []).find(m => m.key === mod.requires);
-    return !!requiredMod && !isModuleComplete(requiredMod);
+    return (requiredMod && !isModuleComplete(requiredMod)) ? 'requires' : null;
+  }
+
+  function isModuleLocked(trilha, mod) {
+    return moduleLockReason(trilha, mod) !== null;
   }
 
   function buildModuleCardsHtml(trilha) {
@@ -888,7 +912,8 @@
     );
 
     return modules.map(m => {
-      const locked = isModuleLocked(trilha, m);
+      const lockReason = moduleLockReason(trilha, m);
+      const locked = lockReason !== null;
       const done = isModuleComplete(m);
       // "Liberado hoje" só faz sentido de mostrar quando é a ÚNICA razão do
       // módulo estar acessível: a trilha inteira ainda nem "começou"
@@ -896,7 +921,9 @@
       // assim (ver visibleTrilhas) — senão o rótulo apareceria em módulos
       // que já estariam acessíveis de qualquer jeito.
       const releasedByDaily = !locked && !done && trilhaStatus(trilha) === 'futura' && releasedTodayKeys.has(m.key);
-      const statusLabel = locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : releasedByDaily ? '📌 Liberado hoje' : '';
+      const statusLabel = lockReason === 'prazo'
+        ? `🔒 Prazo encerrado em ${formatDataBr(trilhaDates(trilha).prazo)} — fale com o professor`
+        : locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : releasedByDaily ? '📌 Liberado hoje' : '';
       const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '');
       const click = locked ? '' : `onclick="PortalCore.openModule('${trilha.key}','${m.key}')"`;
       return `

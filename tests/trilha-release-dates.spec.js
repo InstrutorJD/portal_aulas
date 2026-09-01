@@ -93,4 +93,68 @@ test.describe('Trilha com prazo vencido — visão do aluno', () => {
     await expect(page.locator('#trilhaSelect optgroup[label="⚠️ Em atraso"] option')).toHaveText(['SQL']);
     await expect(page.locator('#moduleSelector_sql h2')).toContainText('Em atraso');
   });
+
+  test('módulo ainda não concluído fica travado, com aviso de prazo e sem abrir ao clicar', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', prazo: '2000-01-01' }],
+    });
+    await page.goto(SISTEMAS_ALUNO_URL);
+    await page.click('.game-card:has-text("Banco de Dados")');
+
+    const teoriaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Teoria — Fundamentos de SQL' });
+    await expect(teoriaCard).toHaveClass(/locked/);
+    await expect(teoriaCard).toContainText('Prazo encerrado em 01/01/2000');
+    await expect(teoriaCard).toContainText('fale com o professor');
+
+    // Reforça que é bloqueio de verdade (openModule), não só estilo: clicar
+    // não abre o iframe do módulo.
+    await teoriaCard.click();
+    await expect(page.locator('#moduleFrameArea_sql')).toBeHidden();
+  });
+
+  test('módulo já concluído ANTES do prazo continua aberto, pra revisão', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', prazo: '2000-01-01' }],
+    });
+    await page.addInitScript(() => {
+      localStorage.setItem('sql_basico_teoria_progress_alexandre.natal', JSON.stringify({ completed: true }));
+    });
+    await page.goto(SISTEMAS_ALUNO_URL);
+    await page.click('.game-card:has-text("Banco de Dados")');
+
+    const teoriaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Teoria — Fundamentos de SQL' });
+    await expect(teoriaCard).not.toHaveClass(/locked/);
+    await expect(teoriaCard).toContainText('Concluído');
+  });
+
+  test('professor continua abrindo os módulos normalmente, mesmo com o prazo vencido', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', prazo: '2000-01-01' }],
+    });
+    await page.goto(SISTEMAS_PROFESSOR_URL);
+    await page.click('.game-card:has-text("Banco de Dados")');
+
+    const teoriaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Teoria — Fundamentos de SQL' });
+    await expect(teoriaCard).not.toHaveClass(/locked/);
+  });
+
+  test('liberação diária destrava um módulo específico mesmo com o prazo vencido', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', prazo: '2000-01-01' }],
+      daily_module_releases: [{
+        id: 1, turma: 'sistemas', scope: 'data', target_date: todayIso(),
+        student_email: '', trilha_key: 'sql', module_key: 'teoria',
+      }],
+    });
+    await page.goto(SISTEMAS_ALUNO_URL);
+    await page.click('.game-card:has-text("Banco de Dados")');
+
+    // Aqui o rótulo "Liberado hoje" não se aplica (é exclusivo do caso
+    // "início futuro" — ver comentário de releasedByDaily em
+    // shared/platform-core.js); o que importa é que a liberação diária
+    // também vence o bloqueio de prazo: o módulo fica clicável.
+    const teoriaCard = page.locator('#moduleSelector_sql .game-card', { hasText: 'Teoria — Fundamentos de SQL' });
+    await expect(teoriaCard).not.toHaveClass(/locked/);
+    await expect(teoriaCard).not.toContainText('Prazo encerrado');
+  });
 });
