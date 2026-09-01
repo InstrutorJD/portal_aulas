@@ -256,6 +256,16 @@ create policy "student_activity_update_self"
 alter table public.student_activity add column if not exists active_seconds_today int not null default 0;
 alter table public.student_activity add column if not exists activity_date date not null default current_date;
 
+-- Há quanto tempo o aluno está NESSA tela (coluna "Há quanto tempo" da
+-- Atividade em Tempo Real) — diferente de updated_at (que muda a cada
+-- heartbeat de 15s, mesmo ficando na mesma tela): location_started_at só
+-- reseta quando `location` muda de verdade, então ele marca desde QUANDO
+-- o aluno chegou na tela atual. Calculado aqui embaixo, no mesmo gatilho
+-- que já corrige updated_at pra usar o relógio do banco (não do cliente)
+-- — pelo mesmo motivo: se fosse o cliente quem mandasse esse timestamp,
+-- um relógio de aluno desacertado bagunçaria a conta.
+alter table public.student_activity add column if not exists location_started_at timestamptz not null default now();
+
 create or replace function public.track_daily_active_seconds()
 returns trigger
 language plpgsql
@@ -278,6 +288,7 @@ begin
   if tg_op = 'INSERT' then
     new.activity_date := current_date;
     new.active_seconds_today := 0;
+    new.location_started_at := now();
     return new;
   end if;
 
@@ -292,6 +303,16 @@ begin
       new.active_seconds_today := coalesce(old.active_seconds_today, 0);
     end if;
     new.activity_date := current_date;
+  end if;
+
+  -- location_started_at só reseta quando a localização muda de verdade —
+  -- do contrário (heartbeat normal na mesma tela), preserva o valor
+  -- antigo, que é justamente o que faz a coluna significar "desde quando"
+  -- em vez de "última vez que o heartbeat chegou" (isso já é updated_at).
+  if old.location is distinct from new.location then
+    new.location_started_at := now();
+  else
+    new.location_started_at := old.location_started_at;
   end if;
 
   return new;

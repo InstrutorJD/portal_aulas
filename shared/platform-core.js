@@ -433,7 +433,7 @@
               <div class="collapsible-body">
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
                 <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Onde está</th><th>Status</th><th>Última atualização</th></tr></thead>
+                  <thead><tr><th>Aluno</th><th>Onde está</th><th>Há quanto tempo</th><th>Status</th><th>Última atualização</th></tr></thead>
                   <tbody id="tblGestaoActivityBody"></tbody>
                 </table>
               </div>
@@ -1338,6 +1338,23 @@
     return row.status || 'offline';
   }
 
+  // "Há quanto tempo" (Atividade em Tempo Real) — location_started_at é
+  // mantido pelo gatilho track_daily_active_seconds() no banco (só reseta
+  // quando `location` muda de verdade, ao contrário de updated_at, que
+  // muda a cada heartbeat de 15s mesmo na mesma tela). Formata a diferença
+  // pro relógio do PROFESSOR (só exibição — não é gravado em lugar nenhum,
+  // então não tem o problema de relógio de cliente que updated_at tinha).
+  function formatDurationSince(iso) {
+    if (!iso) return '--';
+    const ms = Date.now() - new Date(iso).getTime();
+    if (!Number.isFinite(ms) || ms < 0) return '--';
+    const totalMin = Math.floor(ms / 60000);
+    if (totalMin < 1) return '<1min';
+    const h = Math.floor(totalMin / 60);
+    const min = totalMin % 60;
+    return h > 0 ? `${h}h${String(min).padStart(2, '0')}min` : `${min}min`;
+  }
+
   async function renderGestaoActivity() {
     const tbody = document.getElementById('tblGestaoActivityBody');
     if (!tbody || !sbClient) return;
@@ -1346,7 +1363,7 @@
     const rows = error ? [] : (data || []);
 
     if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum registro de atividade ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum registro de atividade ainda.</td></tr>`;
       return;
     }
 
@@ -1359,7 +1376,8 @@
     tbody.innerHTML = rows.map(r => {
       const meta = statusMeta[computeGestaoDisplayStatus(r)] || statusMeta.offline;
       const lastUpdate = r.updated_at ? new Date(r.updated_at).toLocaleTimeString() : '--';
-      return `<tr><td><b>${r.student_name || r.student_email}</b></td><td>${r.location_label || r.location || '--'}</td><td><span style="color:${meta.color}">${meta.label}</span></td><td>${lastUpdate}</td></tr>`;
+      const duration = formatDurationSince(r.location_started_at);
+      return `<tr><td><b>${r.student_name || r.student_email}</b></td><td>${r.location_label || r.location || '--'}</td><td>${duration}</td><td><span style="color:${meta.color}">${meta.label}</span></td><td>${lastUpdate}</td></tr>`;
     }).join('');
   }
 
