@@ -133,33 +133,20 @@
   // padrão de turmas/sistemas/atividades/modelagem-dados-requisitos-
   // trabalho.html. Depois do visto aqui, a trilha libera o módulo
   // "Questionário" (ver requires:'trabalho' em turmas/jogos/config.js) —
-  // só aí o aluno é cobrado sobre o que pesquisou/aplicou pra este
-  // trabalho, nunca antes.
+  // só aí o aluno é cobrado sobre o que pesquisou pra este trabalho,
+  // nunca antes.
   //
-  // Nem todo aluno tem um jogo próprio jogável (só quem já passou pela
-  // trilha de Codificação tem o Cobrinha construído) — por isso a etapa
-  // "Apresentação" abre com 2 caminhos possíveis: um jogo jogável de
-  // verdade (Cobrinha ou um minigame já pronto do portal, ex. Campo
-  // Minado) OU uma gameplay real assistida na internet (ex.: um vídeo de
-  // gameplay recente de um jogo grande ainda não lançado, que costuma
-  // mostrar bugs/glitches de verdade — o professor sugeriu GTA 6 como
-  // exemplo). Cada bloco abaixo aceita os dois: resultado real (se
-  // testável ao vivo) ou resultado baseado no que foi observado na
-  // gameplay (se só assistida) — ver texto de cada etapa.
+  // É pesquisa de teoria, não aplicação prática: o aluno não testa jogo
+  // nenhum aqui (nem o próprio, nem gameplay assistida) — só pesquisa
+  // nome/onde se aplica/por quê de cada tipo de teste e monta slides
+  // sobre isso. A parte "mão na massa" de aplicar teste de verdade já
+  // mora nos módulos de prática das outras trilhas desta matéria
+  // (ex.: teste-fundamentos-pratica.html, resolve chamados).
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-Antes de lançar um jogo, o QA aprova o build em **4 frentes**. Monte um pacote de roteiros de teste sobre elas.
-
-### Em cima de qual jogo?
-
-Escolha UMA opção e use a MESMA nos 4 blocos:
-
-- 🎮 Jogo jogável (Cobrinha, ou um jogo do portal — Campo Minado, Digitação)
-- 📺 Gameplay real que você assistir (ex.: a gameplay de GTA 6 que saiu recentemente — costuma ter bugs de verdade)
-
-Diga qual escolheu logo no início do documento.
+Antes de lançar um jogo, o QA aprova o build em **4 frentes**. Pesquise sobre elas e monte um material (slides) explicando cada uma.
 
 ### Os 4 tipos de teste
 
@@ -175,54 +162,49 @@ Diga qual escolheu logo no início do documento.
 Documento (Canva/Slides/Word) com os 4 blocos das próximas etapas, exportado em **PDF** → e-mail pro professor → peça o visto → libera o Questionário.`
     },
     {
-      titulo: 'Bloco 1 — Roteiro de Certificação Técnica',
+      titulo: 'Bloco 1 — Certificação Técnica',
       corpo: `
 Tópicos pra pesquisar:
 
 - [ ] O que é certificação técnica, onde se aplica e por quê (com suas palavras)
 - [ ] Exigências técnicas de certificação de console (cite a fonte)
 - [ ] Pelo menos **5 exigências reais** encontradas
-- [ ] Roteiro de teste (passo a passo) cobrindo **3 dessas exigências**, aplicado ao jogo/gameplay escolhido
-- [ ] Resultado de cada item (passou / não passou)
 
 > Dica: pesquise "certificação técnica de jogos para console".`
     },
     {
-      titulo: 'Bloco 2 — Roteiro de Testes de Plataforma',
+      titulo: 'Bloco 2 — Testes de Plataforma',
       corpo: `
 Tópicos pra pesquisar:
 
 - [ ] O que é teste de plataforma, onde se aplica e por quê (com suas palavras)
-- [ ] Pelo menos **4 combinações** de resolução/janela (ex.: tela cheia, janela pequena, ultrawide, redimensionar)
-- [ ] Roteiro testando **1 funcionalidade** (ex.: menu, HUD) nas 4 combinações, aplicado ao jogo/gameplay escolhido
-- [ ] Resultado de cada combinação
-- [ ] 1 problema que só esse tipo de teste pegaria`
+- [ ] Pelo menos **4 exemplos** de combinações de resolução/janela que costumam ser testadas (ex.: tela cheia, janela pequena, ultrawide, redimensionar)
+- [ ] 1 exemplo de problema que só esse tipo de teste consegue pegar`
     },
     {
-      titulo: 'Bloco 3 — Checklist de Publicação (Smoke Test)',
+      titulo: 'Bloco 3 — Smoke Test (Publicação)',
       corpo: `
 Tópicos pra pesquisar:
 
 - [ ] O que é Smoke Test, onde se aplica e por quê (com suas palavras)
 - [ ] Por que é rápido e não substitui um teste completo
-- [ ] Checklist com pelo menos **6 itens** (ex.: jogo abre, tela inicial carrega, controle responde, inicia partida, fecha sem travar, som toca), aplicado ao jogo/gameplay escolhido
-- [ ] Resultado PASSOU/FALHOU de cada item`
+- [ ] Exemplo de checklist com pelo menos **6 itens** que um Smoke Test costuma cobrir (ex.: jogo abre, tela inicial carrega, controle responde, inicia partida, fecha sem travar, som toca)`
     },
     {
-      titulo: 'Bloco 4 — Relatório de Testes Exploratórios',
+      titulo: 'Bloco 4 — Teste Exploratório',
       corpo: `
 Tópicos pra pesquisar:
 
 - [ ] O que é teste exploratório, onde se aplica e por quê (com suas palavras)
-- [ ] Pelo menos **15 minutos** jogando tentando quebrar de propósito (ou assistindo à gameplay reparando em bugs/glitches)
-- [ ] Relatório com pelo menos **2 achados** (ou 1 achado + 1 sugestão): o que fez/observou, o que esperava, o que aconteceu`
+- [ ] Como costuma ser feito (jogar sem roteiro fixo, tentando achar bugs de propósito)
+- [ ] Por que ele encontra bugs que um teste com roteiro fixo não encontraria`
     },
     {
       titulo: 'Critérios de formatação — vale nota',
       corpo: `
 - [ ] **Fontes**: no máximo 2 (título + corpo), legíveis, tamanho igual em slides/páginas do mesmo tipo.
 - [ ] **Alinhamento**: título sempre no mesmo lugar, texto alinhado, não jogado de qualquer jeito.
-- [ ] **Aplicação**: cada roteiro/checklist precisa mostrar um RESULTADO — real, se testável ao vivo, ou baseado no que você observou/concluiu sobre o jogo/gameplay escolhido — não só a teoria de cada um.`
+- [ ] **Conteúdo**: os 4 tipos aparecem com nome, onde se aplica e por quê — não só a definição solta.`
     },
     {
       titulo: 'Como entregar',
@@ -481,13 +463,12 @@ Procure o professor pessoalmente pra confirmar que chegou. Só depois avance e p
       title: 'Roteiros de Teste — Checklist de correção do trabalho',
       subtitle: 'Trabalho (Canva/Slides/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
       items: [
-        { number: 1, title: 'Qual jogo/gameplay?', prompt: 'O aluno declarou logo no início qual jogo (jogável) ou gameplay (assistida) escolheu?', answer: 'Precisa aparecer no começo do documento — se for gameplay, o resultado de cada bloco deve vir marcado como "baseado no vídeo", não como teste ao vivo.' },
-        { number: 2, title: 'Bloco 1 — Roteiro de Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (certificação técnica), onde é melhor aplicado e por quê; exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas; roteiro de teste cobrindo pelo menos 3 delas; resultado (passou/não passou) — real, se jogo jogável, ou esperado com base na gameplay.' },
-        { number: 3, title: 'Bloco 2 — Roteiro de Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de plataforma), onde é melhor aplicado e por quê; pelo menos 4 combinações de resolução/janela definidas; roteiro testando a MESMA funcionalidade em todas elas; resultado registrado por combinação (real ou baseado na gameplay); pelo menos 1 problema apontado que só esse tipo de teste pegaria.' },
-        { number: 4, title: 'Bloco 3 — Checklist de Publicação (Smoke Test)', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (Smoke Test), onde é melhor aplicado e por quê; o que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); checklist com pelo menos 6 itens; resultado PASSOU/FALHOU por item (real, se jogo jogável, ou esperado com base na gameplay).' },
-        { number: 5, title: 'Bloco 4 — Relatório de Testes Exploratórios', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste exploratório), onde é melhor aplicado e por quê; o que é teste exploratório, com palavras próprias; evidência de pelo menos 15 minutos jogando (jogo jogável) ou assistindo com atenção (gameplay); relatório com pelo menos 2 achados (ou 1 achado + 1 sugestão), cada um com o que fez/observou, o que esperava, o que aconteceu.' },
-        { number: 6, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
-        { number: 7, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
+        { number: 1, title: 'Bloco 1 — Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (certificação técnica), onde é melhor aplicado e por quê; exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas.' },
+        { number: 2, title: 'Bloco 2 — Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de plataforma), onde é melhor aplicado e por quê; pelo menos 4 exemplos de combinações de resolução/janela; 1 exemplo de problema que só esse tipo de teste pegaria.' },
+        { number: 3, title: 'Bloco 3 — Smoke Test (Publicação)', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (Smoke Test), onde é melhor aplicado e por quê; o que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); exemplo de checklist com pelo menos 6 itens.' },
+        { number: 4, title: 'Bloco 4 — Teste Exploratório', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste exploratório), onde é melhor aplicado e por quê; o que é teste exploratório, com palavras próprias; como costuma ser feito; por que encontra bugs que um roteiro fixo não encontraria.' },
+        { number: 5, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
+        { number: 6, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
       ],
       fileName: 'teste-roteiros-trabalho-checklist.txt'
     });

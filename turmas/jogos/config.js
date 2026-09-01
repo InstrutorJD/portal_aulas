@@ -697,12 +697,12 @@ window.TURMA_CONFIG_JOGOS = {
           // shared/exam-proctor.js) depois desse visto.
           key: 'teste-roteiros-avancados',
           label: 'Roteiros de Teste: Certificação, Plataforma e Publicação',
-          desc: 'Pesquise e aplique roteiros de certificação técnica, testes de plataforma, Smoke Test de publicação e teste exploratório — num jogo já pronto ou numa gameplay real assistida na internet — e entregue pro professor por e-mail antes de responder o questionário.',
+          desc: 'Pesquise sobre certificação técnica, testes de plataforma, Smoke Test de publicação e teste exploratório, monte slides explicando cada um e entregue pro professor por e-mail antes de responder o questionário.',
           capacidade: 'Definir roteiro de teste para execução, conforme recomendações técnicas / Identificar problemas de sistemas por meio de aplicação de teste.',
           modules: [
             {
               key: 'trabalho', title: 'Trabalho — Roteiros de Teste (Certificação, Plataforma e Publicação)',
-              desc: 'Monte um pacote de roteiros/checklists de teste (certificação de console, plataforma/resolução, Smoke Test e relatório de bugs de teste exploratório), aplicado a um jogo já pronto (seu ou do portal) ou a uma gameplay real assistida — e entregue por e-mail pro professor.',
+              desc: 'Pesquise sobre os 4 tipos de teste (certificação de console, plataforma/resolução, Smoke Test e teste exploratório) e monte slides explicando nome, onde se aplica e por quê de cada um — entregue por e-mail pro professor.',
               icon: '🖼️', src: 'atividades/teste-roteiros-trabalho.html',
               progressKey: 'teste_roteiros_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
