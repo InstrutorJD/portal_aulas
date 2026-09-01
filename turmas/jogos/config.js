@@ -715,6 +715,31 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'trabalho', hasSlides: true, hasGabarito: true
             }
           ]
+        },
+        {
+          // Trilha individual, adaptada — só aparece pro aluno listado em
+          // visibleFor (professor sempre vê, pra acompanhar/gerar gabarito).
+          // Ver trilhaStatus() em shared/platform-core.js. Mesma capacidade
+          // MSEP da trilha regular 'teste-roteiros-avancados' (só o trabalho
+          // — sem questionário, que exige mais leitura/escrita), reduzida a
+          // 2 tipos de teste 100% mão-na-massa (Smoke Test + Exploratório,
+          // sem pesquisa de documentação externa) aplicados ao Campo Minado
+          // (games/campo-minado.html, já pronto no portal) em vez de um
+          // jogo próprio — o Engel não faz a trilha de Codificação que
+          // constrói o Cobrinha. Ver estrutura.txt, seção 7.
+          key: 'teste-roteiros-engel',
+          label: 'Roteiros de Teste (Engel)',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Testar o Campo Minado (Adaptado)',
+              desc: '2 tipos de teste (Smoke Test e Teste Exploratório), aplicados ao jogo Campo Minado já pronto no portal — depois faz slides simples (molde de 4) e entrega pro professor.',
+              icon: '🖼️', src: 'atividades/teste-roteiros-trabalho-engel.html',
+              progressKey: 'teste_roteiros_trabalho_engel_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     }

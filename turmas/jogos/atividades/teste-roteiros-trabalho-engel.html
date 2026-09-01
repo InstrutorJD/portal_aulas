@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Trabalho: Testar o Jogo (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); min-height:100vh;
+  }
+
+  .env{
+    max-width:760px; margin:0 auto; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+    min-height:calc(100vh - 20px);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .steps{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; padding:12px 12px 0; }
+  .step-dot{
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    font-size:17px; border:2px solid var(--line); background:var(--panel2); border-radius:8px;
+  }
+  .step-dot.active{ border-color:var(--green); }
+  .step-dot.done{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+
+  .stage{ flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:20px; }
+  .card .big-icon{ font-size:56px; line-height:1; text-align:center; margin-bottom:10px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--yellow);
+    margin:0 0 12px; letter-spacing:1px; text-align:center;
+  }
+
+  .md-body{ font-size:18px; line-height:1.7; }
+  .md-body h3{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--green); letter-spacing:0.5px;
+    margin:14px 0 6px; font-size:19px;
+  }
+  .md-body p{ margin:0 0 12px; }
+  .md-body code{ background:#000; color:var(--green); padding:2px 7px; border-radius:2px; font-size:0.9em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:12px 14px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px; font-size:16px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list{ margin:0 0 12px; padding-left:0; list-style:none; }
+  .md-body li{ margin-bottom:8px; }
+  .md-body li.md-check{ padding:8px 10px; border:1px dashed var(--line); background:var(--panel2); }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--green); font-size:1.1em; }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 26px; cursor:pointer; border-radius:8px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .visto-box p{ font-size:18px; line-height:1.7; margin:0 0 10px; text-align:center; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:320px; margin:14px auto 0; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:12px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; text-align:center; }
+  .visto-form input{
+    font-family:inherit; font-size:16px; padding:10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px; text-align:center;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .visto-msg{ font-size:14px; padding:8px 10px; border:1px dashed var(--line); text-align:center; }
+  .visto-msg.erro{ border-color:#ff3b30; color:#ff3b30; }
+  .visto-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  @media (max-width: 600px) {
+    .card{ padding:14px; }
+    .md-body{ font-size:17px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'teste_roteiros_trabalho_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🎮 TESTAR UM JOGO</div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">6</span></div>
+  </div>
+  <div class="steps" id="stepsRow"></div>
+  <div class="stage">
+    <div id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `teste_roteiros_trabalho_engel_progress_${username}`;
+  const STEP_KEY = `teste_roteiros_trabalho_engel_step_${username}`;
+  const PROFESSOR_EMAIL = 'jairondouglas.senai@fieg.com.br';
+
+  // Versão adaptada do trabalho "Roteiros de Teste" (turmas/jogos/atividades/
+  // teste-roteiros-trabalho.html) pro Engel — mesma capacidade MSEP (definir
+  // roteiro de teste / identificar problemas por meio de teste), só muda o
+  // jeito de ensinar/testar:
+  //   - De 4 tipos de teste pra 2: fica só Smoke Test e Teste Exploratório —
+  //     os dois são 100% "mão na massa" (jogar e observar). Certificação
+  //     técnica e Teste de Plataforma exigem ler documentação externa de
+  //     fabricante/rodar em várias resoluções — deixados de fora aqui por
+  //     serem tarefas de pesquisa abstrata, não o tipo de adaptação que
+  //     funciona pro Engel (ver estrutura.txt, seção 7).
+  //   - "SEU jogo" na versão regular = o Cobrinha que cada aluno constrói na
+  //     trilha de Codificação. O Engel não faz essa trilha (só tem a trilha
+  //     adaptada de JS Básico) — por isso ele testa o Campo Minado
+  //     (games/campo-minado.html), um jogo já pronto no portal, sem precisar
+  //     ter codificado nada antes.
+  //   - Passos bem curtos, 1 ideia por frase, ícone grande por bloco —
+  //     mesmo padrão visual de ponto-de-virada-engel.html/
+  //     js-basico-adaptado-engel.html.
+  // Continua sem correção automática: o produto é um PDF (slides) enviado
+  // por e-mail, confirmado com o visto do professor (mesmo mecanismo de
+  // shared/professor-visto.js usado no "Pular etapa" de js-basico-adaptado-
+  // engel.html).
+  const STEPS = [
+    {
+      icon: '🎮',
+      titulo: 'Testar o Campo Minado',
+      corpo: `
+Você vai testar o jogo **Campo Minado** 💣 (o mesmo jogo que já está aqui no portal).
+
+São 2 tipos de teste:
+- [ ] 💨 **Smoke Test** — teste rápido
+- [ ] 🔎 **Teste Exploratório** — jogar bastante tentando quebrar
+
+No fim: você monta uns slides simples mostrando o que testou, e manda pro professor.`
+    },
+    {
+      icon: '💨',
+      titulo: 'Bloco 1 — Smoke Test',
+      corpo: `
+**Smoke Test** = teste RÁPIDO. Só olha se o básico funciona.
+
+Quando se usa: **antes de lançar** uma versão nova do jogo. Por quê: pra saber rápido se dá pra publicar, antes de gastar tempo com testes mais longos.
+
+Abra o Campo Minado agora e teste estes 4 pontos. Pra cada um, anote ✅ (sim) ou ❌ (não):
+
+- [ ] 🟢 O jogo abre?
+- [ ] 🖱️ Dá pra clicar nos quadradinhos?
+- [ ] 🚩 Dá pra marcar uma bandeira?
+- [ ] ❌ Dá pra fechar o jogo?`
+    },
+    {
+      icon: '🔎',
+      titulo: 'Bloco 2 — Teste Exploratório',
+      corpo: `
+**Teste Exploratório** = jogar BASTANTE tentando "quebrar" o jogo. Sem roteiro fixo.
+
+Quando se usa: quando o jogo **já está estável** (o básico já funciona). Por quê: acha bugs escondidos que ninguém pensou em testar antes.
+
+Jogue o Campo Minado por uns 5 minutos. Clique rápido, clique em tudo, tente bagunçar.
+
+Anote 1 coisa:
+- [ ] Uma coisa estranha que você viu (ou: "não achei nada estranho, o jogo aguentou").`
+    },
+    {
+      icon: '🖼️',
+      titulo: 'Como fazer os slides',
+      corpo: `
+Molde de **4 slides** — copie esse jeito, com poucas palavras e emoji grande:
+
+- [ ] **Slide 1** — 🎮 Título: "Teste do Campo Minado — [seu nome]"
+- [ ] **Slide 2** — 💨 Smoke Test: 1 frase de "quando/por que se usa" (copie do Bloco 1) + os 4 itens do checklist, cada um com ✅ ou ❌
+- [ ] **Slide 3** — 🔎 Teste Exploratório: 1 frase de "quando/por que se usa" (copie do Bloco 2) + a coisa estranha que você achou (ou "tudo certo")
+- [ ] **Slide 4** — 🏁 Fim: "Terminei!"
+
+Faça no Canva, Google Slides ou PowerPoint.`
+    },
+    {
+      icon: '📧',
+      titulo: 'Como entregar',
+      corpo: `
+1. Baixe os slides em **PDF**.
+2. Mande e-mail pro professor:
+
+§§§text
+${PROFESSOR_EMAIL}
+§§§
+
+Assunto:
+
+§§§text
+Teste de Jogos - Engel
+§§§
+
+3. Anexe o PDF (não cole no corpo do e-mail).
+4. Depois, avance e peça o visto aqui.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepsRowEl = document.getElementById('stepsRow');
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Parser markdown-enxuto igual ao da versão regular (teste-roteiros-
+  // trabalho.html) — só cabeçalhos, bloco §§§lang...§§§, lista/checklist e
+  // parágrafo, sem tabela (não é usada aqui).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ul class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ul>';
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|-|\d+\.)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('teste_roteiros_trabalho_engel', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderStepsRow() {
+    let html = '';
+    STEPS.forEach((s, i) => {
+      const done = i < currentIndex;
+      const active = i === currentIndex;
+      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : s.icon}</div>`;
+    });
+    const vistoDone = currentIndex > STEPS.length || (loadProgress() && loadProgress().completed);
+    html += `<div class="step-dot${currentIndex >= STEPS.length ? ' active' : ''}${vistoDone ? ' done' : ''}">${vistoDone ? '✅' : '🧑‍🏫'}</div>`;
+    stepsRowEl.innerHTML = html;
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo ➡️</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+    lblStepNum.textContent = currentIndex + 1;
+    renderStepsRow();
+
+    const step = STEPS[currentIndex];
+    reportStep(`Trabalho (Engel) — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <div class="big-icon">${step.icon}</div>
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    lblStepNum.textContent = STEPS.length + 1;
+    renderStepsRow();
+    reportStep('Trabalho (Engel) — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <div class="big-icon">🏆</div>
+          <h2>Atividade concluída!</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <div class="big-icon">🧑‍🏫</div>
+        <h2>Etapa final — Visto do professor</h2>
+        <p>Você já mandou o e-mail com o PDF pro professor?</p>
+        <p>Peça pro professor conferir. Quando ele confirmar, peça o token dele e digite abaixo.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Peça o token pro professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Deu erro. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito pro professor: checklist de correção do material enviado por
+  // e-mail, mesmo espírito do gabarito da versão regular (não é pergunta e
+  // resposta certa, é o que conferir no PDF do aluno).
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Roteiros de Teste (Engel) — Checklist de correção do trabalho',
+      subtitle: 'Trabalho adaptado (Canva/Slides/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
+      items: [
+        { number: 1, title: 'Slide 2 — Smoke Test', prompt: 'O slide cobre tudo?', answer: 'Frase de quando/por que se usa Smoke Test (antes de lançar uma versão, pra saber rápido se dá pra publicar); os 4 itens do checklist (jogo abre / dá pra clicar / dá pra marcar bandeira / dá pra fechar) — cada um com ✅ ou ❌, testado de verdade no Campo Minado.' },
+        { number: 2, title: 'Slide 3 — Teste Exploratório', prompt: 'O slide cobre tudo?', answer: 'Frase de quando/por que se usa Teste Exploratório (quando o jogo já está estável, pra achar bugs escondidos); pelo menos 1 observação depois de jogar uns 5 minutos tentando quebrar o jogo (uma coisa estranha encontrada, ou "não achei nada estranho").' },
+        { number: 3, title: 'Slides 1 e 4', prompt: 'Título e fechamento presentes?', answer: 'Slide 1 com o nome do aluno; Slide 4 marcando o fim.' },
+        { number: 4, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado, enviado por e-mail para jairondouglas.senai@fieg.com.br, assunto "Teste de Jogos - Engel", PDF anexado.' }
+      ],
+      fileName: 'teste-roteiros-trabalho-engel-gabarito.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
