@@ -58,11 +58,12 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await stubSupabaseFake(page, {});
   });
 
-  test('mostra os cards das 6 matérias de Jogos Digitais', async ({ page }) => {
+  test('mostra os cards das 7 matérias de Jogos Digitais', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(6);
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(7);
     await expect(page.locator('#materiaCardGrid')).toContainText('Fundamentos de Programação');
     await expect(page.locator('#materiaCardGrid')).toContainText('Testes de Jogos Digitais');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Prova');
   });
 
   test('carrega tema, usuário e trilhas JS/C# dentro de Fundamentos de Programação', async ({ page }) => {

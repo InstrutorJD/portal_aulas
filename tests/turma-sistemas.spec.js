@@ -26,10 +26,11 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(green).not.toBe('#7cff3f'); // não é o verde da turma Jogos
   });
 
-  test('mostra os cards das 9 matérias de Sistemas', async ({ page }) => {
+  test('mostra os cards das 10 matérias de Sistemas', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(9);
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(10);
     await expect(page.locator('.game-card:has-text("Internet das Coisas")')).toContainText('Em breve');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Prova');
   });
 
   test('mostra a trilha SQL dentro de Banco de Dados, com teoria e prática', async ({ page }) => {
