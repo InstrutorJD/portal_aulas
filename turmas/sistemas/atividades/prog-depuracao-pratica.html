@@ -254,6 +254,7 @@
       code: 'let nome = joao;\nconsole.log("Bem-vindo, " + nome);',
       hint: 'Texto (string) em JavaScript precisa ficar entre aspas — sem elas, o computador tenta achar uma VARIÁVEL chamada joao, que não existe.',
       bugExplanation: 'Faltavam aspas em <code>joao</code> — sem elas, o JavaScript tenta usar joao como o NOME de uma variável (que não existe), em vez de tratar como texto. Com aspas (<code>"joao"</code>), vira uma string de verdade.',
+      solution: 'let nome = "joao";\nconsole.log("Bem-vindo, " + nome);',
       expectedOutput: 'Bem-vindo, joao'
     },
     {
@@ -264,6 +265,7 @@
       code: 'let idade = 15;\nconsole.log(idad + 1);',
       hint: 'Confira se o nome da variável usada no <code>console.log</code> é exatamente igual ao nome declarado com <code>let</code>.',
       bugExplanation: 'A variável foi declarada como <code>idade</code>, mas usada como <code>idad</code> (faltando uma letra) — nomes de variável precisam ser IDÊNTICOS, letra por letra, em todo o código.',
+      solution: 'let idade = 15;\nconsole.log(idade + 1);',
       expectedOutput: '16'
     },
     {
@@ -274,6 +276,7 @@
       code: 'let Nome = "Maria";\nconsole.log(nome);',
       hint: 'JavaScript diferencia letra maiúscula de minúscula no nome das variáveis — "Nome" e "nome" não são a mesma coisa.',
       bugExplanation: 'A variável foi declarada com N maiúsculo (<code>Nome</code>), mas usada com n minúsculo (<code>nome</code>) — pra JavaScript, maiúsculas e minúsculas tornam o nome completamente diferente.',
+      solution: 'let Nome = "Maria";\nconsole.log(Nome);',
       expectedOutput: 'Maria'
     },
     {
@@ -284,6 +287,7 @@
       code: 'function dobro(numero) {\n  return numero + 1;\n}\n\nconsole.log(dobro(5));',
       hint: '"Dobro" significa multiplicar por 2 — confira a operação usada dentro da função.',
       bugExplanation: 'A função somava 1 (<code>numero + 1</code>) em vez de multiplicar por 2 (<code>numero * 2</code>) — o dobro de um número é ele vezes 2, não ele mais 1.',
+      solution: 'function dobro(numero) {\n  return numero * 2;\n}\n\nconsole.log(dobro(5));',
       expectedOutput: '10'
     },
     {
@@ -294,6 +298,7 @@
       code: 'function verificarAcesso(idade) {\n  if (idade = 18) {\n    return "liberado";\n  } else {\n    return "bloqueado";\n  }\n}\n\nconsole.log(verificarAcesso(15));',
       hint: 'Repare no operador dentro do <code>if</code> — <code>=</code> (atribuição) não é o mesmo que comparar dois valores.',
       bugExplanation: 'O <code>if</code> usava <code>=</code> (atribuição) em vez de <code>&gt;=</code> (comparação) — isso troca o valor de <code>idade</code> por 18 e o resultado da atribuição (18) é sempre "verdadeiro", então a função SEMPRE retornava "liberado", não importa a idade.',
+      solution: 'function verificarAcesso(idade) {\n  if (idade >= 18) {\n    return "liberado";\n  } else {\n    return "bloqueado";\n  }\n}\n\nconsole.log(verificarAcesso(15));',
       expectedOutput: 'bloqueado'
     },
     {
@@ -304,6 +309,7 @@
       code: 'function classificarNota(nota) {\n  let conceito;\n  switch (true) {\n    case nota >= 9:\n      conceito = "A";\n    case nota >= 7:\n      conceito = "B";\n    case nota >= 5:\n      conceito = "C";\n    default:\n      conceito = "D";\n  }\n  return conceito;\n}\n\nconsole.log(classificarNota(9.5));',
       hint: 'Depois que um <code>case</code> do <code>switch</code> é escolhido, o código continua rodando os próximos <code>case</code> também — a não ser que algo pare essa continuação.',
       bugExplanation: 'Faltava <code>break;</code> depois de cada atribuição dentro do <code>switch</code> — sem ele, mesmo depois de entrar no <code>case</code> certo, a execução continua "caindo" nos próximos e sobrescrevendo <code>conceito</code>, até chegar no <code>default</code>.',
+      solution: 'function classificarNota(nota) {\n  let conceito;\n  switch (true) {\n    case nota >= 9:\n      conceito = "A";\n      break;\n    case nota >= 7:\n      conceito = "B";\n      break;\n    case nota >= 5:\n      conceito = "C";\n      break;\n    default:\n      conceito = "D";\n  }\n  return conceito;\n}\n\nconsole.log(classificarNota(9.5));',
       expectedOutput: 'A'
     },
     {
@@ -314,6 +320,7 @@
       code: 'function dividir(a, b) {\n  return a / b;\n}\n\nfunction metade(numero) {\n  return dividir(2, numero);\n}\n\nconsole.log(metade(10));',
       hint: 'Confira a ORDEM dos argumentos passados pra <code>dividir(...)</code> dentro de <code>metade(...)</code>.',
       bugExplanation: 'Os argumentos estavam invertidos: <code>dividir(2, numero)</code> calcula <code>2 / numero</code>, quando deveria ser <code>dividir(numero, 2)</code> pra calcular <code>numero / 2</code>.',
+      solution: 'function dividir(a, b) {\n  return a / b;\n}\n\nfunction metade(numero) {\n  return dividir(numero, 2);\n}\n\nconsole.log(metade(10));',
       expectedOutput: '5'
     },
     {
@@ -324,6 +331,7 @@
       code: 'function faixaEtaria(idade) {\n  if (idade >= 0) {\n    return "crianca";\n  } else if (idade >= 12) {\n    return "adolescente";\n  } else if (idade >= 18) {\n    return "adulto";\n  }\n  return "invalido";\n}\n\nconsole.log(faixaEtaria(25));',
       hint: 'Num encadeamento de <code>if/else if</code>, a ORDEM das condições importa — pense em qual delas "captura" o valor primeiro.',
       bugExplanation: 'As condições estavam na ordem errada: como <code>idade &gt;= 0</code> é verdadeiro pra quase qualquer idade, ela captura o caso primeiro e as duas condições seguintes nunca são alcançadas. A ordem certa é da mais restritiva pra menos restritiva: <code>&gt;= 18</code>, depois <code>&gt;= 12</code>, depois <code>&gt;= 0</code>.',
+      solution: 'function faixaEtaria(idade) {\n  if (idade >= 18) {\n    return "adulto";\n  } else if (idade >= 12) {\n    return "adolescente";\n  } else if (idade >= 0) {\n    return "crianca";\n  }\n  return "invalido";\n}\n\nconsole.log(faixaEtaria(25));',
       expectedOutput: 'adulto'
     },
     {
@@ -334,6 +342,7 @@
       code: 'function diaDaSemana(numero) {\n  switch (numero) {\n    case 1: return "segunda";\n    case 2: return "terca";\n    case 3: return "quarta";\n    case 4: return "quinta";\n    case 5: return "sexta";\n    default: return "fim de semana";\n  }\n}\n\nfunction diaSeguinte(numero) {\n  return diaDaSemana(numero + 2);\n}\n\nconsole.log(diaSeguinte(3));',
       hint: '"Seguinte" significa o próximo — confira o número que está sendo somado dentro de <code>diaSeguinte(...)</code>.',
       bugExplanation: 'A função somava <code>numero + 2</code> em vez de <code>numero + 1</code>, pulando um dia — o dia seguinte a quarta (3) é quinta (4), não sexta (5).',
+      solution: 'function diaDaSemana(numero) {\n  switch (numero) {\n    case 1: return "segunda";\n    case 2: return "terca";\n    case 3: return "quarta";\n    case 4: return "quinta";\n    case 5: return "sexta";\n    default: return "fim de semana";\n  }\n}\n\nfunction diaSeguinte(numero) {\n  return diaDaSemana(numero + 1);\n}\n\nconsole.log(diaSeguinte(3));',
       expectedOutput: 'quinta'
     },
     {
@@ -344,6 +353,7 @@
       code: 'function contarAprovados(notas) {\n  let total = 0;\n  for (let i = 0; i < notas.length; i++) {\n    if (notas[i] > 6) {\n      total++;\n    }\n  }\n  return total;\n}\n\nconsole.log(contarAprovados([5, 6, 7, 4, 9, 3]));',
       hint: 'Uma nota exatamente igual a 6 deveria contar como aprovada. O operador de comparação usado está incluindo esse caso?',
       bugExplanation: 'O <code>if</code> usava <code>&gt;</code> (maior que) em vez de <code>&gt;=</code> (maior ou igual) — isso deixava de contar a nota 6 como aprovada, mesmo ela sendo exatamente o limite de aprovação.',
+      solution: 'function contarAprovados(notas) {\n  let total = 0;\n  for (let i = 0; i < notas.length; i++) {\n    if (notas[i] >= 6) {\n      total++;\n    }\n  }\n  return total;\n}\n\nconsole.log(contarAprovados([5, 6, 7, 4, 9, 3]));',
       expectedOutput: '3'
     },
     {
@@ -354,6 +364,7 @@
       code: 'function senhaCorreta(digitada, correta) {\n  if (digitada = correta) {\n    return "acesso liberado";\n  }\n  return "senha incorreta";\n}\n\nconsole.log(senhaCorreta("1234", "5678"));',
       hint: 'De novo o <code>=</code> dentro do <code>if</code> — compare com o que você aprendeu no chamado "Acesso liberado?".',
       bugExplanation: 'O <code>if</code> usava <code>=</code> (atribuição) em vez de <code>===</code> (comparação) — isso troca o valor de <code>digitada</code> pelo de <code>correta</code>, e como o resultado é uma string não vazia, o <code>if</code> é sempre "verdadeiro", liberando o acesso mesmo com a senha errada.',
+      solution: 'function senhaCorreta(digitada, correta) {\n  if (digitada === correta) {\n    return "acesso liberado";\n  }\n  return "senha incorreta";\n}\n\nconsole.log(senhaCorreta("1234", "5678"));',
       expectedOutput: 'senha incorreta'
     },
     {
@@ -364,6 +375,7 @@
       code: 'function turnoDoDia(hora) {\n  if (hora >= 5) {\n    return "manha";\n  } else if (hora >= 12) {\n    return "tarde";\n  } else if (hora >= 18) {\n    return "noite";\n  }\n  return "madrugada";\n}\n\nconsole.log(turnoDoDia(19));',
       hint: 'Mesmo problema do chamado "Faixa etária" — confira a ORDEM das condições no <code>if/else if</code>.',
       bugExplanation: 'As condições estavam na ordem errada: como <code>hora &gt;= 5</code> já é verdadeiro às 19h, ela captura o caso primeiro e as condições seguintes nunca são testadas. A ordem certa é da mais restritiva pra menos restritiva: <code>&gt;= 18</code>, depois <code>&gt;= 12</code>, depois <code>&gt;= 5</code>.',
+      solution: 'function turnoDoDia(hora) {\n  if (hora >= 18) {\n    return "noite";\n  } else if (hora >= 12) {\n    return "tarde";\n  } else if (hora >= 5) {\n    return "manha";\n  }\n  return "madrugada";\n}\n\nconsole.log(turnoDoDia(19));',
       expectedOutput: 'noite'
     },
     {
@@ -374,6 +386,7 @@
       code: 'function categoriaPedido(peso) {\n  let categoria;\n  switch (true) {\n    case peso <= 1:\n      categoria = "leve";\n    case peso <= 5:\n      categoria = "medio";\n    default:\n      categoria = "pesado";\n  }\n  return categoria;\n}\n\nconsole.log(categoriaPedido(0.5));',
       hint: 'Mesmo problema do chamado "Conceito da nota" — falta algo depois de cada atribuição dentro do <code>switch</code>.',
       bugExplanation: 'Faltava <code>break;</code> depois de cada atribuição dentro do <code>switch</code> — sem ele, mesmo entrando no <code>case</code> certo (peso 0.5 é "leve"), a execução continua caindo nos próximos e sobrescrevendo <code>categoria</code> até o <code>default</code>.',
+      solution: 'function categoriaPedido(peso) {\n  let categoria;\n  switch (true) {\n    case peso <= 1:\n      categoria = "leve";\n      break;\n    case peso <= 5:\n      categoria = "medio";\n      break;\n    default:\n      categoria = "pesado";\n  }\n  return categoria;\n}\n\nconsole.log(categoriaPedido(0.5));',
       expectedOutput: 'leve'
     },
     {
@@ -384,6 +397,7 @@
       code: 'function contarReprovados(faltas) {\n  let total = 0;\n  for (let i = 0; i < faltas.length; i++) {\n    if (faltas[i] > 4) {\n      total++;\n    }\n  }\n  return total;\n}\n\nconsole.log(contarReprovados([2, 4, 5, 1, 4, 6]));',
       hint: 'Mesmo problema do chamado "Contagem de aprovados" — o limite de 4 faltas deveria contar, e o operador usado está deixando esse caso de fora.',
       bugExplanation: 'O <code>if</code> usava <code>&gt;</code> (maior que) em vez de <code>&gt;=</code> (maior ou igual) — isso deixava de contar quem tem exatamente 4 faltas, mesmo esse sendo o limite de reprovação.',
+      solution: 'function contarReprovados(faltas) {\n  let total = 0;\n  for (let i = 0; i < faltas.length; i++) {\n    if (faltas[i] >= 4) {\n      total++;\n    }\n  }\n  return total;\n}\n\nconsole.log(contarReprovados([2, 4, 5, 1, 4, 6]));',
       expectedOutput: '4'
     }
   ];
@@ -400,7 +414,7 @@
         number: i + 1,
         title: c.title,
         prompt: `${c.desc}\n\nCódigo com bug:\n${c.code}`,
-        answer: `Console após corrigir: ${c.expectedOutput}\n\nBug: ${c.bugExplanation.replace(/<[^>]+>/g, '')}`
+        answer: `Console após corrigir: ${c.expectedOutput}\n\nBug: ${c.bugExplanation.replace(/<[^>]+>/g, '')}\n\nCódigo corrigido (não é a única forma correta):\n${c.solution}`
       })),
       fileName: 'prog-depuracao-pratica-gabarito.txt'
     });
