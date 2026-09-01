@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Dev Sistemas: Projetos com PixelCode</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --green:#3aa0ff; --green-dim:#2b6ba3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#d6e2ec; --ink-dim:#6c8698;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050a10;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(58,160,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:190px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .project-item{
+    display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
+  }
+  .project-item .status{ font-size:13px; width:16px; text-align:center; flex-shrink:0; }
+  .project-item.active{ border-color:var(--green); color:var(--green); }
+  .project-item.completed{ color:var(--ink); }
+  .project-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:10px; height:100%; overflow-y:auto; }
+
+  .intro-box{
+    flex-shrink:0; background:#050a10; border:1px solid var(--green-dim); padding:10px 14px;
+    font-size:12px; color:var(--ink); line-height:1.6;
+  }
+  .intro-box b{ color:var(--green); }
+  .intro-box ol{ margin:6px 0 0; padding-left:20px; }
+  .intro-box li{ margin-bottom:3px; }
+
+  .project-header{ flex-shrink:0; background:var(--panel); border:1px solid var(--line); padding:12px 16px; }
+  .project-header .title-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .project-header .icon{ font-size:26px; line-height:1; }
+  .project-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--green); margin:0; letter-spacing:1px; }
+  .project-header p{ font-size:13px; color:var(--ink); margin:0; line-height:1.6; }
+  .project-header code{ color:var(--yellow); }
+
+  .hint-toggle{
+    display:inline-block; margin-top:10px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--green-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-toggle:hover{ background:rgba(224,196,106,0.1); }
+  .hint-box{
+    display:none; margin-top:8px; background:var(--panel2); border:1px dashed var(--yellow);
+    padding:8px 10px; font-size:12px; color:var(--ink); line-height:1.6;
+  }
+  .hint-box.show{ display:block; }
+  .hint-box code{ color:var(--yellow); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+  button.btn, a.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04150c; border:none; padding:11px 18px; cursor:pointer; border-radius:2px;
+    text-decoration:none; display:inline-block;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .visto-panel{ background:var(--panel); border:1px solid var(--line); padding:12px 16px; flex-shrink:0; }
+  .visto-panel h3{ font-family:var(--user-font-display, 'VT323', monospace); font-size:16px; color:var(--yellow); margin:0 0 8px; letter-spacing:1px; }
+  .visto-panel p{ font-size:12px; color:var(--ink-dim); margin:0 0 10px; line-height:1.6; }
+  .visto-panel .done-msg{ font-size:13px; color:var(--green); }
+  .visto-form{ display:flex; flex-direction:column; gap:10px; max-width:320px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); display:none; }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); display:block; }
+  .visto-msg.ok{ border-color:var(--green); color:var(--green); display:block; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'prog_projetos_pixelcode';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>DEV SISTEMAS — PROJETOS COM PIXELCODE</div>
+    <div>COM VISTO: <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Projetos</div>
+        <div id="projectList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="intro-box">
+          <b>📘 Como funciona</b> — esses projetos você escreve do zero, sozinho, no <b>PixelCode</b> (editor separado, sem correção automática):
+          <ol>
+            <li>Leia o enunciado e, se precisar, a dica.</li>
+            <li>Clique em "🎨 Abrir PixelCode" — ele abre numa aba nova, ao lado desta.</li>
+            <li>Escreva o código no PixelCode e rode com "▶ Executar" até o resultado bater com o pedido.</li>
+            <li>Chame o professor pra conferir sua tela. Ele vai gerar um token (aba Gestão → "Token — Dar Visto / Pular Etapa") e você digita esse token aqui embaixo, no projeto correspondente.</li>
+          </ol>
+        </div>
+
+        <div class="project-header">
+          <div class="title-row">
+            <span class="icon" id="projIcon">--</span>
+            <h2 id="projTitle">--</h2>
+          </div>
+          <p id="projDesc"></p>
+          <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+
+        <div class="actions">
+          <a class="btn" id="btnOpenPixelCode" href="../../../pixelcode.html" target="_blank" rel="noopener">🎨 Abrir PixelCode</a>
+        </div>
+
+        <div class="visto-panel" id="vistoPanel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  // PROGRESS_KEY precisa ser um array de ids concluídos — é o formato que
+  // shared/platform-core.js (getModuleProgress) e shared/progress-sync.js
+  // esperam pra calcular %/sincronizar entre dispositivos. Quem deu o
+  // visto e quando fica numa chave PRÓPRIA (META_KEY, só local — não
+  // sincroniza entre dispositivos, mas é só um texto de conveniência pra
+  // reexibir "visto dado por Fulano em ...", não dado essencial).
+  const PROGRESS_KEY = `prog_projetos_pixelcode_progress_${username}`;
+  const META_KEY = `prog_projetos_pixelcode_meta_${username}`;
+
+  // 4 pequenos projetos que o aluno escreve do ZERO, sozinho, no PixelCode
+  // (pixelcode.html — editor Monaco + console, standalone, sem integração
+  // com o portal). Como o código vive numa aba separada, fora do alcance
+  // do portal, não tem como o portal corrigir sozinho — cada projeto tem o
+  // próprio "Dar visto" (shared/professor-visto.js), independente dos
+  // outros 3. `solution`/`expectedSample` só existem pro gabarito do
+  // professor conferir se o aluno fez algo equivalente — nunca são
+  // comparados automaticamente com o código do aluno.
+  const PROJECTS = [
+    {
+      id: 1,
+      title: 'Calculadora Básica',
+      icon: '🧮',
+      desc: 'Crie quatro funções — <code>soma</code>, <code>subtracao</code>, <code>multiplicacao</code> e <code>divisao</code> — cada uma recebendo dois números e devolvendo o resultado daquela operação. No final, use <code>console.log</code> pra mostrar o resultado das quatro operações usando os números <b>12</b> e <b>4</b>.',
+      hint: 'Cada função recebe dois parâmetros (ex.: <code>a, b</code>) e usa <code>return</code> pra devolver o resultado — só muda o operador em cada uma (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>). Pra testar, chame cada uma dentro de um <code>console.log(...)</code>, ex.: <code>console.log(soma(12, 4));</code>.',
+      solution: 'function soma(a, b) {\n  return a + b;\n}\nfunction subtracao(a, b) {\n  return a - b;\n}\nfunction multiplicacao(a, b) {\n  return a * b;\n}\nfunction divisao(a, b) {\n  return a / b;\n}\n\nconsole.log(soma(12, 4));\nconsole.log(subtracao(12, 4));\nconsole.log(multiplicacao(12, 4));\nconsole.log(divisao(12, 4));',
+      expectedSample: 'Console mostra, em qualquer ordem razoável: 16, 8, 48, 3'
+    },
+    {
+      id: 2,
+      title: 'Calculadora de Gorjetas',
+      icon: '💰',
+      desc: 'Crie uma função <code>calcularGorjeta(conta, porcentagem)</code> que recebe o valor de uma conta e uma porcentagem de gorjeta, e devolve tanto o valor da gorjeta quanto o total a pagar (conta + gorjeta). Teste com uma conta de <b>80</b> e <b>15%</b> de gorjeta.',
+      hint: 'Porcentagem em código é sempre <code>valor * (porcentagem / 100)</code>. Pra uma função devolver dois valores de uma vez, use um objeto: <code>return { gorjeta, total };</code> — depois acesse com <code>resultado.gorjeta</code> e <code>resultado.total</code>.',
+      solution: 'function calcularGorjeta(conta, porcentagem) {\n  const gorjeta = conta * (porcentagem / 100);\n  const total = conta + gorjeta;\n  return { gorjeta, total };\n}\n\nconst resultado = calcularGorjeta(80, 15);\nconsole.log("Gorjeta: " + resultado.gorjeta);\nconsole.log("Total a pagar: " + resultado.total);',
+      expectedSample: 'Gorjeta: 12\nTotal a pagar: 92'
+    },
+    {
+      id: 3,
+      title: 'Um Contador',
+      icon: '🔢',
+      desc: 'Crie uma função <code>contar(inicio, fim)</code> que mostra no console, um por um, todos os números de <code>inicio</code> até <code>fim</code> (incluindo os dois extremos). Teste chamando <code>contar(1, 5)</code> e depois <code>contar(10, 15)</code>.',
+      hint: 'Use um laço <code>for</code> começando em <code>inicio</code> e indo até <code>fim</code> (com <code>&lt;=</code>, pra incluir o próprio <code>fim</code>), com um <code>console.log</code> do número dentro do laço.',
+      solution: 'function contar(inicio, fim) {\n  for (let i = inicio; i <= fim; i++) {\n    console.log(i);\n  }\n}\n\ncontar(1, 5);\ncontar(10, 15);',
+      expectedSample: '1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15 (uma linha por número, nessa ordem)'
+    },
+    {
+      id: 4,
+      title: 'Conversor de Temperatura',
+      icon: '🌡️',
+      desc: 'Crie duas funções: <code>celsiusParaFahrenheit(c)</code> e <code>fahrenheitParaCelsius(f)</code>, cada uma convertendo pra outra escala. Teste convertendo <b>100°C</b> pra Fahrenheit e <b>32°F</b> pra Celsius.',
+      hint: 'As fórmulas são: <code>F = C * 9/5 + 32</code> e <code>C = (F - 32) * 5/9</code>. Repare nos parênteses da segunda fórmula — sem eles, a ordem das operações muda o resultado.',
+      solution: 'function celsiusParaFahrenheit(c) {\n  return c * 9 / 5 + 32;\n}\nfunction fahrenheitParaCelsius(f) {\n  return (f - 32) * 5 / 9;\n}\n\nconsole.log(celsiusParaFahrenheit(100));\nconsole.log(fahrenheitParaCelsius(32));',
+      expectedSample: '212\n0'
+    }
+  ];
+
+  // Exposto sempre (não só quando o botão local aparece) pra a aba "Gestão"
+  // do portal da turma conseguir chamar isso remotamente, num iframe oculto,
+  // e baixar um .txt com o enunciado, o código de referência e a saída
+  // esperada de cada projeto — só pra conferência visual, o professor ainda
+  // decide se o que o aluno escreveu é equivalente.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Dev Sistemas: Projetos com PixelCode',
+      subtitle: 'Prática (visto do professor) · Turma Sistemas',
+      items: PROJECTS.map((p, i) => ({
+        number: i + 1,
+        title: p.title,
+        prompt: p.desc.replace(/<[^>]+>/g, ''),
+        answer: `Saída esperada (aproximada): ${p.expectedSample}\n\nCódigo de referência (não é a única forma correta):\n${p.solution}`
+      })),
+      fileName: 'prog-projetos-pixelcode-gabarito.txt'
+    });
+  };
+
+  const projectListEl = document.getElementById('projectList');
+  const projIconEl = document.getElementById('projIcon');
+  const projTitleEl = document.getElementById('projTitle');
+  const projDescEl = document.getElementById('projDesc');
+  const btnHint = document.getElementById('btnHint');
+  const hintBox = document.getElementById('hintBox');
+  const vistoPanel = document.getElementById('vistoPanel');
+  const lblProgress = document.getElementById('lblProgress');
+
+  function getCompletedIds() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]');
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function saveCompletedIds(ids) {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(ids));
+  }
+  function getMeta() {
+    try { return JSON.parse(localStorage.getItem(META_KEY) || 'null') || {}; }
+    catch (e) { return {}; }
+  }
+  function saveMeta(meta) {
+    localStorage.setItem(META_KEY, JSON.stringify(meta));
+  }
+
+  let completedIds = new Set(getCompletedIds());
+  let meta = getMeta();
+  let selectedId = PROJECTS.find(p => !completedIds.has(p.id))?.id || PROJECTS[0].id;
+
+  function completedCount() {
+    return completedIds.size;
+  }
+
+  function renderSidebar() {
+    projectListEl.innerHTML = '';
+    PROJECTS.forEach(p => {
+      const isDone = completedIds.has(p.id);
+      const item = document.createElement('div');
+      item.className = 'project-item' + (p.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '');
+      const statusIcon = isDone ? '✅' : '🧑‍🏫';
+      item.innerHTML = `<span class="status">${statusIcon}</span><span class="name">${p.icon} ${p.title}</span>`;
+      item.addEventListener('click', () => selectProject(p.id));
+      projectListEl.appendChild(item);
+    });
+    lblProgress.textContent = `${completedCount()}/${PROJECTS.length}`;
+  }
+
+  function renderVistoPanel(project) {
+    // completedIds (array sincronizado via progress-sync.js) é a fonte de
+    // verdade de "concluído ou não" — meta (só local) só enriquece o texto
+    // com quem/quando, quando existir. Sem meta (ex.: sincronizou de outro
+    // dispositivo, onde o visto foi dado), ainda mostra "visto dado", só
+    // sem o nome/data — nunca reabre o formulário pra um projeto já feito.
+    if (completedIds.has(project.id)) {
+      const already = meta[project.id];
+      const quando = already && already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      const porTexto = already && already.vistoPor ? ` por <b>${already.vistoPor}</b>` : '';
+      vistoPanel.innerHTML = `
+        <h3>✅ Visto dado</h3>
+        <p class="done-msg">Visto dado${porTexto}${quando ? ' em ' + quando : ''}.</p>
+      `;
+      return;
+    }
+
+    vistoPanel.innerHTML = `
+      <h3>🧑‍🏫 Conferido pelo professor?</h3>
+      <p>Chame o professor pra ver seu código rodando no PixelCode. Quando ele confirmar, peça o token de professor (aba Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo.</p>
+      <div class="visto-form">
+        <label>Token do professor
+          <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+        </label>
+        <button class="btn" id="btnDarVisto">Dar visto</button>
+        <div class="visto-msg" id="vistoMsg"></div>
+      </div>
+    `;
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    const vistoToken = document.getElementById('vistoToken');
+
+    btnDarVisto.addEventListener('click', async () => {
+      const t = vistoToken.value;
+      vistoMsg.className = 'visto-msg';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        completedIds.add(project.id);
+        saveCompletedIds([...completedIds]);
+        meta[project.id] = { vistoPor: result.nome, vistoEm: new Date().toISOString() };
+        saveMeta(meta);
+        renderSidebar();
+        renderVistoPanel(project);
+
+        if (typeof window.reportActivity === 'function') {
+          window.reportActivity(
+            'prog_projetos_pixelcode',
+            `Dev Sistemas — Projetos PixelCode — ${project.title} (visto dado)`,
+            { projectId: project.id, total: PROJECTS.length, completed: completedCount() }
+          );
+        }
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  function selectProject(id) {
+    const project = PROJECTS.find(p => p.id === id);
+    if (!project) return;
+    selectedId = id;
+
+    projIconEl.textContent = project.icon;
+    projTitleEl.textContent = project.title;
+    projDescEl.innerHTML = project.desc;
+
+    hintBox.innerHTML = project.hint || '';
+    hintBox.classList.remove('show');
+    btnHint.textContent = '💡 Ver dica';
+
+    renderVistoPanel(project);
+    renderSidebar();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity(
+        'prog_projetos_pixelcode',
+        `Dev Sistemas — Projetos PixelCode — ${project.title}`,
+        { projectId: project.id, total: PROJECTS.length, completed: completedCount() }
+      );
+    }
+  }
+
+  btnHint.addEventListener('click', () => {
+    const showing = hintBox.classList.toggle('show');
+    btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
+  });
+
+  renderSidebar();
+  selectProject(selectedId);
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

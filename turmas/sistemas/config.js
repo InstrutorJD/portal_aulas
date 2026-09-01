@@ -527,6 +527,26 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          // Sem correção automática de propósito: o código do aluno vive
+          // numa aba separada do PixelCode (pixelcode.html), fora do
+          // alcance do portal — cada projeto só é marcado concluído com o
+          // visto manual do professor (shared/professor-visto.js), igual
+          // à prática de Conexão com Supabase.
+          key: 'prog-projetos-pixelcode',
+          label: 'Projetos com PixelCode',
+          desc: 'Escreva pequenos programas do zero, sozinho, no PixelCode — cada um vira um projeto real, conferido e assinado pelo professor.',
+          capacidade: 'Aplicar lógica de programação pra resolver problemas usando JavaScript.',
+          modules: [
+            {
+              key: 'projetos', title: 'Projetos — Calculadora, Gorjetas, Contador e Conversor',
+              desc: '4 pequenos programas escritos do zero no PixelCode (funções, laços e fórmulas) — sem correção automática: cada um é conferido e recebe o visto do professor.',
+              icon: '🎨', src: 'atividades/prog-projetos-pixelcode.html',
+              progressKey: 'prog_projetos_pixelcode_progress_', progressTotal: 4,
+              hasGabarito: true
+            }
+          ]
         }
       ]
     }

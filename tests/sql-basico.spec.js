@@ -122,6 +122,7 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`mundo_equipe_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
       localStorage.setItem(`prog_depuracao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`prog_depuracao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]));
+      localStorage.setItem(`prog_projetos_pixelcode_progress_${user}`, JSON.stringify([1, 2, 3, 4]));
     }, 'alexandre.natal');
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
