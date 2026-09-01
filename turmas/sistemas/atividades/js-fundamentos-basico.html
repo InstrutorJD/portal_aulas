@@ -192,6 +192,7 @@
       explanation: 'Uma <b>variável</b> é como uma caixinha com um nome, onde você guarda um valor para usar depois. Para criar uma, use a palavra <code>let</code>, dê um nome, um sinal de igual <code>=</code> e o valor, terminando com <code>;</code>.<pre>let idade = 10;</pre>',
       desc: 'Crie uma variável chamada <code>resultado</code> guardando o valor <b>100</b>.',
       hint: 'Use <code>let</code>, o nome exato pedido pra variável e o valor certo, seguido de ponto e vírgula.',
+      solution: 'let resultado = 100;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: {}, expected: 100 }
@@ -205,6 +206,7 @@
       explanation: 'Um texto (chamado de <b>string</b>) precisa ficar entre aspas — simples <code>\'</code> ou duplas <code>"</code>.<pre>let nome = "Ana";</pre>',
       desc: 'Crie uma variável chamada <code>resultado</code> guardando o texto <code>"JavaScript"</code>.',
       hint: 'Coloque o texto entre aspas, exatamente como pedido (maiúsculas/minúsculas importam).',
+      solution: 'let resultado = "JavaScript";',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: {}, expected: 'JavaScript' }
@@ -218,6 +220,7 @@
       explanation: 'Para somar dois números, use o sinal <code>+</code>.<pre>let total = x + y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável chamada <code>resultado</code> com a soma delas.',
       hint: 'Qual operador matemático soma dois valores? Aplique ele entre <code>a</code> e <code>b</code>.',
+      solution: 'let resultado = a + b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: { a: 2, b: 3 }, expected: 5 },
@@ -233,6 +236,7 @@
       explanation: 'Para dividir, use o sinal <code>/</code>.<pre>let metade = x / 2;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável chamada <code>resultado</code> com o valor de <code>a</code> dividido por <code>b</code>.',
       hint: 'Qual sinal representa divisão em JavaScript? Repare na ordem: é <code>a</code> dividido por <code>b</code>.',
+      solution: 'let resultado = a / b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: { a: 10, b: 2 }, expected: 5 },
@@ -248,6 +252,7 @@
       explanation: 'Você pode criar uma variável nova a partir do valor de outra que já existe, usando qualquer operador — aqui, soma.<pre>let vida = 5;\nlet vidaExtra = vida + 3; // vidaExtra vale 8</pre>',
       desc: 'A variável <code>pontos</code> já existe. Crie <code>resultado</code> com o valor de <code>pontos</code> mais <b>10</b>.',
       hint: 'Pense em como aumentar um valor existente em uma quantia fixa — some <code>10</code> ao valor de <code>pontos</code>.',
+      solution: 'let resultado = pontos + 10;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: { pontos: 0 }, expected: 10 },
@@ -263,6 +268,7 @@
       explanation: 'O comando <code>console.log(...)</code> mostra qualquer valor na tela (no console do navegador) — é a forma mais comum de exibir um resultado.<pre>console.log(idade);</pre>',
       desc: 'A variável <code>idade</code> já existe. Use <code>console.log</code> para mostrar o valor dela.',
       hint: '<code>console.log(valor)</code> mostra o que estiver dentro dos parênteses — passe a variável <code>idade</code> pra ele.',
+      solution: 'console.log(idade);',
       check: { type: 'console' },
       tests: [
         { values: { idade: 10 }, expected: [10] },
@@ -278,6 +284,7 @@
       explanation: 'Você também pode mostrar um texto direto, sem precisar de uma variável.<pre>console.log("Bem-vindo!");</pre>',
       desc: 'Use <code>console.log</code> para mostrar o texto <code>"Olá, mundo!"</code>.',
       hint: 'Coloque o texto entre aspas, exatamente como pedido, dentro dos parênteses do <code>console.log</code>.',
+      solution: 'console.log("Olá, mundo!");',
       check: { type: 'console' },
       tests: [
         { values: {}, expected: ['Olá, mundo!'] }
@@ -291,6 +298,7 @@
       explanation: '<code>alert(...)</code> é outra forma de mostrar uma mensagem — em vez de aparecer no console, abre um aviso na tela pro usuário ver. Funciona parecido com <code>console.log</code>.<pre>alert("Atenção!");</pre>',
       desc: 'A variável <code>nome</code> já existe (um texto). Use <code>alert</code> para mostrar o valor dela.',
       hint: '<code>alert(valor)</code> mostra o que está dentro dos parênteses num aviso — passe a variável <code>nome</code> pra ele.',
+      solution: 'alert(nome);',
       check: { type: 'console' },
       tests: [
         { values: { nome: 'Ana' }, expected: ['Ana'] },
@@ -306,6 +314,7 @@
       explanation: 'Não precisa guardar numa variável antes — dá pra mostrar o resultado de uma conta direto dentro do <code>console.log</code>.<pre>console.log(x + y);</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Use <code>console.log</code> para mostrar a soma delas, sem precisar criar outra variável.',
       hint: 'Some <code>a</code> e <code>b</code> direto dentro dos parênteses do <code>console.log</code>.',
+      solution: 'console.log(a + b);',
       check: { type: 'console' },
       tests: [
         { values: { a: 2, b: 3 }, expected: [5] },
@@ -321,6 +330,7 @@
       explanation: 'Você pode chamar <code>console.log</code> várias vezes seguidas — cada chamada aparece numa linha nova, na ordem em que o código roda.<pre>console.log("Nome:");\nconsole.log(nome);</pre>',
       desc: 'A variável <code>total</code> já existe. Use <code>console.log</code> duas vezes: primeiro mostre o texto <code>"Total:"</code>, depois mostre o valor de <code>total</code>.',
       hint: 'Duas linhas separadas, cada uma com seu próprio <code>console.log(...)</code> — a primeira com o texto, a segunda com a variável.',
+      solution: 'console.log("Total:");\nconsole.log(total);',
       check: { type: 'console' },
       tests: [
         { values: { total: 50 }, expected: ['Total:', 50] },
@@ -350,7 +360,7 @@
             return `${prefix} → console/alert deve mostrar ${JSON.stringify(t.expected)}`;
           }
           return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
-        }).join('\n')
+        }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
       })),
       fileName: 'js-fundamentos-basico-gabarito.txt'
     });
