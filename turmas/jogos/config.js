@@ -719,22 +719,30 @@ window.TURMA_CONFIG_JOGOS = {
         {
           // Trilha individual, adaptada — só aparece pro aluno listado em
           // visibleFor (professor sempre vê, pra acompanhar/gerar gabarito).
-          // Ver trilhaStatus() em shared/platform-core.js. Mesma capacidade
-          // MSEP da trilha regular 'teste-roteiros-avancados' (só o trabalho
-          // — sem questionário, que exige mais leitura/escrita), reduzida a
-          // 2 tipos de teste 100% mão-na-massa (Smoke Test + Exploratório,
-          // sem pesquisa de documentação externa) aplicados ao Campo Minado
-          // (games/campo-minado.html, já pronto no portal) em vez de um
-          // jogo próprio — o Engel não faz a trilha de Codificação que
-          // constrói o Cobrinha. Ver estrutura.txt, seção 7.
+          // Ver trilhaStatus() em shared/platform-core.js.
+          //
+          // 2ª versão, mais fácil ainda (a pedido do professor): a 1ª pedia
+          // pro Engel testar o Campo Minado e escrever os próprios
+          // resultados — ainda exigia decidir o que escrever. Aqui o
+          // "assunto" de cada slide (título + cor + texto) já vem PRONTO —
+          // a habilidade sendo treinada vira só a MECÂNICA de montar slide
+          // no Canva (criar título, criar texto, pintar a fonte do título
+          // numa cor, uma cor por slide). Não pede mais pra testar nada:
+          // só ler e digitar (sem copiar/colar — ver bloqueio próprio no
+          // fim de atividades/teste-roteiros-trabalho-engel.html). A
+          // capacidade MSEP da trilha regular equivalente
+          // ('teste-roteiros-avancados') fica só como pano de fundo do
+          // conteúdo dos slides (nomeia os 2 tipos de teste); o foco real
+          // da adaptação é a habilidade de criar slides. Ver estrutura.txt,
+          // seção 7.
           key: 'teste-roteiros-engel',
           label: 'Roteiros de Teste (Engel)',
           desc: 'Escolha um módulo para começar.',
           visibleFor: ['engel.fraga'],
           modules: [
             {
-              key: 'trabalho', title: 'Trabalho — Testar o Campo Minado (Adaptado)',
-              desc: '2 tipos de teste (Smoke Test e Teste Exploratório), aplicados ao jogo Campo Minado já pronto no portal — depois faz slides simples (molde de 4) e entrega pro professor.',
+              key: 'trabalho', title: 'Criar Slides no Canva (Adaptado)',
+              desc: '4 slides com título, cor da fonte e texto já prontos — você só digita (sem copiar/colar) e entrega pro professor.',
               icon: '🖼️', src: 'atividades/teste-roteiros-trabalho-engel.html',
               progressKey: 'teste_roteiros_trabalho_engel_progress_', progressMode: 'flag',
               hasGabarito: true

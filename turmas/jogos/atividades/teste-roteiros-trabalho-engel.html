@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Trabalho: Testar o Jogo (Engel)</title>
+<title>PixelForge Studios — Criar Slides no Canva (Engel)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -46,22 +46,43 @@
     margin:0 0 12px; letter-spacing:1px; text-align:center;
   }
 
-  .md-body{ font-size:18px; line-height:1.7; }
-  .md-body h3{
-    font-family:var(--user-font-display, 'VT323', monospace); color:var(--green); letter-spacing:0.5px;
-    margin:14px 0 6px; font-size:19px;
+  .lead{ font-size:18px; line-height:1.7; text-align:center; margin:0 0 6px; }
+
+  /* Guia "como fazer no Canva" — só aparece na Apresentação */
+  .howto{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+  .howto-item{
+    display:flex; align-items:center; gap:12px; background:var(--panel2);
+    border:1px solid var(--line); padding:10px 12px;
   }
-  .md-body p{ margin:0 0 12px; }
-  .md-body code{ background:#000; color:var(--green); padding:2px 7px; border-radius:2px; font-size:0.9em; }
-  .md-body pre{
-    background:#000; border:1px solid var(--line); padding:12px 14px; overflow-x:auto;
-    margin:0 0 12px; border-radius:2px; font-size:16px;
+  .howto-item .n{
+    flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--green);
+    color:#04220a; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:15px;
   }
-  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
-  .md-body ul.md-list{ margin:0 0 12px; padding-left:0; list-style:none; }
-  .md-body li{ margin-bottom:8px; }
-  .md-body li.md-check{ padding:8px 10px; border:1px dashed var(--line); background:var(--panel2); }
-  .md-body li.md-check::before{ content:'☐ '; color:var(--green); font-size:1.1em; }
+  .howto-item .t{ font-size:16px; }
+  .reminder{
+    margin-top:14px; text-align:center; font-size:15px; color:var(--yellow);
+    border:1px dashed var(--yellow); padding:10px; background:var(--panel2);
+  }
+
+  /* Tela de slide: cor do título (swatch grande) + caixas "digite isso" */
+  .color-row{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:14px; }
+  .swatch{ width:44px; height:44px; border-radius:8px; border:2px solid #000; flex-shrink:0; }
+  .color-label{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; letter-spacing:1px;
+  }
+
+  .type-label{
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px;
+    margin:0 0 6px; text-align:center;
+  }
+  .type-box{
+    background:#000; border:2px solid var(--line); padding:16px; margin-bottom:16px;
+    text-align:center; font-size:22px; font-weight:800; line-height:1.4;
+    user-select:none; -webkit-user-select:none; -ms-user-select:none; -webkit-touch-callout:none;
+    cursor:default;
+  }
+  .type-box.title-box{ border-color:var(--swatch-color, var(--green)); color:var(--swatch-color, var(--green)); font-family:var(--user-font-display, 'VT323', monospace); font-size:30px; }
+  .type-box.body-box{ color:var(--ink); font-weight:600; font-size:19px; }
 
   .step-nav{ display:flex; justify-content:space-between; align-items:center; }
   button.btn{
@@ -83,9 +104,25 @@
   .visto-msg.erro{ border-color:#ff3b30; color:#ff3b30; }
   .visto-msg.ok{ border-color:var(--green); color:var(--green); }
 
+  .entrega-box{ font-size:17px; line-height:1.7; text-align:center; }
+  .entrega-box pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; font-size:16px;
+    display:inline-block; margin:6px 0 14px; color:var(--green);
+  }
+
+  /* Toast do bloqueio de copiar/colar nas caixas de "digite isso" */
+  #noCopyToast{
+    position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:99999;
+    background:#1a1a1a; color:#f5f5f5; font:600 13px 'JetBrains Mono', monospace;
+    padding:9px 18px; border-radius:6px; box-shadow:0 2px 10px rgba(0,0,0,.5);
+    opacity:0; pointer-events:none; transition:opacity .15s ease;
+  }
+  #noCopyToast.show{ opacity:1; }
+
   @media (max-width: 600px) {
     .card{ padding:14px; }
-    .md-body{ font-size:17px; }
+    .type-box{ font-size:19px; }
+    .type-box.title-box{ font-size:24px; }
   }
 </style>
 <script>
@@ -104,14 +141,15 @@
 
 <div class="env">
   <div class="topbar">
-    <div>🎮 TESTAR UM JOGO</div>
-    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">6</span></div>
+    <div>🖼️ CRIAR SLIDES NO CANVA</div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">7</span></div>
   </div>
   <div class="steps" id="stepsRow"></div>
   <div class="stage">
     <div id="stepWrap"></div>
   </div>
 </div>
+<div id="noCopyToast">✍️ Digite com a mão — não dá pra copiar aqui!</div>
 
 <script>
   const urlParams = new URLSearchParams(window.location.search);
@@ -120,103 +158,62 @@
   const STEP_KEY = `teste_roteiros_trabalho_engel_step_${username}`;
   const PROFESSOR_EMAIL = 'jairondouglas.senai@fieg.com.br';
 
-  // Versão adaptada do trabalho "Roteiros de Teste" (turmas/jogos/atividades/
-  // teste-roteiros-trabalho.html) pro Engel — mesma capacidade MSEP (definir
-  // roteiro de teste / identificar problemas por meio de teste), só muda o
-  // jeito de ensinar/testar:
-  //   - De 4 tipos de teste pra 2: fica só Smoke Test e Teste Exploratório —
-  //     os dois são 100% "mão na massa" (jogar e observar). Certificação
-  //     técnica e Teste de Plataforma exigem ler documentação externa de
-  //     fabricante/rodar em várias resoluções — deixados de fora aqui por
-  //     serem tarefas de pesquisa abstrata, não o tipo de adaptação que
-  //     funciona pro Engel (ver estrutura.txt, seção 7).
-  //   - "SEU jogo" na versão regular = o Cobrinha que cada aluno constrói na
-  //     trilha de Codificação. O Engel não faz essa trilha (só tem a trilha
-  //     adaptada de JS Básico) — por isso ele testa o Campo Minado
-  //     (games/campo-minado.html), um jogo já pronto no portal, sem precisar
-  //     ter codificado nada antes.
-  //   - Passos bem curtos, 1 ideia por frase, ícone grande por bloco —
-  //     mesmo padrão visual de ponto-de-virada-engel.html/
-  //     js-basico-adaptado-engel.html.
-  // Continua sem correção automática: o produto é um PDF (slides) enviado
-  // por e-mail, confirmado com o visto do professor (mesmo mecanismo de
-  // shared/professor-visto.js usado no "Pular etapa" de js-basico-adaptado-
-  // engel.html).
-  const STEPS = [
+  // Reformulada a pedido do professor: a versão anterior pedia pro Engel
+  // testar o Campo Minado e escrever os próprios resultados — mesmo sendo
+  // um jogo real e jogável, ainda exigia decidir o que escrever, que é
+  // justamente o obstáculo pro perfil dele. Esta versão é mais fácil
+  // ainda: o "assunto" (título + texto de cada slide) já vem PRONTO — a
+  // habilidade sendo treinada é só a mecânica de montar slide no Canva
+  // (criar título, criar texto, pintar a cor da fonte do título, cada
+  // slide numa cor diferente). Não pede mais pra ele testar nada nem
+  // decidir o que escrever — só ler e digitar.
+  //
+  // "Não pode permitir copiar e colar": diferente do bloqueio de
+  // Ctrl+C/V ligado pelo professor por turma (shared/clipboard-guard.js,
+  // opcional e afeta a turma inteira), aqui o bloqueio é próprio desta
+  // atividade e sempre ligado, mas só nas caixas ".no-copy" (o
+  // título/texto que ele precisa digitar) — não afeta copiar o e-mail do
+  // professor na etapa de entrega, por exemplo. Ver isNoCopyZone()/
+  // listeners no fim do arquivo. Mesmo aviso de shared/clipboard-guard.js:
+  // é desincentivo pedagógico (força ele a digitar de verdade, treinando
+  // leitura/digitação — mesma lógica de js-basico-adaptado-engel.html),
+  // não segurança de verdade.
+  const HOWTO = [
+    { n: 1, t: 'No Canva, clique na caixa de "Adicionar título".' },
+    { n: 2, t: 'Digite o título (com a mão, sem colar).' },
+    { n: 3, t: 'Selecione o título digitado (arraste por cima do texto).' },
+    { n: 4, t: 'Clique no ícone "A" (cor da fonte) e escolha a cor mostrada aqui.' },
+    { n: 5, t: 'Clique numa caixa de texto normal e digite o texto do slide.' },
+    { n: 6, t: 'Clique no "+" pra criar o próximo slide e repita.' }
+  ];
+
+  const SLIDES = [
     {
-      icon: '🎮',
-      titulo: 'Testar o Campo Minado',
-      corpo: `
-Você vai testar o jogo **Campo Minado** 💣 (o mesmo jogo que já está aqui no portal).
-
-São 2 tipos de teste:
-- [ ] 💨 **Smoke Test** — teste rápido
-- [ ] 🔎 **Teste Exploratório** — jogar bastante tentando quebrar
-
-No fim: você monta uns slides simples mostrando o que testou, e manda pro professor.`
+      icon: '🎮', corNome: 'Vermelho', cor: '#e53935', emoji: '🔴',
+      titulo: 'Teste do Campo Minado',
+      texto: 'Por Engel Fraga'
     },
     {
-      icon: '💨',
-      titulo: 'Bloco 1 — Smoke Test',
-      corpo: `
-**Smoke Test** = teste RÁPIDO. Só olha se o básico funciona.
-
-Quando se usa: **antes de lançar** uma versão nova do jogo. Por quê: pra saber rápido se dá pra publicar, antes de gastar tempo com testes mais longos.
-
-Abra o Campo Minado agora e teste estes 4 pontos. Pra cada um, anote ✅ (sim) ou ❌ (não):
-
-- [ ] 🟢 O jogo abre?
-- [ ] 🖱️ Dá pra clicar nos quadradinhos?
-- [ ] 🚩 Dá pra marcar uma bandeira?
-- [ ] ❌ Dá pra fechar o jogo?`
+      icon: '💨', corNome: 'Azul', cor: '#1e88e5', emoji: '🔵',
+      titulo: 'Smoke Test',
+      texto: 'Teste rápido. Serve pra ver se o jogo abre e funciona, antes de lançar.'
     },
     {
-      icon: '🔎',
-      titulo: 'Bloco 2 — Teste Exploratório',
-      corpo: `
-**Teste Exploratório** = jogar BASTANTE tentando "quebrar" o jogo. Sem roteiro fixo.
-
-Quando se usa: quando o jogo **já está estável** (o básico já funciona). Por quê: acha bugs escondidos que ninguém pensou em testar antes.
-
-Jogue o Campo Minado por uns 5 minutos. Clique rápido, clique em tudo, tente bagunçar.
-
-Anote 1 coisa:
-- [ ] Uma coisa estranha que você viu (ou: "não achei nada estranho, o jogo aguentou").`
+      icon: '🔎', corNome: 'Verde', cor: '#43a047', emoji: '🟢',
+      titulo: 'Teste Exploratório',
+      texto: 'Jogar bastante tentando quebrar o jogo. Serve pra achar bugs escondidos.'
     },
     {
-      icon: '🖼️',
-      titulo: 'Como fazer os slides',
-      corpo: `
-Molde de **4 slides** — copie esse jeito, com poucas palavras e emoji grande:
-
-- [ ] **Slide 1** — 🎮 Título: "Teste do Campo Minado — [seu nome]"
-- [ ] **Slide 2** — 💨 Smoke Test: 1 frase de "quando/por que se usa" (copie do Bloco 1) + os 4 itens do checklist, cada um com ✅ ou ❌
-- [ ] **Slide 3** — 🔎 Teste Exploratório: 1 frase de "quando/por que se usa" (copie do Bloco 2) + a coisa estranha que você achou (ou "tudo certo")
-- [ ] **Slide 4** — 🏁 Fim: "Terminei!"
-
-Faça no Canva, Google Slides ou PowerPoint.`
-    },
-    {
-      icon: '📧',
-      titulo: 'Como entregar',
-      corpo: `
-1. Baixe os slides em **PDF**.
-2. Mande e-mail pro professor:
-
-§§§text
-${PROFESSOR_EMAIL}
-§§§
-
-Assunto:
-
-§§§text
-Teste de Jogos - Engel
-§§§
-
-3. Anexe o PDF (não cole no corpo do e-mail).
-4. Depois, avance e peça o visto aqui.`
+      icon: '🏁', corNome: 'Amarelo', cor: '#fdd835', emoji: '🟡',
+      titulo: 'Fim!',
+      texto: 'Terminei! 🏁'
     }
   ];
+
+  // Passos: índice 0 = Apresentação, 1..SLIDES.length = os slides,
+  // TOTAL_STEPS-1 = Como entregar. Depois disso (índice TOTAL_STEPS) entra
+  // o visto — ver renderStep()/renderVisto().
+  const TOTAL_STEPS = 2 + SLIDES.length; // apresentação + slides + entrega
 
   function loadProgress() {
     try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
@@ -226,99 +223,48 @@ Teste de Jogos - Engel
   function loadStepIndex() {
     try {
       const n = parseInt(localStorage.getItem(STEP_KEY), 10);
-      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+      return Number.isInteger(n) && n >= 0 && n <= TOTAL_STEPS ? n : 0;
     } catch (e) { return 0; }
   }
   function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
 
   const savedProgress = loadProgress();
-  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+  let currentIndex = (savedProgress && savedProgress.completed) ? TOTAL_STEPS : loadStepIndex();
 
   const stepsRowEl = document.getElementById('stepsRow');
   const stepWrap = document.getElementById('stepWrap');
   const lblStepNum = document.getElementById('lblStepNum');
   const lblStepTotal = document.getElementById('lblStepTotal');
-  lblStepTotal.textContent = STEPS.length + 1;
+  lblStepTotal.textContent = TOTAL_STEPS + 1;
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
-  function inline(s) {
-    let t = escapeHtml(s);
-    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-    return t;
-  }
-
-  // Parser markdown-enxuto igual ao da versão regular (teste-roteiros-
-  // trabalho.html) — só cabeçalhos, bloco §§§lang...§§§, lista/checklist e
-  // parágrafo, sem tabela (não é usada aqui).
-  function mdToHtml(md) {
-    const lines = md.replace(/\r\n/g, '\n').split('\n');
-    let html = '';
-    let i = 0;
-    while (i < lines.length) {
-      const line = lines[i].trim();
-      if (line === '') { i++; continue; }
-
-      if (line.startsWith('§§§')) {
-        i++;
-        const codeLines = [];
-        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
-        i++;
-        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
-        continue;
-      }
-
-      const hm = line.match(/^(#{1,6})\s+(.*)$/);
-      if (hm) {
-        const level = Math.min(hm[1].length + 2, 6);
-        html += `<h${level}>${inline(hm[2])}</h${level}>`;
-        i++; continue;
-      }
-
-      if (/^-\s+/.test(line)) {
-        const items = [];
-        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
-        html += '<ul class="md-list">' + items.map(it => {
-          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
-          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
-          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
-        }).join('') + '</ul>';
-        continue;
-      }
-
-      if (/^\d+\.\s+/.test(line)) {
-        const items = [];
-        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
-        html += '<ul class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ul>';
-        continue;
-      }
-
-      const para = [];
-      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|-|\d+\.)/.test(lines[i].trim())) {
-        para.push(lines[i].trim());
-        i++;
-      }
-      html += `<p>${inline(para.join(' '))}</p>`;
-    }
-    return html;
-  }
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('teste_roteiros_trabalho_engel', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+      window.reportActivity('teste_roteiros_trabalho_engel', label, { step: currentIndex + 1, total: TOTAL_STEPS + 1 });
     }
+  }
+
+  // Ícone de cada "bolinha" da barra de progresso: apresentação (🖼️),
+  // 1 por slide (o emoji da cor), entrega (📧), visto (🧑‍🏫).
+  function stepIcon(i) {
+    if (i === 0) return '🖼️';
+    if (i >= 1 && i <= SLIDES.length) return SLIDES[i - 1].emoji;
+    if (i === TOTAL_STEPS - 1) return '📧';
+    return '🧑‍🏫';
   }
 
   function renderStepsRow() {
     let html = '';
-    STEPS.forEach((s, i) => {
+    for (let i = 0; i < TOTAL_STEPS; i++) {
       const done = i < currentIndex;
       const active = i === currentIndex;
-      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : s.icon}</div>`;
-    });
-    const vistoDone = currentIndex > STEPS.length || (loadProgress() && loadProgress().completed);
-    html += `<div class="step-dot${currentIndex >= STEPS.length ? ' active' : ''}${vistoDone ? ' done' : ''}">${vistoDone ? '✅' : '🧑‍🏫'}</div>`;
+      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : stepIcon(i)}</div>`;
+    }
+    const vistoDone = currentIndex > TOTAL_STEPS || (loadProgress() && loadProgress().completed);
+    html += `<div class="step-dot${currentIndex >= TOTAL_STEPS ? ' active' : ''}${vistoDone ? ' done' : ''}">${vistoDone ? '✅' : '🧑‍🏫'}</div>`;
     stepsRowEl.innerHTML = html;
   }
 
@@ -330,31 +276,85 @@ Teste de Jogos - Engel
       </div>`;
   }
 
+  function renderApresentacao() {
+    stepWrap.innerHTML = `
+      <div class="card">
+        <div class="big-icon">🖼️</div>
+        <h2>Vamos criar os slides!</h2>
+        <p class="lead">São 4 slides. Cada um já vem com o TÍTULO, a COR e o TEXTO prontos — você só precisa digitar no Canva.</p>
+        <div class="howto">
+          ${HOWTO.map(h => `<div class="howto-item"><div class="n">${h.n}</div><div class="t">${escapeHtml(h.t)}</div></div>`).join('')}
+        </div>
+        <div class="reminder">✍️ Digite tudo com a mão — copiar e colar não funciona aqui.</div>
+      </div>
+      ${renderNav(false, true)}
+    `;
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderSlide(slideIdx) {
+    const s = SLIDES[slideIdx];
+    stepWrap.innerHTML = `
+      <div class="card" style="--swatch-color:${s.cor}">
+        <div class="big-icon">${s.icon}</div>
+        <h2>Slide ${slideIdx + 1}</h2>
+        <div class="color-row">
+          <div class="swatch" style="background:${s.cor}"></div>
+          <div class="color-label" style="color:${s.cor}">${s.emoji} ${escapeHtml(s.corNome)}</div>
+        </div>
+        <p class="type-label">Título (nesta cor)</p>
+        <div class="type-box title-box no-copy">${escapeHtml(s.titulo)}</div>
+        <p class="type-label">Texto</p>
+        <div class="type-box body-box no-copy">${escapeHtml(s.texto)}</div>
+      </div>
+      ${renderNav(true, true)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderEntrega() {
+    stepWrap.innerHTML = `
+      <div class="card">
+        <div class="big-icon">📧</div>
+        <h2>Como entregar</h2>
+        <div class="entrega-box">
+          <p>1. Baixe os slides em PDF.</p>
+          <p>2. Mande e-mail pro professor:</p>
+          <pre>${escapeHtml(PROFESSOR_EMAIL)}</pre>
+          <p>3. Anexe o PDF.</p>
+          <p>4. Depois, avance e peça o visto aqui.</p>
+        </div>
+      </div>
+      ${renderNav(true, true)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
   function renderStep() {
-    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    if (currentIndex >= TOTAL_STEPS) { renderVisto(); return; }
     saveStepIndex(currentIndex);
     lblStepNum.textContent = currentIndex + 1;
     renderStepsRow();
 
-    const step = STEPS[currentIndex];
-    reportStep(`Trabalho (Engel) — ${step.titulo}`);
-    stepWrap.innerHTML = `
-      <div class="card">
-        <div class="big-icon">${step.icon}</div>
-        <h2>${escapeHtml(step.titulo)}</h2>
-        <div class="md-body">${mdToHtml(step.corpo)}</div>
-      </div>
-      ${renderNav(currentIndex > 0, true)}
-    `;
-    const btnBack = document.getElementById('btnBack');
-    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
-    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+    if (currentIndex === 0) {
+      reportStep('Slides (Engel) — Apresentação');
+      renderApresentacao();
+    } else if (currentIndex >= 1 && currentIndex <= SLIDES.length) {
+      const slideIdx = currentIndex - 1;
+      reportStep(`Slides (Engel) — Slide ${slideIdx + 1}: ${SLIDES[slideIdx].titulo}`);
+      renderSlide(slideIdx);
+    } else {
+      reportStep('Slides (Engel) — Como entregar');
+      renderEntrega();
+    }
   }
 
   function renderVisto() {
-    lblStepNum.textContent = STEPS.length + 1;
+    lblStepNum.textContent = TOTAL_STEPS + 1;
     renderStepsRow();
-    reportStep('Trabalho (Engel) — Visto do professor');
+    reportStep('Slides (Engel) — Visto do professor');
 
     const already = loadProgress();
     if (already && already.completed) {
@@ -367,7 +367,7 @@ Teste de Jogos - Engel
         </div>
         ${renderNav(true, false)}
       `;
-      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = TOTAL_STEPS - 1; renderStep(); });
       return;
     }
 
@@ -387,7 +387,7 @@ Teste de Jogos - Engel
       </div>
       ${renderNav(true, false)}
     `;
-    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = TOTAL_STEPS - 1; renderStep(); });
 
     const btnDarVisto = document.getElementById('btnDarVisto');
     const vistoMsg = document.getElementById('vistoMsg');
@@ -426,22 +426,52 @@ Teste de Jogos - Engel
     });
   }
 
-  // Gabarito pro professor: checklist de correção do material enviado por
-  // e-mail, mesmo espírito do gabarito da versão regular (não é pergunta e
-  // resposta certa, é o que conferir no PDF do aluno).
+  // Gabarito pro professor: o que conferir no PDF (4 títulos com a cor
+  // certa + 4 textos), igual ao que foi digitado aqui.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Roteiros de Teste (Engel) — Checklist de correção do trabalho',
-      subtitle: 'Trabalho adaptado (Canva/Slides/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
-      items: [
-        { number: 1, title: 'Slide 2 — Smoke Test', prompt: 'O slide cobre tudo?', answer: 'Frase de quando/por que se usa Smoke Test (antes de lançar uma versão, pra saber rápido se dá pra publicar); os 4 itens do checklist (jogo abre / dá pra clicar / dá pra marcar bandeira / dá pra fechar) — cada um com ✅ ou ❌, testado de verdade no Campo Minado.' },
-        { number: 2, title: 'Slide 3 — Teste Exploratório', prompt: 'O slide cobre tudo?', answer: 'Frase de quando/por que se usa Teste Exploratório (quando o jogo já está estável, pra achar bugs escondidos); pelo menos 1 observação depois de jogar uns 5 minutos tentando quebrar o jogo (uma coisa estranha encontrada, ou "não achei nada estranho").' },
-        { number: 3, title: 'Slides 1 e 4', prompt: 'Título e fechamento presentes?', answer: 'Slide 1 com o nome do aluno; Slide 4 marcando o fim.' },
-        { number: 4, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado, enviado por e-mail para jairondouglas.senai@fieg.com.br, assunto "Teste de Jogos - Engel", PDF anexado.' }
-      ],
+      title: 'Criar Slides no Canva (Engel) — Checklist de correção',
+      subtitle: 'Trabalho adaptado (Canva/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
+      items: SLIDES.map((s, i) => ({
+        number: i + 1,
+        title: `Slide ${i + 1}`,
+        prompt: 'Título na cor certa e texto igual ao pedido?',
+        answer: `Título "${s.titulo}" na cor ${s.corNome}; texto "${s.texto}".`
+      })).concat([
+        { number: SLIDES.length + 1, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado, enviado por e-mail para jairondouglas.senai@fieg.com.br, PDF anexado.' }
+      ]),
       fileName: 'teste-roteiros-trabalho-engel-gabarito.txt'
     });
   };
+
+  // Bloqueio de copiar/colar específico desta atividade (sempre ligado,
+  // independente do toggle por turma de shared/clipboard-guard.js) — só
+  // nas caixas ".no-copy" (título/texto do slide). Não afeta copiar o
+  // e-mail do professor na etapa de entrega.
+  const noCopyToast = document.getElementById('noCopyToast');
+  let noCopyToastTimer = null;
+  function showNoCopyToast() {
+    noCopyToast.classList.add('show');
+    clearTimeout(noCopyToastTimer);
+    noCopyToastTimer = setTimeout(() => noCopyToast.classList.remove('show'), 1600);
+  }
+  function isInNoCopyZone(target) {
+    if (target && target.closest && target.closest('.no-copy')) return true;
+    const sel = window.getSelection();
+    const node = sel && sel.anchorNode;
+    const el = node ? (node.nodeType === 1 ? node : node.parentElement) : null;
+    return !!(el && el.closest && el.closest('.no-copy'));
+  }
+  document.addEventListener('copy', e => { if (isInNoCopyZone(e.target)) { e.preventDefault(); showNoCopyToast(); } }, true);
+  document.addEventListener('cut', e => { if (isInNoCopyZone(e.target)) { e.preventDefault(); showNoCopyToast(); } }, true);
+  document.addEventListener('contextmenu', e => { if (isInNoCopyZone(e.target)) { e.preventDefault(); showNoCopyToast(); } }, true);
+  document.addEventListener('keydown', e => {
+    const key = (e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && (key === 'c' || key === 'x') && isInNoCopyZone(e.target)) {
+      e.preventDefault();
+      showNoCopyToast();
+    }
+  }, true);
 
   renderStep();
 </script>
