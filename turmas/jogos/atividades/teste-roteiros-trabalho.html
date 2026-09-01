@@ -141,6 +141,17 @@
       corpo: `
 A PixelForge Studios está perto de lançar um jogo — e antes de qualquer lançamento de verdade, o time de QA precisa aprovar o build em **quatro frentes diferentes**. Você vai montar esse pacote de roteiros de teste, aplicado ao SEU jogo (o Cobrinha da trilha de Codificação, ou outro jogo indicado pelo professor).
 
+### Os 4 tipos de teste — resumo rápido
+
+O questionário depois cobra estes 4 NOMES, onde cada um se aplica melhor e por quê — decore essa tabela antes de começar a pesquisar:
+
+| Tipo de teste | Onde é melhor aplicado | Por quê |
+|---|---|---|
+| Certificação técnica | Antes de enviar o jogo pra aprovação de um fabricante de console | Sem seguir as regras técnicas obrigatórias do fabricante, o jogo nem entra na loja oficial |
+| Teste de plataforma | Quando o jogo precisa rodar em telas/resoluções/janelas diferentes | Garante que a MESMA funcionalidade continua funcionando em qualquer tamanho de tela |
+| Smoke Test (publicação) | Logo antes de publicar qualquer build novo | É rápido de propósito — só confirma que o básico funciona, antes de investir tempo em testes mais profundos |
+| Teste exploratório | Quando o jogo já está relativamente estável | Sem roteiro fixo, encontra bugs e Easter eggs que um teste com script nunca cobriria |
+
 ### O que entregar
 
 Um documento (Canva, Google Slides, Word ou PDF direto) cobrindo os 4 blocos das próximas etapas, exportado em **PDF**.
@@ -160,6 +171,7 @@ O questionário depois só cobra o que está nas próximas etapas — capriche n
       corpo: `
 Antes de um jogo chegar numa loja de console (Nintendo eShop, PlayStation Store, Xbox Store), ele passa por um processo de **certificação técnica** — o fabricante exige que certas regras sejam seguidas antes de aprovar o lançamento.
 
+- [ ] **Nome do tipo de teste** (certificação técnica), **onde ele é melhor aplicado** (antes de enviar o jogo pra aprovação de um fabricante de console) e **por que** existe (o jogo não entra na loja oficial sem seguir as regras do fabricante) — com suas palavras.
 - [ ] Pesquise as exigências técnicas de certificação de PELO MENOS UM fabricante (ex.: diretrizes públicas de desenvolvedor da Nintendo, Sony ou Microsoft) — cite a fonte.
 - [ ] Liste pelo menos **5 exigências reais** encontradas (ex.: comportamento ao apertar o botão Home/Menu, o que acontece se a conexão cair, tratamento de erro sem travar o jogo).
 - [ ] Monte um **roteiro de teste** (passo a passo) que verifique se o SEU jogo atende a pelo menos 3 dessas exigências.
@@ -172,6 +184,7 @@ Antes de um jogo chegar numa loja de console (Nintendo eShop, PlayStation Store,
       corpo: `
 O mesmo jogo pode rodar em telas, resoluções e janelas bem diferentes — o que funciona perfeito em tela cheia 1920×1080 pode quebrar numa janela pequena redimensionada.
 
+- [ ] **Nome do tipo de teste** (teste de plataforma), **onde ele é melhor aplicado** (quando o jogo precisa rodar em telas/resoluções/janelas diferentes) e **por que** existe (a mesma funcionalidade pode se comportar diferente em cada tamanho de tela) — com suas palavras.
 - [ ] Defina pelo menos **4 combinações** de resolução/janela pra testar (ex.: tela cheia 1080p, janela pequena, tela ultrawide, redimensionamento durante o jogo).
 - [ ] Escolha UMA funcionalidade do seu jogo (ex.: menu, pontuação na tela, controles) e escreva um **roteiro** que testa essa MESMA funcionalidade em cada uma das combinações.
 - [ ] Rode o roteiro de verdade no seu jogo e registre o resultado de cada combinação.
@@ -182,6 +195,7 @@ O mesmo jogo pode rodar em telas, resoluções e janelas bem diferentes — o qu
       corpo: `
 Antes de publicar qualquer versão (build), existe um teste rápido chamado **Smoke Test** (ou "roteiro de fumaça") — ele só confirma que o básico funciona, que o build não "quebra" já na abertura.
 
+- [ ] **Nome do tipo de teste** (Smoke Test), **onde ele é melhor aplicado** (logo antes de publicar qualquer build novo) e **por que** existe (é rápido de propósito, pra confirmar o básico antes de investir tempo em testes mais profundos) — com suas palavras.
 - [ ] O que é um Smoke Test, com suas palavras.
 - [ ] Por que ele é rápido e não substitui um teste completo (diferença pra um teste de regressão, por exemplo).
 - [ ] Um **checklist final de Smoke Test** com pelo menos 6 itens pro SEU jogo (ex.: o jogo abre sem erro, a tela inicial carrega, o controle responde, dá pra iniciar uma partida, dá pra fechar o jogo sem travar, o som toca).
@@ -192,6 +206,7 @@ Antes de publicar qualquer versão (build), existe um teste rápido chamado **Sm
       corpo: `
 Nem todo teste segue um roteiro fixo — o **teste exploratório** é quando você joga sem script, tentando quebrar o jogo de propósito, caçando bugs e comportamentos escondidos (inclusive Easter Eggs não documentados).
 
+- [ ] **Nome do tipo de teste** (teste exploratório), **onde ele é melhor aplicado** (quando o jogo já está relativamente estável) e **por que** existe (sem roteiro fixo, encontra bugs e Easter eggs que um teste com script nunca cobriria) — com suas palavras.
 - [ ] O que é teste exploratório, com suas palavras — e por que ele encontra bugs que um roteiro fixo não encontraria.
 - [ ] Jogue o SEU jogo por pelo menos **15 minutos** tentando quebrar ele de propósito (cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado).
 - [ ] Um **Relatório de Bugs** com pelo menos 2 achados reais (ou, se o jogo estiver bem estável, pelo menos 1 comportamento inesperado + 1 sugestão de melhoria). Pra cada achado: o que você fez, o que esperava que acontecesse, o que aconteceu de verdade.`
@@ -460,10 +475,10 @@ Procure o professor pessoalmente pra confirmar que chegou. Só depois avance e p
       title: 'Roteiros de Teste — Checklist de correção do trabalho',
       subtitle: 'Trabalho (Canva/Slides/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
       items: [
-        { number: 1, title: 'Bloco 1 — Roteiro de Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas; roteiro de teste cobrindo pelo menos 3 delas; resultado (passou/não passou) registrado no jogo do aluno.' },
-        { number: 2, title: 'Bloco 2 — Roteiro de Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Pelo menos 4 combinações de resolução/janela definidas; roteiro testando a MESMA funcionalidade em todas elas; resultado registrado por combinação; pelo menos 1 problema apontado que só esse tipo de teste pegaria.' },
-        { number: 3, title: 'Bloco 3 — Checklist de Publicação (Smoke Test)', prompt: 'O material cobre todos os itens abaixo?', answer: 'O que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); checklist com pelo menos 6 itens; resultado PASSOU/FALHOU registrado por item, aplicado no jogo do aluno.' },
-        { number: 4, title: 'Bloco 4 — Relatório de Testes Exploratórios', prompt: 'O material cobre todos os itens abaixo?', answer: 'O que é teste exploratório, com palavras próprias; evidência de pelo menos 15 minutos jogando tentando quebrar o jogo; relatório com pelo menos 2 achados (ou 1 achado + 1 sugestão), cada um com o que fez / o que esperava / o que aconteceu.' },
+        { number: 1, title: 'Bloco 1 — Roteiro de Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (certificação técnica), onde é melhor aplicado e por quê; exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas; roteiro de teste cobrindo pelo menos 3 delas; resultado (passou/não passou) registrado no jogo do aluno.' },
+        { number: 2, title: 'Bloco 2 — Roteiro de Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de plataforma), onde é melhor aplicado e por quê; pelo menos 4 combinações de resolução/janela definidas; roteiro testando a MESMA funcionalidade em todas elas; resultado registrado por combinação; pelo menos 1 problema apontado que só esse tipo de teste pegaria.' },
+        { number: 3, title: 'Bloco 3 — Checklist de Publicação (Smoke Test)', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (Smoke Test), onde é melhor aplicado e por quê; o que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); checklist com pelo menos 6 itens; resultado PASSOU/FALHOU registrado por item, aplicado no jogo do aluno.' },
+        { number: 4, title: 'Bloco 4 — Relatório de Testes Exploratórios', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste exploratório), onde é melhor aplicado e por quê; o que é teste exploratório, com palavras próprias; evidência de pelo menos 15 minutos jogando tentando quebrar o jogo; relatório com pelo menos 2 achados (ou 1 achado + 1 sugestão), cada um com o que fez / o que esperava / o que aconteceu.' },
         { number: 5, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
         { number: 6, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
       ],

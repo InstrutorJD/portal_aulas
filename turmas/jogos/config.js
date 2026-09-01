@@ -709,7 +709,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'questionario', title: 'Questionário — Roteiros de Teste',
-              desc: '8 perguntas sobre certificação técnica, testes de plataforma, Smoke Test e teste exploratório — só libera depois do visto do trabalho.',
+              desc: '11 perguntas sobre certificação técnica, testes de plataforma, Smoke Test e teste exploratório — cobrando o nome de cada tipo e pra qual cenário ele serve. Só libera depois do visto do trabalho.',
               icon: '📝', src: 'atividades/teste-roteiros-questionario.html',
               progressKey: 'teste_roteiros_questionario_progress_', progressMode: 'flag',
               requires: 'trabalho', hasSlides: true, hasGabarito: true

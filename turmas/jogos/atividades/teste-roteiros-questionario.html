@@ -155,7 +155,7 @@
     <div>TESTES DE JOGOS — QUESTIONÁRIO: ROTEIROS DE TESTE</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">11</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -188,6 +188,15 @@
         options: ['O jogo responder corretamente ao botão Home/Menu do console', 'O jogo precisar ter pelo menos 10 fases diferentes', 'O jogo precisar ser totalmente gratuito pra jogar', 'O jogo precisar rodar em um único idioma sempre'],
         correctIndex: 0,
         explanation: 'Exato! Reagir direito a botões do próprio sistema (Home/Menu) é um comportamento técnico cobrado por certificação — não uma regra de conteúdo do jogo.'
+      }
+    },
+    {
+      story: 'Um estúdio termina o jogo e, antes de enviar pra revisão da loja oficial de um console, revisa se ele segue TODAS as regras técnicas exigidas pelo fabricante daquele console.',
+      question: {
+        prompt: 'Esse processo — conferir se o jogo segue as regras técnicas de um fabricante ANTES de enviar pra loja oficial — tem um nome próprio. Qual é?',
+        options: ['Certificação técnica', 'Smoke test', 'Teste exploratório', 'Teste de plataforma'],
+        correctIndex: 0,
+        explanation: 'Isso! Esse processo específico, de conferir as regras do fabricante antes do envio, é a certificação técnica.'
       }
     },
     {
@@ -227,12 +236,30 @@
       }
     },
     {
+      story: 'Um build acabou de sair do forno. Antes de mandar pra qualquer outro tipo de teste, alguém só quer confirmar rapidinho que o jogo abre e não trava já na tela inicial.',
+      question: {
+        prompt: 'Esse tipo de verificação rápida, feita logo que um build novo fica pronto, tem um nome específico. Qual é?',
+        options: ['Smoke test', 'Certificação técnica', 'Teste de plataforma', 'Teste exploratório'],
+        correctIndex: 0,
+        explanation: 'Exato! É justamente pra esse momento — build recém-saído, antes de qualquer outro teste — que existe o Smoke Test.'
+      }
+    },
+    {
       story: 'Por fim, o <b>teste exploratório</b>: em vez de seguir um roteiro fixo, o testador joga livremente, tentando quebrar o jogo de propósito — cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado.',
       question: {
         prompt: 'O que diferencia um teste EXPLORATÓRIO de um teste com roteiro fixo?',
         options: ['O exploratório não segue script — o testador tenta coisas livremente', 'O exploratório só pode ser feito pelo programador do próprio jogo', 'O exploratório é sempre mais rápido que qualquer outro tipo de teste', 'Não existe diferença nenhuma entre esses dois tipos de teste'],
         correctIndex: 0,
         explanation: 'Isso! Sem script fixo, o testador consegue achar bugs que um roteiro nunca cobriria, porque ninguém pensou em testar aquele caminho.'
+      }
+    },
+    {
+      story: 'Um testador começa a apertar botões meio aleatórios, tentar combinações fora do esperado e sair do fluxo normal do jogo, só pra ver no que dá — sem seguir nenhum roteiro escrito.',
+      question: {
+        prompt: 'Essa forma de testar — sem roteiro fixo, só experimentando livremente — tem um nome próprio. Qual é?',
+        options: ['Teste exploratório', 'Smoke test', 'Certificação técnica', 'Teste de plataforma'],
+        correctIndex: 0,
+        explanation: 'Isso! É exatamente essa liberdade, sem script, que define o teste exploratório.'
       }
     },
     {
@@ -404,7 +431,7 @@
       <div class="card gate-card">
         <h2>⚠️ Regras deste questionário</h2>
         <ul>
-          <li>Você tem <b>8 perguntas</b> e precisa de pelo menos <b>80% de acerto</b> pra concluir.</li>
+          <li>Você tem <b>11 perguntas</b> e precisa de pelo menos <b>80% de acerto</b> pra concluir.</li>
           <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
           <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
           <li>Na <b>2ª advertência</b>, o questionário é <b>bloqueado</b> — só o professor libera de novo.</li>
