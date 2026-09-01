@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Roteiros de Teste: Questionário</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
+
+  .zeta-row{ display:flex; align-items:flex-start; gap:12px; }
+  .zeta-avatar{
+    font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(124,255,63,0.5));
+  }
+  .speech-bubble{
+    background:var(--panel); border:1px solid var(--green-dim); padding:16px 18px;
+    font-size:14px; line-height:1.7; position:relative;
+  }
+  .speech-bubble .zeta-name{
+    display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--green);
+    letter-spacing:1px; margin-bottom:6px;
+  }
+  .speech-bubble code{ color:var(--yellow); }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+  .feedback b{ color:var(--yellow); }
+
+  .actions{ display:flex; justify-content:flex-end; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  .btn-topbar{
+    font-family:inherit; font-size:10px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:5px 10px;
+    cursor:pointer; border-radius:2px;
+  }
+  .btn-topbar:hover{ background:rgba(124,255,63,0.1); }
+  .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
+
+  /* Tela inicial (regras) e tela de bloqueio — mesmo visual de .card */
+  .gate-card ul{ margin:10px 0 0; padding-left:20px; font-size:13px; line-height:1.8; }
+  .gate-card li{ margin-bottom:4px; }
+  .gate-card .warn-icon{ font-size:40px; margin-bottom:8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:320px; margin-top:16px; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  /* Overlay de advertência — aparece POR CIMA do quiz quando o aluno volta
+     pra aba depois de ter saído (ver shared/exam-proctor.js) */
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(5,8,5,0.88); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:420px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:13.5px; line-height:1.7; margin:0 0 14px; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .speech-bubble{ padding:12px 14px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'teste_roteiros_questionario';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="../../../shared/vendor/pptxgen.bundle.js"></script>
+<script src="../../../shared/slides-generator.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/quiz-teoria-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>TESTES DE JOGOS — QUESTIONÁRIO: ROTEIROS DE TESTE</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></span>
+    </div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="gateWrap" style="display:none;"></div>
+    <div class="story-wrap" id="storyWrap" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+  // Este questionário só cobra o que a etapa "Trabalho" desta trilha pediu
+  // pra pesquisar e aplicar (ver turmas/jogos/atividades/teste-roteiros-
+  // trabalho.html, Blocos 1 a 4) — nenhuma pergunta aqui sai desses
+  // assuntos.
+  const STEPS = [
+    {
+      story: 'Zeta aqui! Antes de um jogo entrar numa loja como a Nintendo eShop, a PlayStation Store ou a Xbox Store, ele passa por um processo chamado <b>certificação técnica</b>: o próprio fabricante exige que o jogo siga certas regras (ex.: como reagir ao botão Home/Menu, o que fazer se a conexão cair) antes de aprovar o lançamento.',
+      question: {
+        prompt: 'Como se chama o processo que verifica se um jogo atende às exigências técnicas de um fabricante de console, antes dele entrar na loja oficial?',
+        options: ['Certificação técnica', 'Testes exploratórios', 'Smoke test', 'Teste de regressão'],
+        correctIndex: 0,
+        explanation: 'Isso! É a certificação técnica que garante que o jogo segue as regras do fabricante antes de ser aprovado pra loja.'
+      }
+    },
+    {
+      story: 'As exigências de certificação costumam ser bem específicas — não são regras de gameplay, e sim de COMPORTAMENTO técnico do jogo diante de situações do próprio console.',
+      question: {
+        prompt: 'Qual das opções abaixo é um exemplo TÍPICO de exigência de certificação de console?',
+        options: ['O jogo responder corretamente ao botão Home/Menu do console', 'O jogo precisar ter pelo menos 10 fases diferentes', 'O jogo precisar ser totalmente gratuito pra jogar', 'O jogo precisar rodar em um único idioma sempre'],
+        correctIndex: 0,
+        explanation: 'Exato! Reagir direito a botões do próprio sistema (Home/Menu) é um comportamento técnico cobrado por certificação — não uma regra de conteúdo do jogo.'
+      }
+    },
+    {
+      story: 'Agora, <b>testes de plataforma</b>: o mesmo jogo pode rodar em telas, resoluções e tamanhos de janela bem diferentes — o que funciona perfeito em tela cheia pode quebrar numa janela pequena redimensionada.',
+      question: {
+        prompt: 'Por que um QA testa a MESMA funcionalidade em resoluções e tamanhos de janela diferentes, em vez de testar só uma vez em tela cheia?',
+        options: ['Porque o mesmo código pode se comportar diferente em cada tamanho de tela', 'Porque cada resolução usa uma versão totalmente separada do jogo', 'Porque isso deixa o jogo visivelmente mais rápido de rodar', 'Porque simplesmente não é possível testar nada em tela cheia'],
+        correctIndex: 0,
+        explanation: 'Isso! O layout de tela pode reagir mal a um tamanho diferente, mesmo sendo exatamente o mesmo código por trás.'
+      }
+    },
+    {
+      story: 'Um exemplo clássico: um menu que fica perfeito em tela cheia, mas os botões saem da área visível quando a janela é redimensionada pra um tamanho pequeno.',
+      question: {
+        prompt: 'Qual tipo de teste é feito especificamente pra pegar um problema como esse (menu quebrando ao redimensionar a janela)?',
+        options: ['Teste de plataforma (resolução/janela)', 'Smoke test', 'Certificação técnica de console', 'Nenhum teste pegaria esse tipo de problema'],
+        correctIndex: 0,
+        explanation: 'Correto! É justamente o roteiro de plataforma que testa a mesma funcionalidade em resoluções/janelas diferentes.'
+      }
+    },
+    {
+      story: 'Antes de publicar QUALQUER build novo, existe um teste rápido chamado <b>Smoke Test</b> (ou "roteiro de fumaça") — o nome vem da ideia de checar rapidamente se "sai fumaça" ao ligar algo, antes de investigar a fundo.',
+      question: {
+        prompt: 'O que é um Smoke Test?',
+        options: ['Um teste rápido que confirma que o jogo abre sem travar ou quebrar', 'Um teste bem completo que cobre absolutamente tudo do jogo', 'Um teste que só acontece depois que o jogo já foi lançado', 'Um teste feito exclusivamente pelo jogador final, sem QA'],
+        correctIndex: 0,
+        explanation: 'Isso! O Smoke Test é rápido e superficial de propósito — só garante que o build "não quebra" já na abertura.'
+      }
+    },
+    {
+      story: 'Justamente por ser rápido, o Smoke Test NÃO substitui um teste completo — ele é só o primeiro filtro, antes de investir tempo em testes mais profundos.',
+      question: {
+        prompt: 'Por que o Smoke Test é rápido, em vez de ser um teste completo de tudo?',
+        options: ['Porque o objetivo é só confirmar rápido que o build não quebra logo de cara', 'Porque testes rápidos sempre encontram muito mais bugs que os completos', 'Porque simplesmente não sobra tempo nenhum pra testar jogos de verdade', 'Porque o Smoke Test substitui completamente todos os outros tipos de teste'],
+        correctIndex: 0,
+        explanation: 'Exato! É um filtro rápido, não um substituto — o resto dos testes (certificação, plataforma, exploratório) ainda precisa acontecer.'
+      }
+    },
+    {
+      story: 'Por fim, o <b>teste exploratório</b>: em vez de seguir um roteiro fixo, o testador joga livremente, tentando quebrar o jogo de propósito — cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado.',
+      question: {
+        prompt: 'O que diferencia um teste EXPLORATÓRIO de um teste com roteiro fixo?',
+        options: ['O exploratório não segue script — o testador tenta coisas livremente', 'O exploratório só pode ser feito pelo programador do próprio jogo', 'O exploratório é sempre mais rápido que qualquer outro tipo de teste', 'Não existe diferença nenhuma entre esses dois tipos de teste'],
+        correctIndex: 0,
+        explanation: 'Isso! Sem script fixo, o testador consegue achar bugs que um roteiro nunca cobriria, porque ninguém pensou em testar aquele caminho.'
+      }
+    },
+    {
+      story: 'Durante um teste exploratório, às vezes o testador acha algo que ninguém documentou de propósito — uma combinação de teclas escondida que ativa uma mensagem, uma animação secreta, algo assim.',
+      question: {
+        prompt: 'Como costuma ser chamado esse tipo de achado — um segredo escondido no jogo, não documentado, encontrado durante o teste exploratório?',
+        options: ['Easter egg', 'Smoke test', 'Requisito não funcional', 'Certificação técnica'],
+        correctIndex: 0,
+        explanation: 'Isso! Easter egg é exatamente esse tipo de segredo escondido — um dos achados clássicos de teste exploratório.'
+      }
+    }
+  ];
+
+  window.generateSlidesForGestao = function () {
+    return window.PortalSlides.generate({
+      title: 'Testes de Jogos — Roteiros de Teste',
+      subtitle: 'Questionário · Trilha Roteiros de Teste · Turma Jogos Digitais',
+      capacidade: 'Definir roteiro de teste para execução, conforme recomendações técnicas / Identificar problemas de sistemas por meio de aplicação de teste.',
+      steps: STEPS,
+      fileName: 'teste-roteiros-questionario-slides.pptx',
+      closingTitle: 'Revise antes de responder!',
+      closingText: 'O questionário só cobra o que foi pedido no trabalho (roteiros de certificação, plataforma, publicação e teste exploratório) desta trilha — reveja seu material antes de responder.'
+    });
+  };
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Testes de Jogos — Roteiros de Teste (Questionário)',
+      subtitle: 'Questionário · Trilha Roteiros de Teste · Turma Jogos Digitais',
+      items: STEPS.map((step, i) => ({
+        number: i + 1,
+        prompt: step.question.prompt,
+        options: step.question.options,
+        correctIndex: step.question.correctIndex,
+        answer: step.question.options[step.question.correctIndex]
+      })),
+      fileName: 'teste-roteiros-questionario-gabarito.txt'
+    });
+  };
+
+  const gateWrap = document.getElementById('gateWrap');
+  const storyWrap = document.getElementById('storyWrap');
+
+  function quizAlreadyCompleted() {
+    const username = new URLSearchParams(window.location.search).get('user') || 'anon';
+    try {
+      const data = JSON.parse(localStorage.getItem(`teste_roteiros_questionario_progress_${username}`) || 'null');
+      return !!(data && data.completed);
+    } catch (e) { return false; }
+  }
+
+  function startQuizEngine() {
+    storyWrap.style.display = 'flex';
+    gateWrap.style.display = 'none';
+    window.PortalQuizTeoria.run({
+      activityLocation: 'teste_roteiros_questionario',
+      steps: STEPS,
+      reportLabel: 'Roteiros de Teste — Questionário',
+      mentor: { rowClass: 'zeta', avatar: '🔍', name: 'Zeta, a Detetive de Qualidade' },
+      finishPassed: {
+        title: 'Roteiros de Teste concluído!',
+        introHtml: '<p>Você já sabe diferenciar certificação técnica, testes de plataforma, Smoke Test e teste exploratório — e sabe o que cada um consegue (e não consegue) pegar.</p>',
+        closingHtml: '<p>Trilha concluída — bom trabalho!</p>',
+        restartLabel: '🔁 Rever o questionário'
+      }
+    });
+
+    const btnGenSlides = document.getElementById('btnGenSlides');
+    if (btnGenSlides) {
+      (async function () {
+        const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+        if (!user || user.role !== 'professor') return;
+        btnGenSlides.style.display = 'inline-block';
+        btnGenSlides.addEventListener('click', () => {
+          btnGenSlides.disabled = true;
+          btnGenSlides.textContent = '⏳ Gerando...';
+          setTimeout(() => {
+            window.generateSlidesForGestao();
+            btnGenSlides.disabled = false;
+            btnGenSlides.textContent = '🖨️ Gerar Slides (PPTX)';
+          }, 50);
+        });
+      })();
+    }
+  }
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Advertência ${count}/2</h2>
+        <p>Você saiu da aba/janela do portal durante o questionário. Isso conta como uma advertência.<br>
+        Na <b>2ª advertência</b>, esta atividade é <b>bloqueada</b> — só o professor consegue liberar de novo.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi, continuar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen(guard) {
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFillReset();
+    gateWrap.innerHTML = `
+      <div class="card gate-card" style="text-align:center;">
+        <div class="warn-icon">🔒</div>
+        <h2>Atividade bloqueada</h2>
+        <p>Você saiu da aba/janela do portal 2 vezes durante o questionário. Por isso, esta atividade foi bloqueada.</p>
+        <p>Procure o professor. Ele pode liberar de novo com o mesmo token que usa pra "Dar visto" (Gestão → "Token — Dar Visto / Pular Etapa").</p>
+        <div class="token-form" style="margin-left:auto; margin-right:auto; text-align:left;">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen(guard);
+    });
+  }
+
+  function progressFillReset() {
+    document.getElementById('progressFill').style.width = '0%';
+  }
+
+  function renderStartScreen(guard) {
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFillReset();
+    gateWrap.innerHTML = `
+      <div class="zeta-row">
+        <div class="zeta-avatar">🔍</div>
+        <div class="speech-bubble">
+          <span class="zeta-name">Zeta, a Detetive de Qualidade</span>
+          Antes de começar: este questionário só pergunta sobre o que você já pesquisou e aplicou no seu trabalho (Roteiros de Teste) — revise seu material se precisar, antes de clicar em Iniciar.
+        </div>
+      </div>
+      <div class="card gate-card">
+        <h2>⚠️ Regras deste questionário</h2>
+        <ul>
+          <li>Você tem <b>8 perguntas</b> e precisa de pelo menos <b>80% de acerto</b> pra concluir.</li>
+          <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
+          <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
+          <li>Na <b>2ª advertência</b>, o questionário é <b>bloqueado</b> — só o professor libera de novo.</li>
+        </ul>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn" id="btnIniciar">▶ Iniciar questionário</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen(guard)
+      });
+      startQuizEngine();
+    });
+  }
+
+  (async function boot() {
+    const guard = await window.PortalExamGuard.create('teste_roteiros_questionario');
+
+    // Sem sessão de aluno reconhecida (professor, ou iframe oculto da Gestão
+    // gerando slides/gabarito remotamente) — guarda desligada: abre direto,
+    // sem tela de regras nem risco de bloqueio.
+    if (guard.disabled || quizAlreadyCompleted()) {
+      startQuizEngine();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen(guard);
+    } else {
+      renderStartScreen(guard);
+    }
+  })();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

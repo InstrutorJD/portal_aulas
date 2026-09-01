@@ -46,7 +46,7 @@ test.describe('Aba Perfil (só aluno)', () => {
 
   test('mostra progresso geral, por matéria/trilha, a posição no ranking e desbloqueia insígnias por % de conclusão', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
-    // breno completa só js/basico (10/10) → 1 módulo concluído de 55 na turma
+    // breno completa só js/basico (10/10) → 1 módulo concluído de 57 na turma
     // toda (2% geral), mas 7% dentro da matéria Fundamentos (1 de 14 módulos:
     // js básico+intermediário, csharp básico+prática, gdscript básico+prática,
     // e mais 4 trilhas teoria+prática de fundamentos gerais de jogos).
@@ -58,7 +58,7 @@ test.describe('Aba Perfil (só aluno)', () => {
 
     const resumo = page.locator('#perfilResumo');
     await expect(resumo).toContainText('2%');
-    await expect(resumo).toContainText('1/55');
+    await expect(resumo).toContainText('1/57');
     await expect(resumo).toContainText('2º'); // atrás só do edward, à frente do resto (0%)
     await expect(resumo).toContainText('Posição de 17');
 

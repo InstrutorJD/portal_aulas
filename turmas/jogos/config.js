@@ -687,6 +687,34 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          // Trilha "pesquisa e entrega pro professor" — mesmo padrão de
+          // turmas/sistemas/config.js (trilha 'modelagem-dados-requisitos'):
+          // o "trabalho" não tem correção automática (o produto é um PDF
+          // enviado por e-mail, confirmado com o visto do professor) e só
+          // libera o "questionário" (com trava anti-cola de
+          // shared/exam-proctor.js) depois desse visto.
+          key: 'teste-roteiros-avancados',
+          label: 'Roteiros de Teste: Certificação, Plataforma e Publicação',
+          desc: 'Pesquise e aplique, no seu próprio jogo, roteiros de certificação técnica, testes de plataforma, Smoke Test de publicação e teste exploratório — entregue pro professor por e-mail e depois responda o questionário.',
+          capacidade: 'Definir roteiro de teste para execução, conforme recomendações técnicas / Identificar problemas de sistemas por meio de aplicação de teste.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Roteiros de Teste (Certificação, Plataforma e Publicação)',
+              desc: 'Monte um pacote de roteiros/checklists de teste (certificação de console, plataforma/resolução, Smoke Test e relatório de bugs de teste exploratório), aplicado ao seu próprio jogo, e entregue por e-mail pro professor.',
+              icon: '🖼️', src: 'atividades/teste-roteiros-trabalho.html',
+              progressKey: 'teste_roteiros_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'questionario', title: 'Questionário — Roteiros de Teste',
+              desc: '8 perguntas sobre certificação técnica, testes de plataforma, Smoke Test e teste exploratório — só libera depois do visto do trabalho.',
+              icon: '📝', src: 'atividades/teste-roteiros-questionario.html',
+              progressKey: 'teste_roteiros_questionario_progress_', progressMode: 'flag',
+              requires: 'trabalho', hasSlides: true, hasGabarito: true
+            }
+          ]
         }
       ]
     }

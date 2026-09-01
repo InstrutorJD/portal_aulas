@@ -26,7 +26,8 @@ function seedAllModulesComplete(user) {
     'projetos_metodos_teoria', 'projetos_fases_teoria',
     'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
     'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
-    'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria'
+    'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria',
+    'teste_roteiros_trabalho', 'teste_roteiros_questionario'
   ];
   teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
   localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));

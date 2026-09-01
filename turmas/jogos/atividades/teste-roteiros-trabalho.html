@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Trabalho: Roteiros de Teste</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--yellow); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--green); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--green); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--green-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--green-dim); color:var(--yellow); font-style:italic;
+  }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--yellow); }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'teste_roteiros_trabalho';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>TESTES DE JOGOS — TRABALHO: ROTEIROS DE TESTE</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">7</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `teste_roteiros_trabalho_progress_${username}`;
+  const STEP_KEY = `teste_roteiros_trabalho_step_${username}`;
+  const PROFESSOR_EMAIL = 'jairondouglas.senai@fieg.com.br';
+
+  // Atividade sem correção automática (o "produto" é um PDF exportado de
+  // fora do portal — Canva, Google Slides, Word ou PDF direto): cada tela
+  // só navega com Voltar/Próximo, sem quiz nenhum. Quem marca como
+  // concluída é o professor, na última etapa (ver renderVisto), mesmo
+  // padrão de turmas/sistemas/atividades/modelagem-dados-requisitos-
+  // trabalho.html. Depois do visto aqui, a trilha libera o módulo
+  // "Questionário" (ver requires:'trabalho' em turmas/jogos/config.js) —
+  // só aí o aluno é cobrado sobre o que pesquisou/aplicou pra este
+  // trabalho, nunca antes.
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios está perto de lançar um jogo — e antes de qualquer lançamento de verdade, o time de QA precisa aprovar o build em **quatro frentes diferentes**. Você vai montar esse pacote de roteiros de teste, aplicado ao SEU jogo (o Cobrinha da trilha de Codificação, ou outro jogo indicado pelo professor).
+
+### O que entregar
+
+Um documento (Canva, Google Slides, Word ou PDF direto) cobrindo os 4 blocos das próximas etapas, exportado em **PDF**.
+
+O questionário depois só cobra o que está nas próximas etapas — capriche na pesquisa e não pule a parte de aplicar de verdade no seu jogo.
+
+### Como funciona aqui
+
+1. Leia os 4 blocos de conteúdo obrigatório (próximas etapas).
+2. Leia os critérios de formatação — valem nota.
+3. Monte o material por fora e exporte em PDF.
+4. Envie por e-mail pro professor.
+5. Peça o visto pessoalmente — só aí libera o Questionário.`
+    },
+    {
+      titulo: 'Bloco 1 — Roteiro de Certificação Técnica',
+      corpo: `
+Antes de um jogo chegar numa loja de console (Nintendo eShop, PlayStation Store, Xbox Store), ele passa por um processo de **certificação técnica** — o fabricante exige que certas regras sejam seguidas antes de aprovar o lançamento.
+
+- [ ] Pesquise as exigências técnicas de certificação de PELO MENOS UM fabricante (ex.: diretrizes públicas de desenvolvedor da Nintendo, Sony ou Microsoft) — cite a fonte.
+- [ ] Liste pelo menos **5 exigências reais** encontradas (ex.: comportamento ao apertar o botão Home/Menu, o que acontece se a conexão cair, tratamento de erro sem travar o jogo).
+- [ ] Monte um **roteiro de teste** (passo a passo) que verifique se o SEU jogo atende a pelo menos 3 dessas exigências.
+- [ ] Para cada item do roteiro, registre o **resultado** (passou / não passou) no seu jogo.
+
+> Dica: procure por "certification requirements" ou "TRC/TCR" (Technical Requirements Checklist) nos portais de desenvolvedor de cada fabricante — a maior parte dessa documentação é pública.`
+    },
+    {
+      titulo: 'Bloco 2 — Roteiro de Testes de Plataforma',
+      corpo: `
+O mesmo jogo pode rodar em telas, resoluções e janelas bem diferentes — o que funciona perfeito em tela cheia 1920×1080 pode quebrar numa janela pequena redimensionada.
+
+- [ ] Defina pelo menos **4 combinações** de resolução/janela pra testar (ex.: tela cheia 1080p, janela pequena, tela ultrawide, redimensionamento durante o jogo).
+- [ ] Escolha UMA funcionalidade do seu jogo (ex.: menu, pontuação na tela, controles) e escreva um **roteiro** que testa essa MESMA funcionalidade em cada uma das combinações.
+- [ ] Rode o roteiro de verdade no seu jogo e registre o resultado de cada combinação.
+- [ ] Aponte pelo menos **1 problema** (real ou hipotético) que esse tipo de teste consegue pegar, e que um teste só em tela cheia não pegaria.`
+    },
+    {
+      titulo: 'Bloco 3 — Checklist de Publicação (Smoke Test)',
+      corpo: `
+Antes de publicar qualquer versão (build), existe um teste rápido chamado **Smoke Test** (ou "roteiro de fumaça") — ele só confirma que o básico funciona, que o build não "quebra" já na abertura.
+
+- [ ] O que é um Smoke Test, com suas palavras.
+- [ ] Por que ele é rápido e não substitui um teste completo (diferença pra um teste de regressão, por exemplo).
+- [ ] Um **checklist final de Smoke Test** com pelo menos 6 itens pro SEU jogo (ex.: o jogo abre sem erro, a tela inicial carrega, o controle responde, dá pra iniciar uma partida, dá pra fechar o jogo sem travar, o som toca).
+- [ ] Rode o checklist de verdade no seu build e registre PASSOU/FALHOU em cada item.`
+    },
+    {
+      titulo: 'Bloco 4 — Relatório de Testes Exploratórios',
+      corpo: `
+Nem todo teste segue um roteiro fixo — o **teste exploratório** é quando você joga sem script, tentando quebrar o jogo de propósito, caçando bugs e comportamentos escondidos (inclusive Easter Eggs não documentados).
+
+- [ ] O que é teste exploratório, com suas palavras — e por que ele encontra bugs que um roteiro fixo não encontraria.
+- [ ] Jogue o SEU jogo por pelo menos **15 minutos** tentando quebrar ele de propósito (cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado).
+- [ ] Um **Relatório de Bugs** com pelo menos 2 achados reais (ou, se o jogo estiver bem estável, pelo menos 1 comportamento inesperado + 1 sugestão de melhoria). Pra cada achado: o que você fez, o que esperava que acontecesse, o que aconteceu de verdade.`
+    },
+    {
+      titulo: 'Critérios de formatação — vale nota',
+      corpo: `
+- [ ] **Fontes**: no máximo 2 (título + corpo), legíveis, tamanho igual em slides/páginas do mesmo tipo.
+- [ ] **Alinhamento**: título sempre no mesmo lugar, texto alinhado, não jogado de qualquer jeito.
+- [ ] **Aplicação real**: cada roteiro/checklist precisa mostrar o RESULTADO de ter sido aplicado de verdade no seu jogo — não só a teoria de cada um.`
+    },
+    {
+      titulo: 'Como entregar',
+      corpo: `
+### 1. Exportar em PDF
+
+Canva: Compartilhar → Baixar → PDF Padrão. Slides/Word: Arquivo → Baixar/Salvar como → PDF.
+
+### 2. Enviar por e-mail
+
+Para:
+
+§§§text
+${PROFESSOR_EMAIL}
+§§§
+
+Assunto:
+
+§§§text
+[Testes de Jogos] Trabalho - Seu Nome - Turma
+§§§
+
+Anexe o PDF (não cole no corpo do e-mail).
+
+### 3. Pedir o visto
+
+Procure o professor pessoalmente pra confirmar que chegou. Só depois avance e peça o visto aqui — é isso que libera o Questionário.
+
+> ⚠️ Só peça o visto depois de enviar o e-mail de verdade.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
+  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('teste_roteiros_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Trabalho — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Trabalho — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+          <p>O módulo "Questionário" desta trilha já está liberado.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>Você já enviou o PDF por e-mail pro professor (<code>${escapeHtml(PROFESSOR_EMAIL)}</code>)? Só avance daqui em diante depois de ter enviado de verdade.</p>
+        <p>Procure o professor pra confirmar o recebimento. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui não é "pergunta e resposta certa" (não tem múltipla
+  // escolha) — é o checklist de critérios pra o professor conferir o
+  // material enviado por e-mail sem precisar reabrir este módulo.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Roteiros de Teste — Checklist de correção do trabalho',
+      subtitle: 'Trabalho (Canva/Slides/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
+      items: [
+        { number: 1, title: 'Bloco 1 — Roteiro de Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas; roteiro de teste cobrindo pelo menos 3 delas; resultado (passou/não passou) registrado no jogo do aluno.' },
+        { number: 2, title: 'Bloco 2 — Roteiro de Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Pelo menos 4 combinações de resolução/janela definidas; roteiro testando a MESMA funcionalidade em todas elas; resultado registrado por combinação; pelo menos 1 problema apontado que só esse tipo de teste pegaria.' },
+        { number: 3, title: 'Bloco 3 — Checklist de Publicação (Smoke Test)', prompt: 'O material cobre todos os itens abaixo?', answer: 'O que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); checklist com pelo menos 6 itens; resultado PASSOU/FALHOU registrado por item, aplicado no jogo do aluno.' },
+        { number: 4, title: 'Bloco 4 — Relatório de Testes Exploratórios', prompt: 'O material cobre todos os itens abaixo?', answer: 'O que é teste exploratório, com palavras próprias; evidência de pelo menos 15 minutos jogando tentando quebrar o jogo; relatório com pelo menos 2 achados (ou 1 achado + 1 sugestão), cada um com o que fez / o que esperava / o que aconteceu.' },
+        { number: 5, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
+        { number: 6, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
+      ],
+      fileName: 'teste-roteiros-trabalho-checklist.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
