@@ -55,7 +55,19 @@
     let completed = getCompleted();
     let selectedId = challenges.find(c => !completed.has(c.id))?.id || challenges[0].id;
 
+    // Bypass pro professor: ele quer ver/preparar todos os desafios sem
+    // precisar resolver cada um em ordem (ver PENDENCIAS.md, "Desbloquear
+    // todas as etapas das atividades para o professor"). A checagem é
+    // assíncrona, então a sidebar é re-renderizada assim que ela resolver.
+    let isProfessor = false;
+    (async function () {
+      const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+      isProfessor = !!(user && user.role === 'professor');
+      if (isProfessor) renderSidebar();
+    })();
+
     function isUnlocked(challenge) {
+      if (isProfessor) return true;
       const idx = challenges.findIndex(c => c.id === challenge.id);
       if (idx === 0) return true;
       return completed.has(challenges[idx - 1].id);

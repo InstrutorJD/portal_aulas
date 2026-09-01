@@ -650,7 +650,19 @@ let selectedIndex = (() => {
   return idx === -1 ? STEPS.length : idx; // STEPS.length = tela de visto
 })();
 
+// Bypass pro professor: ele quer ver/preparar todos os passos (e o Visto)
+// sem precisar resolver cada um em ordem (ver PENDENCIAS.md, "Desbloquear
+// todas as etapas das atividades para o professor"). A checagem é
+// assíncrona, então a sidebar é re-renderizada assim que ela resolver.
+let isProfessor = false;
+(async function () {
+  const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+  isProfessor = !!(user && user.role === 'professor');
+  if (isProfessor) renderSidebar();
+})();
+
 function isUnlocked(index) {
+  if (isProfessor) return true;
   if (index === 0) return true;
   return completed.has(STEPS[index - 1].id);
 }
@@ -672,7 +684,7 @@ function renderSidebar() {
     stepListEl.appendChild(item);
   });
 
-  const vistoUnlocked = STEPS.every(s => completed.has(s.id));
+  const vistoUnlocked = isProfessor || STEPS.every(s => completed.has(s.id));
   const vistoItem = document.createElement('div');
   vistoItem.className = 'step-item'
     + (selectedIndex === STEPS.length ? ' active' : '')

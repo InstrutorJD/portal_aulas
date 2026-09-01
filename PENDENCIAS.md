@@ -185,11 +185,10 @@ escolhido, não a lógica.
 
 ## Desbloquear todas as etapas das atividades para o professor
 
-**Status:** parcialmente resolvido. O motor compartilhado da teoria
-(`shared/quiz-teoria-engine.js`) e a prática nova de Depuração
-(`turmas/sistemas/atividades/prog-depuracao-pratica.html`) já liberam
-tudo pro professor — ver "Já resolvido" abaixo. Os outros ~43 arquivos
-bespoke (lista original) continuam pendentes.
+**Status:** resolvido. Todos os arquivos com a trava por
+`isUnlocked`/progressão trancada — motores compartilhados e os ~48
+arquivos bespoke — já liberam tudo pro professor. Ver "Já resolvido"
+abaixo.
 
 **Onde:** o bloqueio por **módulo/trilha** (navegação entre matérias) já
 libera tudo pro professor — `isModuleLocked()` em
@@ -210,21 +209,10 @@ function isUnlocked(challenge) {
 
 — sem nenhuma exceção pro professor, então mesmo logado como professor
 só dava pra abrir a 1ª etapa até "resolver" cada uma em sequência. Esse
-exato padrão ainda está duplicado (bespoke, sem função compartilhada) em
-~43 arquivos: todas as outras `*-pratica.html` das duas turmas (jogos e
-sistemas), `js-basico.html`, `js-intermediario.html`,
-`js-basico-adaptado-engel.html`, `csharp-pratica.html`,
-`gdscript-pratica.html`, `sql-basico.html`, `sql-join.html`,
-`sql-agregacao.html`. Além desses, dois casos com assinatura levemente
-diferente:
-- `turmas/jogos/atividades/cobrinha-construcao.html`: `isUnlocked(index)`
-  sobre `STEPS` (não `CHALLENGES`), mais uma trava separada pro passo
-  final (`vistoUnlocked = STEPS.every(s => completed.has(s.id))`).
-- `shared/js-challenge-engine.js`: mesma lógica, mas já centralizada
-  numa engine compartilhada (só usada por
-  `turmas/sistemas/atividades/js-fundamentos-basico.html` e
-  `-intermediario.html`) — corrigir esse arquivo já resolve os dois de
-  uma vez.
+mesmo padrão estava duplicado (bespoke, sem função compartilhada) em
+~46 arquivos, mais dois casos com assinatura levemente diferente
+(`cobrinha-construcao.html` e `shared/js-challenge-engine.js`) — ver
+lista completa em "Já resolvido" abaixo.
 
 **Objetivo:** o professor conseguir abrir/navegar livremente por
 qualquer etapa de qualquer atividade prática, sem precisar "resolver"
@@ -243,18 +231,29 @@ qualquer parte do conteúdo. Não muda nada pro aluno.
   aplicado em `isUnlocked(challenge)` — com `isProfessor` ligado, todo
   chamado conta como desbloqueado; a sidebar é re-renderizada assim que
   a checagem assíncrona resolve.
+- Os ~46 arquivos bespoke restantes com o padrão `isUnlocked(challenge)`
+  sobre `CHALLENGES` (todas as `*-pratica.html` das duas turmas,
+  `js-basico.html`, `js-intermediario.html`,
+  `js-basico-adaptado-engel.html`, `csharp-pratica.html`,
+  `gdscript-pratica.html`, `sql-basico.html`, `sql-join.html`,
+  `sql-agregacao.html`): corrigidos em lote (script único, tratando
+  arquivos CRLF e LF separadamente — a mistura de final de linha era
+  exatamente o que travou a tentativa anterior). Mesmo padrão dos dois
+  itens acima: comentário + `isProfessor` + IIFE assíncrona antes de
+  `isUnlocked`, `if (isProfessor) return true;` como 1ª linha dela.
+- `shared/js-challenge-engine.js` (motor compartilhado, usado por
+  `js-fundamentos-basico.html`/`-intermediario.html`): mesmo padrão,
+  corrigido uma vez só na engine — resolve os dois arquivos de uma vez.
+- `turmas/jogos/atividades/cobrinha-construcao.html`: caso especial —
+  além de `isUnlocked(index)` sobre `STEPS`, o passo final ("Visto do
+  professor") tem seu próprio `vistoUnlocked = STEPS.every(s =>
+  completed.has(s.id))`, sem passar por `isUnlocked`. Vira
+  `vistoUnlocked = isProfessor || STEPS.every(...)`, senão o professor
+  destravava os passos mas não o Visto.
 
-**Caminho mapeado pros ~43 arquivos restantes:** em cada um, checar
-`(await window.PortalSession.getUser())?.role === 'professor'` (mesmo
-`shared/session.js` que toda atividade já inclui) uma vez no carregamento,
-guardar num flag (`isProfessor`), e fazer `isUnlocked(...)` retornar
-`true` de cara quando o flag estiver ligado — como a checagem é
-assíncrona, a etapa fica travada até a resposta chegar e então a
-sidebar é re-renderizada (mesmo padrão dos dois arquivos já corrigidos
-acima). Uma tentativa anterior de aplicar isso em lote (regex simples
-sobre os 44 arquivos originais) esbarrou em arquivos com final de linha
-CRLF vs LF misturado no repositório — precisa normalizar isso antes
-(ou tratar os dois casos no script) pra não quebrar arquivo nenhum.
+Cobertura: `tests/professor-unlock-challenges.spec.js` (novo) testa as 3
+variações (bespoke, motor compartilhado, caso especial do Cobrinha).
+Suíte completa passa (203/203).
 
 ## Token do professor em "Dar visto"/"Pular etapa" — proteção contra força bruta
 
