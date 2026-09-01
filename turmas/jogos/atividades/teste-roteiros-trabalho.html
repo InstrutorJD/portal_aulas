@@ -150,88 +150,72 @@
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios está perto de lançar um jogo — e antes de qualquer lançamento de verdade, o time de QA precisa aprovar o build em **quatro frentes diferentes**. Você vai montar esse pacote de roteiros de teste.
+Antes de lançar um jogo, o QA aprova o build em **4 frentes**. Monte um pacote de roteiros de teste sobre elas.
 
 ### Em cima de qual jogo?
 
-Você não precisa ter programado um jogo pra fazer este trabalho. Escolha UMA das opções abaixo e use a MESMA nos 4 blocos:
+Escolha UMA opção e use a MESMA nos 4 blocos:
 
-- 🎮 **Um jogo jogável de verdade** — o Cobrinha, se você já construiu o seu na trilha de Codificação, ou um jogo já pronto aqui no portal (aba Jogos, ex.: Campo Minado, Digitação).
-- 📺 **Uma gameplay real que você assistir na internet** — ex.: o vídeo de gameplay de GTA 6 que saiu recentemente. Gameplays assim, de jogos grandes ainda não lançados, costumam mostrar bugs/glitches de verdade — dá pra usar o que aparece no vídeo como base pros seus roteiros.
+- 🎮 Jogo jogável (Cobrinha, ou um jogo do portal — Campo Minado, Digitação)
+- 📺 Gameplay real que você assistir (ex.: a gameplay de GTA 6 que saiu recentemente — costuma ter bugs de verdade)
 
-Se escolher um jogo jogável, teste de verdade e registre o resultado real. Se escolher uma gameplay, escreva o roteiro (o que você testaria) e o resultado com base no que observou no vídeo — deixe claro no documento que é uma análise em cima da gameplay, não um teste ao vivo.
+Diga qual escolheu logo no início do documento.
 
-Diga logo no início do documento qual jogo/gameplay você escolheu.
+### Os 4 tipos de teste
 
-### Os 4 tipos de teste — resumo rápido
-
-O questionário depois cobra estes 4 NOMES, onde cada um se aplica melhor e por quê — decore essa tabela antes de começar a pesquisar:
-
-| Tipo de teste | Onde é melhor aplicado | Por quê |
+| Tipo | Onde se aplica | Por quê |
 |---|---|---|
-| Certificação técnica | Antes de enviar o jogo pra aprovação de um fabricante de console | Sem seguir as regras técnicas obrigatórias do fabricante, o jogo nem entra na loja oficial |
-| Teste de plataforma | Quando o jogo precisa rodar em telas/resoluções/janelas diferentes | Garante que a MESMA funcionalidade continua funcionando em qualquer tamanho de tela |
-| Smoke Test (publicação) | Logo antes de publicar qualquer build novo | É rápido de propósito — só confirma que o básico funciona, antes de investir tempo em testes mais profundos |
-| Teste exploratório | Quando o jogo já está relativamente estável | Sem roteiro fixo, encontra bugs e Easter eggs que um teste com script nunca cobriria |
+| Certificação técnica | Antes de enviar pra aprovação de um fabricante de console | Sem seguir as regras, o jogo não entra na loja |
+| Teste de plataforma | Jogo precisa rodar em telas/resoluções diferentes | Garante que funciona em qualquer tamanho de tela |
+| Smoke Test | Antes de publicar um build novo | Confirma o básico rápido, antes de testar mais a fundo |
+| Teste exploratório | Jogo já está estável | Sem roteiro fixo, acha bugs escondidos |
 
-### O que entregar
+### Entrega
 
-Um documento (Canva, Google Slides, Word ou PDF direto) cobrindo os 4 blocos das próximas etapas, exportado em **PDF**.
-
-O questionário depois só cobra o que está nas próximas etapas — capriche na pesquisa e não pule a parte de aplicar (de verdade ou com base na gameplay escolhida).
-
-### Como funciona aqui
-
-1. Leia os 4 blocos de conteúdo obrigatório (próximas etapas).
-2. Leia os critérios de formatação — valem nota.
-3. Monte o material por fora e exporte em PDF.
-4. Envie por e-mail pro professor.
-5. Peça o visto pessoalmente — só aí libera o Questionário.`
+Documento (Canva/Slides/Word) com os 4 blocos das próximas etapas, exportado em **PDF** → e-mail pro professor → peça o visto → libera o Questionário.`
     },
     {
       titulo: 'Bloco 1 — Roteiro de Certificação Técnica',
       corpo: `
-Antes de um jogo chegar numa loja de console (Nintendo eShop, PlayStation Store, Xbox Store), ele passa por um processo de **certificação técnica** — o fabricante exige que certas regras sejam seguidas antes de aprovar o lançamento.
+Tópicos pra pesquisar:
 
-- [ ] **Nome do tipo de teste** (certificação técnica), **onde ele é melhor aplicado** (antes de enviar o jogo pra aprovação de um fabricante de console) e **por que** existe (o jogo não entra na loja oficial sem seguir as regras do fabricante) — com suas palavras.
-- [ ] Pesquise quais exigências técnicas costumam ser cobradas antes de um jogo ser aprovado pra uma loja de console — cite a fonte que você usou.
-- [ ] Liste pelo menos **5 exigências reais** encontradas (ex.: comportamento ao apertar o botão Home/Menu, o que acontece se a conexão cair, tratamento de erro sem travar o jogo).
-- [ ] Monte um **roteiro de teste** (passo a passo) que verifique se o jogo/gameplay que você escolheu atende a pelo menos 3 dessas exigências.
-- [ ] Para cada item do roteiro, registre o **resultado** (passou / não passou) — real, se testável ao vivo, ou o que você espera com base no que observou (se escolheu uma gameplay).
+- [ ] O que é certificação técnica, onde se aplica e por quê (com suas palavras)
+- [ ] Exigências técnicas de certificação de console (cite a fonte)
+- [ ] Pelo menos **5 exigências reais** encontradas
+- [ ] Roteiro de teste (passo a passo) cobrindo **3 dessas exigências**, aplicado ao jogo/gameplay escolhido
+- [ ] Resultado de cada item (passou / não passou)
 
-> Dica: procure por termos como "certificação técnica de jogos para console" ou "requisitos técnicos para publicar jogo em console" — esse tipo de exigência costuma ser documentado publicamente.`
+> Dica: pesquise "certificação técnica de jogos para console".`
     },
     {
       titulo: 'Bloco 2 — Roteiro de Testes de Plataforma',
       corpo: `
-O mesmo jogo pode rodar em telas, resoluções e janelas bem diferentes — o que funciona perfeito em tela cheia 1920×1080 pode quebrar numa janela pequena redimensionada.
+Tópicos pra pesquisar:
 
-- [ ] **Nome do tipo de teste** (teste de plataforma), **onde ele é melhor aplicado** (quando o jogo precisa rodar em telas/resoluções/janelas diferentes) e **por que** existe (a mesma funcionalidade pode se comportar diferente em cada tamanho de tela) — com suas palavras.
-- [ ] Defina pelo menos **4 combinações** de resolução/janela pra testar (ex.: tela cheia 1080p, janela pequena, tela ultrawide, redimensionamento durante o jogo).
-- [ ] Escolha UMA funcionalidade do jogo/gameplay escolhido (ex.: menu, pontuação/HUD na tela, controles) e escreva um **roteiro** que testa essa MESMA funcionalidade em cada uma das combinações.
-- [ ] Rode o roteiro de verdade (se for jogo jogável) ou registre o resultado esperado com base no que você viu na gameplay, pra cada combinação.
-- [ ] Aponte pelo menos **1 problema** (real ou hipotético) que esse tipo de teste consegue pegar, e que um teste só em tela cheia não pegaria.`
+- [ ] O que é teste de plataforma, onde se aplica e por quê (com suas palavras)
+- [ ] Pelo menos **4 combinações** de resolução/janela (ex.: tela cheia, janela pequena, ultrawide, redimensionar)
+- [ ] Roteiro testando **1 funcionalidade** (ex.: menu, HUD) nas 4 combinações, aplicado ao jogo/gameplay escolhido
+- [ ] Resultado de cada combinação
+- [ ] 1 problema que só esse tipo de teste pegaria`
     },
     {
       titulo: 'Bloco 3 — Checklist de Publicação (Smoke Test)',
       corpo: `
-Antes de publicar qualquer versão (build), existe um teste rápido chamado **Smoke Test** (ou "roteiro de fumaça") — ele só confirma que o básico funciona, que o build não "quebra" já na abertura.
+Tópicos pra pesquisar:
 
-- [ ] **Nome do tipo de teste** (Smoke Test), **onde ele é melhor aplicado** (logo antes de publicar qualquer build novo) e **por que** existe (é rápido de propósito, pra confirmar o básico antes de investir tempo em testes mais profundos) — com suas palavras.
-- [ ] O que é um Smoke Test, com suas palavras.
-- [ ] Por que ele é rápido e não substitui um teste completo (diferença pra um teste de regressão, por exemplo).
-- [ ] Um **checklist final de Smoke Test** com pelo menos 6 itens pro jogo/gameplay escolhido (ex.: o jogo abre sem erro, a tela inicial carrega, o controle responde, dá pra iniciar uma partida, dá pra fechar o jogo sem travar, o som toca).
-- [ ] Rode o checklist de verdade (se for jogo jogável) ou registre PASSOU/FALHOU esperado com base no que você viu na gameplay, em cada item.`
+- [ ] O que é Smoke Test, onde se aplica e por quê (com suas palavras)
+- [ ] Por que é rápido e não substitui um teste completo
+- [ ] Checklist com pelo menos **6 itens** (ex.: jogo abre, tela inicial carrega, controle responde, inicia partida, fecha sem travar, som toca), aplicado ao jogo/gameplay escolhido
+- [ ] Resultado PASSOU/FALHOU de cada item`
     },
     {
       titulo: 'Bloco 4 — Relatório de Testes Exploratórios',
       corpo: `
-Nem todo teste segue um roteiro fixo — o **teste exploratório** é quando você joga sem script, tentando quebrar o jogo de propósito, caçando bugs e comportamentos escondidos (inclusive Easter Eggs não documentados).
+Tópicos pra pesquisar:
 
-- [ ] **Nome do tipo de teste** (teste exploratório), **onde ele é melhor aplicado** (quando o jogo já está relativamente estável) e **por que** existe (sem roteiro fixo, encontra bugs e Easter eggs que um teste com script nunca cobriria) — com suas palavras.
-- [ ] O que é teste exploratório, com suas palavras — e por que ele encontra bugs que um roteiro fixo não encontraria.
-- [ ] Se escolheu um **jogo jogável**: jogue por pelo menos **15 minutos** tentando quebrar ele de propósito (cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado). Se escolheu uma **gameplay**: assista com atenção a pelo menos **15 minutos** do vídeo, reparando em qualquer bug, glitch ou comportamento estranho que aparecer.
-- [ ] Um **Relatório de Bugs** com pelo menos 2 achados reais (do seu teste ao vivo, ou observados na gameplay) — ou, se não achar nada estranho, pelo menos 1 comportamento inesperado + 1 sugestão de melhoria. Pra cada achado: o que você fez/observou, o que esperava que acontecesse, o que aconteceu de verdade.`
+- [ ] O que é teste exploratório, onde se aplica e por quê (com suas palavras)
+- [ ] Pelo menos **15 minutos** jogando tentando quebrar de propósito (ou assistindo à gameplay reparando em bugs/glitches)
+- [ ] Relatório com pelo menos **2 achados** (ou 1 achado + 1 sugestão): o que fez/observou, o que esperava, o que aconteceu`
     },
     {
       titulo: 'Critérios de formatação — vale nota',
