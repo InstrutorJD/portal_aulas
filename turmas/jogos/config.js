@@ -742,7 +742,7 @@ window.TURMA_CONFIG_JOGOS = {
           modules: [
             {
               key: 'trabalho', title: 'Criar Slides no Canva (Adaptado)',
-              desc: '4 slides com título, cor da fonte e texto já prontos — você só digita (sem copiar/colar) e entrega pro professor.',
+              desc: '10 slides (capa + os 4 tipos de teste do trabalho regular, 2 slides cada + encerramento) com título, cor da fonte e texto já prontos — você só digita (sem copiar/colar) e entrega pro professor.',
               icon: '🖼️', src: 'atividades/teste-roteiros-trabalho-engel.html',
               progressKey: 'teste_roteiros_trabalho_engel_progress_', progressMode: 'flag',
               hasGabarito: true

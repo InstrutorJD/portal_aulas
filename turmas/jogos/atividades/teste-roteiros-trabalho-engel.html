@@ -187,24 +187,61 @@
     { n: 6, t: 'Clique no "+" pra criar o próximo slide e repita.' }
   ];
 
+  // 10 slides — capa + os 4 tipos de teste do trabalho regular (turmas/
+  // jogos/atividades/teste-roteiros-trabalho.html: Certificação Técnica,
+  // Teste de Plataforma, Smoke Test, Teste Exploratório), 2 slides por
+  // tipo (nome+definição, depois quando/por quê se usa — mesmo conteúdo
+  // que os outros alunos pesquisam, só que já pronto pra digitar) +
+  // encerramento. Mesmo assunto, mesma cobertura dos 4 tipos — só muda
+  // que aqui não tem pesquisa nem redação, é ler e digitar.
   const SLIDES = [
     {
-      icon: '🎮', corNome: 'Vermelho', cor: '#e53935', emoji: '🔴',
-      titulo: 'Teste do Campo Minado',
+      icon: '🖼️', corNome: 'Rosa', cor: '#ec407a', emoji: '🌸',
+      titulo: 'Roteiros de Teste',
       texto: 'Por Engel Fraga'
+    },
+    {
+      icon: '🎖️', corNome: 'Vermelho', cor: '#e53935', emoji: '🔴',
+      titulo: 'Certificação Técnica',
+      texto: 'Teste feito antes de vender o jogo numa loja de console.'
+    },
+    {
+      icon: '🚫', corNome: 'Laranja', cor: '#fb8c00', emoji: '🟠',
+      titulo: 'Antes de Lançar',
+      texto: 'Sem seguir as regras do fabricante, o jogo não entra na loja.'
+    },
+    {
+      icon: '🖥️', corNome: 'Amarelo', cor: '#fdd835', emoji: '🟡',
+      titulo: 'Teste de Plataforma',
+      texto: 'Ver se o jogo funciona em telas de tamanhos diferentes.'
+    },
+    {
+      icon: '📐', corNome: 'Verde', cor: '#43a047', emoji: '🟢',
+      titulo: 'Telas Diferentes',
+      texto: 'Garante que o jogo funciona igual em qualquer tamanho de tela.'
     },
     {
       icon: '💨', corNome: 'Azul', cor: '#1e88e5', emoji: '🔵',
       titulo: 'Smoke Test',
-      texto: 'Teste rápido. Serve pra ver se o jogo abre e funciona, antes de lançar.'
+      texto: 'Teste rápido, feito bem antes de publicar o jogo.'
     },
     {
-      icon: '🔎', corNome: 'Verde', cor: '#43a047', emoji: '🟢',
+      icon: '⏱️', corNome: 'Roxo', cor: '#ab47bc', emoji: '🟣',
+      titulo: 'Teste Rápido',
+      texto: 'Só confirma o básico, antes de testar mais a fundo.'
+    },
+    {
+      icon: '🔎', corNome: 'Marrom', cor: '#6d4c41', emoji: '🟤',
       titulo: 'Teste Exploratório',
-      texto: 'Jogar bastante tentando quebrar o jogo. Serve pra achar bugs escondidos.'
+      texto: 'Jogar bastante tentando quebrar o jogo de propósito.'
     },
     {
-      icon: '🏁', corNome: 'Amarelo', cor: '#fdd835', emoji: '🟡',
+      icon: '🐞', corNome: 'Cinza', cor: '#cfd8dc', emoji: '⚪',
+      titulo: 'Sem Roteiro Fixo',
+      texto: 'Acha bugs e segredos escondidos que um teste comum não pegaria.'
+    },
+    {
+      icon: '🏁', corNome: 'Verde-água', cor: '#00acc1', emoji: '🔷',
       titulo: 'Fim!',
       texto: 'Terminei! 🏁'
     }
@@ -281,7 +318,7 @@
       <div class="card">
         <div class="big-icon">🖼️</div>
         <h2>Vamos criar os slides!</h2>
-        <p class="lead">São 4 slides. Cada um já vem com o TÍTULO, a COR e o TEXTO prontos — você só precisa digitar no Canva.</p>
+        <p class="lead">São ${SLIDES.length} slides. Cada um já vem com o TÍTULO, a COR e o TEXTO prontos — você só precisa digitar no Canva.</p>
         <div class="howto">
           ${HOWTO.map(h => `<div class="howto-item"><div class="n">${h.n}</div><div class="t">${escapeHtml(h.t)}</div></div>`).join('')}
         </div>
