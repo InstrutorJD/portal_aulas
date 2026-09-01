@@ -135,11 +135,33 @@
   // "Questionário" (ver requires:'trabalho' em turmas/jogos/config.js) —
   // só aí o aluno é cobrado sobre o que pesquisou/aplicou pra este
   // trabalho, nunca antes.
+  //
+  // Nem todo aluno tem um jogo próprio jogável (só quem já passou pela
+  // trilha de Codificação tem o Cobrinha construído) — por isso a etapa
+  // "Apresentação" abre com 2 caminhos possíveis: um jogo jogável de
+  // verdade (Cobrinha ou um minigame já pronto do portal, ex. Campo
+  // Minado) OU uma gameplay real assistida na internet (ex.: um vídeo de
+  // gameplay recente de um jogo grande ainda não lançado, que costuma
+  // mostrar bugs/glitches de verdade — o professor sugeriu GTA 6 como
+  // exemplo). Cada bloco abaixo aceita os dois: resultado real (se
+  // testável ao vivo) ou resultado baseado no que foi observado na
+  // gameplay (se só assistida) — ver texto de cada etapa.
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios está perto de lançar um jogo — e antes de qualquer lançamento de verdade, o time de QA precisa aprovar o build em **quatro frentes diferentes**. Você vai montar esse pacote de roteiros de teste, aplicado ao SEU jogo (o Cobrinha da trilha de Codificação, ou outro jogo indicado pelo professor).
+A PixelForge Studios está perto de lançar um jogo — e antes de qualquer lançamento de verdade, o time de QA precisa aprovar o build em **quatro frentes diferentes**. Você vai montar esse pacote de roteiros de teste.
+
+### Em cima de qual jogo?
+
+Você não precisa ter programado um jogo pra fazer este trabalho. Escolha UMA das opções abaixo e use a MESMA nos 4 blocos:
+
+- 🎮 **Um jogo jogável de verdade** — o Cobrinha, se você já construiu o seu na trilha de Codificação, ou um jogo já pronto aqui no portal (aba Jogos, ex.: Campo Minado, Digitação).
+- 📺 **Uma gameplay real que você assistir na internet** — ex.: o vídeo de gameplay de GTA 6 que saiu recentemente. Gameplays assim, de jogos grandes ainda não lançados, costumam mostrar bugs/glitches de verdade — dá pra usar o que aparece no vídeo como base pros seus roteiros.
+
+Se escolher um jogo jogável, teste de verdade e registre o resultado real. Se escolher uma gameplay, escreva o roteiro (o que você testaria) e o resultado com base no que observou no vídeo — deixe claro no documento que é uma análise em cima da gameplay, não um teste ao vivo.
+
+Diga logo no início do documento qual jogo/gameplay você escolheu.
 
 ### Os 4 tipos de teste — resumo rápido
 
@@ -156,7 +178,7 @@ O questionário depois cobra estes 4 NOMES, onde cada um se aplica melhor e por 
 
 Um documento (Canva, Google Slides, Word ou PDF direto) cobrindo os 4 blocos das próximas etapas, exportado em **PDF**.
 
-O questionário depois só cobra o que está nas próximas etapas — capriche na pesquisa e não pule a parte de aplicar de verdade no seu jogo.
+O questionário depois só cobra o que está nas próximas etapas — capriche na pesquisa e não pule a parte de aplicar (de verdade ou com base na gameplay escolhida).
 
 ### Como funciona aqui
 
@@ -174,8 +196,8 @@ Antes de um jogo chegar numa loja de console (Nintendo eShop, PlayStation Store,
 - [ ] **Nome do tipo de teste** (certificação técnica), **onde ele é melhor aplicado** (antes de enviar o jogo pra aprovação de um fabricante de console) e **por que** existe (o jogo não entra na loja oficial sem seguir as regras do fabricante) — com suas palavras.
 - [ ] Pesquise as exigências técnicas de certificação de PELO MENOS UM fabricante (ex.: diretrizes públicas de desenvolvedor da Nintendo, Sony ou Microsoft) — cite a fonte.
 - [ ] Liste pelo menos **5 exigências reais** encontradas (ex.: comportamento ao apertar o botão Home/Menu, o que acontece se a conexão cair, tratamento de erro sem travar o jogo).
-- [ ] Monte um **roteiro de teste** (passo a passo) que verifique se o SEU jogo atende a pelo menos 3 dessas exigências.
-- [ ] Para cada item do roteiro, registre o **resultado** (passou / não passou) no seu jogo.
+- [ ] Monte um **roteiro de teste** (passo a passo) que verifique se o jogo/gameplay que você escolheu atende a pelo menos 3 dessas exigências.
+- [ ] Para cada item do roteiro, registre o **resultado** (passou / não passou) — real, se testável ao vivo, ou o que você espera com base no que observou (se escolheu uma gameplay).
 
 > Dica: procure por "certification requirements" ou "TRC/TCR" (Technical Requirements Checklist) nos portais de desenvolvedor de cada fabricante — a maior parte dessa documentação é pública.`
     },
@@ -186,8 +208,8 @@ O mesmo jogo pode rodar em telas, resoluções e janelas bem diferentes — o qu
 
 - [ ] **Nome do tipo de teste** (teste de plataforma), **onde ele é melhor aplicado** (quando o jogo precisa rodar em telas/resoluções/janelas diferentes) e **por que** existe (a mesma funcionalidade pode se comportar diferente em cada tamanho de tela) — com suas palavras.
 - [ ] Defina pelo menos **4 combinações** de resolução/janela pra testar (ex.: tela cheia 1080p, janela pequena, tela ultrawide, redimensionamento durante o jogo).
-- [ ] Escolha UMA funcionalidade do seu jogo (ex.: menu, pontuação na tela, controles) e escreva um **roteiro** que testa essa MESMA funcionalidade em cada uma das combinações.
-- [ ] Rode o roteiro de verdade no seu jogo e registre o resultado de cada combinação.
+- [ ] Escolha UMA funcionalidade do jogo/gameplay escolhido (ex.: menu, pontuação/HUD na tela, controles) e escreva um **roteiro** que testa essa MESMA funcionalidade em cada uma das combinações.
+- [ ] Rode o roteiro de verdade (se for jogo jogável) ou registre o resultado esperado com base no que você viu na gameplay, pra cada combinação.
 - [ ] Aponte pelo menos **1 problema** (real ou hipotético) que esse tipo de teste consegue pegar, e que um teste só em tela cheia não pegaria.`
     },
     {
@@ -198,8 +220,8 @@ Antes de publicar qualquer versão (build), existe um teste rápido chamado **Sm
 - [ ] **Nome do tipo de teste** (Smoke Test), **onde ele é melhor aplicado** (logo antes de publicar qualquer build novo) e **por que** existe (é rápido de propósito, pra confirmar o básico antes de investir tempo em testes mais profundos) — com suas palavras.
 - [ ] O que é um Smoke Test, com suas palavras.
 - [ ] Por que ele é rápido e não substitui um teste completo (diferença pra um teste de regressão, por exemplo).
-- [ ] Um **checklist final de Smoke Test** com pelo menos 6 itens pro SEU jogo (ex.: o jogo abre sem erro, a tela inicial carrega, o controle responde, dá pra iniciar uma partida, dá pra fechar o jogo sem travar, o som toca).
-- [ ] Rode o checklist de verdade no seu build e registre PASSOU/FALHOU em cada item.`
+- [ ] Um **checklist final de Smoke Test** com pelo menos 6 itens pro jogo/gameplay escolhido (ex.: o jogo abre sem erro, a tela inicial carrega, o controle responde, dá pra iniciar uma partida, dá pra fechar o jogo sem travar, o som toca).
+- [ ] Rode o checklist de verdade (se for jogo jogável) ou registre PASSOU/FALHOU esperado com base no que você viu na gameplay, em cada item.`
     },
     {
       titulo: 'Bloco 4 — Relatório de Testes Exploratórios',
@@ -208,15 +230,15 @@ Nem todo teste segue um roteiro fixo — o **teste exploratório** é quando voc
 
 - [ ] **Nome do tipo de teste** (teste exploratório), **onde ele é melhor aplicado** (quando o jogo já está relativamente estável) e **por que** existe (sem roteiro fixo, encontra bugs e Easter eggs que um teste com script nunca cobriria) — com suas palavras.
 - [ ] O que é teste exploratório, com suas palavras — e por que ele encontra bugs que um roteiro fixo não encontraria.
-- [ ] Jogue o SEU jogo por pelo menos **15 minutos** tentando quebrar ele de propósito (cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado).
-- [ ] Um **Relatório de Bugs** com pelo menos 2 achados reais (ou, se o jogo estiver bem estável, pelo menos 1 comportamento inesperado + 1 sugestão de melhoria). Pra cada achado: o que você fez, o que esperava que acontecesse, o que aconteceu de verdade.`
+- [ ] Se escolheu um **jogo jogável**: jogue por pelo menos **15 minutos** tentando quebrar ele de propósito (cliques rápidos, teclas ao mesmo tempo, sair do fluxo esperado). Se escolheu uma **gameplay**: assista com atenção a pelo menos **15 minutos** do vídeo, reparando em qualquer bug, glitch ou comportamento estranho que aparecer.
+- [ ] Um **Relatório de Bugs** com pelo menos 2 achados reais (do seu teste ao vivo, ou observados na gameplay) — ou, se não achar nada estranho, pelo menos 1 comportamento inesperado + 1 sugestão de melhoria. Pra cada achado: o que você fez/observou, o que esperava que acontecesse, o que aconteceu de verdade.`
     },
     {
       titulo: 'Critérios de formatação — vale nota',
       corpo: `
 - [ ] **Fontes**: no máximo 2 (título + corpo), legíveis, tamanho igual em slides/páginas do mesmo tipo.
 - [ ] **Alinhamento**: título sempre no mesmo lugar, texto alinhado, não jogado de qualquer jeito.
-- [ ] **Aplicação real**: cada roteiro/checklist precisa mostrar o RESULTADO de ter sido aplicado de verdade no seu jogo — não só a teoria de cada um.`
+- [ ] **Aplicação**: cada roteiro/checklist precisa mostrar um RESULTADO — real, se testável ao vivo, ou baseado no que você observou/concluiu sobre o jogo/gameplay escolhido — não só a teoria de cada um.`
     },
     {
       titulo: 'Como entregar',
@@ -475,12 +497,13 @@ Procure o professor pessoalmente pra confirmar que chegou. Só depois avance e p
       title: 'Roteiros de Teste — Checklist de correção do trabalho',
       subtitle: 'Trabalho (Canva/Slides/PDF, entregue por e-mail) · Testes de Jogos Digitais · Turma Jogos Digitais',
       items: [
-        { number: 1, title: 'Bloco 1 — Roteiro de Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (certificação técnica), onde é melhor aplicado e por quê; exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas; roteiro de teste cobrindo pelo menos 3 delas; resultado (passou/não passou) registrado no jogo do aluno.' },
-        { number: 2, title: 'Bloco 2 — Roteiro de Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de plataforma), onde é melhor aplicado e por quê; pelo menos 4 combinações de resolução/janela definidas; roteiro testando a MESMA funcionalidade em todas elas; resultado registrado por combinação; pelo menos 1 problema apontado que só esse tipo de teste pegaria.' },
-        { number: 3, title: 'Bloco 3 — Checklist de Publicação (Smoke Test)', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (Smoke Test), onde é melhor aplicado e por quê; o que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); checklist com pelo menos 6 itens; resultado PASSOU/FALHOU registrado por item, aplicado no jogo do aluno.' },
-        { number: 4, title: 'Bloco 4 — Relatório de Testes Exploratórios', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste exploratório), onde é melhor aplicado e por quê; o que é teste exploratório, com palavras próprias; evidência de pelo menos 15 minutos jogando tentando quebrar o jogo; relatório com pelo menos 2 achados (ou 1 achado + 1 sugestão), cada um com o que fez / o que esperava / o que aconteceu.' },
-        { number: 5, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
-        { number: 6, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
+        { number: 1, title: 'Qual jogo/gameplay?', prompt: 'O aluno declarou logo no início qual jogo (jogável) ou gameplay (assistida) escolheu?', answer: 'Precisa aparecer no começo do documento — se for gameplay, o resultado de cada bloco deve vir marcado como "baseado no vídeo", não como teste ao vivo.' },
+        { number: 2, title: 'Bloco 1 — Roteiro de Certificação Técnica', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (certificação técnica), onde é melhor aplicado e por quê; exigências de certificação de pelo menos 1 fabricante, com fonte citada; pelo menos 5 exigências reais listadas; roteiro de teste cobrindo pelo menos 3 delas; resultado (passou/não passou) — real, se jogo jogável, ou esperado com base na gameplay.' },
+        { number: 3, title: 'Bloco 2 — Roteiro de Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de plataforma), onde é melhor aplicado e por quê; pelo menos 4 combinações de resolução/janela definidas; roteiro testando a MESMA funcionalidade em todas elas; resultado registrado por combinação (real ou baseado na gameplay); pelo menos 1 problema apontado que só esse tipo de teste pegaria.' },
+        { number: 4, title: 'Bloco 3 — Checklist de Publicação (Smoke Test)', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (Smoke Test), onde é melhor aplicado e por quê; o que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); checklist com pelo menos 6 itens; resultado PASSOU/FALHOU por item (real, se jogo jogável, ou esperado com base na gameplay).' },
+        { number: 5, title: 'Bloco 4 — Relatório de Testes Exploratórios', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste exploratório), onde é melhor aplicado e por quê; o que é teste exploratório, com palavras próprias; evidência de pelo menos 15 minutos jogando (jogo jogável) ou assistindo com atenção (gameplay); relatório com pelo menos 2 achados (ou 1 achado + 1 sugestão), cada um com o que fez/observou, o que esperava, o que aconteceu.' },
+        { number: 6, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
+        { number: 7, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
       ],
       fileName: 'teste-roteiros-trabalho-checklist.txt'
     });
