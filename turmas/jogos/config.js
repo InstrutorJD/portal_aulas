@@ -697,19 +697,19 @@ window.TURMA_CONFIG_JOGOS = {
           // shared/exam-proctor.js) depois desse visto.
           key: 'teste-roteiros-avancados',
           label: 'Roteiros de Teste: Certificação, Plataforma e Publicação',
-          desc: 'Pesquise sobre certificação técnica, testes de plataforma, Smoke Test de publicação e teste exploratório, monte slides explicando cada um e entregue pro professor por e-mail antes de responder o questionário.',
+          desc: 'Pesquise sobre certificação técnica, testes de plataforma, Smoke Test, teste exploratório, teste de regressão e teste de performance, monte slides explicando cada um e entregue pro professor por e-mail antes de responder o questionário.',
           capacidade: 'Definir roteiro de teste para execução, conforme recomendações técnicas / Identificar problemas de sistemas por meio de aplicação de teste.',
           modules: [
             {
               key: 'trabalho', title: 'Trabalho — Roteiros de Teste (Certificação, Plataforma e Publicação)',
-              desc: 'Pesquise sobre os 4 tipos de teste (certificação de console, plataforma/resolução, Smoke Test e teste exploratório) e monte slides explicando nome, onde se aplica e por quê de cada um — entregue por e-mail pro professor.',
+              desc: 'Pesquise sobre os 6 tipos de teste (certificação de console, plataforma/resolução, Smoke Test, teste exploratório, teste de regressão e teste de performance) e monte slides explicando nome, onde se aplica e por quê de cada um — entregue por e-mail pro professor.',
               icon: '🖼️', src: 'atividades/teste-roteiros-trabalho.html',
               progressKey: 'teste_roteiros_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             },
             {
               key: 'questionario', title: 'Questionário — Roteiros de Teste',
-              desc: '11 perguntas sobre certificação técnica, testes de plataforma, Smoke Test e teste exploratório — cobrando o nome de cada tipo e pra qual cenário ele serve. Só libera depois do visto do trabalho.',
+              desc: '19 perguntas sobre os 6 tipos de teste — incluindo 4 bugs reais mostrados na gameplay de GTA 6, pra você relacionar qual teste pegaria cada um antes do lançamento. Só libera depois do visto do trabalho.',
               icon: '📝', src: 'atividades/teste-roteiros-questionario.html',
               progressKey: 'teste_roteiros_questionario_progress_', progressMode: 'flag',
               requires: 'trabalho', hasSlides: true, hasGabarito: true

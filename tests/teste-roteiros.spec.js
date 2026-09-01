@@ -60,11 +60,11 @@ test.describe('turmas/jogos — trilha Roteiros de Teste', () => {
     await expect(questionarioCard).toContainText('Bloqueado');
   });
 
-  test('Trabalho: navega pelas 7 etapas com Voltar/Próximo e dá o visto com o token do professor', async ({ page }) => {
+  test('Trabalho: navega pelas 9 etapas com Voltar/Próximo e dá o visto com o token do professor', async ({ page }) => {
     await page.goto(TRABALHO_URL);
-    await expect(page.locator('#lblStepTotal')).toHaveText('8');
+    await expect(page.locator('#lblStepTotal')).toHaveText('10');
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 9; i++) {
       await expect(page.locator('#lblStepNum')).toHaveText(String(i + 1));
       await page.click('#btnNext');
     }
@@ -79,7 +79,7 @@ test.describe('turmas/jogos — trilha Roteiros de Teste', () => {
 
     // Voltar uma etapa some com a tela de visto e volta pro conteúdo normal.
     await page.click('#btnBack');
-    await expect(page.locator('#lblStepNum')).toHaveText('7');
+    await expect(page.locator('#lblStepNum')).toHaveText('9');
   });
 
   test('Questionário: mostra a tela de regras antes de iniciar, não o quiz direto', async ({ page }) => {

@@ -146,9 +146,9 @@
     {
       titulo: 'Apresentação',
       corpo: `
-Antes de lançar um jogo, o QA aprova o build em **4 frentes**. Pesquise sobre elas e monte um material (slides) explicando cada uma.
+Antes de lançar um jogo, o QA aprova o build em **6 frentes**. Pesquise sobre elas e monte um material (slides) explicando cada uma.
 
-### Os 4 tipos de teste
+### Os 6 tipos de teste
 
 | Tipo | Onde se aplica | Por quê |
 |---|---|---|
@@ -156,10 +156,12 @@ Antes de lançar um jogo, o QA aprova o build em **4 frentes**. Pesquise sobre e
 | Teste de plataforma | Jogo precisa rodar em telas/resoluções diferentes | Garante que funciona em qualquer tamanho de tela |
 | Smoke Test | Antes de publicar um build novo | Confirma o básico rápido, antes de testar mais a fundo |
 | Teste exploratório | Jogo já está estável | Sem roteiro fixo, acha bugs escondidos |
+| Teste de regressão | Depois de corrigir qualquer bug | Garante que a correção não quebrou (nem trouxe de volta) outra coisa |
+| Teste de performance | Em qualquer build, mesmo com FPS estável | Mede COMO o jogo roda (resposta, suavidade), não só SE ele roda |
 
 ### Entrega
 
-Documento (Canva/Slides/Word) com os 4 blocos das próximas etapas, exportado em **PDF** → e-mail pro professor → peça o visto → libera o Questionário.`
+Documento (Canva/Slides/Word) com os 6 blocos das próximas etapas, exportado em **PDF** → e-mail pro professor → peça o visto → libera o Questionário.`
     },
     {
       titulo: 'Bloco 1 — Certificação Técnica',
@@ -200,11 +202,29 @@ Tópicos pra pesquisar:
 - [ ] Por que ele encontra bugs que um teste com roteiro fixo não encontraria`
     },
     {
+      titulo: 'Bloco 5 — Teste de Regressão',
+      corpo: `
+Tópicos pra pesquisar:
+
+- [ ] O que é teste de regressão, onde se aplica e por quê (com suas palavras)
+- [ ] Por que faz sentido rodar de novo testes ANTIGOS (que já passavam) depois de qualquer correção, e não só o teste do bug específico
+- [ ] Um exemplo de situação onde corrigir um bug acaba quebrando outra coisa sem querer`
+    },
+    {
+      titulo: 'Bloco 6 — Teste de Performance',
+      corpo: `
+Tópicos pra pesquisar:
+
+- [ ] O que é teste de performance, onde se aplica e por quê (com suas palavras)
+- [ ] O que costuma ser medido nele (ex.: tempo de resposta, consistência de quadros, engasgos), diferente de só "roda ou não roda"
+- [ ] Por que um jogo pode ter taxa de quadros (FPS) estável e AINDA ASSIM ter um problema de performance`
+    },
+    {
       titulo: 'Critérios de formatação — vale nota',
       corpo: `
 - [ ] **Fontes**: no máximo 2 (título + corpo), legíveis, tamanho igual em slides/páginas do mesmo tipo.
 - [ ] **Alinhamento**: título sempre no mesmo lugar, texto alinhado, não jogado de qualquer jeito.
-- [ ] **Conteúdo**: os 4 tipos aparecem com nome, onde se aplica e por quê — não só a definição solta.`
+- [ ] **Conteúdo**: os 6 tipos aparecem com nome, onde se aplica e por quê — não só a definição solta.`
     },
     {
       titulo: 'Como entregar',
@@ -467,8 +487,10 @@ Procure o professor pessoalmente pra confirmar que chegou. Só depois avance e p
         { number: 2, title: 'Bloco 2 — Testes de Plataforma', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de plataforma), onde é melhor aplicado e por quê; pelo menos 4 exemplos de combinações de resolução/janela; 1 exemplo de problema que só esse tipo de teste pegaria.' },
         { number: 3, title: 'Bloco 3 — Smoke Test (Publicação)', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (Smoke Test), onde é melhor aplicado e por quê; o que é Smoke Test, com palavras próprias; por que é rápido (não substitui teste completo); exemplo de checklist com pelo menos 6 itens.' },
         { number: 4, title: 'Bloco 4 — Teste Exploratório', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste exploratório), onde é melhor aplicado e por quê; o que é teste exploratório, com palavras próprias; como costuma ser feito; por que encontra bugs que um roteiro fixo não encontraria.' },
-        { number: 5, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
-        { number: 6, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
+        { number: 5, title: 'Bloco 5 — Teste de Regressão', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de regressão), onde é melhor aplicado e por quê; por que roda de novo testes antigos após uma correção, não só o teste do bug específico; 1 exemplo de correção que quebra outra coisa sem querer.' },
+        { number: 6, title: 'Bloco 6 — Teste de Performance', prompt: 'O material cobre todos os itens abaixo?', answer: 'Nome do tipo de teste (teste de performance), onde é melhor aplicado e por quê; o que costuma ser medido (tempo de resposta, consistência de quadros, engasgos); por que dá pra ter FPS estável e ainda assim ter problema de performance.' },
+        { number: 7, title: 'Fontes e alinhamento', prompt: 'O material segue os critérios de formatação?', answer: 'No máximo 2 fontes (título/corpo), legíveis, tamanho consistente; título sempre no mesmo lugar; texto alinhado, não jogado de qualquer jeito.' },
+        { number: 8, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: 'PDF exportado (não link nem arquivo editável), enviado por e-mail para jairondouglas.senai@fieg.com.br, com assunto "[Testes de Jogos] Trabalho - Nome - Turma" e o PDF anexado.' }
       ],
       fileName: 'teste-roteiros-trabalho-checklist.txt'
     });

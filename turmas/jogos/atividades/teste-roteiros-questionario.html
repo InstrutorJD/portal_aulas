@@ -155,7 +155,7 @@
     <div>TESTES DE JOGOS — QUESTIONÁRIO: ROTEIROS DE TESTE</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">11</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">19</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -168,9 +168,27 @@
 
 <script>
   // Este questionário só cobra o que a etapa "Trabalho" desta trilha pediu
-  // pra pesquisar e aplicar (ver turmas/jogos/atividades/teste-roteiros-
-  // trabalho.html, Blocos 1 a 4) — nenhuma pergunta aqui sai desses
-  // assuntos.
+  // pra pesquisar (ver turmas/jogos/atividades/teste-roteiros-trabalho.html,
+  // Blocos 1 a 6) — nenhuma pergunta aqui sai desses assuntos, com uma
+  // exceção: as 4 últimas perguntas (bugs "numa gameplay real") pedem pra
+  // relacionar um bug JÁ CONHECIDO com o tipo de teste que pegaria — cada
+  // bug é real, documentado em cobertura de jogos (não inventado):
+  //   1. Poste de luz flutuando (2ª trailer/gameplay de GTA 6, cena de
+  //      perseguição, ~2:29) — https://rockstarintel.com/gta-6-has-a-technical-problem-and-rockstar-cant-seem-to-fix-it/
+  //      e https://www.notebookcheck.net/GTA-6-Error-spotted-in-second-trailer-and-why-fans-see-it-as-a-good-sign.1313449.0.html
+  //   2. Efeito de disparo (muzzle flash) aparecendo antes do gatilho ser
+  //      apertado, numa cena de tiro de dentro do carro — reportado por
+  //      usuários do Reddit, cobertura em https://www.sportskeeda.com (busca
+  //      "GTA 6 trailer 2 glitch pedestrian animation bug reddit").
+  //   3. Engasgo de câmera/animação mesmo com FPS estável, analisado pela
+  //      Digital Foundry como possível problema estrutural da engine RAGE —
+  //      https://rockstarintel.com/gta-6-has-a-technical-problem-and-rockstar-cant-seem-to-fix-it/
+  //   4. Trecho de estrada sem textura numa cena-chave do 1º trailer —
+  //      https://www.thenews.com.pk/latest/1348055-gta-6-trailer-under-fire-netizens-spotted-major-glitches
+  // Cada pergunta descreve o bug com fidelidade ao que foi reportado (sem
+  // exagerar nem inventar detalhe) — o que se avalia é o raciocínio de
+  // qual teste pegaria aquele tipo específico de problema, não decorar o
+  // bug em si.
   const STEPS = [
     {
       story: 'Zeta aqui! Antes de um jogo entrar numa loja como a Nintendo eShop, a PlayStation Store ou a Xbox Store, ele passa por um processo chamado <b>certificação técnica</b>: o próprio fabricante exige que o jogo siga certas regras (ex.: como reagir ao botão Home/Menu, o que fazer se a conexão cair) antes de aprovar o lançamento.',
@@ -270,6 +288,78 @@
         correctIndex: 0,
         explanation: 'Isso! Easter egg é exatamente esse tipo de segredo escondido — um dos achados clássicos de teste exploratório.'
       }
+    },
+    {
+      story: 'Depois que um bug é corrigido, a equipe de QA não confia só na palavra de quem programou — ela roda de novo os MESMOS testes de antes, pra garantir que a correção não quebrou (nem trouxe de volta) nada que já funcionava.',
+      question: {
+        prompt: 'Como se chama esse tipo de teste, que repete roteiros já usados antes pra garantir que bugs corrigidos não voltem e que nada quebrou com a mudança?',
+        options: ['Teste de regressão', 'Teste exploratório', 'Certificação técnica', 'Smoke test'],
+        correctIndex: 0,
+        explanation: 'Isso! Teste de regressão é repetir testes antigos depois de qualquer mudança, pra garantir que nada "regrediu" (voltou a quebrar).'
+      }
+    },
+    {
+      story: 'Um estúdio corrige um bug no sistema de mira do jogo. Antes de considerar a correção pronta, alguém roda de novo TODOS os testes de combate que já existiam — não só o caso específico do bug corrigido.',
+      question: {
+        prompt: 'Por que faz sentido rodar de novo testes antigos que já passavam, e não só o teste do bug específico que foi corrigido?',
+        options: ['Porque a correção pode ter afetado sem querer outras partes do sistema de combate', 'Porque testes antigos sempre encontram bugs novos, nunca os antigos', 'Porque rodar tudo de novo é mais rápido que testar só o necessário', 'Porque não existe outro jeito de saber se o bug foi corrigido'],
+        correctIndex: 0,
+        explanation: 'Isso! Uma correção pode ter efeito colateral em outra parte do sistema — por isso o teste de regressão cobre o que já funcionava, não só o ponto que mudou.'
+      }
+    },
+    {
+      story: 'A equipe técnica mede quanto tempo o jogo leva pra responder a um comando, quão consistente é a taxa de quadros, e se existem engasgos de movimento — tudo isso sem mudar NADA na jogabilidade, só medindo COMO o jogo se comporta tecnicamente.',
+      question: {
+        prompt: 'Como se chama o tipo de teste que mede o comportamento técnico do jogo (tempo de resposta, consistência de quadros, engasgos), e não a jogabilidade em si?',
+        options: ['Teste de performance', 'Teste de plataforma', 'Teste exploratório', 'Certificação técnica'],
+        correctIndex: 0,
+        explanation: 'Isso! Teste de performance mede o desempenho técnico — velocidade, consistência, tempo de resposta — não se a mecânica do jogo está certa.'
+      }
+    },
+    {
+      story: 'Mesmo dois jogos com a MESMA jogabilidade podem parecer bem diferentes de se jogar: um responde rápido e suave, o outro engasga em certos momentos — mesmo rodando na mesma taxa de quadros (FPS).',
+      question: {
+        prompt: 'Por que faz sentido medir performance separadamente, mesmo quando a taxa de quadros (FPS) já está estável?',
+        options: ['Porque FPS estável sozinho não garante que o MOVIMENTO pareça suave — pode haver engasgos mesmo assim', 'Porque taxa de quadros estável já garante 100% que não existe nenhum problema técnico', 'Porque teste de performance substitui completamente a taxa de quadros como medida', 'Porque não existe diferença nenhuma entre FPS estável e um jogo rodando bem'],
+        correctIndex: 0,
+        explanation: 'Isso! FPS estável não é garantia de suavidade — pode existir um problema de sincronia entre animação e atualização de quadro, mesmo com a taxa de quadros ok.'
+      }
+    },
+    {
+      story: 'Na gameplay de GTA 6 divulgada recentemente, jogadores repararam que um poste de luz aparece flutuando no ar, sem nenhum suporte visível, durante uma cena de perseguição.',
+      question: {
+        prompt: 'Esse tipo de problema — um objeto do cenário posicionado errado, sem seguir nenhum padrão óbvio — tem mais chance de ser encontrado por qual tipo de teste?',
+        options: ['Teste exploratório', 'Certificação técnica', 'Smoke test', 'Teste de plataforma'],
+        correctIndex: 0,
+        explanation: 'Isso! Um objeto flutuando sem motivo é o tipo de coisa que aparece ao explorar o cenário livremente, sem roteiro fixo — exatamente o que o teste exploratório é feito pra pegar.'
+      }
+    },
+    {
+      story: 'Também na gameplay de GTA 6, o efeito de luz do disparo de uma arma aparece iluminando a cena ANTES do personagem apertar o gatilho, numa cena de tiro pela janela do carro — a animação e o efeito visual saem de sincronia numa ação específica e repetível.',
+      question: {
+        prompt: 'Depois de corrigido, esse tipo de bug de sincronia precisa ser checado de novo toda vez que o jogo muda de versão — qual tipo de teste garante isso, repetindo o mesmo passo a passo a cada build novo?',
+        options: ['Teste de regressão', 'Smoke test', 'Teste exploratório', 'Certificação técnica'],
+        correctIndex: 0,
+        explanation: 'Isso! O teste de regressão roda o mesmo roteiro específico de novo a cada nova versão, garantindo que um bug já visto (como esse de sincronia) não volte a aparecer.'
+      }
+    },
+    {
+      story: 'Especialistas em tecnologia (Digital Foundry) repararam que, mesmo com GTA 6 rodando numa taxa de quadros estável (30 FPS), o movimento da câmera e dos personagens parece "engasgado" em vários trechos da gameplay — um problema de tempo entre a animação e a atualização de cada quadro.',
+      question: {
+        prompt: 'Um problema de MOVIMENTO/TEMPO como esse, mesmo com a taxa de quadros estável, é território de qual tipo de teste?',
+        options: ['Teste de performance', 'Teste de plataforma', 'Certificação técnica', 'Smoke test'],
+        correctIndex: 0,
+        explanation: 'Isso! Teste de performance mede COMO o jogo roda tecnicamente (tempo de resposta, suavidade, consistência quadro a quadro) — não só SE ele roda.'
+      }
+    },
+    {
+      story: 'Numa cena importante do 1º trailer de GTA 6, um trecho de estrada aparece sem textura nenhuma — só um chão liso, sem o asfalto detalhado do resto da cidade.',
+      question: {
+        prompt: 'Um problema BÁSICO e visível assim (algo não carregou visualmente) é exatamente o tipo de coisa que qual teste rápido, feito logo no início, deveria pegar primeiro?',
+        options: ['Smoke test', 'Teste exploratório', 'Teste de regressão', 'Certificação técnica'],
+        correctIndex: 0,
+        explanation: 'Isso! É justamente esse tipo de falha básica e visível — algo não carregando direito — que o Smoke Test é feito pra pegar rápido, antes de qualquer teste mais profundo.'
+      }
     }
   ];
 
@@ -281,7 +371,7 @@
       steps: STEPS,
       fileName: 'teste-roteiros-questionario-slides.pptx',
       closingTitle: 'Revise antes de responder!',
-      closingText: 'O questionário só cobra o que foi pedido no trabalho (roteiros de certificação, plataforma, publicação e teste exploratório) desta trilha — reveja seu material antes de responder.'
+      closingText: 'O questionário só cobra o que foi pedido no trabalho (certificação técnica, plataforma, Smoke Test, teste exploratório, regressão e performance) desta trilha, além de 4 bugs reais de GTA 6 pra relacionar com o tipo de teste certo — reveja seu material antes de responder.'
     });
   };
 
@@ -321,7 +411,7 @@
       mentor: { rowClass: 'zeta', avatar: '🔍', name: 'Zeta, a Detetive de Qualidade' },
       finishPassed: {
         title: 'Roteiros de Teste concluído!',
-        introHtml: '<p>Você já sabe diferenciar certificação técnica, testes de plataforma, Smoke Test e teste exploratório — e sabe o que cada um consegue (e não consegue) pegar.</p>',
+        introHtml: '<p>Você já sabe diferenciar certificação técnica, testes de plataforma, Smoke Test, teste exploratório, teste de regressão e teste de performance — e já treinou reconhecer, em bugs reais, qual desses testes teria pegado o problema antes do lançamento.</p>',
         closingHtml: '<p>Trilha concluída — bom trabalho!</p>',
         restartLabel: '🔁 Rever o questionário'
       }
@@ -431,7 +521,7 @@
       <div class="card gate-card">
         <h2>⚠️ Regras deste questionário</h2>
         <ul>
-          <li>Você tem <b>11 perguntas</b> e precisa de pelo menos <b>80% de acerto</b> pra concluir.</li>
+          <li>Você tem <b>19 perguntas</b> e precisa de pelo menos <b>80% de acerto</b> pra concluir.</li>
           <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
           <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
           <li>Na <b>2ª advertência</b>, o questionário é <b>bloqueado</b> — só o professor libera de novo.</li>
