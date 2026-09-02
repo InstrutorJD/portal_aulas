@@ -1,5 +1,33 @@
 # Pendências
 
+## Efeito visual + sonoro ao concluir uma atividade
+
+**Status:** pendente — ideia do professor, ainda não implementada.
+
+**Onde:** hoje, ao concluir uma atividade (trabalho com visto, questionário
+que bate o % mínimo, prática que resolve o último desafio), a tela de
+"concluído"/troféu é só estática — nenhum efeito visual (ex.: confete,
+fogos de artifício) nem sonoro (ex.: som de palmas) toca nesse momento, em
+nenhuma das telas de conclusão das duas turmas.
+
+**Objetivo:** dar um retorno mais comemorativo/gratificante quando o aluno
+termina uma atividade — exemplo citado pelo professor: fogos de artifício
+e/ou som de palmas.
+
+**Próximos passos (ainda não decidido, discutir antes de implementar):**
+- Onde aplicar: só nas telas de conclusão dos motores compartilhados
+  (`shared/quiz-teoria-engine.js`, `shared/js-challenge-engine.js`, o que
+  cobriria a maior parte do conteúdo com pouco esforço), ou também nas
+  ~48 telas bespoke de prática/trabalho das duas turmas?
+- Efeito visual: biblioteca de confete/fogos (ex.: canvas-confetti) ou algo
+  mais simples em CSS puro, sem dependência nova?
+- Som: precisa de um arquivo de áudio (ex.: clipe de palmas) — de onde
+  viria (licença livre) e como ficaria disponível offline (mesmo padrão
+  dos assets já usados no portal, sem depender de CDN externo)?
+- Precisa de opção pra desligar o som (autoplay de áudio costuma ser
+  bloqueado por navegador até alguma interação do usuário, e alguns
+  alunos podem estar em ambiente silencioso/compartilhado)?
+
 ## Timer mínimo antes de liberar resposta nos quizzes/desafios
 
 **Status:** pendente — ideia do professor, ainda não implementada.
