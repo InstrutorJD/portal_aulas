@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Cor e Título (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); min-height:100vh;
+  }
+
+  .env{
+    max-width:760px; margin:0 auto; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+    min-height:calc(100vh - 20px);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .steps{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; padding:12px 12px 0; }
+  .step-dot{
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    font-size:17px; border:2px solid var(--line); background:var(--panel2); border-radius:8px;
+  }
+  .step-dot.active{ border-color:var(--green); }
+  .step-dot.done{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+
+  .stage{ flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:20px; }
+  .card .big-icon{ font-size:56px; line-height:1; text-align:center; margin-bottom:10px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--yellow);
+    margin:0 0 12px; letter-spacing:1px; text-align:center;
+  }
+
+  .lead{ font-size:18px; line-height:1.7; text-align:center; margin:0 0 6px; }
+
+  /* Cor da pergunta — swatch grande + nome da cor, igual ao slide */
+  .color-row{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:14px; }
+  .swatch{ width:60px; height:60px; border-radius:10px; border:2px solid #000; flex-shrink:0; }
+  .color-label{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; letter-spacing:1px;
+  }
+  .question-lead{ font-size:17px; text-align:center; margin:0 0 16px; color:var(--ink-dim); }
+
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option{
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    border:2px solid var(--line); background:var(--panel2); cursor:pointer; font-size:17px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:28px; height:28px; flex-shrink:0; border:2px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-dim); font-weight:800;
+  }
+  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.1); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.1); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; font-size:16px; line-height:1.6;
+    border:1px dashed var(--line); text-align:center;
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--green); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+
+  .step-nav{ display:flex; justify-content:flex-end; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 26px; cursor:pointer; border-radius:8px;
+  }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .score-box{ text-align:center; }
+  .score-box .score{ font-size:22px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  @media (max-width: 600px) {
+    .card{ padding:14px; }
+    .swatch{ width:48px; height:48px; }
+    .color-label{ font-size:21px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'teste_roteiros_questionario_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🎨 CORES E TÍTULOS</div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">10</span></div>
+  </div>
+  <div class="steps" id="stepsRow"></div>
+  <div class="stage">
+    <div id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `teste_roteiros_questionario_engel_progress_${username}`;
+
+  // Questionário simples pro Engel: mostra a COR (swatch + nome, igual ao
+  // que ele já digitou nos slides de atividades/teste-roteiros-trabalho-
+  // engel.html) e pede pra escolher, entre 4 opções, qual TÍTULO usa essa
+  // cor. Usa só os 8 slides "de conteúdo" (os 4 tipos de teste, 2 slides
+  // cada) — a capa e o slide de encerramento ficam de fora de propósito,
+  // porque os dois usam a MESMA cor (Verde-água) com títulos diferentes, o
+  // que quebraria a relação 1 cor = 1 título que o questionário testa.
+  //
+  // Sem trava anti-cola (exam-proctor) nem visto do professor: mesmo
+  // padrão de simplicidade de teste-roteiros-trabalho-engel.html — aqui é
+  // treino de memória color→título, não uma prova formal. Ao terminar as 8
+  // perguntas a atividade já conclui sozinha (sem exigir % mínimo de
+  // acerto) — o placar aparece só como retorno, não como bloqueio.
+  const QUESTIONS = [
+    { cor: '#e53935', corNome: 'Vermelho', emoji: '🔴',
+      opcoes: ['Smoke Test', 'Certificação Técnica', 'Teste Exploratório', 'Teste de Plataforma'], certa: 1 },
+    { cor: '#fb8c00', corNome: 'Laranja', emoji: '🟠',
+      opcoes: ['Antes de Lançar', 'Sem Roteiro Fixo', 'Telas Diferentes', 'Teste Rápido'], certa: 0 },
+    { cor: '#fdd835', corNome: 'Amarelo', emoji: '🟡',
+      opcoes: ['Teste Exploratório', 'Teste de Plataforma', 'Antes de Lançar', 'Smoke Test'], certa: 1 },
+    { cor: '#43a047', corNome: 'Verde', emoji: '🟢',
+      opcoes: ['Sem Roteiro Fixo', 'Teste Rápido', 'Telas Diferentes', 'Certificação Técnica'], certa: 2 },
+    { cor: '#1e88e5', corNome: 'Azul', emoji: '🔵',
+      opcoes: ['Smoke Test', 'Teste de Plataforma', 'Antes de Lançar', 'Teste Exploratório'], certa: 0 },
+    { cor: '#ab47bc', corNome: 'Roxo', emoji: '🟣',
+      opcoes: ['Telas Diferentes', 'Sem Roteiro Fixo', 'Teste Rápido', 'Certificação Técnica'], certa: 2 },
+    { cor: '#6d4c41', corNome: 'Marrom', emoji: '🟤',
+      opcoes: ['Antes de Lançar', 'Teste Exploratório', 'Smoke Test', 'Teste de Plataforma'], certa: 1 },
+    { cor: '#cfd8dc', corNome: 'Cinza', emoji: '⚪',
+      opcoes: ['Certificação Técnica', 'Teste Rápido', 'Telas Diferentes', 'Sem Roteiro Fixo'], certa: 3 }
+  ];
+  const TOTAL_STEPS = 1 + QUESTIONS.length; // apresentação + perguntas
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  let progress = loadProgress();
+  if (!progress || !Array.isArray(progress.respostas) || progress.respostas.length !== QUESTIONS.length) {
+    progress = { iniciado: false, respostas: new Array(QUESTIONS.length).fill(null), completed: false, correctCount: 0 };
+  }
+
+  // Se já concluiu, ou já respondeu tudo, ou já começou (pulando a tela de
+  // apresentação em visitas seguintes) — decide onde currentIndex começa.
+  // Nunca volta pra reabrir uma pergunta já respondida (trava contra
+  // "recarregar a página e tentar de novo" — mesma ideia de
+  // shared/quiz-teoria-engine.js).
+  let currentIndex;
+  if (progress.completed) {
+    currentIndex = TOTAL_STEPS;
+  } else {
+    const firstUnanswered = progress.respostas.findIndex(r => r === null);
+    if (firstUnanswered === -1) {
+      currentIndex = TOTAL_STEPS;
+    } else if (!progress.iniciado) {
+      currentIndex = 0;
+    } else {
+      currentIndex = firstUnanswered + 1;
+    }
+  }
+
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+  })();
+
+  const stepsRowEl = document.getElementById('stepsRow');
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  lblStepTotal.textContent = TOTAL_STEPS + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('teste_roteiros_questionario_engel', label, { step: currentIndex + 1, total: TOTAL_STEPS + 1, correctCount: progress.correctCount });
+    }
+  }
+
+  function stepIcon(i) {
+    if (i === 0) return '🎨';
+    if (i >= 1 && i <= QUESTIONS.length) return QUESTIONS[i - 1].emoji;
+    return '🏆';
+  }
+
+  function renderStepsRow() {
+    let html = '';
+    for (let i = 0; i < TOTAL_STEPS; i++) {
+      const done = i < currentIndex;
+      const active = i === currentIndex;
+      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : stepIcon(i)}</div>`;
+    }
+    const finalDone = currentIndex >= TOTAL_STEPS;
+    html += `<div class="step-dot${finalDone ? ' active done' : ''}">${finalDone ? '✅' : '🏆'}</div>`;
+    stepsRowEl.innerHTML = html;
+  }
+
+  function renderApresentacao() {
+    stepWrap.innerHTML = `
+      <div class="card">
+        <div class="big-icon">🎨</div>
+        <h2>Vamos relacionar cor e título!</h2>
+        <p class="lead">São ${QUESTIONS.length} perguntas. Em cada uma, você vê uma COR — igual às dos slides que você já criou — e escolhe, entre 4 opções, qual TÍTULO usa essa cor.</p>
+        <p class="lead">Se errar, sem problema: a resposta certa aparece na hora, pra você aprender.</p>
+      </div>
+      <div class="step-nav"><button class="btn" id="btnNext">Começar ➡️</button></div>
+    `;
+    document.getElementById('btnNext').addEventListener('click', () => {
+      progress.iniciado = true;
+      saveProgress(progress);
+      currentIndex++;
+      renderStep();
+    });
+  }
+
+  function renderQuestion(qIdx) {
+    const q = QUESTIONS[qIdx];
+    const letters = ['A', 'B', 'C', 'D'];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="big-icon">❓</div>
+      <h2>Pergunta ${qIdx + 1}</h2>
+      <div class="color-row">
+        <div class="swatch" style="background:${q.cor}"></div>
+        <div class="color-label" style="color:${q.cor}">${q.emoji} ${escapeHtml(q.corNome)}</div>
+      </div>
+      <p class="question-lead">Qual título usa essa cor?</p>
+    `;
+
+    const optionsWrap = document.createElement('div');
+    optionsWrap.className = 'options';
+    let answered = false;
+
+    q.opcoes.forEach((texto, i) => {
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${escapeHtml(texto)}</span>`;
+      opt.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        selectAnswer(i);
+      });
+      optionsWrap.appendChild(opt);
+    });
+    card.appendChild(optionsWrap);
+
+    if (isProfessor) {
+      const profNav = document.createElement('div');
+      profNav.className = 'step-nav';
+      profNav.style.marginTop = '10px';
+      profNav.innerHTML = `<button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>`;
+      card.appendChild(profNav);
+    }
+
+    stepWrap.innerHTML = '';
+    stepWrap.appendChild(card);
+
+    if (isProfessor) {
+      document.getElementById('btnSkipProfessor').addEventListener('click', () => {
+        currentIndex++;
+        renderStep();
+      });
+    }
+
+    function selectAnswer(chosenIdx) {
+      const allOptionEls = optionsWrap.querySelectorAll('.option');
+      allOptionEls.forEach(el => el.classList.add('disabled'));
+
+      const isCorrect = chosenIdx === q.certa;
+      allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (!isCorrect) allOptionEls[q.certa].classList.add('correct');
+
+      progress.respostas[qIdx] = isCorrect;
+      if (isCorrect) progress.correctCount++;
+      saveProgress(progress);
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      feedback.textContent = isCorrect
+        ? `✅ Isso! ${q.corNome} é a cor de "${q.opcoes[q.certa]}".`
+        : `❌ Quase! A cor ${q.corNome} é de "${q.opcoes[q.certa]}".`;
+      card.appendChild(feedback);
+
+      const nav = document.createElement('div');
+      nav.className = 'step-nav';
+      nav.style.marginTop = '16px';
+      nav.innerHTML = `<button class="btn" id="btnNext">Próximo ➡️</button>`;
+      card.appendChild(nav);
+
+      reportStep(`Cor e Título (Engel) — Pergunta ${qIdx + 1}: respondida`);
+
+      document.getElementById('btnNext').addEventListener('click', () => {
+        currentIndex++;
+        renderStep();
+      });
+    }
+  }
+
+  function renderResultado() {
+    const total = QUESTIONS.length;
+    progress.completed = true;
+    saveProgress(progress);
+    reportStep(`Cor e Título (Engel) — Concluído (${progress.correctCount}/${total})`);
+
+    stepWrap.innerHTML = `
+      <div class="card score-box">
+        <div class="big-icon">🏆</div>
+        <h2>Você terminou!</h2>
+        <p class="lead">Você acertou ${progress.correctCount} de ${total} perguntas.</p>
+        <div class="score">${progress.correctCount}/${total} 🎉</div>
+        <div class="step-nav" style="justify-content:center;">
+          <button class="btn btn-secondary" id="btnRestart">🔁 Tentar de novo</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnRestart').addEventListener('click', () => {
+      progress = { iniciado: true, respostas: new Array(QUESTIONS.length).fill(null), completed: false, correctCount: 0 };
+      saveProgress(progress);
+      currentIndex = 1;
+      renderStep();
+    });
+  }
+
+  function renderStep() {
+    if (currentIndex >= TOTAL_STEPS) { renderResultado(); return; }
+    lblStepNum.textContent = currentIndex + 1;
+    renderStepsRow();
+
+    if (currentIndex === 0) {
+      reportStep('Cor e Título (Engel) — Apresentação');
+      renderApresentacao();
+    } else {
+      const qIdx = currentIndex - 1;
+      reportStep(`Cor e Título (Engel) — Pergunta ${qIdx + 1}`);
+      renderQuestion(qIdx);
+    }
+  }
+
+  // Gabarito pro professor: cor → título certo de cada pergunta.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Cor e Título (Engel) — Gabarito',
+      subtitle: 'Questionário adaptado (cor → título) · Testes de Jogos Digitais · Turma Jogos Digitais',
+      items: QUESTIONS.map((q, i) => ({
+        number: i + 1,
+        prompt: `Qual título usa a cor ${q.corNome}?`,
+        options: q.opcoes,
+        correctIndex: q.certa,
+        answer: q.opcoes[q.certa]
+      })),
+      fileName: 'teste-roteiros-questionario-engel-gabarito.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

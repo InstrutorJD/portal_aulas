@@ -746,6 +746,19 @@ window.TURMA_CONFIG_JOGOS = {
               icon: '🖼️', src: 'atividades/teste-roteiros-trabalho-engel.html',
               progressKey: 'teste_roteiros_trabalho_engel_progress_', progressMode: 'flag',
               hasGabarito: true
+            },
+            {
+              // Questionário simples de cor→título, usando as mesmas 8
+              // cores/títulos dos slides de "trabalho" acima (só os 4 tipos
+              // de teste, 2 slides cada — capa/encerramento ficam de fora
+              // porque repetem a cor Verde-água com título diferente). Sem
+              // trava anti-cola nem visto do professor: conclui sozinho ao
+              // fim das 8 perguntas.
+              key: 'questionario', title: 'Questionário — Cor e Título (Adaptado)',
+              desc: '8 perguntas: você vê uma cor (igual às dos slides que você criou) e escolhe, entre 4 opções, qual título usa essa cor. Só libera depois do visto do trabalho.',
+              icon: '🎨', src: 'atividades/teste-roteiros-questionario-engel.html',
+              progressKey: 'teste_roteiros_questionario_engel_progress_', progressMode: 'flag',
+              requires: 'trabalho', hasGabarito: true
             }
           ]
         }
