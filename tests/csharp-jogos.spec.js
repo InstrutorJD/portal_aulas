@@ -1,6 +1,7 @@
 // @ts-check
 // Trilha "C#" (matéria Fundamentos de Programação de Jogos, turma Jogos
-// Digitais): Teoria (quiz-teoria-engine.js) + 2 práticas de código sobre
+// Digitais): Teoria (quiz-teoria-engine.js) + Comparação JS vs C# (tabs,
+// sem editor de código) + 2 práticas de código sobre
 // shared/csharp-challenge-engine.js (variação do motor JS que TRANSPILA um
 // subconjunto restrito de C# pra JS antes de rodar contra os testes — ver
 // esse arquivo pro porquê de não dar pra rodar C# de verdade no navegador).
@@ -8,10 +9,11 @@ const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
 const TEORIA_URL = '/turmas/jogos/atividades/csharp-teoria.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
-const COMPARACAO_URL = '/turmas/jogos/atividades/csharp-comparacao-pratica.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
+const COMPARACAO_URL = '/turmas/jogos/atividades/csharp-comparacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
+const PRATICA_SIMPLES_URL = '/turmas/jogos/atividades/csharp-pratica-simples.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const DESAFIOS_URL = '/turmas/jogos/atividades/csharp-desafios-pratica.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 
-const SOLUTIONS_COMPARACAO = [
+const SOLUTIONS_PRATICA_SIMPLES = [
   'int resultado = 100;',
   'int resultado = a + b;',
   'int resultado = a - b;',
@@ -61,7 +63,7 @@ test.describe('turmas/jogos/atividades/csharp-teoria.html', () => {
   });
 });
 
-test.describe('turmas/jogos/atividades/csharp-comparacao-pratica.html', () => {
+test.describe('turmas/jogos/atividades/csharp-comparacao.html', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, {});
   });
@@ -76,38 +78,49 @@ test.describe('turmas/jogos/atividades/csharp-comparacao-pratica.html', () => {
     await expect(page.locator('#compareTabs')).toContainText('4. If/else');
     await expect(page.locator('#compareTabs')).toContainText('5. Laço');
 
-    await expect(page.locator('#compareTitle')).toHaveText('Criar variável');
+    await expect(page.locator('.compare-body h3')).toHaveText('Criar variável');
     await expect(page.locator('.compare-body')).not.toContainText('Criar constante');
-    await expect(page.locator('#compareProgress')).toHaveText('1 / 5');
-    await expect(page.locator('#compareBtnPrev')).toBeDisabled();
+    await expect(page.locator('#lblStepNum')).toHaveText('1');
+    await expect(page.locator('#lblStepTotal')).toHaveText('5');
+    await expect(page.locator('#btnPrev')).toHaveCount(0);
 
-    await page.click('#compareBtnNext');
-    await expect(page.locator('#compareTitle')).toHaveText('Criar constante');
-    await expect(page.locator('#compareProgress')).toHaveText('2 / 5');
-    await expect(page.locator('#compareBtnPrev')).toBeEnabled();
+    await page.click('#btnNext');
+    await expect(page.locator('.compare-body h3')).toHaveText('Criar constante');
+    await expect(page.locator('#lblStepNum')).toHaveText('2');
+    await expect(page.locator('#btnPrev')).toBeVisible();
 
     // clicar direto numa aba pula pro conceito certo, sem precisar avançar 1 a 1.
     await page.click('#compareTabs .compare-tab:nth-child(5)');
-    await expect(page.locator('#compareTitle')).toHaveText('Laço de repetição');
-    await expect(page.locator('#compareBtnNext')).toHaveText('Ir para os desafios ↓');
+    await expect(page.locator('.compare-body h3')).toHaveText('Laço de repetição');
+    await expect(page.locator('#btnNext')).toHaveText('Concluir comparação ✓');
 
-    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 1: Guardando um número');
+    await page.click('#btnNext');
+    await expect(page.locator('.finish-screen h2')).toHaveText('Comparação concluída!');
+
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`csharp_comparacao_progress_${u}`)), 'breno.silva80');
+    expect(progress).toEqual({ completed: true });
+  });
+});
+
+test.describe('turmas/jogos/atividades/csharp-pratica-simples.html', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubSupabaseFake(page, {});
   });
 
   test('resolve os 5 desafios (variável + 4 operações) em sequência e conclui o módulo', async ({ page }) => {
-    await page.goto(COMPARACAO_URL);
-    await solveAll(page, SOLUTIONS_COMPARACAO);
+    await page.goto(PRATICA_SIMPLES_URL);
+    await solveAll(page, SOLUTIONS_PRATICA_SIMPLES);
     await expect(page.locator('#consoleOutput')).toContainText('Você concluiu todos os desafios');
     await expect(page.locator('#lblProgress')).toHaveText('5/5');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`csharp_comparacao_progress_${u}`)), 'breno.silva80');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`csharp_pratica_simples_progress_${u}`)), 'breno.silva80');
     expect(progress).toHaveLength(5);
   });
 
   test('declarar a divisão como int (em vez de double) falha — ensina o truncamento de int/int do C#', async ({ page }) => {
-    await page.goto(COMPARACAO_URL);
+    await page.goto(PRATICA_SIMPLES_URL);
     for (let i = 0; i < 4; i++) {
-      await solveCurrent(page, SOLUTIONS_COMPARACAO[i]);
+      await solveCurrent(page, SOLUTIONS_PRATICA_SIMPLES[i]);
       await page.click('#btnNext');
     }
     await expect(page.locator('#challengeTitle')).toHaveText('Desafio 5: Dividindo duas variáveis');
@@ -184,12 +197,13 @@ test.describe('turmas/jogos/atividades/csharp-desafios-pratica.html', () => {
 });
 
 test.describe('turmas/jogos/plataforma.html — trilha C#', () => {
-  test('aparece em Fundamentos de Programação, com os 3 módulos em ordem (teoria → comparação → desafios)', async ({ page }) => {
+  test('aparece em Fundamentos de Programação, com os 4 módulos em ordem (teoria → comparação → prática simples → desafios)', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
     await page.click('.game-card:has-text("Fundamentos de Programação")');
     await page.selectOption('#trilhaSelect', 'csharp');
     await expect(page.locator('#moduleSelector_csharp')).toContainText('Teoria — Introdução ao C#');
+    await expect(page.locator('#moduleSelector_csharp')).toContainText('Comparação — JavaScript vs C#');
     await expect(page.locator('#moduleSelector_csharp')).toContainText('Prática — JavaScript vs C#');
     await expect(page.locator('#moduleSelector_csharp')).toContainText('Prática — Desafios de C#');
   });

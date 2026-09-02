@@ -150,7 +150,7 @@ test.describe('Liberação diária — visão do aluno', () => {
         'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria', 'mundo_comprometimento_teoria',
         'projetos_metodos_teoria', 'projetos_fases_teoria',
         'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
-        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria', 'csharp_teoria',
+        'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria', 'csharp_teoria', 'csharp_comparacao',
         'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria',
         'teste_roteiros_trabalho', 'teste_roteiros_questionario'
       ];
@@ -167,7 +167,7 @@ test.describe('Liberação diária — visão do aluno', () => {
       praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
       localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dezoito));
-      localStorage.setItem(`csharp_comparacao_progress_${user}`, JSON.stringify(cinco));
+      localStorage.setItem(`csharp_pratica_simples_progress_${user}`, JSON.stringify(cinco));
 
       const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
       praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));

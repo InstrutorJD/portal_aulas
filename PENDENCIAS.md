@@ -20,28 +20,36 @@ removida — trilha, módulos (`basico`/`pratica`) e os 2 arquivos de atividade
   já que a remoção foi pedida justamente para refazer.
 - Progresso de alunos que já tinham avançado na versão antiga de GDScript
   (e na versão antiga de C#, module keys `basico`/`pratica` — diferentes dos
-  novos `teoria`/`comparacao`/`desafios`, então ficam órfãos, sem contar no
-  progresso, mas continuam ocupando linhas na tabela): ver
+  novos `teoria`/`comparacao`/`pratica-simples`/`desafios`, então ficam
+  órfãos, sem contar no progresso, mas continuam ocupando linhas na
+  tabela): ver
   `sql/supabase-reset-progresso-csharp-gdscript-jogos.sql` para apagar
   `student_module_progress` dessas trilhas no Supabase — mesmo padrão de
   aviso de `sql/supabase-reset-progresso-js-jogos.sql` quanto a progresso
   local no navegador dos alunos (localStorage não é apagado por esse SQL).
 
-## Trilha C# reconstruída (teoria + 2 práticas)
+## Trilha C# reconstruída (teoria + comparação + 2 práticas)
 
 **Status:** concluído — trilha `csharp` recriada do zero dentro de
 "Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), a pedido
-do professor, com 3 módulos:
+do professor, com 4 módulos:
 - **Teoria** (`atividades/csharp-teoria.html`, `shared/quiz-teoria-engine.js`):
   história do C# (Microsoft, Anders Hejlsberg, 2000, .NET), motivo de ter
   sido criado, por que é popular em jogos (Unity), pontos positivos/
   negativos e jogos famosos majoritariamente feitos em C# (Hollow Knight,
   Cuphead, Among Us, Cities: Skylines, Subnautica, Rust, Pokémon GO).
-- **Prática — JavaScript vs C#** (`atividades/csharp-comparacao-pratica.html`):
+- **Comparação — JavaScript vs C#** (`atividades/csharp-comparacao.html`):
   comparação de sintaxe (texto + código lado a lado) entre variável,
-  constante, função, if/else e laço — só a parte de código de verdade fica
-  restrita ao mais simples (criar variável, somar, subtrair, multiplicar,
-  dividir), com 5 desafios.
+  constante, função, if/else e laço, um conceito por vez (abas + Anterior/
+  Próximo). Módulo separado da prática de código abaixo — originalmente os
+  dois estavam empilhados numa página só (`csharp-comparacao-pratica.html`),
+  mas a tela ficou grande demais pra caber num Chromebook; virou 2 etapas
+  da trilha, mesmo padrão de teoria/prática separadas usado no resto do
+  portal.
+- **Prática — JavaScript vs C#** (`atividades/csharp-pratica-simples.html`,
+  renomeado de `csharp-comparacao-pratica.html`): só a parte de código de
+  verdade, restrita ao mais simples (criar variável, somar, subtrair,
+  multiplicar, dividir), com 5 desafios.
 - **Prática — Desafios de C#** (`atividades/csharp-desafios-pratica.html`):
   10 desafios de código no mesmo formato "vença cada duelo em ordem" do JS
   (`js-basico.html`), cobrindo variável e `Console.WriteLine`.

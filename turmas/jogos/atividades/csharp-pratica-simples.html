@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Prática (JavaScript vs C#)</title>
+<title>PixelForge Studios — Jogos: Prática Simples (C#)</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -30,39 +30,6 @@
   }
 
   .stage{ flex:1; min-height:0; padding:12px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
-
-  /* Bloco comparativo (texto direto, sem widget) — sempre visível no topo,
-     antes do desafio de código em si. Um conceito por vez (abas + Anterior/
-     Próximo), não os 5 empilhados na tela — ver COMPARE_ITEMS/renderCompare. */
-  .compare-card{ flex-shrink:0; background:var(--panel); border:1px solid var(--line); padding:14px 16px; }
-  .compare-card h2{
-    font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 4px; letter-spacing:1px;
-  }
-  .compare-card > p.intro{ font-size:12px; color:var(--ink-dim); margin:0 0 12px; line-height:1.5; }
-
-  .compare-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-  .compare-tab{
-    font-family:inherit; font-size:10.5px; font-weight:700; letter-spacing:0.3px;
-    background:var(--panel2); color:var(--ink-dim); border:1px solid var(--line);
-    padding:7px 10px; cursor:pointer; border-radius:2px;
-  }
-  .compare-tab:hover{ border-color:var(--green-dim); color:var(--ink); }
-  .compare-tab.active{ border-color:var(--green); color:var(--green); background:rgba(124,255,63,0.08); }
-  .compare-tab.done .tab-check{ color:var(--green); margin-right:3px; }
-
-  .compare-body h3{ font-size:12.5px; color:var(--yellow); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 6px; }
-  .compare-cols{ display:flex; gap:10px; flex-wrap:wrap; }
-  .compare-col{ flex:1 1 220px; min-width:0; }
-  .compare-col .lang-label{ font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
-  .compare-col pre{
-    background:#000; border:1px solid var(--line); padding:8px 10px; margin:0;
-    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--green); white-space:pre;
-  }
-  .compare-body .note{ font-size:11px; color:var(--ink-dim); margin:6px 0 0; line-height:1.5; }
-  .compare-body .note b{ color:var(--yellow); }
-
-  .compare-nav{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; }
-  .compare-progress{ font-size:10.5px; color:var(--ink-dim); letter-spacing:0.5px; }
 
   .practice-heading{ flex-shrink:0; display:flex; align-items:center; gap:8px; }
   .practice-heading h2{
@@ -151,7 +118,6 @@
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
     .stage{ overflow:visible; padding:8px; }
-    .compare-cols{ flex-direction:column; }
     .layout{ flex-direction:column; height:auto; }
     .sidebar{ width:100%; height:auto; max-height:150px; }
     .main-panel{ height:auto; overflow-y:visible; }
@@ -160,7 +126,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'csharp_comparacao';
+  window.ACTIVITY_LOCATION = 'csharp_pratica_simples';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -175,33 +141,11 @@
 
 <div class="env">
   <div class="topbar">
-    <div>C# — JAVASCRIPT VS C#</div>
+    <div>C# — PRÁTICA SIMPLES</div>
     <div>CONCLUÍDOS: <span id="lblProgress">0/0</span></div>
   </div>
 
   <div class="stage">
-    <div class="compare-card">
-      <h2>JavaScript vs C#</h2>
-      <p class="intro">Você já viu esses 5 conceitos em JavaScript. A lógica é a mesma — o que muda é a sintaxe. Compare um de cada vez:</p>
-
-      <div class="compare-tabs" id="compareTabs"></div>
-
-      <div class="compare-body">
-        <h3 id="compareTitle"></h3>
-        <div class="compare-cols">
-          <div class="compare-col"><div class="lang-label">JavaScript</div><pre id="compareJs"></pre></div>
-          <div class="compare-col"><div class="lang-label">C#</div><pre id="compareCs"></pre></div>
-        </div>
-        <p class="note" id="compareNote"></p>
-      </div>
-
-      <div class="compare-nav">
-        <button class="btn btn-secondary" id="compareBtnPrev">← Anterior</button>
-        <span class="compare-progress" id="compareProgress">1 / 5</span>
-        <button class="btn btn-secondary" id="compareBtnNext">Próximo →</button>
-      </div>
-    </div>
-
     <div class="practice-heading">
       <div>
         <h2>Agora é sua vez</h2>
@@ -245,100 +189,10 @@
 </div>
 
 <script>
-  // Comparação JS vs C#, um conceito por vez (abas numeradas + Anterior/
-  // Próximo) — mostrar os 5 juntos de uma vez era informação demais na tela
-  // ao mesmo tempo. "Próximo" no último item leva pros desafios de código.
-  const COMPARE_ITEMS = [
-    {
-      tab: '1. Variável', title: 'Criar variável',
-      js: 'let idade = 10;', cs: 'int idade = 10;',
-      note: 'Em C# toda variável precisa de um <b>tipo</b> antes do nome (<code>int</code>, <code>double</code>, <code>string</code>...). Em JS, não.'
-    },
-    {
-      tab: '2. Constante', title: 'Criar constante',
-      js: 'const nome = "Ana";', cs: 'const string nome = "Ana";',
-      note: 'Mesma ideia (valor que nunca muda depois de criado) — só que em C# a constante também precisa do tipo.'
-    },
-    {
-      tab: '3. Função', title: 'Criar função',
-      js: 'function somar(a, b) {\n  return a + b;\n}',
-      cs: 'static int Somar(int a, int b) {\n  return a + b;\n}',
-      note: 'Em C# você declara o tipo de CADA parâmetro e também o tipo que a função retorna (aqui, <code>int</code>).'
-    },
-    {
-      tab: '4. If/else', title: 'If / else',
-      js: 'if (idade >= 18) {\n  console.log("Maior");\n} else {\n  console.log("Menor");\n}',
-      cs: 'if (idade >= 18) {\n  Console.WriteLine("Maior");\n} else {\n  Console.WriteLine("Menor");\n}',
-      note: 'A lógica do if/else é idêntica — só troca <code>console.log</code> por <code>Console.WriteLine</code>.'
-    },
-    {
-      tab: '5. Laço', title: 'Laço de repetição',
-      js: 'for (let i = 0; i < 5; i++) {\n  console.log(i);\n}',
-      cs: 'for (int i = 0; i < 5; i++) {\n  Console.WriteLine(i);\n}',
-      note: 'Também quase idêntico: troca <code>let</code> por <code>int</code> e <code>console.log</code> por <code>Console.WriteLine</code>.'
-    }
-  ];
-
-  const compareTabsEl = document.getElementById('compareTabs');
-  const compareTitleEl = document.getElementById('compareTitle');
-  const compareJsEl = document.getElementById('compareJs');
-  const compareCsEl = document.getElementById('compareCs');
-  const compareNoteEl = document.getElementById('compareNote');
-  const compareProgressEl = document.getElementById('compareProgress');
-  const compareBtnPrev = document.getElementById('compareBtnPrev');
-  const compareBtnNext = document.getElementById('compareBtnNext');
-
-  let compareIndex = 0;
-  const compareSeen = new Set([0]);
-
-  function renderCompareTabs() {
-    compareTabsEl.innerHTML = '';
-    COMPARE_ITEMS.forEach((item, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'compare-tab' + (i === compareIndex ? ' active' : '') + (compareSeen.has(i) ? ' done' : '');
-      btn.innerHTML = (compareSeen.has(i) ? '<span class="tab-check">✓</span>' : '') + item.tab;
-      btn.addEventListener('click', () => selectCompare(i));
-      compareTabsEl.appendChild(btn);
-    });
-  }
-
-  function selectCompare(i) {
-    compareIndex = i;
-    compareSeen.add(i);
-    const item = COMPARE_ITEMS[i];
-
-    compareTitleEl.textContent = item.title;
-    compareJsEl.textContent = item.js;
-    compareCsEl.textContent = item.cs;
-    compareNoteEl.innerHTML = item.note;
-    compareProgressEl.textContent = `${i + 1} / ${COMPARE_ITEMS.length}`;
-
-    compareBtnPrev.disabled = i === 0;
-    const isLast = i === COMPARE_ITEMS.length - 1;
-    compareBtnNext.textContent = isLast ? 'Ir para os desafios ↓' : 'Próximo →';
-
-    renderCompareTabs();
-  }
-
-  compareBtnPrev.addEventListener('click', () => {
-    if (compareIndex > 0) selectCompare(compareIndex - 1);
-  });
-  compareBtnNext.addEventListener('click', () => {
-    if (compareIndex < COMPARE_ITEMS.length - 1) {
-      selectCompare(compareIndex + 1);
-    } else {
-      document.querySelector('.practice-heading').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-
-  selectCompare(0);
-</script>
-
-<script>
   // 5 desafios, de propósito só o essencial (variável + as 4 operações
-  // básicas) — se comparar tudo (const/função/if/laço) e ainda pedir código
-  // disso tudo na mesma prática, vira sobrecarga; esses 4 outros conceitos
-  // ficam só na comparação de texto acima, sem exercício de código ainda.
+  // básicas) — os outros 4 conceitos (const/função/if/laço) ficam só na
+  // comparação de texto do módulo anterior (csharp-comparacao.html), sem
+  // exercício de código ainda.
   const CHALLENGES = [
     {
       id: 1,
@@ -422,7 +276,7 @@
 
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'C# — JavaScript vs C#',
+      title: 'C# — Prática Simples',
       subtitle: 'Prática · Trilha C# · Turma Jogos Digitais',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
@@ -434,14 +288,14 @@
           return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
         }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
       })),
-      fileName: 'csharp-comparacao-pratica-gabarito.txt'
+      fileName: 'csharp-pratica-simples-gabarito.txt'
     });
   };
 
   window.PortalCsharpChallenges.run({
-    activityLocation: 'csharp_comparacao',
+    activityLocation: 'csharp_pratica_simples',
     challenges: CHALLENGES,
-    reportLabel: 'C# — JavaScript vs C#'
+    reportLabel: 'C# — Prática Simples'
   });
 </script>
 

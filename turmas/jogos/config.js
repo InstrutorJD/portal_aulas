@@ -569,18 +569,25 @@ window.TURMA_CONFIG_JOGOS = {
               hasSlides: true, hasGabarito: true
             },
             {
-              key: 'comparacao', title: 'Prática — JavaScript vs C#',
-              desc: 'Compare a sintaxe de variável, constante, função, if/else e laço entre JS e C#, depois escreva C# de verdade: criar variável e as 4 operações básicas.',
-              icon: '🔀', src: 'atividades/csharp-comparacao-pratica.html',
-              progressKey: 'csharp_comparacao_progress_', progressTotal: 5,
-              requires: 'teoria', hasGabarito: true
+              key: 'comparacao', title: 'Comparação — JavaScript vs C#',
+              desc: 'Compare a sintaxe de variável, constante, função, if/else e laço entre JS e C#, um conceito por vez.',
+              icon: '🔀', src: 'atividades/csharp-comparacao.html',
+              progressKey: 'csharp_comparacao_progress_', progressMode: 'flag',
+              requires: 'teoria'
+            },
+            {
+              key: 'pratica-simples', title: 'Prática — JavaScript vs C#',
+              desc: 'Escreva C# de verdade: só o essencial — criar variável e as 4 operações básicas.',
+              icon: '🟢', src: 'atividades/csharp-pratica-simples.html',
+              progressKey: 'csharp_pratica_simples_progress_', progressTotal: 5,
+              requires: 'comparacao', hasGabarito: true
             },
             {
               key: 'desafios', title: 'Prática — Desafios de C#',
               desc: 'Vença cada desafio em ordem para avançar: criar variável e Console.WriteLine, com as 4 operações básicas.',
               icon: '🟣', src: 'atividades/csharp-desafios-pratica.html',
               progressKey: 'csharp_desafios_progress_', progressTotal: 10,
-              requires: 'comparacao', hasGabarito: true
+              requires: 'pratica-simples', hasGabarito: true
             }
           ]
         },

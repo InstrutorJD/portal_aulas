@@ -25,11 +25,12 @@
 --         continua removida), OU
 --       - trilha_key = 'csharp' E module_key IN ('basico', 'pratica')
 --         (só os módulos da versão ANTIGA — não toca em 'teoria',
---         'comparacao' nem 'desafios', que são os módulos atuais).
+--         'comparacao', 'pratica-simples' nem 'desafios', que são os
+--         módulos atuais).
 --
 -- O QUE NÃO É TOCADO:
 --   • Progresso de verdade da trilha 'csharp' atual (module_key 'teoria',
---     'comparacao' ou 'desafios').
+--     'comparacao', 'pratica-simples' ou 'desafios').
 --   • Qualquer outra trilha/matéria (JS, Cobrinha, fundamentos gerais,
 --     testes de jogos, etc.), jogos, chamada, notas, liberação de jogos,
 --     turma Sistemas.
@@ -75,7 +76,8 @@ order by trilha_key, student_email, module_key;
 -- Enter. Detecta o próprio usuário pela URL e apaga só as chaves órfãs
 -- da versão antiga de C# e da trilha GDScript — NÃO mexe nas chaves da
 -- trilha C# atual (csharp_teoria_progress_*, csharp_comparacao_progress_*,
--- csharp_desafios_progress_*) nem em mais nada do aluno. Não é
+-- csharp_pratica_simples_progress_*, csharp_desafios_progress_*) nem em
+-- mais nada do aluno. Não é
 -- obrigatório (o portal já não lê mais essas chaves antigas, ver aviso
 -- acima), mas evita deixar lixo acumulado no localStorage.
 -- ============================================================
