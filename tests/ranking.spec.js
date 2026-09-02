@@ -6,9 +6,9 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
-// Turma Jogos tem 55 módulos ao todo (teoria+prática de todas as trilhas de
+// Turma Jogos tem 53 módulos ao todo (teoria+prática de todas as trilhas de
 // todas as matérias com conteúdo) — usados como base do % geral. O % de cada
-// aluno é a MÉDIA da fração current/total de cada um dos 55 módulos, não uma
+// aluno é a MÉDIA da fração current/total de cada um dos 53 módulos, não uma
 // simples contagem de módulos concluídos.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
@@ -19,11 +19,10 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
-    // edward.guzman: completa 3 módulos pré-existentes (js/basico, js/intermediario,
-    // csharp/basico) → soma 3 frações de 1.0 / 55 módulos = 5,45% → arredonda 5%.
+    // edward.guzman: completa 2 módulos pré-existentes (js/basico,
+    // js/intermediario) → soma 2 frações de 1.0 / 53 módulos = 3,77% → arredonda 4%.
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
-    { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
   ],
 };
 
@@ -63,13 +62,12 @@ test.describe('Ranking do aluno na turma', () => {
   test('aluno no topo da turma vê a própria posição em 1º', async ({ page }) => {
     // Aqui é o edward.guzman quem está logado, então é o localStorage dele
     // (não a linha semeada no SEED, que syncAllModulesProgress reescreveria)
-    // que decide o % geral: completa os 3 módulos pré-existentes (3/11 = 27%,
-    // o maior % da turma) → 1º lugar, mesmo sem ser 100%.
+    // que decide o % geral, e ele é o único aluno com progresso > 0% → 1º
+    // lugar, mesmo sem ser 100%.
     await stubSupabaseFake(page, SEED);
     await page.addInitScript(() => {
       localStorage.setItem('js_basico_progress_edward.guzman', JSON.stringify([0, 1, 2, 3, 4]));
       localStorage.setItem('js_intermediario_progress_edward.guzman', JSON.stringify([0, 1, 2, 3, 4, 5, 6]));
-      localStorage.setItem('csharp_basico_progress_edward.guzman', JSON.stringify({ completed: true }));
     });
     await page.goto('/turmas/jogos/plataforma.html?user=edward.guzman&ip=192.168.1.11&saldo=1580.11&role=aluno&turma=jogos');
 
@@ -101,13 +99,12 @@ test.describe('Ranking do aluno na turma', () => {
       student_module_progress: [
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 10, progress_total: 10, completed: true },
-        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     };
 
-    // Caso A: gabriella tem os mesmos 2 módulos concluídos (via SEED, ela
-    // não está logada nesta passagem) e breno.silva80 loga com o MESMO
-    // progresso exato semeado no localStorage dela — mesmo % exato dos dois.
+    // Caso A: gabriella tem o mesmo módulo concluído (via SEED, ela não está
+    // logada nesta passagem) e breno.silva80 loga com o MESMO progresso
+    // exato semeado no localStorage dela — mesmo % exato dos dois.
     // (Não usa "engel.fraga" de propósito: esse usuário tem uma trilha
     // individual extra em turmas/jogos/config.js — visibleFor —, que muda o
     // denominador só dele e quebraria a paridade exata que este teste
@@ -117,12 +114,10 @@ test.describe('Ranking do aluno na turma', () => {
       student_module_progress: [
         ...baseSeed.student_module_progress,
         { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
-        { student_email: 'gabriella.borges5', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     });
     await page.addInitScript(user => {
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
-      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
     }, 'breno.silva80');
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.12&saldo=2100.12&role=aluno&turma=jogos');
     // "breno.silva80" vem antes de "gabriella.borges5" em ordem alfabética.
@@ -134,7 +129,6 @@ test.describe('Ranking do aluno na turma', () => {
       student_module_progress: [
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
         { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 10, progress_total: 10, completed: true },
-        { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     };
 
@@ -147,12 +141,10 @@ test.describe('Ranking do aluno na turma', () => {
       student_module_progress: [
         ...baseSeed.student_module_progress,
         { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 10, progress_total: 10, completed: true },
-        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
       ],
     });
     await page.addInitScript(user => {
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
-      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
     }, 'gabriella.borges5');
     await page.goto('/turmas/jogos/plataforma.html?user=gabriella.borges5&ip=192.168.1.13&saldo=1420.13&role=aluno&turma=jogos');
     // Mesmo % exato de breno, mas "gabriella.borges5" perde o desempate

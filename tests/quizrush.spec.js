@@ -16,7 +16,7 @@ test.describe('QuizRush — montagem pelo professor (aproveitando o gabarito)', 
     await page.goto(HOST_URL);
 
     await expect(page.locator('#scrSetup')).toBeVisible();
-    await page.selectOption('#selModule', { label: 'Básico — A Jornada do Eri' });
+    await page.selectOption('#selModule', { label: 'Teoria — Multimídia e Versionamento' });
     await page.click('#btnFetchQuestions');
 
     await expect(page.locator('#setupResultText')).toContainText('10 perguntas');

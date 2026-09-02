@@ -29,19 +29,19 @@ test.describe('Gestão — liberação diária de atividades (professor)', () =>
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
     await expect(page.locator('#dailyReleaseData')).toHaveValue(todayIso());
-    await page.selectOption('#dailyReleaseAtividade', 'csharp::basico');
+    await page.selectOption('#dailyReleaseAtividade', 'fund-multimidia::teoria');
     await page.click('#btnAddDailyRelease');
 
     await expect(page.locator('#dailyReleaseStatus')).toContainText('Liberado');
     const row = page.locator('#tblDailyReleasesBody tr');
     await expect(row).toContainText('Turma inteira');
-    await expect(row).toContainText('C# — Básico — A Jornada do Eri');
+    await expect(row).toContainText('Multimídia e Versionamento — Teoria — Multimídia e Versionamento');
 
     const rows = await page.evaluate(() => window.__FAKE_DB__.daily_module_releases || []);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
       turma: 'jogos', scope: 'data', target_date: todayIso(),
-      student_email: '', trilha_key: 'csharp', module_key: 'basico',
+      student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
     });
   });
 
@@ -53,7 +53,7 @@ test.describe('Gestão — liberação diária de atividades (professor)', () =>
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
     await page.selectOption('#dailyReleaseAlvo', 'breno.silva80');
-    await page.selectOption('#dailyReleaseAtividade', 'csharp::basico');
+    await page.selectOption('#dailyReleaseAtividade', 'fund-multimidia::teoria');
     await page.click('#btnAddDailyRelease');
 
     await expect(page.locator('#tblDailyReleasesBody tr')).toContainText('Breno Silva');
@@ -74,7 +74,7 @@ test.describe('Gestão — liberação diária de atividades (professor)', () =>
     await expect(page.locator('#dailyReleaseDataWrap')).toBeHidden();
 
     await page.selectOption('#dailyReleaseWeekday', '3'); // quarta-feira
-    await page.selectOption('#dailyReleaseAtividade', 'csharp::basico');
+    await page.selectOption('#dailyReleaseAtividade', 'fund-multimidia::teoria');
     await page.click('#btnAddDailyRelease');
 
     const rows = await page.evaluate(() => window.__FAKE_DB__.daily_module_releases || []);
@@ -86,8 +86,8 @@ test.describe('Gestão — liberação diária de atividades (professor)', () =>
     await stubSupabaseFake(page, {
       daily_module_releases: [{
         id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
-        student_email: '', trilha_key: 'csharp', module_key: 'basico',
-        trilha_label: 'C#', module_title: 'Básico — A Jornada do Eri',
+        student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
+        trilha_label: 'Multimídia e Versionamento', module_title: 'Teoria — Multimídia e Versionamento',
       }],
     });
     await page.goto(JOGOS_PROFESSOR_URL);
@@ -109,7 +109,7 @@ test.describe('Liberação diária — visão do aluno', () => {
     await stubSupabaseFake(page, {
       daily_module_releases: [{
         id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
-        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+        student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
       }],
     });
     await page.goto(ALUNO_URL);
@@ -118,14 +118,14 @@ test.describe('Liberação diária — visão do aluno', () => {
     await expect(tabJogos).toHaveClass(/disabled/);
     await expect(tabJogos).toHaveAttribute('title', /liberada\(s\) pelo professor para hoje/);
 
-    // conclui só a atividade liberada (csharp básico) — o resto da trilha (JS) continua pendente
+    // conclui só a atividade liberada (multimídia teoria) — o resto da trilha (JS) continua pendente
     await page.evaluate(() => {
-      localStorage.setItem('csharp_basico_progress_breno.silva80', JSON.stringify({ completed: true }));
+      localStorage.setItem('fund_multimidia_teoria_progress_breno.silva80', JSON.stringify({ completed: true }));
     });
     await page.click('.game-card:has-text("Fundamentos de Programação")');
-    await page.selectOption('#trilhaSelect', 'csharp');
-    await page.click('#moduleSelector_csharp .game-card');
-    await page.click('#moduleFrameArea_csharp .btn-secondary');
+    await page.selectOption('#trilhaSelect', 'fund-multimidia');
+    await page.click('#moduleSelector_fund-multimidia .game-card');
+    await page.click('#moduleFrameArea_fund-multimidia .btn-secondary');
 
     await expect(tabJogos).not.toHaveClass(/disabled/);
     await expect(tabJogos).toContainText('🎮');
@@ -135,7 +135,7 @@ test.describe('Liberação diária — visão do aluno', () => {
     await stubSupabaseFake(page, {
       daily_module_releases: [{
         id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
-        student_email: 'outro.aluno', trilha_key: 'csharp', module_key: 'basico',
+        student_email: 'outro.aluno', trilha_key: 'fund-multimidia', module_key: 'teoria',
       }],
     });
     await page.addInitScript(user => {
@@ -155,8 +155,6 @@ test.describe('Liberação diária — visão do aluno', () => {
         'teste_roteiros_trabalho', 'teste_roteiros_questionario'
       ];
       teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
-      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`gdscript_basico_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`cobrinha_construcao_progress_${user}`, JSON.stringify({ completed: true }));
 
       const praticaDez = [
@@ -164,7 +162,6 @@ test.describe('Liberação diária — visão do aluno', () => {
         'projetos_metodos_pratica', 'projetos_fases_pratica',
         'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
         'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
-        'csharp_pratica', 'gdscript_pratica',
         'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
       ];
       praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
@@ -188,7 +185,7 @@ test.describe('Liberação diária — visão do aluno', () => {
     await stubSupabaseFake(page, {
       daily_module_releases: [{
         id: 'r1', turma: 'jogos', scope: 'semana', target_date: null, target_weekday: weekday,
-        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+        student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
       }],
     });
     await page.goto(ALUNO_URL);
@@ -204,28 +201,28 @@ test.describe('Liberação diária — visão do aluno', () => {
     await stubSupabaseFake(page, {
       trilha_release_dates: [
         { turma: 'jogos', trilha_key: 'js', inicio: '2999-01-01' },
-        { turma: 'jogos', trilha_key: 'csharp', inicio: '2999-01-01' },
+        { turma: 'jogos', trilha_key: 'fund-multimidia', inicio: '2999-01-01' },
       ],
       daily_module_releases: [{
         id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
-        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+        student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
       }],
     });
     await page.goto(ALUNO_URL);
     await page.click('.game-card:has-text("Fundamentos de Programação")');
 
-    // csharp aparece por causa da liberação diária, mesmo com início no futuro;
+    // fund-multimidia aparece por causa da liberação diária, mesmo com início no futuro;
     // js continua escondida (a exceção é só do módulo liberado, não da matéria toda).
-    await expect(page.locator('#trilhaSelect option[value="csharp"]')).toHaveCount(1);
+    await expect(page.locator('#trilhaSelect option[value="fund-multimidia"]')).toHaveCount(1);
     await expect(page.locator('#trilhaSelect option[value="js"]')).toHaveCount(0);
 
-    await page.selectOption('#trilhaSelect', 'csharp');
-    const liberado = page.locator('#moduleSelector_csharp .game-card', { hasText: 'Básico — A Jornada do Eri' });
+    await page.selectOption('#trilhaSelect', 'fund-multimidia');
+    const liberado = page.locator('#moduleSelector_fund-multimidia .game-card', { hasText: 'Teoria — Multimídia e Versionamento' });
     await expect(liberado).not.toHaveClass(/locked/);
     await expect(liberado).toContainText('Liberado hoje');
     await liberado.click();
-    await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();
-    await page.click('#moduleFrameArea_csharp .btn-secondary');
+    await expect(page.locator('#moduleFrameArea_fund-multimidia')).toBeVisible();
+    await page.click('#moduleFrameArea_fund-multimidia .btn-secondary');
   });
 });
 
@@ -242,8 +239,8 @@ test.describe('Liberação diária — notificação de atividade nova', () => {
     await page.evaluate(() => {
       window.__FAKE_DB__.daily_module_releases.push({
         id: 'r1', turma: 'jogos', scope: 'data', target_date: new Date().toISOString().slice(0, 10), target_weekday: null,
-        student_email: '', trilha_key: 'csharp', module_key: 'basico',
-        trilha_label: 'C#', module_title: 'Básico — A Jornada do Eri',
+        student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
+        trilha_label: 'Multimídia e Versionamento', module_title: 'Teoria — Multimídia e Versionamento',
       });
       window.__fireFakeRealtime('daily_module_releases');
     });
@@ -251,7 +248,7 @@ test.describe('Liberação diária — notificação de atividade nova', () => {
     const toast = page.locator('.pf-toast');
     await expect(toast).toBeVisible();
     await expect(toast).toContainText('Nova atividade liberada');
-    await expect(toast).toContainText('C# — Básico — A Jornada do Eri');
+    await expect(toast).toContainText('Multimídia e Versionamento — Teoria — Multimídia e Versionamento');
 
     await toast.locator('.pf-toast-close').click();
     await expect(page.locator('.pf-toast')).toHaveCount(0);
@@ -261,7 +258,7 @@ test.describe('Liberação diária — notificação de atividade nova', () => {
     await stubSupabaseFake(page, {
       daily_module_releases: [{
         id: 'r1', turma: 'jogos', scope: 'data', target_date: todayIso(), target_weekday: null,
-        student_email: '', trilha_key: 'csharp', module_key: 'basico',
+        student_email: '', trilha_key: 'fund-multimidia', module_key: 'teoria',
       }],
     });
     await page.goto(ALUNO_URL);
@@ -277,7 +274,7 @@ test.describe('Liberação diária — notificação de atividade nova', () => {
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
-    await page.selectOption('#dailyReleaseAtividade', 'csharp::basico');
+    await page.selectOption('#dailyReleaseAtividade', 'fund-multimidia::teoria');
     await page.click('#btnAddDailyRelease');
     await expect(page.locator('#dailyReleaseStatus')).toContainText('Liberado');
 

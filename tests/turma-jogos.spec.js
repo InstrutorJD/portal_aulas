@@ -30,8 +30,6 @@ function seedAllModulesComplete(user) {
     'teste_roteiros_trabalho', 'teste_roteiros_questionario'
   ];
   teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
-  localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
-  localStorage.setItem(`gdscript_basico_progress_${user}`, JSON.stringify({ completed: true }));
   localStorage.setItem(`cobrinha_construcao_progress_${user}`, JSON.stringify({ completed: true }));
 
   const praticaDez = [
@@ -39,7 +37,6 @@ function seedAllModulesComplete(user) {
     'projetos_metodos_pratica', 'projetos_fases_pratica',
     'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
     'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
-    'csharp_pratica', 'gdscript_pratica',
     'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
   ];
   praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
@@ -66,18 +63,17 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await expect(page.locator('#materiaCardGrid')).toContainText('Prova');
   });
 
-  test('carrega tema, usuário e trilhas JS/C# dentro de Fundamentos de Programação', async ({ page }) => {
+  test('carrega tema, usuário e trilhas dentro de Fundamentos de Programação', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#txtUserNom')).toHaveText('Breno Silva');
     await expect(page.locator('#txtUserTurma')).toHaveText('Jogos Digitais');
 
     await openMateria1(page);
 
-    // 6 trilhas nessa matéria (fundamentos genéricos + JS/C#) — vira um
+    // 5 trilhas nessa matéria (4 fundamentos genéricos + JS) — vira um
     // <select> só, começando na primeira trilha cadastrada.
     await expect(page.locator('#trilhaSelect')).toHaveValue('fund-ambiente');
     await expect(page.locator('#trilhaSelect option[value="js"]')).toHaveCount(1);
-    await expect(page.locator('#trilhaSelect option[value="csharp"]')).toHaveCount(1);
 
     // tema "hacker": --green deve ser o verde original, não o azul de Sistemas
     const green = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--green').trim());
@@ -100,19 +96,19 @@ test.describe('turmas/jogos/plataforma.html', () => {
   test('abrir e fechar um módulo de trilha troca a área visível', async ({ page }) => {
     await page.goto(URL);
     await openMateria1(page);
-    await page.selectOption('#trilhaSelect', 'csharp');
-    await expect(page.locator('#subTabContent_csharp')).toBeVisible();
+    await page.selectOption('#trilhaSelect', 'fund-multimidia');
+    await expect(page.locator('#subTabContent_fund-multimidia')).toBeVisible();
 
-    await page.click('#moduleSelector_csharp .game-card');
-    await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();
-    await expect(page.locator('#moduleSelector_csharp')).toBeHidden();
-    await expect(page.locator('#moduleFrame_csharp')).toHaveAttribute(
-      'src', /atividades\/csharp-basico\.html\?user=breno\.silva80/
+    await page.click('#moduleSelector_fund-multimidia .game-card');
+    await expect(page.locator('#moduleFrameArea_fund-multimidia')).toBeVisible();
+    await expect(page.locator('#moduleSelector_fund-multimidia')).toBeHidden();
+    await expect(page.locator('#moduleFrame_fund-multimidia')).toHaveAttribute(
+      'src', /atividades\/fund-multimidia-teoria\.html\?user=breno\.silva80/
     );
 
-    await page.click('#moduleFrameArea_csharp .btn-secondary');
-    await expect(page.locator('#moduleFrameArea_csharp')).toBeHidden();
-    await expect(page.locator('#moduleSelector_csharp')).toBeVisible();
+    await page.click('#moduleFrameArea_fund-multimidia .btn-secondary');
+    await expect(page.locator('#moduleFrameArea_fund-multimidia')).toBeHidden();
+    await expect(page.locator('#moduleSelector_fund-multimidia')).toBeVisible();
   });
 
   test('aba Jogos desbloqueia quando todos os módulos já foram concluídos', async ({ page }) => {
@@ -214,21 +210,21 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
   test('fechar um módulo manda o progresso pra student_module_progress', async ({ page }) => {
     await stubSupabaseFake(page, { student_module_progress: [] });
     await page.addInitScript(user => {
-      localStorage.setItem(`csharp_basico_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`fund_multimidia_teoria_progress_${user}`, JSON.stringify({ completed: true }));
     }, 'breno.silva80');
 
     await page.goto(URL);
     await openMateria1(page);
-    await page.selectOption('#trilhaSelect', 'csharp');
-    await page.click('#moduleSelector_csharp .game-card');
-    await expect(page.locator('#moduleFrameArea_csharp')).toBeVisible();
+    await page.selectOption('#trilhaSelect', 'fund-multimidia');
+    await page.click('#moduleSelector_fund-multimidia .game-card');
+    await expect(page.locator('#moduleFrameArea_fund-multimidia')).toBeVisible();
 
-    await page.click('#moduleFrameArea_csharp .btn-secondary');
-    await expect(page.locator('#moduleSelector_csharp')).toBeVisible();
+    await page.click('#moduleFrameArea_fund-multimidia .btn-secondary');
+    await expect(page.locator('#moduleSelector_fund-multimidia')).toBeVisible();
 
     const rows = await page.evaluate(() => window.__FAKE_DB__.student_module_progress || []);
-    const csharpRow = rows.find(r => r.trilha_key === 'csharp' && r.module_key === 'basico');
-    expect(csharpRow).toMatchObject({
+    const multimidiaRow = rows.find(r => r.trilha_key === 'fund-multimidia' && r.module_key === 'teoria');
+    expect(multimidiaRow).toMatchObject({
       student_email: 'breno.silva80',
       turma: 'jogos',
       progress_current: 1,
@@ -245,13 +241,13 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
   // Regressão: aluno loga num navegador/dispositivo sem o localStorage de
   // antes (troca de máquina, cache limpo, primeira vez com login real pós-
   // migração pro Supabase Auth) — o progresso local chega "zerado", mas o
-  // csharp/basico dele já estava concluído de verdade no Supabase. O sync
-  // automático do carregamento (syncAllModulesProgress) não pode sobrescrever
-  // esse progresso remoto com o zero local.
+  // fund-multimidia/teoria dele já estava concluído de verdade no Supabase.
+  // O sync automático do carregamento (syncAllModulesProgress) não pode
+  // sobrescrever esse progresso remoto com o zero local.
   test('login num dispositivo sem progresso local não apaga o que já estava concluído no Supabase', async ({ page }) => {
     await stubSupabaseFake(page, {
       student_module_progress: [
-        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'csharp', module_key: 'basico', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'fund-multimidia', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
       ],
     });
     // Sem addInitScript nenhum — localStorage chega vazio, como um
@@ -260,7 +256,7 @@ test.describe('turmas/jogos/plataforma.html — sincronização de progresso pro
 
     await expect.poll(async () => {
       const rows = await page.evaluate(() => window.__FAKE_DB__.student_module_progress || []);
-      return rows.find(r => r.trilha_key === 'csharp' && r.module_key === 'basico');
+      return rows.find(r => r.trilha_key === 'fund-multimidia' && r.module_key === 'teoria');
     }).toMatchObject({ progress_current: 1, progress_total: 1, completed: true });
   });
 });

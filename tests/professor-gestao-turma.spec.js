@@ -143,17 +143,17 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Apresentações (Slides)');
 
-    await expect(page.locator('#gestaoSlidesList')).toContainText('Básico — A Jornada do Eri');
+    await expect(page.locator('#gestaoSlidesList')).toContainText('Teoria — Multimídia e Versionamento');
 
     // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
     await expect(page.locator('#tabContentAulas')).toBeHidden();
 
-    const row = page.locator('#gestaoSlidesList > div', { hasText: 'Básico — A Jornada do Eri' });
+    const row = page.locator('#gestaoSlidesList > div', { hasText: 'Teoria — Multimídia e Versionamento' });
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
       row.locator('[data-slide-mod]').click(),
     ]);
-    expect(download.suggestedFilename()).toBe('csharp-basico-slides.pptx');
+    expect(download.suggestedFilename()).toBe('fund-multimidia-teoria-slides.pptx');
 
     await expect(page.locator('#tabContentAulas')).toBeHidden();
   });
@@ -165,24 +165,24 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Gabarito');
 
-    await expect(page.locator('#gestaoGabaritoList')).toContainText('Básico — A Jornada do Eri');
+    await expect(page.locator('#gestaoGabaritoList')).toContainText('Teoria — Multimídia e Versionamento');
 
     // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
     await expect(page.locator('#tabContentAulas')).toBeHidden();
 
-    const csharpRow = page.locator('#gestaoGabaritoList > div', { hasText: 'Básico — A Jornada do Eri' });
+    const multimidiaRow = page.locator('#gestaoGabaritoList > div', { hasText: 'Teoria — Multimídia e Versionamento' });
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
-      csharpRow.locator('[data-gabarito-mod]').click(),
+      multimidiaRow.locator('[data-gabarito-mod]').click(),
     ]);
-    expect(download.suggestedFilename()).toBe('csharp-basico-gabarito.txt');
+    expect(download.suggestedFilename()).toBe('fund-multimidia-teoria-gabarito.txt');
 
     const filePath = await download.path();
     const fs = require('node:fs');
     const content = fs.readFileSync(filePath, 'utf-8');
     expect(content).toContain('GABARITO');
-    expect(content).toContain('Quem criou a linguagem C#?');
-    expect(content).toContain('RESPOSTA ESPERADA: A Microsoft');
+    expect(content).toContain('Depois de importar a imagem de um personagem pro projeto');
+    expect(content).toContain('RESPOSTA ESPERADA: Associar a imagem a um objeto do jogo e definir sua posição/comportamento no código');
 
     await expect(page.locator('#tabContentAulas')).toBeHidden();
   });

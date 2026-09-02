@@ -556,50 +556,6 @@ window.TURMA_CONFIG_JOGOS = {
           ]
         },
         {
-          key: 'csharp',
-          label: 'C#',
-          desc: 'Escolha um módulo para começar.',
-          capacidade: 'Reconhecer a origem, o propósito e a sintaxe básica da linguagem C# (variáveis, tipos de dados, comandos de saída, comentários, condicionais e laços de repetição), como preparação para a prática em Godot.',
-          modules: [
-            {
-              key: 'basico', title: 'Básico — A Jornada do Eri',
-              desc: 'Primeiro contato com C#, contado em forma de história. Responda cada pergunta para avançar.',
-              icon: '🦈', src: 'atividades/csharp-basico.html',
-              progressKey: 'csharp_basico_progress_', progressMode: 'flag',
-              hasSlides: true, hasGabarito: true
-            },
-            {
-              key: 'pratica', title: 'Prática — Central de Suporte: C#',
-              desc: 'Resolva chamados analisando trechos de código C# e identificando o conceito certo.',
-              icon: '🐙', src: 'atividades/csharp-pratica.html',
-              progressKey: 'csharp_pratica_progress_', progressTotal: 10,
-              requires: 'basico', hasGabarito: true
-            }
-          ]
-        },
-        {
-          key: 'gdscript',
-          label: 'GDScript',
-          desc: 'Escolha um módulo para começar.',
-          capacidade: 'Reconhecer a sintaxe básica da linguagem GDScript (variáveis, tipos de dados, comandos de saída, comentários, condicionais, laços de repetição e funções) e sua relação com o motor Godot.',
-          modules: [
-            {
-              key: 'basico', title: 'Básico — A Missão do Godi',
-              desc: 'Primeiro contato com GDScript, contado em forma de história. Responda cada pergunta para avançar.',
-              icon: '🤖', src: 'atividades/gdscript-basico.html',
-              progressKey: 'gdscript_basico_progress_', progressMode: 'flag',
-              hasSlides: true, hasGabarito: true
-            },
-            {
-              key: 'pratica', title: 'Prática — Central de Suporte: GDScript',
-              desc: 'Resolva chamados analisando trechos de código GDScript e identificando o conceito certo.',
-              icon: '🔧', src: 'atividades/gdscript-pratica.html',
-              progressKey: 'gdscript_pratica_progress_', progressTotal: 10,
-              requires: 'basico', hasGabarito: true
-            }
-          ]
-        },
-        {
           // Trilha individual, adaptada — só aparece pro aluno listado em
           // visibleFor (professor sempre vê, pra acompanhar/gerar gabarito).
           // Ver trilhaStatus() em shared/platform-core.js.

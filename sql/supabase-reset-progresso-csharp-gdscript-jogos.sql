@@ -1,0 +1,72 @@
+-- ============================================================
+-- RESET DAS TRILHAS "C#" e "GDSCRIPT" — turma Jogos Digitais — apaga
+-- todo o progresso salvo dessas duas trilhas, porque as trilhas foram
+-- REMOVIDAS do portal (turmas/jogos/config.js) para serem refeitas do
+-- zero. Não mexe em mais nada (outras trilhas, jogos, chamada, notas,
+-- turma Sistemas continuam intactos).
+--
+-- MOTIVO: as trilhas 'csharp' e 'gdscript' (e os 4 arquivos de
+-- atividade por trás delas — atividades/csharp-basico.html,
+-- atividades/csharp-pratica.html, atividades/gdscript-basico.html,
+-- atividades/gdscript-pratica.html) foram apagadas do portal a pedido
+-- do professor, para serem reconstruídas do zero (conteúdo novo,
+-- possivelmente formato novo). Progresso salvo de uma trilha que não
+-- existe mais é só lixo no banco — não corresponde a nenhum módulo
+-- que o portal ainda consiga mostrar.
+--
+-- O QUE É ZERADO:
+--   • student_module_progress — só as linhas de turma='jogos' e
+--     trilha_key IN ('csharp', 'gdscript') (módulos 'basico' e
+--     'pratica' das duas)
+--
+-- O QUE NÃO É TOCADO:
+--   • Qualquer outra trilha/matéria (JS, Cobrinha, fundamentos
+--     gerais, testes de jogos, etc.), jogos, chamada, notas,
+--     liberação de jogos, turma Sistemas.
+--
+-- ⚠️ ATENÇÃO — LEIA ANTES DE RODAR:
+--   1) Isso é IRREVERSÍVEL. Não existe "desfazer" depois de rodar.
+--   2) O progresso do aluno mora em DOIS lugares: aqui no Supabase (só
+--      uma cópia sincronizada, usada pros relatórios) E no localStorage
+--      do NAVEGADOR de cada aluno (é essa cópia local que decide o que
+--      aparece "concluído" na tela dele). Rodar só este SQL zera o
+--      Supabase — mas como as trilhas 'csharp'/'gdscript' foram
+--      REMOVIDAS do config.js, o portal não lê mais essas chaves de
+--      localStorage nem as reenvia pro Supabase (diferente do reset de
+--      JS, que reativa sozinho se o aluno reabrir com localStorage
+--      antigo) — então rodar só o DELETE abaixo já é suficiente, sem
+--      depender de o aluno limpar nada no navegador dele. O passo 2
+--      (limpar localStorage) é só uma limpeza de hygiene, opcional.
+--   3) Rode a consulta de PRÉVIA primeiro, confira quem vai ser
+--      afetado, e só depois descomente e rode o DELETE.
+-- ============================================================
+
+-- PRÉVIA — rode isto primeiro e confira a lista antes de apagar:
+select student_email, trilha_key, module_key, progress_current, progress_total, completed, updated_at
+from public.student_module_progress
+where turma = 'jogos' and trilha_key in ('csharp', 'gdscript')
+order by trilha_key, student_email, module_key;
+
+-- RESET — descomente as 2 linhas abaixo e rode depois de conferir a prévia:
+-- delete from public.student_module_progress
+-- where turma = 'jogos' and trilha_key in ('csharp', 'gdscript');
+
+-- ============================================================
+-- PASSO 2 (opcional, hygiene) — limpar o progresso local
+-- Cada aluno cola isto no console do navegador (F12 → Console),
+-- estando no portal (qualquer página do domínio, logado), e aperta
+-- Enter. Detecta o próprio usuário pela URL e apaga só as chaves das
+-- trilhas C#/GDScript — não mexe em mais nada do aluno. Não é
+-- obrigatório (o portal já não lê mais essas chaves, ver aviso acima),
+-- mas evita deixar lixo acumulado no localStorage.
+-- ============================================================
+--
+-- (() => {
+--   const u = new URLSearchParams(location.search).get('user');
+--   if (!u) { console.log('Não achei o parâmetro ?user= na URL atual.'); return; }
+--   localStorage.removeItem(`csharp_basico_progress_${u}`);
+--   localStorage.removeItem(`csharp_pratica_progress_${u}`);
+--   localStorage.removeItem(`gdscript_basico_progress_${u}`);
+--   localStorage.removeItem(`gdscript_pratica_progress_${u}`);
+--   console.log('Progresso local de C# e GDScript limpo pra', u);
+-- })();

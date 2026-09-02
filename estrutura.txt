@@ -156,7 +156,7 @@ preencha:
 -------------------------------------------------------
 Insígnia/conquista ao concluir (nome + critério): <opcional>
 Referência a outro módulo/arquivo já existente que sirva de modelo
-  de tom/dificuldade: <ex.: "igual csharp-basico.html">
+  de tom/dificuldade: <ex.: "igual fund-multimidia-teoria.html">
 Qualquer restrição de acessibilidade, tempo de aula disponível ou
   outro contexto que deva moldar o tamanho/ritmo da trilha: <texto>
 

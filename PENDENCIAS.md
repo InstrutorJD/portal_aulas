@@ -1,5 +1,40 @@
 # Pendências
 
+## Trilhas C# e GDScript removidas para reconstrução
+
+**Status:** pendente — remoção deliberada a pedido do professor, aguardando
+reconstrução do zero (ainda sem data/conteúdo definido).
+
+**Onde:** as trilhas `csharp` (label "C#") e `gdscript` (label "GDScript"),
+dentro da matéria "Fundamentos de Programação de Jogos"
+(`turmas/jogos/config.js`), foram removidas por completo — trilha, módulos
+(`basico`/`pratica`) e os 4 arquivos de atividade (`atividades/
+csharp-basico.html`, `atividades/csharp-pratica.html`, `atividades/
+gdscript-basico.html`, `atividades/gdscript-pratica.html`). Os testes que
+usavam a trilha `csharp` só como exemplo genérico (abrir/fechar módulo,
+liberação diária, sync de progresso, listagem de slides/gabarito na Gestão)
+foram migrados pra usar a trilha `fund-multimidia` (Multimídia e
+Versionamento) no lugar — não há mais nenhuma cobertura de teste específica
+de C#/GDScript, já que o conteúdo não existe mais.
+
+**Objetivo:** as duas trilhas serão refeitas do zero (conteúdo, formato e
+progressão a definir com o professor), não uma correção/edição do que
+existia antes.
+
+**Próximos passos:**
+- Definir com o professor a capacidade real (MSEP) de cada trilha antes de
+  recriar qualquer coisa — mesma regra de sempre (a capacidade não pode ser
+  inventada, ver seção "Trilha por capacidade (MSEP)" do README).
+- Definir o formato de cada uma (história + quiz, desafios de código,
+  outro) e o conteúdo, do zero — não reaproveitar o texto das versões
+  antigas sem revisão, já que a remoção foi pedida justamente para refazer.
+- Progresso de alunos que já tinham avançado nas versões antigas: ver
+  `sql/supabase-reset-progresso-csharp-gdscript-jogos.sql` para apagar
+  `student_module_progress` dessas duas trilhas no Supabase — mesmo padrão
+  de aviso de `sql/supabase-reset-progresso-js-jogos.sql` quanto a
+  progresso local no navegador dos alunos (localStorage não é apagado por
+  esse SQL).
+
 ## Efeito visual + sonoro ao concluir uma atividade
 
 **Status:** pendente — ideia do professor, ainda não implementada.
@@ -91,7 +126,9 @@ trabalhada em cada **matéria** naquele dia.
 
 **Onde:** nada disso existe ainda — hoje não há nenhum ponto de acesso a
 documentação externa dentro do portal. Trilhas de linguagem já
-cadastradas: `js`/`csharp` (Jogos Digitais, `turmas/jogos/config.js`),
+cadastradas: `js` (Jogos Digitais, `turmas/jogos/config.js` — as trilhas
+`csharp`/`gdscript` foram removidas pra reconstrução, ver "Trilhas C# e
+GDScript removidas para reconstrução" abaixo),
 `sql`/`sql-comentarios` (Sistemas, `turmas/sistemas/config.js`), além de
 HTML/CSS/JavaScript usados na prática de Conexão com Supabase
 (`turmas/sistemas/atividades/db-conexao-supabase-pratica.html`).
