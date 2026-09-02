@@ -421,6 +421,15 @@
     if (data) {
       colorCurrentWord(typedVal);
       const hit = tallyWord(data, typedVal);
+      // Conta o espaço que confirmou a palavra como 1 caractere certo — é
+      // um toque de teclado de verdade, e é assim que praticamente toda
+      // plataforma de digitação mede PPM (padrão "5 caracteres = 1
+      // palavra", contando o espaço entre palavras). Sem isso, a pontuação
+      // aqui saía sistematicamente ~12-13% mais baixa que em outras
+      // plataformas pro MESMO desempenho de digitação (o gap cresce com
+      // banco de palavras mais curtas: quanto menor a palavra, maior o
+      // peso proporcional do espaço "esquecido").
+      correctChars++;
       data.el.classList.add(hit ? 'pop-correct' : 'pop-wrong');
     }
     currentWordIndex++;
