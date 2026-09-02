@@ -1,39 +1,60 @@
 # Pendências
 
-## Trilhas C# e GDScript removidas para reconstrução
+## Trilha GDScript removida, aguardando reconstrução
 
-**Status:** pendente — remoção deliberada a pedido do professor, aguardando
-reconstrução do zero (ainda sem data/conteúdo definido).
+**Status:** pendente — remoção deliberada a pedido do professor. A trilha
+`csharp` já foi refeita do zero (ver abaixo); só `gdscript` continua sem
+conteúdo, aguardando reconstrução (ainda sem data definida).
 
-**Onde:** as trilhas `csharp` (label "C#") e `gdscript` (label "GDScript"),
-dentro da matéria "Fundamentos de Programação de Jogos"
-(`turmas/jogos/config.js`), foram removidas por completo — trilha, módulos
-(`basico`/`pratica`) e os 4 arquivos de atividade (`atividades/
-csharp-basico.html`, `atividades/csharp-pratica.html`, `atividades/
-gdscript-basico.html`, `atividades/gdscript-pratica.html`). Os testes que
-usavam a trilha `csharp` só como exemplo genérico (abrir/fechar módulo,
-liberação diária, sync de progresso, listagem de slides/gabarito na Gestão)
-foram migrados pra usar a trilha `fund-multimidia` (Multimídia e
-Versionamento) no lugar — não há mais nenhuma cobertura de teste específica
-de C#/GDScript, já que o conteúdo não existe mais.
-
-**Objetivo:** as duas trilhas serão refeitas do zero (conteúdo, formato e
-progressão a definir com o professor), não uma correção/edição do que
-existia antes.
+**Onde:** a trilha `gdscript` (label "GDScript"), dentro da matéria
+"Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), continua
+removida — trilha, módulos (`basico`/`pratica`) e os 2 arquivos de atividade
+(`atividades/gdscript-basico.html`, `atividades/gdscript-pratica.html`).
 
 **Próximos passos:**
-- Definir com o professor a capacidade real (MSEP) de cada trilha antes de
+- Definir com o professor a capacidade real (MSEP) da trilha antes de
   recriar qualquer coisa — mesma regra de sempre (a capacidade não pode ser
   inventada, ver seção "Trilha por capacidade (MSEP)" do README).
-- Definir o formato de cada uma (história + quiz, desafios de código,
-  outro) e o conteúdo, do zero — não reaproveitar o texto das versões
-  antigas sem revisão, já que a remoção foi pedida justamente para refazer.
-- Progresso de alunos que já tinham avançado nas versões antigas: ver
+- Definir o formato (história + quiz, desafios de código, outro) e o
+  conteúdo, do zero — não reaproveitar o texto da versão antiga sem revisão,
+  já que a remoção foi pedida justamente para refazer.
+- Progresso de alunos que já tinham avançado na versão antiga de GDScript
+  (e na versão antiga de C#, module keys `basico`/`pratica` — diferentes dos
+  novos `teoria`/`comparacao`/`desafios`, então ficam órfãos, sem contar no
+  progresso, mas continuam ocupando linhas na tabela): ver
   `sql/supabase-reset-progresso-csharp-gdscript-jogos.sql` para apagar
-  `student_module_progress` dessas duas trilhas no Supabase — mesmo padrão
-  de aviso de `sql/supabase-reset-progresso-js-jogos.sql` quanto a
-  progresso local no navegador dos alunos (localStorage não é apagado por
-  esse SQL).
+  `student_module_progress` dessas trilhas no Supabase — mesmo padrão de
+  aviso de `sql/supabase-reset-progresso-js-jogos.sql` quanto a progresso
+  local no navegador dos alunos (localStorage não é apagado por esse SQL).
+
+## Trilha C# reconstruída (teoria + 2 práticas)
+
+**Status:** concluído — trilha `csharp` recriada do zero dentro de
+"Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), a pedido
+do professor, com 3 módulos:
+- **Teoria** (`atividades/csharp-teoria.html`, `shared/quiz-teoria-engine.js`):
+  história do C# (Microsoft, Anders Hejlsberg, 2000, .NET), motivo de ter
+  sido criado, por que é popular em jogos (Unity), pontos positivos/
+  negativos e jogos famosos majoritariamente feitos em C# (Hollow Knight,
+  Cuphead, Among Us, Cities: Skylines, Subnautica, Rust, Pokémon GO).
+- **Prática — JavaScript vs C#** (`atividades/csharp-comparacao-pratica.html`):
+  comparação de sintaxe (texto + código lado a lado) entre variável,
+  constante, função, if/else e laço — só a parte de código de verdade fica
+  restrita ao mais simples (criar variável, somar, subtrair, multiplicar,
+  dividir), com 5 desafios.
+- **Prática — Desafios de C#** (`atividades/csharp-desafios-pratica.html`):
+  10 desafios de código no mesmo formato "vença cada duelo em ordem" do JS
+  (`js-basico.html`), cobrindo variável e `Console.WriteLine`.
+
+Como não dá pra rodar C# de verdade no navegador, as 2 práticas usam
+`shared/csharp-challenge-engine.js` — um motor novo (variação de
+`shared/js-challenge-engine.js`) que TRANSPILA um subconjunto restrito de
+sintaxe C# (declaração de variável tipada + `Console.WriteLine`) pra
+JavaScript equivalente antes de rodar contra os casos de teste. Qualquer
+linha fora desse subconjunto reconhecido vira erro de sintaxe (não passa
+"por acidente" só por ser JS válido) — e se o tipo declarado for `int`, o
+resultado é truncado (`Math.trunc`) igual o C# de verdade faz na divisão
+inteira, diferente do JavaScript.
 
 ## Efeito visual + sonoro ao concluir uma atividade
 

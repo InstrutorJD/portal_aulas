@@ -6,9 +6,10 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
-// Turma Jogos tem 53 módulos ao todo (teoria+prática de todas as trilhas de
-// todas as matérias com conteúdo) — usados como base do % geral. O % de cada
-// aluno é a MÉDIA da fração current/total de cada um dos 53 módulos, não uma
+// Turma Jogos tem 56 módulos ao todo (teoria+prática de todas as trilhas de
+// todas as matérias com conteúdo, incluindo os 3 módulos da trilha 'csharp':
+// teoria/comparacao/desafios) — usados como base do % geral. O % de cada
+// aluno é a MÉDIA da fração current/total de cada um dos 56 módulos, não uma
 // simples contagem de módulos concluídos.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
@@ -20,14 +21,14 @@ const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
     // edward.guzman: completa 2 módulos pré-existentes (js/basico,
-    // js/intermediario) → soma 2 frações de 1.0 / 53 módulos = 3,77% → arredonda 4%.
+    // js/intermediario) → soma 2 frações de 1.0 / 56 módulos = 3,57% → arredonda 4%.
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
   ],
 };
 
 // breno.silva80 completa os 10 desafios de js/basico (progressTotal:10) e
-// nada mais → 1 fração de 1.0 / 55 módulos da turma = 1,8% → arredonda 2%.
+// nada mais → 1 fração de 1.0 / 56 módulos da turma = 1,79% → arredonda 2%.
 async function seedBrenoLocalProgress(page) {
   await page.addInitScript(() => {
     localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));

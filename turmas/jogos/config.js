@@ -556,6 +556,35 @@ window.TURMA_CONFIG_JOGOS = {
           ]
         },
         {
+          key: 'csharp',
+          label: 'C#',
+          desc: 'Aprenda a história do C#, compare a sintaxe dele com o JavaScript que você já viu e pratique escrevendo código C# de verdade.',
+          capacidade: 'Reconhecer a origem, o propósito e o contexto de uso da linguagem C# no desenvolvimento de jogos, comparando sua sintaxe básica (variáveis, constantes, funções, condicionais e laços) com a do JavaScript.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Introdução ao C#',
+              desc: 'História do C#, por que foi criado, por que é tão usado em jogos (Unity), principais pontos positivos/negativos e jogos famosos feitos com ele.',
+              icon: '🐞', src: 'atividades/csharp-teoria.html',
+              progressKey: 'csharp_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'comparacao', title: 'Prática — JavaScript vs C#',
+              desc: 'Compare a sintaxe de variável, constante, função, if/else e laço entre JS e C#, depois escreva C# de verdade: criar variável e as 4 operações básicas.',
+              icon: '🔀', src: 'atividades/csharp-comparacao-pratica.html',
+              progressKey: 'csharp_comparacao_progress_', progressTotal: 5,
+              requires: 'teoria', hasGabarito: true
+            },
+            {
+              key: 'desafios', title: 'Prática — Desafios de C#',
+              desc: 'Vença cada desafio em ordem para avançar: criar variável e Console.WriteLine, com as 4 operações básicas.',
+              icon: '🟣', src: 'atividades/csharp-desafios-pratica.html',
+              progressKey: 'csharp_desafios_progress_', progressTotal: 10,
+              requires: 'comparacao', hasGabarito: true
+            }
+          ]
+        },
+        {
           // Trilha individual, adaptada — só aparece pro aluno listado em
           // visibleFor (professor sempre vê, pra acompanhar/gerar gabarito).
           // Ver trilhaStatus() em shared/platform-core.js.
