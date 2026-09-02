@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — C# Básico (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:14px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:16px; width:100%; height:100%; }
+
+  .sidebar{
+    width:80px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+    display:flex; flex-direction:column; gap:8px; align-items:center;
+  }
+  .step-icon{
+    width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+    font-size:28px; border:2px solid var(--line); background:var(--panel2); cursor:pointer;
+    border-radius:8px; position:relative;
+  }
+  .step-icon.active{ border-color:var(--green); }
+  .step-icon.completed{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+  .step-icon.locked{ opacity:0.35; cursor:not-allowed; }
+  .step-icon .badge{
+    position:absolute; top:-6px; right:-6px; font-size:16px;
+  }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:10px; height:100%; overflow-y:auto; }
+
+  .challenge-header{ flex-shrink:0; background:var(--panel); border:1px solid var(--line); padding:16px; text-align:center; }
+  .challenge-header .big-icon{ font-size:56px; line-height:1; margin-bottom:6px; }
+  .challenge-header h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:28px; color:var(--green); margin:0 0 10px; letter-spacing:1px;
+  }
+  .challenge-header p{ font-size:18px; color:var(--ink); margin:0; line-height:1.5; }
+
+  .vocab-row{
+    display:flex; justify-content:center; align-items:center; gap:18px;
+    margin:2px 0 12px; flex-wrap:wrap;
+  }
+  .vocab-item{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .vocab-item .emoji{ font-size:44px; line-height:1; }
+  .vocab-item .word{ font-size:14px; color:var(--yellow); font-weight:800; }
+  .vocab-op{ font-size:30px; color:var(--green); }
+
+  .box-label{
+    font-size:14px; color:var(--ink-dim); text-align:center; margin:2px 0 12px;
+  }
+  .box-label b{ color:var(--yellow); }
+
+  .example-box{
+    background:#050805; border:1px solid var(--green-dim); padding:12px 16px;
+    font-size:16px; color:var(--yellow); text-align:center; font-family:'JetBrains Mono', monospace;
+  }
+
+  .hint-toggle{
+    display:block; margin:10px auto 0; font-size:14px; font-weight:800; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:2px solid var(--green-dim); padding:8px 16px; cursor:pointer; border-radius:6px;
+  }
+  .hint-box{
+    display:none; margin-top:10px; background:var(--panel2); border:2px dashed var(--yellow);
+    padding:10px 14px; font-size:16px; color:var(--ink); line-height:1.5; text-align:center;
+  }
+  .hint-box.show{ display:block; }
+
+  textarea#codeInput{
+    width:100%; min-height:110px; resize:vertical; background:#000; color:var(--green);
+    border:2px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:18px;
+    padding:12px; outline:none; line-height:1.6; flex-shrink:0;
+  }
+  textarea#codeInput:focus{ border-color:var(--green); }
+
+  .actions{ display:flex; gap:10px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 26px; cursor:pointer; border-radius:8px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .skip-form{
+    display:none; flex-direction:column; gap:8px; max-width:320px; margin:10px auto 0;
+    background:var(--panel2); border:1px dashed var(--yellow); padding:12px 14px; flex-shrink:0;
+  }
+  .skip-form.show{ display:flex; }
+  .skip-form label{ display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .skip-form input{
+    font-family:inherit; font-size:14px; padding:8px 9px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .skip-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .skip-msg{ font-size:12px; padding:6px 8px; border:1px dashed var(--line); display:none; }
+  .skip-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); display:block; }
+  .skip-msg.ok{ border-color:var(--green); color:var(--green); display:block; }
+
+  .console{
+    background:#060806; border:1px solid var(--line); padding:10px 14px; font-size:15px;
+    flex:0 0 70px; min-height:60px; overflow-y:auto; line-height:1.7; text-align:center;
+  }
+  .console .line.pass{ color:var(--green); font-weight:800; }
+  .console .line.fail{ color:var(--blood-bright); font-weight:800; }
+  .console .line.success{ color:var(--green); font-weight:bold; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; flex-direction:row; flex-wrap:wrap; justify-content:center; }
+    .main-panel{ height:auto; overflow-y:visible; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'csharp_basico_adaptado_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/csharp-challenge-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🔵 C# — CAIXAS</div>
+    <div>✅ <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar" id="stepList"></div>
+
+      <div class="main-panel">
+        <div class="challenge-header">
+          <div class="big-icon" id="stepIcon">📦</div>
+          <h2 id="challengeTitle">--</h2>
+          <div class="vocab-row" id="vocabRow" style="display:none;"></div>
+          <p id="challengeDesc"></p>
+        </div>
+
+        <div class="box-label" id="boxLabel"></div>
+
+        <div class="example-box" id="exampleBox"></div>
+
+        <button class="hint-toggle" id="btnHint">💡 Dica</button>
+        <div class="hint-box" id="hintBox"></div>
+
+        <textarea id="codeInput" spellcheck="false"></textarea>
+
+        <div class="actions">
+          <button class="btn" id="btnRun">▶️ Testar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">➡️ Próximo</button>
+          <button class="btn btn-secondary" id="btnSkip">⏭️ Pular (professor)</button>
+        </div>
+
+        <div class="skip-form" id="skipForm">
+          <label>Token do professor
+            <input type="text" id="skipToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
+          <div class="skip-msg" id="skipMsg"></div>
+        </div>
+
+        <div class="console" id="consoleOutput"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `csharp_basico_adaptado_engel_progress_${username}`;
+
+  // Atividade adaptada (mesmo espírito de js-basico-adaptado-engel.html):
+  // passos curtos, 1 ícone grande por conceito, texto reduzido ao mínimo (o
+  // professor explica ao vivo antes de cada passo). Aqui, "variável" vira
+  // "caixa" e "valor" vira "objeto dentro da caixa" — mesma ideia do C# de
+  // verdade (csharp-comparacao.html / csharp-pratica-simples.html), só com
+  // o nome trocado pra algo concreto.
+  //
+  // O código digitado passa pelo MESMO transpile de C# restrito do motor
+  // compartilhado (window.PortalCsharpChallenges.transpile, de
+  // shared/csharp-challenge-engine.js) — não é uma checagem à parte. Isso
+  // garante que só sintaxe C# de verdade (não JS) passa no teste, igual a
+  // trilha C# principal, e reaproveita a mesma lógica já testada em vez de
+  // duplicar um parser novo.
+  const VOCAB_EMOJI = {
+    gato: '🐱', cachorro: '🐶', casa: '🏠', escola: '🏫', moto: '🏍️',
+    carro: '🚗', macaco: '🐵', pato: '🦆', rato: '🐭', agua: '💧', vida: '❤️'
+  };
+
+  const CHALLENGES = [
+    {
+      id: 1,
+      title: 'Guardar um número',
+      icon: '📦',
+      resultVar: 'resultado',
+      givenVars: [],
+      starter: '\n\n',
+      example: 'int resultado = 100;',
+      desc: 'Uma caixa guarda um objeto dentro dela. Crie a caixa resultado e guarde o número 100 dentro.',
+      boxLabel: 'A palavra <b>int</b> é a etiqueta da caixa: só cabe número inteiro nela.',
+      hint: 'Use: int resultado = 100;',
+      tests: [ { values: {}, expected: 100 } ]
+    },
+    {
+      id: 2,
+      title: 'Somar',
+      icon: '➕',
+      resultVar: 'resultado',
+      givenVars: ['gato', 'cachorro'],
+      starter: '\n\n',
+      example: 'int resultado = gato + cachorro;',
+      desc: 'As caixas gato e cachorro já têm um número dentro. Crie a caixa resultado com a soma dos dois números.',
+      boxLabel: 'A caixa nova também precisa da etiqueta <b>int</b>.',
+      hint: 'Use: int resultado = gato + cachorro;',
+      tests: [
+        { values: { gato: 2, cachorro: 3 }, expected: 5 },
+        { values: { gato: 10, cachorro: 1 }, expected: 11 }
+      ]
+    },
+    {
+      id: 3,
+      title: 'Subtrair',
+      icon: '➖',
+      resultVar: 'resultado',
+      givenVars: ['moto', 'carro'],
+      starter: '\n\n',
+      example: 'int resultado = moto - carro;',
+      desc: 'Tire o número da caixa carro do número da caixa moto. Guarde na caixa resultado.',
+      boxLabel: 'Lembre da etiqueta: <b>int</b> antes do nome da caixa nova.',
+      hint: 'Use: int resultado = moto - carro;',
+      tests: [
+        { values: { moto: 10, carro: 4 }, expected: 6 },
+        { values: { moto: 5, carro: 5 }, expected: 0 }
+      ]
+    },
+    {
+      id: 4,
+      title: 'Multiplicar',
+      icon: '✖️',
+      resultVar: 'resultado',
+      givenVars: ['macaco', 'pato'],
+      starter: '\n\n',
+      example: 'int resultado = macaco * pato;',
+      desc: 'Multiplique o número da caixa macaco pelo número da caixa pato. Guarde na caixa resultado.',
+      boxLabel: 'Etiqueta <b>int</b> de novo — sempre antes do nome da caixa.',
+      hint: 'Use: int resultado = macaco * pato;',
+      tests: [
+        { values: { macaco: 2, pato: 3 }, expected: 6 },
+        { values: { macaco: 4, pato: 5 }, expected: 20 }
+      ]
+    },
+    {
+      id: 5,
+      title: 'Dividir',
+      icon: '➗',
+      resultVar: 'resultado',
+      givenVars: ['rato', 'agua'],
+      starter: '\n\n',
+      example: 'int resultado = rato / agua;',
+      desc: 'Divida o número da caixa rato pelo número da caixa agua (a conta sempre fecha certinho). Guarde na caixa resultado.',
+      boxLabel: 'Continua sendo uma caixa <b>int</b> — o resultado é sempre um número inteiro aqui.',
+      hint: 'Use: int resultado = rato / agua;',
+      tests: [
+        { values: { rato: 10, agua: 2 }, expected: 5 },
+        { values: { rato: 8, agua: 2 }, expected: 4 }
+      ]
+    }
+  ];
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'C# Básico — Adaptado (Engel)',
+      subtitle: 'Atividade individual · Turma Jogos Digitais',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        answer: c.tests.map(t => {
+          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
+          return `${prefix} → ${c.resultVar} deve ser ${JSON.stringify(t.expected)}`;
+        }).join('\n') + '\n\nExemplo:\n' + c.example
+      })),
+      fileName: 'csharp-basico-adaptado-engel-gabarito.txt'
+    });
+  };
+
+  const stepListEl = document.getElementById('stepList');
+  const stepIconEl = document.getElementById('stepIcon');
+  const challengeTitleEl = document.getElementById('challengeTitle');
+  const challengeDescEl = document.getElementById('challengeDesc');
+  const vocabRowEl = document.getElementById('vocabRow');
+  const boxLabelEl = document.getElementById('boxLabel');
+  const exampleBoxEl = document.getElementById('exampleBox');
+  const codeInput = document.getElementById('codeInput');
+  const btnRun = document.getElementById('btnRun');
+  const btnNext = document.getElementById('btnNext');
+  const btnHint = document.getElementById('btnHint');
+  const hintBox = document.getElementById('hintBox');
+  const consoleOutput = document.getElementById('consoleOutput');
+  const lblProgress = document.getElementById('lblProgress');
+  const btnSkip = document.getElementById('btnSkip');
+  const skipForm = document.getElementById('skipForm');
+  const skipToken = document.getElementById('skipToken');
+  const btnConfirmSkip = document.getElementById('btnConfirmSkip');
+  const skipMsg = document.getElementById('skipMsg');
+
+  function hideSkipForm() {
+    skipForm.classList.remove('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    skipToken.value = '';
+    btnConfirmSkip.disabled = false;
+    btnConfirmSkip.textContent = 'Confirmar e pular';
+  }
+
+  function getCompleted() {
+    try { return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveCompleted(set) { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...set])); }
+
+  let completed = getCompleted();
+  let selectedId = CHALLENGES.find(c => !completed.has(c.id))?.id || CHALLENGES[0].id;
+
+  // Bypass pro professor: ele quer ver/preparar todos os desafios sem
+  // precisar resolver cada um em ordem (ver PENDENCIAS.md, "Desbloquear
+  // todas as etapas das atividades para o professor"). A checagem é
+  // assíncrona, então a sidebar é re-renderizada assim que ela resolver.
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+    if (isProfessor) renderSidebar();
+  })();
+
+  function isUnlocked(challenge) {
+    if (isProfessor) return true;
+    const idx = CHALLENGES.findIndex(c => c.id === challenge.id);
+    if (idx === 0) return true;
+    return completed.has(CHALLENGES[idx - 1].id);
+  }
+
+  function renderSidebar() {
+    stepListEl.innerHTML = '';
+    CHALLENGES.forEach(c => {
+      const unlocked = isUnlocked(c);
+      const isDone = completed.has(c.id);
+      const item = document.createElement('div');
+      item.className = 'step-icon' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (!unlocked ? ' locked' : '');
+      item.innerHTML = `${unlocked ? c.icon : '🔒'}${isDone ? '<span class="badge">✅</span>' : ''}`;
+      if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
+      stepListEl.appendChild(item);
+    });
+    lblProgress.textContent = `${completed.size}/${CHALLENGES.length}`;
+  }
+
+  function clearConsole() { consoleOutput.innerHTML = ''; }
+  function logConsole(msg, type) {
+    const line = document.createElement('div');
+    line.className = 'line ' + (type || 'info');
+    line.textContent = msg;
+    consoleOutput.appendChild(line);
+  }
+
+  function selectChallenge(id) {
+    const challenge = CHALLENGES.find(c => c.id === id);
+    if (!challenge || !isUnlocked(challenge)) return;
+    selectedId = id;
+
+    stepIconEl.textContent = challenge.icon;
+    challengeTitleEl.textContent = challenge.title;
+    challengeDescEl.textContent = challenge.desc;
+
+    const vocabWords = challenge.givenVars.filter(v => VOCAB_EMOJI[v]);
+    if (vocabWords.length) {
+      vocabRowEl.innerHTML = vocabWords.map(v =>
+        `<div class="vocab-item"><span class="emoji">${VOCAB_EMOJI[v]}</span><span class="word">${v}</span></div>`
+      ).join('<span class="vocab-op">·</span>');
+      vocabRowEl.style.display = 'flex';
+    } else {
+      vocabRowEl.style.display = 'none';
+    }
+
+    boxLabelEl.innerHTML = challenge.boxLabel || '';
+    exampleBoxEl.textContent = challenge.example;
+    codeInput.value = challenge.starter;
+    btnNext.style.display = 'none';
+    hideSkipForm();
+
+    hintBox.textContent = challenge.hint || '';
+    hintBox.classList.remove('show');
+    btnHint.textContent = '💡 Dica';
+
+    clearConsole();
+    renderSidebar();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('csharp_basico_adaptado_engel', `C# Básico (Engel) — ${challenge.title}`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size });
+    }
+  }
+
+  function runChallenge() {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    let jsCode;
+    try {
+      jsCode = window.PortalCsharpChallenges.transpile(codeInput.value);
+    } catch (err) {
+      logConsole(`❌ ${err.message}`, 'fail');
+      return;
+    }
+
+    let fnFactory;
+    try {
+      fnFactory = new Function(
+        ...challenge.givenVars,
+        `${jsCode}\nreturn typeof ${challenge.resultVar} !== 'undefined' ? ${challenge.resultVar} : undefined;`
+      );
+    } catch (err) {
+      logConsole('❌ Erro no código', 'fail');
+      return;
+    }
+
+    let allPass = true;
+    challenge.tests.forEach((t) => {
+      const paramValues = challenge.givenVars.map(name => t.values[name]);
+      let result, hasError = false;
+      try { result = fnFactory(...paramValues); } catch (err) { hasError = true; }
+      const pass = !hasError && result === t.expected;
+      if (!pass) allPass = false;
+    });
+
+    if (allPass) {
+      completed.add(challenge.id);
+      saveCompleted(completed);
+      const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+      logConsole(isLast ? '🏆 Terminou tudo!' : '✅ Acertou!', 'success');
+      if (!isLast) btnNext.style.display = 'inline-block';
+      renderSidebar();
+
+      if (typeof window.reportActivity === 'function') {
+        window.reportActivity('csharp_basico_adaptado_engel', `C# Básico (Engel) — ${challenge.title} (concluído)`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size });
+      }
+    } else {
+      logConsole('❌ Tenta de novo', 'fail');
+    }
+  }
+
+  // "Pular etapa": pro professor avançar o Engel quando vir que ele está
+  // travado num passo — exige a credencial do professor (mesma verificação
+  // do "Dar visto" em shared/professor-visto.js), pra não virar um botão
+  // que qualquer aluno usa pra pular sozinho.
+  function skipCurrentChallenge(nomeProfessor) {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+    clearConsole();
+
+    completed.add(challenge.id);
+    saveCompleted(completed);
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    logConsole(`⏭️ Pulado pelo professor (${nomeProfessor}).`, 'success');
+    if (!isLast) btnNext.style.display = 'inline-block';
+    renderSidebar();
+    hideSkipForm();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('csharp_basico_adaptado_engel', `C# Básico (Engel) — ${challenge.title} (pulado pelo professor)`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, skipped: true });
+    }
+  }
+
+  btnHint.addEventListener('click', () => {
+    const showing = hintBox.classList.toggle('show');
+    btnHint.textContent = showing ? '💡 Ocultar' : '💡 Dica';
+  });
+  btnRun.addEventListener('click', runChallenge);
+  btnSkip.addEventListener('click', () => {
+    skipForm.classList.toggle('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+  });
+  btnConfirmSkip.addEventListener('click', async () => {
+    const t = skipToken.value;
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    if (!t) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Informe o token do professor.';
+      return;
+    }
+    btnConfirmSkip.disabled = true;
+    btnConfirmSkip.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificarToken(t)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        skipMsg.className = 'skip-msg erro';
+        skipMsg.textContent = result.erro;
+        btnConfirmSkip.disabled = false;
+        btnConfirmSkip.textContent = 'Confirmar e pular';
+        return;
+      }
+      skipCurrentChallenge(result.nome);
+    } catch (e) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      btnConfirmSkip.disabled = false;
+      btnConfirmSkip.textContent = 'Confirmar e pular';
+    }
+  });
+  btnNext.addEventListener('click', () => {
+    const idx = CHALLENGES.findIndex(c => c.id === selectedId);
+    const next = CHALLENGES[idx + 1];
+    if (next) selectChallenge(next.id);
+  });
+
+  renderSidebar();
+  selectChallenge(selectedId);
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

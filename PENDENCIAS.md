@@ -64,6 +64,17 @@ linha fora desse subconjunto reconhecido vira erro de sintaxe (não passa
 resultado é truncado (`Math.trunc`) igual o C# de verdade faz na divisão
 inteira, diferente do JavaScript.
 
+**C# Básico (Engel):** trilha individual (`visibleFor: ['engel.fraga']`,
+mesmo padrão de `js-adaptado-engel`), `atividades/csharp-basico-adaptado-engel.html`.
+Mesmo assunto da trilha C# principal (criar "variável", somar, subtrair,
+multiplicar, dividir), só que com termos concretos: "caixa" no lugar de
+variável, "objeto dentro da caixa" no lugar de valor, e a palavra do tipo
+(`int`) descrita como "etiqueta da caixa". Reaproveita a UI de ícones
+grandes + palavras conhecidas (emoji) de `js-basico-adaptado-engel.html`, e
+valida o código digitado chamando `window.PortalCsharpChallenges.transpile`
+(exportado por `shared/csharp-challenge-engine.js`) — mesma validação de
+sintaxe C# restrita da trilha principal, sem duplicar o parser.
+
 ## Efeito visual + sonoro ao concluir uma atividade
 
 **Status:** pendente — ideia do professor, ainda não implementada.

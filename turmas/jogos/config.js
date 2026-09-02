@@ -608,6 +608,21 @@ window.TURMA_CONFIG_JOGOS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'csharp-adaptado-engel',
+          label: 'C# Básico (Engel)',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'basico', title: 'C# Básico — Adaptado',
+              desc: '5 passos curtos, mesma ideia da trilha C# principal só que com "caixa" no lugar de variável e "objeto dentro da caixa" no lugar de valor: guardar número, somar, subtrair, multiplicar, dividir — com as mesmas palavras conhecidas (gato, cachorro, moto, carro...).',
+              icon: '🔵', src: 'atividades/csharp-basico-adaptado-engel.html',
+              progressKey: 'csharp_basico_adaptado_engel_progress_', progressTotal: 5,
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },

@@ -165,3 +165,78 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
     await expect(frame.locator('#btnNext')).toBeVisible();
   });
 });
+
+test.describe('Trilha individual "C# Básico (Engel)"', () => {
+  test('engel.fraga vê a própria trilha e consegue abrir o módulo', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await expect(page.locator('#trilhaSelect option[value="csharp-adaptado-engel"]')).toHaveCount(1);
+
+    await page.selectOption('#trilhaSelect', 'csharp-adaptado-engel');
+    await expect(page.locator('#subTabContent_csharp-adaptado-engel')).toBeVisible();
+    await page.click('#moduleSelector_csharp-adaptado-engel .game-card');
+    await expect(page.locator('#moduleFrame_csharp-adaptado-engel')).toHaveAttribute(
+      'src', /atividades\/csharp-basico-adaptado-engel\.html\?user=engel\.fraga/
+    );
+  });
+
+  test('outro aluno (fora da lista) não vê a trilha', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(BRENO_URL);
+    await openFundamentos(page);
+    await expect(page.locator('#trilhaSelect option[value="csharp-adaptado-engel"]')).toHaveCount(0);
+  });
+
+  test('resolver o 1º passo (caixa + objeto) com sintaxe C# de verdade libera o 2º', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await page.selectOption('#trilhaSelect', 'csharp-adaptado-engel');
+    await page.click('#moduleSelector_csharp-adaptado-engel .game-card');
+
+    const frame = page.frameLocator('#moduleFrame_csharp-adaptado-engel');
+    await expect(frame.locator('#challengeTitle')).toContainText('Guardar um número');
+    await frame.locator('#codeInput').fill('int resultado = 100;');
+    await frame.locator('#btnRun').click();
+    await expect(frame.locator('.console')).toContainText('Acertou');
+    await expect(frame.locator('#btnNext')).toBeVisible();
+  });
+
+  test('escrever JavaScript (let) em vez de C# (int) não passa — exige o tipo da caixa', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await page.selectOption('#trilhaSelect', 'csharp-adaptado-engel');
+    await page.click('#moduleSelector_csharp-adaptado-engel .game-card');
+
+    const frame = page.frameLocator('#moduleFrame_csharp-adaptado-engel');
+    await frame.locator('#codeInput').fill('let resultado = 100;');
+    await frame.locator('#btnRun').click();
+    await expect(frame.locator('.console')).toContainText('não reconheci o comando');
+    await expect(frame.locator('#btnNext')).toBeHidden();
+  });
+
+  test('botão "Pular (professor)" exige token válido antes de pular a etapa', async ({ page }) => {
+    await stubSupabaseFake(page, SEED_PROFESSOR);
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await page.selectOption('#trilhaSelect', 'csharp-adaptado-engel');
+    await page.click('#moduleSelector_csharp-adaptado-engel .game-card');
+
+    const frame = page.frameLocator('#moduleFrame_csharp-adaptado-engel');
+    await expect(frame.locator('#challengeTitle')).toContainText('Guardar um número');
+
+    await frame.locator('#btnSkip').click();
+    await expect(frame.locator('#skipForm')).toBeVisible();
+    await frame.locator('#skipToken').fill('000000');
+    await frame.locator('#btnConfirmSkip').click();
+    await expect(frame.locator('#skipMsg')).toContainText('inválido ou expirado');
+    await expect(frame.locator('#btnNext')).toBeHidden();
+
+    await frame.locator('#skipToken').fill(TOKEN_VALIDO);
+    await frame.locator('#btnConfirmSkip').click();
+    await expect(frame.locator('.console')).toContainText('Pulado pelo professor');
+    await expect(frame.locator('#btnNext')).toBeVisible();
+  });
+});
