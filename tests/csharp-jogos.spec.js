@@ -66,13 +66,31 @@ test.describe('turmas/jogos/atividades/csharp-comparacao-pratica.html', () => {
     await stubSupabaseFake(page, {});
   });
 
-  test('mostra a comparação JS vs C# pros 5 conceitos, antes do widget de código', async ({ page }) => {
+  test('mostra a comparação JS vs C# um conceito por vez (abas), não os 5 empilhados na tela', async ({ page }) => {
     await page.goto(COMPARACAO_URL);
-    await expect(page.locator('.compare-card')).toContainText('Criar variável');
-    await expect(page.locator('.compare-card')).toContainText('Criar constante');
-    await expect(page.locator('.compare-card')).toContainText('Criar função');
-    await expect(page.locator('.compare-card')).toContainText('If / else');
-    await expect(page.locator('.compare-card')).toContainText('Laço de repetição');
+
+    // as 5 abas ficam sempre visíveis, mas só 1 conceito por vez é mostrado.
+    await expect(page.locator('#compareTabs')).toContainText('1. Variável');
+    await expect(page.locator('#compareTabs')).toContainText('2. Constante');
+    await expect(page.locator('#compareTabs')).toContainText('3. Função');
+    await expect(page.locator('#compareTabs')).toContainText('4. If/else');
+    await expect(page.locator('#compareTabs')).toContainText('5. Laço');
+
+    await expect(page.locator('#compareTitle')).toHaveText('Criar variável');
+    await expect(page.locator('.compare-body')).not.toContainText('Criar constante');
+    await expect(page.locator('#compareProgress')).toHaveText('1 / 5');
+    await expect(page.locator('#compareBtnPrev')).toBeDisabled();
+
+    await page.click('#compareBtnNext');
+    await expect(page.locator('#compareTitle')).toHaveText('Criar constante');
+    await expect(page.locator('#compareProgress')).toHaveText('2 / 5');
+    await expect(page.locator('#compareBtnPrev')).toBeEnabled();
+
+    // clicar direto numa aba pula pro conceito certo, sem precisar avançar 1 a 1.
+    await page.click('#compareTabs .compare-tab:nth-child(5)');
+    await expect(page.locator('#compareTitle')).toHaveText('Laço de repetição');
+    await expect(page.locator('#compareBtnNext')).toHaveText('Ir para os desafios ↓');
+
     await expect(page.locator('#challengeTitle')).toHaveText('Desafio 1: Guardando um número');
   });
 
