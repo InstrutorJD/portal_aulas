@@ -584,9 +584,9 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'desafios', title: 'Prática — Desafios de C#',
-              desc: 'Vença cada desafio em ordem para avançar: criar variável e Console.WriteLine, com as 4 operações básicas.',
+              desc: 'Vença cada desafio em ordem para avançar: variável, Console.WriteLine, constante, função, if/else e for.',
               icon: '🟣', src: 'atividades/csharp-desafios-pratica.html',
-              progressKey: 'csharp_desafios_progress_', progressTotal: 10,
+              progressKey: 'csharp_desafios_progress_', progressTotal: 14,
               requires: 'pratica-simples', hasGabarito: true
             }
           ]

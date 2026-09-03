@@ -181,6 +181,10 @@
   // multiplicar, dividir, atualizar uma variável a partir de outra já existente.
   // Bloco 2 — Console (3 desafios): Console.WriteLine com variável, texto
   // fixo e o resultado de uma conta direto.
+  // Bloco 3 — Constante, Função, If/else e For (1 desafio cada): fecha o gap
+  // com os 5 conceitos ensinados na Comparação JS vs C# (csharp-comparacao.html)
+  // — até aqui só "Variável" tinha desafio de código de verdade; os outros 4
+  // eram só comparados em texto, nunca praticados.
   const CHALLENGES = [
     {
       id: 1,
@@ -334,6 +338,64 @@
         { values: { a: 2, b: 3 }, expected: [5] },
         { values: { a: 10, b: 15 }, expected: [25] },
         { values: { a: 1, b: 1 }, expected: [2] }
+      ]
+    },
+    {
+      id: 11,
+      title: 'Criando uma constante',
+      givenVars: [],
+      starter: '// crie uma constante chamada limite, do tipo int, com o valor 10\n\n',
+      explanation: 'Uma <b>constante</b> usa a palavra <code>const</code> antes do tipo — depois de criada, o valor nunca muda.<pre>const int maxVidas = 3;</pre>',
+      desc: 'Crie uma constante chamada <code>limite</code>, do tipo <code>int</code>, com o valor <b>10</b>.',
+      hint: 'A forma é <code>const TIPO nome = valor;</code>.',
+      solution: 'const int limite = 10;',
+      check: { type: 'variable', name: 'limite' },
+      tests: [
+        { values: {}, expected: 10 }
+      ]
+    },
+    {
+      id: 12,
+      title: 'Criando uma função',
+      givenVars: [],
+      starter: '// crie a funcao Dobro(int numero) que devolve numero vezes 2\n\n\n// depois, crie a variavel resultado chamando Dobro(5)\n',
+      explanation: 'Uma <b>função</b> declara o tipo de cada parâmetro e o tipo que ela devolve com <code>return</code>.<pre>static int Triplo(int x) {\n  return x * 3;\n}</pre>',
+      desc: 'Crie uma função chamada <code>Dobro</code>, que recebe um <code>int</code> chamado <code>numero</code> e devolve o dobro dele. Depois, crie <code>resultado</code> com o valor de <code>Dobro(5)</code>.',
+      hint: 'A forma é <code>static TIPO Nome(TIPO parametro) { return expressão; }</code> — depois, chame com <code>Nome(valor)</code> igual chamaria <code>Console.WriteLine(valor)</code>.',
+      solution: 'static int Dobro(int numero) {\n  return numero * 2;\n}\nint resultado = Dobro(5);',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: {}, expected: 10 }
+      ]
+    },
+    {
+      id: 13,
+      title: 'Decidindo com if/else',
+      givenVars: ['idade'],
+      starter: 'string resultado;\nif (idade >= 18) {\n  \n} else {\n  \n}\n',
+      explanation: 'O <code>if</code> testa uma condição; o <code>else</code> roda quando ela é falsa.<pre>string status;\nif (vida > 0) {\n  status = "Vivo";\n} else {\n  status = "Morto";\n}</pre>',
+      desc: 'A variável <code>idade</code> já existe. Complete o código: se <code>idade</code> for maior ou igual a <b>18</b>, <code>resultado</code> deve ser <code>"Maior"</code>; senão, <code>"Menor"</code>.',
+      hint: 'Dentro do <code>if</code>, escreva <code>resultado = "Maior";</code>. Dentro do <code>else</code>, <code>resultado = "Menor";</code>.',
+      solution: 'string resultado;\nif (idade >= 18) {\n  resultado = "Maior";\n} else {\n  resultado = "Menor";\n}',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { idade: 20 }, expected: 'Maior' },
+        { values: { idade: 18 }, expected: 'Maior' },
+        { values: { idade: 10 }, expected: 'Menor' }
+      ]
+    },
+    {
+      id: 14,
+      title: 'Repetindo com for',
+      givenVars: [],
+      starter: '// use um for pra mostrar 0, 1, 2, 3 e 4 no console (5 números)\n\n',
+      explanation: 'O <code>for</code> repete um bloco enquanto a condição continuar verdadeira.<pre>for (int i = 0; i < 3; i++) {\n  Console.WriteLine(i);\n}</pre>',
+      desc: 'Use um laço <code>for</code> para mostrar no console os números de <b>0</b> a <b>4</b>, um <code>Console.WriteLine</code> por número.',
+      hint: 'Comece com <code>i = 0</code> e repita enquanto <code>i &lt; 5</code>, mostrando <code>i</code> a cada volta.',
+      solution: 'for (int i = 0; i < 5; i++) {\n  Console.WriteLine(i);\n}',
+      check: { type: 'console' },
+      tests: [
+        { values: {}, expected: [0, 1, 2, 3, 4] }
       ]
     }
   ];

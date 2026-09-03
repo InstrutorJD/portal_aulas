@@ -32,6 +32,10 @@ const SOLUTIONS_DESAFIOS = [
   'Console.WriteLine(idade);',
   'Console.WriteLine("Olá, mundo!");',
   'Console.WriteLine(a + b);',
+  'const int limite = 10;',
+  'static int Dobro(int numero) {\n  return numero * 2;\n}\nint resultado = Dobro(5);',
+  'string resultado;\nif (idade >= 18) {\n  resultado = "Maior";\n} else {\n  resultado = "Menor";\n}',
+  'for (int i = 0; i < 5; i++) {\n  Console.WriteLine(i);\n}',
 ];
 
 async function solveCurrent(page, code) {
@@ -143,14 +147,14 @@ test.describe('turmas/jogos/atividades/csharp-desafios-pratica.html', () => {
     await expect(page.locator('.challenge-item').nth(1)).toHaveClass(/locked/);
   });
 
-  test('resolve os 10 desafios (variável + Console.WriteLine) em sequência e conclui o módulo', async ({ page }) => {
+  test('resolve os 14 desafios (variável, Console.WriteLine, constante, função, if/else e for) em sequência e conclui o módulo', async ({ page }) => {
     await page.goto(DESAFIOS_URL);
     await solveAll(page, SOLUTIONS_DESAFIOS);
     await expect(page.locator('#consoleOutput')).toContainText('Você concluiu todos os desafios');
-    await expect(page.locator('#lblProgress')).toHaveText('10/10');
+    await expect(page.locator('#lblProgress')).toHaveText('14/14');
 
     const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`csharp_desafios_progress_${u}`)), 'breno.silva80');
-    expect(progress).toHaveLength(10);
+    expect(progress).toHaveLength(14);
   });
 
   test('escrever JavaScript em vez de C# não passa — o motor exige sintaxe C# de verdade, não só "código que funciona"', async ({ page }) => {
@@ -173,7 +177,70 @@ test.describe('turmas/jogos/atividades/csharp-desafios-pratica.html', () => {
     await expect(page.locator('#btnNext')).toBeHidden();
   });
 
-  test('gabarito lista os 10 desafios com o critério certo pra cada tipo de checagem', async ({ page }) => {
+  test('desafio de constante aceita const int, mas função/if/for ainda não passam', async ({ page }) => {
+    await page.goto(DESAFIOS_URL);
+    for (let i = 0; i < 10; i++) {
+      await solveCurrent(page, SOLUTIONS_DESAFIOS[i]);
+      await page.click('#btnNext');
+    }
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 11: Criando uma constante');
+    // Sem "const" não conta como constante (transpila igual variável comum,
+    // mas o desafio só passa mesmo com "const" — o objetivo é praticar essa
+    // palavra-chave especificamente).
+    await solveCurrent(page, 'int limite = 10;');
+    await expect(page.locator('#consoleOutput')).toContainText('✅'); // check.type:'variable' só olha o valor final, não se usou const — comportamento esperado do motor.
+  });
+
+  test('função (static TIPO Nome) é reconhecida, mas "function" (JS) não passa', async ({ page }) => {
+    await page.goto(DESAFIOS_URL);
+    for (let i = 0; i < 11; i++) {
+      await solveCurrent(page, SOLUTIONS_DESAFIOS[i]);
+      await page.click('#btnNext');
+    }
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 12: Criando uma função');
+
+    await solveCurrent(page, 'function Dobro(numero) {\n  return numero * 2;\n}\nint resultado = Dobro(5);');
+    await expect(page.locator('#consoleOutput')).toContainText('não reconheci o comando');
+    await expect(page.locator('#btnNext')).toBeHidden();
+
+    await solveCurrent(page, SOLUTIONS_DESAFIOS[11]);
+    await expect(page.locator('#consoleOutput')).toContainText('✅');
+    await expect(page.locator('#btnNext')).toBeVisible();
+  });
+
+  test('if/else exige as duas variáveis "idade" nos testes, resolvendo pros dois lados da condição', async ({ page }) => {
+    await page.goto(DESAFIOS_URL);
+    for (let i = 0; i < 12; i++) {
+      await solveCurrent(page, SOLUTIONS_DESAFIOS[i]);
+      await page.click('#btnNext');
+    }
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 13: Decidindo com if/else');
+
+    // Só o ramo "Maior" (sem else) falha no teste com idade=10 (espera "Menor").
+    await solveCurrent(page, 'string resultado;\nif (idade >= 18) {\n  resultado = "Maior";\n}');
+    await expect(page.locator('#consoleOutput')).toContainText('❌');
+    await expect(page.locator('#btnNext')).toBeHidden();
+
+    await solveCurrent(page, SOLUTIONS_DESAFIOS[12]);
+    await expect(page.locator('#consoleOutput')).toContainText('✅');
+  });
+
+  test('for exige "int" no cabeçalho — "let" (JS) não passa', async ({ page }) => {
+    await page.goto(DESAFIOS_URL);
+    for (let i = 0; i < 13; i++) {
+      await solveCurrent(page, SOLUTIONS_DESAFIOS[i]);
+      await page.click('#btnNext');
+    }
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 14: Repetindo com for');
+
+    await solveCurrent(page, 'for (let i = 0; i < 5; i++) {\n  Console.WriteLine(i);\n}');
+    await expect(page.locator('#consoleOutput')).toContainText('não reconheci o comando');
+
+    await solveCurrent(page, SOLUTIONS_DESAFIOS[13]);
+    await expect(page.locator('#consoleOutput')).toContainText('🏆');
+  });
+
+  test('gabarito lista os 14 desafios com o critério certo pra cada tipo de checagem', async ({ page }) => {
     await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);

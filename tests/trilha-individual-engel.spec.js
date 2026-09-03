@@ -85,13 +85,16 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
         'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',
         'projetos_metodos_pratica', 'projetos_fases_pratica',
         'cod_ide_pratica', 'cod_linguagens_pratica', 'cod_seguranca_debug_pratica', 'cod_poo_pratica', 'cod_agil_clean_pratica', 'cod_seguranca_ia_pratica',
-        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica', 'csharp_desafios',
+        'fund_ambiente_pratica', 'fund_logica_pratica', 'fund_prog2d_pratica', 'fund_multimidia_pratica',
         'teste_fundamentos_pratica', 'teste_planejamento_pratica', 'teste_execucao_pratica'
       ];
       praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
       localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dezoito));
       localStorage.setItem(`csharp_pratica_simples_progress_${user}`, JSON.stringify(cinco));
+      // csharp_desafios tem 14 desafios (progressTotal:14), diferente do
+      // padrão de 10 usado pelas outras trilhas de prática.
+      localStorage.setItem(`csharp_desafios_progress_${user}`, JSON.stringify(Array.from({ length: 14 }, (_, i) => i + 1)));
 
       const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
       praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));

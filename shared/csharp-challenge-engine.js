@@ -12,10 +12,27 @@
 // digitando `let x = 5;` (JS, não C#) passaria no teste sem nunca ter escrito
 // C# de verdade.
 //
-// Sintaxe C# reconhecida (uma instrução por linha, terminando em `;`):
+// Sintaxe C# reconhecida (uma "linha lógica" por vez — declarações e
+// Console.WriteLine terminam em `;`; blocos abrem com `{` e fecham com `}`
+// sozinho numa linha):
 //   TIPO nome = expressão;         → int/double/float/string/bool/char/var
 //   const TIPO nome = expressão;
+//   TIPO nome;                      (declara sem valor inicial)
+//   nome = expressão;               (reatribui uma variável já existente)
 //   Console.WriteLine(expressão);
+//   if (condição) {
+//   } else {
+//   for (int i = inicio; i OP limite; i++) {
+//   static TIPO Nome(TIPO param1, TIPO param2) {
+//   return expressão;
+//   }
+// Como C# e JS já compartilham a sintaxe de if/else, for e chaves, essas
+// linhas passam quase direto pro JS (só troca `int` do cabeçalho do for por
+// `let`, e a assinatura da função vira `function Nome(param1, param2) {`) —
+// não tem parser recursivo aqui, é reconhecimento linha a linha; o
+// aninhamento de blocos funciona sozinho porque as chaves emitidas são as
+// mesmas do código do aluno, e quem interpreta de verdade é o `new
+// Function` do JS lá na frente.
 //
 // Detalhe de fidelidade com C# de verdade: se o tipo declarado for `int`, o
 // resultado da expressão é truncado (Math.trunc) — em C#, `int / int` corta
@@ -38,32 +55,48 @@
 //   #consoleOutput #lblProgress
 (function () {
   const TYPE_KEYWORDS = ['int', 'double', 'float', 'string', 'bool', 'char', 'var'];
+  const FUNC_TYPE_KEYWORDS = TYPE_KEYWORDS.filter(t => t !== 'var');
   const DECL_RE = new RegExp(`^(const\\s+)?(${TYPE_KEYWORDS.join('|')})\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*=\\s*(.+);$`);
+  const DECL_NOINIT_RE = new RegExp(`^(${TYPE_KEYWORDS.join('|')})\\s+([A-Za-z_][A-Za-z0-9_]*);$`);
+  const ASSIGN_RE = /^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+);$/;
   const WRITE_RE = /^Console\.WriteLine\(\s*(.+)\s*\);$/;
+  const FUNC_HEADER_RE = new RegExp(`^static\\s+(${FUNC_TYPE_KEYWORDS.join('|')})\\s+([A-Za-z_][A-Za-z0-9_]*)\\s*\\(([^)]*)\\)\\s*\\{$`);
+  const PARAM_RE = new RegExp(`^(${FUNC_TYPE_KEYWORDS.join('|')})\\s+([A-Za-z_][A-Za-z0-9_]*)$`);
+  const RETURN_RE = /^return\s+(.+);$/;
+  const IF_RE = /^if\s*\((.+)\)\s*\{$/;
+  const ELSE_RE = /^\}\s*else\s*\{$/;
+  const FOR_RE = /^for\s*\(int\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*([^;]+);\s*\1\s*(<=|>=|<|>)\s*([^;]+);\s*\1\+\+\)\s*\{$/;
+  const CLOSE_RE = /^\}$/;
+
   function stripComment(line) {
     const idx = line.indexOf('//');
     return idx === -1 ? line : line.slice(0, idx);
   }
 
-  // Só letras/números/identificadores, operadores aritméticos, parênteses,
-  // ponto (decimal) e aspas duplas (abre/fecha string) FORA de string —
-  // barra qualquer coisa que não seja uma expressão simples (chamada de
-  // função, `;` escondido, acesso a propriedade além de Console.WriteLine já
-  // tratado à parte etc). DENTRO de uma string literal, qualquer caractere
-  // vale (acento, pontuação, vírgula...) — é conteúdo do aluno pra exibir,
-  // não código; só a aspa que fecha a string continua sendo especial.
+  // Letras/números/identificadores, operadores aritméticos e de comparação/
+  // lógicos, parênteses, vírgula (argumentos de função), ponto (decimal) e
+  // aspas duplas (abre/fecha string) FORA de string — barra qualquer coisa
+  // que não seja uma expressão/condição simples (`;` escondido, acesso a
+  // propriedade além de Console.WriteLine já tratado à parte etc). DENTRO de
+  // uma string literal, qualquer caractere vale (acento, pontuação,
+  // vírgula...) — é conteúdo do aluno pra exibir, não código; só a aspa que
+  // fecha a string continua sendo especial.
   function isSafeExpr(expr) {
     let inString = false;
     for (const ch of expr) {
       if (ch === '"') { inString = !inString; continue; }
       if (inString) continue;
-      if (!/[A-Za-z0-9_+\-*/().\s]/.test(ch)) return false;
+      if (!/[A-Za-z0-9_+\-*/().,\s<>=!&|]/.test(ch)) return false;
     }
     return !inString;
   }
 
   // Converte o C# restrito do aluno pra JS equivalente. Lança Error (com
-  // mensagem amigável) na primeira linha que não reconhecer.
+  // mensagem amigável) na primeira linha que não reconhecer. Reconhecimento
+  // é linha a linha (ver comentário no topo do arquivo) — blocos (if/else,
+  // for, função) só precisam que CADA linha bata com um padrão conhecido;
+  // quem garante que as chaves abrem/fecham direito é o `new Function` do
+  // JS que roda o resultado depois, não este transpile.
   function transpile(code) {
     const jsLines = [];
     const lines = code.split('\n');
@@ -86,6 +119,12 @@
         continue;
       }
 
+      const declNoInitMatch = line.match(DECL_NOINIT_RE);
+      if (declNoInitMatch) {
+        jsLines.push(`let ${declNoInitMatch[2]};`);
+        continue;
+      }
+
       const writeMatch = line.match(WRITE_RE);
       if (writeMatch) {
         const expr = writeMatch[1].trim();
@@ -96,9 +135,82 @@
         continue;
       }
 
+      const funcMatch = line.match(FUNC_HEADER_RE);
+      if (funcMatch) {
+        const name = funcMatch[2];
+        const rawParams = funcMatch[3].trim();
+        const paramNames = [];
+        if (rawParams !== '') {
+          for (const p of rawParams.split(',')) {
+            const paramMatch = p.trim().match(PARAM_RE);
+            if (!paramMatch) {
+              throw new Error(`parâmetro não reconhecido em "${line}"`);
+            }
+            paramNames.push(paramMatch[2]);
+          }
+        }
+        jsLines.push(`function ${name}(${paramNames.join(', ')}) {`);
+        continue;
+      }
+
+      const returnMatch = line.match(RETURN_RE);
+      if (returnMatch) {
+        const expr = returnMatch[1].trim();
+        if (!isSafeExpr(expr)) {
+          throw new Error(`expressão não reconhecida em "${line}"`);
+        }
+        jsLines.push(`return ${expr};`);
+        continue;
+      }
+
+      const ifMatch = line.match(IF_RE);
+      if (ifMatch) {
+        const cond = ifMatch[1].trim();
+        if (!isSafeExpr(cond)) {
+          throw new Error(`condição não reconhecida em "${line}"`);
+        }
+        jsLines.push(`if (${cond}) {`);
+        continue;
+      }
+
+      if (ELSE_RE.test(line)) {
+        jsLines.push('} else {');
+        continue;
+      }
+
+      const forMatch = line.match(FOR_RE);
+      if (forMatch) {
+        const varName = forMatch[1];
+        const start = forMatch[2].trim();
+        const op = forMatch[3];
+        const limit = forMatch[4].trim();
+        if (!isSafeExpr(start) || !isSafeExpr(limit)) {
+          throw new Error(`expressão não reconhecida em "${line}"`);
+        }
+        jsLines.push(`for (let ${varName} = ${start}; ${varName} ${op} ${limit}; ${varName}++) {`);
+        continue;
+      }
+
+      if (CLOSE_RE.test(line)) {
+        jsLines.push('}');
+        continue;
+      }
+
+      const assignMatch = line.match(ASSIGN_RE);
+      if (assignMatch) {
+        const name = assignMatch[1];
+        const expr = assignMatch[2].trim();
+        if (!isSafeExpr(expr)) {
+          throw new Error(`expressão não reconhecida em "${line}"`);
+        }
+        jsLines.push(`${name} = ${expr};`);
+        continue;
+      }
+
       throw new Error(
         `não reconheci o comando "${line}" — use uma declaração de variável ` +
-        `(ex: int idade = 10;) ou Console.WriteLine(...);`
+        `(ex: int idade = 10;), Console.WriteLine(...), if/else, for ou uma ` +
+        `função (static TIPO Nome(...) { ... });`
       );
     }
 

@@ -51,18 +51,55 @@ do professor, com 4 módulos:
   verdade, restrita ao mais simples (criar variável, somar, subtrair,
   multiplicar, dividir), com 5 desafios.
 - **Prática — Desafios de C#** (`atividades/csharp-desafios-pratica.html`):
-  10 desafios de código no mesmo formato "vença cada duelo em ordem" do JS
-  (`js-basico.html`), cobrindo variável e `Console.WriteLine`.
+  14 desafios de código no mesmo formato "vença cada duelo em ordem" do JS
+  (`js-basico.html`) — 10 de variável/`Console.WriteLine` (bloco original) +
+  4 novos (um pra cada conceito que só era comparado em texto até então:
+  constante, função, if/else e for — ver próxima seção).
 
 Como não dá pra rodar C# de verdade no navegador, as 2 práticas usam
 `shared/csharp-challenge-engine.js` — um motor novo (variação de
 `shared/js-challenge-engine.js`) que TRANSPILA um subconjunto restrito de
-sintaxe C# (declaração de variável tipada + `Console.WriteLine`) pra
-JavaScript equivalente antes de rodar contra os casos de teste. Qualquer
-linha fora desse subconjunto reconhecido vira erro de sintaxe (não passa
-"por acidente" só por ser JS válido) — e se o tipo declarado for `int`, o
-resultado é truncado (`Math.trunc`) igual o C# de verdade faz na divisão
-inteira, diferente do JavaScript.
+sintaxe C# pra JavaScript equivalente antes de rodar contra os casos de
+teste. Qualquer linha fora desse subconjunto reconhecido vira erro de
+sintaxe (não passa "por acidente" só por ser JS válido) — e se o tipo
+declarado for `int`, o resultado é truncado (`Math.trunc`) igual o C# de
+verdade faz na divisão inteira, diferente do JavaScript.
+
+## Desafios de constante/função/if-else/for na trilha C#
+
+**Status:** concluído — a Comparação JS vs C# (`csharp-comparacao.html`)
+sempre ensinou 5 conceitos (variável, constante, função, if/else, laço),
+mas até então só "variável" tinha desafio de código de verdade nas 2
+práticas; os outros 4 eram só comparados em texto, nunca escritos pelo
+aluno. `shared/csharp-challenge-engine.js` só reconhecia 2 formatos de
+linha (declaração de variável e `Console.WriteLine`) — qualquer `if`, `for`
+ou `static TIPO Nome(...)` caía direto no erro genérico "não reconheci o
+comando".
+
+**O que mudou:** `transpile()` ganhou mais formatos reconhecidos —
+declaração sem valor inicial (`TIPO nome;`), reatribuição (`nome = expr;`),
+cabeçalho de função (`static TIPO Nome(TIPO p1, TIPO p2) {`), `return`,
+`if (cond) {`, `} else {`, `for (int i = ini; i OP fim; i++) {` e `}`
+sozinho numa linha. Não é um parser recursivo — é reconhecimento linha a
+linha (cada linha bate com um padrão isolado); o aninhamento de blocos
+funciona sozinho porque as chaves emitidas são as mesmas do código do
+aluno, e quem interpreta de verdade a estrutura é o `new Function` do JS
+que roda o resultado. C# e JS já compartilham a sintaxe de if/else/for, então
+essas linhas passam quase direto — só o cabeçalho do `for` troca `int` por
+`let`, e a assinatura da função vira `function Nome(p1, p2) {`.
+
+4 desafios novos em `csharp-desafios-pratica.html` (ids 11-14): criar
+constante, criar função (com parâmetro e `return`), if/else, e um `for`
+imprimindo uma sequência no console. `progressTotal` do módulo foi de 10
+pra 14 — precisou atualizar `turmas/jogos/config.js` e os testes que
+semeavam esse progresso com um array genérico de 10 itens
+(`tests/turma-jogos.spec.js`, `tests/daily-activity-release.spec.js`,
+`tests/trilha-individual-engel.spec.js` — `csharp_desafios` saiu do grupo
+compartilhado `praticaDez` e ganhou array próprio de 14).
+
+Cobertura: `tests/csharp-jogos.spec.js` — desafio de função rejeita
+`function` (JS) e exige `static TIPO Nome`; desafio de for rejeita `let`
+(JS) e exige `int` no cabeçalho; desafio de if/else falha sem o `else`.
 
 **C# Básico (Engel):** trilha individual (`visibleFor: ['engel.fraga']`,
 mesmo padrão de `js-adaptado-engel`), `atividades/csharp-basico-adaptado-engel.html`.
