@@ -86,4 +86,40 @@ test.describe('games/fuga-do-bug.html', () => {
     await expect(page.locator('#hudDeaths')).toHaveText('0');
     await expect(page.locator('#hudCheckpoint')).toHaveText('0');
   });
+
+  // O painel de placar usa o componente compartilhado
+  // (shared/game-leaderboard.js, GameLeaderboard.showPanel) — mesmo
+  // #glOverlay/.gl-row de todos os outros jogos, não um modal próprio.
+  test('botão "Placar" mostra o ranking da turma pro jogo, com a própria linha destacada', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      game_scores: [
+        { student_email: 'edward.guzman', student_name: 'Edward Guzman', turma: 'jogos', game: 'fuga_do_bug', score: 98500 },
+        { student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', game: 'fuga_do_bug', score: 87000 },
+      ],
+    });
+    await page.goto(GAME_URL);
+    await page.click('#btnRanking');
+
+    const overlay = page.locator('#glOverlay');
+    await expect(overlay).toContainText('Placar — Fuga do Bug');
+    await expect(overlay.locator('.gl-row').nth(0)).toContainText('Edward Guzman');
+    await expect(overlay.locator('.gl-row').nth(0)).toContainText('98500 pts');
+    await expect(overlay.locator('.gl-row.me')).toContainText('Breno Silva');
+  });
+
+  test('sem ninguém ter pontuado ainda, mostra a mensagem de placar vazio (não "carregando" pra sempre)', async ({ page }) => {
+    await page.goto(GAME_URL);
+    await page.click('#btnRanking');
+    await expect(page.locator('#glOverlay')).toContainText('Ninguém pontuou ainda');
+  });
+
+  test('terminar a fase grava o placar, e ele aparece na hora ao abrir o ranking', async ({ page }) => {
+    await page.goto(GAME_URL);
+    await page.click('#btnStart');
+    await page.evaluate(() => window.finishLevel());
+
+    await page.click('#btnRanking');
+    const overlay = page.locator('#glOverlay');
+    await expect(overlay.locator('.gl-row.me')).toContainText('Breno Silva');
+  });
 });

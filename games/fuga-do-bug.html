@@ -96,17 +96,6 @@
     display:flex; align-items:center; justify-content:center; user-select:none;
   }
   .tc-btn:active{ background:var(--green-dim); color:#04180a; }
-
-  .ranking-modal{
-    position:absolute; inset:0; background:rgba(3,5,3,0.92); display:none;
-    align-items:center; justify-content:center; z-index:50;
-  }
-  .ranking-modal.show{ display:flex; }
-  .ranking-box{ background:var(--panel); border:1px solid var(--green-dim); border-radius:4px; padding:16px 18px; width:280px; max-height:80%; overflow:auto; }
-  .ranking-box h2{ font-family:'VT323',monospace; color:var(--green); font-size:20px; margin:0 0 10px; }
-  .ranking-row{ display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px solid var(--line); }
-  .ranking-row .pos{ color:var(--yellow); width:22px; }
-  .ranking-close{ margin-top:10px; width:100%; }
 </style>
 </head>
 <body>
@@ -159,13 +148,6 @@
       <button class="btn" id="btnRestart">Jogar de novo</button>
     </div>
 
-    <div class="ranking-modal" id="rankingModal">
-      <div class="ranking-box">
-        <h2>🏆 Placar da turma</h2>
-        <div id="rankingList" style="font-size:12px; color:var(--ink-dim);">Carregando…</div>
-        <button class="btn ghost ranking-close" id="btnCloseRanking">Fechar</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -698,20 +680,19 @@
     running = true;
   });
 
-  const rankingModal = document.getElementById('rankingModal');
-  document.getElementById('btnRanking').addEventListener('click', async () => {
-    rankingModal.classList.add('show');
-    const list = document.getElementById('rankingList');
-    list.textContent = 'Carregando…';
-    if (window.GameLeaderboard && window.GameLeaderboard.enabled){
-      const { rows } = await window.GameLeaderboard.fetchTop({ game:'fuga_do_bug', turma, limit:10 });
-      if (!rows || !rows.length){ list.textContent = 'Ninguém completou a fase ainda nesta turma.'; return; }
-      list.innerHTML = rows.map((r,i) => `<div class="ranking-row"><span class="pos">${i+1}º</span><span>${r.student_name}</span><span>${r.score}</span></div>`).join('');
-    } else {
-      list.textContent = 'Placar indisponível (Supabase não configurado).';
-    }
+  // Painel compartilhado (shared/game-leaderboard.js) em vez de um modal
+  // próprio — mesmo componente usado por todos os outros jogos (visual
+  // consistente, atualiza sozinho em tempo real enquanto o painel tá
+  // aberto via GameLeaderboard.watch, e distingue erro de verdade de
+  // "ninguém pontuou ainda"). Ver games/digitacao.html pro mesmo padrão.
+  const btnRanking = document.getElementById('btnRanking');
+  btnRanking.addEventListener('click', () => {
+    window.GameLeaderboard.showPanel({
+      game: 'fuga_do_bug', turma, email: username,
+      title: 'Placar — Fuga do Bug', formatScore: s => `${s} pts`
+    });
   });
-  document.getElementById('btnCloseRanking').addEventListener('click', () => rankingModal.classList.remove('show'));
+  if (!window.GameLeaderboard.enabled) btnRanking.style.display = 'none';
 
   // tests/fuga-do-bug.spec.js chama window.finishLevel() direto — simular a
   // travessia real dos 8 segmentos via teclado não dá pra automatizar de
