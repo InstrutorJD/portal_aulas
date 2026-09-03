@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Projeto de Vida &amp; Mundo do Trabalho (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); min-height:100vh;
+  }
+
+  .env{
+    max-width:760px; margin:0 auto; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+    min-height:calc(100vh - 20px);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; }
+
+  .steps{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; }
+  .step-dot{
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; border:2px solid var(--line); background:var(--panel2); border-radius:8px;
+  }
+  .step-dot.active{ border-color:var(--green); }
+  .step-dot.done{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+
+  .scene{
+    background:var(--panel); border:1px solid var(--line); padding:22px; text-align:center;
+  }
+  .scene .tag-label{
+    display:inline-block; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--yellow); border:1px dashed var(--yellow); border-radius:12px; padding:3px 10px; margin-bottom:12px;
+  }
+  .scene .big-icon{ font-size:64px; line-height:1; margin-bottom:10px; }
+  .scene p{ font-size:19px; line-height:1.6; margin:0; color:var(--ink); }
+
+  .question{
+    font-family:'VT323', monospace; font-size:26px; color:var(--green); text-align:center; margin:0;
+  }
+
+  .choices{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
+  .choice-btn{
+    flex:1 1 200px; max-width:260px; display:flex; flex-direction:column; align-items:center; gap:8px;
+    background:var(--panel2); border:2px solid var(--green-dim); border-radius:10px;
+    padding:20px 12px; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .choice-btn:hover{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .choice-btn .emoji{ font-size:56px; line-height:1; }
+  .choice-btn .label{ font-size:17px; font-weight:800; text-align:center; }
+  .choice-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .reaction{
+    display:none; background:var(--panel2); border:2px dashed var(--yellow);
+    padding:16px; text-align:center; font-size:19px; color:var(--ink); line-height:1.6;
+  }
+  .reaction.show{ display:block; }
+  .reaction .emoji{ font-size:40px; display:block; margin-bottom:6px; }
+  .reaction b{ color:var(--yellow); }
+
+  .actions{ display:flex; justify-content:center; margin-top:auto; padding-top:6px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:18px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 28px; cursor:pointer; border-radius:8px;
+  }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .end-card{ text-align:center; }
+  .end-card .big-icon{ font-size:72px; margin-bottom:8px; }
+  .end-card h2{ font-family:'VT323', monospace; font-size:30px; color:var(--green); margin:0 0 10px; }
+  .end-card p{ font-size:19px; color:var(--ink); line-height:1.6; margin:0 0 16px; }
+  .recap{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; font-size:32px; margin-bottom:18px; }
+
+  .start-screen{ text-align:center; margin:auto 0; }
+  .start-screen .big-icon{ font-size:72px; margin-bottom:10px; }
+  .start-screen h1{ font-family:'VT323', monospace; font-size:30px; color:var(--green); margin:0 0 10px; }
+  .start-screen p{ font-size:19px; color:var(--ink-dim); line-height:1.6; margin:0 0 18px; }
+
+  @media (max-width: 600px) {
+    .choices{ flex-direction:column; align-items:stretch; }
+    .choice-btn{ max-width:none; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'vida_trabalho_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🧭 A JORNADA DO LUCAS</div>
+    <div>✅ <span id="lblProgress">0/9</span></div>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+(function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `vida_trabalho_engel_progress_${username}`;
+
+  const stage = document.getElementById('stage');
+  const lblProgress = document.getElementById('lblProgress');
+
+  // Trilha única (Engel) unificando os temas das duas matérias
+  // "Projeto de Vida" (5 trilhas) e "Mundo do Trabalho" (4 trilhas) — mesmo
+  // motor/estilo visual de atividades/ponto-de-virada-engel.html (cenas com
+  // emoji grande, 2 escolhas, sem certo/errado, tag que ecoa numa cena
+  // futura), só que com 9 cenas — uma por trilha original — continuando o
+  // mesmo personagem (Lucas), agora crescendo e entrando no mundo do
+  // trabalho. Cada reação já ensina o conceito da trilha original (ex.:
+  // "isso é INDÚSTRIA 4.0") não importa qual escolha o aluno faça — as duas
+  // opções de cada cena são válidas, só uma delas deixa uma tag que pode
+  // mudar o texto de uma cena mais à frente.
+  const SCENES = [
+    // 1) Autoconhecimento e Valores Pessoais
+    {
+      icon: '🧭',
+      text: () => 'Lucas vai escolher uma atividade nova pro fim de semana.',
+      question: 'O que ele escolhe?',
+      tagLabel: 'Autoconhecimento',
+      choices: [
+        { emoji: '🎨', label: 'Desenhar', tag: 'criativo', reaction: () => 'Lucas descobre que gosta de criar coisas do zero. Isso é um <b>TALENTO</b>.' },
+        { emoji: '⚽', label: 'Jogar bola', tag: null, reaction: () => 'Lucas descobre que gosta de jogar em time pra vencer. Isso também é um <b>TALENTO</b>.' }
+      ]
+    },
+    // 2) Cidadania e Convivência Social
+    {
+      icon: '🚏',
+      text: () => 'No ponto de ônibus, chega uma pessoa idosa e não tem banco vazio.',
+      question: 'O que Lucas faz?',
+      tagLabel: 'Cidadania',
+      choices: [
+        { emoji: '🙋', label: 'Cede o lugar', tag: 'cidadao', reaction: () => 'Lucas cede o lugar. Isso é <b>CIDADANIA</b>: cuidar de quem precisa mais.' },
+        { emoji: '📱', label: 'Fica no celular', tag: null, reaction: () => 'Lucas nem percebe. Um colega cede o lugar por ele.' }
+      ]
+    },
+    // 3) Inteligência Emocional e Relacionamentos
+    {
+      icon: '😤',
+      text: () => 'Lucas perde um jogo importante e fica bravo.',
+      question: 'O que ele faz com a raiva?',
+      tagLabel: 'Intelig. Emocional',
+      choices: [
+        { emoji: '🌬️', label: 'Respira fundo', tag: 'calmo', reaction: () => 'Lucas respira, se acalma, e conversa numa boa. Isso é <b>AUTOCONTROLE</b>.' },
+        { emoji: '🗣️', label: 'Desabafa na hora', tag: null, reaction: () => 'Lucas fala tudo na hora, ainda bravo. Depois pede desculpa pro time.' }
+      ]
+    },
+    // 4) Colaboração e Compromisso em Equipe (Projeto de Vida)
+    {
+      icon: '👥',
+      text: () => 'Lucas e mais 3 colegas têm um trabalho em grupo pra entregar.',
+      question: 'Como eles dividem as tarefas?',
+      tagLabel: 'Equipe (escola)',
+      choices: [
+        { emoji: '📋', label: 'Cada um faz uma parte', tag: 'equipe', reaction: () => 'Cada um cuida de uma parte e confia no outro. Isso é <b>DIVISÃO DE PAPÉIS</b>.' },
+        { emoji: '🖊️', label: 'Lucas faz quase tudo', tag: null, reaction: () => 'Lucas prefere fazer sozinho pra garantir. O grupo entrega, mas ele fica cansado.' }
+      ]
+    },
+    // 5) Metas e Objetivos de Carreira
+    {
+      icon: '🎯',
+      text: () => 'Lucas quer aprender uma linguagem de programação nova.',
+      question: 'Como ele começa?',
+      tagLabel: 'Metas e Carreira',
+      choices: [
+        { emoji: '🗓️', label: 'Faz um plano', tag: 'planejado', reaction: () => 'Lucas escreve uma <b>META</b> clara: 1 aula por dia, por 30 dias.' },
+        { emoji: '🎲', label: 'Começa sem plano', tag: null, reaction: () => 'Lucas começa direto, sem organizar. Aprende, mas bem mais devagar.' }
+      ]
+    },
+    // 6) Revoluções Industriais e Indústria 4.0
+    {
+      icon: '🏭',
+      text: () => 'Na fábrica que Lucas visita, uma máquina apresenta um problema.',
+      question: 'Como resolvem, hoje em dia?',
+      tagLabel: 'Indústria 4.0',
+      choices: [
+        { emoji: '📡', label: 'Sensor avisa sozinho', tag: 'industria4', reaction: () => 'Um sensor (<b>IoT</b>) avisa o problema antes de piorar. Isso é <b>INDÚSTRIA 4.0</b>.' },
+        { emoji: '🧑‍🔧', label: 'Técnico percebe de perto', tag: null, reaction: () => 'Um técnico percebe olhando de perto. Era assim antes da Indústria 4.0.' }
+      ]
+    },
+    // 7) Inovação e Resolução de Problemas
+    {
+      icon: '💡',
+      text: (tags) => tags.has('criativo')
+        ? 'A mochila de Lucas rasgou. Ele já sabe que gosta de inventar coisas. 🎨'
+        : 'A mochila de Lucas rasgou, e ele precisa levar os livros.',
+      question: 'O que ele faz?',
+      tagLabel: 'Inovação',
+      choices: [
+        { emoji: '🧵', label: 'Inventa um jeito novo', tag: 'inovador', reaction: () => 'Lucas cria um jeito novo de fechar a mochila. Isso é <b>INOVAÇÃO</b>.' },
+        { emoji: '🛍️', label: 'Usa uma sacola', tag: null, reaction: () => 'Lucas resolve rápido, do jeito de sempre.' }
+      ]
+    },
+    // 8) Trabalho em Equipe e Colaboração (Mundo do Trabalho)
+    {
+      icon: '🧑‍💼',
+      text: () => 'No primeiro estágio de Lucas, um colega discorda da ideia dele.',
+      question: 'O que Lucas faz?',
+      tagLabel: 'Equipe (trabalho)',
+      choices: [
+        { emoji: '👂', label: 'Escuta o colega', tag: 'flexivel', reaction: () => 'Lucas escuta, e os dois juntam as duas ideias. Isso é <b>GESTÃO DE CONFLITO</b>.' },
+        { emoji: '💪', label: 'Mantém sua ideia', tag: null, reaction: () => 'Lucas segue com a própria ideia. Funciona, mas o colega fica incomodado.' }
+      ]
+    },
+    // 9) Comprometimento e Autocontrole no Trabalho
+    {
+      icon: '⏱️',
+      text: (tags) => tags.has('planejado')
+        ? 'Lucas tem um prazo apertado no estágio. Ele já sabe se planejar — aprendeu treinando programação. 🗓️'
+        : 'Lucas tem um prazo apertado pra terminar uma tarefa do estágio.',
+      question: 'O que ele faz?',
+      tagLabel: 'Comprometimento',
+      choices: [
+        { emoji: '🧘', label: 'Organiza e foca', tag: 'comprometido', reaction: () => 'Lucas organiza o tempo e entrega dentro do prazo, com calma. Isso é <b>COMPROMETIMENTO</b>.' },
+        { emoji: '😰', label: 'Deixa pra última hora', tag: null, reaction: () => 'Lucas corre em cima da hora. Entrega, mas com bastante pressa.' }
+      ]
+    }
+  ];
+
+  function freshState() { return { stepIndex: 0, tags: [], picks: [] }; }
+
+  function loadState() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(`vida_trabalho_engel_state_${username}`) || 'null');
+      if (!raw) return null;
+      return { stepIndex: raw.stepIndex || 0, tags: new Set(raw.tags || []), picks: raw.picks || [] };
+    } catch (e) { return null; }
+  }
+  function saveState() {
+    const toSave = { stepIndex: state.stepIndex, tags: [...state.tags], picks: state.picks };
+    localStorage.setItem(`vida_trabalho_engel_state_${username}`, JSON.stringify(toSave));
+  }
+
+  let state = loadState() || freshState();
+  if (!(state.tags instanceof Set)) state.tags = new Set(state.tags || []);
+
+  function renderSteps() {
+    let html = '<div class="steps">';
+    SCENES.forEach((s, i) => {
+      const done = i < state.picks.length;
+      const active = i === state.stepIndex;
+      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : s.icon}</div>`;
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function report(label, extra) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('vida_trabalho_engel', `Jornada do Lucas (Engel) — ${label}`, Object.assign({ total: SCENES.length, completed: state.picks.length }, extra || {}));
+    }
+  }
+
+  function renderScene() {
+    lblProgress.textContent = `${state.picks.length}/${SCENES.length}`;
+    if (state.stepIndex >= SCENES.length) return renderEnd();
+
+    const scene = SCENES[state.stepIndex];
+    stage.innerHTML = `
+      ${renderSteps()}
+      <div class="scene">
+        <span class="tag-label">${scene.tagLabel}</span>
+        <div class="big-icon">${scene.icon}</div>
+        <p>${scene.text(state.tags)}</p>
+      </div>
+      <h2 class="question">${scene.question}</h2>
+      <div class="choices" id="choicesWrap"></div>
+      <div class="reaction" id="reactionBox"></div>
+      <div class="actions" id="actionsWrap"></div>
+    `;
+    const wrap = document.getElementById('choicesWrap');
+    scene.choices.forEach((c, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerHTML = `<span class="emoji">${c.emoji}</span><span class="label">${c.label}</span>`;
+      btn.addEventListener('click', () => pickChoice(scene, idx));
+      wrap.appendChild(btn);
+    });
+    report(`Cena ${state.stepIndex + 1}: ${scene.tagLabel}`);
+  }
+
+  function pickChoice(scene, idx) {
+    const choice = scene.choices[idx];
+    document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+    if (choice.tag) state.tags.add(choice.tag);
+
+    const box = document.getElementById('reactionBox');
+    box.innerHTML = `<span class="emoji">${choice.emoji}</span>${choice.reaction(state.tags)}`;
+    box.classList.add('show');
+
+    state.picks.push({ scene: state.stepIndex, choice: idx, emoji: choice.emoji });
+    saveState();
+    report(`Cena ${state.stepIndex + 1}: ${scene.tagLabel} (escolheu: ${choice.label})`, { choiceLabel: choice.label });
+
+    const actions = document.getElementById('actionsWrap');
+    const isLast = state.stepIndex === SCENES.length - 1;
+    actions.innerHTML = `<button class="btn" id="btnNext">${isLast ? 'Ver final ➡️' : 'Próximo ➡️'}</button>`;
+    document.getElementById('btnNext').addEventListener('click', () => {
+      state.stepIndex += 1;
+      saveState();
+      renderScene();
+    });
+  }
+
+  // Final muda conforme o padrão das escolhas (quantas tags de crescimento
+  // o jogador juntou), sem existir final "ruim" — os dois são positivos,
+  // só contam uma história diferente.
+  function resolveEnding() {
+    const growthTags = ['calmo', 'equipe', 'planejado', 'flexivel', 'comprometido'];
+    const score = growthTags.filter(t => state.tags.has(t)).length;
+    return score >= 3
+      ? { icon: '🌟', text: 'Lucas cresceu com calma, organização e gente por perto — pronto pro que vier.' }
+      : { icon: '💪', text: 'Lucas cresceu resolvendo tudo do jeito dele, aprendendo na prática, passo a passo.' };
+  }
+
+  function renderEnd() {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ completed: true }));
+    report('Concluído', { finished: true });
+
+    const ending = resolveEnding();
+    const recap = state.picks.map(p => p.emoji).join(' ');
+    stage.innerHTML = `
+      ${renderSteps()}
+      <div class="end-card">
+        <div class="big-icon">${ending.icon}</div>
+        <h2>Fim da jornada!</h2>
+        <div class="recap">${recap}</div>
+        <p>${ending.text}</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="btnRestart">↻ Viver de novo</button>
+      </div>
+    `;
+    document.getElementById('btnRestart').addEventListener('click', () => {
+      state = freshState();
+      state.tags = new Set();
+      saveState();
+      renderStart(false);
+    });
+  }
+
+  function renderStart(resuming) {
+    stage.innerHTML = `
+      <div class="start-screen">
+        <div class="big-icon">🧭</div>
+        <h1>A Jornada do Lucas</h1>
+        <p>Você decide por Lucas. 9 cenas. 2 escolhas em cada uma — e cada uma pode mudar o que vem depois.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnStart">${resuming ? 'Continuar' : 'Começar'}</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnStart').addEventListener('click', renderScene);
+  }
+
+  if (state.picks.length > 0 && state.picks.length < SCENES.length) {
+    renderStart(true);
+  } else if (state.picks.length >= SCENES.length) {
+    state.stepIndex = SCENES.length;
+    renderScene();
+  } else {
+    renderStart(false);
+  }
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

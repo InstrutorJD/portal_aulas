@@ -145,6 +145,28 @@ window.TURMA_CONFIG_JOGOS = {
               progressKey: 'ponto_de_virada_engel_progress_', progressMode: 'flag'
             }
           ]
+        },
+        {
+          // Trilha individual, adaptada — só aparece pro aluno listado em
+          // visibleFor (professor sempre vê, pra acompanhar). Ver
+          // trilhaStatus() em shared/platform-core.js. Unifica os temas das
+          // 5 trilhas de "Projeto de Vida" + as 4 de "Mundo do Trabalho"
+          // numa trilha só, no mesmo formato/motor de "Ponto de Virada"
+          // acima (continua o mesmo personagem, Lucas): 9 cenas — uma por
+          // trilha original —, 2 escolhas por cena, emoji grande, pouco
+          // texto, sem certo ou errado.
+          key: 'vida-trabalho-engel',
+          label: 'Projeto de Vida & Mundo do Trabalho (Engel)',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'jogo', title: 'A Jornada do Lucas — Adaptado',
+              desc: '9 cenas curtas da vida do Lucas (escola → primeiro estágio), cobrindo autoconhecimento, cidadania, inteligência emocional, equipe, metas, indústria 4.0, inovação, equipe no trabalho e comprometimento. 2 escolhas por cena, emoji grande. Sem certo ou errado.',
+              icon: '🧭', src: 'atividades/vida-trabalho-engel.html',
+              progressKey: 'vida_trabalho_engel_progress_', progressMode: 'flag'
+            }
+          ]
         }
       ]
     },

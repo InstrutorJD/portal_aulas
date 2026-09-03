@@ -1,5 +1,34 @@
 # Pendências
 
+## Trilha "Projeto de Vida & Mundo do Trabalho (Engel)"
+
+**Status:** concluído — trilha individual nova (`visibleFor: ['engel.fraga']`),
+dentro da matéria "Projeto de Vida" (`turmas/jogos/config.js`), unificando
+os temas das 5 trilhas de Projeto de Vida (Autoconhecimento, Cidadania,
+Inteligência Emocional, Colaboração em Equipe, Metas e Carreira) + as 4 de
+Mundo do Trabalho (Revoluções Industriais/Indústria 4.0, Inovação, Trabalho
+em Equipe, Comprometimento) numa trilha só, a pedido do professor.
+
+`atividades/vida-trabalho-engel.html` reaproveita o motor/estilo visual de
+`atividades/ponto-de-virada-engel.html` (emoji grande, pouco texto, sem
+correção automática — "sem certo ou errado") em vez do formato
+teoria-quiz/prática-de-pareceres usado pro resto da turma: 9 cenas (uma por
+trilha original), 2 escolhas por cena, cada reação já ensina o conceito da
+trilha original (ex.: "isso é INDÚSTRIA 4.0") não importa qual escolha o
+aluno faça. Continua o mesmo personagem das cenas (Lucas), agora crescendo
+da escola pro primeiro estágio — 2 cenas têm callback de tag pra uma escolha
+anterior (ex.: cena 1 "criativo" muda o texto da cena 7 de Inovação). Final
+varia conforme quantas tags de "crescimento" (calmo/equipe/planejado/
+flexível/comprometido) o aluno escolheu ao longo do caminho — os dois finais
+são positivos, sem "final ruim".
+
+Cobertura: `tests/vida-trabalho-engel.spec.js` (visibilidade pro Engel/
+professor, invisibilidade pra outros alunos, 2 playthroughs completos —
+sempre 1ª opção e sempre 2ª — conferindo o callback de tag e os dois
+finais). Precisou atualizar as contagens de `<option>` em
+`tests/trilha-organizacao.spec.js` (a matéria "Projeto de Vida" foi de 6
+pra 7 trilhas cadastradas).
+
 ## Lista de Gabaritos agrupada por matéria (Gestão)
 
 **Status:** concluído — a pedido do professor. A lista de Gabarito na aba

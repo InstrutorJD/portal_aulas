@@ -50,8 +50,9 @@ test.describe('Organização das trilhas (em aberto / em atraso / concluídas)',
     await page.click('.game-card:has-text("Projeto de Vida")');
 
     const select = page.locator('#trilhaSelect');
-    // 6 trilhas cadastradas - 1 futura (patch acima) - 1 individual/visibleFor
-    // ("Ponto de Virada (Engel)", sempre futura pra quem não é o Engel).
+    // 7 trilhas cadastradas - 1 futura (patch acima) - 2 individuais/
+    // visibleFor ("Ponto de Virada (Engel)" e "Projeto de Vida & Mundo do
+    // Trabalho (Engel)", sempre futuras pra quem não é o Engel).
     await expect(select.locator('option')).toHaveCount(4);
     await expect(select).not.toContainText('Cidadania e Convivência Social');
   });
@@ -63,9 +64,10 @@ test.describe('Organização das trilhas (em aberto / em atraso / concluídas)',
     await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
     await page.click('.game-card:has-text("Projeto de Vida")');
 
-    // 6 trilhas cadastradas em Projeto de Vida (a 6ª, "Ponto de Virada
-    // (Engel)", é individual/visibleFor — mas o professor sempre vê tudo).
-    await expect(page.locator('#trilhaSelect option')).toHaveCount(6);
+    // 7 trilhas cadastradas em Projeto de Vida (as 2 individuais/
+    // visibleFor, "Ponto de Virada (Engel)" e "Projeto de Vida & Mundo do
+    // Trabalho (Engel)" — mas o professor sempre vê tudo).
+    await expect(page.locator('#trilhaSelect option')).toHaveCount(7);
     await expect(page.locator('#trilhaSelect')).toContainText('Cidadania e Convivência Social');
   });
 
@@ -79,8 +81,8 @@ test.describe('Organização das trilhas (em aberto / em atraso / concluídas)',
 
     const select = page.locator('#trilhaSelect');
     await expect(select.locator('optgroup[label="✅ Concluídas"] option')).toHaveText(['Colaboração e Compromisso em Equipe']);
-    // grupo "aberta" continua com as outras 4 trilhas não concluídas (a 6ª,
-    // "Ponto de Virada (Engel)", nem aparece pra este aluno — visibleFor).
+    // grupo "aberta" continua com as outras 4 trilhas não concluídas (as 2
+    // trilhas individuais/visibleFor do Engel nem aparecem pra este aluno).
     await expect(select.locator('optgroup[label="🟢 Em aberto"] option')).toHaveCount(4);
 
     await select.selectOption('vida-equipe');
