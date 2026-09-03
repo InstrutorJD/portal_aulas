@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelForge Studios — Fuga do Bug</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
+  body{
+    padding:10px; background:var(--bg); color:var(--ink);
+    font-family:'JetBrains Mono', monospace; height:100vh;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:32px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0; gap:10px;
+  }
+  .topbar .title{ font-family:'VT323', monospace; font-size:16px; color:var(--green); letter-spacing:1px; }
+  .topbar .stats{ display:flex; gap:14px; align-items:center; }
+  .topbar .stats b{ color:var(--ink); }
+  #btnRanking{
+    background:var(--panel); border:1px solid var(--green-dim); color:var(--green);
+    font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase;
+    padding:4px 10px; cursor:pointer; border-radius:2px;
+  }
+  #btnRanking:hover{ background:var(--green-dim); color:#04180a; }
+
+  .stage{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+
+  #gameCanvas{
+    background:linear-gradient(180deg,#081006 0%, #050805 70%);
+    display:block; max-width:100%; max-height:100%;
+    image-rendering:pixelated;
+  }
+
+  .hud{
+    position:absolute; top:10px; left:10px; display:flex; gap:10px; pointer-events:none;
+  }
+  .hud .pill{
+    background:rgba(10,15,10,0.8); border:1px solid var(--green-dim); border-radius:3px;
+    padding:4px 10px; font-size:12px; color:var(--ink);
+  }
+  .hud .pill b{ color:var(--green); }
+  .hud .pill.deaths b{ color:var(--blood-bright); }
+
+  .tip-toast{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-60%);
+    background:rgba(8,10,8,0.94); border:1px solid var(--blood); border-radius:4px;
+    padding:14px 20px; max-width:420px; text-align:center; pointer-events:none;
+    opacity:0; transition:opacity .15s ease;
+  }
+  .tip-toast.show{ opacity:1; }
+  .tip-toast .k{ font-family:'VT323',monospace; font-size:22px; color:var(--blood-bright); display:block; margin-bottom:4px; }
+  .tip-toast .m{ font-size:12px; color:var(--ink); line-height:1.4; }
+
+  .overlay{
+    position:absolute; inset:0; background:rgba(3,5,3,0.92);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
+    text-align:center; padding:20px;
+  }
+  .overlay h1{ font-family:'VT323',monospace; font-size:38px; color:var(--green); margin:0; letter-spacing:1px; text-shadow:0 0 10px rgba(124,255,63,.4); }
+  .overlay h1.dead{ color:var(--blood-bright); text-shadow:0 0 10px rgba(255,59,48,.5); }
+  .overlay p{ font-size:12px; color:var(--ink-dim); max-width:420px; line-height:1.6; margin:0; }
+  .overlay .commit{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--yellow); background:var(--panel2); border:1px solid var(--line); padding:8px 12px; border-radius:3px; max-width:420px; }
+  .btn{
+    background:var(--green-dim); color:#04180a; border:none; font-family:'JetBrains Mono',monospace;
+    font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.5px;
+    padding:10px 22px; border-radius:3px; cursor:pointer;
+  }
+  .btn:hover{ background:var(--green); }
+  .btn.ghost{ background:transparent; border:1px solid var(--green-dim); color:var(--green); }
+
+  .touch-controls{
+    position:absolute; bottom:12px; left:0; right:0; display:none;
+    justify-content:space-between; padding:0 14px; pointer-events:none;
+  }
+  .touch-controls.active{ display:flex; }
+  .tc-group{ display:flex; gap:10px; pointer-events:all; }
+  .tc-btn{
+    width:56px; height:56px; border-radius:50%; background:rgba(16,20,15,0.85);
+    border:1px solid var(--green-dim); color:var(--green); font-size:22px;
+    display:flex; align-items:center; justify-content:center; user-select:none;
+  }
+  .tc-btn:active{ background:var(--green-dim); color:#04180a; }
+
+  .ranking-modal{
+    position:absolute; inset:0; background:rgba(3,5,3,0.92); display:none;
+    align-items:center; justify-content:center; z-index:50;
+  }
+  .ranking-modal.show{ display:flex; }
+  .ranking-box{ background:var(--panel); border:1px solid var(--green-dim); border-radius:4px; padding:16px 18px; width:280px; max-height:80%; overflow:auto; }
+  .ranking-box h2{ font-family:'VT323',monospace; color:var(--green); font-size:20px; margin:0 0 10px; }
+  .ranking-row{ display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px solid var(--line); }
+  .ranking-row .pos{ color:var(--yellow); width:22px; }
+  .ranking-close{ margin-top:10px; width:100%; }
+</style>
+</head>
+<body>
+<div class="env">
+  <div class="topbar">
+    <div class="title">🩹 FUGA DO BUG — trilha de commits instável</div>
+    <div class="stats">
+      <span id="btnRanking">🏆 Placar</span>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+    <div class="hud">
+      <div class="pill deaths">💀 Mortes: <b id="hudDeaths">0</b></div>
+      <div class="pill">📍 Checkpoint: <b id="hudCheckpoint">0</b>/<span id="hudCheckpointTotal">0</span></div>
+      <div class="pill">⏱️ <b id="hudTime">0.0s</b></div>
+    </div>
+
+    <div class="tip-toast" id="tipToast"><span class="k" id="tipToastK">git commit -m "morri"</span><span class="m" id="tipToastM"></span></div>
+
+    <div class="touch-controls" id="touchControls">
+      <div class="tc-group">
+        <div class="tc-btn" id="tcLeft">◀</div>
+        <div class="tc-btn" id="tcRight">▶</div>
+      </div>
+      <div class="tc-group">
+        <div class="tc-btn" id="tcJump">⤒</div>
+      </div>
+    </div>
+
+    <div class="overlay" id="startOverlay">
+      <h1>FUGA DO BUG</h1>
+      <p>Você é o commit HEAD tentando sair da branch antes do rebase automático te apagar. O chão nem sempre é chão. Confie pouco, pule sempre, e não fique bravo — morrer aqui é o ponto do jogo.</p>
+      <p>Setas / A D para mover · Espaço ou ▲ para pular · Chegue na bandeira 🏁 no fim da trilha.</p>
+      <button class="btn" id="btnStart">Iniciar</button>
+    </div>
+
+    <div class="overlay" id="deathOverlay" style="display:none;">
+      <h1 class="dead">MORREU. DE NOVO.</h1>
+      <div class="commit" id="deathTip"></div>
+      <p>Voltando pro último checkpoint. Respira.</p>
+      <button class="btn" id="btnRespawn">Continuar</button>
+    </div>
+
+    <div class="overlay" id="winOverlay" style="display:none;">
+      <h1>MERGE CONCLUÍDO 🏁</h1>
+      <p id="winStats"></p>
+      <button class="btn" id="btnRestart">Jogar de novo</button>
+    </div>
+
+    <div class="ranking-modal" id="rankingModal">
+      <div class="ranking-box">
+        <h2>🏆 Placar da turma</h2>
+        <div id="rankingList" style="font-size:12px; color:var(--ink-dim);">Carregando…</div>
+        <button class="btn ghost ranking-close" id="btnCloseRanking">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/clipboard-guard.js"></script>
+<script src="../shared/game-leaderboard.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  // ---------- Sessão / query params (mesmo padrão de campo-minado.html) ----------
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'convidado';
+  const displayName = urlParams.get('name') || username;
+  const turma = urlParams.get('turma') || 'jogos';
+
+  // ---------- Canvas ----------
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const GROUND_Y = H - 70;
+
+  function resizeCanvas(){
+    const stage = canvas.parentElement;
+    const scale = Math.min(stage.clientWidth / W, stage.clientHeight / H, 1.4);
+    canvas.style.width = (W*scale) + 'px';
+    canvas.style.height = (H*scale) + 'px';
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  // ---------- Dicas de "commit de morte" (leve, sem culpar o aluno) ----------
+  const DEATH_TIPS = [
+    'Nem todo bloco que parece sólido está no ambiente de produção.',
+    'Dica real de debug: quando algo falha do nada, suspeite do que "sempre funcionou".',
+    'git blame não vai ajudar aqui. Só o timing.',
+    'Alguns bugs só aparecem depois que você já confiou no código.',
+    'Isso não foi falha sua — foi a trilha. Tenta nascer.',
+    'No mundo real, isso seria um teste automatizado faltando.',
+    'A dica que ninguém te dá: memoriza o padrão, não o reflexo.'
+  ];
+
+  // ---------- Nível: obstáculos por segmento ----------
+  // Tipos: 'solid' (plataforma real), 'fake' (parece igual, sem colisão),
+  // 'crumble' (sólida por ~0.35s, depois cai), 'spike' (morte no contato),
+  // 'saw' (lâmina que oscila em X, morte no contato), 'drop' (bloco que cai
+  // do teto quando o jogador cruza um gatilho em X).
+  const GROUND = { x:0, y:GROUND_Y, w:9999, h:200, type:'solid' };
+
+  const level = [];
+  const checkpoints = [ {x:40, y:GROUND_Y-70} ];
+
+  function addPlat(x,y,w,h,type){ level.push({x,y,w,h,type}); return level[level.length-1]; }
+  function addSpike(x,w){ level.push({x, y:GROUND_Y-18, w, h:18, type:'spike'}); }
+  function addSaw(x, range, y){ level.push({x, y, w:26, h:26, type:'saw', baseX:x, range, dir:1, speed:2.2}); }
+  function addDrop(x, triggerX, y, w, h){ level.push({x, y, w, h, type:'drop', triggerX, state:'idle', vy:0, restY:y}); }
+  function addCheckpoint(x,y){ checkpoints.push({x,y}); }
+  function addFlag(x,y){ level.push({x,y,w:14,h:60,type:'flag'}); }
+  function addCommit(x,y){ level.push({x,y,w:16,h:16,type:'commit', collected:false}); }
+
+  // Segmento 1: introdução — armadilha simples e óbvia
+  addSpike(360, 40);
+  addPlat(300, GROUND_Y, 60, 200, 'solid'); // não usado colisão de topo (ground já cobre), placeholder visual removido abaixo
+  level.pop();
+  addCommit(420, GROUND_Y-40);
+
+  // Segmento 2: buraco + plataforma falsa logo depois de um checkpoint
+  addPlat(560, GROUND_Y, 9999, 0, 'solid'); level.pop(); // sem-op, ground contínuo cuida do chão
+  // buraco de verdade: removemos o "ground" nessa faixa criando um hole
+  const HOLES = [ {x:640, w:90} ]; // faixas em que o "ground" infinito não existe
+  addPlat(560, GROUND_Y-90, 70, 16, 'solid');
+  addPlat(660, GROUND_Y-90, 70, 16, 'fake'); // parece plataforma segura, não é
+  addSpike(650, 100); // spikes no fundo do buraco
+  addCheckpoint(760, GROUND_Y-70);
+
+  // Segmento 3: serra oscilante sobre passagem estreita
+  addSaw(920, 110, GROUND_Y-90);
+  addPlat(860, GROUND_Y-140, 220, 16, 'solid');
+  addCommit(960, GROUND_Y-170);
+  addCheckpoint(1120, GROUND_Y-70);
+
+  // Segmento 4: bloco que cai do teto ao cruzar um gatilho
+  addDrop(1260, 1230, 40, 60, 26);
+  addSpike(1400, 50);
+  addPlat(1340, GROUND_Y, 60,0,'solid'); level.pop();
+  addCheckpoint(1480, GROUND_Y-70);
+
+  // Segmento 5: sequência de falsas plataformas sobre buraco duplo
+  HOLES.push({x:1560, w:260});
+  addPlat(1560, GROUND_Y-70, 60,16,'solid');
+  addPlat(1640, GROUND_Y-70, 60,16,'fake');
+  addPlat(1720, GROUND_Y-70, 60,16,'solid');
+  addSpike(1560, 260);
+  addCommit(1650, GROUND_Y-110);
+  addCheckpoint(1840, GROUND_Y-70);
+
+  // Segmento 6: plataforma que desmorona (crumble) sobre poço
+  HOLES.push({x:1920, w:220});
+  addPlat(1920, GROUND_Y-40, 70,16,'crumble');
+  addPlat(2010, GROUND_Y-90, 70,16,'crumble');
+  addPlat(2100, GROUND_Y-40, 70,16,'solid');
+  addSpike(1920, 220);
+  addCheckpoint(2200, GROUND_Y-70);
+
+  // Segmento 7: duas serras + drop combinados (fase mais difícil)
+  addSaw(2340, 90, GROUND_Y-60);
+  addSaw(2500, 90, GROUND_Y-140);
+  addPlat(2440, GROUND_Y-180, 140, 16, 'solid');
+  addDrop(2620, 2600, 40, 60, 26);
+  addCheckpoint(2760, GROUND_Y-70);
+
+  // Segmento 8: reta final — plataforma falsa bem na frente da bandeira
+  HOLES.push({x:2840, w:180});
+  addPlat(2840, GROUND_Y-60, 60,16,'fake');
+  addPlat(2920, GROUND_Y-60, 60,16,'solid');
+  addSpike(2840, 180);
+  addCommit(2900, GROUND_Y-100);
+  addFlag(3060, GROUND_Y-60);
+
+  const LEVEL_END_X = 3120;
+  document.getElementById('hudCheckpointTotal').textContent = checkpoints.length - 1;
+
+  // ---------- Jogador (boneco palito: círculo + linhas) ----------
+  const player = {
+    x: 40, y: GROUND_Y-70, w:18, h:34,
+    vx:0, vy:0, onGround:false, alive:true,
+    facing:1, animT:0, checkpointIndex:0
+  };
+  const GRAVITY = 0.62;
+  const MOVE_SPEED = 4.4;
+  const JUMP_VEL = -12.3;
+  const FRICTION = 0.82;
+
+  let camX = 0;
+  let keys = { left:false, right:false, jump:false };
+  let deaths = 0;
+  let startTime = 0;
+  let elapsed = 0;
+  let running = false;
+  let finished = false;
+
+  function isHole(x){
+    return HOLES.some(h => x >= h.x && x <= h.x + h.w);
+  }
+
+  function resetPlayerToCheckpoint(){
+    const cp = checkpoints[player.checkpointIndex];
+    player.x = cp.x; player.y = cp.y; player.vx = 0; player.vy = 0; player.onGround = false; player.alive = true;
+    // reseta plataformas crumble
+    level.forEach(o => { if (o.type==='crumble'){ o.state='idle'; o.timer=0; o.fallen=false; o.dropY = undefined; } if(o.type==='drop'){ o.state='idle'; o.vy=0; o.y=o.restY; } });
+    camX = Math.max(0, cp.x - W*0.35);
+  }
+
+  function killPlayer(){
+    if (!player.alive) return;
+    player.alive = false;
+    deaths++;
+    document.getElementById('hudDeaths').textContent = deaths;
+    const tip = DEATH_TIPS[Math.floor(Math.random()*DEATH_TIPS.length)];
+    document.getElementById('deathTip').textContent = tip;
+    document.getElementById('deathOverlay').style.display = 'flex';
+    running = false;
+  }
+
+  function finishLevel(){
+    if (finished) return;
+    finished = true;
+    running = false;
+    const timeStr = (elapsed/1000).toFixed(1);
+    document.getElementById('winStats').textContent =
+      `Tempo: ${timeStr}s · Mortes: ${deaths} · Commits coletados: ${collected}/${totalCommits}`;
+    document.getElementById('winOverlay').style.display = 'flex';
+    // pontuação: menos mortes = melhor. Convertendo para um score onde maior é melhor.
+    const score = Math.max(0, 100000 - deaths*500 - Math.floor(elapsed));
+    if (window.GameLeaderboard) {
+      window.GameLeaderboard.submitScore({ game: 'fuga_do_bug', turma, email: username, name: displayName, score });
+    }
+  }
+
+  // ---------- Input ----------
+  window.addEventListener('keydown', e => {
+    if (['ArrowLeft','a','A'].includes(e.key)) keys.left = true;
+    if (['ArrowRight','d','D'].includes(e.key)) keys.right = true;
+    if ([' ','ArrowUp','w','W'].includes(e.key)) { keys.jump = true; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e => {
+    if (['ArrowLeft','a','A'].includes(e.key)) keys.left = false;
+    if (['ArrowRight','d','D'].includes(e.key)) keys.right = false;
+    if ([' ','ArrowUp','w','W'].includes(e.key)) keys.jump = false;
+  });
+
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (isTouch) document.getElementById('touchControls').classList.add('active');
+  function bindTouch(id, onDown, onUp){
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); });
+    el.addEventListener('touchend', e => { e.preventDefault(); onUp(); });
+  }
+  bindTouch('tcLeft', ()=>keys.left=true, ()=>keys.left=false);
+  bindTouch('tcRight', ()=>keys.right=true, ()=>keys.right=false);
+  bindTouch('tcJump', ()=>keys.jump=true, ()=>keys.jump=false);
+
+  // ---------- Colisão ----------
+  function platformsAt(){ return level.filter(o => o.type==='solid' || o.type==='fake' || o.type==='crumble' || o.type==='drop'); }
+
+  function update(dt){
+    if (!running) return;
+
+    // movimento horizontal
+    if (keys.left){ player.vx -= 1.1; player.facing = -1; }
+    if (keys.right){ player.vx += 1.1; player.facing = 1; }
+    player.vx *= FRICTION;
+    player.vx = Math.max(-MOVE_SPEED, Math.min(MOVE_SPEED, player.vx));
+
+    // pulo
+    if (keys.jump && player.onGround){
+      player.vy = JUMP_VEL;
+      player.onGround = false;
+    }
+
+    player.vy += GRAVITY;
+    if (player.vy > 16) player.vy = 16;
+
+    let nx = player.x + player.vx;
+    let ny = player.y + player.vy;
+
+    // colisão vertical com plataformas (só topo, caindo)
+    player.onGround = false;
+    if (player.vy >= 0){
+      for (const o of platformsAt()){
+        if (o.type==='fake') continue; // sem colisão
+        if (o.type==='crumble' && o.fallen) continue;
+        if (o.type==='drop' && o.state==='fallen') continue;
+        const feetY = ny + player.h;
+        const wasAbove = (player.y + player.h) <= o.y + 1;
+        if (nx + player.w > o.x && nx < o.x + o.w && feetY >= o.y && feetY <= o.y + o.h + 14 && wasAbove){
+          ny = o.y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+          if (o.type==='crumble' && o.state!=='falling'){
+            o.state='falling'; o.timer=0;
+          }
+        }
+      }
+      // chão infinito, exceto em buracos (HOLES)
+      if (!player.onGround && !isHole(nx + player.w/2)){
+        const feetY = ny + player.h;
+        if (feetY >= GROUND_Y){
+          ny = GROUND_Y - player.h;
+          player.vy = 0;
+          player.onGround = true;
+        }
+      }
+    }
+
+    player.x = nx;
+    player.y = ny;
+
+    // crumble: some depois de 0.35s pisado
+    level.forEach(o => {
+      if (o.type==='crumble' && o.state==='falling'){
+        o.timer += dt;
+        if (o.timer > 350) o.fallen = true;
+      }
+    });
+
+    // saw: oscila
+    level.forEach(o => {
+      if (o.type==='saw'){
+        o.x += o.dir * o.speed;
+        if (o.x > o.baseX + o.range) o.dir = -1;
+        if (o.x < o.baseX) o.dir = 1;
+      }
+    });
+
+    // drop: gatilho por posição X do jogador
+    level.forEach(o => {
+      if (o.type==='drop'){
+        if (o.state==='idle' && player.x > o.triggerX) o.state='falling';
+        if (o.state==='falling'){
+          o.vy += 0.9; o.y += o.vy;
+          if (o.y >= GROUND_Y - o.h){ o.y = GROUND_Y - o.h; o.state='fallen'; }
+        }
+      }
+    });
+
+    // commits coletáveis
+    level.forEach(o => {
+      if (o.type==='commit' && !o.collected){
+        if (player.x < o.x+o.w && player.x+player.w > o.x && player.y < o.y+o.h && player.y+player.h > o.y){
+          o.collected = true; collected++;
+        }
+      }
+    });
+
+    // checkpoints
+    checkpoints.forEach((cp, i) => {
+      if (i > player.checkpointIndex && player.x >= cp.x - 10){
+        player.checkpointIndex = i;
+        document.getElementById('hudCheckpoint').textContent = i;
+      }
+    });
+
+    // morte: caiu no vazio
+    if (player.y > H + 100) killPlayer();
+
+    // morte: spikes / saw
+    for (const o of level){
+      if (o.type==='spike' || o.type==='saw'){
+        const ox = o.type==='saw' ? o.x - o.w/2 : o.x;
+        if (player.x < ox+o.w && player.x+player.w > ox && player.y < o.y+o.h && player.y+player.h > o.y){
+          killPlayer(); break;
+        }
+      }
+      if (o.type==='drop' && (o.state==='falling' || o.state==='fallen')){
+        if (player.x < o.x+o.w && player.x+player.w > o.x && player.y < o.y+o.h && player.y+player.h > o.y && o.state==='falling'){
+          killPlayer(); break;
+        }
+      }
+    }
+
+    // fim de fase
+    if (player.x > LEVEL_END_X) finishLevel();
+
+    // câmera
+    const targetCam = player.x - W*0.4;
+    camX += (targetCam - camX) * 0.12;
+    camX = Math.max(0, camX);
+
+    elapsed = performance.now() - startTime;
+    document.getElementById('hudTime').textContent = (elapsed/1000).toFixed(1)+'s';
+  }
+
+  let collected = 0;
+  const totalCommits = level.filter(o=>o.type==='commit').length;
+
+  // ---------- Render ----------
+  function drawStickFigure(px, py){
+    const cx = px + player.w/2;
+    const headR = 9;
+    const bodyTop = py + headR*2;
+    const bodyBottom = py + player.h - 6;
+    ctx.strokeStyle = '#d9e6d2';
+    ctx.fillStyle = '#d9e6d2';
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+
+    // cabeça (círculo)
+    ctx.beginPath();
+    ctx.arc(cx, py+headR, headR, 0, Math.PI*2);
+    ctx.stroke();
+
+    // corpo
+    ctx.beginPath();
+    ctx.moveTo(cx, bodyTop);
+    ctx.lineTo(cx, bodyBottom-8);
+    ctx.stroke();
+
+    // pernas (levemente animadas)
+    const legSwing = player.onGround ? Math.sin(player.animT*0.02)*6*Math.abs(player.vx)/MOVE_SPEED : 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, bodyBottom-8);
+    ctx.lineTo(cx - 6 - legSwing, py+player.h);
+    ctx.moveTo(cx, bodyBottom-8);
+    ctx.lineTo(cx + 6 + legSwing, py+player.h);
+    ctx.stroke();
+
+    // braços
+    const armSwing = player.onGround ? -legSwing : (player.vy<0 ? -8 : 4);
+    ctx.beginPath();
+    ctx.moveTo(cx, bodyTop+6);
+    ctx.lineTo(cx - 9 - armSwing*0.5, bodyTop+16);
+    ctx.moveTo(cx, bodyTop+6);
+    ctx.lineTo(cx + 9 + armSwing*0.5, bodyTop+16);
+    ctx.stroke();
+
+    // olhinho (direção)
+    ctx.beginPath();
+    ctx.arc(cx + player.facing*3, py+headR-1, 1.6, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // fundo com grid sutil tipo terminal
+    ctx.save();
+    ctx.translate(-camX*0.3, 0); // parallax leve
+    ctx.strokeStyle = 'rgba(124,255,63,0.05)';
+    for(let gx=0; gx<W*3; gx+=40){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(-camX, 0);
+
+    // chão (com buracos)
+    ctx.fillStyle = '#0d150c';
+    let gx = 0;
+    const segStart = Math.floor(camX/40)*40 - 40;
+    ctx.strokeStyle = '#1a2618';
+    let cursor = -200;
+    while (cursor < camX + W + 400){
+      let next = cursor + 20;
+      if (!isHole(cursor+10)){
+        ctx.fillRect(cursor, GROUND_Y, 20, H-GROUND_Y);
+      }
+      cursor = next;
+    }
+    ctx.fillStyle = 'rgba(124,255,63,0.06)';
+    if (!isHole) {} // no-op guard
+    cursor = -200;
+    while (cursor < camX + W + 400){
+      if (!isHole(cursor+10)) ctx.fillRect(cursor, GROUND_Y, 20, 3);
+      cursor += 20;
+    }
+
+    // plataformas
+    for (const o of level){
+      if (o.type==='solid' || o.type==='fake'){
+        ctx.fillStyle = '#132014';
+        ctx.strokeStyle = 'var(--green-dim)';
+        ctx.strokeStyle = '#4a9a2a';
+        ctx.fillRect(o.x,o.y,o.w,o.h);
+        ctx.strokeRect(o.x,o.y,o.w,o.h);
+      } else if (o.type==='crumble'){
+        if (o.fallen) continue;
+        const shake = o.state==='falling' ? (Math.random()*3-1.5) : 0;
+        ctx.fillStyle = o.state==='falling' ? '#c1121f33' : '#132014';
+        ctx.strokeStyle = '#d4c86a';
+        ctx.fillRect(o.x+shake,o.y,o.w,o.h);
+        ctx.strokeRect(o.x+shake,o.y,o.w,o.h);
+      } else if (o.type==='spike'){
+        ctx.fillStyle = '#ff3b30';
+        const n = Math.floor(o.w/16);
+        for (let i=0;i<n;i++){
+          ctx.beginPath();
+          ctx.moveTo(o.x+i*16, o.y+o.h);
+          ctx.lineTo(o.x+i*16+8, o.y);
+          ctx.lineTo(o.x+i*16+16, o.y+o.h);
+          ctx.closePath(); ctx.fill();
+        }
+      } else if (o.type==='saw'){
+        ctx.save();
+        ctx.translate(o.x, o.y+o.h/2);
+        ctx.rotate((performance.now()/60)%(Math.PI*2));
+        ctx.fillStyle = '#c9d1c9';
+        ctx.beginPath();
+        const spikes=8, rOut=o.w/2, rIn=rOut*0.55;
+        for(let i=0;i<spikes*2;i++){
+          const ang = (Math.PI/spikes)*i;
+          const r = i%2===0?rOut:rIn;
+          const x = Math.cos(ang)*r, y=Math.sin(ang)*r;
+          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        }
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#050805';
+        ctx.beginPath(); ctx.arc(0,0,rIn*0.35,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      } else if (o.type==='drop'){
+        ctx.fillStyle = o.state==='fallen' ? '#5a1013' : '#c1121f';
+        ctx.fillRect(o.x,o.y,o.w,o.h);
+        ctx.strokeStyle='#ff3b30'; ctx.strokeRect(o.x,o.y,o.w,o.h);
+      } else if (o.type==='flag'){
+        ctx.fillStyle = '#4a9a2a';
+        ctx.fillRect(o.x, o.y, 3, o.h);
+        ctx.fillStyle = '#7cff3f';
+        ctx.beginPath();
+        ctx.moveTo(o.x+3,o.y);
+        ctx.lineTo(o.x+30,o.y+9);
+        ctx.lineTo(o.x+3,o.y+18);
+        ctx.closePath(); ctx.fill();
+      } else if (o.type==='commit'){
+        if (o.collected) continue;
+        ctx.save();
+        ctx.translate(o.x+o.w/2, o.y+o.h/2 + Math.sin(performance.now()/300)*3);
+        ctx.fillStyle = '#d4c86a';
+        ctx.beginPath(); ctx.arc(0,0,7,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#0a0d0a';
+        ctx.font = '10px monospace';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('git', 0, 1);
+        ctx.restore();
+      }
+    }
+
+    // checkpoints (bandeirinhas discretas)
+    checkpoints.forEach((cp,i) => {
+      ctx.fillStyle = i<=player.checkpointIndex ? '#7cff3f' : '#3a4a36';
+      ctx.fillRect(cp.x-1, cp.y-10, 2, 20);
+      ctx.beginPath(); ctx.arc(cp.x, cp.y-10, 3, 0, Math.PI*2); ctx.fill();
+    });
+
+    if (player.alive) drawStickFigure(player.x, player.y);
+    player.animT += 16;
+
+    ctx.restore();
+  }
+
+  // ---------- Loop ----------
+  let lastT = performance.now();
+  function loop(t){
+    const dt = t - lastT; lastT = t;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- Fluxo de telas ----------
+  document.getElementById('btnStart').addEventListener('click', () => {
+    document.getElementById('startOverlay').style.display = 'none';
+    startTime = performance.now();
+    player.checkpointIndex = 0;
+    resetPlayerToCheckpoint();
+    running = true;
+  });
+  document.getElementById('btnRespawn').addEventListener('click', () => {
+    document.getElementById('deathOverlay').style.display = 'none';
+    resetPlayerToCheckpoint();
+    running = true;
+  });
+  document.getElementById('btnRestart').addEventListener('click', () => {
+    document.getElementById('winOverlay').style.display = 'none';
+    deaths = 0; collected = 0; finished = false;
+    level.forEach(o => { if(o.type==='commit') o.collected=false; });
+    document.getElementById('hudDeaths').textContent = 0;
+    player.checkpointIndex = 0;
+    startTime = performance.now();
+    resetPlayerToCheckpoint();
+    running = true;
+  });
+
+  const rankingModal = document.getElementById('rankingModal');
+  document.getElementById('btnRanking').addEventListener('click', async () => {
+    rankingModal.classList.add('show');
+    const list = document.getElementById('rankingList');
+    list.textContent = 'Carregando…';
+    if (window.GameLeaderboard && window.GameLeaderboard.enabled){
+      const { rows } = await window.GameLeaderboard.fetchTop({ game:'fuga_do_bug', turma, limit:10 });
+      if (!rows || !rows.length){ list.textContent = 'Ninguém completou a fase ainda nesta turma.'; return; }
+      list.innerHTML = rows.map((r,i) => `<div class="ranking-row"><span class="pos">${i+1}º</span><span>${r.student_name}</span><span>${r.score}</span></div>`).join('');
+    } else {
+      list.textContent = 'Placar indisponível (Supabase não configurado).';
+    }
+  });
+  document.getElementById('btnCloseRanking').addEventListener('click', () => rankingModal.classList.remove('show'));
+
+  // tests/fuga-do-bug.spec.js chama window.finishLevel() direto — simular a
+  // travessia real dos 8 segmentos via teclado não dá pra automatizar de
+  // forma confiável (física + timing), mesmo padrão de window.endGame em
+  // games/digitacao.html.
+  window.finishLevel = finishLevel;
+
+  resizeCanvas();
+  draw();
+  requestAnimationFrame(loop);
+})();
+</script>
+
+<script>
+  window.ACTIVITY_LOCATION = 'jogos_fuga_do_bug';
+</script>
+<script src="../shared/activity-tracker.js"></script>
+<script src="../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -2600,11 +2600,11 @@
       icon: '🎉',
       src: '../../games/quizrush.html'
     },
-    pontodevirada: {
-      title: 'Ponto de Virada — RPG de Decisões',
-      desc: 'Guie Lucas por 28 decisões em 5 capítulos: dinheiro, confiança, atalhos e as consequências de cada escolha. Sem sorte envolvida — só o peso do que você decide por ele.',
-      icon: '🎭',
-      src: '../../games/ponto-de-virada.html'
+    fugadobug: {
+      title: 'Fuga do Bug — Plataforma de Armadilhas',
+      desc: 'Fuja da branch antes do rebase te apagar: plataformas falsas, serras, blocos que caem e chão que desmorona. Morrer faz parte — memorize o padrão e chegue na bandeira.',
+      icon: '🩹',
+      src: '../../games/fuga-do-bug.html'
     }
     };
   }

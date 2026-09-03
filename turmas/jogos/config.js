@@ -130,7 +130,9 @@ window.TURMA_CONFIG_JOGOS = {
           // Trilha individual, adaptada — só aparece pro aluno listado em
           // visibleFor (professor sempre vê, pra acompanhar). Ver
           // trilhaStatus() em shared/platform-core.js. Versão reduzida do
-          // jogo "Ponto de Virada" (games/ponto-de-virada.html): 6 cenas,
+          // jogo "Ponto de Virada" (removido do portal a pedido do
+          // professor — esta versão adaptada não dependia do arquivo
+          // original e continua valendo por conta própria): 6 cenas,
           // 2 escolhas por cena (em vez de 3), pouco texto e emoji grande
           // por escolha.
           key: 'ponto-de-virada-engel',

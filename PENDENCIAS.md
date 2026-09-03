@@ -1,5 +1,26 @@
 # Pendências
 
+## Jogo "Ponto de Virada" removido do portal
+
+**Status:** concluído — remoção a pedido do professor. O jogo compartilhado
+"Ponto de Virada — RPG de Decisões" (`games/ponto-de-virada.html`, 28
+decisões em 5 capítulos, disponível pra qualquer aluno na aba Jogos) saiu
+do registro de jogos (`buildGames()` em `shared/platform-core.js`) e o
+arquivo foi apagado. A aba Jogos volta a ter 5 jogos.
+
+**Não afeta** a trilha individual "Ponto de Virada (Engel)"
+(`atividades/ponto-de-virada-engel.html`, `visibleFor: ['engel.fraga']` em
+`turmas/jogos/config.js`) — é uma versão adaptada e independente (6 cenas,
+2 escolhas cada), que só reaproveitou a IDEIA do jogo original; não
+depende do arquivo removido pra funcionar, e continua no portal normalmente.
+
+**Não tratado:** linhas antigas em `game_scores` (Supabase) com
+`game = 'pontodevirada'` continuam no banco — órfãs, inofensivas (não
+aparecem em nenhum placar, já que o jogo saiu da lista), sem script de
+reset dedicado (diferente das remoções de trilha, que tinham
+`student_module_progress` afetando cálculo de %, isso aqui não afeta mais
+nada).
+
 ## Trilha "Projeto de Vida & Mundo do Trabalho (Engel)"
 
 **Status:** concluído — trilha individual nova (`visibleFor: ['engel.fraga']`),
