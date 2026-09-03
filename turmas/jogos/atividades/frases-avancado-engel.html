@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Formar Frases: Avançado (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:14px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:16px; width:100%; height:100%; }
+
+  .sidebar{
+    width:74px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+    display:flex; flex-direction:column; gap:8px; align-items:center;
+  }
+  .step-icon{
+    width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+    font-size:24px; border:2px solid var(--line); background:var(--panel2); cursor:pointer;
+    border-radius:8px; position:relative; flex-shrink:0;
+  }
+  .step-icon.active{ border-color:var(--green); }
+  .step-icon.completed{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+  .step-icon.wrong{ border-color:var(--blood-bright); background:rgba(255,59,48,0.12); }
+  .step-icon.locked{ opacity:0.35; cursor:not-allowed; }
+  .step-icon .badge{ position:absolute; top:-6px; right:-6px; font-size:15px; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; height:100%; overflow-y:auto; align-items:center; }
+
+  .level-tag{
+    display:inline-block; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--yellow); border:1px dashed var(--yellow); border-radius:12px; padding:4px 12px;
+  }
+
+  .clue-row{ display:flex; gap:16px; justify-content:center; align-items:center; min-height:60px; }
+  .clue-row .clue{ line-height:1; transition:opacity .2s ease; }
+  .clue-row .clue.active{ font-size:52px; opacity:1; }
+  .clue-row .clue.pending{ font-size:26px; opacity:0.3; filter:grayscale(1); }
+  .clue-row .clue.done{ font-size:22px; opacity:0.4; color:var(--green); }
+
+  .sentence-box{
+    background:var(--panel); border:1px solid var(--line); padding:20px 26px;
+    font-family:'VT323', monospace; font-size:30px; color:var(--ink); text-align:center;
+    letter-spacing:0.5px; width:100%; max-width:640px;
+  }
+  .sentence-box .blank{ color:var(--yellow); border-bottom:3px dotted var(--yellow); padding:0 6px; }
+  .sentence-box .filled{ color:var(--green); border-bottom:3px solid var(--green); padding:0 6px; }
+
+  .word-options{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; width:100%; max-width:640px; }
+  .word-btn{
+    flex:1 1 120px; max-width:180px; background:var(--panel2); border:2px solid var(--green-dim); border-radius:10px;
+    padding:16px 10px; cursor:pointer; font-family:inherit; color:var(--ink); font-size:17px; font-weight:800; text-align:center;
+  }
+  .word-btn:hover{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .word-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .word-btn.correct-pick{ border-color:var(--green); background:rgba(124,255,63,0.18); opacity:1; }
+  .word-btn.wrong-pick{ border-color:var(--blood-bright); background:rgba(255,59,48,0.18); opacity:1; }
+
+  .feedback{
+    min-height:26px; font-size:17px; font-weight:800; text-align:center;
+  }
+  .feedback.ok{ color:var(--green); }
+  .feedback.fail{ color:var(--blood-bright); }
+
+  .actions{ display:flex; gap:10px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 26px; cursor:pointer; border-radius:8px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .skip-form{
+    display:none; flex-direction:column; gap:8px; max-width:320px; margin:0 auto;
+    background:var(--panel2); border:1px dashed var(--yellow); padding:12px 14px; flex-shrink:0; width:100%;
+  }
+  .skip-form.show{ display:flex; }
+  .skip-form label{ display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .skip-form input{
+    font-family:inherit; font-size:14px; padding:8px 9px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .skip-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .skip-msg{ font-size:12px; padding:6px 8px; border:1px dashed var(--line); display:none; }
+  .skip-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); display:block; }
+  .skip-msg.ok{ border-color:var(--green); color:var(--green); display:block; }
+
+  .trophy-box{ text-align:center; }
+  .trophy-box .big{ font-size:64px; margin-bottom:8px; }
+  .trophy-box h2{ font-family:'VT323', monospace; font-size:30px; color:var(--green); margin:0 0 8px; }
+  .trophy-box p{ font-size:17px; color:var(--ink); line-height:1.6; }
+
+  /* Tela de regras/início e tela de bloqueio (trava de tela — sair da aba
+     conta aviso, ver shared/exam-proctor.js) */
+  .gate-wrap{ width:100%; height:100%; display:none; align-items:center; justify-content:center; padding:14px; }
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{ font-family:'VT323', monospace; font-size:24px; color:var(--yellow); margin:0 0 10px; letter-spacing:1px; }
+  .gate-card{ max-width:440px; width:100%; text-align:center; }
+  .gate-card .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .gate-card p{ font-size:15px; line-height:1.7; color:var(--ink); margin:0 0 8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:280px; margin:16px auto 0; text-align:left; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(5,10,16,0.88); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:380px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:15px; line-height:1.7; margin:0 0 14px; color:var(--ink); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; flex-direction:row; flex-wrap:wrap; justify-content:center; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    .sentence-box{ font-size:22px; padding:16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'frases_engel_avancado';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🧩 FORMAR FRASES — AVANÇADO</div>
+    <div>✅ <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="gate-wrap" id="gateWrap"></div>
+
+  <div class="stage" id="stageWrap" style="display:none;">
+    <div class="layout">
+      <div class="sidebar" id="stepList"></div>
+
+      <div class="main-panel">
+        <div class="level-tag" id="levelTag"></div>
+        <div class="clue-row" id="clueRow"></div>
+        <div class="sentence-box" id="sentenceBox"></div>
+        <div class="word-options" id="wordOptions"></div>
+        <div class="feedback" id="feedback"></div>
+
+        <div class="actions">
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">➡️ Próxima</button>
+          <button class="btn btn-secondary" id="btnSkip">⏭️ Pular (professor)</button>
+        </div>
+
+        <div class="skip-form" id="skipForm">
+          <label>Token do professor
+            <input type="text" id="skipToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
+          <div class="skip-msg" id="skipMsg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `frases_engel_avancado_progress_${username}`;
+
+  // 2ª atividade de "Formar Frases (Engel)" — segue liberada só depois da
+  // 1ª (atividades/frases-engel.html, ver requires:'jogo' em
+  // turmas/jogos/config.js). Mesma mecânica de base (clicar palavras, sem
+  // digitar; emoji como pista; só 1 tentativa por frase, sem chute
+  // repetido), mas MAIS DIFÍCIL de 2 jeitos ao mesmo tempo:
+  //   1) Falta mais de 1 palavra por frase (2 no nível 1/2, 3 no nível 3) —
+  //      tem que clicar VÁRIAS palavras, na ORDEM certa, não só a última.
+  //   2) A pista (emoji) de cada palavra só aparece quando chega a vez
+  //      dela — não dá pra "ver todas as pistas antes" e planejar; ele
+  //      precisa resolver uma de cada vez, na sequência.
+  // Errar QUALQUER palavra da sequência (errada, ou certa fora de ordem)
+  // já trava a frase inteira e passa pra próxima — mesma regra de sempre,
+  // sem revelar a resposta certa.
+  const CHALLENGES = [
+    // Nível 1 — 3 palavras, faltam as 2 últimas (5 frases)
+    { id: 1, level: 1, prefix: ['Eu', 'quero'], blanks: [{ word: 'comer', clue: '🍽️' }, { word: 'maçã', clue: '🍎' }], distractors: ['dormir'] },
+    { id: 2, level: 1, prefix: ['Eu', 'vou'], blanks: [{ word: 'lavar', clue: '🧼' }, { word: 'mãos', clue: '✋' }], distractors: ['correr'] },
+    { id: 3, level: 1, prefix: ['Ele', 'quer'], blanks: [{ word: 'comer', clue: '🍽️' }, { word: 'pizza', clue: '🍕' }], distractors: ['pular'] },
+    { id: 4, level: 1, prefix: ['Nós', 'vamos'], blanks: [{ word: 'comer', clue: '🍽️' }, { word: 'bolo', clue: '🎂' }], distractors: ['nadar'] },
+    { id: 5, level: 1, prefix: ['Ela', 'vai'], blanks: [{ word: 'beber', clue: '🥤' }, { word: 'suco', clue: '🧃' }], distractors: ['escrever'] },
+    // Nível 2 — 4 palavras, faltam as 2 últimas (5 frases)
+    { id: 6, level: 2, prefix: ['O', 'menino', 'quer'], blanks: [{ word: 'comer', clue: '🍽️' }, { word: 'sorvete', clue: '🍦' }], distractors: ['dançar'] },
+    { id: 7, level: 2, prefix: ['A', 'menina', 'vai'], blanks: [{ word: 'comer', clue: '🍽️' }, { word: 'chocolate', clue: '🍫' }], distractors: ['cantar'] },
+    { id: 8, level: 2, prefix: ['O', 'cachorro', 'quer'], blanks: [{ word: 'comer', clue: '🍽️' }, { word: 'osso', clue: '🦴' }], distractors: ['ler'] },
+    { id: 9, level: 2, prefix: ['Nós', 'vamos'], blanks: [{ word: 'assistir', clue: '📺' }, { word: 'filme', clue: '🎬' }], distractors: ['desenhar'] },
+    { id: 10, level: 2, prefix: ['Eles', 'vão'], blanks: [{ word: 'jogar', clue: '🎮' }, { word: 'futebol', clue: '⚽' }], distractors: ['estudar'] },
+    // Nível 3 — 5 palavras, faltam as 3 últimas (5 frases)
+    { id: 11, level: 3, prefix: ['Hoje', 'eu', 'vou'], blanks: [{ word: 'estudar', clue: '📚' }, { word: 'matemática', clue: '🔢' }, { word: 'cedo', clue: '🌅' }], distractors: ['brincar', 'tarde'] },
+    { id: 12, level: 3, prefix: ['Amanhã', 'nós', 'vamos'], blanks: [{ word: 'comprar', clue: '🛒' }, { word: 'presente', clue: '🎁' }, { word: 'tarde', clue: '🌇' }], distractors: ['vender', 'cedo'] },
+    { id: 13, level: 3, prefix: ['Hoje', 'ela', 'vai'], blanks: [{ word: 'desenhar', clue: '🎨' }, { word: 'gato', clue: '🐱' }, { word: 'agora', clue: '⏰' }], distractors: ['escrever', 'depois'] },
+    { id: 14, level: 3, prefix: ['Amanhã', 'ele', 'vai'], blanks: [{ word: 'assistir', clue: '📺' }, { word: 'filme', clue: '🎬' }, { word: 'noite', clue: '🌙' }], distractors: ['jogar', 'cedo'] },
+    { id: 15, level: 3, prefix: ['Hoje', 'nós', 'vamos'], blanks: [{ word: 'ajudar', clue: '🤝' }, { word: 'mamãe', clue: '👩' }, { word: 'depois', clue: '➡️' }], distractors: ['brincar', 'agora'] }
+  ];
+
+  const LEVEL_LABEL = {
+    1: 'Nível 1 · 3 palavras (2 na ordem certa)',
+    2: 'Nível 2 · 4 palavras (2 na ordem certa)',
+    3: 'Nível 3 · 5 palavras (3 na ordem certa)'
+  };
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Formar Frases — Avançado (Engel)',
+      subtitle: 'Jogo adaptado · Trilha individual · Turma Jogos Digitais',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: `${LEVEL_LABEL[c.level]} — Frase ${i + 1}`,
+        prompt: `"${c.prefix.join(' ')} ${c.blanks.map(() => '___').join(' ')}" ${c.blanks.map(b => b.clue).join(' ')}`,
+        answer: `${c.prefix.join(' ')} ${c.blanks.map(b => b.word).join(' ')}`
+      })),
+      fileName: 'frases-avancado-engel-gabarito.txt'
+    });
+  };
+
+  const stepListEl = document.getElementById('stepList');
+  const levelTagEl = document.getElementById('levelTag');
+  const clueRowEl = document.getElementById('clueRow');
+  const sentenceBoxEl = document.getElementById('sentenceBox');
+  const wordOptionsEl = document.getElementById('wordOptions');
+  const feedbackEl = document.getElementById('feedback');
+  const btnNext = document.getElementById('btnNext');
+  const lblProgress = document.getElementById('lblProgress');
+  const btnSkip = document.getElementById('btnSkip');
+  const skipForm = document.getElementById('skipForm');
+  const skipToken = document.getElementById('skipToken');
+  const btnConfirmSkip = document.getElementById('btnConfirmSkip');
+  const skipMsg = document.getElementById('skipMsg');
+
+  function hideSkipForm() {
+    skipForm.classList.remove('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    skipToken.value = '';
+    btnConfirmSkip.disabled = false;
+    btnConfirmSkip.textContent = 'Confirmar e pular';
+  }
+
+  function getCompleted() {
+    try { return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveCompleted(set) { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...set])); }
+
+  const RESULTS_KEY = `frases_engel_avancado_results_${username}`;
+  function getResults() {
+    try { return JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveResults(obj) { localStorage.setItem(RESULTS_KEY, JSON.stringify(obj)); }
+
+  let completed = getCompleted();
+  let results = getResults();
+  let selectedId = CHALLENGES.find(c => !completed.has(c.id))?.id || CHALLENGES[0].id;
+  let filledCount = 0; // quantas palavras da frase ATUAL já foram acertadas, em ordem
+
+  // Bypass pro professor: ver PENDENCIAS.md, "Desbloquear todas as etapas
+  // das atividades para o professor" — mesmo padrão dos outros jogos
+  // adaptados do Engel.
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+    if (isProfessor) renderSidebar();
+  })();
+
+  function isUnlocked(challenge) {
+    if (isProfessor) return true;
+    const idx = CHALLENGES.findIndex(c => c.id === challenge.id);
+    if (idx === 0) return true;
+    return completed.has(CHALLENGES[idx - 1].id);
+  }
+
+  function renderSidebar() {
+    stepListEl.innerHTML = '';
+    CHALLENGES.forEach(c => {
+      const unlocked = isUnlocked(c);
+      const isDone = completed.has(c.id);
+      const result = results[c.id];
+      const badge = result === 'correct' ? '✅' : result === 'wrong' ? '❌' : result === 'skipped' ? '⏭️' : '';
+      const item = document.createElement('div');
+      item.className = 'step-icon' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (result === 'wrong' ? ' wrong' : '') + (!unlocked ? ' locked' : '');
+      item.innerHTML = `${unlocked ? c.blanks[0].clue : '🔒'}${badge ? `<span class="badge">${badge}</span>` : ''}`;
+      if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
+      stepListEl.appendChild(item);
+    });
+    lblProgress.textContent = `${completed.size}/${CHALLENGES.length}`;
+  }
+
+  function renderSentence(challenge, filled) {
+    const prefix = challenge.prefix.join(' ');
+    const blanksHtml = challenge.blanks.map((b, i) =>
+      i < filled ? `<span class="filled">${b.word}</span>` : `<span class="blank">___</span>`
+    ).join(' ');
+    sentenceBoxEl.innerHTML = `${prefix} ${blanksHtml}`;
+  }
+
+  // A pista de uma palavra só aparece quando chega a vez dela (❔ pras que
+  // ainda não chegaram, ✓ pequeno pras já resolvidas) — é isso que
+  // impede "ver tudo de uma vez e planejar", deixando bem mais difícil
+  // que a 1ª atividade (que já mostrava a pista inteira de cara).
+  function renderClueRow(challenge, filled) {
+    clueRowEl.innerHTML = challenge.blanks.map((b, i) => {
+      if (i < filled) return `<span class="clue done">✓</span>`;
+      if (i === filled) return `<span class="clue active">${b.clue}</span>`;
+      return `<span class="clue pending">❔</span>`;
+    }).join('');
+  }
+
+  function selectChallenge(id) {
+    const challenge = CHALLENGES.find(c => c.id === id);
+    if (!challenge || !isUnlocked(challenge)) return;
+    selectedId = id;
+    filledCount = 0;
+
+    levelTagEl.textContent = LEVEL_LABEL[challenge.level];
+    renderSentence(challenge, 0);
+    renderClueRow(challenge, 0);
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'feedback';
+    btnNext.style.display = 'none';
+    hideSkipForm();
+
+    wordOptionsEl.innerHTML = '';
+    const pool = shuffle([...challenge.blanks.map(b => b.word), ...challenge.distractors]);
+    pool.forEach(word => {
+      const btn = document.createElement('button');
+      btn.className = 'word-btn';
+      btn.textContent = word;
+      btn.addEventListener('click', () => pickWord(challenge, word, btn));
+      wordOptionsEl.appendChild(btn);
+    });
+
+    renderSidebar();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('frases_engel_avancado', `Formar Frases — Avançado (Engel) — Frase ${challenge.id}`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size });
+    }
+  }
+
+  // Só 1 tentativa por frase, igual a 1ª atividade — mas agora "a tentativa"
+  // cobre a SEQUÊNCIA inteira de palavras: acertar uma libera a próxima
+  // pista e mantém as outras opções clicáveis; errar QUALQUER uma (errada
+  // de vez, ou certa só que fora de ordem) já trava tudo e conta como
+  // errada — não existe "voltar" pra corrigir só a palavra que errou.
+  function pickWord(challenge, word, btnEl) {
+    const expectedWord = challenge.blanks[filledCount].word;
+    const isCorrect = word === expectedWord;
+
+    if (isCorrect) {
+      btnEl.disabled = true;
+      btnEl.classList.add('correct-pick');
+      filledCount++;
+      renderSentence(challenge, filledCount);
+      renderClueRow(challenge, filledCount);
+
+      if (filledCount < challenge.blanks.length) {
+        return; // ainda faltam palavras — segue nesta mesma frase
+      }
+    } else {
+      wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+      btnEl.classList.add('wrong-pick');
+    }
+
+    finalizeChallenge(challenge, isCorrect);
+  }
+
+  function finalizeChallenge(challenge, isCorrect) {
+    wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+    feedbackEl.textContent = isCorrect ? '✅ Isso mesmo!' : '❌ Não foi dessa vez';
+    feedbackEl.className = 'feedback ' + (isCorrect ? 'ok' : 'fail');
+
+    completed.add(challenge.id);
+    results[challenge.id] = isCorrect ? 'correct' : 'wrong';
+    saveCompleted(completed);
+    saveResults(results);
+
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    if (isLast) {
+      renderSidebar();
+      setTimeout(renderTrophy, 900);
+    } else {
+      btnNext.style.display = 'inline-block';
+      renderSidebar();
+    }
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('frases_engel_avancado', `Formar Frases — Avançado (Engel) — Frase ${challenge.id} (${isCorrect ? 'certa' : 'errada'})`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, correct: isCorrect });
+    }
+  }
+
+  function renderTrophy() {
+    const rightCount = CHALLENGES.filter(c => results[c.id] === 'correct').length;
+    const layout = document.querySelector('.main-panel');
+    layout.innerHTML = `
+      <div class="trophy-box">
+        <div class="big">🏆</div>
+        <h2>Terminou tudo!</h2>
+        <p>Você completou as 15 frases avançadas, com mais de uma palavra faltando em cada.</p>
+        <p>Você acertou ${rightCount} de ${CHALLENGES.length} sozinho.</p>
+      </div>
+    `;
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('frases_engel_avancado', 'Formar Frases — Avançado (Engel) — Concluído', { total: CHALLENGES.length, completed: completed.size, correct: rightCount, finished: true });
+    }
+  }
+
+  // "Pular etapa": pro professor avançar o Engel quando vir que ele está
+  // travado numa frase — exige a credencial do professor (mesma verificação
+  // do "Dar visto" em shared/professor-visto.js), pra não virar um botão
+  // que qualquer aluno usa pra pular sozinho.
+  function skipCurrentChallenge(nomeProfessor) {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+
+    completed.add(challenge.id);
+    results[challenge.id] = 'skipped';
+    saveCompleted(completed);
+    saveResults(results);
+    filledCount = challenge.blanks.length;
+    renderSentence(challenge, filledCount);
+    renderClueRow(challenge, filledCount);
+    wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+    feedbackEl.textContent = `⏭️ Pulado pelo professor (${nomeProfessor}).`;
+    feedbackEl.className = 'feedback ok';
+
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    if (isLast) {
+      renderSidebar();
+      setTimeout(renderTrophy, 700);
+    } else {
+      btnNext.style.display = 'inline-block';
+      renderSidebar();
+    }
+    hideSkipForm();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('frases_engel_avancado', `Formar Frases — Avançado (Engel) — Frase ${challenge.id} (pulada pelo professor)`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, skipped: true });
+    }
+  }
+
+  btnSkip.addEventListener('click', () => {
+    skipForm.classList.toggle('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+  });
+  btnConfirmSkip.addEventListener('click', async () => {
+    const t = skipToken.value;
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    if (!t) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Informe o token do professor.';
+      return;
+    }
+    btnConfirmSkip.disabled = true;
+    btnConfirmSkip.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificarToken(t)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        skipMsg.className = 'skip-msg erro';
+        skipMsg.textContent = result.erro;
+        btnConfirmSkip.disabled = false;
+        btnConfirmSkip.textContent = 'Confirmar e pular';
+        return;
+      }
+      skipCurrentChallenge(result.nome);
+    } catch (e) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      btnConfirmSkip.disabled = false;
+      btnConfirmSkip.textContent = 'Confirmar e pular';
+    }
+  });
+  btnNext.addEventListener('click', () => {
+    const idx = CHALLENGES.findIndex(c => c.id === selectedId);
+    const next = CHALLENGES[idx + 1];
+    if (next) selectChallenge(next.id);
+  });
+
+  // Trava de tela: sair da aba/janela durante o jogo conta 1 aviso; na 2ª
+  // vez, bloqueia até o professor liberar com o token — mesmo mecanismo
+  // (shared/exam-proctor.js) da 1ª atividade (atividades/frases-engel.html).
+  const gateWrap = document.getElementById('gateWrap');
+  const stageWrap = document.getElementById('stageWrap');
+
+  function allChallengesAttempted() {
+    return completed.size >= CHALLENGES.length;
+  }
+
+  function startGame() {
+    gateWrap.style.display = 'none';
+    stageWrap.style.display = 'flex';
+    renderSidebar();
+    if (allChallengesAttempted()) {
+      renderTrophy();
+    } else {
+      selectChallenge(selectedId);
+    }
+  }
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Aviso ${count}/2</h2>
+        <p>Você saiu da tela do jogo. Na <b>2ª vez</b>, o jogo fica <b>bloqueado</b> até o professor liberar.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen(guard) {
+    stageWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🔒</div>
+        <h2>Jogo bloqueado</h2>
+        <p>Você saiu da tela 2 vezes. Peça ajuda ao professor.</p>
+        <p>Ele libera com o mesmo token de "Dar visto" (Gestão → Token).</p>
+        <div class="token-form">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen(guard);
+    });
+  }
+
+  function renderStartScreen(guard) {
+    stageWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🧩</div>
+        <h2>Antes de começar</h2>
+        <p>São 15 frases — agora faltam <b>VÁRIAS</b> palavras, não só a última. Clique nelas na <b>ordem certa</b>.</p>
+        <p>A pista de cada palavra só aparece quando chega a vez dela.</p>
+        <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar — sair da tela conta um aviso, e a 2ª vez bloqueia até o professor liberar.</p>
+        <div class="actions" style="justify-content:center; margin-top:10px;">
+          <button class="btn" id="btnIniciar">▶ Começar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen(guard),
+        isCompleted: allChallengesAttempted
+      });
+      startGame();
+    });
+  }
+
+  (async function boot() {
+    const guard = await window.PortalExamGuard.create('frases_engel_avancado');
+
+    // Sem sessão de aluno reconhecida (professor, ou iframe oculto da
+    // Gestão gerando gabarito remotamente) ou jogo já 100% respondido —
+    // guarda desligada: abre direto, sem tela de regras nem risco de bloqueio.
+    if (guard.disabled || allChallengesAttempted()) {
+      startGame();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen(guard);
+    } else {
+      renderStartScreen(guard);
+    }
+  })();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

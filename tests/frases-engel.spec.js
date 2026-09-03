@@ -37,7 +37,10 @@ async function simulateTabHidden(frame) {
 async function openJogo(page) {
   await page.goto(ENGEL_URL);
   await page.click('.game-card:has-text("Comunicação (Engel)")');
-  await page.click('#moduleSelector_frases-engel .game-card');
+  // .first(): a trilha "Formar Frases" agora tem 2 módulos (esta 1ª
+  // atividade + "Avançado", ver tests/frases-avancado-engel.spec.js) — sem
+  // filtro, o seletor batia em ambos os cards.
+  await page.click('#moduleSelector_frases-engel .game-card >> nth=0');
   const frame = page.frameLocator('#moduleFrame_frases-engel');
   await frame.locator('#btnIniciar').click();
   return frame;
@@ -77,7 +80,7 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
     await stubSupabaseFake(page, {});
     await page.goto(ENGEL_URL);
     await page.click('.game-card:has-text("Comunicação (Engel)")');
-    await page.click('#moduleSelector_frases-engel .game-card');
+    await page.click('#moduleSelector_frases-engel .game-card >> nth=0');
     const frame = page.frameLocator('#moduleFrame_frases-engel');
 
     await expect(frame.locator('#gateWrap')).toContainText('Antes de começar');
@@ -184,7 +187,10 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = await expandGabaritoRow(page, 'Formar Frases');
+    // Título completo, não só "Formar Frases" — a trilha agora tem 2
+    // módulos com gabarito (este + "Avançado"), e ambos começam com esse
+    // prefixo.
+    const row = await expandGabaritoRow(page, 'Associação de Palavras');
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
       row.locator('[data-gabarito-mod]').click(),
@@ -244,7 +250,7 @@ test.describe('Jogo "Formar Frases (Engel)" — trava de tela', () => {
 
     await page.goto(ENGEL_URL);
     await page.click('.game-card:has-text("Comunicação (Engel)")');
-    await page.click('#moduleSelector_frases-engel .game-card');
+    await page.click('#moduleSelector_frases-engel .game-card >> nth=0');
     const frame = page.frameLocator('#moduleFrame_frases-engel');
 
     // já respondeu tudo — não há mais risco de cola, então nem passa pela
@@ -264,7 +270,7 @@ test.describe('Jogo "Formar Frases (Engel)" — trava de tela', () => {
     await stubSupabaseFake(page, SEED_PROFESSOR);
     await page.goto(PROFESSOR_URL);
     await page.click('.game-card:has-text("Comunicação (Engel)")');
-    await page.click('#moduleSelector_frases-engel .game-card');
+    await page.click('#moduleSelector_frases-engel .game-card >> nth=0');
     const frame = page.frameLocator('#moduleFrame_frases-engel');
 
     await expect(frame.locator('#stageWrap')).toBeVisible();

@@ -861,6 +861,13 @@ window.TURMA_CONFIG_JOGOS = {
               icon: '🧩', src: 'atividades/frases-engel.html',
               progressKey: 'frases_engel_progress_', progressTotal: 15,
               hasGabarito: true
+            },
+            {
+              key: 'jogo-avancado', title: 'Formar Frases — Avançado',
+              desc: '15 frases mais difíceis: agora falta mais de 1 palavra por frase (até 3, na ordem certa), e a pista de cada uma só aparece quando chega a vez dela.',
+              icon: '🧠', src: 'atividades/frases-avancado-engel.html',
+              progressKey: 'frases_engel_avancado_progress_', progressTotal: 15,
+              requires: 'jogo', hasGabarito: true
             }
           ]
         }
