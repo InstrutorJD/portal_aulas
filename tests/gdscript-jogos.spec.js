@@ -13,6 +13,7 @@ const TEORIA_URL = '/turmas/jogos/atividades/gdscript-teoria.html?user=breno.sil
 const COMPARACAO_URL = '/turmas/jogos/atividades/gdscript-comparacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const PRATICA_SIMPLES_URL = '/turmas/jogos/atividades/gdscript-pratica-simples.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const DESAFIOS_URL = '/turmas/jogos/atividades/gdscript-desafios-pratica.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
+const CENARIOS_URL = '/turmas/jogos/atividades/gdscript-cenarios-pratica.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 
 const SOLUTIONS_PRATICA_SIMPLES = [
   'var resultado = 100',
@@ -41,6 +42,24 @@ const SOLUTIONS_DESAFIOS = [
   'func Dobro(numero):\n\treturn numero * 2\nvar resultado = Dobro(5)',
   'var resultado\nif idade >= 18:\n\tresultado = "Maior"\nelse:\n\tresultado = "Menor"',
   'for i in range(5):\n\tprint(i)',
+];
+
+const SOLUTIONS_CENARIOS = [
+  'var resultado = posicao_x + velocidade',
+  'var resultado = velocidade_y + gravidade',
+  'var resultado\nif posicao_x + velocidade > largura_tela:\n\tresultado = largura_tela\nelse:\n\tresultado = posicao_x + velocidade',
+  'func mover(posicao, vel):\n\treturn posicao + vel\nvar resultado = mover(posicao_x, velocidade)',
+  'var resultado\nif posicao_y >= altura_chao:\n\tresultado = true\nelse:\n\tresultado = false',
+  'var resultado\nif posicao_x < 0:\n\tresultado = true\nelse:\n\tresultado = false',
+  'var resultado\nif posicao_jogador >= posicao_inimigo - alcance && posicao_jogador <= posicao_inimigo + alcance:\n\tresultado = true\nelse:\n\tresultado = false',
+  'var resultado\nif caixa_a_esquerda < caixa_b_direita && caixa_a_direita > caixa_b_esquerda:\n\tresultado = true\nelse:\n\tresultado = false',
+  'func calcularDano(atk, def):\n\treturn atk - def\nvar resultado = calcularDano(ataque, defesa)',
+  'var resultado = ataque - defesa\nif resultado < 1:\n\tresultado = 1',
+  'var resultado\nif tempo_desde_ataque >= cooldown:\n\tresultado = true\nelse:\n\tresultado = false',
+  'var resultado\nif rolagem <= chance_critica:\n\tresultado = ataque * 2\nelse:\n\tresultado = ataque',
+  'var resultado = dano - reducao_escudo\nif resultado < 0:\n\tresultado = 0',
+  'var resultado\nif esquivou:\n\tresultado = vida\nelse:\n\tresultado = vida - dano',
+  'func estaVivo(v):\n\treturn v > 0\nvar resultado = estaVivo(vida)',
 ];
 
 async function solveCurrent(page, code) {
@@ -222,8 +241,94 @@ test.describe('turmas/jogos/atividades/gdscript-desafios-pratica.html', () => {
   });
 });
 
+test.describe('turmas/jogos/atividades/gdscript-cenarios-pratica.html', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubSupabaseFake(page, {});
+  });
+
+  test('carrega travado a partir do 2º desafio, com o desafio 1 (Movimento) já disponível', async ({ page }) => {
+    await page.goto(CENARIOS_URL);
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 1: Mover para o lado');
+    await expect(page.locator('.challenge-item').nth(1)).toHaveClass(/locked/);
+  });
+
+  test('resolve os 15 cenários (movimento, colisão, ataque e defesa) em sequência e conclui o módulo', async ({ page }) => {
+    await page.goto(CENARIOS_URL);
+    await solveAll(page, SOLUTIONS_CENARIOS);
+    await expect(page.locator('#consoleOutput')).toContainText('Você concluiu todos os desafios');
+    await expect(page.locator('#lblProgress')).toHaveText('15/15');
+
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`gdscript_cenarios_progress_${u}`)), 'breno.silva80');
+    expect(progress).toHaveLength(15);
+  });
+
+  test('colisão entre caixas exige a condição das DUAS bordas — só uma delas não basta', async ({ page }) => {
+    await page.goto(CENARIOS_URL);
+    for (let i = 0; i < 7; i++) {
+      await solveCurrent(page, SOLUTIONS_CENARIOS[i]);
+      await page.click('#btnNext');
+    }
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 8: Colisão entre duas caixas');
+
+    // só confere a borda esquerda, ignora a direita — falha no caso "encostando" (esperado false).
+    await solveCurrent(page, 'var resultado\nif caixa_a_esquerda < caixa_b_direita:\n\tresultado = true\nelse:\n\tresultado = false');
+    await expect(page.locator('#consoleOutput')).toContainText('❌');
+    await expect(page.locator('#btnNext')).toBeHidden();
+
+    await solveCurrent(page, SOLUTIONS_CENARIOS[7]);
+    await expect(page.locator('#consoleOutput')).toContainText('✅');
+    await expect(page.locator('#btnNext')).toBeVisible();
+  });
+
+  test('dano mínimo garantido: esquecer o "piso" de 1 falha quando ataque - defesa não é suficiente', async ({ page }) => {
+    await page.goto(CENARIOS_URL);
+    for (let i = 0; i < 9; i++) {
+      await solveCurrent(page, SOLUTIONS_CENARIOS[i]);
+      await page.click('#btnNext');
+    }
+    await expect(page.locator('#challengeTitle')).toHaveText('Desafio 10: Dano mínimo garantido');
+
+    // sem o "if resultado < 1", o caso ataque=5/defesa=20 dá -15 em vez de 1.
+    await solveCurrent(page, 'var resultado = ataque - defesa');
+    await expect(page.locator('#consoleOutput')).toContainText('❌');
+
+    await solveCurrent(page, SOLUTIONS_CENARIOS[9]);
+    await expect(page.locator('#consoleOutput')).toContainText('✅');
+  });
+
+  test('escrever JS (`&&` fora de uma condição GDScript, `;`, chaves) em vez de GDScript não passa', async ({ page }) => {
+    await page.goto(CENARIOS_URL);
+    await solveCurrent(page, 'let resultado = posicao_x + velocidade;');
+    await expect(page.locator('#consoleOutput')).toContainText('não reconheci o comando');
+    await expect(page.locator('#btnNext')).toBeHidden();
+  });
+
+  test('gabarito lista os 15 cenários, com o grupo (Movimento/Colisão/Ataque/Defesa) no título', async ({ page }) => {
+    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+
+    const row = await expandGabaritoRow(page, 'Cenários de Jogo (GDScript)');
+    await expect(row).toBeVisible();
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 15000 }),
+      row.locator('[data-gabarito-mod]').click(),
+    ]);
+    expect(download.suggestedFilename()).toBe('gdscript-cenarios-pratica-gabarito.txt');
+
+    const filePath = await download.path();
+    const fs = require('node:fs');
+    const content = fs.readFileSync(filePath, 'utf-8');
+    expect(content).toContain('GABARITO');
+    expect(content).toContain('[Movimento] Mover para o lado');
+    expect(content).toContain('[Defesa] Função "estaVivo"');
+    expect(content).toContain('posicao_x = 100, velocidade = 5 → resultado deve ser 105');
+  });
+});
+
 test.describe('turmas/jogos/plataforma.html — trilha GDScript', () => {
-  test('aparece em Fundamentos de Programação, com os 4 módulos em ordem (teoria → comparação → prática simples → desafios)', async ({ page }) => {
+  test('aparece em Fundamentos de Programação, com os 5 módulos em ordem (teoria → comparação → prática simples → desafios → cenários)', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
     await page.click('.game-card:has-text("Fundamentos de Programação")');
@@ -232,5 +337,6 @@ test.describe('turmas/jogos/plataforma.html — trilha GDScript', () => {
     await expect(page.locator('#moduleSelector_gdscript')).toContainText('Comparação — JS/C# vs GDScript');
     await expect(page.locator('#moduleSelector_gdscript')).toContainText('Prática — GDScript Simples');
     await expect(page.locator('#moduleSelector_gdscript')).toContainText('Prática — Desafios de GDScript');
+    await expect(page.locator('#moduleSelector_gdscript')).toContainText('Prática — Cenários de Jogo (GDScript)');
   });
 });

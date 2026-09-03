@@ -9,11 +9,12 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 
-// Turma Jogos tem 61 módulos ao todo (mesma base de cálculo usada em
-// ranking.spec.js). A matéria "Fundamentos de Programação" sozinha tem 18:
-// js/basico, js/intermediario, os 4 módulos da trilha csharp e os 4 módulos
-// da trilha gdscript (teoria, comparação, prática simples, desafios cada),
-// e mais 4 trilhas (teoria+prática cada) de fundamentos gerais de jogos.
+// Turma Jogos tem 62 módulos ao todo (mesma base de cálculo usada em
+// ranking.spec.js). A matéria "Fundamentos de Programação" sozinha tem 19:
+// js/basico, js/intermediario, os 4 módulos da trilha csharp (teoria,
+// comparação, prática simples, desafios) e os 5 da trilha gdscript (os
+// mesmos 4 + 'cenarios', só dela), e mais 4 trilhas (teoria+prática cada)
+// de fundamentos gerais de jogos.
 const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
@@ -46,9 +47,9 @@ test.describe('Aba Perfil (só aluno)', () => {
 
   test('mostra progresso geral, por matéria/trilha, a posição no ranking e desbloqueia insígnias por % de conclusão', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
-    // breno completa só js/basico (10/10) → 1 módulo concluído de 61 na turma
-    // toda (2% geral), mas 6% dentro da matéria Fundamentos (1 de 18 módulos:
-    // js básico+intermediário, os 4 módulos da trilha csharp, os 4 módulos
+    // breno completa só js/basico (10/10) → 1 módulo concluído de 62 na turma
+    // toda (2% geral), mas 5% dentro da matéria Fundamentos (1 de 19 módulos:
+    // js básico+intermediário, os 4 módulos da trilha csharp, os 5 módulos
     // da trilha gdscript, e mais 4 trilhas teoria+prática de fundamentos
     // gerais de jogos).
     await page.addInitScript(() => {
@@ -59,15 +60,16 @@ test.describe('Aba Perfil (só aluno)', () => {
 
     const resumo = page.locator('#perfilResumo');
     await expect(resumo).toContainText('2%');
-    await expect(resumo).toContainText('1/61');
+    await expect(resumo).toContainText('1/62');
     await expect(resumo).toContainText('2º'); // atrás só do edward, à frente do resto (0%)
     await expect(resumo).toContainText('Posição de 17');
 
     const materiaCard = page.locator('.perfil-materia-card', { hasText: 'Fundamentos de Programação' });
-    await expect(materiaCard).toContainText('6%');
+    await expect(materiaCard).toContainText('5%');
     await expect(materiaCard).toContainText('1/2'); // trilha JS: básico feito, intermediário não
     await expect(materiaCard).toContainText('0/2'); // trilhas fund-*: nada feito (teoria + prática)
-    await expect(materiaCard).toContainText('0/4'); // trilhas csharp e gdscript: nada feito (teoria + comparação + prática simples + desafios cada)
+    await expect(materiaCard).toContainText('0/4'); // trilha csharp: nada feito (teoria + comparação + prática simples + desafios)
+    await expect(materiaCard).toContainText('0/5'); // trilha gdscript: nada feito (os mesmos 4 + cenários)
 
     // Progresso real: desbloqueia só "Iniciante" (minPct:0, exige progresso
     // real) — "Explorador" (minPct:20) ainda não.

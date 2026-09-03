@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Jogos: Cenários de Jogo (GDScript)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0f0a14; --panel:#161020; --panel2:#120d1a; --line:#2e2038;
+    --purple:#b98cff; --purple-dim:#7a4fb8; --blood:#c1121f; --blood-bright:#ff3b30;
+    --gold:#e0b84a; --ink:#e6dbf2; --ink-dim:#8b7898;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--purple-dim); background:#0a0710;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:200px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .challenge-item{
+    display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
+  }
+  .challenge-item .status{ font-size:13px; width:16px; text-align:center; flex-shrink:0; }
+  .challenge-item.active{ border-color:var(--purple); color:var(--purple); }
+  .challenge-item.completed{ color:var(--ink); }
+  .challenge-item.locked{ opacity:0.4; cursor:not-allowed; }
+  .challenge-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; overflow-y:auto; }
+
+  .challenge-header{ flex:1 1 0%; min-height:90px; overflow-y:auto; background:var(--panel); border:1px solid var(--line); padding:10px 14px; }
+  .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--purple); margin:0 0 8px; letter-spacing:1px; }
+  .challenge-header p{ font-size:14px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
+  .challenge-header code{ color:var(--gold); }
+
+  .explanation-box{
+    background:#12081c; border:1px solid var(--purple-dim); padding:10px 12px;
+    font-size:11.5px; color:var(--ink); line-height:1.6;
+  }
+  .explanation-box .exp-title{
+    color:var(--purple); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
+  }
+  .explanation-box code{ color:var(--gold); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); white-space:pre;
+  }
+
+  .given-vars{ font-size:10.5px; color:var(--ink-dim); margin-top:8px; }
+  .given-vars b{ color:var(--gold); }
+
+  .hint-toggle{
+    display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--gold); border:1px solid var(--purple-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-toggle:hover{ background:rgba(224,184,74,0.1); }
+  .hint-box{
+    display:none; margin-top:8px; background:var(--panel2); border:1px dashed var(--gold);
+    padding:8px 10px; font-size:11.5px; color:var(--ink); line-height:1.5;
+  }
+  .hint-box.show{ display:block; }
+  .hint-box b{ color:var(--gold); }
+
+  textarea#codeInput{
+    width:100%; flex:0 0 230px; min-height:140px; resize:vertical; background:#000; color:var(--purple);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5; tab-size:4;
+  }
+  textarea#codeInput:focus{ border-color:var(--purple); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--purple); color:#1a0a2a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--purple); border:1px solid var(--purple-dim); }
+
+  .console{
+    background:#0a0610; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    flex:0 0 100px; min-height:70px; overflow-y:auto; line-height:1.6;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--purple); }
+  .console .line.fail{ color:var(--blood-bright); }
+  .console .line.success{ color:var(--purple); font-weight:bold; }
+  .console .line.warn{ color:var(--gold); }
+
+  /* Celular/telas estreitas: mesma regra das outras práticas de desafio —
+     empilha tudo numa coluna só e deixa a página inteira rolar. */
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:200px; }
+    .console{ flex:none; max-height:160px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'gdscript_cenarios';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/gdscript-challenge-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>GDSCRIPT — CENÁRIOS DE JOGO</div>
+    <div>CONCLUÍDOS: <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Desafios</div>
+        <div id="challengeList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="challenge-header">
+          <h2 id="challengeTitle">--</h2>
+
+          <div class="explanation-box">
+            <div class="exp-title">📖 Como funciona</div>
+            <div id="explanationText"></div>
+          </div>
+
+          <p id="challengeDesc"></p>
+          <div class="given-vars" id="givenVarsLabel" style="display:none;"></div>
+
+          <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+
+        <textarea id="codeInput" spellcheck="false"></textarea>
+
+        <div class="actions">
+          <button class="btn" id="btnRun">▶ Executar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo desafio →</button>
+        </div>
+
+        <div class="console" id="consoleOutput"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Onde a trilha GDScript sai da sintaxe abstrata (gdscript-desafios-
+  // pratica.html: variável/print/constante/função/if-else/for, um conceito
+  // isolado por vez) e aplica os MESMOS conceitos em situações de jogo de
+  // verdade — a lógica que entraria dentro de um _process()/_physics_
+  // process() de um Node2D real. Sem Vector2/Node/classe (o motor de
+  // transpile — shared/gdscript-challenge-engine.js — não reconhece esses
+  // tipos): cada cenário usa só números/booleanos simples (posicao_x,
+  // vida, dano...), representando os mesmos dados que, no Godot de
+  // verdade, viveriam dentro de propriedades desses objetos.
+  //
+  // 4 grupos, do mais simples ao mais completo — cada um reaproveita um
+  // conceito já visto na trilha (variável/if-else/função) só que agora
+  // resolvendo um problema real de jogo:
+  //   Movimento (4): soma de velocidade, acúmulo (gravidade), clamp com
+  //     if/else, função reutilizável.
+  //   Colisão (4): comparação simples, intervalo com "&&", sobreposição
+  //     de caixas (AABB) — a técnica de colisão mais comum em jogos 2D.
+  //   Ataque (4): função com subtração, "piso" de dano mínimo, cooldown,
+  //     acerto crítico com condição sobre duas variáveis.
+  //   Defesa (3): redução de dano sem passar de zero, esquiva total,
+  //     função booleana (estaVivo) fechando com um caso clássico de jogo.
+  const CHALLENGES = [
+    // ---------- Movimento ----------
+    {
+      id: 1,
+      group: 'Movimento',
+      title: 'Mover para o lado',
+      givenVars: ['posicao_x', 'velocidade'],
+      starter: '# as variaveis posicao_x e velocidade ja existem\n# crie resultado com a nova posicao (posicao_x + velocidade)\n\n',
+      explanation: 'Em jogos 2D, a posição de um personagem é só um número (a coordenada X). Pra mover, some a velocidade à posição a cada quadro — velocidade negativa move pro lado esquerdo.<pre>var nova_posicao = posicao + velocidade</pre>',
+      desc: 'As variáveis <code>posicao_x</code> e <code>velocidade</code> já existem. Crie <code>resultado</code> com a nova posição.',
+      hint: 'Igual você já fez em "Somando duas variáveis" — só que agora as variáveis representam posição e velocidade de verdade.',
+      solution: 'var resultado = posicao_x + velocidade',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { posicao_x: 100, velocidade: 5 }, expected: 105 },
+        { values: { posicao_x: 0, velocidade: 10 }, expected: 10 },
+        { values: { posicao_x: 50, velocidade: -5 }, expected: 45 }
+      ]
+    },
+    {
+      id: 2,
+      group: 'Movimento',
+      title: 'Acumular a gravidade',
+      givenVars: ['velocidade_y', 'gravidade'],
+      starter: '# as variaveis velocidade_y e gravidade ja existem\n# crie resultado com a nova velocidade_y (velocidade_y + gravidade)\n\n',
+      explanation: 'Pulo e queda funcionam acumulando a gravidade na velocidade vertical, quadro a quadro — quanto mais tempo caindo, mais rápido a queda.<pre>var nova_velocidade_y = velocidade_y + gravidade</pre>',
+      desc: 'As variáveis <code>velocidade_y</code> e <code>gravidade</code> já existem. Crie <code>resultado</code> com a nova velocidade vertical.',
+      hint: 'Mesma soma do desafio anterior — só que aqui é a velocidade vertical acumulando a gravidade, não a posição acumulando a velocidade.',
+      solution: 'var resultado = velocidade_y + gravidade',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { velocidade_y: 0, gravidade: 2 }, expected: 2 },
+        { values: { velocidade_y: 5, gravidade: 2 }, expected: 7 },
+        { values: { velocidade_y: -10, gravidade: 3 }, expected: -7 }
+      ]
+    },
+    {
+      id: 3,
+      group: 'Movimento',
+      title: 'Não sair da tela',
+      givenVars: ['posicao_x', 'velocidade', 'largura_tela'],
+      starter: 'var resultado\nif posicao_x + velocidade > largura_tela:\n\t\nelse:\n\t\n',
+      explanation: 'Antes de mover de verdade, o jogo confere se o personagem não vai passar do limite da tela — se for passar, ele para exatamente na borda em vez de sumir pra fora.<pre>var nova_posicao\nif posicao + velocidade > limite:\n\tnova_posicao = limite\nelse:\n\tnova_posicao = posicao + velocidade</pre>',
+      desc: 'As variáveis <code>posicao_x</code>, <code>velocidade</code> e <code>largura_tela</code> já existem. Complete: se a próxima posição passar de <code>largura_tela</code>, <code>resultado</code> deve <b>parar na borda</b> (valor de <code>largura_tela</code>); senão, deve ser a posição normal (<code>posicao_x + velocidade</code>).',
+      hint: 'No <code>if</code>, <code>resultado</code> vira <code>largura_tela</code> (parou na borda). No <code>else</code>, <code>resultado</code> vira <code>posicao_x + velocidade</code> (moveu normal).',
+      solution: 'var resultado\nif posicao_x + velocidade > largura_tela:\n\tresultado = largura_tela\nelse:\n\tresultado = posicao_x + velocidade',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { posicao_x: 790, velocidade: 20, largura_tela: 800 }, expected: 800 },
+        { values: { posicao_x: 100, velocidade: 20, largura_tela: 800 }, expected: 120 },
+        { values: { posicao_x: 0, velocidade: 5, largura_tela: 800 }, expected: 5 }
+      ]
+    },
+    {
+      id: 4,
+      group: 'Movimento',
+      title: 'Função reutilizável: mover',
+      givenVars: ['posicao_x', 'velocidade'],
+      starter: '# crie a funcao mover(posicao, vel) que devolve posicao + vel\n\n\n# depois, crie a variavel resultado chamando mover(posicao_x, velocidade)\n',
+      explanation: 'Em vez de repetir a mesma soma em vários lugares do jogo (jogador, inimigo, projétil...), cria-se UMA função e chama-se ela sempre que precisar mover algo.<pre>func mover(pos, vel):\n\treturn pos + vel\nvar nova = mover(10, 2)</pre>',
+      desc: 'Crie a função <code>mover(posicao, vel)</code>, que devolve a soma dos dois. Depois, crie <code>resultado</code> chamando <code>mover(posicao_x, velocidade)</code>.',
+      hint: 'Mesmo formato de "Criando uma função" — só que o corpo da função é a soma que você já escreveu no desafio 1.',
+      solution: 'func mover(posicao, vel):\n\treturn posicao + vel\nvar resultado = mover(posicao_x, velocidade)',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { posicao_x: 10, velocidade: 5 }, expected: 15 },
+        { values: { posicao_x: 0, velocidade: -3 }, expected: -3 },
+        { values: { posicao_x: 100, velocidade: 0 }, expected: 100 }
+      ]
+    },
+    // ---------- Colisão ----------
+    {
+      id: 5,
+      group: 'Colisão',
+      title: 'Tocou o chão?',
+      givenVars: ['posicao_y', 'altura_chao'],
+      starter: 'var resultado\nif posicao_y >= altura_chao:\n\t\nelse:\n\t\n',
+      explanation: 'A forma mais simples de colisão em jogo 2D: comparar duas posições. Se a posição Y do personagem chegou (ou passou) na altura do chão, ele tocou o chão.<pre>var tocou\nif posicao_y >= chao:\n\ttocou = true\nelse:\n\ttocou = false</pre>',
+      desc: 'As variáveis <code>posicao_y</code> e <code>altura_chao</code> já existem. <code>resultado</code> deve ser <code>true</code> se <code>posicao_y</code> for maior ou igual a <code>altura_chao</code>; senão, <code>false</code>.',
+      hint: 'Mesmo formato do desafio "Decidindo com if/else" — só que agora o valor de cada lado é <code>true</code>/<code>false</code>, não texto.',
+      solution: 'var resultado\nif posicao_y >= altura_chao:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { posicao_y: 500, altura_chao: 500 }, expected: true },
+        { values: { posicao_y: 300, altura_chao: 500 }, expected: false },
+        { values: { posicao_y: 600, altura_chao: 500 }, expected: true }
+      ]
+    },
+    {
+      id: 6,
+      group: 'Colisão',
+      title: 'Bateu na parede esquerda?',
+      givenVars: ['posicao_x'],
+      starter: 'var resultado\nif posicao_x < 0:\n\t\nelse:\n\t\n',
+      explanation: 'A tela começa em X = 0 — qualquer posição menor que isso já passou da borda esquerda.<pre>var bateu\nif posicao_x < 0:\n\tbateu = true\nelse:\n\tbateu = false</pre>',
+      desc: 'A variável <code>posicao_x</code> já existe. <code>resultado</code> deve ser <code>true</code> se <code>posicao_x</code> for menor que <b>0</b>; senão, <code>false</code>.',
+      hint: 'Só uma condição simples: <code>posicao_x</code> é menor que zero?',
+      solution: 'var resultado\nif posicao_x < 0:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { posicao_x: -5 }, expected: true },
+        { values: { posicao_x: 0 }, expected: false },
+        { values: { posicao_x: 50 }, expected: false }
+      ]
+    },
+    {
+      id: 7,
+      group: 'Colisão',
+      title: 'Dentro do alcance do inimigo?',
+      givenVars: ['posicao_jogador', 'posicao_inimigo', 'alcance'],
+      starter: 'var resultado\nif posicao_jogador >= posicao_inimigo - alcance && posicao_jogador <= posicao_inimigo + alcance:\n\t\nelse:\n\t\n',
+      explanation: 'Pra saber se o jogador está perto o bastante de um inimigo, confere se a posição dele cai DENTRO de uma faixa: do alcance pra trás até o alcance pra frente. <code>&&</code> exige as duas condições verdadeiras ao mesmo tempo.<pre>if pos >= alvo - dist && pos <= alvo + dist:\n\tperto = true</pre>',
+      desc: 'As variáveis já existem. Complete: <code>resultado</code> deve ser <code>true</code> só quando <code>posicao_jogador</code> estiver dentro da faixa <code>[posicao_inimigo - alcance, posicao_inimigo + alcance]</code>; senão, <code>false</code>.',
+      hint: 'O <code>if</code> já está pronto no código inicial — você só precisa preencher o que <code>resultado</code> vira em cada lado (<code>true</code>/<code>false</code>).',
+      solution: 'var resultado\nif posicao_jogador >= posicao_inimigo - alcance && posicao_jogador <= posicao_inimigo + alcance:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { posicao_jogador: 100, posicao_inimigo: 100, alcance: 20 }, expected: true },
+        { values: { posicao_jogador: 70, posicao_inimigo: 100, alcance: 20 }, expected: false },
+        { values: { posicao_jogador: 85, posicao_inimigo: 100, alcance: 20 }, expected: true }
+      ]
+    },
+    {
+      id: 8,
+      group: 'Colisão',
+      title: 'Colisão entre duas caixas',
+      givenVars: ['caixa_a_esquerda', 'caixa_a_direita', 'caixa_b_esquerda', 'caixa_b_direita'],
+      starter: 'var resultado\nif caixa_a_esquerda < caixa_b_direita && caixa_a_direita > caixa_b_esquerda:\n\t\nelse:\n\t\n',
+      explanation: 'A técnica mais usada pra colisão em jogos 2D: cada personagem tem uma "caixa" (borda esquerda/direita). Duas caixas se tocam quando UMA começa antes da outra terminar, nos dois sentidos.<pre>if a_esq < b_dir && a_dir > b_esq:\n\tbateu = true</pre>',
+      desc: 'As 4 bordas já existem (eixo X). Complete: <code>resultado</code> deve ser <code>true</code> quando as caixas se sobrepõem; senão, <code>false</code>.',
+      hint: 'Mesma ideia do desafio anterior — só que agora são duas CAIXAS (cada uma com borda esquerda e direita) em vez de um ponto e uma faixa.',
+      solution: 'var resultado\nif caixa_a_esquerda < caixa_b_direita && caixa_a_direita > caixa_b_esquerda:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { caixa_a_esquerda: 0, caixa_a_direita: 50, caixa_b_esquerda: 30, caixa_b_direita: 80 }, expected: true },
+        { values: { caixa_a_esquerda: 0, caixa_a_direita: 50, caixa_b_esquerda: 60, caixa_b_direita: 100 }, expected: false },
+        { values: { caixa_a_esquerda: 0, caixa_a_direita: 50, caixa_b_esquerda: 50, caixa_b_direita: 100 }, expected: false }
+      ]
+    },
+    // ---------- Ataque ----------
+    {
+      id: 9,
+      group: 'Ataque',
+      title: 'Calcular dano bruto',
+      givenVars: ['ataque', 'defesa'],
+      starter: '# crie a funcao calcularDano(atk, def) que devolve atk - def\n\n\n# depois, crie a variavel resultado chamando calcularDano(ataque, defesa)\n',
+      explanation: 'A conta mais simples de dano num RPG: ataque menos defesa. Ainda sem nenhum limite — o desafio seguinte corrige o caso de dar negativo.<pre>func calcularDano(atk, def):\n\treturn atk - def</pre>',
+      desc: 'Crie a função <code>calcularDano(atk, def)</code>, que devolve <code>atk - def</code>. Depois, crie <code>resultado</code> chamando <code>calcularDano(ataque, defesa)</code>.',
+      hint: 'Mesmo formato da função "mover" do desafio 4 — só que o corpo agora é uma subtração, não uma soma.',
+      solution: 'func calcularDano(atk, def):\n\treturn atk - def\nvar resultado = calcularDano(ataque, defesa)',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { ataque: 50, defesa: 20 }, expected: 30 },
+        { values: { ataque: 10, defesa: 10 }, expected: 0 },
+        { values: { ataque: 5, defesa: 20 }, expected: -15 }
+      ]
+    },
+    {
+      id: 10,
+      group: 'Ataque',
+      title: 'Dano mínimo garantido',
+      givenVars: ['ataque', 'defesa'],
+      starter: 'var resultado = ataque - defesa\nif resultado < 1:\n\t\n',
+      explanation: 'Igual você viu no desafio anterior, "ataque - defesa" pode dar 0 ou até negativo — a maioria dos jogos garante um dano MÍNIMO (aqui, 1), pra todo ataque acertado valer alguma coisa.<pre>var dano = ataque - defesa\nif dano < 1:\n\tdano = 1</pre>',
+      desc: 'A variável <code>resultado</code> já começa com <code>ataque - defesa</code>. Complete: se <code>resultado</code> for menor que <b>1</b>, ele deve virar <b>1</b>.',
+      hint: 'Dentro do <code>if</code> (já pronto), reatribua <code>resultado</code> pro valor mínimo pedido — sem usar <code>var</code> de novo.',
+      solution: 'var resultado = ataque - defesa\nif resultado < 1:\n\tresultado = 1',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { ataque: 50, defesa: 20 }, expected: 30 },
+        { values: { ataque: 10, defesa: 10 }, expected: 1 },
+        { values: { ataque: 5, defesa: 20 }, expected: 1 }
+      ]
+    },
+    {
+      id: 11,
+      group: 'Ataque',
+      title: 'Cooldown liberado?',
+      givenVars: ['tempo_desde_ataque', 'cooldown'],
+      starter: 'var resultado\nif tempo_desde_ataque >= cooldown:\n\t\nelse:\n\t\n',
+      explanation: '"Cooldown" é o tempo de espera entre um ataque e o próximo. Só pode atacar de novo quando o tempo já passado for maior ou igual ao cooldown exigido.<pre>var pode_atacar\nif tempo_passado >= espera:\n\tpode_atacar = true\nelse:\n\tpode_atacar = false</pre>',
+      desc: 'As variáveis já existem. <code>resultado</code> deve ser <code>true</code> se <code>tempo_desde_ataque</code> for maior ou igual a <code>cooldown</code>; senão, <code>false</code>.',
+      hint: 'Mesmo formato do desafio "Tocou o chão?" — só troca as variáveis pelo tempo de espera do ataque.',
+      solution: 'var resultado\nif tempo_desde_ataque >= cooldown:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { tempo_desde_ataque: 3, cooldown: 3 }, expected: true },
+        { values: { tempo_desde_ataque: 1, cooldown: 3 }, expected: false },
+        { values: { tempo_desde_ataque: 5, cooldown: 3 }, expected: true }
+      ]
+    },
+    {
+      id: 12,
+      group: 'Ataque',
+      title: 'Acerto crítico',
+      givenVars: ['ataque', 'chance_critica', 'rolagem'],
+      starter: 'var resultado\nif rolagem <= chance_critica:\n\t\nelse:\n\t\n',
+      explanation: 'Muitos jogos "rolam um dado" (um número aleatório) e comparam com a chance de crítico do personagem — se o número sorteado cair dentro da chance, o ataque acerta em dobro.<pre>if dado <= chance:\n\tdano = ataque * 2\nelse:\n\tdano = ataque</pre>',
+      desc: 'As variáveis já existem (<code>rolagem</code> é o número sorteado). Complete: se <code>rolagem</code> for menor ou igual a <code>chance_critica</code>, <code>resultado</code> deve ser <code>ataque * 2</code>; senão, só <code>ataque</code>.',
+      hint: 'O <code>if</code> já está pronto — preencha os dois lados com o dano certo (dobrado ou normal).',
+      solution: 'var resultado\nif rolagem <= chance_critica:\n\tresultado = ataque * 2\nelse:\n\tresultado = ataque',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { ataque: 10, chance_critica: 30, rolagem: 15 }, expected: 20 },
+        { values: { ataque: 10, chance_critica: 30, rolagem: 80 }, expected: 10 },
+        { values: { ataque: 20, chance_critica: 50, rolagem: 50 }, expected: 40 }
+      ]
+    },
+    // ---------- Defesa ----------
+    {
+      id: 13,
+      group: 'Defesa',
+      title: 'Reduzir dano com escudo',
+      givenVars: ['dano', 'reducao_escudo'],
+      starter: 'var resultado = dano - reducao_escudo\nif resultado < 0:\n\t\n',
+      explanation: 'Um escudo reduz o dano recebido — mas igual o dano de ataque, não pode passar de zero: um escudo forte não pode fazer o personagem CURAR ao ser atacado.<pre>var dano_final = dano - reducao\nif dano_final < 0:\n\tdano_final = 0</pre>',
+      desc: 'A variável <code>resultado</code> já começa com <code>dano - reducao_escudo</code>. Complete: se <code>resultado</code> for menor que <b>0</b>, ele deve virar <b>0</b>.',
+      hint: 'Mesmo padrão do "Dano mínimo garantido" — só que o piso agora é 0, não 1.',
+      solution: 'var resultado = dano - reducao_escudo\nif resultado < 0:\n\tresultado = 0',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { dano: 30, reducao_escudo: 10 }, expected: 20 },
+        { values: { dano: 10, reducao_escudo: 10 }, expected: 0 },
+        { values: { dano: 5, reducao_escudo: 20 }, expected: 0 }
+      ]
+    },
+    {
+      id: 14,
+      group: 'Defesa',
+      title: 'Esquiva total',
+      givenVars: ['vida', 'dano', 'esquivou'],
+      starter: 'var resultado\nif esquivou:\n\t\nelse:\n\t\n',
+      explanation: 'Se o personagem esquivou do ataque, a vida não muda nada — o dano é totalmente ignorado. <code>esquivou</code> já é um valor <code>true</code>/<code>false</code>, então dá pra testar ele direto, sem comparação.<pre>if esquivou:\n\tvida_final = vida\nelse:\n\tvida_final = vida - dano</pre>',
+      desc: 'As variáveis já existem. Complete: se <code>esquivou</code> for verdadeiro, <code>resultado</code> deve ser <code>vida</code> (sem mudar); senão, <code>vida - dano</code>.',
+      hint: 'O <code>if esquivou:</code> já testa a variável booleana direto — não precisa comparar com nada.',
+      solution: 'var resultado\nif esquivou:\n\tresultado = vida\nelse:\n\tresultado = vida - dano',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { vida: 100, dano: 30, esquivou: true }, expected: 100 },
+        { values: { vida: 100, dano: 30, esquivou: false }, expected: 70 },
+        { values: { vida: 50, dano: 50, esquivou: false }, expected: 0 }
+      ]
+    },
+    {
+      id: 15,
+      group: 'Defesa',
+      title: 'Função "estaVivo"',
+      givenVars: ['vida'],
+      starter: '# crie a funcao estaVivo(v) que devolve verdadeiro se v for maior que 0\n\n\n# depois, crie a variavel resultado chamando estaVivo(vida)\n',
+      explanation: 'Quase todo jogo confere, a cada quadro, se um personagem ainda está vivo — e quase sempre isso vira uma função, chamada de vários lugares (fim de jogo, respawn, IA de inimigo...). Uma comparação (<code>&gt;</code>) já devolve <code>true</code>/<code>false</code> sozinha, sem precisar de if/else.<pre>func estaVivo(v):\n\treturn v > 0</pre>',
+      desc: 'Crie a função <code>estaVivo(v)</code>, que devolve <code>true</code> se <code>v</code> for maior que <b>0</b> (e <code>false</code> senão). Depois, crie <code>resultado</code> chamando <code>estaVivo(vida)</code>.',
+      hint: 'O <code>return</code> pode devolver o resultado de uma comparação direto — não precisa de <code>if/else</code> dentro da função.',
+      solution: 'func estaVivo(v):\n\treturn v > 0\nvar resultado = estaVivo(vida)',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { vida: 10 }, expected: true },
+        { values: { vida: 0 }, expected: false },
+        { values: { vida: -5 }, expected: false }
+      ]
+    }
+  ];
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'GDScript — Cenários de Jogo',
+      subtitle: 'Prática · Trilha GDScript · Turma Jogos Digitais',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: `[${c.group}] ${c.title}`,
+        prompt: c.desc,
+        answer: c.tests.map(t => {
+          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
+          return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
+        }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
+      })),
+      fileName: 'gdscript-cenarios-pratica-gabarito.txt'
+    });
+  };
+
+  window.PortalGdscriptChallenges.run({
+    activityLocation: 'gdscript_cenarios',
+    challenges: CHALLENGES,
+    reportLabel: 'GDScript — Cenários de Jogo'
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

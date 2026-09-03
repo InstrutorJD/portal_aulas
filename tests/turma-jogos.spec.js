@@ -44,15 +44,18 @@ function seedAllModulesComplete(user) {
   localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
   localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dezoito));
   // csharp_pratica_simples e gdscript_pratica_simples têm 9 desafios cada
-  // (progressTotal:9), e csharp_desafios/gdscript_desafios têm 14
-  // (progressTotal:14) — ambos diferentes do padrão de 10 usado pelas
-  // outras trilhas de prática.
+  // (progressTotal:9), csharp_desafios/gdscript_desafios têm 14
+  // (progressTotal:14), e gdscript_cenarios (só existe pro GDScript, sem
+  // equivalente em C#) tem 15 (progressTotal:15) — todos diferentes do
+  // padrão de 10 usado pelas outras trilhas de prática.
   const nove = Array.from({ length: 9 }, (_, i) => i + 1);
   const catorze = Array.from({ length: 14 }, (_, i) => i + 1);
+  const quinze = Array.from({ length: 15 }, (_, i) => i + 1);
   localStorage.setItem(`csharp_pratica_simples_progress_${user}`, JSON.stringify(nove));
   localStorage.setItem(`gdscript_pratica_simples_progress_${user}`, JSON.stringify(nove));
   localStorage.setItem(`csharp_desafios_progress_${user}`, JSON.stringify(catorze));
   localStorage.setItem(`gdscript_desafios_progress_${user}`, JSON.stringify(catorze));
+  localStorage.setItem(`gdscript_cenarios_progress_${user}`, JSON.stringify(quinze));
 
   const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
   praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));

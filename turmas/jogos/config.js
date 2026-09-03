@@ -646,6 +646,13 @@ window.TURMA_CONFIG_JOGOS = {
               icon: '🟣', src: 'atividades/gdscript-desafios-pratica.html',
               progressKey: 'gdscript_desafios_progress_', progressTotal: 14,
               requires: 'pratica-simples', hasGabarito: true
+            },
+            {
+              key: 'cenarios', title: 'Prática — Cenários de Jogo (GDScript)',
+              desc: 'Aplique variável, if/else e função em situações reais de jogo: movimento, colisão, ataque e defesa — 15 desafios, do mais simples ao mais completo.',
+              icon: '🎮', src: 'atividades/gdscript-cenarios-pratica.html',
+              progressKey: 'gdscript_cenarios_progress_', progressTotal: 15,
+              requires: 'desafios', hasGabarito: true
             }
           ]
         },
