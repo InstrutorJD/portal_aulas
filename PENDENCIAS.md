@@ -1,5 +1,40 @@
 # Pendências
 
+## Lista de Gabaritos agrupada por matéria (Gestão)
+
+**Status:** concluído — a pedido do professor. A lista de Gabarito na aba
+Gestão (`#gestaoGabaritoList`, `renderGestaoGabaritoList()` em
+`shared/platform-core.js`) era uma lista achatada de todo módulo com
+`hasGabarito:true` da turma — 63 linhas na turma Jogos, tomando a tela
+inteira. Agora agrupa por matéria (`allTrilhasComMateria()`, já existia,
+usado noutro lugar da Gestão), cada matéria num `.collapsible-card.nested`
+fechado por padrão, mostrando só o título + contagem até o professor abrir
+a que precisa.
+
+`.nested` é uma variante mais compacta de `.collapsible-card` (sem fundo/
+borda/margem própria, pra não virar "caixa dentro de caixa") — reaproveita
+o mesmo `toggleGestaoSection()`/`.expanded` de sempre. Isso escondeu um bug
+real de CSS: `.collapsible-card.expanded .collapsible-body{display:block}`
+é um seletor DESCENDENTE, então bate em QUALQUER `.collapsible-body`
+aninhado dentro do card "Gabarito" de fora assim que ELE abre — não só o
+filho direto —, com especificidade maior que o `display:none` genérico.
+Resultado: todo grupo de matéria nascia aberto sozinho assim que "Gabarito"
+era expandido, mesmo sem o professor clicar nele. Corrigido com uma regra
+`.collapsible-card.nested .collapsible-body{display:none}` de especificidade
+igual (desempate por ordem no arquivo) + `.collapsible-card.nested.expanded
+.collapsible-body{display:block}` de especificidade maior — mesmo problema
+existia pra seta (`.collapsible-arrow`), corrigido do mesmo jeito.
+
+Os testes que clicavam direto em `#gestaoGabaritoList > div` (a linha do
+módulo, filho direto da lista) quebraram — agora a linha fica 2 níveis mais
+funda, dentro do `.collapsible-body` do grupo. Novo helper
+`expandGabaritoRow(page, titleHint)` em `tests/helpers.js` acha o grupo
+certo pelo texto do módulo (sem precisar saber o nome da matéria), expande
+o cabeçalho dele, e devolve o locator da linha — usado em
+`tests/csharp-jogos.spec.js`, `tests/gdscript-jogos.spec.js`,
+`tests/professor-gestao-turma.spec.js`, `tests/turma-sistemas.spec.js` e
+`tests/js-fundamentos.spec.js`.
+
 ## Mais desafios básicos + dicas menos reveladoras (C# e GDScript)
 
 **Status:** concluído — a pedido do professor, as "Práticas simples" (C# e

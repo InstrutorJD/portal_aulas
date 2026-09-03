@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
@@ -94,7 +94,7 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = page.locator('#gestaoGabaritoList > div', { hasText: 'Autoconhecimento e Valores Pessoais' });
+    const row = await expandGabaritoRow(page, 'Autoconhecimento e Valores Pessoais');
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
       row.locator('[data-gabarito-mod]').click(),
@@ -118,7 +118,7 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = page.locator('#gestaoGabaritoList > div', { hasText: 'Sistema Web com HTML, JavaScript e Supabase' });
+    const row = await expandGabaritoRow(page, 'Sistema Web com HTML, JavaScript e Supabase');
     await expect(row).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),

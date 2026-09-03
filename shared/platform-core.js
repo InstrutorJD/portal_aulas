@@ -2209,14 +2209,31 @@
     });
   }
 
+  // Agrupado por matéria (cada matéria colapsável, fechada por padrão) —
+  // uma lista achatada com ~60+ módulos (turma Jogos) tomava a tela toda;
+  // agrupar deixa só os títulos das matérias visíveis até o professor abrir
+  // a que precisa. Reaproveita o mesmo mecanismo de .collapsible-card (ver
+  // toggleGestaoSection) numa variante mais compacta (.nested, sem fundo/
+  // borda própria) — closest('.collapsible-card') no clique do cabeçalho da
+  // matéria acha o card ANINHADO mais próximo, não o card "Gabarito" de fora.
   function renderGestaoGabaritoList() {
     const container = document.getElementById('gestaoGabaritoList');
     if (!container) return;
 
     const gabaritoModules = [];
-    allTrilhas().forEach(trilha => {
+    const groups = [];
+    const groupByLabel = {};
+
+    allTrilhasComMateria().forEach(({ materiaLabel, trilha }) => {
       (trilha.modules || []).forEach(mod => {
-        if (mod.hasGabarito) gabaritoModules.push(mod);
+        if (!mod.hasGabarito) return;
+        const idx = gabaritoModules.length;
+        gabaritoModules.push(mod);
+        if (!groupByLabel[materiaLabel]) {
+          groupByLabel[materiaLabel] = { label: materiaLabel, items: [] };
+          groups.push(groupByLabel[materiaLabel]);
+        }
+        groupByLabel[materiaLabel].items.push({ mod, idx });
       });
     });
 
@@ -2225,10 +2242,20 @@
       return;
     }
 
-    container.innerHTML = gabaritoModules.map((mod, i) => `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);">
-        <span>${mod.title}</span>
-        <button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" data-gabarito-mod="${i}">📄 Gerar Gabarito</button>
+    container.innerHTML = groups.map(group => `
+      <div class="collapsible-card nested">
+        <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+          <h3>${group.label}<span class="count">(${group.items.length})</span></h3>
+          <span class="collapsible-arrow">▶</span>
+        </div>
+        <div class="collapsible-body">
+          ${group.items.map(({ mod, idx }) => `
+            <div class="gabarito-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);">
+              <span>${mod.title}</span>
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" data-gabarito-mod="${idx}">📄 Gerar Gabarito</button>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `).join('');
 

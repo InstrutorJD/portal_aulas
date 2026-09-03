@@ -77,7 +77,20 @@ function rosterToProfiles(roster, turma) {
 function jogosAlunoProfiles() { return rosterToProfiles(JOGOS_ALUNO_ROSTER, 'jogos'); }
 function sistemasAlunoProfiles() { return rosterToProfiles(SISTEMAS_ALUNO_ROSTER, 'sistemas'); }
 
+/** A lista de gabaritos (Gestão > Gabarito) é agrupada por matéria — cada
+ * grupo é um .collapsible-card.nested colapsado por padrão (ver
+ * renderGestaoGabaritoList em shared/platform-core.js). Acha o grupo que
+ * contém `titleHint`, expande o cabeçalho dele, e devolve o locator da
+ * linha (.gabarito-row) — o teste faz o próprio Promise.all com
+ * page.waitForEvent('download') em volta do clique no botão dessa linha.
+ * Não precisa saber o nome da matéria: acha pelo texto do módulo mesmo. */
+async function expandGabaritoRow(page, titleHint) {
+  const group = page.locator('#gestaoGabaritoList .collapsible-card.nested', { hasText: titleHint });
+  await group.locator('.collapsible-head').click();
+  return group.locator('.gabarito-row', { hasText: titleHint });
+}
+
 module.exports = {
   blockExternalNoise, stubSupabaseDisabled, stubSupabaseFake,
-  jogosAlunoProfiles, sistemasAlunoProfiles,
+  jogosAlunoProfiles, sistemasAlunoProfiles, expandGabaritoRow,
 };

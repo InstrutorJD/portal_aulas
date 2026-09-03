@@ -101,6 +101,31 @@ body{
 .collapsible-card .collapsible-body{ display:none; padding:0 14px 14px; }
 .collapsible-card.expanded .collapsible-body{ display:block; }
 
+/* Variante mais compacta pra agrupar itens DENTRO de um .collapsible-card
+   maior (ex.: gabaritos agrupados por matéria) — sem o fundo/borda/margem
+   de um .card cheio, senão vira "caixa dentro de caixa". */
+.collapsible-card.nested{ background:transparent; border:none; padding:0; margin-bottom:4px; }
+.collapsible-card.nested .collapsible-head{ padding:8px 2px; border-bottom:1px solid var(--line); }
+/* Mesmo problema do display:none abaixo: .collapsible-card.expanded
+   .collapsible-arrow também é seletor descendente e giraria a seta de
+   TODO grupo aninhado assim que o card "Gabarito" de fora abrisse. */
+.collapsible-card.nested .collapsible-arrow{ transform:none; }
+.collapsible-card.nested.expanded .collapsible-arrow{ transform:rotate(90deg); }
+.collapsible-card.nested .collapsible-head h3{
+  font-family:var(--user-font-display, 'VT323', monospace); font-size:15px; color:var(--yellow);
+  letter-spacing:0.5px; margin:0;
+}
+.collapsible-card.nested .collapsible-head .count{ color:var(--ink-dim); font-family:inherit; font-size:11px; font-weight:400; letter-spacing:0; margin-left:4px; }
+/* display:none explícito aqui (não só herdado da regra genérica lá em
+   cima) porque .collapsible-card.expanded .collapsible-body é um seletor
+   DESCENDENTE — ele bate em QUALQUER .collapsible-body dentro do card
+   "Gabarito" expandido, aninhado ou não, com especificidade maior que a
+   regra genérica de display:none. Sem essa reafirmação aqui (mesma
+   especificidade, mas depois no arquivo = vence o empate), todo grupo
+   aninhado nascia aberto assim que o card "Gabarito" de fora era expandido. */
+.collapsible-card.nested .collapsible-body{ display:none; padding:0 2px; }
+.collapsible-card.nested.expanded .collapsible-body{ display:block; }
+
 .gestao-subhead{
   font-family:var(--user-font-display, 'VT323', monospace); font-size:16px; color:var(--yellow);
   letter-spacing:1px; margin:18px 0 10px; padding-top:14px; border-top:1px solid var(--line);

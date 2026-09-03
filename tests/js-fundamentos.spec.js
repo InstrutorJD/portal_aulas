@@ -9,7 +9,7 @@
 // `check.type` ('variable'/'console'/'function') — ver
 // turmas/sistemas/atividades/js-fundamentos-basico.html e -intermediario.html.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
 const BASICO_URL = '/turmas/sistemas/atividades/js-fundamentos-basico.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 const INTERMEDIARIO_URL = '/turmas/sistemas/atividades/js-fundamentos-intermediario.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
@@ -65,7 +65,7 @@ async function downloadGabarito(page, moduleTitleHint, expectedFileName) {
   await page.waitForTimeout(200);
   await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-  const row = page.locator('#gestaoGabaritoList > div', { hasText: moduleTitleHint });
+  const row = await expandGabaritoRow(page, moduleTitleHint);
   await expect(row).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent('download', { timeout: 15000 }),

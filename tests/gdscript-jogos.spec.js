@@ -7,7 +7,7 @@
 // `;` nem `{ }` — ver esse arquivo pro porquê de não dar pra rodar GDScript
 // de verdade no navegador).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
 const TEORIA_URL = '/turmas/jogos/atividades/gdscript-teoria.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const COMPARACAO_URL = '/turmas/jogos/atividades/gdscript-comparacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
@@ -205,7 +205,7 @@ test.describe('turmas/jogos/atividades/gdscript-desafios-pratica.html', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = page.locator('#gestaoGabaritoList > div', { hasText: 'Desafios de GDScript' });
+    const row = await expandGabaritoRow(page, 'Desafios de GDScript');
     await expect(row).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),

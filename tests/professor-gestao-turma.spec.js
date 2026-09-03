@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles, expandGabaritoRow } = require('./helpers');
 
 const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
@@ -170,7 +170,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
     await expect(page.locator('#tabContentAulas')).toBeHidden();
 
-    const multimidiaRow = page.locator('#gestaoGabaritoList > div', { hasText: 'Teoria — Multimídia e Versionamento' });
+    const multimidiaRow = await expandGabaritoRow(page, 'Teoria — Multimídia e Versionamento');
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
       multimidiaRow.locator('[data-gabarito-mod]').click(),

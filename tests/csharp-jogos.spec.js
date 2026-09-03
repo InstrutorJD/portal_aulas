@@ -6,7 +6,7 @@
 // subconjunto restrito de C# pra JS antes de rodar contra os testes — ver
 // esse arquivo pro porquê de não dar pra rodar C# de verdade no navegador).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake } = require('./helpers');
+const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
 const TEORIA_URL = '/turmas/jogos/atividades/csharp-teoria.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const COMPARACAO_URL = '/turmas/jogos/atividades/csharp-comparacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
@@ -250,7 +250,7 @@ test.describe('turmas/jogos/atividades/csharp-desafios-pratica.html', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = page.locator('#gestaoGabaritoList > div', { hasText: 'Desafios de C#' });
+    const row = await expandGabaritoRow(page, 'Desafios de C#');
     await expect(row).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
