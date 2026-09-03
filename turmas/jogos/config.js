@@ -829,6 +829,36 @@ window.TURMA_CONFIG_JOGOS = {
         }
       ]
     },
+    {
+      // Matéria dedicada, inteira restrita a um único aluno (materia.
+      // visibleFor — ver isMateriaVisibleToEmail em shared/platform-core.js).
+      // Diferente das outras trilhas individuais do Engel (que ficam DENTRO
+      // de uma matéria compartilhada, ex.: 'js-adaptado-engel' dentro de
+      // "Fundamentos de Programação"), esta matéria não corresponde a
+      // nenhum conteúdo regular da turma — por isso o card dela também
+      // precisa ficar escondido pros outros alunos (só a trilha não bastava,
+      // deixaria o CARD "Em breve" vazando o nome/existência da adaptação
+      // pra turma toda). O professor sempre vê, pra acompanhar/gerar
+      // gabarito.
+      key: 'comunicacao-engel', label: 'Comunicação (Engel)', visibleFor: ['engel.fraga'],
+      trilhas: [
+        {
+          key: 'frases-engel',
+          label: 'Formar Frases',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'jogo', title: 'Formar Frases — Associação de Palavras',
+              desc: '15 frases (clicando, sem digitar) pra completar com a palavra certa, sempre com emoji grande de pista — começa com 2 palavras e vai crescendo até 4.',
+              icon: '🧩', src: 'atividades/frases-engel.html',
+              progressKey: 'frases_engel_progress_', progressTotal: 15,
+              hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
     // Matéria "Prova" — ainda sem trilhas (conteúdo específico desta turma
     // entra depois). Toda atividade avaliativa colocada aqui deve usar a
     // regra "sair da tela = advertência, saiu de novo = bloqueio": inclua

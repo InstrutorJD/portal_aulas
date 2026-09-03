@@ -480,9 +480,22 @@
     return !Array.isArray(trilha.visibleFor) || trilha.visibleFor.includes(email);
   }
 
+  // Mesma ideia, em nível de MATÉRIA (materia.visibleFor) — pra matéria
+  // dedicada inteira a um único aluno (ex.: "Comunicação (Engel)"), não só
+  // uma trilha dentro de uma matéria compartilhada. Sem isso, o card da
+  // matéria (renderMaterias) e o card dela no Perfil (renderPerfilTab)
+  // apareceriam — vazios, "Em breve" — pra TODO MUNDO, vazando o nome da
+  // matéria (e a existência da adaptação) pros outros alunos da turma.
+  function isMateriaVisibleToEmail(materia, email) {
+    return !Array.isArray(materia.visibleFor) || materia.visibleFor.includes(email);
+  }
+
   function renderMaterias() {
     const grid = document.getElementById('materiaCardGrid');
-    const materias = cfg.materias || [];
+    // Igual ao bypass de trilhaStatus: professor sempre vê todas as
+    // matérias (pra gerenciar/revisar conteúdo individual), aluno só vê as
+    // que não são restritas a outro colega.
+    const materias = (cfg.materias || []).filter(m => currentUser.role !== 'aluno' || isMateriaVisibleToEmail(m, paramUser));
     if (materias.length === 0) {
       grid.innerHTML = `<div class="empty-state">Nenhuma matéria cadastrada ainda para esta turma.</div>`;
       return;
@@ -1876,7 +1889,7 @@
       </div>
     `;
 
-    const materias = (cfg.materias || []).filter(m => (m.trilhas || []).length > 0);
+    const materias = (cfg.materias || []).filter(m => (m.trilhas || []).length > 0 && isMateriaVisibleToEmail(m, targetEmail));
     if (materias.length === 0) {
       materiasEl.innerHTML = `<div class="empty-state">Nenhuma matéria cadastrada ainda.</div>`;
       return;
