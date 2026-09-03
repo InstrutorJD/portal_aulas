@@ -592,6 +592,42 @@ window.TURMA_CONFIG_JOGOS = {
           ]
         },
         {
+          key: 'gdscript',
+          label: 'GDScript',
+          desc: 'Aprenda a história do GDScript, compare a sintaxe dele com o JavaScript/C# que você já viu e pratique escrevendo código GDScript de verdade.',
+          capacidade: 'Reconhecer a origem, o propósito e o contexto de uso da linguagem GDScript no desenvolvimento de jogos, comparando sua sintaxe básica (variáveis, constantes, funções, condicionais e laços) com a do JavaScript e do C#.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Introdução ao GDScript',
+              desc: 'História do GDScript, por que foi criado (integração nativa com a Godot), principais pontos positivos/negativos e jogos famosos feitos com ele.',
+              icon: '🤖', src: 'atividades/gdscript-teoria.html',
+              progressKey: 'gdscript_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'comparacao', title: 'Comparação — JS/C# vs GDScript',
+              desc: 'Compare a sintaxe de variável, constante, função, if/else e laço entre JavaScript, C# e GDScript, um conceito por vez.',
+              icon: '🔀', src: 'atividades/gdscript-comparacao.html',
+              progressKey: 'gdscript_comparacao_progress_', progressMode: 'flag',
+              requires: 'teoria'
+            },
+            {
+              key: 'pratica-simples', title: 'Prática — GDScript Simples',
+              desc: 'Escreva GDScript de verdade: só o essencial — criar variável e as 4 operações básicas.',
+              icon: '🟢', src: 'atividades/gdscript-pratica-simples.html',
+              progressKey: 'gdscript_pratica_simples_progress_', progressTotal: 5,
+              requires: 'comparacao', hasGabarito: true
+            },
+            {
+              key: 'desafios', title: 'Prática — Desafios de GDScript',
+              desc: 'Vença cada desafio em ordem para avançar: variável, print, constante, função, if/else e for.',
+              icon: '🟣', src: 'atividades/gdscript-desafios-pratica.html',
+              progressKey: 'gdscript_desafios_progress_', progressTotal: 14,
+              requires: 'pratica-simples', hasGabarito: true
+            }
+          ]
+        },
+        {
           // Trilha individual, adaptada — só aparece pro aluno listado em
           // visibleFor (professor sempre vê, pra acompanhar/gerar gabarito).
           // Ver trilhaStatus() em shared/platform-core.js.

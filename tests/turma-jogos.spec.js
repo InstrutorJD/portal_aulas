@@ -25,7 +25,8 @@ function seedAllModulesComplete(user) {
     'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria', 'mundo_comprometimento_teoria',
     'projetos_metodos_teoria', 'projetos_fases_teoria',
     'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria',
-    'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria', 'csharp_teoria', 'csharp_comparacao',
+    'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
+    'csharp_teoria', 'csharp_comparacao', 'gdscript_teoria', 'gdscript_comparacao',
     'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria',
     'teste_roteiros_trabalho', 'teste_roteiros_questionario'
   ];
@@ -43,9 +44,12 @@ function seedAllModulesComplete(user) {
   localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
   localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dezoito));
   localStorage.setItem(`csharp_pratica_simples_progress_${user}`, JSON.stringify(cinco));
-  // csharp_desafios tem 14 desafios (progressTotal:14), diferente do
-  // padrão de 10 usado pelas outras trilhas de prática.
-  localStorage.setItem(`csharp_desafios_progress_${user}`, JSON.stringify(Array.from({ length: 14 }, (_, i) => i + 1)));
+  localStorage.setItem(`gdscript_pratica_simples_progress_${user}`, JSON.stringify(cinco));
+  // csharp_desafios e gdscript_desafios têm 14 desafios (progressTotal:14),
+  // diferente do padrão de 10 usado pelas outras trilhas de prática.
+  const catorze = Array.from({ length: 14 }, (_, i) => i + 1);
+  localStorage.setItem(`csharp_desafios_progress_${user}`, JSON.stringify(catorze));
+  localStorage.setItem(`gdscript_desafios_progress_${user}`, JSON.stringify(catorze));
 
   const praticaCinco = ['vida_autoconhecimento_pratica', 'vida_cidadania_pratica', 'vida_emocional_pratica', 'vida_equipe_pratica'];
   praticaCinco.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(cinco)));
@@ -74,11 +78,12 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
     await openMateria1(page);
 
-    // 6 trilhas nessa matéria (4 fundamentos genéricos + JS + C#) — vira um
-    // <select> só, começando na primeira trilha cadastrada.
+    // 7 trilhas nessa matéria (4 fundamentos genéricos + JS + C# + GDScript)
+    // — vira um <select> só, começando na primeira trilha cadastrada.
     await expect(page.locator('#trilhaSelect')).toHaveValue('fund-ambiente');
     await expect(page.locator('#trilhaSelect option[value="js"]')).toHaveCount(1);
     await expect(page.locator('#trilhaSelect option[value="csharp"]')).toHaveCount(1);
+    await expect(page.locator('#trilhaSelect option[value="gdscript"]')).toHaveCount(1);
 
     // tema "hacker": --green deve ser o verde original, não o azul de Sistemas
     const green = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--green').trim());

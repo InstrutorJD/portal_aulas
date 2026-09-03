@@ -6,11 +6,12 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
-// Turma Jogos tem 57 módulos ao todo (teoria+prática de todas as trilhas de
-// todas as matérias com conteúdo, incluindo os 4 módulos da trilha 'csharp':
-// teoria/comparacao/pratica-simples/desafios) — usados como base do % geral.
-// O % de cada aluno é a MÉDIA da fração current/total de cada um dos 57
-// módulos, não uma simples contagem de módulos concluídos.
+// Turma Jogos tem 61 módulos ao todo (teoria+prática de todas as trilhas de
+// todas as matérias com conteúdo, incluindo os 4 módulos de cada uma das
+// trilhas 'csharp' e 'gdscript': teoria/comparacao/pratica-simples/
+// desafios) — usados como base do % geral. O % de cada aluno é a MÉDIA da
+// fração current/total de cada um dos 61 módulos, não uma simples contagem
+// de módulos concluídos.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
 // (syncAllModulesProgress roda no load e reescreve student_module_progress
@@ -21,14 +22,14 @@ const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
     // edward.guzman: completa 2 módulos pré-existentes (js/basico,
-    // js/intermediario) → soma 2 frações de 1.0 / 57 módulos = 3,51% → arredonda 4%.
+    // js/intermediario) → soma 2 frações de 1.0 / 61 módulos = 3,28% → arredonda 3%.
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
   ],
 };
 
 // breno.silva80 completa os 10 desafios de js/basico (progressTotal:10) e
-// nada mais → 1 fração de 1.0 / 57 módulos da turma = 1,75% → arredonda 2%.
+// nada mais → 1 fração de 1.0 / 61 módulos da turma = 1,64% → arredonda 2%.
 async function seedBrenoLocalProgress(page) {
   await page.addInitScript(() => {
     localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
@@ -43,7 +44,7 @@ test.describe('Ranking do aluno na turma', () => {
 
     const badge = page.locator('#rankingBadge');
     await expect(badge).toBeVisible();
-    // edward (6%) na frente, breno (2%) em 2º de 17 alunos da turma Jogos.
+    // edward (3%) na frente, breno (2%) em 2º de 17 alunos da turma Jogos.
     // O texto é só o essencial (troféu + posição); o detalhe completo vira title/tooltip.
     await expect(badge).toHaveText('🏆 2º');
     await expect(badge).toHaveAttribute('title', 'Sua posição na turma: 2º de 17 (2% concluído)');

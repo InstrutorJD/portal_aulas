@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Jogos: Comparação (JS/C# vs GDScript)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0f0a14; --panel:#161020; --panel2:#120d1a; --line:#2e2038;
+    --purple:#b98cff; --purple-dim:#7a4fb8; --blood:#c1121f; --blood-bright:#ff3b30;
+    --gold:#e0b84a; --ink:#e6dbf2; --ink-dim:#8b7898;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--purple-dim); background:#0a0710;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--purple); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:700px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--purple); margin:0 0 4px; letter-spacing:1px;
+  }
+  .card > p.intro{ font-size:12.5px; color:var(--ink-dim); margin:0 0 12px; line-height:1.6; }
+
+  .compare-tabs{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .compare-tab{
+    font-family:inherit; font-size:10.5px; font-weight:700; letter-spacing:0.3px;
+    background:var(--panel2); color:var(--ink-dim); border:1px solid var(--line);
+    padding:7px 10px; cursor:pointer; border-radius:2px;
+  }
+  .compare-tab:hover{ border-color:var(--purple-dim); color:var(--ink); }
+  .compare-tab.active{ border-color:var(--purple); color:var(--purple); background:rgba(185,140,255,0.08); }
+  .compare-tab.done .tab-check{ color:var(--purple); margin-right:3px; }
+
+  .compare-body h3{ font-size:13.5px; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; margin:0 0 8px; }
+  .compare-cols{ display:flex; gap:8px; flex-wrap:wrap; }
+  .compare-col{ flex:1 1 190px; min-width:0; }
+  .compare-col .lang-label{ font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
+  .compare-col pre{
+    background:#000; border:1px solid var(--line); padding:8px 9px; margin:0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--purple); white-space:pre;
+    min-height:60px;
+  }
+  .compare-col.gdscript pre{ color:var(--gold); }
+  .compare-body .note{ font-size:12px; color:var(--ink-dim); margin:8px 0 0; line-height:1.6; }
+  .compare-body .note b, .compare-body .note code{ color:var(--gold); }
+
+  .actions{ display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--purple); color:#1a0a2a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--purple); border:1px solid var(--purple-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--purple); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:12px 14px; }
+    .compare-cols{ flex-direction:column; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'gdscript_comparacao';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>GDSCRIPT — COMPARAÇÃO</div>
+    <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="storyWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `gdscript_comparacao_progress_${username}`;
+
+  // Comparação de 3 colunas (JS | C# | GDScript), um conceito por vez (abas
+  // + Anterior/Próximo) — mesmo padrão de csharp-comparacao.html, só que com
+  // uma coluna a mais. GDScript não usa `;` nem chaves — blocos são por
+  // indentação, igual Python.
+  const COMPARE_ITEMS = [
+    {
+      tab: '1. Variável', title: 'Criar variável',
+      js: 'let idade = 10;', cs: 'int idade = 10;', gd: 'var idade = 10',
+      note: 'GDScript não exige tipo antes do nome (como o JS) nem usa <code>let</code> — só <code>var</code>, e sem <code>;</code> no final.'
+    },
+    {
+      tab: '2. Constante', title: 'Criar constante',
+      js: 'const nome = "Ana";', cs: 'const string nome = "Ana";', gd: 'const nome = "Ana"',
+      note: 'A mais parecida com o JS das três: só <code>const</code> + nome + valor, sem tipo e sem <code>;</code>.'
+    },
+    {
+      tab: '3. Função', title: 'Criar função',
+      js: 'function somar(a, b) {\n  return a + b;\n}',
+      cs: 'static int Somar(int a, int b) {\n  return a + b;\n}',
+      gd: 'func somar(a, b):\n\treturn a + b',
+      note: 'GDScript usa <code>func</code> (não <code>function</code>) e dois-pontos + indentação no lugar das chaves — sem tipo nos parâmetros.'
+    },
+    {
+      tab: '4. If/else', title: 'If / else',
+      js: 'if (idade >= 18) {\n  console.log("Maior");\n} else {\n  console.log("Menor");\n}',
+      cs: 'if (idade >= 18) {\n  Console.WriteLine("Maior");\n} else {\n  Console.WriteLine("Menor");\n}',
+      gd: 'if idade >= 18:\n\tprint("Maior")\nelse:\n\tprint("Menor")',
+      note: 'Sem parênteses na condição e sem chaves — só dois-pontos (<code>:</code>) e indentação marcam onde cada bloco começa.'
+    },
+    {
+      tab: '5. Laço', title: 'Laço de repetição',
+      js: 'for (let i = 0; i < 5; i++) {\n  console.log(i);\n}',
+      cs: 'for (int i = 0; i < 5; i++) {\n  Console.WriteLine(i);\n}',
+      gd: 'for i in range(5):\n\tprint(i)',
+      note: 'A mais enxuta das três: <code>range(5)</code> já gera os números de 0 a 4 sozinho, sem escrever condição nem incremento.'
+    }
+  ];
+
+  const storyWrap = document.getElementById('storyWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = COMPARE_ITEMS.length;
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('gdscript_comparacao', label, { step: compareIndex + 1, total: COMPARE_ITEMS.length });
+    }
+  }
+
+  let compareIndex = 0;
+  const compareSeen = new Set([0]);
+
+  function updateProgressBar() {
+    const pct = Math.round((compareIndex / COMPARE_ITEMS.length) * 100);
+    progressFill.style.width = pct + '%';
+    lblStepNum.textContent = compareIndex + 1;
+  }
+
+  function renderCompare() {
+    updateProgressBar();
+    const item = COMPARE_ITEMS[compareIndex];
+    reportStep(`GDScript — Comparação — Etapa ${compareIndex + 1}/${COMPARE_ITEMS.length}`);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h2>JavaScript / C# / GDScript</h2>
+      <p class="intro">Você já viu esses 5 conceitos em JavaScript e C#. Veja como ficam em GDScript — um conceito por vez:</p>
+      <div class="compare-tabs" id="compareTabs"></div>
+      <div class="compare-body">
+        <h3>${item.title}</h3>
+        <div class="compare-cols">
+          <div class="compare-col"><div class="lang-label">JavaScript</div><pre>${item.js}</pre></div>
+          <div class="compare-col"><div class="lang-label">C#</div><pre>${item.cs}</pre></div>
+          <div class="compare-col gdscript"><div class="lang-label">GDScript</div><pre>${item.gd}</pre></div>
+        </div>
+        <p class="note">${item.note}</p>
+      </div>
+    `;
+
+    const tabsEl = card.querySelector('#compareTabs');
+    COMPARE_ITEMS.forEach((it, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'compare-tab' + (i === compareIndex ? ' active' : '') + (compareSeen.has(i) ? ' done' : '');
+      btn.innerHTML = (compareSeen.has(i) ? '<span class="tab-check">✓</span>' : '') + it.tab;
+      btn.addEventListener('click', () => { compareIndex = i; compareSeen.add(i); renderCompare(); });
+      tabsEl.appendChild(btn);
+    });
+
+    const isLast = compareIndex === COMPARE_ITEMS.length - 1;
+    const nav = document.createElement('div');
+    nav.className = 'actions';
+    nav.innerHTML = `
+      ${compareIndex > 0 ? '<button class="btn btn-secondary" id="btnPrev">← Anterior</button>' : ''}
+      <button class="btn" id="btnNext">${isLast ? 'Concluir comparação ✓' : 'Próximo →'}</button>
+    `;
+    card.appendChild(nav);
+
+    storyWrap.innerHTML = '';
+    storyWrap.appendChild(card);
+
+    const btnPrev = card.querySelector('#btnPrev');
+    if (btnPrev) btnPrev.addEventListener('click', () => { compareIndex--; renderCompare(); });
+    card.querySelector('#btnNext').addEventListener('click', () => {
+      if (isLast) {
+        finish();
+      } else {
+        compareIndex++;
+        compareSeen.add(compareIndex);
+        renderCompare();
+      }
+    });
+  }
+
+  function finish(reviewOnly) {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = COMPARE_ITEMS.length;
+    if (!reviewOnly) {
+      saveProgress({ completed: true });
+      reportStep('GDScript — Comparação — Concluída');
+    }
+
+    storyWrap.innerHTML = `
+      <div class="card finish-screen">
+        <div class="trophy">🏆</div>
+        <h2>Comparação concluída!</h2>
+        <p>Você já viu como variável, constante, função, if/else e laço de repetição mudam de sintaxe entre JavaScript, C# e GDScript.</p>
+        <p>Agora é hora de escrever GDScript de verdade!</p>
+        <div class="actions" style="justify-content:center; margin-top:12px;">
+          <button class="btn btn-secondary" id="btnReview">🔁 Rever comparação</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnReview').addEventListener('click', () => { compareIndex = 0; renderCompare(); });
+  }
+
+  const saved = loadProgress();
+  if (saved && saved.completed) {
+    finish(true);
+  } else {
+    renderCompare();
+  }
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

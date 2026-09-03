@@ -1,32 +1,53 @@
 # Pendências
 
-## Trilha GDScript removida, aguardando reconstrução
+## Trilha GDScript reconstruída (teoria + comparação de 3 colunas + 2 práticas)
 
-**Status:** pendente — remoção deliberada a pedido do professor. A trilha
-`csharp` já foi refeita do zero (ver abaixo); só `gdscript` continua sem
-conteúdo, aguardando reconstrução (ainda sem data definida).
+**Status:** concluído — trilha `gdscript` recriada do zero dentro de
+"Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), a pedido
+do professor, no mesmo formato/ordem da trilha `csharp` (simples → difícil),
+com 4 módulos:
+- **Teoria** (`atividades/gdscript-teoria.html`, `shared/quiz-teoria-engine.js`):
+  história do GDScript (criado pela própria equipe da Godot — Juan Linietsky
+  e Ariel Manzur), motivo de ter sido criado (integração nativa com nós/
+  cenas/sinais), pontos positivos/negativos e jogos famosos feitos com ele
+  (Brotato, Dome Keeper, Cassette Beasts).
+- **Comparação — JS/C# vs GDScript** (`atividades/gdscript-comparacao.html`):
+  igual a `csharp-comparacao.html`, só que com uma 3ª coluna — cada um dos 5
+  conceitos (variável, constante, função, if/else, laço) mostrado em
+  JavaScript, C# e GDScript lado a lado, um conceito por vez.
+- **Prática — GDScript Simples** (`atividades/gdscript-pratica-simples.html`):
+  só o essencial (criar variável, somar, subtrair, multiplicar, dividir),
+  com 5 desafios.
+- **Prática — Desafios de GDScript** (`atividades/gdscript-desafios-pratica.html`):
+  14 desafios no mesmo formato "vença cada duelo em ordem" — 10 de
+  variável/`print` + 4 de constante/função/if-else/for (mesmo balanceamento
+  da trilha C#, ver seção acima).
 
-**Onde:** a trilha `gdscript` (label "GDScript"), dentro da matéria
-"Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), continua
-removida — trilha, módulos (`basico`/`pratica`) e os 2 arquivos de atividade
-(`atividades/gdscript-basico.html`, `atividades/gdscript-pratica.html`).
+Como GDScript também não roda de verdade no navegador,
+`shared/gdscript-challenge-engine.js` (motor novo, mesmo espírito do motor
+de C#) TRANSPILA um subconjunto restrito de GDScript pra JavaScript. A
+diferença chave: GDScript não usa `;` nem `{ }` — blocos são por
+INDENTAÇÃO, igual Python. O transpile rastreia uma pilha de níveis de
+indentação (mais indentado que a linha anterior = abre bloco; menos
+indentado = fecha `}` até bater com um nível já visto) — não é um parser
+recursivo completo, é reconhecimento linha a linha; quem garante que o
+aninhamento fica certo é o `new Function()` do JS que roda o resultado
+depois. Cuidado ao mexer nesse arquivo: a lógica de fechamento de bloco já
+teve um bug (o `else:` duplicava o `}` de fechamento do `if`, porque a
+lógica de dedent já emite o `}` antes da linha ser processada pelo
+`ELSE_RE`) — corrigido antes de publicar, coberto por
+`tests/gdscript-jogos.spec.js`.
 
-**Próximos passos:**
-- Definir com o professor a capacidade real (MSEP) da trilha antes de
-  recriar qualquer coisa — mesma regra de sempre (a capacidade não pode ser
-  inventada, ver seção "Trilha por capacidade (MSEP)" do README).
-- Definir o formato (história + quiz, desafios de código, outro) e o
-  conteúdo, do zero — não reaproveitar o texto da versão antiga sem revisão,
-  já que a remoção foi pedida justamente para refazer.
-- Progresso de alunos que já tinham avançado na versão antiga de GDScript
-  (e na versão antiga de C#, module keys `basico`/`pratica` — diferentes dos
-  novos `teoria`/`comparacao`/`pratica-simples`/`desafios`, então ficam
-  órfãos, sem contar no progresso, mas continuam ocupando linhas na
-  tabela): ver
-  `sql/supabase-reset-progresso-csharp-gdscript-jogos.sql` para apagar
-  `student_module_progress` dessas trilhas no Supabase — mesmo padrão de
-  aviso de `sql/supabase-reset-progresso-js-jogos.sql` quanto a progresso
-  local no navegador dos alunos (localStorage não é apagado por esse SQL).
+A trilha evita ensinar a divisão int/float do GDScript (que depende do tipo
+em tempo de execução, não de uma palavra de tipo como o C#) — os desafios de
+divisão só usam valores que fecham redondo, pra não arriscar ensinar uma
+regra que o motor não modela de verdade.
+
+`sql/supabase-reset-progresso-csharp-gdscript-jogos.sql` foi atualizado
+junto: antes apagava a trilha `gdscript` INTEIRA (sem filtro de
+`module_key`), porque na época ela não tinha conteúdo nenhum. Agora filtra
+por `module_key in ('basico', 'pratica')` nas duas trilhas — igual já fazia
+só pra `csharp` — pra não apagar o progresso de verdade da trilha atual.
 
 ## Trilha C# reconstruída (teoria + comparação + 2 práticas)
 
