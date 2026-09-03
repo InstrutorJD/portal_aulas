@@ -44,6 +44,7 @@
   }
   .step-icon.active{ border-color:var(--green); }
   .step-icon.completed{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+  .step-icon.wrong{ border-color:var(--blood-bright); background:rgba(255,59,48,0.12); }
   .step-icon.locked{ opacity:0.35; cursor:not-allowed; }
   .step-icon .badge{ position:absolute; top:-6px; right:-6px; font-size:15px; }
 
@@ -70,8 +71,9 @@
     padding:16px 10px; cursor:pointer; font-family:inherit; color:var(--ink); font-size:19px; font-weight:800; text-align:center;
   }
   .word-btn:hover{ border-color:var(--green); background:rgba(124,255,63,0.08); }
-  .word-btn:disabled{ opacity:0.4; cursor:not-allowed; }
-  .word-btn.wrong-flash{ border-color:var(--blood-bright); background:rgba(255,59,48,0.12); }
+  .word-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .word-btn.correct-pick{ border-color:var(--green); background:rgba(124,255,63,0.18); opacity:1; }
+  .word-btn.wrong-pick{ border-color:var(--blood-bright); background:rgba(255,59,48,0.18); opacity:1; }
 
   .feedback{
     min-height:26px; font-size:17px; font-weight:800; text-align:center;
@@ -107,6 +109,34 @@
   .trophy-box h2{ font-family:'VT323', monospace; font-size:30px; color:var(--green); margin:0 0 8px; }
   .trophy-box p{ font-size:17px; color:var(--ink); line-height:1.6; }
 
+  /* Tela de regras/início e tela de bloqueio (trava de tela — sair da aba
+     conta aviso, ver shared/exam-proctor.js) */
+  .gate-wrap{ width:100%; height:100%; display:none; align-items:center; justify-content:center; padding:14px; }
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{ font-family:'VT323', monospace; font-size:24px; color:var(--yellow); margin:0 0 10px; letter-spacing:1px; }
+  .gate-card{ max-width:440px; width:100%; text-align:center; }
+  .gate-card .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .gate-card p{ font-size:15px; line-height:1.7; color:var(--ink); margin:0 0 8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:280px; margin:16px auto 0; text-align:left; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(5,10,16,0.88); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:380px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:15px; line-height:1.7; margin:0 0 14px; color:var(--ink); }
+
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
@@ -127,6 +157,7 @@
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
 <script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
@@ -137,7 +168,9 @@
     <div>✅ <span id="lblProgress">0/0</span></div>
   </div>
 
-  <div class="stage">
+  <div class="gate-wrap" id="gateWrap"></div>
+
+  <div class="stage" id="stageWrap" style="display:none;">
     <div class="layout">
       <div class="sidebar" id="stepList"></div>
 
@@ -176,8 +209,10 @@
   // frase (2 → 3 → 4 palavras) e pelo vocabulário, não pela quantidade de
   // cliques: em todo nível só falta a ÚLTIMA palavra, clicada entre 3
   // opções — mais previsível de acompanhar do que ter que acertar várias
-  // palavras em sequência. Cada opção errada só mostra "tenta de novo" (sem
-  // revelar a certa), igual o resto do portal — o emoji já é a pista.
+  // palavras em sequência. SÓ 1 TENTATIVA por frase (ver pickWord): a
+  // primeira palavra clicada já trava a resposta, certa ou errada, e segue
+  // pra próxima — sem chute repetido por eliminação. Errar não revela qual
+  // era a certa, igual o resto do portal — o emoji já é a pista.
   const CHALLENGES = [
     // Nível 1 — 2 palavras (5 frases)
     { id: 1, level: 1, words: ['Bom'], clue: '☀️', correct: 'Dia', options: ['Dia', 'Noite', 'Carro'] },
@@ -253,7 +288,20 @@
   }
   function saveCompleted(set) { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...set])); }
 
+  // Guarda o RESULTADO de cada frase já respondida (certo/errado/pulado) —
+  // separado de `completed` (que só controla destravar a próxima e o
+  // contador de progresso, ver PENDENCIAS/README sobre o formato array de
+  // ids). Só usado pra colorir a barra lateral e mostrar o placar final;
+  // não precisa sincronizar com o Supabase.
+  const RESULTS_KEY = `frases_engel_results_${username}`;
+  function getResults() {
+    try { return JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveResults(obj) { localStorage.setItem(RESULTS_KEY, JSON.stringify(obj)); }
+
   let completed = getCompleted();
+  let results = getResults();
   let selectedId = CHALLENGES.find(c => !completed.has(c.id))?.id || CHALLENGES[0].id;
 
   // Bypass pro professor: ver PENDENCIAS.md, "Desbloquear todas as etapas
@@ -278,9 +326,11 @@
     CHALLENGES.forEach(c => {
       const unlocked = isUnlocked(c);
       const isDone = completed.has(c.id);
+      const result = results[c.id];
+      const badge = result === 'correct' ? '✅' : result === 'wrong' ? '❌' : result === 'skipped' ? '⏭️' : '';
       const item = document.createElement('div');
-      item.className = 'step-icon' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (!unlocked ? ' locked' : '');
-      item.innerHTML = `${unlocked ? c.clue.slice(0, 2) : '🔒'}${isDone ? '<span class="badge">✅</span>' : ''}`;
+      item.className = 'step-icon' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (result === 'wrong' ? ' wrong' : '') + (!unlocked ? ' locked' : '');
+      item.innerHTML = `${unlocked ? c.clue.slice(0, 2) : '🔒'}${badge ? `<span class="badge">${badge}</span>` : ''}`;
       if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
       stepListEl.appendChild(item);
     });
@@ -324,48 +374,62 @@
     }
   }
 
+  // Só 1 tentativa por frase — sem chute repetido: a primeira palavra
+  // clicada já trava a resposta (certa ou errada) e segue pro Próxima. Isso
+  // é o que faz o progresso ($completed$/PROGRESS_KEY) e o resultado
+  // ($results$/RESULTS_KEY) andarem juntos aqui: TODA frase respondida
+  // (certa ou errada) destrava a próxima — só não conta quando ele nem
+  // chegou a clicar em nada ainda.
   function pickWord(challenge, word, btnEl) {
     const isCorrect = word === challenge.correct;
 
+    wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+    btnEl.classList.add(isCorrect ? 'correct-pick' : 'wrong-pick');
+
     if (isCorrect) {
-      wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
       sentenceBoxEl.innerHTML = renderSentence(challenge, challenge.correct);
       feedbackEl.textContent = '✅ Isso mesmo!';
       feedbackEl.className = 'feedback ok';
-
-      completed.add(challenge.id);
-      saveCompleted(completed);
-      const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
-      if (isLast) {
-        renderSidebar();
-        setTimeout(renderTrophy, 700);
-      } else {
-        btnNext.style.display = 'inline-block';
-        renderSidebar();
-      }
-
-      if (typeof window.reportActivity === 'function') {
-        window.reportActivity('frases_engel', `Formar Frases (Engel) — Frase ${challenge.id} (concluída)`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size });
-      }
     } else {
-      btnEl.classList.add('wrong-flash');
-      setTimeout(() => btnEl.classList.remove('wrong-flash'), 400);
-      feedbackEl.textContent = '❌ Tenta de novo';
+      // Não revela qual era a certa — mesma regra do resto do portal (ver
+      // shared/quiz-teoria-engine.js) — só marca que essa já era a única
+      // chance e segue em frente.
+      feedbackEl.textContent = '❌ Não foi dessa vez';
       feedbackEl.className = 'feedback fail';
+    }
+
+    completed.add(challenge.id);
+    results[challenge.id] = isCorrect ? 'correct' : 'wrong';
+    saveCompleted(completed);
+    saveResults(results);
+
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    if (isLast) {
+      renderSidebar();
+      setTimeout(renderTrophy, 900);
+    } else {
+      btnNext.style.display = 'inline-block';
+      renderSidebar();
+    }
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('frases_engel', `Formar Frases (Engel) — Frase ${challenge.id} (${isCorrect ? 'certa' : 'errada'})`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, correct: isCorrect });
     }
   }
 
   function renderTrophy() {
+    const rightCount = CHALLENGES.filter(c => results[c.id] === 'correct').length;
     const layout = document.querySelector('.main-panel');
     layout.innerHTML = `
       <div class="trophy-box">
         <div class="big">🏆</div>
         <h2>Terminou tudo!</h2>
         <p>Você completou as 15 frases, do mais fácil até o mais difícil.</p>
+        <p>Você acertou ${rightCount} de ${CHALLENGES.length} sozinho.</p>
       </div>
     `;
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('frases_engel', 'Formar Frases (Engel) — Concluído', { total: CHALLENGES.length, completed: completed.size, finished: true });
+      window.reportActivity('frases_engel', 'Formar Frases (Engel) — Concluído', { total: CHALLENGES.length, completed: completed.size, correct: rightCount, finished: true });
     }
   }
 
@@ -378,7 +442,9 @@
     if (!challenge) return;
 
     completed.add(challenge.id);
+    results[challenge.id] = 'skipped';
     saveCompleted(completed);
+    saveResults(results);
     sentenceBoxEl.innerHTML = renderSentence(challenge, challenge.correct);
     wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
     feedbackEl.textContent = `⏭️ Pulado pelo professor (${nomeProfessor}).`;
@@ -440,12 +506,136 @@
     if (next) selectChallenge(next.id);
   });
 
-  renderSidebar();
-  if (completed.size >= CHALLENGES.length) {
-    renderTrophy();
-  } else {
-    selectChallenge(selectedId);
+  // Trava de tela: sair da aba/janela durante o jogo conta 1 aviso; na 2ª
+  // vez, bloqueia até o professor liberar com o token — mesmo mecanismo
+  // (shared/exam-proctor.js) já usado em atividades avaliativas do portal
+  // (ver turmas/sistemas/atividades/prog-depuracao-pratica.html, que usa o
+  // mesmo formato de progresso "array de ids resolvidos"). Só conta a
+  // partir de clicar em "Começar" — sem isso a MERA abertura do jogo já
+  // contaria como saída.
+  const gateWrap = document.getElementById('gateWrap');
+  const stageWrap = document.getElementById('stageWrap');
+
+  function allChallengesAttempted() {
+    return completed.size >= CHALLENGES.length;
   }
+
+  function startGame() {
+    gateWrap.style.display = 'none';
+    stageWrap.style.display = 'flex';
+    renderSidebar();
+    if (allChallengesAttempted()) {
+      renderTrophy();
+    } else {
+      selectChallenge(selectedId);
+    }
+  }
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Aviso ${count}/2</h2>
+        <p>Você saiu da tela do jogo. Na <b>2ª vez</b>, o jogo fica <b>bloqueado</b> até o professor liberar.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen(guard) {
+    stageWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🔒</div>
+        <h2>Jogo bloqueado</h2>
+        <p>Você saiu da tela 2 vezes. Peça ajuda ao professor.</p>
+        <p>Ele libera com o mesmo token de "Dar visto" (Gestão → Token).</p>
+        <div class="token-form">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen(guard);
+    });
+  }
+
+  function renderStartScreen(guard) {
+    stageWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🧩</div>
+        <h2>Antes de começar</h2>
+        <p>São 15 frases. Depois de clicar em <b>Começar</b>, fique nesta tela até terminar.</p>
+        <p>Se você sair da tela, conta um aviso. Na 2ª vez, o jogo bloqueia até o professor liberar.</p>
+        <div class="actions" style="justify-content:center; margin-top:10px;">
+          <button class="btn" id="btnIniciar">▶ Começar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen(guard),
+        isCompleted: allChallengesAttempted
+      });
+      startGame();
+    });
+  }
+
+  (async function boot() {
+    const guard = await window.PortalExamGuard.create('frases_engel');
+
+    // Sem sessão de aluno reconhecida (professor, ou iframe oculto da
+    // Gestão gerando gabarito remotamente) ou jogo já 100% respondido —
+    // guarda desligada: abre direto, sem tela de regras nem risco de bloqueio.
+    if (guard.disabled || allChallengesAttempted()) {
+      startGame();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen(guard);
+    } else {
+      renderStartScreen(guard);
+    }
+  })();
 </script>
 
 <script src="../../../shared/vlibras-widget.js"></script>

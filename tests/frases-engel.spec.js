@@ -4,9 +4,9 @@
 // como as outras adaptações do Engel) — ver isMateriaVisibleToEmail em
 // shared/platform-core.js. Cobre o ponto mais sensível: o CARD da matéria
 // não pode vazar (nem vazio/"Em breve") pra quem não é o Engel nem o
-// professor, e o jogo em si (associar palavra + emoji pra completar frase,
-// sem digitar) precisa travar progressão, aceitar pular via token do
-// professor e gerar gabarito — mesmo padrão dos outros jogos dele.
+// professor; o jogo em si só dá 1 tentativa por frase (sem chute repetido);
+// e a trava de tela (shared/exam-proctor.js) bloqueia depois de sair da
+// aba 2 vezes, só o professor libera com token.
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
@@ -24,11 +24,23 @@ const SEED_PROFESSOR = {
   ],
 };
 
+async function simulateTabHidden(frame) {
+  await frame.locator('body').evaluate(() => {
+    Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+}
+
+// Abre o jogo e já clica "Começar" (trava de tela armada) — a maioria dos
+// testes quer chegar direto na 1ª frase, não na tela de regras em si (essa
+// tem teste próprio).
 async function openJogo(page) {
   await page.goto(ENGEL_URL);
   await page.click('.game-card:has-text("Comunicação (Engel)")');
   await page.click('#moduleSelector_frases-engel .game-card');
-  return page.frameLocator('#moduleFrame_frases-engel');
+  const frame = page.frameLocator('#moduleFrame_frases-engel');
+  await frame.locator('#btnIniciar').click();
+  return frame;
 }
 
 test.describe('Matéria "Comunicação (Engel)" — visibilidade do card', () => {
@@ -61,6 +73,18 @@ test.describe('Matéria "Comunicação (Engel)" — visibilidade do card', () =>
 });
 
 test.describe('Jogo "Formar Frases (Engel)"', () => {
+  test('mostra a tela de regras antes de começar, não o jogo direto', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ENGEL_URL);
+    await page.click('.game-card:has-text("Comunicação (Engel)")');
+    await page.click('#moduleSelector_frases-engel .game-card');
+    const frame = page.frameLocator('#moduleFrame_frases-engel');
+
+    await expect(frame.locator('#gateWrap')).toContainText('Antes de começar');
+    await expect(frame.locator('#stageWrap')).toBeHidden();
+    await expect(frame.locator('#btnIniciar')).toBeVisible();
+  });
+
   test('carrega travado a partir da 2ª frase, com a 1ª (nível 1, 2 palavras) já disponível', async ({ page }) => {
     await stubSupabaseFake(page, {});
     const frame = await openJogo(page);
@@ -71,13 +95,28 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
     await expect(frame.locator('.step-icon').nth(1)).toHaveClass(/locked/);
   });
 
-  test('clicar a palavra errada não avança e mostra "tenta de novo", sem revelar a certa', async ({ page }) => {
+  test('clicar a palavra errada trava a resposta na hora (sem chute repetido) e libera a próxima', async ({ page }) => {
     await stubSupabaseFake(page, {});
     const frame = await openJogo(page);
+
     await frame.locator('.word-btn', { hasText: 'Carro' }).click();
-    await expect(frame.locator('#feedback')).toContainText('Tenta de novo');
-    await expect(frame.locator('#btnNext')).toBeHidden();
-    await expect(frame.locator('.step-icon').first()).not.toHaveClass(/completed/);
+    await expect(frame.locator('#feedback')).toContainText('Não foi dessa vez');
+    await expect(frame.locator('.word-btn', { hasText: 'Carro' })).toHaveClass(/wrong-pick/);
+
+    // as 3 opções ficam desabilitadas — não dá pra tentar de novo.
+    const buttons = frame.locator('.word-btn');
+    await expect(buttons).toHaveCount(3);
+    for (let i = 0; i < 3; i++) await expect(buttons.nth(i)).toBeDisabled();
+
+    // mesmo errando, a frase conta como respondida: destrava a próxima e
+    // aparece "Próxima" (não fica travado esperando acertar).
+    await expect(frame.locator('#btnNext')).toBeVisible();
+    await expect(frame.locator('.step-icon').first()).toHaveClass(/completed/);
+    await expect(frame.locator('.step-icon').first()).toHaveClass(/wrong/);
+    await expect(frame.locator('.step-icon').first()).toContainText('❌');
+
+    await frame.locator('#btnNext').click();
+    await expect(frame.locator('#clueEmoji')).toHaveText('🌙');
   });
 
   test('clicar a palavra certa completa a frase, marca concluída e libera a próxima', async ({ page }) => {
@@ -88,17 +127,23 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
     await expect(frame.locator('#feedback')).toContainText('Isso mesmo');
     await expect(frame.locator('#btnNext')).toBeVisible();
     await expect(frame.locator('.step-icon').first()).toHaveClass(/completed/);
+    await expect(frame.locator('.step-icon').first()).toContainText('✅');
 
     await frame.locator('#btnNext').click();
     await expect(frame.locator('#levelTag')).toHaveText('Nível 1 · 2 palavras');
     await expect(frame.locator('#clueEmoji')).toHaveText('🌙');
   });
 
-  test('resolve as 15 frases em ordem (2 → 3 → 4 palavras) e mostra o troféu final', async ({ page }) => {
+  test('resolve as 15 frases em ordem (2 → 3 → 4 palavras), errando de propósito 1, e mostra o placar no troféu final', async ({ page }) => {
     await stubSupabaseFake(page, {});
     const frame = await openJogo(page);
 
-    const answers = ['Dia', 'Noite', 'Bem', 'Cachorro', 'Casa', 'Água', 'Gato', 'Bola', 'Amigos', 'Quente', 'Dormindo', 'Desenhando', 'Maçã', 'Bola', 'Festa'];
+    // Frase 1 errada de propósito (Carro em vez de Dia) — ainda assim avança.
+    await frame.locator('.word-btn', { hasText: 'Carro' }).click();
+    await expect(frame.locator('#feedback')).toContainText('Não foi dessa vez');
+    await frame.locator('#btnNext').click();
+
+    const answers = ['Noite', 'Bem', 'Cachorro', 'Casa', 'Água', 'Gato', 'Bola', 'Amigos', 'Quente', 'Dormindo', 'Desenhando', 'Maçã', 'Bola', 'Festa'];
     for (let i = 0; i < answers.length; i++) {
       await frame.locator('.word-btn', { hasText: new RegExp(`^${answers[i]}$`) }).click();
       await expect(frame.locator('#feedback')).toContainText('Isso mesmo');
@@ -106,11 +151,13 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
     }
 
     await expect(frame.locator('.trophy-box')).toContainText('Terminou tudo!');
+    await expect(frame.locator('.trophy-box')).toContainText('Você acertou 14 de 15 sozinho.');
+
     const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`frases_engel_progress_${u}`)), 'engel.fraga');
     expect(progress).toHaveLength(15);
-
-    // nível sobe de verdade — a 11ª frase (nível 3) já tem 4 palavras.
-    // (implícito: passou pelas 15 sem travar, cobrindo os 3 níveis.)
+    const results = await page.evaluate(u => JSON.parse(localStorage.getItem(`frases_engel_results_${u}`)), 'engel.fraga');
+    expect(results['1']).toBe('wrong');
+    expect(results['2']).toBe('correct');
   });
 
   test('botão "Pular (professor)" exige token válido antes de pular a frase', async ({ page }) => {
@@ -150,5 +197,77 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
     expect(content).toContain('GABARITO');
     expect(content).toContain('Bom Dia');
     expect(content).toContain('Amanhã vai ter Festa');
+  });
+});
+
+test.describe('Jogo "Formar Frases (Engel)" — trava de tela', () => {
+  test('1ª saída da aba avisa, 2ª bloqueia — e o professor desbloqueia com o token', async ({ page }) => {
+    await stubSupabaseFake(page, SEED_PROFESSOR);
+    const frame = await openJogo(page);
+    await expect(frame.locator('#stageWrap')).toBeVisible();
+
+    // 1ª saída: aviso, o jogo continua acessível por baixo do overlay.
+    await simulateTabHidden(frame);
+    await expect(frame.locator('.warn-overlay')).toContainText('Aviso 1/2');
+    await frame.locator('#btnWarnOk').click();
+    await expect(frame.locator('.warn-overlay')).toHaveCount(0);
+    await expect(frame.locator('#stageWrap')).toBeVisible();
+
+    // 2ª saída: bloqueia de verdade — o jogo some, entra a tela de bloqueio.
+    await simulateTabHidden(frame);
+    await expect(frame.locator('#gateWrap')).toContainText('Jogo bloqueado');
+    await expect(frame.locator('#stageWrap')).toBeHidden();
+
+    const blockedState = await page.evaluate(u => JSON.parse(localStorage.getItem(`frases_engel_guard_${u}`)), 'engel.fraga');
+    expect(blockedState.blocked).toBe(true);
+
+    // Sem o token do professor não sai da tela de bloqueio.
+    await frame.locator('#unlockToken').fill('000000');
+    await frame.locator('#btnUnlock').click();
+    await expect(frame.locator('#gateWrap')).toContainText('Jogo bloqueado');
+
+    // Com o token certo, volta pra tela de regras (não direto pro jogo) e zera os avisos.
+    await frame.locator('#unlockToken').fill(TOKEN_VALIDO);
+    await frame.locator('#btnUnlock').click();
+    await expect(frame.locator('#gateWrap')).toContainText('Antes de começar');
+    const unlockedState = await page.evaluate(u => JSON.parse(localStorage.getItem(`frases_engel_guard_${u}`)), 'engel.fraga');
+    expect(unlockedState.blocked).toBe(false);
+    expect(unlockedState.warnings).toBe(0);
+  });
+
+  test('depois de responder as 15 frases, o jogo abre direto no troféu (sem tela de regras) e sair da aba não conta mais aviso', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.addInitScript(u => {
+      const todasIds = Array.from({ length: 15 }, (_, i) => i + 1);
+      localStorage.setItem(`frases_engel_progress_${u}`, JSON.stringify(todasIds));
+    }, 'engel.fraga');
+
+    await page.goto(ENGEL_URL);
+    await page.click('.game-card:has-text("Comunicação (Engel)")');
+    await page.click('#moduleSelector_frases-engel .game-card');
+    const frame = page.frameLocator('#moduleFrame_frases-engel');
+
+    // já respondeu tudo — não há mais risco de cola, então nem passa pela
+    // tela de regras: o troféu já aparece direto.
+    await expect(frame.locator('.trophy-box')).toContainText('Terminou tudo!');
+
+    await simulateTabHidden(frame);
+    await expect(frame.locator('.warn-overlay')).toHaveCount(0);
+  });
+
+  test('professor abre o jogo direto, sem tela de regras nem risco de bloqueio', async ({ page }) => {
+    // A URL do iframe do módulo não carrega "role=" (só user/name/turma —
+    // ver openModule em shared/platform-core.js) — sem um profile
+    // 'admin'/professor já semeado, o cliente fake sintetizaria 'aluno'
+    // por padrão pra esse id dentro do iframe. Mesmo motivo de
+    // tests/professor-unlock-challenges.spec.js sempre semear isso.
+    await stubSupabaseFake(page, SEED_PROFESSOR);
+    await page.goto(PROFESSOR_URL);
+    await page.click('.game-card:has-text("Comunicação (Engel)")');
+    await page.click('#moduleSelector_frases-engel .game-card');
+    const frame = page.frameLocator('#moduleFrame_frases-engel');
+
+    await expect(frame.locator('#stageWrap')).toBeVisible();
+    await expect(frame.locator('#gateWrap')).not.toContainText('Antes de começar');
   });
 });
