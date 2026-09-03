@@ -1,5 +1,33 @@
 # Pendências
 
+## Mais desafios básicos + dicas menos reveladoras (C# e GDScript)
+
+**Status:** concluído — a pedido do professor, as "Práticas simples" (C# e
+GDScript) ganharam 4 desafios novos cada (de 5 pra 9): guardar texto, resto
+da divisão (`%`), valor oposto (`-x`) e combinar duas operações com
+parênteses (`(a + b) * c`) — `progressTotal` dos dois módulos foi atualizado
+de 5 pra 9 em `turmas/jogos/config.js`.
+
+Ao testar o operador `%`, achei um bug real: `isSafeExpr()` (nos dois
+motores, `shared/csharp-challenge-engine.js` e
+`shared/gdscript-challenge-engine.js`) não tinha `%` no alfabeto permitido —
+qualquer desafio usando resto da divisão falhava com "expressão não
+reconhecida", mesmo com código correto. Corrigido nos dois arquivos.
+
+Também revisei as dicas das 4 telas de prática (`csharp-pratica-simples`,
+`gdscript-pratica-simples`, `csharp-desafios-pratica`,
+`gdscript-desafios-pratica`) — várias praticamente entregavam a resposta
+pronta (ex.: a dica do desafio de if/else escrevia a solução completa,
+`resultado = "Maior";` / `resultado = "Menor";`, palavra por palavra). Agora
+apontam pro conceito/operador certo sem escrever a linha de código final.
+
+Enquanto testava a tela de teoria do GDScript, achei outro bug de conteúdo
+(não relacionado às dicas): uma das 8 histórias (a de hot-reload/documentação)
+nunca mencionava "GDScript" pelo nome — como a ordem das histórias é
+embaralhada a cada carga (`shared/quiz-teoria-engine.js`), um teste que
+checava "a 1ª história menciona a linguagem" falhava sempre que essa etapa
+caía em 1º. Corrigido no texto da história, não só no teste.
+
 ## Trilha GDScript reconstruída (teoria + comparação de 3 colunas + 2 práticas)
 
 **Status:** concluído — trilha `gdscript` recriada do zero dentro de

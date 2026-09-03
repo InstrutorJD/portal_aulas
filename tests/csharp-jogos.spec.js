@@ -19,6 +19,10 @@ const SOLUTIONS_PRATICA_SIMPLES = [
   'int resultado = a - b;',
   'int resultado = a * b;',
   'double resultado = a / b;',
+  'string resultado = "Godot";',
+  'int resultado = a % b;',
+  'int resultado = -a;',
+  'int resultado = (a + b) * c;',
 ];
 
 const SOLUTIONS_DESAFIOS = [
@@ -111,14 +115,14 @@ test.describe('turmas/jogos/atividades/csharp-pratica-simples.html', () => {
     await stubSupabaseFake(page, {});
   });
 
-  test('resolve os 5 desafios (variável + 4 operações) em sequência e conclui o módulo', async ({ page }) => {
+  test('resolve os 9 desafios (variável, texto, operações, resto, oposto e combinação) em sequência e conclui o módulo', async ({ page }) => {
     await page.goto(PRATICA_SIMPLES_URL);
     await solveAll(page, SOLUTIONS_PRATICA_SIMPLES);
     await expect(page.locator('#consoleOutput')).toContainText('Você concluiu todos os desafios');
-    await expect(page.locator('#lblProgress')).toHaveText('5/5');
+    await expect(page.locator('#lblProgress')).toHaveText('9/9');
 
     const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`csharp_pratica_simples_progress_${u}`)), 'breno.silva80');
-    expect(progress).toHaveLength(5);
+    expect(progress).toHaveLength(9);
   });
 
   test('declarar a divisão como int (em vez de double) falha — ensina o truncamento de int/int do C#', async ({ page }) => {

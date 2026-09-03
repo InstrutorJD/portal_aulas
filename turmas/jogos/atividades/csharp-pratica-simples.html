@@ -201,7 +201,7 @@
       starter: '// crie uma variável chamada resultado, do tipo int, com o valor 100\n\n',
       explanation: 'Em C#, toda variável precisa de um <b>tipo</b> antes do nome. Pra números inteiros, use <code>int</code>.<pre>int pontos = 5;</pre>',
       desc: 'Crie uma variável chamada <code>resultado</code>, do tipo <code>int</code>, com o valor <b>100</b>.',
-      hint: 'A forma é <code>TIPO nome = valor;</code> — aqui o tipo é <code>int</code>.',
+      hint: 'Toda variável em C# segue <code>TIPO nome = valor;</code>. Qual palavra-chave de tipo serve pra números inteiros?',
       solution: 'int resultado = 100;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -215,7 +215,7 @@
       starter: '// as variáveis a e b já existem\n// crie uma variável int chamada resultado com a soma de a e b\n\n',
       explanation: 'Somar em C# funciona igual em JS: use <code>+</code>.<pre>int total = x + y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>int resultado</code> com a soma delas.',
-      hint: 'Some <code>a</code> e <code>b</code> com <code>+</code>, guardando numa variável <code>int</code>.',
+      hint: 'Pense em qual operador matemático junta dois valores numa soma — e lembre que toda variável em C# precisa do tipo antes do nome.',
       solution: 'int resultado = a + b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -231,7 +231,7 @@
       starter: '// as variáveis a e b já existem\n// crie uma variável int chamada resultado com a subtração de a por b\n\n',
       explanation: 'Subtrair usa <code>-</code>, igual em JS.<pre>int saldo = x - y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>int resultado</code> com <code>a</code> menos <code>b</code>.',
-      hint: 'Use <code>-</code> entre <code>a</code> e <code>b</code>, nessa ordem.',
+      hint: 'A ordem dos valores importa numa subtração — pense em qual variável vem primeiro pra não inverter o resultado.',
       solution: 'int resultado = a - b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -247,7 +247,7 @@
       starter: '// as variáveis a e b já existem\n// crie uma variável int chamada resultado com a multiplicação de a por b\n\n',
       explanation: 'Multiplicar usa <code>*</code>.<pre>int area = x * y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>int resultado</code> com <code>a</code> vezes <code>b</code>.',
-      hint: 'Use <code>*</code> entre <code>a</code> e <code>b</code>.',
+      hint: 'Qual sinal representa multiplicação em C#? É o mesmo símbolo usado em quase toda linguagem de programação.',
       solution: 'int resultado = a * b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -263,13 +263,75 @@
       starter: '// as variáveis a e b já existem\n// crie uma variável double chamada resultado com a divisão de a por b\n\n',
       explanation: 'Dividir usa <code>/</code> — mas cuidado: em C#, se a variável for <code>int</code>, o resultado corta a parte decimal (7/2 vira 3, não 3.5). Pra manter as casas decimais, declare como <code>double</code>.<pre>double media = x / y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem (nem sempre dividem "redondo"). Crie <code>resultado</code>, do tipo <code>double</code>, com <code>a</code> dividido por <code>b</code>.',
-      hint: 'Declare <code>resultado</code> como <code>double</code>, não <code>int</code> — senão o C# descarta as casas decimais.',
+      hint: 'Pense no tipo da variável: qual dos dois tipos que você já conhece consegue guardar casas decimais sem perder informação?',
       solution: 'double resultado = a / b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: { a: 7, b: 2 }, expected: 3.5 },
         { values: { a: 9, b: 2 }, expected: 4.5 },
         { values: { a: 10, b: 4 }, expected: 2.5 }
+      ]
+    },
+    {
+      id: 6,
+      title: 'Guardando um texto',
+      givenVars: [],
+      starter: '// crie uma variável chamada resultado, do tipo string, com o texto "Godot"\n\n',
+      explanation: 'Texto em C# é do tipo <code>string</code> e fica entre aspas duplas.<pre>string engine = "Unity";</pre>',
+      desc: 'Crie uma variável chamada <code>resultado</code>, do tipo <code>string</code>, com o texto <code>"Godot"</code>.',
+      hint: 'Lembre-se: texto em C# precisa do tipo certo pra guardar palavras, e o conteúdo fica entre aspas duplas.',
+      solution: 'string resultado = "Godot";',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: {}, expected: 'Godot' }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Resto da divisão',
+      givenVars: ['a', 'b'],
+      starter: '// as variáveis a e b já existem\n// crie uma variável int chamada resultado com o resto da divisão de a por b\n\n',
+      explanation: 'O operador <code>%</code> devolve o que sobra de uma divisão (não o resultado dela).<pre>int sobra = x % y; // 7 % 2 é 1</pre>',
+      desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>int resultado</code> com o resto da divisão de <code>a</code> por <code>b</code>.',
+      hint: 'Existe um operador específico pra "sobra" de uma divisão — não é a barra normal (<code>/</code>).',
+      solution: 'int resultado = a % b;',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 10, b: 3 }, expected: 1 },
+        { values: { a: 9, b: 3 }, expected: 0 },
+        { values: { a: 7, b: 2 }, expected: 1 }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Valor oposto',
+      givenVars: ['a'],
+      starter: '// a variável a já existe\n// crie uma variável int chamada resultado com o valor oposto (negativo) de a\n\n',
+      explanation: 'Um operador de um símbolo só, colocado antes do valor, inverte o sinal de um número.<pre>int oposto = -x;</pre>',
+      desc: 'A variável <code>a</code> já existe. Crie <code>int resultado</code> com o valor oposto (o sinal invertido) de <code>a</code>.',
+      hint: 'Pra inverter o sinal de um número, existe um operador de um símbolo só, colocado ANTES do valor.',
+      solution: 'int resultado = -a;',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 5 }, expected: -5 },
+        { values: { a: -3 }, expected: 3 },
+        { values: { a: 0 }, expected: 0 }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Combinando duas operações',
+      givenVars: ['a', 'b', 'c'],
+      starter: '// as variáveis a, b e c já existem\n// crie uma variável int chamada resultado somando a com b, e depois multiplicando por c\n\n',
+      explanation: 'Parênteses decidem qual conta acontece primeiro, igual na matemática.<pre>int total = (x + y) * z;</pre>',
+      desc: 'As variáveis <code>a</code>, <code>b</code> e <code>c</code> já existem. Crie <code>int resultado</code> somando <code>a</code> com <code>b</code>, e depois multiplicando esse total por <code>c</code>.',
+      hint: 'Quando duas operações aparecem juntas, os parênteses decidem qual conta acontece primeiro — sem eles, a multiplicação venceria antes da soma.',
+      solution: 'int resultado = (a + b) * c;',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 2, b: 3, c: 4 }, expected: 20 },
+        { values: { a: 1, b: 1, c: 5 }, expected: 10 },
+        { values: { a: 0, b: 2, c: 3 }, expected: 6 }
       ]
     }
   ];

@@ -192,7 +192,7 @@
       starter: '# crie uma variavel chamada resultado, com o valor 100\n\n',
       explanation: 'Em GDScript, toda variável começa com <code>var</code> — sem tipo, sem <code>;</code>.<pre>var pontos = 5</pre>',
       desc: 'Crie uma variável chamada <code>resultado</code>, com o valor <b>100</b>.',
-      hint: 'A forma é <code>var nome = valor</code>, sem ponto e vírgula no final.',
+      hint: 'Toda variável em GDScript começa com <code>var nome = valor</code>. Lembre-se: sem tipo antes do nome, sem ponto e vírgula no final.',
       solution: 'var resultado = 100',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -236,7 +236,7 @@
       starter: '# as variaveis a e b ja existem\n# crie uma variavel resultado com a subtracao de a por b\n\n',
       explanation: 'Para subtrair, use o sinal <code>-</code>.<pre>var diferenca = x - y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável <code>resultado</code> com <code>a</code> menos <code>b</code>.',
-      hint: 'Use <code>-</code> entre <code>a</code> e <code>b</code>, nessa ordem.',
+      hint: 'A ordem dos valores importa numa subtração — pense em qual variável vem primeiro pra não inverter o resultado.',
       solution: 'var resultado = a - b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -252,7 +252,7 @@
       starter: '# as variaveis a e b ja existem\n# crie uma variavel resultado com a multiplicacao de a por b\n\n',
       explanation: 'Para multiplicar, use o sinal <code>*</code>.<pre>var area = x * y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável <code>resultado</code> com <code>a</code> vezes <code>b</code>.',
-      hint: 'Use <code>*</code> entre <code>a</code> e <code>b</code>.',
+      hint: 'Qual sinal representa multiplicação? É o mesmo símbolo usado em quase toda linguagem de programação.',
       solution: 'var resultado = a * b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -268,7 +268,7 @@
       starter: '# as variaveis a e b ja existem (a divisao sempre fecha redondo)\n# crie uma variavel resultado com a divisao de a por b\n\n',
       explanation: 'Para dividir, use o sinal <code>/</code>.<pre>var media = x / y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável <code>resultado</code> com <code>a</code> dividido por <code>b</code>.',
-      hint: 'Use <code>/</code> entre <code>a</code> e <code>b</code>.',
+      hint: 'Qual símbolo representa divisão? É o mesmo usado em quase toda calculadora.',
       solution: 'var resultado = a / b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -284,7 +284,7 @@
       starter: '# a variavel pontos ja existe\n# crie uma variavel resultado somando 10 ao valor de pontos\n\n',
       explanation: 'Você pode criar uma variável nova a partir do valor de outra que já existe, usando qualquer operador — aqui, soma.<pre>var vidaExtra = vida + 3</pre>',
       desc: 'A variável <code>pontos</code> já existe. Crie <code>resultado</code> com o valor de <code>pontos</code> mais <b>10</b>.',
-      hint: 'Pense em como aumentar um valor existente em uma quantia fixa — some <code>10</code> ao valor de <code>pontos</code>.',
+      hint: 'Você pode usar o valor de uma variável que já existe pra criar uma nova — qual operação aumenta um valor em uma quantia fixa?',
       solution: 'var resultado = pontos + 10',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -300,7 +300,7 @@
       starter: '# a variavel idade ja existe\n# use print para mostrar o valor de idade\n\n',
       explanation: 'O comando <code>print(...)</code> mostra qualquer valor na tela — é a forma mais comum de exibir um resultado em GDScript.<pre>print(idade)</pre>',
       desc: 'A variável <code>idade</code> já existe. Use <code>print</code> para mostrar o valor dela.',
-      hint: '<code>print(valor)</code> mostra o que estiver dentro dos parênteses — passe a variável <code>idade</code> pra ele.',
+      hint: 'O comando que exibe algo na tela recebe, entre parênteses, aquilo que você quer mostrar.',
       solution: 'print(idade)',
       check: { type: 'console' },
       tests: [
@@ -330,7 +330,7 @@
       starter: '# as variaveis a e b ja existem\n# mostre no console a soma delas\n\n',
       explanation: 'Não precisa guardar numa variável antes — dá pra mostrar o resultado de uma conta direto dentro do <code>print</code>.<pre>print(x + y)</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Use <code>print</code> para mostrar a soma delas, sem precisar criar outra variável.',
-      hint: 'Some <code>a</code> e <code>b</code> direto dentro dos parênteses do <code>print</code>.',
+      hint: 'Você não precisa criar uma variável antes — dá pra escrever a conta direto dentro dos parênteses de quem exibe o valor.',
       solution: 'print(a + b)',
       check: { type: 'console' },
       tests: [
@@ -346,7 +346,7 @@
       starter: '# crie uma constante chamada limite, com o valor 10\n\n',
       explanation: 'Uma <b>constante</b> usa <code>const</code> no lugar de <code>var</code> — depois de criada, o valor nunca muda.<pre>const MAX_VIDAS = 3</pre>',
       desc: 'Crie uma constante chamada <code>limite</code>, com o valor <b>10</b>.',
-      hint: 'A forma é <code>const nome = valor</code>.',
+      hint: 'Existe uma palavra que substitui o <code>var</code> quando o valor de uma variável nunca deve mudar depois de criada.',
       solution: 'const limite = 10',
       check: { type: 'variable', name: 'limite' },
       tests: [
@@ -360,7 +360,7 @@
       starter: '# crie a funcao Dobro(numero) que devolve numero vezes 2\n\n\n# depois, crie a variavel resultado chamando Dobro(5)\n',
       explanation: 'Uma <b>função</b> começa com <code>func</code>, termina com dois-pontos, e o corpo fica indentado (sem chaves).<pre>func Triplo(x):\n\treturn x * 3</pre>',
       desc: 'Crie uma função chamada <code>Dobro</code>, que recebe <code>numero</code> e devolve o dobro dele. Depois, crie <code>resultado</code> com o valor de <code>Dobro(5)</code>.',
-      hint: 'A forma é <code>func Nome(parametro):</code> seguido de <code>return expressão</code> indentado — depois, chame com <code>Nome(valor)</code> igual chamaria <code>print(valor)</code>.',
+      hint: 'Uma função começa com <code>func</code> + nome + parâmetros entre parênteses + dois-pontos, e usa <code>return</code> (indentado) pra devolver o valor. Depois, você a chama como chamaria qualquer outro comando.',
       solution: 'func Dobro(numero):\n\treturn numero * 2\nvar resultado = Dobro(5)',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -374,7 +374,7 @@
       starter: 'var resultado\nif idade >= 18:\n\t\nelse:\n\t\n',
       explanation: '<code>if</code> testa uma condição; <code>else</code> roda quando ela é falsa — os dois-pontos e a indentação marcam onde cada bloco começa.<pre>var status\nif vida > 0:\n\tstatus = "Vivo"\nelse:\n\tstatus = "Morto"</pre>',
       desc: 'A variável <code>idade</code> já existe. Complete o código: se <code>idade</code> for maior ou igual a <b>18</b>, <code>resultado</code> deve ser <code>"Maior"</code>; senão, <code>"Menor"</code>.',
-      hint: 'Dentro do <code>if</code> (indentado), escreva <code>resultado = "Maior"</code>. Dentro do <code>else</code>, <code>resultado = "Menor"</code>.',
+      hint: 'Dentro de cada bloco (indentado) você reatribui a variável <code>resultado</code>, sem a palavra <code>var</code> de novo — pense no texto certo pra cada lado da condição.',
       solution: 'var resultado\nif idade >= 18:\n\tresultado = "Maior"\nelse:\n\tresultado = "Menor"',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -390,7 +390,7 @@
       starter: '# use um for pra mostrar 0, 1, 2, 3 e 4 no console (5 numeros)\n\n',
       explanation: '<code>for</code> repete um bloco pra cada número dentro de <code>range(...)</code>.<pre>for i in range(3):\n\tprint(i)</pre>',
       desc: 'Use um laço <code>for</code> para mostrar no console os números de <b>0</b> a <b>4</b>, um <code>print</code> por número.',
-      hint: '<code>range(5)</code> já gera os números de 0 a 4 sozinho — mostre <code>i</code> a cada volta.',
+      hint: '<code>range(N)</code> gera uma sequência de números sozinho — pense em quantas repetições você precisa pra cobrir de 0 até 4.',
       solution: 'for i in range(5):\n\tprint(i)',
       check: { type: 'console' },
       tests: [

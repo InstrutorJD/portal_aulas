@@ -168,11 +168,14 @@ test.describe('Liberação diária — visão do aluno', () => {
       praticaDez.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify(dez)));
       localStorage.setItem(`js_basico_progress_${user}`, JSON.stringify(dez));
       localStorage.setItem(`js_intermediario_progress_${user}`, JSON.stringify(dezoito));
-      localStorage.setItem(`csharp_pratica_simples_progress_${user}`, JSON.stringify(cinco));
-      localStorage.setItem(`gdscript_pratica_simples_progress_${user}`, JSON.stringify(cinco));
-      // csharp_desafios e gdscript_desafios têm 14 desafios (progressTotal:14),
-      // diferente do padrão de 10 usado pelas outras trilhas de prática.
+      // csharp_pratica_simples e gdscript_pratica_simples têm 9 desafios cada
+      // (progressTotal:9), e csharp_desafios/gdscript_desafios têm 14
+      // (progressTotal:14) — ambos diferentes do padrão de 10 usado pelas
+      // outras trilhas de prática.
+      const nove = Array.from({ length: 9 }, (_, i) => i + 1);
       const catorze = Array.from({ length: 14 }, (_, i) => i + 1);
+      localStorage.setItem(`csharp_pratica_simples_progress_${user}`, JSON.stringify(nove));
+      localStorage.setItem(`gdscript_pratica_simples_progress_${user}`, JSON.stringify(nove));
       localStorage.setItem(`csharp_desafios_progress_${user}`, JSON.stringify(catorze));
       localStorage.setItem(`gdscript_desafios_progress_${user}`, JSON.stringify(catorze));
 

@@ -20,6 +20,10 @@ const SOLUTIONS_PRATICA_SIMPLES = [
   'var resultado = a - b',
   'var resultado = a * b',
   'var resultado = a / b',
+  'var resultado = "Godot"',
+  'var resultado = a % b',
+  'var resultado = -a',
+  'var resultado = (a + b) * c',
 ];
 
 const SOLUTIONS_DESAFIOS = [
@@ -106,14 +110,14 @@ test.describe('turmas/jogos/atividades/gdscript-pratica-simples.html', () => {
     await stubSupabaseFake(page, {});
   });
 
-  test('resolve os 5 desafios (variável + 4 operações) em sequência e conclui o módulo', async ({ page }) => {
+  test('resolve os 9 desafios (variável, texto, operações, resto, oposto e combinação) em sequência e conclui o módulo', async ({ page }) => {
     await page.goto(PRATICA_SIMPLES_URL);
     await solveAll(page, SOLUTIONS_PRATICA_SIMPLES);
     await expect(page.locator('#consoleOutput')).toContainText('Você concluiu todos os desafios');
-    await expect(page.locator('#lblProgress')).toHaveText('5/5');
+    await expect(page.locator('#lblProgress')).toHaveText('9/9');
 
     const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`gdscript_pratica_simples_progress_${u}`)), 'breno.silva80');
-    expect(progress).toHaveLength(5);
+    expect(progress).toHaveLength(9);
   });
 
   test('escrever C#/JS (com `;`, `let` ou tipo) em vez de GDScript não passa', async ({ page }) => {

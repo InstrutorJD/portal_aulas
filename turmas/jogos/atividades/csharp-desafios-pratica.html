@@ -193,7 +193,7 @@
       starter: '// crie uma variável chamada resultado, do tipo int, com o valor 100\n\n',
       explanation: 'Em C#, toda variável precisa de um <b>tipo</b> antes do nome. Pra números inteiros, use <code>int</code>.<pre>int pontos = 5;</pre>',
       desc: 'Crie uma variável chamada <code>resultado</code>, do tipo <code>int</code>, com o valor <b>100</b>.',
-      hint: 'A forma é <code>TIPO nome = valor;</code>, terminando com ponto e vírgula.',
+      hint: 'Toda variável em C# segue <code>TIPO nome = valor;</code>. Qual palavra-chave de tipo serve pra números inteiros?',
       solution: 'int resultado = 100;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -237,7 +237,7 @@
       starter: '// as variáveis a e b já existem\n// crie uma variável int chamada resultado com a subtração de a por b\n\n',
       explanation: 'Para subtrair, use o sinal <code>-</code>.<pre>int diferenca = x - y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável <code>int</code> chamada <code>resultado</code> com <code>a</code> menos <code>b</code>.',
-      hint: 'Use <code>-</code> entre <code>a</code> e <code>b</code>, nessa ordem.',
+      hint: 'A ordem dos valores importa numa subtração — pense em qual variável vem primeiro pra não inverter o resultado.',
       solution: 'int resultado = a - b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -253,7 +253,7 @@
       starter: '// as variáveis a e b já existem\n// crie uma variável int chamada resultado com a multiplicação de a por b\n\n',
       explanation: 'Para multiplicar, use o sinal <code>*</code>.<pre>int area = x * y;</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie uma variável <code>int</code> chamada <code>resultado</code> com <code>a</code> vezes <code>b</code>.',
-      hint: 'Use <code>*</code> entre <code>a</code> e <code>b</code>.',
+      hint: 'Qual sinal representa multiplicação em C#? É o mesmo símbolo usado em quase toda linguagem de programação.',
       solution: 'int resultado = a * b;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -285,7 +285,7 @@
       starter: '// a variável pontos já existe\n// crie uma variável int chamada resultado somando 10 ao valor de pontos\n\n',
       explanation: 'Você pode criar uma variável nova a partir do valor de outra que já existe, usando qualquer operador — aqui, soma.<pre>int vidaExtra = vida + 3;</pre>',
       desc: 'A variável <code>pontos</code> já existe. Crie <code>resultado</code>, do tipo <code>int</code>, com o valor de <code>pontos</code> mais <b>10</b>.',
-      hint: 'Pense em como aumentar um valor existente em uma quantia fixa — some <code>10</code> ao valor de <code>pontos</code>.',
+      hint: 'Você pode usar o valor de uma variável que já existe pra criar uma nova — qual operação aumenta um valor em uma quantia fixa?',
       solution: 'int resultado = pontos + 10;',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -301,7 +301,7 @@
       starter: '// a variável idade já existe\n// use Console.WriteLine para mostrar o valor de idade\n\n',
       explanation: 'O comando <code>Console.WriteLine(...)</code> mostra qualquer valor na tela — é a forma mais comum de exibir um resultado em C#.<pre>Console.WriteLine(idade);</pre>',
       desc: 'A variável <code>idade</code> já existe. Use <code>Console.WriteLine</code> para mostrar o valor dela.',
-      hint: '<code>Console.WriteLine(valor)</code> mostra o que estiver dentro dos parênteses — passe a variável <code>idade</code> pra ele.',
+      hint: 'O comando que exibe algo na tela recebe, entre parênteses, aquilo que você quer mostrar.',
       solution: 'Console.WriteLine(idade);',
       check: { type: 'console' },
       tests: [
@@ -331,7 +331,7 @@
       starter: '// as variáveis a e b já existem\n// mostre no console a soma delas\n\n',
       explanation: 'Não precisa guardar numa variável antes — dá pra mostrar o resultado de uma conta direto dentro do <code>Console.WriteLine</code>.<pre>Console.WriteLine(x + y);</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Use <code>Console.WriteLine</code> para mostrar a soma delas, sem precisar criar outra variável.',
-      hint: 'Some <code>a</code> e <code>b</code> direto dentro dos parênteses do <code>Console.WriteLine</code>.',
+      hint: 'Você não precisa criar uma variável antes — dá pra escrever a conta direto dentro dos parênteses de quem exibe o valor.',
       solution: 'Console.WriteLine(a + b);',
       check: { type: 'console' },
       tests: [
@@ -347,7 +347,7 @@
       starter: '// crie uma constante chamada limite, do tipo int, com o valor 10\n\n',
       explanation: 'Uma <b>constante</b> usa a palavra <code>const</code> antes do tipo — depois de criada, o valor nunca muda.<pre>const int maxVidas = 3;</pre>',
       desc: 'Crie uma constante chamada <code>limite</code>, do tipo <code>int</code>, com o valor <b>10</b>.',
-      hint: 'A forma é <code>const TIPO nome = valor;</code>.',
+      hint: 'Existe uma palavra-chave que vem antes do tipo quando o valor de uma variável nunca deve mudar depois de criada.',
       solution: 'const int limite = 10;',
       check: { type: 'variable', name: 'limite' },
       tests: [
@@ -361,7 +361,7 @@
       starter: '// crie a funcao Dobro(int numero) que devolve numero vezes 2\n\n\n// depois, crie a variavel resultado chamando Dobro(5)\n',
       explanation: 'Uma <b>função</b> declara o tipo de cada parâmetro e o tipo que ela devolve com <code>return</code>.<pre>static int Triplo(int x) {\n  return x * 3;\n}</pre>',
       desc: 'Crie uma função chamada <code>Dobro</code>, que recebe um <code>int</code> chamado <code>numero</code> e devolve o dobro dele. Depois, crie <code>resultado</code> com o valor de <code>Dobro(5)</code>.',
-      hint: 'A forma é <code>static TIPO Nome(TIPO parametro) { return expressão; }</code> — depois, chame com <code>Nome(valor)</code> igual chamaria <code>Console.WriteLine(valor)</code>.',
+      hint: 'Uma função começa com <code>static</code> + o tipo que ela devolve + o nome + os parâmetros entre parênteses — e usa <code>return</code> pra devolver o valor. Depois, você a chama como chamaria qualquer outro comando.',
       solution: 'static int Dobro(int numero) {\n  return numero * 2;\n}\nint resultado = Dobro(5);',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -375,7 +375,7 @@
       starter: 'string resultado;\nif (idade >= 18) {\n  \n} else {\n  \n}\n',
       explanation: 'O <code>if</code> testa uma condição; o <code>else</code> roda quando ela é falsa.<pre>string status;\nif (vida > 0) {\n  status = "Vivo";\n} else {\n  status = "Morto";\n}</pre>',
       desc: 'A variável <code>idade</code> já existe. Complete o código: se <code>idade</code> for maior ou igual a <b>18</b>, <code>resultado</code> deve ser <code>"Maior"</code>; senão, <code>"Menor"</code>.',
-      hint: 'Dentro do <code>if</code>, escreva <code>resultado = "Maior";</code>. Dentro do <code>else</code>, <code>resultado = "Menor";</code>.',
+      hint: 'Dentro de cada bloco você reatribui a variável <code>resultado</code> (ela já foi declarada, não repita o tipo) — pense no texto certo pra cada lado da condição.',
       solution: 'string resultado;\nif (idade >= 18) {\n  resultado = "Maior";\n} else {\n  resultado = "Menor";\n}',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -391,7 +391,7 @@
       starter: '// use um for pra mostrar 0, 1, 2, 3 e 4 no console (5 números)\n\n',
       explanation: 'O <code>for</code> repete um bloco enquanto a condição continuar verdadeira.<pre>for (int i = 0; i < 3; i++) {\n  Console.WriteLine(i);\n}</pre>',
       desc: 'Use um laço <code>for</code> para mostrar no console os números de <b>0</b> a <b>4</b>, um <code>Console.WriteLine</code> por número.',
-      hint: 'Comece com <code>i = 0</code> e repita enquanto <code>i &lt; 5</code>, mostrando <code>i</code> a cada volta.',
+      hint: 'Um <code>for</code> tem 3 partes: onde a contagem começa, até quando ela repete, e o que muda a cada volta — a mesma variável que muda é a que você deve exibir.',
       solution: 'for (int i = 0; i < 5; i++) {\n  Console.WriteLine(i);\n}',
       check: { type: 'console' },
       tests: [

@@ -86,7 +86,7 @@
     for (const ch of expr) {
       if (ch === '"') { inString = !inString; continue; }
       if (inString) continue;
-      if (!/[A-Za-z0-9_+\-*/().,\s<>=!&|]/.test(ch)) return false;
+      if (!/[A-Za-z0-9_+\-*/%().,\s<>=!&|]/.test(ch)) return false;
     }
     return !inString;
   }

@@ -204,7 +204,7 @@
       starter: '# crie uma variavel chamada resultado, com o valor 100\n\n',
       explanation: 'Em GDScript, uma variável começa com <code>var</code> — sem tipo, sem <code>;</code>.<pre>var pontos = 5</pre>',
       desc: 'Crie uma variável chamada <code>resultado</code>, com o valor <b>100</b>.',
-      hint: 'A forma é <code>var nome = valor</code> — sem ponto e vírgula no final.',
+      hint: 'Toda variável em GDScript começa com <code>var nome = valor</code>. Lembre-se: sem tipo antes do nome, sem ponto e vírgula no final.',
       solution: 'var resultado = 100',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -218,7 +218,7 @@
       starter: '# as variaveis a e b ja existem\n# crie uma variavel resultado com a soma de a e b\n\n',
       explanation: 'Somar em GDScript funciona igual em JS/C#: use <code>+</code>.<pre>var total = x + y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>resultado</code> com a soma delas.',
-      hint: 'Some <code>a</code> e <code>b</code> com <code>+</code>, guardando em <code>resultado</code>.',
+      hint: 'Pense em qual operador matemático junta dois valores numa soma — a sintaxe de <code>var</code> é a mesma do primeiro desafio.',
       solution: 'var resultado = a + b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -234,7 +234,7 @@
       starter: '# as variaveis a e b ja existem\n# crie uma variavel resultado com a subtracao de a por b\n\n',
       explanation: 'Subtrair usa <code>-</code>, igual em JS/C#.<pre>var saldo = x - y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>resultado</code> com <code>a</code> menos <code>b</code>.',
-      hint: 'Use <code>-</code> entre <code>a</code> e <code>b</code>, nessa ordem.',
+      hint: 'A ordem dos valores importa numa subtração — pense em qual variável vem primeiro pra não inverter o resultado.',
       solution: 'var resultado = a - b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -250,7 +250,7 @@
       starter: '# as variaveis a e b ja existem\n# crie uma variavel resultado com a multiplicacao de a por b\n\n',
       explanation: 'Multiplicar usa <code>*</code>.<pre>var area = x * y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>resultado</code> com <code>a</code> vezes <code>b</code>.',
-      hint: 'Use <code>*</code> entre <code>a</code> e <code>b</code>.',
+      hint: 'Qual sinal representa multiplicação? É o mesmo símbolo usado em quase toda linguagem de programação.',
       solution: 'var resultado = a * b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
@@ -266,13 +266,75 @@
       starter: '# as variaveis a e b ja existem (a divisao sempre fecha redondo)\n# crie uma variavel resultado com a divisao de a por b\n\n',
       explanation: 'Dividir usa <code>/</code>.<pre>var media = x / y</pre>',
       desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>resultado</code> com <code>a</code> dividido por <code>b</code>.',
-      hint: 'Use <code>/</code> entre <code>a</code> e <code>b</code>.',
+      hint: 'Qual símbolo representa divisão? É o mesmo usado em quase toda calculadora.',
       solution: 'var resultado = a / b',
       check: { type: 'variable', name: 'resultado' },
       tests: [
         { values: { a: 10, b: 2 }, expected: 5 },
         { values: { a: 20, b: 4 }, expected: 5 },
         { values: { a: 8, b: 2 }, expected: 4 }
+      ]
+    },
+    {
+      id: 6,
+      title: 'Guardando um texto',
+      givenVars: [],
+      starter: '# crie uma variavel chamada resultado, com o texto "Godot"\n\n',
+      explanation: 'Texto em GDScript fica entre aspas duplas, igual as outras linguagens que você já viu.<pre>var engine = "Unity"</pre>',
+      desc: 'Crie uma variável chamada <code>resultado</code>, com o texto <code>"Godot"</code>.',
+      hint: 'Lembre-se: texto em GDScript fica entre aspas duplas, e a sintaxe de variável continua a mesma do desafio 1.',
+      solution: 'var resultado = "Godot"',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: {}, expected: 'Godot' }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Resto da divisão',
+      givenVars: ['a', 'b'],
+      starter: '# as variaveis a e b ja existem\n# crie uma variavel resultado com o resto da divisao de a por b\n\n',
+      explanation: 'O operador <code>%</code> devolve o que sobra de uma divisão (não o resultado dela).<pre>var sobra = x % y # 7 % 2 é 1</pre>',
+      desc: 'As variáveis <code>a</code> e <code>b</code> já existem. Crie <code>resultado</code> com o resto da divisão de <code>a</code> por <code>b</code>.',
+      hint: 'Existe um operador específico pra "sobra" de uma divisão — não é a barra normal (<code>/</code>).',
+      solution: 'var resultado = a % b',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 10, b: 3 }, expected: 1 },
+        { values: { a: 9, b: 3 }, expected: 0 },
+        { values: { a: 7, b: 2 }, expected: 1 }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Valor oposto',
+      givenVars: ['a'],
+      starter: '# a variavel a ja existe\n# crie uma variavel resultado com o valor oposto (negativo) de a\n\n',
+      explanation: 'Um operador de um símbolo só, colocado antes do valor, inverte o sinal de um número.<pre>var oposto = -x</pre>',
+      desc: 'A variável <code>a</code> já existe. Crie <code>resultado</code> com o valor oposto (o sinal invertido) de <code>a</code>.',
+      hint: 'Pra inverter o sinal de um número, existe um operador de um símbolo só, colocado ANTES do valor.',
+      solution: 'var resultado = -a',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 5 }, expected: -5 },
+        { values: { a: -3 }, expected: 3 },
+        { values: { a: 0 }, expected: 0 }
+      ]
+    },
+    {
+      id: 9,
+      title: 'Combinando duas operações',
+      givenVars: ['a', 'b', 'c'],
+      starter: '# as variaveis a, b e c ja existem\n# crie uma variavel resultado somando a com b, e depois multiplicando por c\n\n',
+      explanation: 'Parênteses decidem qual conta acontece primeiro, igual na matemática.<pre>var total = (x + y) * z</pre>',
+      desc: 'As variáveis <code>a</code>, <code>b</code> e <code>c</code> já existem. Crie <code>resultado</code> somando <code>a</code> com <code>b</code>, e depois multiplicando esse total por <code>c</code>.',
+      hint: 'Quando duas operações aparecem juntas, os parênteses decidem qual conta acontece primeiro — sem eles, a multiplicação venceria antes da soma.',
+      solution: 'var resultado = (a + b) * c',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { a: 2, b: 3, c: 4 }, expected: 20 },
+        { values: { a: 1, b: 1, c: 5 }, expected: 10 },
+        { values: { a: 0, b: 2, c: 3 }, expected: 6 }
       ]
     }
   ];

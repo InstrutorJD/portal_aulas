@@ -577,9 +577,9 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica-simples', title: 'Prática — JavaScript vs C#',
-              desc: 'Escreva C# de verdade: só o essencial — criar variável e as 4 operações básicas.',
+              desc: 'Escreva C# de verdade: criar variável, texto, as 4 operações básicas, resto da divisão, valor oposto e combinar operações.',
               icon: '🟢', src: 'atividades/csharp-pratica-simples.html',
-              progressKey: 'csharp_pratica_simples_progress_', progressTotal: 5,
+              progressKey: 'csharp_pratica_simples_progress_', progressTotal: 9,
               requires: 'comparacao', hasGabarito: true
             },
             {
@@ -613,9 +613,9 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'pratica-simples', title: 'Prática — GDScript Simples',
-              desc: 'Escreva GDScript de verdade: só o essencial — criar variável e as 4 operações básicas.',
+              desc: 'Escreva GDScript de verdade: criar variável, texto, as 4 operações básicas, resto da divisão, valor oposto e combinar operações.',
               icon: '🟢', src: 'atividades/gdscript-pratica-simples.html',
-              progressKey: 'gdscript_pratica_simples_progress_', progressTotal: 5,
+              progressKey: 'gdscript_pratica_simples_progress_', progressTotal: 9,
               requires: 'comparacao', hasGabarito: true
             },
             {
