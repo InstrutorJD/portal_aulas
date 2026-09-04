@@ -315,7 +315,34 @@ window.TURMA_CONFIG_SISTEMAS = {
         }
       ]
     },
-    { key: 'intro-dev-projetos', label: 'Introdução de Desenvolvimento de Projetos', trilhas: [] },
+    {
+      key: 'intro-dev-projetos',
+      label: 'Introdução de Desenvolvimento de Projetos',
+      trilhas: [
+        {
+          key: 'oficina-comunicacao',
+          label: 'Oficina de Comunicação',
+          desc: 'Monte, no CodePen, uma documentação técnica do sistema cobrindo as fases de elaboração de um projeto, usando linguagem clara e normativa — depois peça o visto do professor.',
+          capacidade: 'Reconhecer as diferentes fases pertinentes à elaboração de um projeto.',
+          modules: [
+            {
+              // Atividade não corrigível automaticamente pelo portal (o
+              // "produto" é uma página HTML publicada no CodePen) — por
+              // isso progressMode 'flag' sem nenhum quiz: o aluno só navega
+              // pelas etapas, e quem marca como concluída é o professor,
+              // dando "visto" com token na etapa final (ver
+              // shared/professor-visto.js), mesmo padrão de
+              // modelagem-dados-requisitos-trabalho.html.
+              key: 'trabalho', title: 'Trabalho — Documentação Técnica do Sistema (CodePen)',
+              desc: 'Documente, no CodePen, as fases de elaboração de um projeto de sistema, usando linguagem técnica clara e normativa. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '📄', src: 'atividades/oficina-comunicacao-trabalho.html',
+              progressKey: 'oficina_comunicacao_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
     {
       key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1',
       trilhas: [

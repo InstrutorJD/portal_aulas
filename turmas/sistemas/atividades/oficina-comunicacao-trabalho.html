@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Trabalho: Oficina de Comunicação</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0d0912; --panel:#171022; --panel2:#130d1c; --line:#2e2340;
+    --accent:#b98cff; --accent-dim:#7c56b3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#e7defa; --ink-dim:#8b7aa8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--accent-dim); background:#0a0710;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--accent); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--yellow); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--accent); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--accent); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--accent-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--accent-dim); color:var(--yellow); font-style:italic;
+  }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--yellow); }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--accent); color:#150a24; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--accent); border:1px solid var(--accent-dim); }
+
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--accent-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--accent); color:var(--accent); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'oficina_comunicacao_trabalho';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>INTRODUÇÃO DE DESENVOLVIMENTO DE PROJETOS — TRABALHO: OFICINA DE COMUNICAÇÃO</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `oficina_comunicacao_trabalho_progress_${username}`;
+  const STEP_KEY = `oficina_comunicacao_trabalho_step_${username}`;
+  const PROFESSOR_EMAIL = 'jairondouglas.senai@fieg.com.br';
+
+  // Atividade sem correção automática (o "produto" é uma página HTML
+  // publicada no CodePen, fora do portal) — cada tela só navega com
+  // Voltar/Próximo, sem quiz nenhum. Quem marca como concluída é o
+  // professor, na última etapa (ver renderVisto), o mesmo padrão de
+  // modelagem-dados-requisitos-trabalho.html e db-conexao-supabase-pratica.html.
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios precisa de uma **documentação técnica** que qualquer pessoa da equipe consiga ler e entender sem precisar te perguntar nada. É isso que você vai montar.
+
+### O que entregar
+
+Uma página de **documentação técnica** (HTML, publicada no **CodePen**) explicando as **fases de elaboração de um projeto** de sistema, escrita em **linguagem clara e normativa**.
+
+### Como funciona aqui
+
+1. Leia o bloco de conteúdo obrigatório (as fases do projeto).
+2. Leia os critérios de comunicação técnica — valem nota.
+3. Monte a documentação no CodePen.
+4. Envie o link por e-mail pro professor.
+5. Peça o visto pessoalmente — só aí a atividade é marcada como concluída.`
+    },
+    {
+      titulo: 'Bloco — As fases de elaboração de um projeto',
+      corpo: `
+Documente cada fase com suas palavras, explicando o que acontece nela, e dê 1 exemplo próprio (pode usar um sistema fictício, tipo loja, escola ou locadora):
+
+- [ ] **Levantamento de requisitos** — descobrir junto do cliente/usuário o que o sistema precisa fazer.
+- [ ] **Planejamento** — definir escopo, cronograma, recursos e responsáveis antes de começar a construir.
+- [ ] **Desenvolvimento (execução)** — construir o sistema de acordo com o que foi planejado.
+- [ ] **Testes** — verificar se o sistema funciona e atende ao que foi levantado no início.
+- [ ] **Entrega (implantação)** — colocar o sistema no ar / entregar pro cliente.
+- [ ] **Manutenção** — corrigir problemas e evoluir o sistema depois da entrega.
+
+> Dica: mostre a ORDEM das fases (uma lista numerada ou um pequeno diagrama já resolve).`
+    },
+    {
+      titulo: 'Critérios de comunicação técnica — vale nota',
+      corpo: `
+- [ ] **Linguagem clara e objetiva** — frases diretas, sem gírias nem ambiguidade.
+- [ ] **Linguagem normativa** — impessoal, na 3ª pessoa ou no infinitivo (ex.: "O sistema deve...", "Este documento descreve..."), nunca em "eu" ou "a gente".
+- [ ] **Organização visual** — títulos e seções bem separados, fáceis de escanear.
+- [ ] **Termos técnicos corretos** — usados do jeito certo e, quando não forem óbvios, explicados em uma frase.`
+    },
+    {
+      titulo: 'Como entregar',
+      corpo: `
+### 1. Montar no CodePen
+
+Crie um novo Pen em codepen.io e escreva a documentação em HTML (CSS pra formatar, se quiser deixar mais legível).
+
+### 2. Salvar e copiar o link
+
+Salve o Pen e copie o link compartilhável dele.
+
+### 3. Enviar por e-mail
+
+Para:
+
+§§§text
+${PROFESSOR_EMAIL}
+§§§
+
+Assunto:
+
+§§§text
+[Introdução de Desenvolvimento de Projetos] Oficina de Comunicação - Seu Nome - Turma
+§§§
+
+Cole o link do CodePen no corpo do e-mail.
+
+### 4. Pedir o visto
+
+Procure o professor pessoalmente pra confirmar que chegou. Só depois avance e peça o visto aqui — é isso que marca a atividade como concluída.
+
+> ⚠️ Só peça o visto depois de enviar o e-mail de verdade.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
+  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('oficina_comunicacao_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Trabalho — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Trabalho — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>Você já enviou o link do CodePen por e-mail pro professor (<code>${escapeHtml(PROFESSOR_EMAIL)}</code>)? Só avance daqui em diante depois de ter enviado de verdade.</p>
+        <p>Procure o professor pra confirmar o recebimento. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui não é "pergunta e resposta certa" (não tem múltipla
+  // escolha) — é o checklist de critérios pra o professor conferir a
+  // documentação publicada no CodePen sem precisar reabrir este módulo.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Oficina de Comunicação — Checklist de correção do trabalho',
+      subtitle: 'Trabalho (documentação técnica no CodePen, entregue por e-mail) · Introdução de Desenvolvimento de Projetos · Turma Sistemas',
+      items: [
+        { number: 1, title: 'Fases do projeto', prompt: 'A documentação cobre todas as fases abaixo, cada uma com exemplo próprio e na ordem certa?', answer: 'Levantamento de requisitos; Planejamento; Desenvolvimento (execução); Testes; Entrega (implantação); Manutenção.' },
+        { number: 2, title: 'Linguagem clara e objetiva', prompt: 'O texto evita gírias e ambiguidade?', answer: 'Frases diretas, sem gírias nem duplo sentido.' },
+        { number: 3, title: 'Linguagem normativa', prompt: 'O texto está na 3ª pessoa/infinitivo, sem "eu"/"a gente"?', answer: 'Impessoal — ex.: "O sistema deve...", "Este documento descreve...".' },
+        { number: 4, title: 'Organização visual', prompt: 'A documentação tem títulos e seções bem separados?', answer: 'Hierarquia de títulos clara, fácil de escanear.' },
+        { number: 5, title: 'Termos técnicos', prompt: 'Os termos técnicos usados estão corretos e, quando necessário, explicados?', answer: 'Uso correto do vocabulário técnico, com breve explicação nos termos menos óbvios.' },
+        { number: 6, title: 'Entrega', prompt: 'O aluno entregou corretamente?', answer: `Link do CodePen (não HTML anexado nem print), enviado por e-mail para ${PROFESSOR_EMAIL}, com assunto "[Introdução de Desenvolvimento de Projetos] Oficina de Comunicação - Nome - Turma".` }
+      ],
+      fileName: 'oficina-comunicacao-trabalho-checklist.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
