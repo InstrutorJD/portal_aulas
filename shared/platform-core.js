@@ -385,6 +385,20 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Atividade em Tempo Real</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Onde está</th><th>Há quanto tempo</th><th>Status</th><th>Última atualização</th></tr></thead>
+                  <tbody id="tblGestaoActivityBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Relatórios</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -422,20 +436,6 @@
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos presentes hoje que ainda não concluíram nenhuma atividade hoje. Não considera quem já foi marcado como falta na chamada de hoje.</p>
                 <button class="btn btn-secondary" id="btnGerarAtividadeDia" style="margin-bottom:10px;">📋 Gerar Relatório do Dia</button>
                 <div id="atividadeDiaResultado"></div>
-              </div>
-            </div>
-
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Atividade em Tempo Real</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
-                <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Onde está</th><th>Há quanto tempo</th><th>Status</th><th>Última atualização</th></tr></thead>
-                  <tbody id="tblGestaoActivityBody"></tbody>
-                </table>
               </div>
             </div>
 
@@ -2427,7 +2427,7 @@
       const titulo = card.querySelector('.collapsible-head h2')?.textContent.trim();
       if (titulo === 'Relatórios' || titulo === 'Atividade em Tempo Real') {
         card.classList.add('expanded');
-        if (titulo === 'Relatórios') scrollTarget = card;
+        if (!scrollTarget) scrollTarget = card;
       }
     });
     scrollTarget?.scrollIntoView({ behavior: 'smooth', block: 'start' });
