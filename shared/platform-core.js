@@ -385,6 +385,26 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Ficha de Observação — Laboratório de Autonomia</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Avaliação comportamental (não é nota): o aluno só vê o resultado depois que você salvar aqui.</p>
+                <div style="overflow-x:auto;">
+                  <table class="audit-table">
+                    <thead><tr><th>Aluno</th><th style="width:220px;">Avaliação</th><th>Observações</th></tr></thead>
+                    <tbody id="fichaObservacaoBody"></tbody>
+                  </table>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+                  <button class="btn" id="btnSalvarFichaObservacao">Salvar</button>
+                  <span class="status-msg" id="fichaObservacaoStatus"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Atividade em Tempo Real</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -1703,6 +1723,86 @@
     renderRelatorioNotas();
   }
 
+  // ---------- Ficha de observação comportamental (Laboratório de Autonomia) ----------
+  // Uma única atividade por enquanto (ver turmas/sistemas/config.js,
+  // trilha 'lab-autonomia-requisitos') — por isso a chave fica fixa aqui,
+  // em vez de virar um seletor como o bimestre de Notas. O aluno lê o
+  // resultado na própria tela da atividade (ver
+  // atividades/lab-autonomia-requisitos-roteiro.html), nunca escreve nela.
+  const FICHA_OBSERVACAO_ATIVIDADE_KEY = 'lab_autonomia_requisitos';
+  const FICHA_OBSERVACAO_OPCOES = [
+    { value: 'demonstrou', label: 'Demonstrou autonomia' },
+    { value: 'em_desenvolvimento', label: 'Em desenvolvimento' },
+    { value: 'nao_demonstrou', label: 'Não demonstrou' }
+  ];
+
+  async function loadFichaObservacao() {
+    const tbody = document.getElementById('fichaObservacaoBody');
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
+
+    const students = turmaStudents();
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
+
+    const { data: rows } = await sbClient.from('behavioral_observations').select('*')
+      .eq('turma', cfg.id).eq('atividade_key', FICHA_OBSERVACAO_ATIVIDADE_KEY);
+    const byStudent = {};
+    (rows || []).forEach(r => { byStudent[r.student_email] = r; });
+
+    const optionsHtml = selected => FICHA_OBSERVACAO_OPCOES.map(o =>
+      `<option value="${o.value}" ${o.value === selected ? 'selected' : ''}>${o.label}</option>`
+    ).join('');
+
+    tbody.innerHTML = students.map(u => {
+      const obs = byStudent[u.email] || {};
+      return `
+        <tr data-email="${u.email}">
+          <td>${u.nome}</td>
+          <td>
+            <select class="ficha-observacao-avaliacao">
+              <option value="">— selecione —</option>
+              ${optionsHtml(obs.avaliacao || '')}
+            </select>
+          </td>
+          <td><input type="text" class="ficha-observacao-obs" value="${(obs.observacoes || '').replace(/"/g, '&quot;')}" placeholder="Opcional"></td>
+        </tr>
+      `;
+    }).join('');
+
+    document.getElementById('fichaObservacaoStatus').textContent = '';
+  }
+
+  async function salvarFichaObservacao() {
+    if (!sbClient) return;
+    const now = new Date().toISOString();
+
+    const rows = Array.from(document.querySelectorAll('#fichaObservacaoBody tr[data-email]'))
+      .map(tr => {
+        const email = tr.getAttribute('data-email');
+        const u = turmaStudentByEmail(email);
+        const avaliacao = tr.querySelector('.ficha-observacao-avaliacao').value;
+        const observacoes = tr.querySelector('.ficha-observacao-obs').value.trim();
+        return { email, u, avaliacao, observacoes };
+      })
+      // Sem avaliação escolhida ainda pra esse aluno: não grava linha
+      // nenhuma (evita empurrar a checagem "not null" da coluna por um
+      // aluno que o professor ainda não observou).
+      .filter(r => r.avaliacao)
+      .map(r => ({
+        student_email: r.email,
+        student_name: r.u ? r.u.nome : r.email,
+        turma: cfg.id,
+        atividade_key: FICHA_OBSERVACAO_ATIVIDADE_KEY,
+        avaliacao: r.avaliacao,
+        observacoes: r.observacoes || null,
+        observado_por: currentUser.nome,
+        updated_at: now
+      }));
+
+    if (rows.length === 0) return;
+    await sbClient.from('behavioral_observations').upsert(rows, { onConflict: 'student_email,atividade_key' });
+    document.getElementById('fichaObservacaoStatus').textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
+  }
+
   // % de desempenho de uma MATÉRIA pro aluno: média das frações de conclusão
   // de TODOS os módulos de TODAS as trilhas dela (crédito parcial, não só
   // 0%/100%). Lê direto de cfg.materias, então recalcula sozinho sempre que
@@ -2371,6 +2471,7 @@
     renderRelatorioPresenca();
     loadNotas();
     renderRelatorioNotas();
+    loadFichaObservacao();
     renderRelatorioInatividade();
 
     if (!sbClient) return;
@@ -2515,6 +2616,7 @@
     document.getElementById('btnGerarPdfPresenca').addEventListener('click', gerarPdfChamadaMes);
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
+    document.getElementById('btnSalvarFichaObservacao').addEventListener('click', salvarFichaObservacao);
     document.getElementById('btnSalvarTrilhaDatas').addEventListener('click', salvarTrilhaDatas);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
   }

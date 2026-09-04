@@ -385,6 +385,29 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'trabalho', hasSlides: true, hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'lab-autonomia-requisitos',
+          label: 'Laboratório de Autonomia: Análise de Requisitos',
+          desc: 'Aplique técnicas de análise em requisitos ambíguos, exercendo autonomia pra decidir o melhor caminho técnico — atividade presencial avaliada pelo professor numa ficha de observação comportamental.',
+          capacidade: 'Identificar requisitos funcional e não-funcional para desenvolvimento de sistemas.',
+          modules: [
+            {
+              // Atividade PRESENCIAL (quadro branco, sem correção
+              // automática nem visto por token): o aluno só lê o roteiro e
+              // segue as instruções em aula. Quem marca como concluída é o
+              // professor, à distância, preenchendo a Ficha de Observação
+              // Comportamental na Gestão (ver shared/platform-core.js,
+              // loadFichaObservacao/salvarFichaObservacao e
+              // sql/supabase-setup-completo.sql, tabela
+              // behavioral_observations) — a última etapa do roteiro só lê
+              // esse resultado, sem nenhum gabarito (não tem resposta certa).
+              key: 'roteiro', title: 'Laboratório de Autonomia',
+              desc: 'Analise requisitos ambíguos aplicando técnicas de análise, decidindo com autonomia o melhor caminho técnico. Atividade presencial — o professor observa e avalia à distância, na Ficha de Observação Comportamental da Gestão.',
+              icon: '🧭', src: 'atividades/lab-autonomia-requisitos-roteiro.html',
+              progressKey: 'lab_autonomia_requisitos_progress_', progressMode: 'flag'
+            }
+          ]
         }
       ]
     },

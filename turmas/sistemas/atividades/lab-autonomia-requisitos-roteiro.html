@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Laboratório de Autonomia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0d0912; --panel:#171022; --panel2:#130d1c; --line:#2e2340;
+    --accent:#b98cff; --accent-dim:#7c56b3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#e7defa; --ink-dim:#8b7aa8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--accent-dim); background:#0a0710;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--accent); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--yellow); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--accent); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--accent); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--accent-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--accent-dim); color:var(--yellow); font-style:italic;
+  }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--accent); color:#150a24; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--accent); border:1px solid var(--accent-dim); }
+
+  .resultado-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .resultado-box .avaliacao-tag{
+    display:inline-block; font-weight:800; text-transform:uppercase; font-size:11px; letter-spacing:0.5px;
+    padding:5px 10px; border-radius:2px; margin-bottom:10px;
+  }
+  .resultado-box .avaliacao-tag.demonstrou{ background:rgba(185,140,255,0.15); color:var(--accent); }
+  .resultado-box .avaliacao-tag.em_desenvolvimento{ background:rgba(224,196,106,0.15); color:var(--yellow); }
+  .resultado-box .avaliacao-tag.nao_demonstrou{ background:rgba(255,91,77,0.15); color:var(--blood-bright); }
+  .resultado-box .observacoes-box{
+    margin-top:10px; background:var(--panel2); border:1px dashed var(--line); padding:10px 12px; font-size:12.5px; line-height:1.6;
+  }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'lab_autonomia_requisitos';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>MODELAGEM DE SISTEMAS — LABORATÓRIO DE AUTONOMIA</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `lab_autonomia_requisitos_progress_${username}`;
+  const STEP_KEY = `lab_autonomia_requisitos_step_${username}`;
+  const ATIVIDADE_KEY = 'lab_autonomia_requisitos';
+
+  // Atividade PRESENCIAL, sem correção automática: o aluno só navega pelo
+  // roteiro (o que fazer, com quadro branco/caderno). Não existe visto por
+  // token aqui — quem marca como concluída é o professor, à distância, ao
+  // preencher a Ficha de Observação Comportamental na Gestão (ver
+  // shared/platform-core.js, loadFichaObservacao/salvarFichaObservacao) —
+  // a última etapa desta tela só LÊ esse resultado (ver renderResultado).
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios recebeu uma lista de requisitos **ambíguos** de um cliente novo — e a equipe de sistemas precisa aplicar técnicas de análise pra esclarecer o que realmente precisa ser feito, muitas vezes sem poder esperar uma resposta imediata do cliente.
+
+### O que você vai fazer
+
+Esta é uma atividade **presencial**: você vai analisar requisitos ambíguos, aplicar uma técnica de análise e **decidir, com autonomia, o melhor caminho técnico** — justificando sua decisão pro professor.
+
+### Como funciona aqui
+
+1. Leia as técnicas de análise de requisitos (próxima etapa).
+2. Leia os requisitos ambíguos que você vai analisar.
+3. Durante a aula, aplique uma técnica e decida um caminho técnico pra cada requisito — o professor acompanha e observa.
+4. No final, o professor registra a avaliação comportamental à distância — ela aparece aqui, na última etapa.`
+    },
+    {
+      titulo: 'Bloco — Técnicas de análise de requisitos',
+      corpo: `
+Nenhuma técnica abaixo é "a certa" — a ideia é escolher uma (ou combinar) e **decidir**, em vez de ficar travado esperando uma resposta perfeita:
+
+- [ ] **Perguntas de esclarecimento** — perguntar diretamente o que está faltando ou ambíguo.
+- [ ] **Levantar hipóteses e validar** — assumir uma interpretação razoável e confirmar depois, sem travar o trabalho esperando resposta.
+- [ ] **Dividir em partes menores** — quebrar um requisito vago em pedaços mais concretos e verificáveis.
+- [ ] **Casos de uso / exemplos concretos** — descrever uma situação real de uso pra expor o que o requisito não deixou claro.
+- [ ] **Revisão em conjunto (walkthrough)** — apresentar sua interpretação pra alguém (professor/colega) e ajustar com o feedback.`
+    },
+    {
+      titulo: 'Bloco — Requisitos ambíguos pra analisar',
+      corpo: `
+Pra cada requisito abaixo, no seu caderno ou no quadro branco, responda: **(a)** o que está ambíguo aqui? **(b)** que pergunta de esclarecimento você faria? **(c)** que decisão técnica você tomaria ENQUANTO isso não é respondido, e por quê?
+
+1. "O sistema deve ser rápido."
+2. "O sistema deve funcionar em qualquer dispositivo."
+3. "O usuário deve conseguir recuperar a senha facilmente."
+
+Apresente sua análise pro professor quando ele passar na sua mesa.`
+    },
+    {
+      titulo: 'Bloco — Como você vai ser avaliado',
+      corpo: `
+O professor não está avaliando se você "acertou" a resposta perfeita — não existe uma única certa. Ele está observando se você **exerce autonomia na tomada de decisão**:
+
+- [ ] Tenta analisar e decidir sozinho antes de pedir ajuda.
+- [ ] Justifica a decisão tomada (mesmo que ela mude depois).
+- [ ] Usa alguma técnica de análise, não só "chuta".
+- [ ] Não trava esperando uma resposta pronta do professor.
+
+> No final da aula, o professor registra essa avaliação à distância — ela aparece na próxima etapa desta atividade.`
+    }
+  ];
+
+  function loadLocalProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveLocalProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadLocalProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
+  // (cabeçalhos, listas/checklist, citação) — sem tabela/bloco de código,
+  // que este roteiro não usa.
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(#|-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('lab_autonomia_requisitos', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { saveStepIndex(STEPS.length); renderResultado(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Roteiro — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  const AVALIACAO_LABELS = {
+    demonstrou: { tag: '✅ Demonstrou autonomia', classe: 'demonstrou' },
+    em_desenvolvimento: { tag: '🌱 Em desenvolvimento', classe: 'em_desenvolvimento' },
+    nao_demonstrou: { tag: '⚠️ Não demonstrou', classe: 'nao_demonstrou' }
+  };
+
+  let resultadoPollTimer = null;
+
+  async function fetchResultado() {
+    const sb = window.PortalSession ? window.PortalSession.client() : null;
+    if (!sb) return null;
+    const { data } = await sb.from('behavioral_observations').select('*')
+      .eq('student_email', username).eq('atividade_key', ATIVIDADE_KEY).limit(1);
+    return (data && data[0]) || null;
+  }
+
+  async function renderResultado() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Roteiro — Aguardando avaliação do professor');
+
+    const obs = await fetchResultado();
+
+    if (obs) {
+      if (resultadoPollTimer) { clearInterval(resultadoPollTimer); resultadoPollTimer = null; }
+      saveLocalProgress({ completed: true, avaliacao: obs.avaliacao, observadoPor: obs.observado_por, observadoEm: obs.updated_at });
+
+      const info = AVALIACAO_LABELS[obs.avaliacao] || { tag: obs.avaliacao, classe: '' };
+      stepWrap.innerHTML = `
+        <div class="card resultado-box">
+          <h2>✅ Atividade avaliada</h2>
+          <span class="avaliacao-tag ${info.classe}">${info.tag}</span>
+          <p>Avaliação registrada por <b>${escapeHtml(obs.observado_por || 'o professor')}</b>.</p>
+          ${obs.observacoes ? `<div class="observacoes-box">${escapeHtml(obs.observacoes)}</div>` : ''}
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card resultado-box">
+        <h2>🧑‍🏫 Aguardando avaliação do professor</h2>
+        <p>Esta atividade é presencial — o professor observa como você analisa os requisitos ambíguos e registra a avaliação depois, sem precisar da sua tela.</p>
+        <p>Deixe esta tela aberta ou volte aqui mais tarde: assim que o professor registrar, o resultado aparece automaticamente.</p>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => {
+      if (resultadoPollTimer) { clearInterval(resultadoPollTimer); resultadoPollTimer = null; }
+      currentIndex = STEPS.length - 1;
+      renderStep();
+    });
+
+    if (!resultadoPollTimer) {
+      resultadoPollTimer = setInterval(async () => {
+        const found = await fetchResultado();
+        if (found) renderResultado();
+      }, 15000);
+    }
+  }
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

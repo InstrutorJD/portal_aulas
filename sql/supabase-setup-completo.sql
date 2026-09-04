@@ -1526,14 +1526,54 @@ grant execute on function public.gerar_professor_token() to authenticated;
 grant execute on function public.professor_token_atual() to authenticated;
 grant execute on function public.verificar_professor_token(text) to anon, authenticated;
 
+-- Ficha de observação comportamental: avaliação qualitativa do professor
+-- sobre o comportamento do aluno numa atividade PRESENCIAL (ex.: o
+-- "Laboratório de Autonomia", turmas/sistemas/config.js) — não é nota nem
+-- progresso de trilha corrigido automaticamente, é uma observação que só o
+-- professor registra, uma linha por (aluno, atividade). O aluno lê o
+-- resultado na própria tela da atividade (ver
+-- atividades/lab-autonomia-requisitos-roteiro.html), do mesmo jeito que já
+-- lê notas/chamada — nunca escreve nela.
+create table if not exists public.behavioral_observations (
+  id uuid primary key default gen_random_uuid(),
+  student_email text not null,
+  student_name text,
+  turma text not null,
+  atividade_key text not null,
+  avaliacao text not null check (avaliacao in ('demonstrou', 'em_desenvolvimento', 'nao_demonstrou')),
+  observacoes text,
+  observado_por text,
+  updated_at timestamptz not null default now(),
+  unique (student_email, atividade_key)
+);
+
+create index if not exists idx_behavioral_observations_turma_atividade on public.behavioral_observations (turma, atividade_key);
+
+alter table public.behavioral_observations enable row level security;
+
+drop policy if exists "behavioral_observations_select_self_or_professor" on public.behavioral_observations;
+create policy "behavioral_observations_select_self_or_professor"
+  on public.behavioral_observations for select
+  using (public.is_professor() or student_email = public.current_email());
+
+drop policy if exists "behavioral_observations_insert_professor" on public.behavioral_observations;
+create policy "behavioral_observations_insert_professor"
+  on public.behavioral_observations for insert
+  with check (public.is_professor());
+
+drop policy if exists "behavioral_observations_update_professor" on public.behavioral_observations;
+create policy "behavioral_observations_update_professor"
+  on public.behavioral_observations for update
+  using (public.is_professor())
+  with check (public.is_professor());
 
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, trilha_release_dates, game_scores,
 -- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers,
--- student_activity_state e professor_tokens foram criadas, se
--- network_nodes ganhou as colunas current_ip e turma, e se
+-- student_activity_state, professor_tokens e behavioral_observations foram
+-- criadas, se network_nodes ganhou as colunas current_ip e turma, e se
 -- network_nodes/node_permissions/node_shields aparecem com RLS
 -- habilitado (ícone de cadeado no Table Editor). Se profiles estiver
 -- vazia, rode scripts/migrate-users-to-auth.mjs antes de testar login.
