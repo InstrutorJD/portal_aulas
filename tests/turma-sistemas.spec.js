@@ -4,9 +4,9 @@ const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
-// Banco de Dados (SQL), Projeto de Vida e Mundo do Trabalho têm trilhas de
-// verdade — as demais 6 matérias de Sistemas são placeholders vazios por
-// enquanto.
+// Banco de Dados (SQL), Redes de Computadores, Internet das Coisas, Projeto
+// de Vida e Mundo do Trabalho têm trilhas de verdade — as demais matérias
+// de Sistemas são placeholders vazios por enquanto.
 async function openMateria1(page) {
   await page.click('.game-card:has-text("Banco de Dados")');
 }
@@ -29,7 +29,7 @@ test.describe('turmas/sistemas/plataforma.html', () => {
   test('mostra os cards das 10 matérias de Sistemas', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(10);
-    await expect(page.locator('.game-card:has-text("Internet das Coisas")')).toContainText('Em breve');
+    await expect(page.locator('.game-card:has-text("Introdução de Desenvolvimento de Projetos")')).toContainText('Em breve');
     await expect(page.locator('#materiaCardGrid')).toContainText('Prova');
   });
 

@@ -287,7 +287,34 @@ window.TURMA_CONFIG_SISTEMAS = {
         }
       ]
     },
-    { key: 'internet-das-coisas', label: 'Internet das Coisas', trilhas: [] },
+    {
+      key: 'internet-das-coisas',
+      label: 'Internet das Coisas',
+      trilhas: [
+        {
+          key: 'iot-conectividade-hardware',
+          label: 'Conectividade de Hardware',
+          desc: 'Aprenda a teoria e depois resolva chamados sobre satélite, Bluetooth e WiFi na conectividade de dispositivos IoT.',
+          capacidade: 'Integrar dispositivos de comunicação de dados; Integrar os princípios de qualidade às atividades sob sua responsabilidade.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Conectividade de Hardware',
+              desc: 'Conectividade via satélite, Bluetooth e WiFi na integração de dispositivos IoT.',
+              icon: '🛰️', src: 'atividades/iot-conectividade-teoria.html',
+              progressKey: 'iot_conectividade_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de IoT: Conectividade',
+              desc: 'Resolva chamados escolhendo a tecnologia de conectividade certa pra cada cenário de campo.',
+              icon: '📶', src: 'atividades/iot-conectividade-pratica.html',
+              progressKey: 'iot_conectividade_pratica_progress_', progressTotal: 5,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
     { key: 'intro-dev-projetos', label: 'Introdução de Desenvolvimento de Projetos', trilhas: [] },
     {
       key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1',
