@@ -51,7 +51,7 @@ test.describe('turmas/sistemas/atividades — trilha Conectividade de Hardware (
     expect(stored.completed).toBe(true);
   });
 
-  test('prática de Conectividade resolve os 5 chamados, incluindo retry após resposta errada', async ({ page }) => {
+  test('prática de Conectividade resolve os 6 chamados, incluindo retry após resposta errada', async ({ page }) => {
     await page.goto('/turmas/sistemas/atividades/iot-conectividade-pratica.html?user=alexandre.natal&role=aluno&turma=sistemas');
     await page.waitForSelector('#optionsPanel .option');
 
@@ -60,15 +60,15 @@ test.describe('turmas/sistemas/atividades — trilha Conectividade de Hardware (
     await expect(page.locator('#ticketStatus')).toHaveText('PENDENTE');
     await expect(page.locator('.console .line.fail')).toBeVisible();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const correctIdx = await page.evaluate(() => CHALLENGES.find(c => c.id === selectedId).correctIndex);
       await page.locator('.option').nth(correctIdx).click();
       await expect(page.locator('#ticketStatus')).toHaveText('RESOLVIDO');
-      if (i < 4) await page.click('#btnNext');
+      if (i < 5) await page.click('#btnNext');
     }
 
-    await expect(page.locator('#lblProgress')).toHaveText('5/5');
+    await expect(page.locator('#lblProgress')).toHaveText('6/6');
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('iot_conectividade_pratica_progress_alexandre.natal')));
-    expect(stored.sort()).toEqual([1, 2, 3, 4, 5]);
+    expect(stored.sort()).toEqual([1, 2, 3, 4, 5, 6]);
   });
 });

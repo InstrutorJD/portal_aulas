@@ -308,7 +308,7 @@ window.TURMA_CONFIG_SISTEMAS = {
               key: 'pratica', title: 'Prática — Central de IoT: Conectividade',
               desc: 'Resolva chamados escolhendo a tecnologia de conectividade certa pra cada cenário de campo.',
               icon: '📶', src: 'atividades/iot-conectividade-pratica.html',
-              progressKey: 'iot_conectividade_pratica_progress_', progressTotal: 5,
+              progressKey: 'iot_conectividade_pratica_progress_', progressTotal: 6,
               requires: 'teoria', hasGabarito: true
             }
           ]

@@ -133,7 +133,7 @@
     <div>IOT — CENTRAL DE CAMPO (TEORIA)</div>
     <div style="display:flex; align-items:center; gap:12px;">
       <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
-      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">3</span></span>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">4</span></span>
     </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -170,6 +170,20 @@
         options: ['WiFi', 'Bluetooth', 'Conectividade via satélite', 'Rádio frequência simples (RF)'],
         correctIndex: 0,
         explanation: 'Isso mesmo! Com roteador por perto e a necessidade de banda alta pra vídeo contínuo, o WiFi é a escolha certa — o Bluetooth não teria banda suficiente, e o satélite seria caro e desnecessário aqui.'
+      }
+    },
+    {
+      story: 'Pra fechar, vamos juntar tudo num dispositivo só: um <b>drone</b>. Ele carrega vários sensores — <b>GPS</b> (posição), <b>IMU</b> (giroscópio + acelerômetro, pra estabilidade e orientação), <b>barômetro</b> (altitude) e <b>câmera</b> — e cada sensor gera um tipo de dado diferente. O vídeo da câmera é <b>pesado</b> (muitos dados por segundo), então drones de treinamento costumam criar sua própria rede <b>WiFi</b> pra transmitir a imagem em tempo real pro celular do piloto. Já dados pequenos e esporádicos — como o nível de bateria do controle remoto — podem ser trocados por <b>Bluetooth</b>, que gasta bem menos energia. E um drone agrícola sobrevoando uma área imensa, longe de qualquer roteador ou torre de celular, só consegue mandar sua telemetria em tempo real pra central de controle usando <b>satélite</b> — a mesma lógica que já vimos lá no início.',
+      question: {
+        prompt: 'Um drone de treinamento (como os usados em sala de aula) transmite o vídeo da câmera em tempo real pro celular do piloto, que fica sempre por perto. Qual tecnologia ele costuma usar pra isso, e por quê?',
+        options: [
+          'WiFi, porque o vídeo exige banda alta a curta/média distância',
+          'Bluetooth, porque o vídeo tem pouquíssimos dados',
+          'Satélite, porque o piloto pode estar em qualquer lugar do mundo',
+          'Nenhuma tecnologia sem fio — o vídeo precisa de cabo'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Vídeo em tempo real exige banda alta, e o piloto está sempre perto do drone — exatamente o cenário em que o WiFi se encaixa melhor, o mesmo raciocínio da câmera de segurança.'
       }
     }
   ];
@@ -213,7 +227,7 @@
     mentor: { rowClass: "eri", avatar: "🛰️", name: "Zenit, Engenheira de Campo IoT" },
     finishPassed: {
       title: "Conectividade de Hardware concluída!",
-      introHtml: "<p>Você já sabe quando usar satélite, Bluetooth e WiFi na conectividade de dispositivos IoT.</p>",
+      introHtml: "<p>Você já sabe quando usar satélite, Bluetooth e WiFi na conectividade de dispositivos IoT — e viu os três juntando forças num drone.</p>",
       closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de IoT.</p>",
       restartLabel: "🔁 Rever a teoria"
     }
