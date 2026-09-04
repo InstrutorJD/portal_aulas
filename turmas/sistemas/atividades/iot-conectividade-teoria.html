@@ -146,7 +146,7 @@
 <script>
   const STEPS = [
     {
-      story: 'Olá! Eu sou a <b>Zenit</b>, engenheira de campo de IoT. Antes de você integrar qualquer dispositivo, precisa escolher COMO ele vai se comunicar. Vamos começar pela conectividade <b>via satélite</b>: usada quando o dispositivo fica num local remoto, sem torre de celular e sem roteador WiFi por perto — como fazendas isoladas, boias no oceano ou estações de monitoramento ambiental. Ela cobre distâncias enormes, mas tem mais latência e custo por dado transmitido do que WiFi ou Bluetooth.',
+      story: 'Olá! Eu sou a <b>Zenit</b>, engenheira de campo de IoT. Antes de você integrar qualquer dispositivo, precisa escolher COMO ele vai se comunicar. Vamos começar pela conectividade <b>via satélite</b>: o dispositivo transmite o sinal direto pra um satélite em órbita, que retransmite os dados pra uma estação em terra — por isso funciona em praticamente qualquer ponto do planeta, mesmo sem nenhuma rede terrestre por perto. É usada quando o dispositivo fica num local remoto, sem torre de celular e sem roteador WiFi por perto — como fazendas isoladas, boias no oceano ou estações de monitoramento ambiental. Ela cobre distâncias enormes, mas tem mais latência e custo por dado transmitido do que WiFi ou Bluetooth.',
       question: {
         prompt: 'Você precisa enviar, uma vez por hora, a leitura de um sensor de umidade instalado numa fazenda muito isolada, sem cobertura de celular nem roteador WiFi por perto. Qual tecnologia de conectividade resolve isso?',
         options: ['Conectividade via satélite', 'Bluetooth', 'WiFi doméstico', 'Cabo de rede (Ethernet)'],
@@ -155,7 +155,7 @@
       }
     },
     {
-      story: 'Já o <b>Bluetooth</b> (na versão de baixo consumo, chamada BLE) foi feito pro oposto: distâncias bem curtas — só alguns metros — entre um sensor e um dispositivo próximo, como um celular ou um gateway. A vantagem é o consumo de energia baixíssimo, o que faz sensores a pilha ou bateria pequena durarem meses ou até anos.',
+      story: 'Já o <b>Bluetooth</b> é um padrão de comunicação sem fio de curto alcance, criado justamente pra ligar dispositivos pessoais entre si sem cabo. Na versão de baixo consumo, chamada <b>BLE</b> (Bluetooth Low Energy), ele foi otimizado pro oposto do satélite: distâncias bem curtas — só alguns metros — entre um sensor e um dispositivo próximo, como um celular ou um gateway. A vantagem é o consumo de energia baixíssimo, o que faz sensores a pilha ou bateria pequena durarem meses ou até anos.',
       question: {
         prompt: 'Uma pulseira inteligente mede a frequência cardíaca e envia os dados pro celular do usuário, que fica sempre a poucos metros de distância. A bateria da pulseira precisa durar vários dias sem recarregar. Qual tecnologia é a mais indicada?',
         options: ['Bluetooth (BLE)', 'WiFi', 'Conectividade via satélite', 'Rádio AM/FM'],
@@ -164,7 +164,7 @@
       }
     },
     {
-      story: 'Por fim, o <b>WiFi</b> entra quando já existe uma rede local por perto (uma casa, um escritório, uma fábrica) e o dispositivo precisa de mais banda do que o Bluetooth oferece — como vídeo ou muitos dados por segundo. O alcance cobre um cômodo ou um andar inteiro, mas o consumo de energia é bem maior que o do Bluetooth, então não é ideal pra sensores a bateria minúscula.',
+      story: 'Por fim, o <b>WiFi</b> é a tecnologia sem fio que conecta um dispositivo a uma rede local já existente — o mesmo roteador que seu celular ou notebook usa em casa. Ele entra em cena quando já existe essa rede local por perto (uma casa, um escritório, uma fábrica) e o dispositivo precisa de mais banda do que o Bluetooth oferece — como vídeo ou muitos dados por segundo. O alcance cobre um cômodo ou um andar inteiro, mas o consumo de energia é bem maior que o do Bluetooth, então não é ideal pra sensores a bateria minúscula.',
       question: {
         prompt: 'Uma câmera de segurança residencial precisa transmitir vídeo em tempo real quase o dia inteiro pro roteador que já existe na casa. Qual tecnologia de conectividade é a mais indicada?',
         options: ['WiFi', 'Bluetooth', 'Conectividade via satélite', 'Rádio frequência simples (RF)'],
@@ -173,7 +173,7 @@
       }
     },
     {
-      story: 'Pra fechar, vamos juntar tudo num dispositivo só: um <b>drone</b>. Ele carrega vários sensores — <b>GPS</b> (posição), <b>IMU</b> (giroscópio + acelerômetro, pra estabilidade e orientação), <b>barômetro</b> (altitude) e <b>câmera</b> — e cada sensor gera um tipo de dado diferente. O vídeo da câmera é <b>pesado</b> (muitos dados por segundo), então drones de treinamento costumam criar sua própria rede <b>WiFi</b> pra transmitir a imagem em tempo real pro celular do piloto. Já dados pequenos e esporádicos — como o nível de bateria do controle remoto — podem ser trocados por <b>Bluetooth</b>, que gasta bem menos energia. E um drone agrícola sobrevoando uma área imensa, longe de qualquer roteador ou torre de celular, só consegue mandar sua telemetria em tempo real pra central de controle usando <b>satélite</b> — a mesma lógica que já vimos lá no início.',
+      story: 'Pra fechar, vamos juntar tudo num dispositivo só: um <b>drone</b>. Um <b>sensor</b> é qualquer componente que mede algo do ambiente ou do próprio equipamento (posição, movimento, luz, temperatura...) e transforma isso em dado digital. Um drone carrega vários — <b>GPS</b> (posição), <b>IMU</b> (giroscópio + acelerômetro, pra estabilidade e orientação), <b>barômetro</b> (altitude) e <b>câmera</b> — e cada sensor gera um tipo de dado diferente. O vídeo da câmera é <b>pesado</b> (muitos dados por segundo), então drones de treinamento costumam criar sua própria rede <b>WiFi</b> pra transmitir a imagem em tempo real pro celular do piloto. Já dados pequenos e esporádicos — como o nível de bateria do controle remoto — podem ser trocados por <b>Bluetooth</b>, que gasta bem menos energia. E um drone agrícola sobrevoando uma área imensa, longe de qualquer roteador ou torre de celular, só consegue mandar sua telemetria em tempo real pra central de controle usando <b>satélite</b> — a mesma lógica que já vimos lá no início.',
       question: {
         prompt: 'Um drone de treinamento (como os usados em sala de aula) transmite o vídeo da câmera em tempo real pro celular do piloto, que fica sempre por perto. Qual tecnologia ele costuma usar pra isso, e por quê?',
         options: [
