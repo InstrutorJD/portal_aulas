@@ -2041,16 +2041,24 @@
     const students = turmaStudents();
     const theadRow = document.getElementById('relatorioNotasHead');
     const tbody = document.getElementById('relatorioNotasBody');
-    const totalCols = 6 + materias.length;
+    const totalCols = 7 + materias.length;
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
+    theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th><th>Nota da Prova</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
 
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
 
-    const [gradesRes, progressRes] = await Promise.all([
+    // "Nota da Prova" não vem de student_module_progress (que só sabe
+    // "concluiu ou não" pra módulos progressMode:'flag', sem o valor da
+    // nota) — vem direto de student_activity_state, a mesma tabela que
+    // shared/progress-sync.js já mantém atualizada com o `state` completo
+    // de cada atividade. A prova (turmas/*/atividades/prova-*.html) salva
+    // `state.nota` (0 a 100 pontos) ao concluir — ver finishExam() lá.
+    // progress_key segue o mesmo ACTIVITY_LOCATION da prova: `prova_<turma>`.
+    const [gradesRes, progressRes, notaProvaRes] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id),
-      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id)
+      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
+      sbClient.from('student_activity_state').select('student_email, state').eq('progress_key', `prova_${cfg.id}`)
     ]);
 
     const gradesByStudent = {};
@@ -2063,12 +2071,18 @@
       progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
       progressByStudent[r.student_email].push(r);
     });
+    const notaProvaByStudent = {};
+    (notaProvaRes.data || []).forEach(r => {
+      if (r.state && typeof r.state.nota === 'number') notaProvaByStudent[r.student_email] = r.state.nota;
+    });
 
     tbody.innerHTML = students.map(u => {
       const bims = gradesByStudent[u.email] || {};
       const bimCells = [1, 2, 3, 4].map(b => `<td>${bims[b] !== undefined && bims[b] !== null ? Number(bims[b]).toFixed(2) : '—'}</td>`).join('');
       const lancadas = [1, 2, 3, 4].map(b => bims[b]).filter(v => v !== undefined && v !== null);
       const mediaGeral = lancadas.length ? (lancadas.reduce((a, b) => a + Number(b), 0) / lancadas.length).toFixed(2) : '—';
+      const notaProva = notaProvaByStudent[u.email];
+      const notaProvaCell = `<td>${notaProva === undefined ? '—' : notaProva + '/100'}</td>`;
 
       const pRows = progressByStudent[u.email] || [];
       const materiaCells = materias.map(m => {
@@ -2076,7 +2090,7 @@
         return `<td>${pct === null ? '—' : pct + '%'}</td>`;
       }).join('');
 
-      return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${materiaCells}</tr>`;
+      return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${notaProvaCell}${materiaCells}</tr>`;
     }).join('');
   }
 

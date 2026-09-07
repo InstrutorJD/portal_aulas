@@ -1388,11 +1388,19 @@ create index if not exists idx_student_activity_state_student on public.student_
 
 alter table public.student_activity_state enable row level security;
 
+-- O professor precisa ler o estado bruto de TODOS os alunos pra montar a
+-- coluna "Nota da Prova" do Relatório de Notas (ver renderRelatorioNotas em
+-- shared/platform-core.js) — a prova (turmas/*/atividades/prova-*.html)
+-- guarda a nota final (0-100) dentro desse `state`, e student_module_progress
+-- só sabe "concluído ou não" (progressMode 'flag'), sem o valor da nota.
+-- Mesmo padrão já usado em student_activity (bloco 1) e nas demais tabelas
+-- com leitura liberada pro professor.
 drop policy if exists "student_activity_state_select_all" on public.student_activity_state;
 drop policy if exists "student_activity_state_select_self" on public.student_activity_state;
-create policy "student_activity_state_select_self"
+drop policy if exists "student_activity_state_select_self_or_professor" on public.student_activity_state;
+create policy "student_activity_state_select_self_or_professor"
   on public.student_activity_state for select
-  using (student_email = public.current_email());
+  using (public.is_professor() or student_email = public.current_email());
 
 drop policy if exists "student_activity_state_insert_all" on public.student_activity_state;
 drop policy if exists "student_activity_state_insert_self" on public.student_activity_state;

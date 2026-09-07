@@ -169,6 +169,14 @@ test.describe('Notas — dentro do portal da turma', () => {
         // abertos — sem linha, contam como 0% na média da MATÉRIA Banco de
         // Dados (que soma os módulos das 2 trilhas dela).
       ],
+      // "Nota da Prova" não vem de student_module_progress (que só sabe
+      // "concluiu ou não" pro módulo progressMode:'flag' da prova) — vem
+      // de student_activity_state, onde a prova salva `state.nota` (0-100)
+      // ao concluir. progress_key segue `prova_<turma>` (ver finishExam()
+      // em turmas/sistemas/atividades/prova-sistemas.html).
+      student_activity_state: [
+        { student_email: 'alexandre.natal', progress_key: 'prova_sistemas', state: { completed: true, correctCount: 17, total: 20, nota: 85 } },
+      ],
     });
     await expandGestaoSection(page, 'Relatórios');
 
@@ -176,14 +184,25 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(page.locator('#relatorioNotasBody')).not.toContainText('nota1');
     // A coluna é por MATÉRIA, não por trilha.
     await expect(page.locator('#relatorioNotasHead')).toContainText('Banco de Dados');
+    await expect(page.locator('#relatorioNotasHead')).toContainText('Nota da Prova');
 
     const row = page.locator('#relatorioNotasBody tr', { hasText: 'Alexandre Natal' });
     await expect(row).toContainText('10.00'); // média B1
     await expect(row).toContainText('8.00');  // média B2
     await expect(row).toContainText('9.00');  // média geral (10 e 8, sem B3/B4)
+    await expect(row).toContainText('85/100'); // nota da prova, em pontos — nunca em %
     // Banco de Dados tem 6 módulos ao todo (sql: teoria/basico/join/agregacao +
     // sql-comentarios: teoria + db-conexao-supabase: pratica).
     // 3 concluídos, 3 nunca abertos => 3/6 = 50%.
     await expect(row).toContainText('50%');
+  });
+
+  test('relatório de notas mostra "—" pra quem ainda não fez a prova', async ({ page }) => {
+    await openGestao(page, SISTEMAS_URL, { grades: [], student_module_progress: [], student_activity_state: [] });
+    await expandGestaoSection(page, 'Relatórios');
+
+    const row = page.locator('#relatorioNotasBody tr', { hasText: 'Alexandre Natal' });
+    await expect(row).toContainText('—');
+    await expect(row).not.toContainText('/100');
   });
 });
