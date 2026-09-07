@@ -866,6 +866,19 @@
     correctCount = 0;
   }
 
+  // Botão exclusivo do professor (pré-visualizando com seu próprio usuário)
+  // pra testar o sorteio: apaga a seleção/estado/progresso salvos sob o
+  // login dele e sorteia 20 questões novas na hora, sem afetar nenhum
+  // aluno (cada um tem sua própria SELECTION_KEY/STATE_KEY/PROGRESS_KEY).
+  function resetForProfessor() {
+    localStorage.removeItem(SELECTION_KEY);
+    localStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(PROGRESS_KEY);
+    startExam();
+    storyWrap.innerHTML = '';
+    renderQuestion();
+  }
+
   const gateWrap = document.getElementById('gateWrap');
   const storyWrap = document.getElementById('storyWrap');
   const lblStepNum = document.getElementById('lblStepNum');
@@ -965,7 +978,10 @@
       const profActions = document.createElement('div');
       profActions.className = 'actions';
       profActions.style.marginTop = '10px';
-      profActions.innerHTML = `<button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>`;
+      profActions.innerHTML = `
+        <button class="btn btn-secondary" id="btnResetProfessor">🔄 Reiniciar prova (professor)</button>
+        <button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>
+      `;
       card.appendChild(profActions);
     }
 
@@ -973,6 +989,10 @@
     storyWrap.appendChild(card);
 
     if (isProfessor) {
+      // Reinicia com uma seleção de 20 questões nova (embaralhada de novo),
+      // só pra conferir que o sorteio/embaralhamento está funcionando —
+      // não afeta a tentativa de nenhum aluno.
+      document.getElementById('btnResetProfessor').addEventListener('click', resetForProfessor);
       document.getElementById('btnSkipProfessor').addEventListener('click', () => {
         currentIndex++;
         if (currentIndex >= EXAM_SIZE) {
@@ -1012,8 +1032,13 @@
         ${aprovado
           ? '<p>O professor já pode conferir sua nota na aba Gestão.</p>'
           : '<p>Esse resultado aponta conteúdos que ainda precisam de reforço. O professor já pode ver sua nota na aba Gestão e te ajudar a focar onde estudar mais.</p>'}
+        ${isProfessor ? '<div class="actions" style="justify-content:center; margin-top:10px;"><button class="btn btn-secondary" id="btnResetProfessor">🔄 Reiniciar prova (professor)</button></div>' : ''}
       </div>
     `;
+
+    if (isProfessor) {
+      document.getElementById('btnResetProfessor').addEventListener('click', resetForProfessor);
+    }
   }
 
   // ============================================================

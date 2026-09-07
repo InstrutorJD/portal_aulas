@@ -135,6 +135,28 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
     await expect(page.locator('.option')).toHaveCount(5);
   });
 
+  test('professor tem um botão "Reiniciar prova" pra testar o sorteio de novo', async ({ page }) => {
+    const PROF_URL = '/turmas/sistemas/atividades/prova-sistemas.html?user=admin&role=professor&turma=sistemas';
+    await page.goto(PROF_URL);
+    // Professor não passa pela trava nem pela tela de regras (guard.disabled) —
+    // cai direto numa questão, com uma seleção já sorteada automaticamente.
+    await expect(page.locator('.option')).toHaveCount(5);
+    await expect(page.locator('#btnResetProfessor')).toBeVisible();
+    await expect(page.locator('#btnSkipProfessor')).toBeVisible();
+
+    const selectionBefore = await page.evaluate(u => localStorage.getItem(`prova_sistemas_selecao_${u}`), 'admin');
+    expect(selectionBefore).not.toBeNull();
+
+    await page.click('#btnResetProfessor');
+
+    await expect(page.locator('.option')).toHaveCount(5);
+    const selectionAfter = await page.evaluate(u => localStorage.getItem(`prova_sistemas_selecao_${u}`), 'admin');
+    expect(selectionAfter).not.toBeNull();
+    // Praticamente impossível o sorteio de 20 de 60 repetir por acaso —
+    // confirma que reiniciar de fato gerou uma seleção nova.
+    expect(selectionAfter).not.toBe(selectionBefore);
+  });
+
   test('gabarito lista o banco inteiro de 60 questões', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor');
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
