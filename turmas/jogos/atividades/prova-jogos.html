@@ -905,14 +905,20 @@
     progressFill.style.width = '100%';
     lblStepNum.textContent = EXAM_SIZE;
 
+    // Abaixo de 60 pontos não é hora de comemorar (🏁/"!") — a tela vira
+    // um aviso neutro apontando pra reforçar o conteúdo, não um elogio.
+    const aprovado = nota >= 60;
+
     storyWrap.innerHTML = `
       <div class="card finish-screen">
-        <div class="trophy">🏁</div>
-        <h2>Prova concluída!</h2>
+        <div class="trophy">${aprovado ? '🏁' : '📋'}</div>
+        <h2>Prova concluída${aprovado ? '!' : ''}</h2>
         <p>Sua prova foi entregue e registrada — não é possível refazer esta tentativa.</p>
         <div class="score">Nota: ${nota} de 100 pontos</div>
         <p>Você acertou ${correctCount} de ${EXAM_SIZE} questões — cada uma vale ${PONTOS_POR_QUESTAO} pontos.</p>
-        <p>O professor já pode conferir sua nota na aba Gestão.</p>
+        ${aprovado
+          ? '<p>O professor já pode conferir sua nota na aba Gestão.</p>'
+          : '<p>Esse resultado aponta conteúdos que ainda precisam de reforço. O professor já pode ver sua nota na aba Gestão e te ajudar a focar onde estudar mais.</p>'}
       </div>
     `;
   }
