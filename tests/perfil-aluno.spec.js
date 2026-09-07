@@ -9,12 +9,14 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 
-// Turma Jogos tem 62 módulos ao todo (mesma base de cálculo usada em
+// Turma Jogos tem 67 módulos ao todo (mesma base de cálculo usada em
 // ranking.spec.js). A matéria "Fundamentos de Programação" sozinha tem 19:
 // js/basico, js/intermediario, os 4 módulos da trilha csharp (teoria,
 // comparação, prática simples, desafios) e os 5 da trilha gdscript (os
 // mesmos 4 + 'cenarios', só dela), e mais 4 trilhas (teoria+prática cada)
-// de fundamentos gerais de jogos.
+// de fundamentos gerais de jogos. (Os outros 5 módulos novos, das trilhas
+// 'cod-godot' (teoria+prática) e 'cod-godot-personagem' (teoria+prática+
+// roteiro), ficam na matéria "Codificação de Jogos".)
 const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
@@ -47,11 +49,11 @@ test.describe('Aba Perfil (só aluno)', () => {
 
   test('mostra progresso geral, por matéria/trilha, a posição no ranking e desbloqueia insígnias por % de conclusão', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
-    // breno completa só js/basico (10/10) → 1 módulo concluído de 62 na turma
-    // toda (2% geral), mas 5% dentro da matéria Fundamentos (1 de 19 módulos:
-    // js básico+intermediário, os 4 módulos da trilha csharp, os 5 módulos
-    // da trilha gdscript, e mais 4 trilhas teoria+prática de fundamentos
-    // gerais de jogos).
+    // breno completa só js/basico (10/10) → 1 módulo concluído de 67 na turma
+    // toda (1/67 = 1,49% geral, arredonda pra 1%), mas 5% dentro da matéria
+    // Fundamentos (1 de 19 módulos: js básico+intermediário, os 4 módulos da
+    // trilha csharp, os 5 módulos da trilha gdscript, e mais 4 trilhas
+    // teoria+prática de fundamentos gerais de jogos).
     await page.addInitScript(() => {
       localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
     });
@@ -59,8 +61,8 @@ test.describe('Aba Perfil (só aluno)', () => {
     await openPerfil(page);
 
     const resumo = page.locator('#perfilResumo');
-    await expect(resumo).toContainText('2%');
-    await expect(resumo).toContainText('1/62');
+    await expect(resumo).toContainText('1%');
+    await expect(resumo).toContainText('1/67');
     await expect(resumo).toContainText('2º'); // atrás só do edward, à frente do resto (0%)
     await expect(resumo).toContainText('Posição de 17');
 

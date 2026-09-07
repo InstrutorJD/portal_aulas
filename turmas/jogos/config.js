@@ -450,6 +450,57 @@ window.TURMA_CONFIG_JOGOS = {
           ]
         },
         {
+          key: 'cod-godot',
+          label: 'Motor Godot',
+          desc: 'Aprenda a teoria e depois escreva GDScript de verdade: arquitetura de nós e cenas, configuração de projeto, tipagem, controle de fluxo e o pipeline completo de movimentação top-down.',
+          capacidade: 'Reconhecer a arquitetura de nós e cenas de uma engine de jogos (Godot) e a configuração de projeto associada / Aplicar linguagem de programação (GDScript) na implementação de lógica de movimentação de personagens.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Motor Godot',
+              desc: 'Nós e cenas, hierarquia pai-filho, Main Scene/Stretch Mode, sistema de coordenadas, tipagem explícita, operadores, controle de fluxo, funções nativas com delta, Arrays e o fluxo de movimentação top-down.',
+              icon: '🐞', src: 'atividades/cod-godot-teoria.html',
+              progressKey: 'cod_godot_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Codificação: Motor Godot',
+              desc: 'Escreva GDScript de verdade: monte a direção a partir do input, normalize o vetor e implemente o pipeline de movimentação com delta.',
+              icon: '🎮', src: 'atividades/cod-godot-pratica.html',
+              progressKey: 'cod_godot_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'cod-godot-personagem',
+          label: 'Motor Godot: Personagem Jogável',
+          desc: 'Aprenda a teoria e depois escreva GDScript de verdade: CharacterBody2D x RigidBody2D, filtro Pixel Art, colisor circular, pivô centralizado, Z-Index e convenção de nomes/pastas de cena.',
+          capacidade: 'Aplicar a arquitetura de nós (CharacterBody2D, Sprite2D, CollisionShape2D) e as boas práticas de configuração, geometria e organização de cenas na estruturação de um personagem jogável em Godot 4.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Personagem Jogável em Godot',
+              desc: 'CharacterBody2D x RigidBody2D, filtro de textura pra Pixel Art, CollisionShape2D/CircleShape2D, pivô centralizado, Z-Index e convenção de nomes/pastas de cena.',
+              icon: '🐞', src: 'atividades/cod-godot-personagem-teoria.html',
+              progressKey: 'cod_godot_personagem_teoria_progress_', progressMode: 'flag',
+              hasSlides: true, hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Central de Codificação: Personagem Jogável',
+              desc: 'Escreva GDScript de verdade: centralize o pivô, dimensione o colisor, organize o Z-Index e monte o caminho da cena seguindo a convenção de nomes.',
+              icon: '🧍', src: 'atividades/cod-godot-personagem-pratica.html',
+              progressKey: 'cod_godot_personagem_pratica_progress_', progressTotal: 10,
+              requires: 'teoria', hasGabarito: true
+            },
+            {
+              key: 'roteiro', title: 'Roteiro — Construa seu Personagem no Godot',
+              desc: 'Mão na massa de verdade: monte a cena do personagem no editor da Godot, configure o Input Map e escreva o script de movimentação — depois peça o visto do professor.',
+              icon: '🕹️', src: 'atividades/cod-godot-personagem-roteiro.html',
+              progressKey: 'cod_godot_personagem_roteiro_progress_', progressMode: 'flag',
+              requires: 'pratica', hasGabarito: true
+            }
+          ]
+        },
+        {
           key: 'projeto-cobrinha',
           label: 'Projeto: Construa seu Jogo',
           desc: 'Saia do zero e construa, peça por peça, um jogo de Cobrinha de verdade — direto aqui no portal.',

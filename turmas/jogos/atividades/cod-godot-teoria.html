@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Motor Godot: Teoria</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d14; --panel:#10141f; --panel2:#0d101a; --line:#20283a;
+    --blue:#5ec8ff; --blue-dim:#2f7aa8; --blood:#c1121f; --blood-bright:#ff3b30;
+    --gold:#e0b84a; --ink:#dbe4f2; --ink-dim:#657388;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--blue-dim); background:#060810;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(94,200,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--blue); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
+
+  .bia-row{ display:flex; align-items:flex-start; gap:12px; }
+  .bia-avatar{
+    font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(94,200,255,0.5));
+  }
+  .speech-bubble{
+    background:var(--panel); border:1px solid var(--blue-dim); padding:16px 18px;
+    font-size:14px; line-height:1.7; position:relative;
+  }
+  .speech-bubble .bia-name{
+    display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--blue);
+    letter-spacing:1px; margin-bottom:6px;
+  }
+  .speech-bubble code{ color:var(--gold); }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--gold); margin:0 0 12px; letter-spacing:1px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--blue-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--blue); background:rgba(94,200,255,0.08); }
+  .option.correct .opt-letter{ border-color:var(--blue); color:var(--blue); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--blue); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+  .feedback b{ color:var(--gold); }
+
+  .actions{ display:flex; justify-content:flex-end; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--blue); color:#04162a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--blue); border:1px solid var(--blue-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--blue); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--gold); font-weight:800; margin:14px 0; }
+
+  .btn-topbar{
+    font-family:inherit; font-size:10px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--blue); border:1px solid var(--blue-dim); padding:5px 10px;
+    cursor:pointer; border-radius:2px;
+  }
+  .btn-topbar:hover{ background:rgba(94,200,255,0.1); }
+  .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .speech-bubble{ padding:12px 14px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cod_godot_teoria';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/vendor/pptxgen.bundle.js"></script>
+<script src="../../../shared/slides-generator.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/quiz-teoria-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>CODIFICAÇÃO — MOTOR GODOT (TEORIA)</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button id="btnGenSlides" class="btn-topbar" style="display:none;">🖨️ Gerar Slides (PPTX)</button>
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></span>
+    </div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="storyWrap"></div>
+  </div>
+</div>
+
+<script>
+  const STEPS = [
+    {
+      story: 'Olá! Eu sou a <b>Bia</b>, a joaninha debugger da PixelForge Studios — hoje vamos abrir a <b>Godot Engine</b> de verdade. Na Godot vale uma regra de ouro: <b>tudo é uma cena</b>. Uma cena é um conjunto de <b>nós</b> (nodes) organizados em hierarquia pra cumprir uma função. Pra montar um jogador, por exemplo, a gente não cria um bloco único: compõe um <code>CharacterBody2D</code> (o "corpo" que se move e colide com o cenário) como nó pai, com um <code>Sprite2D</code> (a imagem/animação visível) e um <code>CollisionShape2D</code> (a forma que o motor de física usa pra detectar colisão) como filhos.',
+      question: {
+        prompt: 'Pra montar o jogador na Godot, você usa um CharacterBody2D como nó pai, com um Sprite2D e um CollisionShape2D como filhos. Por que separar em três nós em vez de um bloco único?',
+        options: [
+          'Cada nó cuida de uma responsabilidade específica (física, visual, colisão), o que facilita ajustar e reaproveitar cada parte',
+          'Porque a Godot só permite no máximo um nó por cena',
+          'Porque CharacterBody2D não pode ter nenhum nó filho',
+          'Porque Sprite2D substitui completamente a necessidade de um CollisionShape2D'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Cada nó tem uma responsabilidade específica — física no CharacterBody2D, visual no Sprite2D, colisão no CollisionShape2D — e essa composição modular facilita ajustar e reaproveitar cada parte separadamente.'
+      }
+    },
+    {
+      story: 'Essa hierarquia de nós tem uma consequência direta: mover o <b>nó pai</b> desloca todos os <b>nós filhos</b> junto, no espaço <b>global</b> da cena. Só que o inverso dá mais liberdade — mover um nó filho é considerado um movimento <b>local</b>, relativo à posição do nó pai, sem afetar o resto da hierarquia. Assim, se você mover o CharacterBody2D do jogador, o Sprite2D e o CollisionShape2D "andam junto" automaticamente — mas se quiser só ajustar onde o Sprite2D aparece dentro do corpo do jogador, mexe só nele.',
+      question: {
+        prompt: 'Você move o nó CharacterBody2D do jogador pra outro canto da tela. O que acontece com o Sprite2D e o CollisionShape2D que são filhos dele?',
+        options: [
+          'Eles se movem junto, porque a posição deles é relativa (local) ao nó pai',
+          'Eles ficam parados exatamente onde estavam antes',
+          'A cena inteira quebra e precisa ser recriada do zero',
+          'Só o Sprite2D se move; o CollisionShape2D nunca acompanha o pai'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Filhos herdam o movimento do pai automaticamente — é assim que a hierarquia de nós evita ter que reposicionar cada peça do jogador manualmente toda vez.'
+      }
+    },
+    {
+      story: 'Antes de rodar o jogo, duas configurações do projeto merecem atenção. A <b>Main Scene</b> define qual cena abre primeiro quando o executável roda — geralmente um menu ou a fase inicial. E o <b>Stretch Mode</b>, configurado como "Canvas Items", garante que o jogo mantenha a proporção e escale corretamente em telas de tamanhos diferentes, evitando áreas vazias ("faixas pretas") ou imagem distorcida.',
+      question: {
+        prompt: 'O jogo aparece com uma "faixa vazia" na lateral quando testado num monitor de proporção diferente do usado no desenvolvimento. Qual configuração do projeto resolve isso?',
+        options: [
+          'Ajustar o Stretch Mode para "Canvas Items", garantindo escala e proporção corretas',
+          'Definir a Main Scene de novo, sem relação com o problema',
+          'Deletar o Sprite2D do jogador',
+          'Isso nunca tem solução — cada monitor exige um jogo diferente'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O Stretch Mode "Canvas Items" é feito exatamente pra isso: manter a proporção e escalar certo em telas de tamanhos e resoluções diferentes.'
+      }
+    },
+    {
+      story: 'Um detalhe que costuma pegar todo mundo de surpresa: o sistema de coordenadas da Godot tem a origem <b>(0,0)</b> no <b>canto superior esquerdo</b> da tela, com o eixo <b>X</b> crescendo pra direita e o eixo <b>Y positivo apontando pra BAIXO</b> (não pra cima, como em um gráfico de matemática tradicional). É a chamada "pegadinha do eixo Y": pra mover algo pra CIMA na tela, você precisa DIMINUIR o valor de Y, não aumentar.',
+      question: {
+        prompt: 'Você quer que o jogador suba na tela (vá pra cima) ao pressionar a tecla correspondente. O que deve acontecer com o valor de Y da posição dele?',
+        options: [
+          'Y deve DIMINUIR, porque na Godot o eixo Y positivo aponta pra baixo',
+          'Y deve AUMENTAR, igual em qualquer gráfico de matemática',
+          'Y nunca muda quando o jogador sobe ou desce',
+          'É preciso mudar o eixo X, não o Y, pra subir na tela'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Como a origem fica no canto superior esquerdo e Y positivo aponta pra baixo, subir na tela significa DIMINUIR o Y — o contrário do que a intuição de um gráfico de matemática sugere.'
+      }
+    },
+    {
+      story: 'Do lado do código: o GDScript aceita tipagem dinâmica, mas o padrão profissional é usar <b>tipagem explícita</b> — declarar o tipo de cada variável, como em <code>var moedas: int = 10</code>. Isso evita erros lógicos graves, como tentar guardar um texto numa variável que deveria só processar números, e o próprio editor te avisa do problema antes mesmo de rodar o jogo.',
+      question: {
+        prompt: 'Por que declarar "var moedas: int = 10" (com o tipo int explícito) é considerado mais seguro do que só "var moedas = 10"?',
+        options: [
+          'Porque impede, ainda no editor, que alguém atribua por engano um valor de outro tipo (como um texto) a essa variável',
+          'Porque só variáveis tipadas podem ser usadas dentro de funções',
+          'Porque tipagem explícita deixa o jogo graficamente mais bonito',
+          'Porque sem tipo explícito a variável não pode ser somada a outra'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! A tipagem explícita funciona como uma trava de segurança: o editor acusa o erro na hora, antes de um valor do tipo errado (como um texto numa variável numérica) causar uma falha em tempo real.'
+      }
+    },
+    {
+      story: 'O GDScript tem os operadores esperados: <b>aritméticos</b> (<code>+ - * /</code>, e o módulo <code>%</code>, útil pra saber se um número é par ou ímpar), <b>relacionais</b> (<code>== != > < >= <=</code>, pra comparar valores) e <b>lógicos</b> (<code>and/or/not</code>, que também podem ser escritos como <code>&& || !</code>, pra combinar condições). E existe um atalho de atribuição bem usado: escrever <code>vida -= 10</code> em vez de <code>vida = vida - 10</code> — mais curto e igual de claro.',
+      question: {
+        prompt: 'Você quer subtrair 10 pontos de vida da variável "vida", da forma mais concisa e "profissional" possível em GDScript. Qual linha faz isso?',
+        options: [
+          'vida -= 10',
+          'vida == vida - 10',
+          'vida -- 10',
+          'vida =! 10'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! "vida -= 10" é o atalho de atribuição padrão pra subtrair um valor da própria variável, sem precisar reescrever "vida = vida - 10" por extenso.'
+      }
+    },
+    {
+      story: 'Pro controle de fluxo, <code>if</code>, <code>elif</code> e <code>else</code> tomam decisões com base em condições. Já os laços de repetição têm dois sabores: o <b>while</b>, que roda enquanto uma condição for verdadeira (em loops controlados como <code>while true</code>, o <code>break</code> é obrigatório pra ter uma saída), e o <b>for</b>, que — diferente do C# — funciona como um <i>foreach</i>: <code>for i in range(10)</code> cria sozinho a variável iteradora, ideal pra percorrer um <b>Array</b> ou repetir uma tarefa um número fixo de vezes.',
+      question: {
+        prompt: 'Um código usa "while true:" pra ficar esperando um evento (como uma senha correta ser digitada), mas o loop nunca acaba e o jogo trava. O que provavelmente falta no código?',
+        options: [
+          'Um `break` dentro do loop, pra encerrar o ciclo assim que a condição desejada acontecer',
+          'Trocar `while` por `if`, porque `if` sempre repete sozinho',
+          'Remover a condição `true` e deixar o parêntese vazio',
+          'Nada — todo `while true` trava o jogo de propósito, é esperado'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Um `while true` sem `break` é um loop infinito de verdade — o `break`, disparado quando a condição desejada acontece (como a senha certa), é o que dá uma saída pro ciclo.'
+      }
+    },
+    {
+      story: 'A Godot chama automaticamente algumas funções do seu script, sempre com um <b>underline</b> (_) no início do nome, pra diferenciar das suas funções personalizadas: <code>_ready()</code> roda uma única vez, quando o nó entra na cena; <code>_process(delta)</code> roda a cada quadro (frame) de RENDERIZAÇÃO; e <code>_physics_process(delta)</code> roda a cada quadro de FÍSICA, num ritmo fixo (60 vezes por segundo, por padrão), separado da taxa de FPS da tela. Qualquer código que mexa com corpos físicos — como mover um CharacterBody2D — deve ficar dentro de <code>_physics_process(delta)</code>, não de <code>_process(delta)</code>, pra ficar sincronizado com o motor de física e a detecção de colisão. Nos dois casos, o parâmetro <b>delta</b> é o tempo (em segundos) desde o último quadro — multiplicar um valor por ele torna o resultado independente da taxa de quadros: sem isso, um jogador a 1000 FPS se moveria muito mais rápido que um a 60 FPS. E pra guardar várias informações juntas (como o nome dos jogadores de um ranking), existem os <b>Arrays</b>: listas ordenadas, contadas a partir do <b>zero</b> — <code>nomes[0]</code> é sempre o primeiro item.',
+      question: {
+        prompt: 'Sem multiplicar o deslocamento do jogador pelo "delta" dentro de "_physics_process(delta)", o que acontece entre um computador rodando a 60 FPS e outro rodando a 1000 FPS?',
+        options: [
+          'O jogador se moveria numa velocidade diferente (bem mais rápido) no computador de 1000 FPS',
+          'Não faz nenhuma diferença, a velocidade seria idêntica nos dois',
+          'O jogo simplesmente não rodaria no computador de 1000 FPS',
+          'O "delta" só afeta o som do jogo, nunca a movimentação'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Sem multiplicar pelo "delta", o deslocamento por quadro é fixo — então quanto mais quadros de física por segundo, mais vezes esse deslocamento é aplicado, e o jogador anda mais rápido. Multiplicar por "delta" normaliza isso pra qualquer hardware — e é por isso que código de movimento vive em "_physics_process(delta)", sincronizado com o motor de física, e não em "_process(delta)".'
+      }
+    },
+    {
+      story: 'Juntando tudo: pra mover o jogador em qualquer direção (movimentação "top-down"), o fluxo típico dentro de <code>_physics_process(delta)</code> (não <code>_process(delta)</code>, porque mexe direto com o CharacterBody2D) é: 1) checar quais teclas estão pressionadas com <code>Input.is_action_pressed()</code> e montar um vetor <code>direcao</code> (lembrando da pegadinha: "Baixo" soma no Y, "Cima" subtrai); 2) aplicar <code>direcao.normalized()</code>, pra evitar o bug clássico de andar mais rápido na diagonal (a soma pitagórica de X e Y, sem normalizar, ultrapassa a velocidade máxima); 3) multiplicar pela velocidade escalar do jogador e guardar na propriedade <code>velocity</code> do CharacterBody2D; 4) chamar <code>move_and_slide()</code> (sem nenhum argumento — ele já lê a propriedade <code>velocity</code> sozinho), que aplica essa velocidade de verdade e já cuida de colisões e deslizes em paredes.',
+      question: {
+        prompt: 'Sem chamar ".normalized()" no vetor direção antes de multiplicar pela velocidade, o que acontece quando o jogador anda na diagonal (duas teclas pressionadas ao mesmo tempo)?',
+        options: [
+          'Ele se move mais rápido do que o esperado, porque a soma dos dois eixos (X e Y) ultrapassa a velocidade máxima planejada',
+          'Nada muda — normalizar ou não dá exatamente na mesma velocidade',
+          'O jogo trava imediatamente sem o ".normalized()"',
+          'O jogador passa a se mover mais devagar do que o normal'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Sem normalizar, mover na diagonal soma as duas componentes (X e Y) e o vetor resultante fica maior que 1 — por isso o jogador anda mais rápido na diagonal do que em linha reta, um bug clássico que ".normalized()" resolve.'
+      }
+    }
+  ];
+
+  window.generateSlidesForGestao = function () {
+    return window.PortalSlides.generate({
+      title: 'Codificação de Jogos — Motor Godot',
+      subtitle: 'Aula Teórica · Trilha Motor Godot · Turma Jogos Digitais',
+      capacidade: 'Reconhecer a arquitetura de nós e cenas da Godot Engine, a configuração de projeto e a sintaxe de GDScript (tipagem, operadores, controle de fluxo, funções e arrays) aplicadas à implementação de movimentação de personagens.',
+      steps: STEPS,
+      fileName: 'cod-godot-teoria-slides.pptx',
+      closingTitle: 'Hora da prática!',
+      closingText: 'Abra o módulo "Prática — Central de Codificação: Motor Godot" no Portal de Aulas para os alunos escreverem código de verdade.'
+    });
+  };
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Codificação de Jogos — Motor Godot',
+      subtitle: 'Aula Teórica · Trilha Motor Godot · Turma Jogos Digitais',
+      items: STEPS.map((step, i) => ({
+        number: i + 1,
+        prompt: step.question.prompt,
+        options: step.question.options,
+        correctIndex: step.question.correctIndex,
+        answer: step.question.options[step.question.correctIndex]
+      })),
+      fileName: 'cod-godot-teoria-gabarito.txt'
+    });
+  };
+
+  window.PortalQuizTeoria.run({
+    activityLocation: "cod_godot_teoria",
+    steps: STEPS,
+    reportLabel: "Codificação — Motor Godot",
+    mentor: { rowClass: "bia", avatar: "🐞", name: "Bia, a Joaninha Debugger" },
+    finishPassed: {
+      title: "Motor Godot concluído!",
+      introHtml: "<p>Você já reconhece a arquitetura de nós e cenas, a configuração de projeto, a pegadinha do eixo Y, tipagem explícita, operadores, controle de fluxo, funções nativas com delta, Arrays e o fluxo completo de movimentação top-down.</p>",
+      closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de Codificação.</p>",
+      restartLabel: "🔁 Rever a teoria"
+    }
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

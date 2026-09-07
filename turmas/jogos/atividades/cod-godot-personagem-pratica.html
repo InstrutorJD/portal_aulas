@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Jogos: Central de Codificação — Personagem Jogável</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d14; --panel:#10141f; --panel2:#0d101a; --line:#20283a;
+    --blue:#5ec8ff; --blue-dim:#2f7aa8; --blood:#c1121f; --blood-bright:#ff3b30;
+    --gold:#e0b84a; --ink:#dbe4f2; --ink-dim:#657388;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--blue-dim); background:#060810;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(94,200,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:190px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .challenge-item{
+    display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
+  }
+  .challenge-item .status{ font-size:13px; width:16px; text-align:center; flex-shrink:0; }
+  .challenge-item.active{ border-color:var(--blue); color:var(--blue); }
+  .challenge-item.completed{ color:var(--ink); }
+  .challenge-item.locked{ opacity:0.4; cursor:not-allowed; }
+  .challenge-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; overflow-y:auto; }
+
+  .challenge-header{ flex:1 1 0%; min-height:90px; overflow-y:auto; background:var(--panel); border:1px solid var(--line); padding:10px 14px; }
+  .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--blue); margin:0 0 8px; letter-spacing:1px; }
+  .challenge-header p{ font-size:14px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
+  .challenge-header code{ color:var(--gold); }
+
+  .explanation-box{
+    background:#08111c; border:1px solid var(--blue-dim); padding:10px 12px;
+    font-size:11.5px; color:var(--ink); line-height:1.6;
+  }
+  .explanation-box .exp-title{
+    color:var(--blue); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
+  }
+  .explanation-box code{ color:var(--gold); }
+  .explanation-box pre{
+    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); white-space:pre;
+  }
+
+  .given-vars{ font-size:10.5px; color:var(--ink-dim); margin-top:8px; }
+  .given-vars b{ color:var(--gold); }
+
+  .hint-toggle{
+    display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--gold); border:1px solid var(--blue-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-toggle:hover{ background:rgba(224,184,74,0.1); }
+  .hint-box{
+    display:none; margin-top:8px; background:var(--panel2); border:1px dashed var(--gold);
+    padding:8px 10px; font-size:11.5px; color:var(--ink); line-height:1.5;
+  }
+  .hint-box.show{ display:block; }
+  .hint-box b{ color:var(--gold); }
+
+  textarea#codeInput{
+    width:100%; flex:0 0 230px; min-height:140px; resize:vertical; background:#000; color:var(--blue);
+    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
+    padding:10px; outline:none; line-height:1.5; tab-size:4;
+  }
+  textarea#codeInput:focus{ border-color:var(--blue); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--blue); color:#04162a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--blue); border:1px solid var(--blue-dim); }
+
+  .console{
+    background:#08090f; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    flex:0 0 100px; min-height:70px; overflow-y:auto; line-height:1.6;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.pass{ color:var(--blue); }
+  .console .line.fail{ color:var(--blood-bright); }
+  .console .line.success{ color:var(--blue); font-weight:bold; }
+  .console .line.warn{ color:var(--gold); }
+
+  /* Celular/telas estreitas: mesma regra das outras práticas de desafio —
+     empilha tudo numa coluna só e deixa a página inteira rolar. */
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    textarea#codeInput{ min-height:200px; }
+    .console{ flex:none; max-height:160px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cod_godot_personagem_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/gdscript-challenge-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>CODIFICAÇÃO — CENTRAL DE CODIFICAÇÃO: PERSONAGEM JOGÁVEL</div>
+    <div>CONCLUÍDOS: <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Desafios</div>
+        <div id="challengeList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="challenge-header">
+          <h2 id="challengeTitle">--</h2>
+
+          <div class="explanation-box">
+            <div class="exp-title">📖 Como funciona</div>
+            <div id="explanationText"></div>
+          </div>
+
+          <p id="challengeDesc"></p>
+          <div class="given-vars" id="givenVarsLabel" style="display:none;"></div>
+
+          <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+
+        <textarea id="codeInput" spellcheck="false"></textarea>
+
+        <div class="actions">
+          <button class="btn" id="btnRun">▶ Executar</button>
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo desafio →</button>
+        </div>
+
+        <div class="console" id="consoleOutput"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Escreve, em GDScript de verdade, a lógica por trás das boas práticas de
+  // estruturação de personagem descritas na Proposta de Arquitetura Técnica
+  // (pivô centralizado, dimensionamento do colisor, Z-Index de camadas e
+  // convenção de nomes/pastas de cena) — sobre o mesmo motor de
+  // shared/gdscript-challenge-engine.js usado pela trilha "Motor Godot".
+  const CHALLENGES = [
+    {
+      id: 1,
+      title: 'Pivô centralizado?',
+      givenVars: ['offset_x', 'offset_y'],
+      starter: '# offset_x e offset_y ja existem (posicao do Sprite2D em relacao ao no pai)\n# resultado deve ser true so quando AMBOS forem 0\n\nvar resultado\n\n',
+      explanation: 'O pivô de um nó filho só está centralizado quando o deslocamento (offset) em relação ao pai é 0 nos dois eixos ao mesmo tempo.<pre>if offset_x == 0 && offset_y == 0:\n\tresultado = true</pre>',
+      desc: 'As variáveis <code>offset_x</code> e <code>offset_y</code> (posição do Sprite2D em relação ao nó pai) já existem. <code>resultado</code> deve ser <code>true</code> só quando AMBAS forem <b>0</b> — ou seja, o pivô está centralizado; senão, <code>false</code>.',
+      hint: 'Combine as duas checagens de igualdade a 0 com <code>&&</code>.',
+      solution: 'var resultado\nif offset_x == 0 && offset_y == 0:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { offset_x: 0, offset_y: 0 }, expected: true },
+        { values: { offset_x: 5, offset_y: 0 }, expected: false },
+        { values: { offset_x: 0, offset_y: -3 }, expected: false },
+        { values: { offset_x: 2, offset_y: 2 }, expected: false }
+      ]
+    },
+    {
+      id: 2,
+      title: 'Raio do colisor a partir da largura do sprite',
+      givenVars: ['largura_sprite'],
+      starter: '# largura_sprite ja existe\n# crie resultado com metade da largura (o raio do CircleShape2D)\n\n',
+      explanation: 'Um CircleShape2D que cobre exatamente a largura do sprite tem raio igual à metade dessa largura.<pre>var raio = largura_sprite / 2</pre>',
+      desc: 'A variável <code>largura_sprite</code> já existe. Crie <code>resultado</code> com o raio do colisor: metade da largura do sprite.',
+      hint: 'O raio de um círculo é metade do diâmetro — aqui, metade da largura.',
+      solution: 'var resultado = largura_sprite / 2',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { largura_sprite: 32 }, expected: 16 },
+        { values: { largura_sprite: 64 }, expected: 32 },
+        { values: { largura_sprite: 16 }, expected: 8 },
+        { values: { largura_sprite: 100 }, expected: 50 }
+      ]
+    },
+    {
+      id: 3,
+      title: 'Focando o colisor na base do personagem',
+      givenVars: ['altura_sprite'],
+      starter: '# altura_sprite ja existe\n# crie resultado com o deslocamento vertical do colisor (metade da altura)\n\n',
+      explanation: 'Pra focar o colisor na base (pés) do personagem, o centro dele deve descer metade da altura do sprite — lembrando que, na Godot, Y positivo aponta pra baixo.<pre>var deslocamento_y = altura_sprite / 2</pre>',
+      desc: 'A variável <code>altura_sprite</code> já existe. Crie <code>resultado</code> com o deslocamento vertical do colisor: metade da altura do sprite.',
+      hint: 'Mesma conta do desafio anterior, agora sobre a altura em vez da largura.',
+      solution: 'var resultado = altura_sprite / 2',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { altura_sprite: 40 }, expected: 20 },
+        { values: { altura_sprite: 80 }, expected: 40 },
+        { values: { altura_sprite: 20 }, expected: 10 },
+        { values: { altura_sprite: 120 }, expected: 60 }
+      ]
+    },
+    {
+      id: 4,
+      title: 'O acessório deve colidir?',
+      givenVars: ['altura_elemento', 'altura_base_personagem'],
+      starter: '# altura_elemento e altura_base_personagem ja existem\n# resultado deve ser true so quando o elemento estiver DENTRO da base\n# (lembre-se: Y menor eh mais alto na tela)\n\nvar resultado\n\n',
+      explanation: 'Um acessório (como a ponta de um chapéu) não deve colidir se estiver ACIMA da base do personagem — ou seja, se sua posição Y for menor que a da base. Só colide se estiver na altura da base ou abaixo dela.<pre>if altura_elemento >= altura_base_personagem:\n\tresultado = true</pre>',
+      desc: 'As variáveis <code>altura_elemento</code> e <code>altura_base_personagem</code> já existem (posições no eixo Y). <code>resultado</code> deve ser <code>true</code> só quando <code>altura_elemento</code> for maior ou igual a <code>altura_base_personagem</code> (o elemento está na base ou abaixo dela, deve colidir); senão, <code>false</code> (elemento acima da base, como a ponta de um chapéu — não deve colidir).',
+      hint: 'Lembre-se da pegadinha do eixo Y: um valor MENOR significa mais pra CIMA na tela.',
+      solution: 'var resultado\nif altura_elemento >= altura_base_personagem:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { altura_elemento: 50, altura_base_personagem: 30 }, expected: true },
+        { values: { altura_elemento: 10, altura_base_personagem: 30 }, expected: false },
+        { values: { altura_elemento: 30, altura_base_personagem: 30 }, expected: true },
+        { values: { altura_elemento: 5, altura_base_personagem: 40 }, expected: false }
+      ]
+    },
+    {
+      id: 5,
+      title: 'Z-Index do personagem acima do cenário',
+      givenVars: ['z_cenario'],
+      starter: '# crie a funcao zIndexPersonagem(z_cenario)\n# que devolve o z_cenario mais 1\nfunc zIndexPersonagem(z_cenario):\n\t\n\n# depois, crie resultado chamando a funcao\nvar resultado = zIndexPersonagem(z_cenario)\n',
+      explanation: 'Pra garantir que o personagem sempre seja desenhado por cima do cenário, o Z Index dele deve ser pelo menos 1 a mais que o do cenário.<pre>func zIndexPersonagem(z_cenario):\n\treturn z_cenario + 1</pre>',
+      desc: 'Crie a função <code>zIndexPersonagem(z_cenario)</code>, que devolve o Z Index do cenário mais <b>1</b> — garantindo que o personagem sempre seja desenhado por cima. Depois, crie <code>resultado</code> chamando a função com <code>z_cenario</code>.',
+      hint: 'É só somar 1 ao valor recebido.',
+      solution: 'func zIndexPersonagem(z_cenario):\n\treturn z_cenario + 1\nvar resultado = zIndexPersonagem(z_cenario)',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { z_cenario: 0 }, expected: 1 },
+        { values: { z_cenario: 2 }, expected: 3 },
+        { values: { z_cenario: -1 }, expected: 0 },
+        { values: { z_cenario: 5 }, expected: 6 }
+      ]
+    },
+    {
+      id: 6,
+      title: 'O personagem está na camada certa?',
+      givenVars: ['z_personagem', 'z_cenario'],
+      starter: '# z_personagem e z_cenario ja existem\n# resultado deve ser true so quando z_personagem for MAIOR que z_cenario\n\nvar resultado\n\n',
+      explanation: 'O personagem só é desenhado corretamente por cima do cenário quando seu Z Index é maior que o do cenário — igual não basta.<pre>if z_personagem > z_cenario:\n\tresultado = true</pre>',
+      desc: 'As variáveis <code>z_personagem</code> e <code>z_cenario</code> já existem. <code>resultado</code> deve ser <code>true</code> só quando <code>z_personagem</code> for MAIOR que <code>z_cenario</code>; senão, <code>false</code>.',
+      hint: 'Use o operador de "maior que" — igual não conta.',
+      solution: 'var resultado\nif z_personagem > z_cenario:\n\tresultado = true\nelse:\n\tresultado = false',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { z_personagem: 1, z_cenario: 0 }, expected: true },
+        { values: { z_personagem: 0, z_cenario: 0 }, expected: false },
+        { values: { z_personagem: -1, z_cenario: 0 }, expected: false },
+        { values: { z_personagem: 3, z_cenario: 1 }, expected: true }
+      ]
+    },
+    {
+      id: 7,
+      title: 'Nome do arquivo da cena (snake_case)',
+      givenVars: ['nome_base'],
+      starter: '# nome_base ja existe (ex: "jogador")\n# crie resultado concatenando nome_base com ".tscn"\n\n',
+      explanation: 'A convenção da Godot usa snake_case pro nome do arquivo de cena, com a extensão .tscn.<pre>var arquivo = nome_base + ".tscn"</pre>',
+      desc: 'A variável <code>nome_base</code> já existe (ex: <code>"jogador"</code>). Crie <code>resultado</code> concatenando <code>nome_base</code> com <code>".tscn"</code>.',
+      hint: 'Em GDScript, <code>+</code> também concatena texto quando os dois lados são strings.',
+      solution: 'var resultado = nome_base + ".tscn"',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { nome_base: 'jogador' }, expected: 'jogador.tscn' },
+        { values: { nome_base: 'inimigo' }, expected: 'inimigo.tscn' },
+        { values: { nome_base: 'npc_vendedor' }, expected: 'npc_vendedor.tscn' }
+      ]
+    },
+    {
+      id: 8,
+      title: 'Nome do script (snake_case)',
+      givenVars: ['nome_base'],
+      starter: '# nome_base ja existe (ex: "jogador")\n# crie resultado concatenando nome_base com ".gd"\n\n',
+      explanation: 'O script de uma cena segue a mesma base do nome do arquivo .tscn, trocando a extensão pra .gd.<pre>var script = nome_base + ".gd"</pre>',
+      desc: 'A variável <code>nome_base</code> já existe. Crie <code>resultado</code> concatenando <code>nome_base</code> com <code>".gd"</code>.',
+      hint: 'Mesma ideia do desafio anterior, trocando só a extensão.',
+      solution: 'var resultado = nome_base + ".gd"',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { nome_base: 'jogador' }, expected: 'jogador.gd' },
+        { values: { nome_base: 'inimigo' }, expected: 'inimigo.gd' },
+        { values: { nome_base: 'npc_vendedor' }, expected: 'npc_vendedor.gd' }
+      ]
+    },
+    {
+      id: 9,
+      title: 'CharacterBody2D ou RigidBody2D?',
+      givenVars: ['controlado_via_script'],
+      starter: '# controlado_via_script (bool) ja existe\n# resultado deve ser "CharacterBody2D" quando for true, senao "RigidBody2D"\n\nvar resultado\n\n',
+      explanation: 'Se o corpo precisa ser controlado inteiramente por código, a escolha é CharacterBody2D; se ele deve reagir sozinho à simulação de física do motor, é RigidBody2D.<pre>if controlado_via_script:\n\tresultado = "CharacterBody2D"</pre>',
+      desc: 'A variável <code>controlado_via_script</code> (bool) já existe. <code>resultado</code> deve ser <code>"CharacterBody2D"</code> quando ela for <code>true</code>; senão, <code>"RigidBody2D"</code>.',
+      hint: 'Um `if` direto na variável booleana já funciona como condição.',
+      solution: 'var resultado\nif controlado_via_script:\n\tresultado = "CharacterBody2D"\nelse:\n\tresultado = "RigidBody2D"',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { controlado_via_script: true }, expected: 'CharacterBody2D' },
+        { values: { controlado_via_script: false }, expected: 'RigidBody2D' }
+      ]
+    },
+    {
+      id: 10,
+      title: 'Caminho completo da cena do personagem',
+      givenVars: ['pasta_scenes', 'nome_base'],
+      starter: '# crie a funcao caminhoCena(pasta, nome)\n# que devolve pasta + nome + ".tscn" (nessa ordem)\nfunc caminhoCena(pasta, nome):\n\t\n\n# depois, crie resultado chamando a funcao\nvar resultado = caminhoCena(pasta_scenes, nome_base)\n',
+      explanation: 'É a estrutura de pastas da arquitetura (res://scenes/jogador/) juntada ao nome do arquivo — a pasta já vem com a barra final, então basta concatenar tudo em sequência.<pre>func caminhoCena(pasta, nome):\n\treturn pasta + nome + ".tscn"</pre>',
+      desc: 'Crie a função <code>caminhoCena(pasta, nome)</code>, que devolve o caminho completo: <code>pasta</code> + <code>nome</code> + <code>".tscn"</code> (nessa ordem, sem separador extra — a pasta já inclui a barra final). Depois, crie <code>resultado</code> chamando a função com <code>pasta_scenes</code> e <code>nome_base</code>.',
+      hint: 'Concatene os três pedaços com <code>+</code>, na ordem: pasta, nome, extensão.',
+      solution: 'func caminhoCena(pasta, nome):\n\treturn pasta + nome + ".tscn"\nvar resultado = caminhoCena(pasta_scenes, nome_base)',
+      check: { type: 'variable', name: 'resultado' },
+      tests: [
+        { values: { pasta_scenes: 'res://scenes/jogador/', nome_base: 'jogador' }, expected: 'res://scenes/jogador/jogador.tscn' },
+        { values: { pasta_scenes: 'res://scenes/inimigo/', nome_base: 'inimigo' }, expected: 'res://scenes/inimigo/inimigo.tscn' }
+      ]
+    }
+  ];
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Codificação de Jogos — Motor Godot: Personagem Jogável',
+      subtitle: 'Prática · Trilha Motor Godot: Personagem Jogável · Turma Jogos Digitais',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        prompt: c.desc,
+        answer: c.tests.map(t => {
+          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
+          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
+          if (c.check.type === 'console') {
+            return `${prefix} → print deve mostrar ${JSON.stringify(t.expected)}`;
+          }
+          return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
+        }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
+      })),
+      fileName: 'cod-godot-personagem-pratica-gabarito.txt'
+    });
+  };
+
+  window.PortalGdscriptChallenges.run({
+    activityLocation: 'cod_godot_personagem_pratica',
+    challenges: CHALLENGES,
+    reportLabel: 'Codificação — Personagem Jogável em Godot'
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

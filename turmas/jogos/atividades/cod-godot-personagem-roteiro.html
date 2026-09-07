@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Roteiro: Construa seu Personagem no Godot</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d14; --panel:#10141f; --panel2:#0d101a; --line:#20283a;
+    --blue:#5ec8ff; --blue-dim:#2f7aa8; --blood:#c1121f; --blood-bright:#ff3b30;
+    --gold:#e0b84a; --ink:#dbe4f2; --ink-dim:#657388;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--blue-dim); background:#060810;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(94,200,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--blue); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--gold); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--blue); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--blue); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--blue-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--blue-dim); color:var(--gold); font-style:italic;
+  }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--gold); }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--blue); color:#04162a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--blue); border:1px solid var(--blue-dim); }
+
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--blue-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--blue); color:var(--blue); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cod_godot_personagem_roteiro';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>CODIFICAÇÃO — ROTEIRO: PERSONAGEM JOGÁVEL NO GODOT</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `cod_godot_personagem_roteiro_progress_${username}`;
+  const STEP_KEY = `cod_godot_personagem_roteiro_step_${username}`;
+
+  // Atividade sem correção automática (o "produto" é um projeto Godot 4
+  // aberto no computador do aluno, fora do portal) — cada tela só navega
+  // com Voltar/Próximo, sem quiz. Quem marca como concluída é o professor,
+  // na última etapa (ver renderVisto), o mesmo padrão de
+  // oficina-comunicacao-trabalho.html e modelagem-dados-requisitos-trabalho.html.
+  //
+  // Passo a passo verificado contra a documentação oficial da Godot
+  // (docs.godotengine.org, versão stable) antes de publicar — em especial:
+  // move_and_slide() sem parâmetros em Godot 4, movimento de CharacterBody2D
+  // deve rodar em _physics_process(delta) (não _process), Vector2.ZERO
+  // .normalized() devolve (0,0) sem erro, caminho de Default Texture Filter
+  // em Project Settings > Rendering > Textures > Canvas Textures, e Z Index
+  // dentro de CanvasItem > Ordering no Inspector.
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios quer ver você estruturar um personagem jogável de verdade, dentro do editor da Godot — não só resolver pedaços de código soltos, mas montar a cena completa e ver o boneco andando na tela.
+
+### O que entregar
+
+Um projeto Godot 4 com uma cena de personagem jogável (¤Jogador.tscn¤), com ¤CharacterBody2D¤ como raiz, colisor e sprite configurados, e um script (¤jogador.gd¤) que move o personagem nas 4 direções — inclusive na diagonal, sem acelerar.
+
+### Como funciona aqui
+
+1. Siga o roteiro passo a passo, construindo a cena dentro da Godot.
+2. Ao final, rode a cena (F6) e confira se o personagem se move certinho.
+3. Chame o professor e mostre o personagem andando na tela.
+4. Peça o visto pessoalmente — só aí a atividade é marcada como concluída.`
+    },
+    {
+      titulo: '1. Criar o projeto e a cena do personagem',
+      corpo: `
+### Abra (ou crie) um projeto Godot 4
+
+Se ainda não tiver um projeto aberto, crie um novo projeto Godot 4 vazio.
+
+### Crie uma cena com CharacterBody2D como raiz
+
+No painel de Cena, clique em **Cena > Nova Cena** (ou o botão "+"), escolha **Outro Nó** e procure por ¤CharacterBody2D¤ — adicione ele como nó raiz da cena.
+
+### Renomeie o nó raiz
+
+Siga a convenção de nomes da Godot: nós usam **PascalCase**. Renomeie o nó raiz pra ¤Jogador¤.
+
+- [ ] Cena criada com CharacterBody2D como raiz
+- [ ] Nó raiz renomeado pra "Jogador"`
+    },
+    {
+      titulo: '2. Sprite e colisor',
+      corpo: `
+### Adicione o Sprite2D
+
+Clique com o botão direito em ¤Jogador¤ > **Adicionar Nó Filho** > procure ¤Sprite2D¤. Se tiver uma imagem de personagem, carregue-a na propriedade **Texture**; se não tiver, tudo bem — dá pra testar o movimento só com o ícone padrão da Godot.
+
+### Adicione o CollisionShape2D
+
+Com ¤Jogador¤ selecionado, adicione outro nó filho: ¤CollisionShape2D¤.
+
+### Configure a forma como CircleShape2D
+
+Selecione o ¤CollisionShape2D¤, clique na propriedade **Shape** no Inspector e escolha **Novo CircleShape2D**. Ajuste o raio arrastando a alça amarela até cobrir a base do personagem, sem sobrar muito nas bordas.
+
+### Confira o pivô
+
+Sprite2D e CollisionShape2D devem ficar centralizados em **(0, 0)** dentro do Jogador — a Godot já posiciona assim por padrão quando o nó é criado pelo menu. Só confira no Inspector (Position deve estar em 0, 0), sem arrastar nada sem querer no viewport 2D.
+
+- [ ] Sprite2D adicionado (com ou sem imagem)
+- [ ] CollisionShape2D com CircleShape2D configurado
+- [ ] Posição dos dois filhos em (0, 0)`
+    },
+    {
+      titulo: '3. Ajuste de Pixel Art (se o seu sprite for Pixel Art)',
+      corpo: `
+Se o seu sprite for em **Pixel Art**, a Godot deixa ele borrado por padrão — o filtro de textura padrão do motor suaviza a imagem ao escalar.
+
+### Corrigir globalmente (recomendado)
+
+Vá em **Project > Project Settings > Rendering > Textures > Canvas Textures** e mude o **Default Texture Filter** de ¤Linear¤ pra ¤Nearest¤. Vale pra todo o projeto.
+
+> Se a imagem já estava importada antes dessa mudança, ela pode continuar borrada: selecione o arquivo PNG, abra a aba **Import** e clique em **Reimport**.
+
+### Ou só nesse nó
+
+Também dá pra ajustar só o Sprite2D: selecione ele e, no Inspector, abra **CanvasItem > Texture > Filter** e escolha ¤Nearest¤.
+
+- [ ] Filtro de textura ajustado pra Nearest (se o sprite for Pixel Art)`
+    },
+    {
+      titulo: '4. Configurar o Input Map',
+      corpo: `
+O script vai checar 4 ações de teclado — mas antes, elas precisam existir no projeto.
+
+Vá em **Project > Project Settings > Input Map** e crie estas 4 ações, cada uma associada à tecla indicada:
+
+| Ação | Tecla |
+| --- | --- |
+| ¤mover_direita¤ | D (ou seta direita) |
+| ¤mover_esquerda¤ | A (ou seta esquerda) |
+| ¤mover_cima¤ | W (ou seta pra cima) |
+| ¤mover_baixo¤ | S (ou seta pra baixo) |
+
+Pra cada uma: digite o nome da ação na caixa de texto no topo, clique em **Add**, depois clique no ícone de "+" ao lado da ação já criada e pressione a tecla correspondente.
+
+- [ ] As 4 ações criadas, cada uma com a tecla certa associada`
+    },
+    {
+      titulo: '5. Escrever o script de movimentação',
+      corpo: `
+### Anexe um script ao Jogador
+
+Com o nó ¤Jogador¤ selecionado, clique no ícone de script (canto superior do painel de Cena) e crie um novo script chamado ¤jogador.gd¤.
+
+### Apague o conteúdo padrão e escreva:
+
+§§§gdscript
+extends CharacterBody2D
+
+@export var velocidade: float = 200.0
+
+func _physics_process(delta):
+	var direcao = Vector2.ZERO
+
+	if Input.is_action_pressed("mover_direita"):
+		direcao.x += 1
+	if Input.is_action_pressed("mover_esquerda"):
+		direcao.x -= 1
+	if Input.is_action_pressed("mover_baixo"):
+		direcao.y += 1
+	if Input.is_action_pressed("mover_cima"):
+		direcao.y -= 1
+
+	direcao = direcao.normalized()
+	velocity = direcao * velocidade
+	move_and_slide()
+§§§
+
+### Por que cada linha existe
+
+- **¤_physics_process(delta)¤, não ¤_process(delta)¤**: ¤move_and_slide()¤ mexe com física, e física roda num ritmo fixo, separado do FPS da tela.
+- **¤direcao.normalized()¤**: sem isso, andar na diagonal (duas teclas ao mesmo tempo) deixaria o personagem mais rápido — normalizar mantém a mesma velocidade em qualquer direção. Chamar ¤.normalized()¤ num vetor ¤(0,0)¤ (parado) é seguro: devolve ¤(0,0)¤ de volta, sem erro.
+- **¤velocity¤**: propriedade nativa do CharacterBody2D — não precisa declarar, já existe.
+- **¤move_and_slide()¤**: não recebe nenhum parâmetro em Godot 4 — ele lê ¤velocity¤ sozinho.
+
+- [ ] Script "jogador.gd" criado e anexado ao nó Jogador
+- [ ] Código digitado sem nenhum sublinhado vermelho de erro no editor`
+    },
+    {
+      titulo: '6. Z-Index (quando tiver cenário)',
+      corpo: `
+Quando você adicionar um cenário (chão, paredes), o personagem precisa ser desenhado **por cima** dele.
+
+Selecione ¤Jogador¤, abra a categoria **CanvasItem > Ordering** no Inspector e ajuste **Z Index** pra ¤1¤ (ou mais). Deixe os elementos de cenário com Z Index ¤0¤ (o padrão).
+
+- [ ] Z Index do Jogador maior que o do cenário (quando existir cenário na cena)`
+    },
+    {
+      titulo: '7. Testar e conferir',
+      corpo: `
+### Salve a cena
+
+¤Ctrl+S¤ (ou Cena > Salvar Cena), salvando como ¤jogador.tscn¤ — se puder, organize dentro de ¤res://scenes/jogador/¤, seguindo a convenção de pastas.
+
+### Rode a cena
+
+Pressione **F6** (Rodar Cena Atual) com a cena do Jogador aberta.
+
+### Teste as 4 direções e a diagonal
+
+Segure as teclas mapeadas (D/A/W/S ou setas) uma de cada vez, depois duas ao mesmo tempo (ex: D+W) — o personagem deve andar na diagonal na MESMA velocidade das outras direções, sem acelerar.
+
+### Checklist final antes de chamar o professor
+
+- [ ] O personagem se move nas 4 direções
+- [ ] A diagonal não é mais rápida que o movimento reto
+- [ ] Nenhum erro aparece no painel de saída (Output) ao rodar a cena
+
+Quando tudo estiver certo, avance pra pedir o visto.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de oficina-comunicacao-trabalho.html
+  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('cod_godot_personagem_roteiro', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Roteiro — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Roteiro — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>Seu personagem já anda nas 4 direções, sem acelerar na diagonal, e sem erros no painel de saída?</p>
+        <p>Chame o professor e mostre o personagem se movendo dentro do editor da Godot. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui é o checklist técnico pra o professor conferir o projeto
+  // Godot aberto na tela do aluno, sem precisar reabrir este roteiro.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Roteiro — Personagem Jogável no Godot — Checklist de correção',
+      subtitle: 'Roteiro prático (projeto Godot 4, verificado presencialmente) · Codificação de Jogos · Turma Jogos Digitais',
+      items: [
+        { number: 1, title: 'Estrutura de nós', prompt: 'A cena do personagem usa CharacterBody2D como raiz, com Sprite2D e CollisionShape2D (CircleShape2D) como filhos?', answer: 'Jogador (CharacterBody2D) > Sprite2D + CollisionShape2D, ambos centralizados em (0,0).' },
+        { number: 2, title: 'Input Map', prompt: 'As 4 ações de movimento existem no projeto, cada uma com uma tecla associada?', answer: 'mover_direita, mover_esquerda, mover_cima, mover_baixo.' },
+        { number: 3, title: 'Script de movimentação', prompt: 'O script usa _physics_process(delta), normaliza a direção antes de multiplicar pela velocidade, e chama move_and_slide() sem argumentos?', answer: 'extends CharacterBody2D; _physics_process(delta) monta "direcao" via Input.is_action_pressed, aplica .normalized(), define velocity = direcao * velocidade, chama move_and_slide().' },
+        { number: 4, title: 'Teste de movimento', prompt: 'O personagem se move nas 4 direções e a diagonal não é mais rápida que o movimento reto?', answer: 'Sim nas duas perguntas — a normalização garante velocidade igual em qualquer direção.' },
+        { number: 5, title: 'Sem erros', prompt: 'O painel de saída (Output) não mostra nenhum erro ao rodar a cena (F6)?', answer: 'Nenhum erro/exceção ao rodar.' }
+      ],
+      fileName: 'cod-godot-personagem-roteiro-checklist.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
