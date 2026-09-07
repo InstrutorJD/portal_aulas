@@ -1,6 +1,6 @@
 // @ts-check
-// "Prova — Turma Jogos Digitais" (matéria Prova, trilha Prova Final): mesmo
-// mecanismo de tests/prova-sistemas.spec.js — banco de 60 questões (5
+// "Prova — Turma Jogos Digitais" (matéria Prova, trilha Prova Diagnóstica):
+// mesmo mecanismo de tests/prova-sistemas.spec.js — banco de 60 questões (5
 // alternativas cada), sorteando 20 por aluno na primeira vez que ele clica
 // "Iniciar prova" (sorteio travado em localStorage pelo resto da
 // tentativa), trava de integridade (shared/exam-proctor.js: 1ª saída da
@@ -46,7 +46,7 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
 
   test('mostra a tela de regras antes de iniciar, não a prova direto', async ({ page }) => {
     await page.goto(PROVA_URL);
-    await expect(page.locator('#gateWrap')).toContainText('Prova — Turma Jogos Digitais');
+    await expect(page.locator('#gateWrap')).toContainText('Prova Diagnóstica — Turma Jogos Digitais');
     await expect(page.locator('#gateWrap')).toContainText('60 questões');
     await expect(page.locator('#gateWrap')).toContainText('20');
     await expect(page.locator('#storyWrap')).toBeHidden();
@@ -137,7 +137,7 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = await expandGabaritoRow(page, 'Prova — Turma Jogos Digitais');
+    const row = await expandGabaritoRow(page, 'Prova Diagnóstica — Turma Jogos Digitais');
     await expect(row).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
@@ -155,10 +155,10 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
 });
 
 test.describe('turmas/jogos/plataforma.html — matéria Prova', () => {
-  test('aparece a trilha Prova Final', async ({ page }) => {
+  test('aparece a trilha Prova Diagnóstica', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
     await page.click('.game-card:has-text("Prova")');
-    await expect(page.locator('#moduleSelector_prova-final')).toContainText('Prova — Turma Jogos Digitais');
+    await expect(page.locator('#moduleSelector_prova-diagnostica')).toContainText('Prova Diagnóstica — Turma Jogos Digitais');
   });
 });

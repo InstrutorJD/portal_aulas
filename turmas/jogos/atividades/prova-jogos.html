@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Prova: Turma Jogos Digitais</title>
+<title>PixelForge Studios — Prova Diagnóstica: Turma Jogos Digitais</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -972,8 +972,8 @@
     progressFill.style.width = '0%';
     gateWrap.innerHTML = `
       <div class="card gate-card">
-        <h2>📋 Prova — Turma Jogos Digitais</h2>
-        <p>Esta prova cobre TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
+        <h2>📋 Prova Diagnóstica — Turma Jogos Digitais</h2>
+        <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
         <ul>
           <li>Existe um banco de <b>60 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
@@ -1002,8 +1002,8 @@
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova — Turma Jogos Digitais — Banco de 60 questões',
-      subtitle: 'Avaliação final (20 sorteadas de 60, por aluno) · Turma Jogos Digitais',
+      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 60 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 60, por aluno) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,

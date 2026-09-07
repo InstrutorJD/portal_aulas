@@ -1,6 +1,6 @@
 // @ts-check
-// "Prova — Turma Sistemas" (matéria Prova, trilha Prova Final): avaliação
-// somativa cobrindo todas as matérias da turma. Banco de 60 questões (5
+// "Prova — Turma Sistemas" (matéria Prova, trilha Prova Diagnóstica):
+// diagnóstico cobrindo todas as matérias da turma. Banco de 60 questões (5
 // alternativas cada), sorteando 20 por aluno na primeira vez que ele clica
 // "Iniciar prova" — o sorteio fica travado (localStorage) pelo resto da
 // tentativa. Trava de integridade (shared/exam-proctor.js), mesmo padrão de
@@ -46,7 +46,7 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
 
   test('mostra a tela de regras antes de iniciar, não a prova direto', async ({ page }) => {
     await page.goto(PROVA_URL);
-    await expect(page.locator('#gateWrap')).toContainText('Prova — Turma Sistemas');
+    await expect(page.locator('#gateWrap')).toContainText('Prova Diagnóstica — Turma Sistemas');
     await expect(page.locator('#gateWrap')).toContainText('60 questões');
     await expect(page.locator('#gateWrap')).toContainText('20');
     await expect(page.locator('#storyWrap')).toBeHidden();
@@ -141,7 +141,7 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
     await page.waitForTimeout(200);
     await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
 
-    const row = await expandGabaritoRow(page, 'Prova — Turma Sistemas');
+    const row = await expandGabaritoRow(page, 'Prova Diagnóstica — Turma Sistemas');
     await expect(row).toBeVisible();
     const [download] = await Promise.all([
       page.waitForEvent('download', { timeout: 15000 }),
@@ -159,10 +159,10 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
 });
 
 test.describe('turmas/sistemas/plataforma.html — matéria Prova', () => {
-  test('aparece a trilha Prova Final, com a Prova travada só pela regra normal de matéria', async ({ page }) => {
+  test('aparece a trilha Prova Diagnóstica, com a Prova travada só pela regra normal de matéria', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
     await page.click('.game-card:has-text("Prova")');
-    await expect(page.locator('#moduleSelector_prova-final')).toContainText('Prova — Turma Sistemas');
+    await expect(page.locator('#moduleSelector_prova-diagnostica')).toContainText('Prova Diagnóstica — Turma Sistemas');
   });
 });

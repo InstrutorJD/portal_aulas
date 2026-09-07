@@ -11,7 +11,7 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 // (teoria/comparacao/pratica-simples/desafios), os 5 da trilha 'gdscript'
 // (os mesmos 4 + 'cenarios', só dela), os 2 da trilha 'cod-godot' (teoria +
 // prática), os 3 da trilha 'cod-godot-personagem' (teoria + prática +
-// roteiro) e o módulo "Prova — Turma Jogos Digitais" — usados como base do
+// roteiro) e o módulo "Prova Diagnóstica — Turma Jogos Digitais" — usados como base do
 // % geral. O % de cada aluno é a MÉDIA da fração current/total de cada um
 // dos 68 módulos, não uma simples contagem de módulos concluídos.
 //

@@ -646,14 +646,15 @@ window.TURMA_CONFIG_SISTEMAS = {
       key: 'prova', label: 'Prova',
       trilhas: [
         {
-          key: 'prova-final',
-          label: 'Prova Final',
-          desc: 'Avaliação final cobrindo todas as matérias trabalhadas na turma — 20 questões sorteadas de um banco de 60 (teoria e prática), com 5 alternativas embaralhadas e trava anti-saída durante a prova.',
-          // TODO(professor): capacidade PROVISÓRIA — esta prova é somativa
-          // (cobre várias capacidades de várias matérias ao mesmo tempo),
+          key: 'prova-diagnostica',
+          label: 'Prova Diagnóstica',
+          desc: 'Diagnóstico do conhecimento dos alunos em todas as matérias trabalhadas na turma — 20 questões sorteadas de um banco de 60 (teoria e prática), com 5 alternativas embaralhadas e trava anti-saída durante a prova.',
+          // TODO(professor): capacidade PROVISÓRIA — esta prova é diagnóstica
+          // (cobre várias capacidades de várias matérias ao mesmo tempo, pra
+          // identificar o que a turma já domina e onde ainda falta reforço),
           // não uma única capacidade MSEP específica. Ajuste esse texto se
           // a coordenação pedir um enquadramento formal diferente.
-          capacidade: 'Avaliação somativa do conjunto de capacidades trabalhadas nas matérias do curso.',
+          capacidade: 'Diagnóstico do conjunto de capacidades trabalhadas nas matérias do curso, pra identificar o que os alunos já dominam e onde ainda precisam de reforço.',
           modules: [
             {
               // Sem correção "aprovado/reprovado" automática de propósito:
@@ -665,7 +666,7 @@ window.TURMA_CONFIG_SISTEMAS = {
               // via shared/exam-proctor.js — mesmo mecanismo de
               // modelagem-dados-requisitos-questionario.html. Desbloqueio:
               // token de 6 dígitos do professor (shared/professor-visto.js).
-              key: 'prova', title: 'Prova — Turma Sistemas',
+              key: 'prova', title: 'Prova Diagnóstica — Turma Sistemas',
               desc: '20 questões (sorteadas de um banco de 60) cobrindo Banco de Dados, Desenvolvimento de Sistemas 1, Redes, Internet das Coisas, Introdução de Dev. de Projetos, Modelagem de Sistemas 1, Projeto de Vida, Mundo do Trabalho e Programação de Aplicativos.',
               icon: '📋', src: 'atividades/prova-sistemas.html',
               progressKey: 'prova_sistemas_progress_', progressMode: 'flag',

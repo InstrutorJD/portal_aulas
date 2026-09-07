@@ -5,7 +5,7 @@ const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
 // Todas as 10 matérias de Sistemas já têm trilha de verdade, incluindo
-// "Prova" (Prova Final, 20 de 60 questões sorteadas — ver
+// "Prova" (Prova Diagnóstica, 20 de 60 questões sorteadas — ver
 // turmas/sistemas/atividades/prova-sistemas.html).
 async function openMateria1(page) {
   await page.click('.game-card:has-text("Banco de Dados")');
