@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Prova: Turma Jogos Digitais</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#070a06;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+  }
+  .card p{ font-size:13px; line-height:1.7; margin:0 0 10px; }
+  .card .materia-tag{
+    display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--green);
+    border:1px solid var(--green-dim); padding:3px 8px; border-radius:2px; margin-bottom:10px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+
+  .actions{ display:flex; justify-content:flex-end; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  .gate-card ul{ margin:10px 0 0; padding-left:20px; font-size:13px; line-height:1.8; }
+  .gate-card li{ margin-bottom:4px; }
+  .gate-card .warn-icon{ font-size:40px; margin-bottom:8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:320px; margin-top:16px; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  /* Overlay de advertência — aparece POR CIMA da prova quando o aluno volta
+     pra aba depois de ter saído (ver shared/exam-proctor.js) */
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(3,6,3,0.9); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:420px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:13.5px; line-height:1.7; margin:0 0 14px; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'prova_jogos';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PROVA — TURMA JOGOS DIGITAIS</div>
+    <div>QUESTÃO <span id="lblStepNum">1</span> DE <span id="lblStepTotal">20</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="gateWrap" style="display:none;"></div>
+    <div class="story-wrap" id="storyWrap" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+  const EXAM_SIZE = 20;
+  // Prova vale 100 pontos no total, divididos igualmente entre as 20
+  // questões — 5 pontos cada, sempre um número redondo (nunca precisa
+  // arredondar). O Relatório de Notas (aba Gestão) lê esse valor de dentro
+  // de `state.nota`, salvo junto do resto do progresso — ver finishExam()
+  // e shared/platform-core.js, renderRelatorioNotas().
+  const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
+
+  // ============================================================
+  // BANCO DE 60 QUESTÕES — cobre todas as matérias/trilhas com
+  // conteúdo real trabalhadas na turma Jogos Digitais (Projeto de
+  // Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de
+  // Projetos, Codificação de Jogos, Fundamentos de Programação de
+  // Jogos e Testes de Jogos Digitais). Mesmo esquema de
+  // turmas/sistemas/atividades/prova-sistemas.html: 5 alternativas
+  // por questão, posição NUNCA fixa (reembaralhadas a cada exibição
+  // — ver renderQuestion), e 20 das 60 sorteadas por aluno (ver
+  // pickExamIndices). As questões de Projeto de Vida e Mundo do
+  // Trabalho reaproveitam o mesmo conteúdo da prova de Sistemas —
+  // são exatamente as mesmas trilhas, copiadas entre as duas turmas.
+  const QUESTION_POOL = [
+    // ---- Projeto de Vida ----
+    {
+      materia: 'Projeto de Vida — Autoconhecimento',
+      prompt: 'Qual opção descreve corretamente a diferença entre TALENTO e HABILIDADE?',
+      options: [
+        'Talento é algo que já vem naturalmente fácil; habilidade é um talento treinado com prática',
+        'Talento e habilidade são exatamente a mesma coisa',
+        'Habilidade vem naturalmente fácil; talento precisa de anos de treino',
+        'Talento só existe em atividades esportivas',
+        'Habilidade é sempre mais rara do que talento'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Autoconhecimento',
+      prompt: 'Por que os motivadores PESSOAIS de alguém às vezes são diferentes dos motivadores PROFISSIONAIS?',
+      options: [
+        'Porque o que dá energia na vida como um todo nem sempre é o mesmo que motiva no ambiente de trabalho',
+        'Porque uma pessoa só pode ter um tipo de motivador na vida inteira',
+        'Porque motivadores profissionais sempre anulam os pessoais',
+        'Porque isso nunca acontece — os dois são sempre idênticos',
+        'Porque motivadores pessoais só existem depois da aposentadoria'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Cidadania',
+      prompt: 'O direito de uma comunidade a um espaço público limpo, mantido pelo esforço de todos, é um exemplo de direito/dever:',
+      options: [
+        'Coletivo, porque pertence ao grupo como um todo, não a uma pessoa isolada',
+        'Individual, porque cada pessoa cuida só da própria casa',
+        'Inexistente — esse tipo de direito/dever não existe',
+        'Individual, porque só o prefeito tem essa responsabilidade',
+        'Coletivo, mas só quando menos de 10 pessoas moram no local'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Cidadania',
+      prompt: 'Respeitar filas e evitar barulho excessivo à noite são exemplos de:',
+      options: [
+        'Urbanidade — normas de boa convivência do dia a dia, mesmo sem serem leis escritas',
+        'Requisitos funcionais de um sistema',
+        'Cardinalidade de um relacionamento',
+        'Chaves estrangeiras de uma tabela',
+        'Tecnologias habilitadoras da Indústria 4.0'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Inteligência Emocional',
+      prompt: 'Perceber uma emoção forte (raiva, frustração) e escolher como reagir, em vez de simplesmente explodir no impulso, é a definição de:',
+      options: ['Autocontrole', 'Empatia', 'Networking', 'Cardinalidade', 'Urbanidade'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Inteligência Emocional',
+      prompt: 'Se colocar no lugar de alguém ANTES de agir, de forma que suas atitudes causem um impacto melhor nas outras pessoas, é a definição de:',
+      options: ['Empatia', 'Autocontrole', 'Adaptabilidade', 'Feedback', 'Networking'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Equipe',
+      prompt: 'Numa equipe organizando um evento, definir que cada pessoa assume uma função clara (um cuida da logística, outro da comunicação) ajuda a evitar principalmente:',
+      options: [
+        'Duas pessoas fazendo a mesma coisa por engano, ou tarefas importantes sem ninguém responsável',
+        'Que a equipe termine o projeto rápido demais',
+        'Que o evento tenha muitos participantes',
+        'Que a equipe precise se comunicar entre si',
+        'Que exista qualquer tipo de compromisso com metas'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Equipe',
+      prompt: 'Numa equipe, silêncio prolongado sobre o andamento de uma tarefa (o que já foi feito, o que está travado) costuma ser sinal de que:',
+      options: [
+        'Algo não está indo bem, e falta comunicação constante sobre o progresso',
+        'Está tudo perfeito, silêncio é sempre sinal de sucesso',
+        'A equipe não precisa mais se comunicar depois da primeira reunião',
+        'Os papéis da equipe nunca foram definidos — é a única causa possível',
+        'A equipe atingiu 100% das metas'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Metas e Carreira',
+      prompt: 'Um aluno quer aprender uma nova linguagem de programação. Em vez de só pensar "quero aprender algum dia", ele descreve pra uma ferramenta de IA por que quer aprender, quanto tempo tem disponível por semana e o que já sabe — e usa a resposta pra montar um plano de estudos com etapas e prazos. Isso é um exemplo de quê?',
+      options: [
+        'Definir uma meta clara de desenvolvimento, usando IA como apoio para estruturar um plano de estudos',
+        'Procrastinação, já que ele gastou tempo "conversando" em vez de estudar direto',
+        'Networking, só porque ele se comunicou com uma ferramenta durante o processo',
+        'Um objetivo ainda vago, pois ele não decidiu sozinho quando vai começar a estudar',
+        'Falta de comprometimento, por ter usado uma ferramenta externa pra montar o plano'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Mundo do Trabalho ----
+    {
+      materia: 'Mundo do Trabalho — Revoluções Industriais',
+      prompt: 'A substituição da força humana e animal pela máquina a vapor nas fábricas de tecelagem, no final do século 18, marca qual Revolução Industrial?',
+      options: ['1ª Revolução Industrial', '2ª Revolução Industrial', '3ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)', 'Nenhuma revolução industrial específica'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Indústria 4.0',
+      prompt: 'O que caracteriza a Indústria 4.0, diferente das revoluções industriais anteriores?',
+      options: [
+        'Máquinas conectadas entre si e à internet em tempo real, formando sistemas ciber-físicos que decidem com base em dados',
+        'O uso da eletricidade nas fábricas pela primeira vez',
+        'A substituição total da força humana pela máquina a vapor',
+        'O surgimento dos primeiros grandes sindicatos de trabalhadores',
+        'A linha de montagem com produção em massa, pela primeira vez'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Indústria 4.0',
+      prompt: 'Sensores espalhados por uma fábrica coletam dados o tempo todo e enviam pra servidores remotos, que guardam e processam essas informações de qualquer lugar. Que combinação de tecnologias habilitadoras é essa?',
+      options: [
+        'IoT (sensores) + Nuvem (processamento remoto)',
+        'Manufatura aditiva + Robótica colaborativa',
+        'Segurança digital + Integração de sistemas',
+        'Apenas manufatura aditiva, sozinha',
+        'Apenas robótica colaborativa, sozinha'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Indústria 4.0',
+      prompt: 'Um robô que trabalha lado a lado com humanos na linha de produção, dividindo tarefas repetitivas, sem precisar de gaiolas de segurança isolando ele, é chamado de:',
+      options: ['Cobot (robô colaborativo)', 'Sensor IoT', 'Servidor de nuvem', 'Impressora 3D', 'Access point'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Inovação',
+      prompt: 'Trocar de ferramenta só porque ela é "mais nova", sem resolver nenhum problema real, é um exemplo de:',
+      options: [
+        'Mudança por mudança — não é inovação de verdade',
+        'Inovação real, por definição',
+        'Melhoria contínua aplicada corretamente',
+        'Raciocínio dedutivo bem aplicado',
+        'Decomposição de um problema complexo'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Inovação',
+      prompt: 'Observar vários casos parecidos e chegar numa regra geral a partir deles é o raciocínio:',
+      options: ['Indutivo', 'Dedutivo', 'Hipotético', 'Inferencial isolado', 'Não existe esse tipo de raciocínio'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Trabalho em Equipe',
+      prompt: 'Numa gestão de conflitos construtiva, em vez de dizer "você errou", a pergunta mais adequada é:',
+      options: [
+        '"O que podemos ajustar nesse processo pra isso não acontecer de novo?"',
+        '"Por que você é sempre assim?"',
+        '"Quem vai levar a culpa por isso?"',
+        '"Isso nunca vai ser resolvido mesmo."',
+        '"Não vamos falar mais sobre esse assunto."'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Comprometimento',
+      prompt: 'Numa simulação de prazo crítico, um aluno precisa terminar um cálculo em um tempo bem curto. Em vez de travar com a pressão, ele respira, organiza os passos e entrega dentro do prazo combinado. Isso é um exemplo de quê?',
+      options: [
+        'Comprometimento com a meta e autocontrole diante da pressão de tempo',
+        'Sorte, já que o cálculo era simples de fazer',
+        'Falta de planejamento, pois ele só organizou os passos durante a prova',
+        'Um comportamento isolado, sem relação com compromisso ou prazos',
+        'Urbanidade, por ter respeitado o tempo dos outros colegas'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Introdução ao Desenvolvimento de Projetos ----
+    {
+      materia: 'Introdução ao Dev. de Projetos — Métodos',
+      prompt: 'Observar vários casos particulares e chegar a uma regra geral é o método:',
+      options: ['Indutivo', 'Dedutivo', 'Hipotético-dedutivo', 'Dialético', 'Nenhum método específico'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Introdução ao Dev. de Projetos — Métodos',
+      prompt: 'Formular uma hipótese testável e tentar ativamente REFUTÁ-LA com testes — se ela resistir, ganha mais confiança. Esse é o método:',
+      options: ['Hipotético-dedutivo', 'Indutivo', 'Dialético', 'Dedutivo', 'De decomposição'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Introdução ao Dev. de Projetos — Métodos',
+      prompt: 'Quebrar um problema grande e assustador em pedaços pequenos o suficiente pra testar um de cada vez, isolando onde está o erro real, é a estratégia de:',
+      options: ['Decomposição', 'Dedução', 'Indução', 'Dialética', 'Pesquisa de anterioridade'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Introdução ao Dev. de Projetos — Métodos',
+      prompt: 'Uma ferramenta de IA sugere um trecho de código pra corrigir um bug. Qual é a postura correta antes de aceitar essa sugestão?',
+      options: [
+        'Validar a sugestão antes de aceitar, já que ela pode conter erros ou "alucinações"',
+        'Aceitar direto, porque IA nunca erra',
+        'Ignorar qualquer sugestão de IA, sempre',
+        'Aplicar sem testar, pra economizar tempo',
+        'Pedir pra outra IA confirmar, sem nenhum teste próprio'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Introdução ao Dev. de Projetos — Fases',
+      prompt: 'Antes de aprovar o planejamento de um jogo, a equipe avalia se dá pra construí-lo com a equipe, o prazo e o orçamento disponíveis. Essa avaliação é a:',
+      options: ['Viabilidade técnica e financeira', 'Pesquisa de anterioridade', 'Execução', 'Registro e patente', 'Comunicação e documentação'],
+      correctIndex: 0
+    },
+
+    // ---- Codificação de Jogos ----
+    {
+      materia: 'Codificação — Instalação e Configuração da IDE',
+      prompt: 'Uma ferramenta junta, num único programa, editor de código, depurador e terminal integrado. Que tipo de ferramenta é essa?',
+      options: ['Uma IDE (Ambiente de Desenvolvimento Integrado)', 'Um framework', 'Uma engine', 'Uma spritesheet', 'Um repositório Git'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Instalação e Configuração da IDE',
+      prompt: 'Um aluno instala um compilador, mas ao rodá-lo no terminal recebe "comando não encontrado". O que provavelmente falta configurar?',
+      options: [
+        'A variável de ambiente PATH, que diz ao sistema onde encontrar o programa',
+        'O tema visual da IDE',
+        'O tamanho da fonte do editor',
+        'Uma extensão de formatação automática',
+        'O SDK de uma linguagem diferente da que ele está usando'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Linguagens, Dados e GDD',
+      prompt: 'Qual linguagem é usada nativamente pela engine Unity como sua linguagem de script principal?',
+      options: ['C#', 'GDScript', 'C++', 'PL/SQL', 'HTML'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Linguagens, Dados e GDD',
+      prompt: '"O jogador pode pular" é um exemplo de requisito, dentro de um GDD (Game Design Document), do tipo:',
+      options: ['Funcional — descreve O QUE o jogo faz', 'Não funcional — descreve COMO o jogo se comporta', 'Nenhum dos dois, é só um comentário', 'De formato de dados', 'De pipeline de renderização'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Segurança da Informação e Debugging',
+      prompt: 'Um sistema de login de jogo depende de três pilares de segurança da informação: dados acessíveis só por quem deve, não alterados indevidamente, e disponíveis quando precisa. Esses pilares formam a sigla:',
+      options: ['CID (Confidencialidade, Integridade, Disponibilidade)', 'GDD (Game Design Document)', "DRY (Don't Repeat Yourself)", 'RGB (Red, Green, Blue)', 'PATH (variável de ambiente)'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Segurança da Informação e Debugging',
+      prompt: 'No debugger do VSCode, qual ferramenta mostra a SEQUÊNCIA de funções chamadas até chegar no ponto do erro?',
+      options: ['Call Stack', 'Watch', 'PATH', 'GDD', 'Sprite sheet'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — POO, Componentes e Multimídia',
+      prompt: 'Uma classe "Inimigo" descreve atributos como vida e velocidade. Cada inimigo criado a partir dela, com seus próprios valores, é chamado de:',
+      options: ['Instância', 'Encapsulamento', 'Trigger', 'Componente', 'Framework'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — POO, Componentes e Multimídia',
+      prompt: 'Em vez de uma classe gigante fazendo tudo, cada lógica (movimento, saúde, ataque) vira um pedaço separado, que pode ser reaproveitado em qualquer objeto que precisar dele. Essa filosofia é a Programação Orientada a:',
+      options: ['Componentes', 'Objetos, exatamente igual a POO tradicional', 'Frameworks, sem nenhuma diferença de POO', 'Triggers', 'Sprites'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Metodologia Ágil e Clean Code',
+      prompt: 'Um quadro que organiza tarefas em colunas como "A Fazer", "Em Progresso" e "Concluído", deixando o fluxo de trabalho visível pra todo mundo, é o quadro:',
+      options: ['Kanban', 'GDD', 'CID', 'RGB', 'PATH'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Metodologia Ágil e Clean Code',
+      prompt: 'Perceber o mesmo trecho de lógica copiado em vários lugares do código é sinal de que ele deveria virar uma função reaproveitável — esse é o princípio:',
+      options: ["DRY (Don't Repeat Yourself)", 'CID', 'AABB', 'RGB', 'GDD'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Segurança no Código e IA com Grafos',
+      prompt: 'Toda entrada do jogador (nome de usuário, texto de chat) deve passar por checagem de tipo, tamanho e conteúdo esperado ANTES de ser usada, pra evitar comandos maliciosos disfarçados de texto comum. Isso é:',
+      options: ['Validação de input', 'Encapsulamento', 'Refatoração', 'Um Sprint', 'Um Smoke Test'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Segurança no Código e IA com Grafos',
+      prompt: 'Um NPC alterna entre estados como "Patrulhando", "Perseguindo" e "Atacando", cada um com seu próprio comportamento. Essa estrutura é chamada de:',
+      options: ['Máquina de estado', 'Grafo de waypoints', 'Árvore de decisão, sem nenhuma relação com estados', 'Colisor AABB', 'Spritesheet'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Motor Godot',
+      prompt: 'Por que o CharacterBody2D é a escolha certa pra um personagem jogável controlado pelo jogador, em vez do RigidBody2D?',
+      options: [
+        'Porque dá controle cinemático absoluto via script, sem a física automática do motor interferir',
+        'Porque RigidBody2D não pode ter Sprite2D como filho',
+        'Porque CharacterBody2D é mais bonito visualmente',
+        'Porque RigidBody2D só funciona em jogos 3D',
+        'Porque CharacterBody2D não precisa de nenhum script'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Motor Godot',
+      prompt: 'Por que o movimento de um CharacterBody2D (usando move_and_slide()) deve rodar dentro de _physics_process(delta), e não de _process(delta)?',
+      options: [
+        'Porque a física roda num ritmo fixo, separado do FPS de tela, e precisa ficar sincronizada com o motor de física',
+        'Porque _process(delta) não existe na Godot 4',
+        'Porque move_and_slide() só funciona dentro de _ready()',
+        'Porque _physics_process roda só uma vez, na criação do nó',
+        'Não faz diferença nenhuma entre os dois'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Motor Godot: Personagem Jogável',
+      prompt: 'O sprite de um personagem em Pixel Art aparece borrado na tela em vez de nítido. Qual ajuste do projeto resolve isso?',
+      options: [
+        'Trocar o Default Texture Filter de Linear pra Nearest',
+        'Aumentar o tamanho do CollisionShape2D',
+        'Mudar o Z Index do Sprite2D',
+        'Trocar o CharacterBody2D por um RigidBody2D',
+        'Diminuir a velocidade do personagem'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Projeto: Construa seu Jogo',
+      prompt: 'No jogo da Cobrinha construído no portal, a função que faz a cobrinha andar recebe a cobrinha (array), a nova cabeça e um "cresce" (true/false). Se ela cresce, o rabo NÃO deve sair da lista. Qual lógica está correta?',
+      options: [
+        'Se cresce for true, devolve [novaCabeca, ...cobrinha]; senão, devolve [novaCabeca, ...cobrinha.slice(0,-1)]',
+        'Sempre devolve [novaCabeca, ...cobrinha], não importa se cresce ou não',
+        'Sempre devolve [novaCabeca, ...cobrinha.slice(0,-1)], não importa se cresce ou não',
+        'Se cresce for true, remove a cabeça antiga e mantém o resto igual',
+        'A cobrinha nunca muda de tamanho, só de posição'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Fundamentos de Programação de Jogos ----
+    {
+      materia: 'Fundamentos — Ambiente e Ferramentas',
+      prompt: 'Qual é a diferença entre o EDITOR de código e o COMPILADOR (ou interpretador)?',
+      options: [
+        'O editor é onde você escreve o código; o compilador é quem de fato transforma esse texto em algo executável',
+        'Os dois fazem exatamente a mesma coisa',
+        'O compilador só existe em jogos 2D, nunca em 3D',
+        'O editor executa o código; o compilador só formata o texto',
+        'O compilador é sempre parte do sistema operacional, nunca de uma IDE'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Ambiente e Ferramentas',
+      prompt: 'Qual linguagem é a própria da engine Godot?',
+      options: ['GDScript', 'C#', 'C++', 'HTML', 'PL/SQL'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Lógica e Algoritmos',
+      prompt: 'O ciclo que roda várias vezes por segundo, lendo entrada do jogador, atualizando o estado do jogo e redesenhando a tela repetidamente, é chamado de:',
+      options: ['Game loop', 'Pipeline de renderização', 'Spritesheet', 'GDD', 'Object pooling'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Lógica e Algoritmos',
+      prompt: 'Na maioria das engines 2D, a origem (0,0) fica no canto superior esquerdo. O que acontece com o valor de Y ao descer na tela?',
+      options: ['O valor de Y aumenta', 'O valor de Y diminui', 'O valor de Y nunca muda', 'O eixo Y não existe em jogos 2D', 'Y só muda se X também mudar'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Lógica e Algoritmos',
+      prompt: 'Organizar o mapa de um jogo como uma grade de linhas e colunas, onde cada posição guarda qual bloco de cenário (grama, parede, água) aparece ali, é a técnica de:',
+      options: ['Cenário como matriz de tiles', 'Colisão AABB', 'Delta time', 'Spritesheet', 'Object pooling'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Lógica e Algoritmos',
+      prompt: "Um personagem que se move 'um pixel por frame' anda mais rápido em PCs potentes (mais FPS) e mais devagar em PCs fracos. Qual técnica resolve essa inconsistência?",
+      options: [
+        'Delta time — escalar o movimento pelo tempo real que passou desde o último frame',
+        'Aumentar sempre a velocidade, não importa o hardware',
+        'Reduzir a resolução da tela',
+        'Trocar o sistema de coordenadas de X/Y pra outro formato',
+        'Diminuir o número de sprites carregados'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Programação de Jogos 2D',
+      prompt: 'Formas simples (retângulos ou círculos) anexadas aos sprites, usadas só pra checar sobreposição entre dois elementos, são chamadas de:',
+      options: ['Colisores (colliders)', 'Triggers', 'Componentes', 'Spritesheets', 'Waypoints'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Programação de Jogos 2D',
+      prompt: 'Instanciar e destruir um projétil por disparo, o tempo todo, pode pesar bastante no desempenho. Qual técnica reaproveita objetos em vez de criar/destruir sem parar?',
+      options: ['Object pooling', 'Delta time', 'Encapsulamento', 'Máquina de estado', 'Pesquisa de anterioridade'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Programação de Jogos 2D',
+      prompt: 'Elementos de jogo (inimigos, itens) seguem um ciclo parecido com CRUD: são criados, atualizados a cada frame, e quando não são mais necessários precisam ser:',
+      options: ['Removidos, senão continuam consumindo processamento mesmo "mortos"', 'Duplicados automaticamente', 'Convertidos em sprites estáticos', 'Movidos pro início da lista', 'Ignorados até o fim do jogo'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Multimídia e Versionamento',
+      prompt: 'Uma única imagem com vários quadros (frames) de uma animação lado a lado, usada pra criar a ilusão de movimento (como um flipbook), é chamada de:',
+      options: ['Spritesheet', 'GDD', 'Colisor AABB', 'PATH', 'Branch'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Multimídia e Versionamento',
+      prompt: 'Duas pessoas alteram a mesma parte de um arquivo ao mesmo tempo no Git. O que acontece?',
+      options: [
+        'Um conflito de merge — cabe ao time decidir manualmente qual mudança deve prevalecer',
+        'O Git apaga automaticamente uma das duas mudanças, sem avisar ninguém',
+        'Nada acontece, as duas mudanças são salvas juntas sem checagem',
+        'O repositório inteiro é bloqueado permanentemente',
+        'O Git escolhe a mudança mais recente automaticamente, sem intervenção'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — JavaScript',
+      prompt: 'Em JavaScript, qual comando cria uma variável chamada pontos com o valor 10?',
+      options: ['let pontos = 10;', 'pontos == 10;', 'const 10 = pontos;', 'if (pontos = 10)', 'pontos -> 10;'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — C#',
+      prompt: 'O C# foi criado pela Microsoft e se tornou muito usado em jogos principalmente porque:',
+      options: [
+        'A engine Unity adotou o C# como sua linguagem oficial de script',
+        'É a única linguagem que roda em consoles de videogame',
+        'Substituiu completamente o GDScript dentro da Godot',
+        'Foi criada especificamente pela Epic Games para a Unreal',
+        'Não pode ser usada fora de jogos'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — GDScript',
+      prompt: 'Por que a equipe da Godot criou o GDScript em vez de usar uma linguagem pronta como Python?',
+      options: [
+        'Pra ter uma linguagem integrada de verdade ao editor, com acesso direto a nós, cenas e sinais da Godot',
+        'Pra rodar GDScript direto em qualquer navegador, sem instalação',
+        'Pra substituir o C++ usado no código-fonte da própria engine',
+        'Pra vender a linguagem separadamente da engine',
+        'Porque Python era proibido de usar em projetos de jogos'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Testes de Jogos Digitais ----
+    {
+      materia: 'Testes — Fundamentos e Níveis de Teste',
+      prompt: 'Um recurso funciona perfeitamente na primeira vez, mas trava depois de horas de uso contínuo ou após a mesma ação ser repetida centenas de vezes. Que tipo de teste investiga esse tipo de falha?',
+      options: ['Teste de Confiabilidade', 'Teste de Funcionalidade', 'Teste de Manutenibilidade', 'Teste de Desempenho', 'Teste de Aceitação'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Fundamentos e Níveis de Teste',
+      prompt: 'Uma testadora não olha o código-fonte, só interage com o jogo por fora e observa o comportamento, como um jogador real faria. Essa é a técnica:',
+      options: ['Caixa-preta', 'Caixa-branca', 'De regressão', 'De unidade', 'De aceitação'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Fundamentos e Níveis de Teste',
+      prompt: 'Testar o jogo INTEIRO rodando de ponta a ponta, do menu inicial até os créditos, exatamente como um jogador real jogaria, é o nível de teste de:',
+      options: ['Sistema', 'Unidade', 'Integração', 'Aceitação', 'Confiabilidade'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Planejamento de Testes',
+      prompt: 'Definir claramente o que ENTRA numa rodada de testes e o que fica pra depois, antes de testar tudo de uma vez sem prioridade, é o(a):',
+      options: ['Escopo', 'Critério de aceite', 'Caso de teste', 'Cronograma', 'Rastreabilidade'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Planejamento de Testes',
+      prompt: 'O fio que liga cada requisito do GDD a PELO MENOS UM caso de teste, garantindo que nenhum requisito passe despercebido sem ser testado, é a:',
+      options: ['Rastreabilidade', 'Priorização', 'Comunicação não violenta', 'Viabilidade técnica', 'Certificação técnica'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Execução por Versão',
+      prompt: 'Na fase em que só a própria equipe do estúdio joga, e várias funcionalidades ainda nem existem, o foco é caçar bugs estruturais grandes. Essa fase é a:',
+      options: ['Alfa', 'Beta', 'Release Candidate', 'Gold', 'Smoke Test'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Execução por Versão',
+      prompt: 'Por que o ambiente de testes deve ficar separado do ambiente de produção (o que os jogadores de verdade usam)?',
+      options: [
+        'Porque rodar testes usando contas e dados reais de jogadores é arriscado — pode corromper progresso de gente de verdade',
+        'Porque o ambiente de produção não aceita nenhum tipo de teste automatizado',
+        'Porque testes só funcionam em computadores mais fracos',
+        'Não existe motivo real, é só uma formalidade sem efeito prático',
+        'Porque o ambiente de testes sempre precisa de internet mais rápida'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Testes — Roteiros Avançados',
+      prompt: 'Um checklist rápido que confere só o básico (o jogo abre, a tela inicial carrega, o controle responde, fecha sem travar) antes de uma publicação, sem substituir um teste completo, é chamado de:',
+      options: ['Smoke Test', 'Teste de Regressão', 'Teste Exploratório', 'Certificação Técnica', 'Teste de Plataforma'],
+      correctIndex: 0
+    }
+  ];
+
+  // ============================================================
+  // SORTEIO: 20 das 60, embaralhadas — recalculado só na primeira
+  // vez que o aluno clica "Iniciar" (persistido em SELECTION_KEY
+  // pra não mudar no meio de uma tentativa em andamento). As
+  // ALTERNATIVAS de cada questão são reembaralhadas a cada exibição
+  // (ver renderQuestion).
+  function shuffleIndexes(length) {
+    const arr = Array.from({ length }, (_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function pickExamIndices() {
+    return shuffleIndexes(QUESTION_POOL.length).slice(0, EXAM_SIZE);
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `prova_jogos_progress_${username}`;
+  const SELECTION_KEY = `prova_jogos_selecao_${username}`;
+  const STATE_KEY = `prova_jogos_estado_${username}`;
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadSelection() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(SELECTION_KEY) || 'null');
+      if (Array.isArray(arr) && arr.length === EXAM_SIZE && arr.every(n => Number.isInteger(n) && n >= 0 && n < QUESTION_POOL.length)) return arr;
+    } catch (e) {}
+    return null;
+  }
+  function saveSelection(arr) { localStorage.setItem(SELECTION_KEY, JSON.stringify(arr)); }
+
+  function loadState() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+      if (s && typeof s.currentIndex === 'number' && typeof s.correctCount === 'number') return s;
+    } catch (e) {}
+    return null;
+  }
+  function saveState(s) { localStorage.setItem(STATE_KEY, JSON.stringify(s)); }
+
+  // IMPORTANTE: o sorteio das 20 questões só acontece dentro de
+  // startExam() (clique em "Iniciar prova"), nunca só por carregar a
+  // página — senão toda visita (inclusive antes do aluno ver as regras)
+  // já "começaria" uma tentativa. `selection` existir é o sinal real de
+  // "essa tentativa já foi iniciada" (ver boot()), independente do valor
+  // de currentIndex (que começa em 0 e fica 0 até a 1ª resposta).
+  let selection = loadSelection();
+  let state = loadState();
+  const alreadyDone = loadProgress();
+
+  // Pergunta salva já respondida -> resume na PRÓXIMA (mesmo esquema anti-
+  // "recarrega e tenta de novo" do shared/quiz-teoria-engine.js).
+  let currentIndex = state ? (state.answered ? state.currentIndex + 1 : state.currentIndex) : 0;
+  let correctCount = state ? state.correctCount : 0;
+
+  function startExam() {
+    selection = pickExamIndices();
+    saveSelection(selection);
+    state = { currentIndex: 0, correctCount: 0, answered: false };
+    saveState(state);
+    currentIndex = 0;
+    correctCount = 0;
+  }
+
+  const gateWrap = document.getElementById('gateWrap');
+  const storyWrap = document.getElementById('storyWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = EXAM_SIZE;
+
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+  })();
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('prova_jogos', label, { step: currentIndex + 1, total: EXAM_SIZE, correctCount });
+    }
+  }
+
+  function updateProgressBar() {
+    const pct = Math.round((currentIndex / EXAM_SIZE) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = Math.min(currentIndex + 1, EXAM_SIZE);
+  }
+
+  function renderQuestion() {
+    storyWrap.style.display = 'flex';
+    gateWrap.style.display = 'none';
+    updateProgressBar();
+
+    const q = QUESTION_POOL[selection[currentIndex]];
+    reportStep(`Prova — Questão ${currentIndex + 1}/${EXAM_SIZE}`);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<span class="materia-tag">${q.materia}</span><h2>❓ ${q.prompt}</h2>`;
+
+    const optionsWrap = document.createElement('div');
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    let answered = false;
+
+    const order = shuffleIndexes(q.options.length);
+    const correctPos = order.indexOf(q.correctIndex);
+
+    order.forEach((origIdx, pos) => {
+      const optText = q.options[origIdx];
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
+      opt.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        selectAnswer(pos);
+      });
+      optionsWrap.appendChild(opt);
+
+      function selectAnswer(chosenIdx) {
+        const allOptionEls = optionsWrap.querySelectorAll('.option');
+        allOptionEls.forEach(el => el.classList.add('disabled'));
+
+        const isCorrect = chosenIdx === correctPos;
+        allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
+        if (isCorrect) correctCount++;
+
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+        feedback.textContent = isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.';
+        card.appendChild(feedback);
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        actions.style.marginTop = '14px';
+        actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">${currentIndex + 1 >= EXAM_SIZE ? 'Ver resultado' : 'Próxima →'}</button>`;
+        card.appendChild(actions);
+
+        state = { currentIndex, correctCount, answered: true };
+        saveState(state);
+        reportStep(`Prova — Questão ${currentIndex + 1}/${EXAM_SIZE} (respondida)`);
+
+        document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
+          currentIndex++;
+          if (currentIndex >= EXAM_SIZE) {
+            finishExam();
+          } else {
+            state = { currentIndex, correctCount, answered: false };
+            saveState(state);
+            storyWrap.innerHTML = '';
+            renderQuestion();
+          }
+        });
+      }
+    });
+
+    card.appendChild(optionsWrap);
+
+    if (isProfessor) {
+      const profActions = document.createElement('div');
+      profActions.className = 'actions';
+      profActions.style.marginTop = '10px';
+      profActions.innerHTML = `<button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>`;
+      card.appendChild(profActions);
+    }
+
+    storyWrap.innerHTML = '';
+    storyWrap.appendChild(card);
+
+    if (isProfessor) {
+      document.getElementById('btnSkipProfessor').addEventListener('click', () => {
+        currentIndex++;
+        if (currentIndex >= EXAM_SIZE) {
+          finishExam(true);
+        } else {
+          state = { currentIndex, correctCount, answered: false };
+          saveState(state);
+          storyWrap.innerHTML = '';
+          renderQuestion();
+        }
+      });
+    }
+  }
+
+  function finishExam(reviewOnly) {
+    const nota = Math.round(correctCount * PONTOS_POR_QUESTAO);
+    if (!reviewOnly) {
+      saveProgress({ completed: true, correctCount, total: EXAM_SIZE, nota, finishedAt: new Date().toISOString() });
+      reportStep(`Prova — Concluída (${correctCount}/${EXAM_SIZE} — nota ${nota}/100)`);
+      window.PortalExamGuard && guard && window.PortalExamGuard.disarm(guard);
+    }
+
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = EXAM_SIZE;
+
+    storyWrap.innerHTML = `
+      <div class="card finish-screen">
+        <div class="trophy">🏁</div>
+        <h2>Prova concluída!</h2>
+        <p>Sua prova foi entregue e registrada — não é possível refazer esta tentativa.</p>
+        <div class="score">Nota: ${nota} de 100 pontos</div>
+        <p>Você acertou ${correctCount} de ${EXAM_SIZE} questões — cada uma vale ${PONTOS_POR_QUESTAO} pontos.</p>
+        <p>O professor já pode conferir sua nota na aba Gestão.</p>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  // GATE (regras + trava anti-saída) e TELA DE BLOQUEIO — mesmo
+  // padrão de modelagem-dados-requisitos-questionario.html /
+  // prova-sistemas.html (shared/exam-proctor.js).
+  // ============================================================
+  let guard = null;
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Advertência ${count}/2</h2>
+        <p>Você saiu da aba/janela do portal durante a prova. Isso conta como uma advertência.<br>
+        Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor consegue liberar de novo.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi, continuar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen() {
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFill.style.width = '0%';
+    gateWrap.innerHTML = `
+      <div class="card gate-card" style="text-align:center;">
+        <div class="warn-icon">🔒</div>
+        <h2>Prova bloqueada</h2>
+        <p>Você saiu da aba/janela do portal 2 vezes durante a prova. Por isso, esta atividade foi bloqueada.</p>
+        <p>Procure o professor. Ele pode liberar de novo com o mesmo token que usa pra "Dar visto" (Gestão → "Token — Dar Visto / Pular Etapa").</p>
+        <div class="token-form" style="margin-left:auto; margin-right:auto; text-align:left;">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen();
+    });
+  }
+
+  function renderStartScreen() {
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFill.style.width = '0%';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <h2>📋 Prova — Turma Jogos Digitais</h2>
+        <p>Esta prova cobre TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
+        <ul>
+          <li>Existe um banco de <b>60 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
+          <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
+          <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
+          <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
+          <li>Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor libera de novo.</li>
+        </ul>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn" id="btnIniciar">▶ Iniciar prova</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      startExam();
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      renderQuestion();
+    });
+  }
+
+  // Gabarito: lista o BANCO INTEIRO de 60 questões (não só as 20 que um
+  // aluno específico recebeu), agrupado por matéria — referência completa
+  // pro professor, sem precisar abrir esta tela.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Prova — Turma Jogos Digitais — Banco de 60 questões',
+      subtitle: 'Avaliação final (20 sorteadas de 60, por aluno) · Turma Jogos Digitais',
+      items: QUESTION_POOL.map((q, i) => ({
+        number: i + 1,
+        title: q.materia,
+        prompt: q.prompt,
+        options: q.options,
+        correctIndex: q.correctIndex,
+        answer: q.options[q.correctIndex]
+      })),
+      fileName: 'prova-jogos-gabarito.txt'
+    });
+  };
+
+  (async function boot() {
+    guard = await window.PortalExamGuard.create('prova_jogos');
+
+    if (alreadyDone && alreadyDone.completed) {
+      correctCount = alreadyDone.correctCount;
+      finishExam(true);
+      return;
+    }
+
+    if (guard.disabled) {
+      // Sem sessão de aluno reconhecida (professor pré-visualizando, ou
+      // iframe oculto da Gestão) — abre a prova direto, sem tela de regras
+      // nem trava, sorteando uma seleção de preview se ainda não existir.
+      if (!selection) startExam();
+      renderQuestion();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen();
+    } else if (selection) {
+      // `selection` existir é o sinal de que essa tentativa já foi
+      // iniciada antes (ex.: recarregou a página no meio) — volta direto
+      // pra prova, sem passar pela tela de regras de novo.
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      if (currentIndex >= EXAM_SIZE) {
+        // Respondeu tudo e saiu antes de ver o resultado — fecha a
+        // tentativa de verdade agora, em vez de tentar renderizar uma
+        // 21ª pergunta que não existe.
+        finishExam();
+      } else {
+        renderQuestion();
+      }
+    } else {
+      renderStartScreen();
+    }
+  })();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

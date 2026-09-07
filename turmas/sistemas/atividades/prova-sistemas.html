@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Prova: Turma Sistemas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --green:#3aa0ff; --green-dim:#2b6ba3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#d6e2ec; --ink-dim:#6c8698;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050a10;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(58,160,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+  }
+  .card p{ font-size:13px; line-height:1.7; margin:0 0 10px; }
+  .card .materia-tag{
+    display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--green);
+    border:1px solid var(--green-dim); padding:3px 8px; border-radius:2px; margin-bottom:10px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--green); background:rgba(58,160,255,0.08); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,91,77,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+
+  .actions{ display:flex; justify-content:flex-end; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04162a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  .gate-card ul{ margin:10px 0 0; padding-left:20px; font-size:13px; line-height:1.8; }
+  .gate-card li{ margin-bottom:4px; }
+  .gate-card .warn-icon{ font-size:40px; margin-bottom:8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:320px; margin-top:16px; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  /* Overlay de advertência — aparece POR CIMA da prova quando o aluno volta
+     pra aba depois de ter saído (ver shared/exam-proctor.js) */
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(3,6,10,0.9); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:420px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:13.5px; line-height:1.7; margin:0 0 14px; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'prova_sistemas';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PROVA — TURMA SISTEMAS</div>
+    <div>QUESTÃO <span id="lblStepNum">1</span> DE <span id="lblStepTotal">20</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="gateWrap" style="display:none;"></div>
+    <div class="story-wrap" id="storyWrap" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+  const EXAM_SIZE = 20;
+  // Prova vale 100 pontos no total, divididos igualmente entre as 20
+  // questões — 5 pontos cada, sempre um número redondo (nunca precisa
+  // arredondar). O Relatório de Notas (aba Gestão) lê esse valor de dentro
+  // de `state.nota`, salvo junto do resto do progresso — ver finishExam()
+  // e shared/platform-core.js, renderRelatorioNotas().
+  const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
+
+  // ============================================================
+  // BANCO DE 60 QUESTÕES — cobre todas as matérias/trilhas com
+  // conteúdo real trabalhadas na turma Sistemas (Banco de Dados,
+  // Desenvolvimento de Sistemas 1, Redes de Computadores, Internet
+  // das Coisas, Introdução de Desenvolvimento de Projetos,
+  // Modelagem de Sistemas 1, Projeto de Vida, Mundo do Trabalho e
+  // Programação de Aplicativos). Cada pergunta tem 5 alternativas
+  // (não 4) — a posição da certa NUNCA é fixa: as opções são
+  // reembaralhadas a cada exibição (ver renderQuestion), então o
+  // correctIndex abaixo é só a posição "de origem" no array, nunca
+  // a posição real na tela. Cada aluno recebe 20 dessas 60,
+  // sorteadas (ver pickExamIndices) — dois alunos raramente pegam o
+  // mesmo conjunto, e mesmo quando uma pergunta se repete entre
+  // eles, a ordem de exibição e a posição das alternativas mudam.
+  const QUESTION_POOL = [
+    // ---- Banco de Dados (SQL, PL/SQL, comentários, Supabase) ----
+    {
+      materia: 'Banco de Dados — SQL',
+      prompt: 'Você precisa listar só os funcionários que ganham mais de R$3000, sem trazer os demais. Qual comando SQL faz exatamente isso?',
+      options: [
+        'SELECT * FROM funcionarios WHERE salario > 3000;',
+        'SELECT * FROM funcionarios ORDER BY salario > 3000;',
+        'UPDATE funcionarios SET salario > 3000;',
+        'SELECT * FROM funcionarios GROUP BY salario > 3000;',
+        'DELETE FROM funcionarios WHERE salario > 3000;'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — SQL',
+      prompt: 'Um chamado pede a lista de funcionários ordenada pelo salário, do MAIOR pro menor. Qual trecho de SQL resolve isso?',
+      options: ['ORDER BY salario DESC', 'ORDER BY salario ASC', 'WHERE salario DESC', 'GROUP BY salario DESC', 'ORDER BY salario = DESC'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — SQL',
+      prompt: "Um colega escreveu UPDATE departamentos SET nome = 'TI'; e rodou sem perceber um detalhe. O que provavelmente vai acontecer?",
+      options: [
+        'O nome de TODAS as linhas da tabela vira "TI", porque faltou o WHERE',
+        'Nada muda, porque UPDATE sempre exige um WHERE pra funcionar',
+        'Só a primeira linha da tabela é alterada, por padrão',
+        'O comando dá erro de sintaxe antes mesmo de rodar',
+        'Apenas o departamento de TI é atualizado corretamente'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — SQL',
+      prompt: 'Você precisa de um relatório cruzando funcionários com o departamento de cada um, informação espalhada em duas tabelas. Qual comando resolve isso?',
+      options: [
+        'SELECT * FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id;',
+        'SELECT * FROM funcionarios WHERE departamentos.id = departamento_id;',
+        'SELECT * FROM funcionarios, departamentos ORDER BY id;',
+        'UPDATE funcionarios SET departamento_id = departamentos.id;',
+        'SELECT * FROM funcionarios GROUP BY departamentos.nome;'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — SQL',
+      prompt: 'O chamado pede a média salarial de CADA departamento, não da empresa inteira. Qual comando entrega isso?',
+      options: [
+        'SELECT departamento_id, AVG(salario) FROM funcionarios GROUP BY departamento_id;',
+        'SELECT AVG(salario) FROM funcionarios WHERE departamento_id;',
+        'SELECT departamento_id, SUM(salario) FROM funcionarios ORDER BY departamento_id;',
+        'SELECT COUNT(salario) FROM funcionarios GROUP BY departamento_id;',
+        'SELECT AVG(departamento_id) FROM funcionarios GROUP BY salario;'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — PL/SQL',
+      prompt: 'Todo bloco anônimo de PL/SQL segue uma estrutura fixa. Qual opção mostra a ORDEM certa das partes desse bloco?',
+      options: [
+        'DECLARE (variáveis, opcional) → BEGIN (comandos) → END;',
+        'BEGIN (variáveis) → DECLARE (comandos) → END;',
+        'END (variáveis) → BEGIN (comandos) → DECLARE;',
+        'DECLARE (comandos) → END (variáveis) → BEGIN;',
+        'BEGIN → END → DECLARE, sempre nessa ordem'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — PL/SQL',
+      prompt: 'Dentro de um bloco PL/SQL, qual operador é usado pra ATRIBUIR um valor a uma variável (diferente do = de comparação)?',
+      options: [':=', '==', '=>', '->', '~='],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — Documentação',
+      prompt: 'Você quer explicar, em várias linhas, o que uma consulta complexa com vários JOINs está tentando responder. Qual sintaxe de comentário SQL serve pra isso?',
+      options: ['/* comentário de várias linhas */', '-- comentário de várias linhas', '# comentário de várias linhas', '// comentário de várias linhas', '<!-- comentário de várias linhas -->'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — Conexão com Supabase',
+      prompt: 'No projeto TikTak, mesmo com a chave pública (anon) certa no código, o SELECT na tabela usuarios não trazia dado nenhum até uma policy de leitura ser criada. Por que isso acontecia?',
+      options: [
+        'Sem RLS habilitado e sem nenhuma policy, o banco recusa o acesso pela Data API, mesmo com a chave certa',
+        'A chave pública (anon) nunca consegue fazer nenhum tipo de SELECT, em nenhuma situação',
+        'A tabela usuarios só aceita conexões vindas do próprio painel do Supabase',
+        'Faltava reiniciar o servidor do Supabase depois de criar a tabela',
+        'O RLS só afeta comandos INSERT, nunca comandos SELECT'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Desenvolvimento de Sistemas 1 ----
+    {
+      materia: 'Dev Sistemas 1 — Ferramentas',
+      prompt: 'Um bug é difícil de achar só lendo o código. Em vez de espalhar console.log por toda parte, uma técnica mais precisa é usar:',
+      options: [
+        'Um breakpoint, que pausa a execução numa linha específica pra inspecionar as variáveis naquele momento',
+        'Um peer review, que só acontece depois que o código já está pronto',
+        'Um scaffold, que gera a estrutura de pastas de um projeto novo',
+        'Um dashboard, que resume dados em gráficos e números',
+        'Uma CLI, que só serve pra iniciar um projeto do zero'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Ferramentas',
+      prompt: 'Por que o CodePen consegue mostrar o resultado de um código JavaScript instantaneamente, sem nenhuma etapa de build antes?',
+      options: [
+        'Porque JavaScript é uma linguagem interpretada, que roda direto sem precisar compilar antes',
+        'Porque JavaScript é uma linguagem compilada, que já vem pronta de fábrica',
+        'Porque o CodePen faz a compilação em segundo plano, escondida do usuário',
+        'Porque todo código JavaScript precisa de um framework pra rodar',
+        'Porque o navegador ignora completamente a etapa de execução'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Ferramentas',
+      prompt: 'Qual das opções usa a convenção PascalCase, geralmente usada pra nomear classes ou componentes?',
+      options: ['NomeDoComponente', 'nomeDoComponente', 'nome_do_componente', 'nome-do-componente', 'NOMEDOCOMPONENTE'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Ferramentas',
+      prompt: 'Ao consumir uma API pública, em que formato a maioria das respostas modernas costuma vir organizada?',
+      options: [
+        'JSON, com dados organizados em objetos { } e listas [ ]',
+        'PDF, com o conteúdo formatado pra impressão',
+        'MP3, com o dado convertido em áudio',
+        'Apenas texto puro, sem nenhuma estrutura',
+        'Um arquivo executável, pronto pra instalar'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Ferramentas',
+      prompt: 'Qual é a principal diferença entre uma BIBLIOTECA e um FRAMEWORK?',
+      options: [
+        'A biblioteca você chama quando precisa; o framework define a estrutura geral e você constrói dentro dela',
+        'Biblioteca e framework são exatamente a mesma coisa, só com nomes diferentes',
+        'Framework só existe pra linguagens compiladas, biblioteca só pra interpretadas',
+        'Biblioteca sempre precisa de uma CLI pra funcionar; framework nunca precisa',
+        'Framework é sempre mais leve e rápido que qualquer biblioteca'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Ferramentas',
+      prompt: 'Num framework moderno de interface, um componente passa por um ciclo de vida. Qual é a sequência correta desse ciclo?',
+      options: [
+        'É criado (montado), pode ser atualizado várias vezes, e eventualmente é removido (desmontado)',
+        'É removido, depois criado, e nunca mais é atualizado',
+        'É atualizado antes mesmo de existir, e só depois é criado',
+        'Só existe o momento de criação — componentes nunca são removidos',
+        'É criado e removido ao mesmo tempo, sempre'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Requisitos',
+      prompt: '"O sistema deve responder em menos de 2 segundos, mesmo com muitos usuários simultâneos." Que tipo de requisito é esse?',
+      options: [
+        'Requisito não funcional, porque descreve uma qualidade do sistema, não uma ação específica',
+        'Requisito funcional, porque descreve uma ação concreta que o sistema executa',
+        'Não é um requisito de verdade, é só uma sugestão opcional',
+        'Requisito funcional, só porque menciona um número (2 segundos)',
+        'Requisito não funcional apenas depois que o sistema já está pronto'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Requisitos',
+      prompt: "Um projeto tem como requisito não funcional 'carregar rápido, mesmo em celulares antigos'. Ao escolher entre duas bibliotecas que fazem a mesma coisa, qual critério faz mais sentido?",
+      options: [
+        'Preferir a biblioteca mais leve e rápida, já que performance é o requisito em jogo',
+        'Escolher sempre a biblioteca mais popular, independente do tamanho dela',
+        'Escolher a biblioteca mais recente lançada no mercado, sem checar mais nada',
+        'Ignorar o requisito e escolher pela preferência pessoal de quem programa',
+        'Escolher a que tem mais funcionalidades extras, mesmo sem usar todas'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Linguagem e Plataforma',
+      prompt: 'Uma equipe vai desenvolver um app NATIVO para iOS. Qual linguagem é a preferida nesse cenário?',
+      options: ['Swift', 'Kotlin', 'C#', 'Electron', 'PL/SQL'],
+      correctIndex: 0
+    },
+
+    // ---- Redes de Computadores ----
+    {
+      materia: 'Redes — Conexão e Endereçamento',
+      prompt: 'Uma casa inteira precisa de conexão sem fio cobrindo vários cômodos, enquanto um fone de ouvido só precisa se conectar ao celular que está no bolso. Quais tecnologias resolvem, respectivamente, cada caso?',
+      options: [
+        'Wi-Fi para a casa inteira, Bluetooth para o fone de ouvido',
+        'Bluetooth para a casa inteira, Wi-Fi para o fone de ouvido',
+        'Fibra óptica para os dois casos, sem diferença',
+        'Par trançado para os dois casos, sem diferença',
+        'Wi-Fi para os dois casos, não existe diferença de alcance'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Conexão e Endereçamento',
+      prompt: 'Qual das opções abaixo é um endereço IPv4 dentro da faixa PRIVADA mais comum, usada dentro de casas e empresas?',
+      options: ['192.168.1.10', '8.8.8.8', '300.168.1.10', '192.168.1', 'FE80::1'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Conexão e Endereçamento',
+      prompt: 'Em vez de escrever a máscara de sub-rede como 255.255.255.0, um técnico escreveu /24. O que essa notação representa?',
+      options: [
+        'A notação CIDR — o número indica quantos dos 32 bits do endereço pertencem à parte de REDE',
+        'O número da porta usada pela conexão',
+        'A quantidade de dispositivos conectados naquele momento',
+        'A versão do protocolo IP sendo usada (IPv4 ou IPv6)',
+        'O tempo, em segundos, que uma conexão pode ficar ociosa'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Resolução de Problemas',
+      prompt: 'Ao investigar por que um computador perdeu a conexão de rede, qual é a ORDEM correta de diagnóstico recomendada?',
+      options: [
+        'Primeiro checar a camada física (cabo, luz de link), depois a camada lógica (IP, máscara, gateway)',
+        'Primeiro reinstalar o sistema operacional inteiro, sempre',
+        'Primeiro checar a camada lógica, e só depois olhar se o cabo está conectado',
+        'A ordem não importa, qualquer uma funciona igual',
+        'Primeiro trocar o roteador, antes de checar qualquer outra coisa'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Resolução de Problemas',
+      prompt: 'Você já sabe que um destino não responde, mas precisa descobrir POR QUAIS roteadores o tráfego está passando até lá. Qual comando é o certo pra isso?',
+      options: [
+        'tracert (Windows) ou traceroute (Linux/Mac)',
+        'ping, que só confirma se o destino responde ou não',
+        'ipconfig, que mostra a configuração local do próprio dispositivo',
+        'GROUP BY, um comando de banco de dados, não de rede',
+        'RDP, um protocolo de acesso remoto gráfico'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Serviços e Modelos',
+      prompt: 'Qual é a porta padrão do protocolo HTTPS, usado para navegação segura na web?',
+      options: ['443', '80', '25', '22', '21'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Serviços e Modelos',
+      prompt: 'Serviços como HTTP, FTP e SSH — que o usuário usa diretamente — ficam em qual camada dos modelos OSI/TCP-IP?',
+      options: [
+        'A camada de Aplicação, a mais "de cima" dos dois modelos',
+        'A camada Física, a mais "de baixo" dos dois modelos',
+        'Só existem nas 7 camadas do OSI, nunca no TCP/IP',
+        'A camada de Transporte, no meio dos dois modelos',
+        'Nenhuma camada — esses serviços não pertencem a nenhum modelo'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Armazenamento',
+      prompt: 'Um plano de internet anuncia 100 Mbps. Aproximadamente qual é a velocidade real de download de um arquivo, em MB/s (megabytes por segundo)?',
+      options: [
+        'Cerca de 12,5 MB/s, porque 1 byte equivale a 8 bits',
+        'Exatamente 100 MB/s, porque Mbps e MB/s são a mesma coisa',
+        'Cerca de 800 MB/s, multiplicando por 8',
+        'Cerca de 1 MB/s, dividindo por 100',
+        'Não é possível calcular isso de jeito nenhum'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Internet das Coisas ----
+    {
+      materia: 'Internet das Coisas — Conectividade',
+      prompt: 'Um sensor de umidade fica numa fazenda muito isolada, sem torre de celular nem roteador WiFi por perto, e precisa enviar uma leitura por hora. Qual tecnologia de conectividade resolve isso?',
+      options: ['Conectividade via satélite', 'Bluetooth', 'WiFi doméstico', 'Cabo de rede (Ethernet)', 'Rádio AM/FM'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Internet das Coisas — Conectividade',
+      prompt: 'O controle remoto do drone DJI Mini 4 Pro conversa com o drone nas mesmas faixas de frequência do WiFi (2,4 GHz e 5,8 GHz), mas não usa o protocolo WiFi comum. Por quê?',
+      options: [
+        'Porque a DJI criou um protocolo de rádio próprio (O4/OcuSync), otimizado pra mais alcance e menos interferência do que o WiFi doméstico',
+        'Porque essas frequências são proibidas para uso de WiFi',
+        'Porque WiFi não consegue transmitir nenhum tipo de vídeo',
+        'Porque o drone não usa nenhum tipo de onda de rádio',
+        'Porque o WiFi só funciona em ambientes fechados, nunca ao ar livre'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Internet das Coisas — Conectividade',
+      prompt: 'Uma pulseira inteligente mede a frequência cardíaca e envia os dados pro celular do usuário, sempre a poucos metros de distância, e a bateria precisa durar vários dias. Qual tecnologia é a mais indicada?',
+      options: ['Bluetooth (BLE)', 'WiFi', 'Conectividade via satélite', 'Rádio AM/FM', 'Cabo de rede (Ethernet)'],
+      correctIndex: 0
+    },
+
+    // ---- Introdução de Desenvolvimento de Projetos ----
+    {
+      materia: 'Introdução de Dev. de Projetos',
+      prompt: 'Qual é a ORDEM correta das fases de elaboração de um projeto de sistema?',
+      options: [
+        'Levantamento de requisitos → Planejamento → Desenvolvimento → Testes → Entrega → Manutenção',
+        'Testes → Planejamento → Entrega → Levantamento de requisitos → Manutenção → Desenvolvimento',
+        'Manutenção → Entrega → Testes → Desenvolvimento → Planejamento → Levantamento de requisitos',
+        'Desenvolvimento → Testes → Levantamento de requisitos → Planejamento → Manutenção → Entrega',
+        'Planejamento → Desenvolvimento → Levantamento de requisitos → Entrega → Testes → Manutenção'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Introdução de Dev. de Projetos',
+      prompt: 'Numa documentação técnica escrita em linguagem NORMATIVA, qual frase está no formato esperado?',
+      options: [
+        '"O sistema deve permitir o cadastro de novos usuários."',
+        '"Eu acho que seria legal a gente colocar um cadastro ali."',
+        '"A gente decidiu fazer um cadastro, sei lá, meio doido."',
+        '"Talvez dê pra pensar num cadastro, se der tempo."',
+        '"Cara, o cadastro ficou show de bola."'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Modelagem de Sistemas 1 ----
+    {
+      materia: 'Modelagem — Dados e Requisitos',
+      prompt: 'Num sistema de locadora de jogos, qual das opções abaixo é um exemplo de ENTIDADE (vira uma tabela no banco)?',
+      options: ['Jogo', 'Alugar um jogo', 'O título do jogo', 'A data de devolução', 'O preço da locação'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Modelagem — Dados e Requisitos',
+      prompt: 'Um Pedido tem VÁRIOS Itens, mas cada Item pertence a UM só Pedido. Qual é a cardinalidade desse relacionamento?',
+      options: ['1:N — um pra muitos', 'N:N — muitos pra muitos', '1:1 — sempre um pra um', 'Não existe cardinalidade nesse caso', '0:0 — nenhum relaciona com nenhum'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Modelagem — Dados e Requisitos',
+      prompt: 'Qual é a diferença entre chave PRIMÁRIA e chave ESTRANGEIRA?',
+      options: [
+        'A primária identifica cada linha de forma única na própria tabela; a estrangeira referencia a chave primária de OUTRA tabela',
+        'As duas fazem exatamente a mesma coisa, só com nomes diferentes',
+        'A estrangeira identifica a própria tabela; a primária referencia outra tabela',
+        'Só a chave estrangeira pode se repetir; a primária nunca pode existir duas vezes',
+        'Chave primária só existe em bancos de dados muito grandes'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Modelagem — Dados e Requisitos',
+      prompt: "Qual das opções está escrita no formato 'user story' (Como [usuário], eu quero [ação], para [motivo])?",
+      options: [
+        '"Como cliente, eu quero ver meu histórico de compras, para acompanhar meus gastos."',
+        '"O sistema possui doze tabelas no banco de dados."',
+        '"Este é o requisito número sete da lista."',
+        '"O servidor fica hospedado na nuvem."',
+        '"A tela de login tem duas caixas de texto."'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Modelagem — Laboratório de Autonomia',
+      prompt: 'Diante de um requisito ambíguo, uma técnica de análise é assumir uma interpretação razoável e seguir o trabalho, confirmando depois — sem travar esperando resposta. Como essa técnica é chamada?',
+      options: [
+        'Levantar hipóteses e validar',
+        'Ignorar o requisito por completo',
+        'Esperar uma resposta perfeita antes de fazer qualquer coisa',
+        'Copiar a solução de outro projeto sem analisar',
+        'Sortear uma interpretação aleatória sem revisar depois'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Projeto de Vida ----
+    {
+      materia: 'Projeto de Vida — Autoconhecimento',
+      prompt: 'Qual opção descreve corretamente a diferença entre TALENTO e HABILIDADE?',
+      options: [
+        'Talento é algo que já vem naturalmente fácil; habilidade é um talento treinado com prática',
+        'Talento e habilidade são exatamente a mesma coisa',
+        'Habilidade vem naturalmente fácil; talento precisa de anos de treino',
+        'Talento só existe em atividades esportivas',
+        'Habilidade é sempre mais rara do que talento'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Autoconhecimento',
+      prompt: 'Por que os motivadores PESSOAIS de alguém às vezes são diferentes dos motivadores PROFISSIONAIS?',
+      options: [
+        'Porque o que dá energia na vida como um todo nem sempre é o mesmo que motiva no ambiente de trabalho',
+        'Porque uma pessoa só pode ter um tipo de motivador na vida inteira',
+        'Porque motivadores profissionais sempre anulam os pessoais',
+        'Porque isso nunca acontece — os dois são sempre idênticos',
+        'Porque motivadores pessoais só existem depois da aposentadoria'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Cidadania',
+      prompt: 'O direito de uma comunidade a um espaço público limpo, mantido pelo esforço de todos, é um exemplo de direito/dever:',
+      options: [
+        'Coletivo, porque pertence ao grupo como um todo, não a uma pessoa isolada',
+        'Individual, porque cada pessoa cuida só da própria casa',
+        'Inexistente — esse tipo de direito/dever não existe',
+        'Individual, porque só o prefeito tem essa responsabilidade',
+        'Coletivo, mas só quando menos de 10 pessoas moram no local'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Cidadania',
+      prompt: 'Respeitar filas e evitar barulho excessivo à noite são exemplos de:',
+      options: [
+        'Urbanidade — normas de boa convivência do dia a dia, mesmo sem serem leis escritas',
+        'Requisitos funcionais de um sistema',
+        'Cardinalidade de um relacionamento',
+        'Chaves estrangeiras de uma tabela',
+        'Tecnologias habilitadoras da Indústria 4.0'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Inteligência Emocional',
+      prompt: 'Perceber uma emoção forte (raiva, frustração) e escolher como reagir, em vez de simplesmente explodir no impulso, é a definição de:',
+      options: ['Autocontrole', 'Empatia', 'Networking', 'Cardinalidade', 'Urbanidade'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Inteligência Emocional',
+      prompt: 'Se colocar no lugar de alguém ANTES de agir, de forma que suas atitudes causem um impacto melhor nas outras pessoas, é a definição de:',
+      options: ['Empatia', 'Autocontrole', 'Adaptabilidade', 'Feedback', 'Networking'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Equipe',
+      prompt: 'Numa equipe organizando um evento, definir que cada pessoa assume uma função clara (um cuida da logística, outro da comunicação) ajuda a evitar principalmente:',
+      options: [
+        'Duas pessoas fazendo a mesma coisa por engano, ou tarefas importantes sem ninguém responsável',
+        'Que a equipe termine o projeto rápido demais',
+        'Que o evento tenha muitos participantes',
+        'Que a equipe precise se comunicar entre si',
+        'Que exista qualquer tipo de compromisso com metas'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Equipe',
+      prompt: 'Numa equipe, silêncio prolongado sobre o andamento de uma tarefa (o que já foi feito, o que está travado) costuma ser sinal de que:',
+      options: [
+        'Algo não está indo bem, e falta comunicação constante sobre o progresso',
+        'Está tudo perfeito, silêncio é sempre sinal de sucesso',
+        'A equipe não precisa mais se comunicar depois da primeira reunião',
+        'Os papéis da equipe nunca foram definidos — é a única causa possível',
+        'A equipe atingiu 100% das metas'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Mundo do Trabalho ----
+    {
+      materia: 'Mundo do Trabalho — Revoluções Industriais',
+      prompt: 'A substituição da força humana e animal pela máquina a vapor nas fábricas de tecelagem, no final do século 18, marca qual Revolução Industrial?',
+      options: ['1ª Revolução Industrial', '2ª Revolução Industrial', '3ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)', 'Nenhuma revolução industrial específica'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Indústria 4.0',
+      prompt: 'O que caracteriza a Indústria 4.0, diferente das revoluções industriais anteriores?',
+      options: [
+        'Máquinas conectadas entre si e à internet em tempo real, formando sistemas ciber-físicos que decidem com base em dados',
+        'O uso da eletricidade nas fábricas pela primeira vez',
+        'A substituição total da força humana pela máquina a vapor',
+        'O surgimento dos primeiros grandes sindicatos de trabalhadores',
+        'A linha de montagem com produção em massa, pela primeira vez'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Indústria 4.0',
+      prompt: 'Sensores espalhados por uma fábrica coletam dados o tempo todo e enviam pra servidores remotos, que guardam e processam essas informações de qualquer lugar. Que combinação de tecnologias habilitadoras é essa?',
+      options: [
+        'IoT (sensores) + Nuvem (processamento remoto)',
+        'Manufatura aditiva + Robótica colaborativa',
+        'Segurança digital + Integração de sistemas',
+        'Apenas manufatura aditiva, sozinha',
+        'Apenas robótica colaborativa, sozinha'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Indústria 4.0',
+      prompt: 'Um robô que trabalha lado a lado com humanos na linha de produção, dividindo tarefas repetitivas, sem precisar de gaiolas de segurança isolando ele, é chamado de:',
+      options: ['Cobot (robô colaborativo)', 'Sensor IoT', 'Servidor de nuvem', 'Impressora 3D', 'Access point'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Inovação',
+      prompt: 'Trocar de ferramenta só porque ela é "mais nova", sem resolver nenhum problema real, é um exemplo de:',
+      options: [
+        'Mudança por mudança — não é inovação de verdade',
+        'Inovação real, por definição',
+        'Melhoria contínua aplicada corretamente',
+        'Raciocínio dedutivo bem aplicado',
+        'Decomposição de um problema complexo'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Inovação',
+      prompt: 'Observar vários casos parecidos e chegar numa regra geral a partir deles é o raciocínio:',
+      options: ['Indutivo', 'Dedutivo', 'Hipotético', 'Inferencial isolado', 'Não existe esse tipo de raciocínio'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Trabalho em Equipe',
+      prompt: 'Numa gestão de conflitos construtiva, em vez de dizer "você errou", a pergunta mais adequada é:',
+      options: [
+        '"O que podemos ajustar nesse processo pra isso não acontecer de novo?"',
+        '"Por que você é sempre assim?"',
+        '"Quem vai levar a culpa por isso?"',
+        '"Isso nunca vai ser resolvido mesmo."',
+        '"Não vamos falar mais sobre esse assunto."'
+      ],
+      correctIndex: 0
+    },
+
+    // ---- Programação de Aplicativos ----
+    {
+      materia: 'Prog. de Aplicativos — Depuração',
+      prompt: 'Um código roda inteiro, sem travar nada, mas devolve um resultado errado. Que tipo de erro é esse?',
+      options: ['Erro de lógica', 'Erro de sintaxe', 'Erro de execução', 'Erro de rede', 'Erro de compilação'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — Depuração',
+      prompt: 'Qual é a diferença entre = e == (ou ===) em JavaScript?',
+      options: [
+        '= atribui um valor a uma variável; == ou === comparam dois valores',
+        'Os dois fazem exatamente a mesma coisa',
+        '= compara valores; == atribui um valor',
+        'Só == existe em JavaScript, = não é usado',
+        '= só funciona dentro de um laço for'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — Depuração',
+      prompt: 'Dentro de um switch, o que acontece se você esquecer o break depois de um case?',
+      options: [
+        'A execução continua rodando os próximos case também, um atrás do outro',
+        'O programa para de rodar imediatamente',
+        'Nada muda, break nunca faz diferença',
+        'Só o primeiro case é executado, os outros são sempre ignorados',
+        'O switch inteiro é ignorado sem o break'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — Depuração',
+      prompt: 'Por que chamar funcao(a, b) pode dar um resultado diferente de funcao(b, a)?',
+      options: [
+        'Porque os parâmetros são preenchidos pela POSIÇÃO em que os argumentos são passados, não pelo nome',
+        'Porque JavaScript sempre ordena os argumentos automaticamente em ordem alfabética',
+        'Porque isso nunca faz diferença nenhuma, em nenhum caso',
+        'Porque funções só aceitam um parâmetro por vez',
+        'Porque a ordem dos parâmetros muda o nome da função'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — Depuração',
+      prompt: 'Numa cadeia de if / else if / else if, o JavaScript testa as condições em qual ordem?',
+      options: [
+        'Na ordem escrita, parando na PRIMEIRA condição que for verdadeira',
+        'Sempre da última condição pra primeira',
+        'Em ordem aleatória a cada execução',
+        'Testa todas ao mesmo tempo, sempre',
+        'Só testa a última condição escrita'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — Depuração',
+      prompt: 'No PixelCode, qual é o fluxo correto pra escrever e testar um código JavaScript?',
+      options: [
+        'Escrever o código no editor e clicar em "▶ Executar" pra ver o resultado no Console',
+        'O código já roda sozinho, sem precisar clicar em nada',
+        'É preciso instalar um programa separado no computador antes de usar',
+        'O Console mostra o código, e o editor mostra o resultado',
+        'Só é possível rodar o código depois de fechar e abrir o PixelCode de novo'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — ClipZone',
+      prompt: 'No app ClipZone, o botão "Entrar" só deve ficar liberado quando usuário E senha estiverem válidos ao mesmo tempo. Qual operador lógico resolve isso?',
+      options: ['&& (E lógico)', '|| (OU lógico)', '! (negação)', '+ (soma)', '% (resto da divisão)'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — ClipZone',
+      prompt: 'Ao curtir um post no ClipZone, a função curtir(post) não deve ALTERAR o post recebido — ela devolve um post novo, com curtidas+1. Por que essa prática (imutabilidade) é recomendada?',
+      options: [
+        'Porque mudar o próprio objeto recebido pode causar efeitos colaterais inesperados em outras partes do código que ainda usam aquele objeto',
+        'Porque JavaScript não permite alterar objetos, nunca',
+        'Porque é sempre mais rápido criar um objeto novo do que alterar um existente',
+        'Porque só funções sem parâmetro podem alterar objetos',
+        'Porque o teste automático sempre falha se um objeto for alterado'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — ClipZone',
+      prompt: "No ClipZone, a função formatarCurtidas abrevia números grandes (ex: 1500 vira '1.5K'). Por que esse tipo de abreviação é comum em apps de rede social de verdade?",
+      options: [
+        'Porque mostrar o número exato completo (como 2350) polui a tela, e a versão abreviada é mais fácil de ler rapidamente',
+        'Porque números grandes trocam o app inteiro de idioma',
+        'Porque o JavaScript não consegue mostrar números maiores que 999',
+        'Porque abreviar sempre deixa o número mais preciso',
+        'Porque é uma exigência do protocolo HTTP'
+      ],
+      correctIndex: 0
+    }
+  ];
+
+  // ============================================================
+  // SORTEIO: 20 das 60, embaralhadas — recalculado só na primeira
+  // vez que o aluno inicia (persistido em SELECTION_KEY pra não
+  // mudar no meio de uma tentativa em andamento). As ALTERNATIVAS
+  // de cada questão são reembaralhadas a cada exibição (ver
+  // renderQuestion), então nem a pergunta nem a posição da resposta
+  // certa seguem um padrão fixo de um aluno pro outro.
+  function shuffleIndexes(length) {
+    const arr = Array.from({ length }, (_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function pickExamIndices() {
+    return shuffleIndexes(QUESTION_POOL.length).slice(0, EXAM_SIZE);
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `prova_sistemas_progress_${username}`;
+  const SELECTION_KEY = `prova_sistemas_selecao_${username}`;
+  const STATE_KEY = `prova_sistemas_estado_${username}`;
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadSelection() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(SELECTION_KEY) || 'null');
+      if (Array.isArray(arr) && arr.length === EXAM_SIZE && arr.every(n => Number.isInteger(n) && n >= 0 && n < QUESTION_POOL.length)) return arr;
+    } catch (e) {}
+    return null;
+  }
+  function saveSelection(arr) { localStorage.setItem(SELECTION_KEY, JSON.stringify(arr)); }
+
+  function loadState() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+      if (s && typeof s.currentIndex === 'number' && typeof s.correctCount === 'number') return s;
+    } catch (e) {}
+    return null;
+  }
+  function saveState(s) { localStorage.setItem(STATE_KEY, JSON.stringify(s)); }
+
+  // IMPORTANTE: o sorteio das 20 questões só acontece dentro de
+  // startExam() (clique em "Iniciar prova"), nunca só por carregar a
+  // página — senão toda visita (inclusive antes do aluno ver as regras)
+  // já "começaria" uma tentativa. `selection` existir é o sinal real de
+  // "essa tentativa já foi iniciada" (ver boot()), independente do valor
+  // de currentIndex (que começa em 0 e fica 0 até a 1ª resposta).
+  let selection = loadSelection();
+  let state = loadState();
+  const alreadyDone = loadProgress();
+
+  // Pergunta salva já respondida -> resume na PRÓXIMA (mesmo esquema anti-
+  // "recarrega e tenta de novo" do shared/quiz-teoria-engine.js).
+  let currentIndex = state ? (state.answered ? state.currentIndex + 1 : state.currentIndex) : 0;
+  let correctCount = state ? state.correctCount : 0;
+
+  function startExam() {
+    selection = pickExamIndices();
+    saveSelection(selection);
+    state = { currentIndex: 0, correctCount: 0, answered: false };
+    saveState(state);
+    currentIndex = 0;
+    correctCount = 0;
+  }
+
+  const gateWrap = document.getElementById('gateWrap');
+  const storyWrap = document.getElementById('storyWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = EXAM_SIZE;
+
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+  })();
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('prova_sistemas', label, { step: currentIndex + 1, total: EXAM_SIZE, correctCount });
+    }
+  }
+
+  function updateProgressBar() {
+    const pct = Math.round((currentIndex / EXAM_SIZE) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = Math.min(currentIndex + 1, EXAM_SIZE);
+  }
+
+  function renderQuestion() {
+    storyWrap.style.display = 'flex';
+    gateWrap.style.display = 'none';
+    updateProgressBar();
+
+    const q = QUESTION_POOL[selection[currentIndex]];
+    reportStep(`Prova — Questão ${currentIndex + 1}/${EXAM_SIZE}`);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<span class="materia-tag">${q.materia}</span><h2>❓ ${q.prompt}</h2>`;
+
+    const optionsWrap = document.createElement('div');
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    let answered = false;
+
+    const order = shuffleIndexes(q.options.length);
+    const correctPos = order.indexOf(q.correctIndex);
+
+    order.forEach((origIdx, pos) => {
+      const optText = q.options[origIdx];
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
+      opt.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        selectAnswer(pos);
+      });
+      optionsWrap.appendChild(opt);
+
+      function selectAnswer(chosenIdx) {
+        const allOptionEls = optionsWrap.querySelectorAll('.option');
+        allOptionEls.forEach(el => el.classList.add('disabled'));
+
+        const isCorrect = chosenIdx === correctPos;
+        allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
+        if (isCorrect) correctCount++;
+
+        const feedback = document.createElement('div');
+        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+        feedback.textContent = isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.';
+        card.appendChild(feedback);
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        actions.style.marginTop = '14px';
+        actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">${currentIndex + 1 >= EXAM_SIZE ? 'Ver resultado' : 'Próxima →'}</button>`;
+        card.appendChild(actions);
+
+        state = { currentIndex, correctCount, answered: true };
+        saveState(state);
+        reportStep(`Prova — Questão ${currentIndex + 1}/${EXAM_SIZE} (respondida)`);
+
+        document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
+          currentIndex++;
+          if (currentIndex >= EXAM_SIZE) {
+            finishExam();
+          } else {
+            state = { currentIndex, correctCount, answered: false };
+            saveState(state);
+            storyWrap.innerHTML = '';
+            renderQuestion();
+          }
+        });
+      }
+    });
+
+    card.appendChild(optionsWrap);
+
+    if (isProfessor) {
+      const profActions = document.createElement('div');
+      profActions.className = 'actions';
+      profActions.style.marginTop = '10px';
+      profActions.innerHTML = `<button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>`;
+      card.appendChild(profActions);
+    }
+
+    storyWrap.innerHTML = '';
+    storyWrap.appendChild(card);
+
+    if (isProfessor) {
+      document.getElementById('btnSkipProfessor').addEventListener('click', () => {
+        currentIndex++;
+        if (currentIndex >= EXAM_SIZE) {
+          finishExam(true);
+        } else {
+          state = { currentIndex, correctCount, answered: false };
+          saveState(state);
+          storyWrap.innerHTML = '';
+          renderQuestion();
+        }
+      });
+    }
+  }
+
+  function finishExam(reviewOnly) {
+    const nota = Math.round(correctCount * PONTOS_POR_QUESTAO);
+    if (!reviewOnly) {
+      saveProgress({ completed: true, correctCount, total: EXAM_SIZE, nota, finishedAt: new Date().toISOString() });
+      reportStep(`Prova — Concluída (${correctCount}/${EXAM_SIZE} — nota ${nota}/100)`);
+      window.PortalExamGuard && guard && window.PortalExamGuard.disarm(guard);
+    }
+
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = EXAM_SIZE;
+
+    storyWrap.innerHTML = `
+      <div class="card finish-screen">
+        <div class="trophy">🏁</div>
+        <h2>Prova concluída!</h2>
+        <p>Sua prova foi entregue e registrada — não é possível refazer esta tentativa.</p>
+        <div class="score">Nota: ${nota} de 100 pontos</div>
+        <p>Você acertou ${correctCount} de ${EXAM_SIZE} questões — cada uma vale ${PONTOS_POR_QUESTAO} pontos.</p>
+        <p>O professor já pode conferir sua nota na aba Gestão.</p>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  // GATE (regras + trava anti-saída) e TELA DE BLOQUEIO — mesmo
+  // padrão de modelagem-dados-requisitos-questionario.html
+  // (shared/exam-proctor.js).
+  // ============================================================
+  let guard = null;
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Advertência ${count}/2</h2>
+        <p>Você saiu da aba/janela do portal durante a prova. Isso conta como uma advertência.<br>
+        Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor consegue liberar de novo.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi, continuar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen() {
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFill.style.width = '0%';
+    gateWrap.innerHTML = `
+      <div class="card gate-card" style="text-align:center;">
+        <div class="warn-icon">🔒</div>
+        <h2>Prova bloqueada</h2>
+        <p>Você saiu da aba/janela do portal 2 vezes durante a prova. Por isso, esta atividade foi bloqueada.</p>
+        <p>Procure o professor. Ele pode liberar de novo com o mesmo token que usa pra "Dar visto" (Gestão → "Token — Dar Visto / Pular Etapa").</p>
+        <div class="token-form" style="margin-left:auto; margin-right:auto; text-align:left;">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen();
+    });
+  }
+
+  function renderStartScreen() {
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFill.style.width = '0%';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <h2>📋 Prova — Turma Sistemas</h2>
+        <p>Esta prova cobre TODAS as matérias trabalhadas até agora — Banco de Dados, Desenvolvimento de Sistemas 1, Redes de Computadores, Internet das Coisas, Introdução de Desenvolvimento de Projetos, Modelagem de Sistemas 1, Projeto de Vida, Mundo do Trabalho e Programação de Aplicativos.</p>
+        <ul>
+          <li>Existe um banco de <b>60 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
+          <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
+          <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
+          <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
+          <li>Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor libera de novo.</li>
+        </ul>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn" id="btnIniciar">▶ Iniciar prova</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      startExam();
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      renderQuestion();
+    });
+  }
+
+  // Gabarito: lista o BANCO INTEIRO de 60 questões (não só as 20 que um
+  // aluno específico recebeu), agrupado por matéria — referência completa
+  // pro professor, sem precisar abrir esta tela.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Prova — Turma Sistemas — Banco de 60 questões',
+      subtitle: 'Avaliação final (20 sorteadas de 60, por aluno) · Turma Sistemas',
+      items: QUESTION_POOL.map((q, i) => ({
+        number: i + 1,
+        title: q.materia,
+        prompt: q.prompt,
+        options: q.options,
+        correctIndex: q.correctIndex,
+        answer: q.options[q.correctIndex]
+      })),
+      fileName: 'prova-sistemas-gabarito.txt'
+    });
+  };
+
+  (async function boot() {
+    guard = await window.PortalExamGuard.create('prova_sistemas');
+
+    if (alreadyDone && alreadyDone.completed) {
+      correctCount = alreadyDone.correctCount;
+      finishExam(true);
+      return;
+    }
+
+    if (guard.disabled) {
+      // Sem sessão de aluno reconhecida (professor pré-visualizando, ou
+      // iframe oculto da Gestão) — abre a prova direto, sem tela de regras
+      // nem trava, sorteando uma seleção de preview se ainda não existir.
+      if (!selection) startExam();
+      renderQuestion();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen();
+    } else if (selection) {
+      // `selection` existir é o sinal de que essa tentativa já foi
+      // iniciada antes (ex.: recarregou a página no meio) — volta direto
+      // pra prova, sem passar pela tela de regras de novo.
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      if (currentIndex >= EXAM_SIZE) {
+        // Respondeu tudo e saiu antes de ver o resultado — fecha a
+        // tentativa de verdade agora, em vez de tentar renderizar uma
+        // 21ª pergunta que não existe.
+        finishExam();
+      } else {
+        renderQuestion();
+      }
+    } else {
+      renderStartScreen();
+    }
+  })();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

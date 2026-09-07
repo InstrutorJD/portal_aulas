@@ -110,6 +110,7 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`iot_conectividade_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
       localStorage.setItem(`oficina_comunicacao_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`lab_autonomia_requisitos_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`prova_sistemas_progress_${user}`, JSON.stringify({ completed: true, correctCount: 20, total: 20 }));
       localStorage.setItem(`vida_autoconhecimento_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`vida_autoconhecimento_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`vida_cidadania_teoria_progress_${user}`, JSON.stringify({ completed: true }));
@@ -127,6 +128,7 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`prog_depuracao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`prog_depuracao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]));
       localStorage.setItem(`prog_projetos_pixelcode_progress_${user}`, JSON.stringify([1, 2, 3, 4]));
+      localStorage.setItem(`clipzone_construcao_progress_${user}`, JSON.stringify({ completed: true }));
     }, 'alexandre.natal');
 
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');

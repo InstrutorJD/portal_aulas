@@ -1,4 +1,4 @@
-// Matérias/trilhas/módulos da turma Sistemas (9 matérias no total).
+// Matérias/trilhas/módulos da turma Sistemas (10 matérias no total).
 // Consumido por plataforma.html (via window.TURMA_CONFIG) — inclusive pela
 // aba "Gestão" do próprio portal (shared/platform-core.js), que lê isso
 // pra montar as colunas de desempenho por trilha do relatório de notas e a
@@ -624,21 +624,57 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          key: 'projeto-clipzone',
+          label: 'Projeto: Construa seu App',
+          desc: 'Saia do zero e construa, peça por peça, um app de vídeos curtos (ClipZone) de verdade — tela de login e tela inicial, direto aqui no portal.',
+          capacidade: 'Aplicar, de forma integrada, lógica de programação, manipulação de objetos e validação de formulário na construção de um aplicativo completo em JavaScript.',
+          modules: [
+            {
+              key: 'construcao', title: 'Construa seu App: ClipZone',
+              desc: 'A PixelForge Studios te contratou! Cada desafio resolvido entra ao vivo no seu app — tela de login e feed. No final, apresente o app pronto pro professor.',
+              icon: '📱', src: 'atividades/clipzone-construcao.html',
+              progressKey: 'clipzone_construcao_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },
-    // Matéria "Prova" — ainda sem trilhas (conteúdo específico desta turma
-    // entra depois). Toda atividade avaliativa colocada aqui deve usar a
-    // regra "sair da tela = advertência, saiu de novo = bloqueio": inclua
-    // shared/professor-visto.js + shared/exam-proctor.js e chame
-    // window.PortalExamGuard.create()/arm() — mesmo mecanismo já usado em
-    // turmas/sistemas/atividades/modelagem-dados-requisitos-questionario.html
-    // (formato quiz, `{completed:true}`) e prog-depuracao-pratica.html
-    // (formato lista de ids resolvidos, via `isCompleted` customizado em
-    // arm()). Nenhum motor novo é necessário — exam-proctor.js já é
-    // genérico pra isso. Desbloqueio: token de 6 dígitos do professor
-    // (mesmo de "Dar visto"/"Pular etapa", shared/professor-visto.js).
-    { key: 'prova', label: 'Prova', trilhas: [] }
+    {
+      key: 'prova', label: 'Prova',
+      trilhas: [
+        {
+          key: 'prova-final',
+          label: 'Prova Final',
+          desc: 'Avaliação final cobrindo todas as matérias trabalhadas na turma — 20 questões sorteadas de um banco de 60 (teoria e prática), com 5 alternativas embaralhadas e trava anti-saída durante a prova.',
+          // TODO(professor): capacidade PROVISÓRIA — esta prova é somativa
+          // (cobre várias capacidades de várias matérias ao mesmo tempo),
+          // não uma única capacidade MSEP específica. Ajuste esse texto se
+          // a coordenação pedir um enquadramento formal diferente.
+          capacidade: 'Avaliação somativa do conjunto de capacidades trabalhadas nas matérias do curso.',
+          modules: [
+            {
+              // Sem correção "aprovado/reprovado" automática de propósito:
+              // é uma prova de verdade, não um quiz de treino — uma única
+              // tentativa oficial, sem botão de "tentar de novo" ao errar.
+              // A pontuação final (correctCount/total) fica registrada no
+              // progresso pra o professor conferir/lançar nota na Gestão.
+              // Trava "sair da tela = advertência, saiu de novo = bloqueio"
+              // via shared/exam-proctor.js — mesmo mecanismo de
+              // modelagem-dados-requisitos-questionario.html. Desbloqueio:
+              // token de 6 dígitos do professor (shared/professor-visto.js).
+              key: 'prova', title: 'Prova — Turma Sistemas',
+              desc: '20 questões (sorteadas de um banco de 60) cobrindo Banco de Dados, Desenvolvimento de Sistemas 1, Redes, Internet das Coisas, Introdução de Dev. de Projetos, Modelagem de Sistemas 1, Projeto de Vida, Mundo do Trabalho e Programação de Aplicativos.',
+              icon: '📋', src: 'atividades/prova-sistemas.html',
+              progressKey: 'prova_sistemas_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        }
+      ]
+    }
   ],
 
   // Insígnias da trilha "Curso de Desenvolvimento de Sistemas" (ver aba

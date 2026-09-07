@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Construa seu App: ClipZone</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --green:#3aa0ff; --green-dim:#2b6ba3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#d6e2ec; --ink-dim:#6c8698;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050a10;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(58,160,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+
+  .sidebar{
+    width:220px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+  }
+  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
+  .step-item{
+    display:flex; align-items:center; gap:8px; padding:7px 8px; margin-bottom:3px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:10.5px;
+  }
+  .step-item .status{ font-size:12px; width:16px; text-align:center; flex-shrink:0; }
+  .step-item.active{ border-color:var(--green); color:var(--green); }
+  .step-item.completed{ color:var(--ink); }
+  .step-item.locked{ opacity:0.4; cursor:not-allowed; }
+  .step-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:10px; height:100%; overflow-y:auto; }
+
+  .preview-box{
+    flex-shrink:0; display:flex; align-items:flex-start; gap:14px; background:var(--panel);
+    border:1px solid var(--line); padding:10px; flex-wrap:wrap;
+  }
+
+  .phone-frame{
+    width:190px; height:380px; flex-shrink:0; background:#000; border:6px solid #1c2430;
+    border-radius:26px; position:relative; overflow:hidden; box-shadow:0 0 15px rgba(0,0,0,0.5);
+  }
+  .phone-notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%); width:64px; height:14px;
+    background:#000; border-radius:0 0 9px 9px; z-index:2;
+  }
+  .phone-screen{
+    position:absolute; inset:0; background:var(--app-bg, #0d1620); color:#f2f6fa; font-size:10.5px;
+    display:flex; flex-direction:column; padding-top:18px; overflow-y:auto;
+  }
+  .app-header{
+    flex-shrink:0; padding:8px 10px; font-family:var(--user-font-display, 'VT323', monospace); font-size:16px;
+    letter-spacing:1px; color:var(--app-accent, var(--green)); display:flex; align-items:center; justify-content:space-between;
+  }
+  .app-link{
+    font-family:inherit; font-size:9.5px; text-transform:uppercase; background:transparent; color:var(--ink-dim);
+    border:1px solid var(--line); padding:3px 7px; cursor:pointer; border-radius:2px;
+  }
+
+  .login-form{ padding:10px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .login-form label{ font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .login-form input{
+    font-family:inherit; font-size:11px; padding:8px 9px; background:#00000055; color:#fff;
+    border:1px solid var(--line); border-radius:4px; outline:none;
+  }
+  .login-form input.campo-ok{ border-color:#3ecf6a; }
+  .login-form input.campo-erro{ border-color:var(--blood-bright); }
+  .login-erro{ font-size:9.5px; color:var(--blood-bright); min-height:12px; }
+  .app-btn{
+    font-family:inherit; font-weight:800; font-size:10.5px; letter-spacing:0.5px; text-transform:uppercase;
+    background:var(--app-accent, var(--green)); color:#04162a; border:none; padding:9px; cursor:pointer; border-radius:4px; margin-top:4px;
+  }
+  .app-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
+  .feed-list{ flex:1; overflow-y:auto; padding:6px; display:flex; flex-direction:column; gap:8px; }
+  .feed-vazio{ padding:20px 10px; text-align:center; font-size:10px; color:var(--ink-dim); font-style:italic; }
+  .post-card{
+    background:var(--app-card, var(--panel2)); border:1px solid var(--line); border-radius:6px; padding:8px; font-size:10px;
+  }
+  .post-video{
+    height:70px; border-radius:4px; background:#00000055; display:flex; align-items:center; justify-content:center;
+    font-size:20px; margin-bottom:6px;
+  }
+  .post-user{ color:var(--app-accent, var(--green)); font-weight:700; margin-bottom:3px; }
+  .post-legenda{ color:#e6edf5; margin-bottom:6px; line-height:1.4; }
+  .post-like{
+    font-family:inherit; font-size:10.5px; background:transparent; color:#e6edf5; border:none; cursor:pointer;
+    display:flex; align-items:center; gap:5px; padding:0;
+  }
+
+  .preview-tabs{ display:flex; gap:6px; margin:4px 0; }
+  .tab-btn{
+    font-family:inherit; font-size:10px; font-weight:700; text-transform:uppercase; background:transparent;
+    color:var(--ink-dim); border:1px solid var(--line); padding:5px 9px; cursor:pointer; border-radius:2px;
+  }
+  .tab-btn.active{ border-color:var(--green); color:var(--green); }
+  .preview-info{ font-size:11px; color:var(--ink-dim); line-height:1.7; min-width:150px; }
+  .preview-hint{ font-size:10.5px; color:var(--ink-dim); font-style:italic; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:14px 16px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--green); margin:0 0 10px; letter-spacing:1px;
+  }
+  .card p{ font-size:12.5px; line-height:1.7; margin:0 0 10px; }
+  .card code{ color:var(--yellow); }
+  .card pre{
+    background:#050a10; border:1px solid var(--line); padding:8px 10px; margin:0 0 10px;
+    font-size:11.5px; line-height:1.5; color:var(--yellow); overflow-x:auto;
+  }
+
+  .desafio-desc{ background:#050a10; border:1px solid var(--green-dim); padding:10px 12px; font-size:12.5px; line-height:1.6; margin-bottom:10px; }
+  .hint-toggle{
+    display:inline-block; margin-bottom:10px; font-size:10.5px; font-weight:700; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--green-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  }
+  .hint-box{ display:none; margin-bottom:10px; background:var(--panel2); border:1px dashed var(--yellow); padding:8px 10px; font-size:11.5px; line-height:1.5; }
+  .hint-box.show{ display:block; }
+
+  textarea#codeInput{
+    width:100%; min-height:150px; background:#050a10; color:var(--ink); border:1px solid var(--line);
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; padding:10px; resize:vertical; margin-bottom:10px;
+  }
+  textarea#codeInput:focus{ outline:none; border-color:var(--green-dim); }
+
+  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; margin-top:4px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04162a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .console{
+    background:#04070a; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    min-height:40px; max-height:140px; overflow-y:auto; line-height:1.6; margin-top:4px;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.fail{ color:var(--blood-bright); }
+  .console .line.success{ color:var(--green); font-weight:bold; }
+
+  .escolha-grid{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .escolha-opt{
+    border:1px solid var(--line); background:var(--panel2); padding:10px 12px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11px; width:110px;
+  }
+  .escolha-opt:hover{ border-color:var(--green-dim); }
+  .escolha-opt.selected{ border-color:var(--green); background:rgba(58,160,255,0.08); color:var(--green); }
+  .escolha-swatch{ width:100%; height:36px; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+
+  .visto-box p{ font-size:13px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  @media (max-width: 800px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; max-height:150px; }
+    .main-panel{ height:auto; overflow-y:visible; }
+    .preview-box{ justify-content:center; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'clipzone_construcao';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PROGRAMAÇÃO DE APLICATIVOS — CONSTRUA SEU APP: CLIPZONE</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">1</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="layout">
+      <div class="sidebar">
+        <div class="sidebar-title">Missões</div>
+        <div id="stepList"></div>
+      </div>
+
+      <div class="main-panel">
+        <div class="preview-box">
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-screen" id="phoneScreen"></div>
+          </div>
+          <div class="preview-info">
+            <div>Seu app, ao vivo:</div>
+            <div class="preview-tabs">
+              <button class="tab-btn active" id="tabLogin">🔐 Login</button>
+              <button class="tab-btn" id="tabFeed">🏠 Feed</button>
+            </div>
+            <div class="preview-hint">Cada desafio resolvido entra aqui na hora.</div>
+          </div>
+        </div>
+
+        <div id="stepContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// MOTOR DO APP — sempre rodando, independente da navegação. As
+// funções que o aluno valida em cada desafio são "encaixadas" aqui
+// (objeto `slots`); antes de validadas, aquele pedaço do app
+// simplesmente não existe ainda (sem crash, sem validação, sem
+// post) — vai ganhando vida aos poucos, tela por tela. Mesmo
+// espírito de turmas/jogos/atividades/cobrinha-construcao.html, só
+// que rendendo DOM (moldura de celular) em vez de canvas.
+// ============================================================
+const phoneScreen = document.getElementById('phoneScreen');
+const tabLogin = document.getElementById('tabLogin');
+const tabFeed = document.getElementById('tabFeed');
+
+const slots = {};
+let activeScreen = 'login';
+let feedState = null;
+let tema = { bg: '#0d1620', accent: '#3aa0ff', card: '#0a121a' };
+let likeIcon = '❤️';
+
+// Dados de demonstração fixos — não são testados, só alimentam o
+// preview assim que slots.criarPost existir (ver renderFeedScreen).
+const DEMO_POSTS = [
+  { usuario: '@ana.criativa', legenda: 'Testando uma ideia nova hoje!', curtidas: 128 },
+  { usuario: '@studio.pixel', legenda: 'Bastidores do próximo projeto 👀', curtidas: 942 },
+  { usuario: '@leo.beats', legenda: 'Novo som saiu, bora ouvir 🎧', curtidas: 2350 }
+];
+
+function aplicarTema() {
+  phoneScreen.style.setProperty('--app-bg', tema.bg);
+  phoneScreen.style.setProperty('--app-accent', tema.accent);
+  phoneScreen.style.setProperty('--app-card', tema.card);
+}
+
+function setActiveScreen(screen) {
+  activeScreen = screen;
+  tabLogin.classList.toggle('active', screen === 'login');
+  tabFeed.classList.toggle('active', screen === 'feed');
+  renderPhone();
+}
+tabLogin.addEventListener('click', () => setActiveScreen('login'));
+tabFeed.addEventListener('click', () => setActiveScreen('feed'));
+
+function renderPhone() {
+  aplicarTema();
+  if (activeScreen === 'login') renderLoginScreen();
+  else renderFeedScreen();
+}
+
+function renderLoginScreen() {
+  phoneScreen.innerHTML = `
+    <div class="app-header">📱 ClipZone</div>
+    <div class="login-form">
+      <label>Usuário</label>
+      <input type="text" id="fldUsuario" placeholder="@seu.usuario" autocomplete="off">
+      <label>Senha</label>
+      <input type="password" id="fldSenha" placeholder="••••••••" autocomplete="off">
+      <div class="login-erro" id="loginErro"></div>
+      <button class="app-btn" id="btnLoginEntrar" disabled>Entrar</button>
+    </div>
+  `;
+  const fldUsuario = document.getElementById('fldUsuario');
+  const fldSenha = document.getElementById('fldSenha');
+  const loginErro = document.getElementById('loginErro');
+  const btnEntrar = document.getElementById('btnLoginEntrar');
+
+  function atualizar() {
+    const usuario = fldUsuario.value;
+    const senha = fldSenha.value;
+    const usuarioValido = slots.validarUsuario ? !!slots.validarUsuario(usuario) : null;
+    const senhaValida = slots.validarSenha ? !!slots.validarSenha(senha) : null;
+
+    fldUsuario.classList.toggle('campo-ok', usuarioValido === true);
+    fldUsuario.classList.toggle('campo-erro', usuarioValido === false && usuario.length > 0);
+    fldSenha.classList.toggle('campo-ok', senhaValida === true);
+    fldSenha.classList.toggle('campo-erro', senhaValida === false && senha.length > 0);
+
+    btnEntrar.disabled = !(slots.podeEntrar && slots.podeEntrar(usuarioValido === true, senhaValida === true));
+    loginErro.textContent = slots.mensagemErro ? slots.mensagemErro(usuarioValido === true, senhaValida === true) : '';
+  }
+  fldUsuario.addEventListener('input', atualizar);
+  fldSenha.addEventListener('input', atualizar);
+  btnEntrar.addEventListener('click', () => setActiveScreen('feed'));
+  atualizar();
+}
+
+function renderFeedScreen() {
+  if (!feedState && slots.criarPost) {
+    feedState = DEMO_POSTS.map(p => slots.criarPost(p.usuario, p.legenda, p.curtidas));
+  }
+  phoneScreen.innerHTML = `
+    <div class="app-header">📱 ClipZone <button class="app-link" id="btnSair">Sair</button></div>
+    <div class="feed-list" id="feedList"></div>
+  `;
+  document.getElementById('btnSair').addEventListener('click', () => setActiveScreen('login'));
+
+  const feedList = document.getElementById('feedList');
+  if (!feedState) {
+    feedList.innerHTML = '<div class="feed-vazio">seu feed ainda não existe...</div>';
+    return;
+  }
+  feedState.forEach((post, idx) => {
+    const card = document.createElement('div');
+    card.className = 'post-card';
+    const curtidasTexto = slots.formatarCurtidas ? slots.formatarCurtidas(post.curtidas) : String(post.curtidas);
+    card.innerHTML = `
+      <div class="post-video">▶️</div>
+      <div class="post-user">${post.usuario}</div>
+      <div class="post-legenda">${post.legenda}</div>
+      <button class="post-like"><span class="like-icon">${likeIcon}</span><span>${curtidasTexto}</span></button>
+    `;
+    card.querySelector('.post-like').addEventListener('click', () => {
+      if (!slots.curtir) return;
+      feedState[idx] = slots.curtir(feedState[idx]);
+      renderFeedScreen();
+    });
+    feedList.appendChild(card);
+  });
+}
+renderPhone();
+
+// ============================================================
+// DADOS DAS ETAPAS
+// ============================================================
+const STEPS = [
+  {
+    id: 'intro', type: 'explicacao', title: '📱 Sua missão',
+    corpo: `<p>A <b>PixelForge Studios</b> está lançando um app de vídeos curtos chamado <b>ClipZone</b>, e você foi contratado(a) como desenvolvedor(a) mobile júnior! Sua missão: construir, peça por peça, a <b>tela de login</b> e a <b>tela inicial (feed)</b> — direto aqui no portal.</p>
+      <p>Cada função que você programar corretamente entra <b>ao vivo</b> no celular ali do lado, na hora. No fim, você chama o professor pra ver o app pronto rodando.</p>`
+  },
+
+  { id: 'como-funciona-exp', type: 'explicacao', title: 'Como funciona um desafio', corpo: `
+    <p>Cada desafio pede pra você completar uma <b>função</b>: um pedacinho de código que recebe informações (os parênteses) e devolve um resultado usando a palavra reservada <code>return</code>.</p>
+    <pre><code>function dobrar(numero) {
+  return numero * 2;
+}</code></pre>
+    <p>Repare no <code>return</code>: é ele quem diz "esse aqui é o resultado". <b>Sem <code>return</code>, a função não devolve nada</b> — o teste recebe <code>undefined</code>, mesmo que sua lógica esteja certa por dentro.</p>
+    <p>Não existe um jeito único de escrever a lógica — o teste só confere o QUE sua função devolve, não COMO você chegou lá.</p>` },
+
+  { id: 'usuario-exp', type: 'explicacao', title: 'Validar o usuário', screen: 'login', corpo: `
+    <p>Toda tela de login precisa validar o que a pessoa digita ANTES de deixar ela entrar. Vamos começar pelo campo de usuário: ele só é considerado válido com pelo menos <b>3 caracteres</b>.</p>` },
+  { id: 'usuario-des', type: 'desafio', title: 'Validar o usuário', screen: 'login',
+    fnName: 'validarUsuario', checkType: 'value',
+    solution: `function validarUsuario(usuario) {
+  return usuario.length >= 3;
+}`,
+    starter: 'function validarUsuario(usuario) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe o texto digitado no campo de usuário e devolve <code>true</code> se ele tiver pelo menos <b>3 caracteres</b>, ou <code>false</code> caso contrário.',
+    hint: `Use a propriedade <code>.length</code> do texto e compare com <code>&gt;=</code>. Exemplo do mesmo formato (outro contexto):<pre><code>function nomeValido(nome) {
+  return nome.length >= 2;
+}</code></pre>`,
+    tests: [
+      { args: [''], expected: false },
+      { args: ['an'], expected: false },
+      { args: ['ana'], expected: true },
+      { args: ['ana.criativa'], expected: true }
+    ]
+  },
+
+  { id: 'senha-exp', type: 'explicacao', title: 'Validar a senha', screen: 'login', corpo: `
+    <p>Agora o campo de senha: por segurança, ela só é considerada válida com pelo menos <b>6 caracteres</b>.</p>` },
+  { id: 'senha-des', type: 'desafio', title: 'Validar a senha', screen: 'login',
+    fnName: 'validarSenha', checkType: 'value',
+    solution: `function validarSenha(senha) {
+  return senha.length >= 6;
+}`,
+    starter: 'function validarSenha(senha) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe o texto digitado no campo de senha e devolve <code>true</code> se ele tiver pelo menos <b>6 caracteres</b>, ou <code>false</code> caso contrário.',
+    hint: `Mesma ideia do desafio anterior (validarUsuario), só trocando o número mínimo de caracteres.`,
+    tests: [
+      { args: [''], expected: false },
+      { args: ['12345'], expected: false },
+      { args: ['123456'], expected: true },
+      { args: ['senha-segura'], expected: true }
+    ]
+  },
+
+  { id: 'entrar-exp', type: 'explicacao', title: 'Liberar o botão "Entrar"', screen: 'login', corpo: `
+    <p>O botão "Entrar" só deve ficar liberado quando os DOIS campos — usuário e senha — estiverem válidos ao mesmo tempo.</p>` },
+  { id: 'entrar-des', type: 'desafio', title: 'Liberar o botão "Entrar"', screen: 'login',
+    fnName: 'podeEntrar', checkType: 'value',
+    solution: `function podeEntrar(usuarioValido, senhaValida) {
+  return usuarioValido && senhaValida;
+}`,
+    starter: 'function podeEntrar(usuarioValido, senhaValida) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe se o usuário é válido e se a senha é válida (dois <code>true</code>/<code>false</code>) — devolva <code>true</code> só quando os DOIS forem verdadeiros.',
+    hint: `Existe um operador lógico que só devolve verdadeiro quando os dois lados são verdadeiros. Exemplo do mesmo formato (outro contexto):<pre><code>function podeDirigir(temHabilitacao, temCarro) {
+  return temHabilitacao && temCarro;
+}</code></pre>`,
+    tests: [
+      { args: [true, true], expected: true },
+      { args: [true, false], expected: false },
+      { args: [false, true], expected: false },
+      { args: [false, false], expected: false }
+    ]
+  },
+
+  { id: 'erro-exp', type: 'explicacao', title: 'Mostrar a mensagem certa', screen: 'login', corpo: `
+    <p>Quando o login falha, o app precisa avisar POR QUÊ. A prioridade é: se o usuário estiver inválido, mostra o erro de usuário (não importa a senha); senão, se a senha estiver inválida, mostra o erro de senha; se os dois estiverem certos, não mostra erro nenhum (texto vazio).</p>` },
+  { id: 'erro-des', type: 'desafio', title: 'Mostrar a mensagem certa', screen: 'login',
+    fnName: 'mensagemErro', checkType: 'value',
+    solution: `function mensagemErro(usuarioValido, senhaValida) {
+  if (!usuarioValido) {
+    return "Usuário precisa de pelo menos 3 caracteres";
+  }
+  if (!senhaValida) {
+    return "Senha precisa de pelo menos 6 caracteres";
+  }
+  return "";
+}`,
+    starter: 'function mensagemErro(usuarioValido, senhaValida) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe se o usuário é válido e se a senha é válida, e devolve o texto certo: se <code>usuarioValido</code> for falso, devolva <code>"Usuário precisa de pelo menos 3 caracteres"</code> (não importa a senha); senão, se <code>senhaValida</code> for falso, devolva <code>"Senha precisa de pelo menos 6 caracteres"</code>; se os dois forem verdadeiros, devolva um texto vazio <code>""</code>.',
+    hint: `Use dois "if" em sequência, cada um com seu próprio return — o primeiro "if" que bater já resolve, sem precisar de "else". Exemplo do mesmo formato (outro contexto):<pre><code>function statusPedido(temEstoque, pagamentoOk) {
+  if (!temEstoque) {
+    return "Sem estoque";
+  }
+  if (!pagamentoOk) {
+    return "Pagamento pendente";
+  }
+  return "Pedido confirmado";
+}</code></pre>`,
+    tests: [
+      { args: [false, false], expected: 'Usuário precisa de pelo menos 3 caracteres' },
+      { args: [false, true], expected: 'Usuário precisa de pelo menos 3 caracteres' },
+      { args: [true, false], expected: 'Senha precisa de pelo menos 6 caracteres' },
+      { args: [true, true], expected: '' }
+    ]
+  },
+
+  { id: 'post-exp', type: 'explicacao', title: 'Criar um post', screen: 'feed', corpo: `
+    <p>Login pronto — hora da tela inicial! No ClipZone, cada vídeo do feed é representado por um <b>post</b>: um objeto com o usuário que postou, a legenda do vídeo, e o número de curtidas.</p>
+    <pre><code>{ usuario: "@ana.criativa", legenda: "Bom dia!", curtidas: 10 }</code></pre>` },
+  { id: 'post-des', type: 'desafio', title: 'Criar um post', screen: 'feed',
+    fnName: 'criarPost', checkType: 'json',
+    solution: `function criarPost(usuario, legenda, curtidas) {
+  return { usuario: usuario, legenda: legenda, curtidas: curtidas };
+}`,
+    starter: 'function criarPost(usuario, legenda, curtidas) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe <code>usuario</code>, <code>legenda</code> e <code>curtidas</code>, e devolve um objeto com essas três informações: <code>{ usuario, legenda, curtidas }</code>.',
+    hint: `Monte um objeto com chave:valor pra cada parâmetro recebido. Exemplo do mesmo formato (outro contexto):<pre><code>function criarProduto(nome, preco) {
+  return { nome: nome, preco: preco };
+}</code></pre>`,
+    tests: [
+      { args: ['@ana.criativa', 'Bom dia!', 10], expected: { usuario: '@ana.criativa', legenda: 'Bom dia!', curtidas: 10 } },
+      { args: ['@leo.beats', 'Novo som 🎧', 0], expected: { usuario: '@leo.beats', legenda: 'Novo som 🎧', curtidas: 0 } }
+    ]
+  },
+
+  { id: 'curtir-exp', type: 'explicacao', title: 'Curtir um post', screen: 'feed', corpo: `
+    <p>Quando alguém toca no ❤️, o número de curtidas daquele post sobe 1. Só um detalhe importante: em vez de MUDAR o post que já existe, sua função deve devolver um post NOVO, com a contagem atualizada — os outros dados (usuário, legenda) continuam iguais.</p>` },
+  { id: 'curtir-des', type: 'desafio', title: 'Curtir um post', screen: 'feed',
+    fnName: 'curtir', checkType: 'json',
+    solution: `function curtir(post) {
+  return { usuario: post.usuario, legenda: post.legenda, curtidas: post.curtidas + 1 };
+}`,
+    starter: 'function curtir(post) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe um post e devolve um post NOVO, igual ao original, mas com <code>curtidas</code> somado 1.',
+    hint: `Monte um objeto novo copiando usuario e legenda do post recebido, e somando 1 só no curtidas. Exemplo do mesmo formato (outro contexto):<pre><code>function aumentarNivel(personagem) {
+  return { nome: personagem.nome, nivel: personagem.nivel + 1 };
+}</code></pre>`,
+    tests: [
+      { args: [{ usuario: '@x', legenda: 'y', curtidas: 5 }], expected: { usuario: '@x', legenda: 'y', curtidas: 6 } },
+      { args: [{ usuario: '@z', legenda: 'w', curtidas: 0 }], expected: { usuario: '@z', legenda: 'w', curtidas: 1 } }
+    ]
+  },
+
+  { id: 'formatar-exp', type: 'explicacao', title: 'Abreviar números grandes', screen: 'feed', corpo: `
+    <p>Um vídeo popular pode ter milhares de curtidas — mostrar "2350" polui a tela. Apps de verdade abreviam: números de 4+ dígitos (1000 ou mais) viram um valor dividido por mil, com 1 casa decimal, seguido de "K".</p>` },
+  { id: 'formatar-des', type: 'desafio', title: 'Abreviar números grandes', screen: 'feed',
+    fnName: 'formatarCurtidas', checkType: 'value',
+    solution: `function formatarCurtidas(numero) {
+  if (numero < 1000) {
+    return String(numero);
+  }
+  return (numero / 1000).toFixed(1) + "K";
+}`,
+    starter: 'function formatarCurtidas(numero) {\n  // não esqueça do return!\n}',
+    desc: 'Crie a função que recebe um número de curtidas e devolve um texto: se for menor que <b>1000</b>, devolva o número como texto puro (ex: <code>950</code> → <code>"950"</code>). Se for 1000 ou mais, divida por 1000, arredonde pra 1 casa decimal com <code>.toFixed(1)</code>, e acrescente <code>"K"</code> no final (ex: <code>1500</code> → <code>"1.5K"</code>).',
+    hint: `<code>.toFixed(1)</code> já devolve um texto com 1 casa decimal — só falta concatenar o "K" no final. Exemplo do mesmo formato (outro contexto):<pre><code>function formatarPreco(centavos) {
+  if (centavos < 100) {
+    return String(centavos) + "¢";
+  }
+  return (centavos / 100).toFixed(2) + "R$";
+}</code></pre>`,
+    tests: [
+      { args: [950], expected: '950' },
+      { args: [1000], expected: '1.0K' },
+      { args: [1500], expected: '1.5K' },
+      { args: [12500], expected: '12.5K' }
+    ]
+  },
+
+  { id: 'tema-exp', type: 'explicacao', title: 'Escolher o tema visual', corpo: `
+    <p>Hora de dar a cara do ClipZone pro seu app! Escolha as cores de fundo, destaque e dos cartões de post.</p>` },
+  { id: 'tema-esc', type: 'escolha', title: 'Escolher o tema visual',
+    opcoes: [
+      { id: 'neon', label: 'Neon', emoji: '💜', tema: { bg: '#120a1f', accent: '#ff2ec4', card: '#1c1030' } },
+      { id: 'minimal', label: 'Minimalista', emoji: '🤍', tema: { bg: '#0d0d0d', accent: '#f2f2f2', card: '#1a1a1a' } },
+      { id: 'sunset', label: 'Pôr do Sol', emoji: '🧡', tema: { bg: '#2a1015', accent: '#ff8a3d', card: '#3a1a20' } },
+      { id: 'oceano', label: 'Oceano', emoji: '💙', tema: { bg: '#08151f', accent: '#2ec7ff', card: '#0f2635' } }
+    ]
+  },
+
+  { id: 'icone-exp', type: 'explicacao', title: 'Escolher o ícone de curtir', corpo: `
+    <p>Por último, escolha qual ícone representa uma curtida no seu app.</p>` },
+  { id: 'icone-esc', type: 'escolha', title: 'Escolher o ícone de curtir',
+    opcoes: [
+      { id: 'coracao', label: 'Coração', emoji: '❤️', icone: '❤️' },
+      { id: 'fogo', label: 'Fogo', emoji: '🔥', icone: '🔥' },
+      { id: 'estrela', label: 'Estrela', emoji: '⭐', icone: '⭐' },
+      { id: 'joinha', label: 'Joinha', emoji: '👍', icone: '👍' }
+    ]
+  }
+];
+
+// ============================================================
+// PROGRESSO / ESTADO
+// ============================================================
+const urlParams = new URLSearchParams(window.location.search);
+const username = urlParams.get('user') || 'anon';
+const PROGRESS_KEY = `clipzone_construcao_progress_${username}`;
+const STATE_KEY = `clipzone_construcao_state_${username}`;
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+}
+function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+    if (s && s.completedIds && s.savedCode) return s;
+  } catch (e) {}
+  return { completedIds: [], savedCode: {}, temaEscolha: null, iconeEscolha: null };
+}
+function saveState() { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+
+const state = loadState();
+const completed = new Set(state.completedIds);
+
+// Reaplica escolhas salvas (tema/ícone) e reconstrói os slots a partir do
+// código já validado antes, pra quem recarrega a página não perder nada.
+function rebuildFromState() {
+  STEPS.forEach(step => {
+    if (step.type !== 'desafio' || !completed.has(step.id)) return;
+    const { fn } = state.savedCode[step.id] ? runTests(step, state.savedCode[step.id]) : {};
+    if (fn) { slots[step.fnName] = fn; return; }
+    // Etapa concluída mas o código salvo não passa mais nos testes — só
+    // acontece quando o professor pulou a etapa (ver "Pular (professor)"
+    // em renderDesafio). Usa a solução de referência pra o app continuar
+    // funcionando de ponta a ponta mesmo sem o código do aluno.
+    const { fn: refFn } = runTests(step, step.solution);
+    if (refFn) slots[step.fnName] = refFn;
+  });
+  if (state.temaEscolha) {
+    const opt = STEPS.find(s => s.id === 'tema-esc').opcoes.find(o => o.id === state.temaEscolha);
+    if (opt) tema = opt.tema;
+  }
+  if (state.iconeEscolha) {
+    const opt = STEPS.find(s => s.id === 'icone-esc').opcoes.find(o => o.id === state.iconeEscolha);
+    if (opt) likeIcon = opt.icone;
+  }
+  renderPhone();
+}
+
+// ============================================================
+// TESTE DE CÓDIGO (mesma lógica de sempre: new Function, roda
+// contra os testes, nunca deixa exceção do aluno escapar).
+// ============================================================
+function runTests(step, code) {
+  let fn;
+  try {
+    const factory = new Function(`${code}\nreturn typeof ${step.fnName} === 'function' ? ${step.fnName} : undefined;`);
+    fn = factory();
+  } catch (e) {
+    return { allPass: false, log: [{ ok:false, msg:'Erro no código: ' + e.message }], fn: null };
+  }
+  if (typeof fn !== 'function') {
+    return { allPass: false, log: [{ ok:false, msg:`A função '${step.fnName}' não foi criada.` }], fn: null };
+  }
+  let allPass = true;
+  const log = step.tests.map((t, i) => {
+    let result, errorMsg;
+    try { result = fn(...t.args); } catch (e) { errorMsg = e.message; }
+    const pass = !errorMsg && (step.checkType === 'json'
+      ? JSON.stringify(result) === JSON.stringify(t.expected)
+      : result === t.expected);
+    if (!pass) allPass = false;
+    const esqueceuReturn = !pass && !errorMsg && result === undefined && t.expected !== undefined;
+    return {
+      ok: pass,
+      msg: pass
+        ? `Teste ${i+1} ✅`
+        : errorMsg
+          ? `Teste ${i+1}: erro — ${errorMsg}`
+          : `Teste ${i+1}: esperado ${JSON.stringify(t.expected)}, recebeu ${JSON.stringify(result)}`
+            + (esqueceuReturn ? ' — sua função não devolveu nada, você usou o return?' : '')
+    };
+  });
+  return { allPass, log, fn };
+}
+
+// ============================================================
+// NAVEGAÇÃO / RENDER DAS ETAPAS
+// ============================================================
+const stepListEl = document.getElementById('stepList');
+const stepContentEl = document.getElementById('stepContent');
+const lblStepNum = document.getElementById('lblStepNum');
+const lblStepTotal = document.getElementById('lblStepTotal');
+const progressFill = document.getElementById('progressFill');
+
+lblStepTotal.textContent = STEPS.length + 1;
+
+let selectedIndex = (() => {
+  const idx = STEPS.findIndex(s => !completed.has(s.id));
+  return idx === -1 ? STEPS.length : idx; // STEPS.length = tela de visto
+})();
+
+// Bypass pro professor: ele quer ver/preparar todos os passos (e o Visto)
+// sem precisar resolver cada um em ordem (ver PENDENCIAS.md, "Desbloquear
+// todas as etapas das atividades para o professor"). A checagem é
+// assíncrona, então a sidebar é re-renderizada assim que ela resolver.
+let isProfessor = false;
+(async function () {
+  const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+  isProfessor = !!(user && user.role === 'professor');
+  if (isProfessor) renderSidebar();
+})();
+
+function isUnlocked(index) {
+  if (isProfessor) return true;
+  if (index === 0) return true;
+  return completed.has(STEPS[index - 1].id);
+}
+
+function renderSidebar() {
+  stepListEl.innerHTML = '';
+  STEPS.forEach((step, idx) => {
+    const unlocked = isUnlocked(idx);
+    const isDone = completed.has(step.id);
+    const item = document.createElement('div');
+    item.className = 'step-item'
+      + (idx === selectedIndex ? ' active' : '')
+      + (isDone ? ' completed' : '')
+      + (!unlocked ? ' locked' : '');
+    const icon = step.type === 'desafio' ? '💻' : step.type === 'escolha' ? '🎨' : '📖';
+    const status = isDone ? '✅' : (unlocked ? icon : '🔒');
+    item.innerHTML = `<span class="status">${status}</span><span class="name">${step.title}</span>`;
+    if (unlocked) item.addEventListener('click', () => selectStep(idx));
+    stepListEl.appendChild(item);
+  });
+
+  const vistoUnlocked = isProfessor || STEPS.every(s => completed.has(s.id));
+  const vistoItem = document.createElement('div');
+  vistoItem.className = 'step-item'
+    + (selectedIndex === STEPS.length ? ' active' : '')
+    + (!vistoUnlocked ? ' locked' : '');
+  vistoItem.innerHTML = `<span class="status">${vistoUnlocked ? '🧑‍🏫' : '🔒'}</span><span class="name">Entrega — Visto do professor</span>`;
+  if (vistoUnlocked) vistoItem.addEventListener('click', () => selectStep(STEPS.length));
+  stepListEl.appendChild(vistoItem);
+
+  const pct = Math.round((completed.size / STEPS.length) * 100);
+  progressFill.style.width = pct + '%';
+  lblStepNum.textContent = Math.min(selectedIndex + 1, STEPS.length + 1);
+}
+
+function selectStep(idx) {
+  if (idx < STEPS.length && !isUnlocked(idx)) return;
+  selectedIndex = idx;
+  renderSidebar();
+  if (idx >= STEPS.length) { renderVisto(); return; }
+  const step = STEPS[idx];
+  if (step.screen) setActiveScreen(step.screen);
+  if (step.type === 'explicacao') renderExplicacao(step);
+  else if (step.type === 'desafio') renderDesafio(step);
+  else if (step.type === 'escolha') renderEscolha(step);
+
+  if (typeof window.reportActivity === 'function') {
+    window.reportActivity('clipzone_construcao', `Construa seu App: ClipZone — ${step.title}`, { step: idx + 1, total: STEPS.length });
+  }
+}
+
+function markDone(id) {
+  completed.add(id);
+  state.completedIds = [...completed];
+  saveState();
+  renderSidebar();
+}
+
+function renderExplicacao(step) {
+  stepContentEl.innerHTML = `
+    <div class="card">
+      <h2>📖 ${step.title}</h2>
+      ${step.corpo}
+      <div class="actions"><button class="btn" id="btnContinuar">Vamos codificar →</button></div>
+    </div>
+  `;
+  document.getElementById('btnContinuar').addEventListener('click', () => {
+    markDone(step.id);
+    const idx = STEPS.findIndex(s => s.id === step.id);
+    if (idx + 1 <= STEPS.length) selectStep(idx + 1);
+  });
+}
+
+function renderDesafio(step) {
+  const already = completed.has(step.id);
+  const savedCode = state.savedCode[step.id] || step.starter;
+  stepContentEl.innerHTML = `
+    <div class="card">
+      <h2>💻 ${step.title}</h2>
+      <div class="desafio-desc">${step.desc}</div>
+      <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
+      <div class="hint-box" id="hintBox">${step.hint}</div>
+      <textarea id="codeInput" spellcheck="false">${savedCode}</textarea>
+      <div class="actions">
+        <button class="btn" id="btnRun">▶ Executar</button>
+        ${already ? '<button class="btn btn-secondary" id="btnNext">Próximo →</button>' : ''}
+        <button class="btn btn-secondary" id="btnSkipStep">⏭️ Pular (professor)</button>
+      </div>
+      <div class="visto-form" id="skipForm" style="display:none;">
+        <label>Token do professor
+          <input type="text" id="skipToken" inputmode="numeric" maxlength="6" autocomplete="off">
+        </label>
+        <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
+        <div class="visto-msg" id="skipMsg" style="display:none;"></div>
+      </div>
+      <div class="console" id="consoleOutput"></div>
+    </div>
+  `;
+  const btnHint = document.getElementById('btnHint');
+  const hintBox = document.getElementById('hintBox');
+  btnHint.addEventListener('click', () => {
+    const showing = hintBox.classList.toggle('show');
+    btnHint.textContent = showing ? '💡 Ocultar dica' : '💡 Ver dica';
+  });
+
+  const codeInput = document.getElementById('codeInput');
+  const consoleOutput = document.getElementById('consoleOutput');
+
+  function logLine(msg, type) {
+    const line = document.createElement('div');
+    line.className = 'line ' + (type || 'info');
+    line.textContent = msg;
+    consoleOutput.appendChild(line);
+  }
+
+  function wireNextButton() {
+    const btnNext = document.getElementById('btnNext');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        const idx = STEPS.findIndex(s => s.id === step.id);
+        selectStep(idx + 1);
+      });
+    }
+  }
+
+  // "Pular (professor)": mesma verificação por token do "Dar visto"
+  // (shared/professor-visto.js) — o professor pula a etapa atual sem o
+  // aluno precisar passar no teste. O app continua funcionando porque
+  // rebuildFromState()/skipDesafioComProfessor() ligam o slot da função
+  // usando step.solution (a referência), não o código (possivelmente
+  // incompleto) do aluno.
+  const btnSkipStep = document.getElementById('btnSkipStep');
+  const skipForm = document.getElementById('skipForm');
+  const skipToken = document.getElementById('skipToken');
+  const btnConfirmSkip = document.getElementById('btnConfirmSkip');
+  const skipMsg = document.getElementById('skipMsg');
+
+  btnSkipStep.addEventListener('click', () => {
+    skipForm.style.display = skipForm.style.display === 'none' ? 'flex' : 'none';
+    skipMsg.style.display = 'none';
+  });
+
+  btnConfirmSkip.addEventListener('click', async () => {
+    const t = skipToken.value;
+    skipMsg.style.display = 'none';
+    if (!t) {
+      skipMsg.className = 'visto-msg erro';
+      skipMsg.textContent = 'Informe o token do professor.';
+      skipMsg.style.display = 'block';
+      return;
+    }
+    btnConfirmSkip.disabled = true;
+    btnConfirmSkip.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificarToken(t)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        skipMsg.className = 'visto-msg erro';
+        skipMsg.textContent = result.erro;
+        skipMsg.style.display = 'block';
+        btnConfirmSkip.disabled = false;
+        btnConfirmSkip.textContent = 'Confirmar e pular';
+        return;
+      }
+      skipDesafioComProfessor(step, result.nome);
+    } catch (e) {
+      skipMsg.className = 'visto-msg erro';
+      skipMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      skipMsg.style.display = 'block';
+      btnConfirmSkip.disabled = false;
+      btnConfirmSkip.textContent = 'Confirmar e pular';
+    }
+  });
+
+  function skipDesafioComProfessor(step, nomeProfessor) {
+    const { fn } = runTests(step, step.solution);
+    if (fn) {
+      slots[step.fnName] = fn;
+      if (step.fnName === 'criarPost') feedState = null;
+      renderPhone();
+    }
+    consoleOutput.innerHTML = '';
+    logLine(`⏭️ Etapa pulada pelo professor (${nomeProfessor}).`, 'success');
+    const wasNew = !completed.has(step.id);
+    markDone(step.id);
+    skipForm.style.display = 'none';
+    if (wasNew && !document.getElementById('btnNext')) {
+      const actionsEl = document.querySelector('#stepContent .actions');
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-secondary';
+      btn.id = 'btnNext';
+      btn.textContent = 'Próximo →';
+      actionsEl.insertBefore(btn, btnSkipStep);
+      wireNextButton();
+    }
+  }
+
+  document.getElementById('btnRun').addEventListener('click', () => {
+    consoleOutput.innerHTML = '';
+    const code = codeInput.value;
+    state.savedCode[step.id] = code;
+    saveState();
+    const { allPass, log, fn } = runTests(step, code);
+    log.forEach(l => logLine(l.msg, l.ok ? 'success' : 'fail'));
+    if (allPass) {
+      slots[step.fnName] = fn;
+      if (step.fnName === 'criarPost') feedState = null;
+      renderPhone();
+      logLine('🏆 Tudo certo! Essa parte já está funcionando no seu app.', 'success');
+      const wasNew = !completed.has(step.id);
+      markDone(step.id);
+      // Sem re-renderizar a tela inteira (isso apagaria o console de
+      // sucesso que acabou de ser escrito) — só injeta o botão Próximo
+      // se ele ainda não existir.
+      if (wasNew && !document.getElementById('btnNext')) {
+        const actionsEl = document.querySelector('#stepContent .actions');
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.id = 'btnNext';
+        btn.textContent = 'Próximo →';
+        actionsEl.appendChild(btn);
+        wireNextButton();
+      }
+    } else {
+      logLine('❌ Ainda não! Ajuste o código e tente de novo.', 'fail');
+    }
+  });
+
+  wireNextButton();
+}
+
+function renderEscolha(step) {
+  const savedId = step.id === 'tema-esc' ? state.temaEscolha : state.iconeEscolha;
+  stepContentEl.innerHTML = `
+    <div class="card">
+      <h2>🎨 ${step.title}</h2>
+      <div class="escolha-grid" id="escolhaGrid"></div>
+      <div class="actions"><button class="btn btn-secondary" id="btnNextEscolha" style="display:${savedId ? 'inline-block' : 'none'};">Próximo →</button></div>
+    </div>
+  `;
+  const grid = document.getElementById('escolhaGrid');
+  step.opcoes.forEach(opt => {
+    const el = document.createElement('div');
+    el.className = 'escolha-opt' + (opt.id === savedId ? ' selected' : '');
+    const swatchColor = opt.tema ? opt.tema.bg : 'var(--panel2)';
+    el.innerHTML = `<div class="escolha-swatch" style="background:${swatchColor};">${opt.emoji}</div><div>${opt.label}</div>`;
+    el.addEventListener('click', () => {
+      if (opt.tema) { tema = opt.tema; state.temaEscolha = opt.id; }
+      if (opt.icone) { likeIcon = opt.icone; state.iconeEscolha = opt.id; }
+      saveState();
+      markDone(step.id);
+      renderPhone();
+      renderEscolha(step);
+    });
+    grid.appendChild(el);
+  });
+  const btnNextEscolha = document.getElementById('btnNextEscolha');
+  if (btnNextEscolha) {
+    btnNextEscolha.addEventListener('click', () => {
+      const idx = STEPS.findIndex(s => s.id === step.id);
+      selectStep(idx + 1);
+    });
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderVisto() {
+  progressFill.style.width = '100%';
+  lblStepNum.textContent = STEPS.length + 1;
+  if (typeof window.reportActivity === 'function') {
+    window.reportActivity('clipzone_construcao', 'Construa seu App: ClipZone — Visto do professor', { step: STEPS.length + 1, total: STEPS.length });
+  }
+
+  const already = loadProgress();
+  if (already && already.completed) {
+    const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+    stepContentEl.innerHTML = `
+      <div class="card visto-box">
+        <h2>✅ App entregue!</h2>
+        <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+      </div>
+    `;
+    return;
+  }
+
+  stepContentEl.innerHTML = `
+    <div class="card visto-box">
+      <h2>🧑‍🏫 Entrega — Visto do professor</h2>
+      <p>Seu app está pronto! Chame o professor, mostre a tela de login validando os campos e a tela inicial com o feed funcionando (curtir um post), e explique como cada função que você escreveu se encaixa no app.</p>
+      <p>Quando ele confirmar que está tudo certo, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+      <div class="visto-form">
+        <label>Token do professor
+          <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+        </label>
+        <button class="btn" id="btnDarVisto">Dar visto</button>
+        <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+      </div>
+    </div>
+  `;
+
+  const btnDarVisto = document.getElementById('btnDarVisto');
+  const vistoMsg = document.getElementById('vistoMsg');
+  btnDarVisto.addEventListener('click', async () => {
+    const t = document.getElementById('vistoToken').value;
+    vistoMsg.style.display = 'none';
+    if (!t) {
+      vistoMsg.className = 'visto-msg erro';
+      vistoMsg.textContent = 'Informe o token do professor.';
+      vistoMsg.style.display = 'block';
+      return;
+    }
+    btnDarVisto.disabled = true;
+    btnDarVisto.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificarToken(t)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = result.erro;
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+        return;
+      }
+      saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+      renderVisto();
+    } catch (e) {
+      vistoMsg.className = 'visto-msg erro';
+      vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      vistoMsg.style.display = 'block';
+      btnDarVisto.disabled = false;
+      btnDarVisto.textContent = 'Dar visto';
+    }
+  });
+}
+
+window.generateGabaritoForGestao = function () {
+  return window.PortalGabarito.generate({
+    title: 'Construa seu App: ClipZone — Gabarito de referência',
+    subtitle: 'Prática · Trilha Programação de Aplicativos · Turma Sistemas',
+    items: STEPS.filter(s => s.type === 'desafio').map((s, i) => ({
+      number: i + 1,
+      title: s.title,
+      prompt: s.desc.replace(/<[^>]+>/g, ''),
+      options: [],
+      correctIndex: 0,
+      answer: `Código de referência (não é a única forma correta):\n${s.solution}`
+    })),
+    fileName: 'clipzone-construcao-gabarito.txt'
+  });
+};
+
+rebuildFromState();
+renderSidebar();
+selectStep(selectedIndex);
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

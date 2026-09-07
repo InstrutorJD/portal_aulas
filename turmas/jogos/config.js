@@ -1,4 +1,6 @@
-// Matérias/trilhas/módulos da turma Jogos Digitais (6 matérias no total).
+// Matérias/trilhas/módulos da turma Jogos Digitais (8 matérias no total,
+// sendo "Comunicação (Engel)" visível só pro aluno adaptado — 7 aparecem
+// pro resto da turma).
 // Consumido por plataforma.html (via window.TURMA_CONFIG) — inclusive pela
 // aba "Gestão" do próprio portal (shared/platform-core.js), que lê isso
 // pra montar as colunas de desempenho por trilha do relatório de notas e a
@@ -926,18 +928,36 @@ window.TURMA_CONFIG_JOGOS = {
         }
       ]
     },
-    // Matéria "Prova" — ainda sem trilhas (conteúdo específico desta turma
-    // entra depois). Toda atividade avaliativa colocada aqui deve usar a
-    // regra "sair da tela = advertência, saiu de novo = bloqueio": inclua
-    // shared/professor-visto.js + shared/exam-proctor.js e chame
-    // window.PortalExamGuard.create()/arm() — mesmo mecanismo já usado em
-    // turmas/sistemas/atividades/modelagem-dados-requisitos-questionario.html
-    // (formato quiz, `{completed:true}`) e prog-depuracao-pratica.html
-    // (formato lista de ids resolvidos, via `isCompleted` customizado em
-    // arm()). Nenhum motor novo é necessário — exam-proctor.js já é
-    // genérico pra isso. Desbloqueio: token de 6 dígitos do professor
-    // (mesmo de "Dar visto"/"Pular etapa", shared/professor-visto.js).
-    { key: 'prova', label: 'Prova', trilhas: [] }
+    {
+      key: 'prova', label: 'Prova',
+      trilhas: [
+        {
+          key: 'prova-final',
+          label: 'Prova Final',
+          desc: 'Avaliação final cobrindo todas as matérias trabalhadas na turma — 20 questões sorteadas de um banco de 60 (teoria e prática), com 5 alternativas embaralhadas e trava anti-saída durante a prova.',
+          // TODO(professor): capacidade PROVISÓRIA — esta prova é somativa
+          // (cobre várias capacidades de várias matérias ao mesmo tempo),
+          // não uma única capacidade MSEP específica. Ajuste esse texto se
+          // a coordenação pedir um enquadramento formal diferente.
+          capacidade: 'Avaliação somativa do conjunto de capacidades trabalhadas nas matérias do curso.',
+          modules: [
+            {
+              // Mesmo mecanismo de turmas/sistemas/atividades/prova-sistemas.html:
+              // uma única tentativa oficial (sem "tentar de novo"), pontuação
+              // final registrada pro professor conferir/lançar nota na
+              // Gestão, e trava "sair da tela = advertência, saiu de novo =
+              // bloqueio" via shared/exam-proctor.js. Desbloqueio: token de
+              // 6 dígitos do professor (shared/professor-visto.js).
+              key: 'prova', title: 'Prova — Turma Jogos Digitais',
+              desc: '20 questões (sorteadas de um banco de 60) cobrindo Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.',
+              icon: '📋', src: 'atividades/prova-jogos.html',
+              progressKey: 'prova_jogos_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        }
+      ]
+    }
   ],
 
   // Insígnias da trilha "Curso de Jogos Digitais" (ver aba Perfil, só

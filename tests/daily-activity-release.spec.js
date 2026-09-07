@@ -187,6 +187,7 @@ test.describe('Liberação diária — visão do aluno', () => {
 
       localStorage.setItem(`vida_metas_carreira_pratica_progress_${user}`, JSON.stringify([1]));
       localStorage.setItem(`mundo_comprometimento_pratica_progress_${user}`, JSON.stringify([1]));
+      localStorage.setItem(`prova_jogos_progress_${user}`, JSON.stringify({ completed: true, correctCount: 20, total: 20 }));
     }, 'breno.silva80');
 
     await page.goto(ALUNO_URL);
