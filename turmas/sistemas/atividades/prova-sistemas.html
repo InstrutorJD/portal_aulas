@@ -198,11 +198,11 @@
       materia: 'Banco de Dados — SQL',
       prompt: 'Você precisa de um relatório cruzando funcionários com o departamento de cada um, informação espalhada em duas tabelas. Qual comando resolve isso?',
       options: [
-        'SELECT * FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id;',
-        'SELECT * FROM funcionarios WHERE departamentos.id = departamento_id;',
-        'SELECT * FROM funcionarios, departamentos ORDER BY id;',
-        'UPDATE funcionarios SET departamento_id = departamentos.id;',
-        'SELECT * FROM funcionarios GROUP BY departamentos.nome;'
+        "SELECT * FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id;",
+        "SELECT * FROM funcionarios WHERE departamentos.id = funcionarios.departamento_id;",
+        "SELECT * FROM funcionarios, departamentos ORDER BY funcionarios.nome, departamentos.nome;",
+        "UPDATE funcionarios SET departamento_id = departamentos.id WHERE funcionarios.id = 1;",
+        "SELECT * FROM funcionarios GROUP BY departamentos.nome ORDER BY funcionarios.nome;"
       ],
       correctIndex: 0
     },
@@ -246,11 +246,11 @@
       materia: 'Banco de Dados — Conexão com Supabase',
       prompt: 'No projeto TikTak, mesmo com a chave pública (anon) certa no código, o SELECT na tabela usuarios não trazia dado nenhum até uma policy de leitura ser criada. Por que isso acontecia?',
       options: [
-        'Sem RLS habilitado e sem nenhuma policy, o banco recusa o acesso pela Data API, mesmo com a chave certa',
-        'A chave pública (anon) nunca consegue fazer nenhum tipo de SELECT, em nenhuma situação',
-        'A tabela usuarios só aceita conexões vindas do próprio painel do Supabase',
-        'Faltava reiniciar o servidor do Supabase depois de criar a tabela',
-        'O RLS só afeta comandos INSERT, nunca comandos SELECT'
+        "Sem RLS habilitado e sem nenhuma policy, o banco recusa o acesso pela Data API, mesmo com a chave certa",
+        "A chave pública (anon) nunca consegue fazer nenhum tipo de SELECT, em absolutamente nenhuma situação possível",
+        "A tabela usuarios só aceita conexões vindas diretamente do próprio painel administrativo do Supabase",
+        "Faltava reiniciar o servidor inteiro do Supabase depois de ter criado a tabela usuarios",
+        "O RLS do Supabase só afeta comandos INSERT e UPDATE, nunca chega a afetar comandos SELECT"
       ],
       correctIndex: 0
     },
@@ -260,11 +260,11 @@
       materia: 'Dev Sistemas 1 — Ferramentas',
       prompt: 'Um bug é difícil de achar só lendo o código. Em vez de espalhar console.log por toda parte, uma técnica mais precisa é usar:',
       options: [
-        'Um breakpoint, que pausa a execução numa linha específica pra inspecionar as variáveis naquele momento',
-        'Um peer review, que só acontece depois que o código já está pronto',
-        'Um scaffold, que gera a estrutura de pastas de um projeto novo',
-        'Um dashboard, que resume dados em gráficos e números',
-        'Uma CLI, que só serve pra iniciar um projeto do zero'
+        "Um breakpoint, que pausa a execução numa linha específica pra inspecionar as variáveis naquele momento",
+        "Um peer review, que só acontece bem depois que o código inteiro já está pronto e finalizado",
+        "Um scaffold, que apenas gera a estrutura inicial de pastas de um projeto totalmente novo",
+        "Um dashboard, que apenas resume dados do sistema em gráficos e números pra visualização",
+        "Uma CLI, que só serve pra iniciar comandos de um projeto do zero, sem inspecionar nada"
       ],
       correctIndex: 0
     },
@@ -272,11 +272,11 @@
       materia: 'Dev Sistemas 1 — Ferramentas',
       prompt: 'Por que o CodePen consegue mostrar o resultado de um código JavaScript instantaneamente, sem nenhuma etapa de build antes?',
       options: [
-        'Porque JavaScript é uma linguagem interpretada, que roda direto sem precisar compilar antes',
-        'Porque JavaScript é uma linguagem compilada, que já vem pronta de fábrica',
-        'Porque o CodePen faz a compilação em segundo plano, escondida do usuário',
-        'Porque todo código JavaScript precisa de um framework pra rodar',
-        'Porque o navegador ignora completamente a etapa de execução'
+        "Porque JavaScript é uma linguagem interpretada, que roda direto sem precisar compilar antes",
+        "Porque JavaScript é uma linguagem compilada, que já vem pronta de fábrica sem nenhum processamento",
+        "Porque o CodePen faz toda a compilação em segundo plano, de forma escondida do usuário final",
+        "Porque todo código JavaScript sempre precisa obrigatoriamente de um framework externo pra rodar",
+        "Porque o navegador simplesmente ignora por completo a etapa de execução do código"
       ],
       correctIndex: 0
     },
@@ -302,11 +302,11 @@
       materia: 'Dev Sistemas 1 — Ferramentas',
       prompt: 'Qual é a principal diferença entre uma BIBLIOTECA e um FRAMEWORK?',
       options: [
-        'A biblioteca você chama quando precisa; o framework define a estrutura geral e você constrói dentro dela',
-        'Biblioteca e framework são exatamente a mesma coisa, só com nomes diferentes',
-        'Framework só existe pra linguagens compiladas, biblioteca só pra interpretadas',
-        'Biblioteca sempre precisa de uma CLI pra funcionar; framework nunca precisa',
-        'Framework é sempre mais leve e rápido que qualquer biblioteca'
+        "A biblioteca você chama quando precisa; o framework define a estrutura geral e você constrói dentro dela",
+        "Biblioteca e framework são exatamente a mesma coisa, só recebem nomes diferentes por convenção",
+        "Framework só existe pra linguagens compiladas; biblioteca só existe pra linguagens interpretadas",
+        "Biblioteca sempre precisa de uma CLI própria pra funcionar; framework nunca precisa de nenhuma",
+        "Framework é sempre mais leve e mais rápido de rodar do que qualquer biblioteca existente"
       ],
       correctIndex: 0
     },
@@ -314,11 +314,11 @@
       materia: 'Dev Sistemas 1 — Ferramentas',
       prompt: 'Num framework moderno de interface, um componente passa por um ciclo de vida. Qual é a sequência correta desse ciclo?',
       options: [
-        'É criado (montado), pode ser atualizado várias vezes, e eventualmente é removido (desmontado)',
-        'É removido, depois criado, e nunca mais é atualizado',
-        'É atualizado antes mesmo de existir, e só depois é criado',
-        'Só existe o momento de criação — componentes nunca são removidos',
-        'É criado e removido ao mesmo tempo, sempre'
+        "É criado (montado), pode ser atualizado várias vezes, e eventualmente é removido (desmontado)",
+        "É removido da tela primeiro, depois criado do zero, e nunca mais chega a ser atualizado",
+        "É atualizado antes mesmo de existir na tela, e só bem depois é que chega a ser criado",
+        "Só existe o momento de criação do componente — componentes nunca chegam a ser removidos",
+        "É criado e removido da tela ao mesmo tempo, sempre, em toda situação possível"
       ],
       correctIndex: 0
     },
@@ -326,11 +326,11 @@
       materia: 'Dev Sistemas 1 — Requisitos',
       prompt: '"O sistema deve responder em menos de 2 segundos, mesmo com muitos usuários simultâneos." Que tipo de requisito é esse?',
       options: [
-        'Requisito não funcional, porque descreve uma qualidade do sistema, não uma ação específica',
-        'Requisito funcional, porque descreve uma ação concreta que o sistema executa',
-        'Não é um requisito de verdade, é só uma sugestão opcional',
-        'Requisito funcional, só porque menciona um número (2 segundos)',
-        'Requisito não funcional apenas depois que o sistema já está pronto'
+        "Requisito não funcional, porque descreve uma qualidade do sistema, não uma ação específica",
+        "Requisito funcional, porque descreve uma ação bem concreta que o próprio sistema executa",
+        "Não é um requisito de verdade — é apenas uma sugestão totalmente opcional, sem importância",
+        "Requisito funcional, só porque a frase menciona um número específico (os 2 segundos)",
+        "Requisito não funcional, mas apenas depois que o sistema inteiro já está pronto e no ar"
       ],
       correctIndex: 0
     },
@@ -376,11 +376,11 @@
       materia: 'Redes — Conexão e Endereçamento',
       prompt: 'Em vez de escrever a máscara de sub-rede como 255.255.255.0, um técnico escreveu /24. O que essa notação representa?',
       options: [
-        'A notação CIDR — o número indica quantos dos 32 bits do endereço pertencem à parte de REDE',
-        'O número da porta usada pela conexão',
-        'A quantidade de dispositivos conectados naquele momento',
-        'A versão do protocolo IP sendo usada (IPv4 ou IPv6)',
-        'O tempo, em segundos, que uma conexão pode ficar ociosa'
+        "A notação CIDR — o número indica quantos dos 32 bits do endereço pertencem à parte de REDE",
+        "O número da porta específica usada naquele momento pela conexão de rede",
+        "A quantidade exata de dispositivos conectados naquele instante à mesma rede",
+        "A versão do protocolo IP que está sendo usada no momento (IPv4 ou IPv6)",
+        "O tempo, em segundos, que uma conexão pode permanecer ociosa antes de cair"
       ],
       correctIndex: 0
     },
@@ -388,11 +388,11 @@
       materia: 'Redes — Resolução de Problemas',
       prompt: 'Ao investigar por que um computador perdeu a conexão de rede, qual é a ORDEM correta de diagnóstico recomendada?',
       options: [
-        'Primeiro checar a camada física (cabo, luz de link), depois a camada lógica (IP, máscara, gateway)',
-        'Primeiro reinstalar o sistema operacional inteiro, sempre',
-        'Primeiro checar a camada lógica, e só depois olhar se o cabo está conectado',
-        'A ordem não importa, qualquer uma funciona igual',
-        'Primeiro trocar o roteador, antes de checar qualquer outra coisa'
+        "Primeiro checar a camada física (cabo, luz de link), depois a camada lógica (IP, máscara, gateway)",
+        "Primeiro reinstalar o sistema operacional inteiro do computador, sempre, antes de mais nada",
+        "Primeiro checar a camada lógica, e só bem depois olhar se o cabo está mesmo conectado",
+        "A ordem de diagnóstico não importa nesse caso — qualquer sequência funciona igual",
+        "Primeiro trocar o roteador de casa, antes mesmo de checar qualquer outra coisa"
       ],
       correctIndex: 0
     },
@@ -450,11 +450,11 @@
       materia: 'Internet das Coisas — Conectividade',
       prompt: 'O controle remoto do drone DJI Mini 4 Pro conversa com o drone nas mesmas faixas de frequência do WiFi (2,4 GHz e 5,8 GHz), mas não usa o protocolo WiFi comum. Por quê?',
       options: [
-        'Porque a DJI criou um protocolo de rádio próprio (O4/OcuSync), otimizado pra mais alcance e menos interferência do que o WiFi doméstico',
-        'Porque essas frequências são proibidas para uso de WiFi',
-        'Porque WiFi não consegue transmitir nenhum tipo de vídeo',
-        'Porque o drone não usa nenhum tipo de onda de rádio',
-        'Porque o WiFi só funciona em ambientes fechados, nunca ao ar livre'
+        "Porque a DJI criou um protocolo de rádio próprio (O4/OcuSync), otimizado pra mais alcance e menos interferência",
+        "Porque essas faixas de frequência específicas são totalmente proibidas para qualquer uso de WiFi comum",
+        "Porque o protocolo WiFi comum não consegue transmitir absolutamente nenhum tipo de vídeo em tempo real",
+        "Porque o drone, na verdade, não usa nenhum tipo de onda de rádio pra se comunicar com o controle",
+        "Porque o WiFi doméstico só funciona dentro de ambientes fechados, nunca em espaços ao ar livre"
       ],
       correctIndex: 0
     },
@@ -508,11 +508,11 @@
       materia: 'Modelagem — Dados e Requisitos',
       prompt: 'Qual é a diferença entre chave PRIMÁRIA e chave ESTRANGEIRA?',
       options: [
-        'A primária identifica cada linha de forma única na própria tabela; a estrangeira referencia a chave primária de OUTRA tabela',
-        'As duas fazem exatamente a mesma coisa, só com nomes diferentes',
-        'A estrangeira identifica a própria tabela; a primária referencia outra tabela',
-        'Só a chave estrangeira pode se repetir; a primária nunca pode existir duas vezes',
-        'Chave primária só existe em bancos de dados muito grandes'
+        "A primária identifica cada linha de forma única na própria tabela; a estrangeira referencia a chave primária de outra",
+        "As duas fazem exatamente a mesma coisa dentro do banco, só recebem nomes diferentes por convenção",
+        "A estrangeira identifica a própria tabela de forma única e exclusiva; a primária referencia outra tabela",
+        "Só a chave estrangeira pode se repetir dentro da tabela; a primária nunca pode existir duas vezes",
+        "Chave primária só costuma existir em bancos de dados considerados muito grandes e complexos de verdade"
       ],
       correctIndex: 0
     },
@@ -520,11 +520,11 @@
       materia: 'Modelagem — Dados e Requisitos',
       prompt: "Qual das opções está escrita no formato 'user story' (Como [usuário], eu quero [ação], para [motivo])?",
       options: [
-        '"Como cliente, eu quero ver meu histórico de compras, para acompanhar meus gastos."',
-        '"O sistema possui doze tabelas no banco de dados."',
-        '"Este é o requisito número sete da lista."',
-        '"O servidor fica hospedado na nuvem."',
-        '"A tela de login tem duas caixas de texto."'
+        "\"Como cliente, eu quero ver meu histórico de compras, para acompanhar meus gastos.\"",
+        "\"O sistema possui exatamente doze tabelas diferentes dentro do banco de dados.\"",
+        "\"Este aqui é o requisito de número sete dentro da lista completa de requisitos.\"",
+        "\"O servidor do sistema fica hospedado permanentemente dentro da nuvem.\"",
+        "\"A tela de login do sistema possui duas caixas de texto e um botão.\""
       ],
       correctIndex: 0
     },
@@ -546,11 +546,11 @@
       materia: 'Projeto de Vida — Autoconhecimento',
       prompt: 'Qual opção descreve corretamente a diferença entre TALENTO e HABILIDADE?',
       options: [
-        'Talento é algo que já vem naturalmente fácil; habilidade é um talento treinado com prática',
-        'Talento e habilidade são exatamente a mesma coisa',
-        'Habilidade vem naturalmente fácil; talento precisa de anos de treino',
-        'Talento só existe em atividades esportivas',
-        'Habilidade é sempre mais rara do que talento'
+        "Talento é algo que já vem naturalmente fácil; habilidade é um talento treinado com prática",
+        "Talento e habilidade são a mesma coisa, só mudam de nome dependendo de quem está explicando",
+        "Habilidade vem naturalmente fácil, sem esforço; talento só se constrói com anos de treino árduo",
+        "Talento só existe em atividades esportivas, nunca em áreas como música, arte ou tecnologia",
+        "Habilidade é sempre mais rara e mais valiosa do que qualquer tipo de talento natural"
       ],
       correctIndex: 0
     },
@@ -558,11 +558,11 @@
       materia: 'Projeto de Vida — Autoconhecimento',
       prompt: 'Por que os motivadores PESSOAIS de alguém às vezes são diferentes dos motivadores PROFISSIONAIS?',
       options: [
-        'Porque o que dá energia na vida como um todo nem sempre é o mesmo que motiva no ambiente de trabalho',
-        'Porque uma pessoa só pode ter um tipo de motivador na vida inteira',
-        'Porque motivadores profissionais sempre anulam os pessoais',
-        'Porque isso nunca acontece — os dois são sempre idênticos',
-        'Porque motivadores pessoais só existem depois da aposentadoria'
+        "Porque o que dá energia na vida como um todo nem sempre é o mesmo que motiva no ambiente de trabalho",
+        "Porque uma pessoa só pode ter um único tipo de motivador durante toda a vida, sem nunca mudar",
+        "Porque motivadores profissionais sempre anulam por completo qualquer motivador pessoal que exista",
+        "Porque isso nunca acontece de verdade — os dois tipos de motivador são sempre idênticos",
+        "Porque motivadores pessoais só passam a existir depois que a pessoa se aposenta do trabalho"
       ],
       correctIndex: 0
     },
@@ -582,11 +582,11 @@
       materia: 'Projeto de Vida — Cidadania',
       prompt: 'Respeitar filas e evitar barulho excessivo à noite são exemplos de:',
       options: [
-        'Urbanidade — normas de boa convivência do dia a dia, mesmo sem serem leis escritas',
-        'Requisitos funcionais de um sistema',
-        'Cardinalidade de um relacionamento',
-        'Chaves estrangeiras de uma tabela',
-        'Tecnologias habilitadoras da Indústria 4.0'
+        "Urbanidade — normas de boa convivência do dia a dia, mesmo sem serem leis escritas",
+        "Requisitos funcionais de um sistema de software em desenvolvimento",
+        "Cardinalidade de um relacionamento dentro de um modelo de banco de dados",
+        "Chaves estrangeiras usadas para conectar duas tabelas de um banco de dados",
+        "Tecnologias habilitadoras associadas ao conceito de Indústria 4.0"
       ],
       correctIndex: 0
     },
@@ -606,11 +606,11 @@
       materia: 'Projeto de Vida — Equipe',
       prompt: 'Numa equipe organizando um evento, definir que cada pessoa assume uma função clara (um cuida da logística, outro da comunicação) ajuda a evitar principalmente:',
       options: [
-        'Duas pessoas fazendo a mesma coisa por engano, ou tarefas importantes sem ninguém responsável',
-        'Que a equipe termine o projeto rápido demais',
-        'Que o evento tenha muitos participantes',
-        'Que a equipe precise se comunicar entre si',
-        'Que exista qualquer tipo de compromisso com metas'
+        "Duas pessoas fazendo a mesma coisa por engano, ou tarefas importantes sem ninguém responsável",
+        "Que a equipe consiga terminar o projeto rápido demais, antes do prazo combinado",
+        "Que o evento organizado pela equipe tenha um número muito grande de participantes",
+        "Que a equipe precise se comunicar com frequência durante todo o projeto",
+        "Que exista qualquer tipo de compromisso da equipe com metas e prazos definidos"
       ],
       correctIndex: 0
     },
@@ -638,11 +638,11 @@
       materia: 'Mundo do Trabalho — Indústria 4.0',
       prompt: 'O que caracteriza a Indústria 4.0, diferente das revoluções industriais anteriores?',
       options: [
-        'Máquinas conectadas entre si e à internet em tempo real, formando sistemas ciber-físicos que decidem com base em dados',
-        'O uso da eletricidade nas fábricas pela primeira vez',
-        'A substituição total da força humana pela máquina a vapor',
-        'O surgimento dos primeiros grandes sindicatos de trabalhadores',
-        'A linha de montagem com produção em massa, pela primeira vez'
+        "Máquinas conectadas entre si e à internet em tempo real, formando sistemas ciber-físicos que decidem com base em dados",
+        "O uso da eletricidade dentro das fábricas pela primeira vez ao longo da história da indústria moderna",
+        "A substituição total da força humana de trabalho pela máquina a vapor movida por carvão nas fábricas",
+        "O surgimento dos primeiros grandes sindicatos organizados de trabalhadores dentro das fábricas industriais",
+        "A linha de montagem com produção em massa surgindo pela primeira vez na história da indústria"
       ],
       correctIndex: 0
     },
@@ -686,11 +686,11 @@
       materia: 'Mundo do Trabalho — Trabalho em Equipe',
       prompt: 'Numa gestão de conflitos construtiva, em vez de dizer "você errou", a pergunta mais adequada é:',
       options: [
-        '"O que podemos ajustar nesse processo pra isso não acontecer de novo?"',
-        '"Por que você é sempre assim?"',
-        '"Quem vai levar a culpa por isso?"',
-        '"Isso nunca vai ser resolvido mesmo."',
-        '"Não vamos falar mais sobre esse assunto."'
+        "\"O que podemos ajustar nesse processo pra isso não acontecer de novo?\"",
+        "\"Por que você é sempre desse jeito, sempre errando as mesmas coisas?\"",
+        "\"Quem exatamente vai levar a culpa oficial por esse erro que aconteceu?\"",
+        "\"Isso aqui nunca vai ter jeito de ser resolvido mesmo, então nem adianta.\"",
+        "\"Prefiro não falar mais sobre esse assunto com você nunca mais.\""
       ],
       correctIndex: 0
     },
@@ -706,11 +706,11 @@
       materia: 'Prog. de Aplicativos — Depuração',
       prompt: 'Qual é a diferença entre = e == (ou ===) em JavaScript?',
       options: [
-        '= atribui um valor a uma variável; == ou === comparam dois valores',
-        'Os dois fazem exatamente a mesma coisa',
-        '= compara valores; == atribui um valor',
-        'Só == existe em JavaScript, = não é usado',
-        '= só funciona dentro de um laço for'
+        "= atribui um valor a uma variável; == ou === comparam dois valores entre si",
+        "Os dois fazem exatamente a mesma coisa dentro do JavaScript, sem nenhuma diferença real",
+        "= serve pra comparar dois valores; == serve pra atribuir um valor a uma variável",
+        "Só o == existe de verdade em JavaScript — o sinal = sozinho nunca chega a ser usado",
+        "O sinal = só funciona corretamente quando está dentro de um laço for"
       ],
       correctIndex: 0
     },
@@ -718,11 +718,11 @@
       materia: 'Prog. de Aplicativos — Depuração',
       prompt: 'Dentro de um switch, o que acontece se você esquecer o break depois de um case?',
       options: [
-        'A execução continua rodando os próximos case também, um atrás do outro',
-        'O programa para de rodar imediatamente',
-        'Nada muda, break nunca faz diferença',
-        'Só o primeiro case é executado, os outros são sempre ignorados',
-        'O switch inteiro é ignorado sem o break'
+        "A execução continua rodando os próximos case também, um atrás do outro, sem parar",
+        "O programa inteiro para de rodar imediatamente, sem executar mais nenhuma linha",
+        "Nada muda no resultado final — o break nunca chega a fazer diferença nenhuma",
+        "Só o primeiro case escrito é executado, os outros são sempre ignorados por completo",
+        "O switch inteiro é ignorado do início ao fim sempre que falta o break"
       ],
       correctIndex: 0
     },
@@ -730,11 +730,11 @@
       materia: 'Prog. de Aplicativos — Depuração',
       prompt: 'Por que chamar funcao(a, b) pode dar um resultado diferente de funcao(b, a)?',
       options: [
-        'Porque os parâmetros são preenchidos pela POSIÇÃO em que os argumentos são passados, não pelo nome',
-        'Porque JavaScript sempre ordena os argumentos automaticamente em ordem alfabética',
-        'Porque isso nunca faz diferença nenhuma, em nenhum caso',
-        'Porque funções só aceitam um parâmetro por vez',
-        'Porque a ordem dos parâmetros muda o nome da função'
+        "Porque os parâmetros são preenchidos pela POSIÇÃO em que os argumentos são passados, não pelo nome",
+        "Porque o JavaScript sempre reordena os argumentos automaticamente em ordem alfabética",
+        "Porque isso nunca chega a fazer diferença nenhuma, em absolutamente nenhum caso possível",
+        "Porque as funções em JavaScript só conseguem aceitar um único parâmetro por vez",
+        "Porque a ordem dos parâmetros muda, na verdade, o próprio nome da função"
       ],
       correctIndex: 0
     },
@@ -742,11 +742,11 @@
       materia: 'Prog. de Aplicativos — Depuração',
       prompt: 'Numa cadeia de if / else if / else if, o JavaScript testa as condições em qual ordem?',
       options: [
-        'Na ordem escrita, parando na PRIMEIRA condição que for verdadeira',
-        'Sempre da última condição pra primeira',
-        'Em ordem aleatória a cada execução',
-        'Testa todas ao mesmo tempo, sempre',
-        'Só testa a última condição escrita'
+        "Na ordem escrita, parando na PRIMEIRA condição que for encontrada verdadeira",
+        "Sempre testando da última condição escrita até chegar na primeira delas",
+        "Em uma ordem completamente aleatória, sorteada de novo a cada execução",
+        "Testando todas as condições ao mesmo tempo, em paralelo, sempre",
+        "Testando apenas a última condição escrita, ignorando todo o resto"
       ],
       correctIndex: 0
     },
@@ -754,11 +754,11 @@
       materia: 'Prog. de Aplicativos — Depuração',
       prompt: 'No PixelCode, qual é o fluxo correto pra escrever e testar um código JavaScript?',
       options: [
-        'Escrever o código no editor e clicar em "▶ Executar" pra ver o resultado no Console',
-        'O código já roda sozinho, sem precisar clicar em nada',
-        'É preciso instalar um programa separado no computador antes de usar',
-        'O Console mostra o código, e o editor mostra o resultado',
-        'Só é possível rodar o código depois de fechar e abrir o PixelCode de novo'
+        "Escrever o código no editor e clicar em \"▶ Executar\" pra ver o resultado no Console",
+        "O código já roda sozinho na tela, automaticamente, sem precisar clicar em nada",
+        "É preciso instalar um programa separado no computador antes de conseguir usar",
+        "O Console mostra o código digitado, e o editor mostra o resultado da execução",
+        "Só é possível rodar o código depois de fechar e abrir o PixelCode de novo"
       ],
       correctIndex: 0
     },
@@ -772,11 +772,11 @@
       materia: 'Prog. de Aplicativos — ClipZone',
       prompt: 'Ao curtir um post no ClipZone, a função curtir(post) não deve ALTERAR o post recebido — ela devolve um post novo, com curtidas+1. Por que essa prática (imutabilidade) é recomendada?',
       options: [
-        'Porque mudar o próprio objeto recebido pode causar efeitos colaterais inesperados em outras partes do código que ainda usam aquele objeto',
-        'Porque JavaScript não permite alterar objetos, nunca',
-        'Porque é sempre mais rápido criar um objeto novo do que alterar um existente',
-        'Porque só funções sem parâmetro podem alterar objetos',
-        'Porque o teste automático sempre falha se um objeto for alterado'
+        "Porque mudar o próprio objeto recebido pode causar efeitos colaterais em outras partes do código que ainda o usam",
+        "Porque o JavaScript, como linguagem, nunca permite alterar nenhum tipo de objeto de forma nenhuma",
+        "Porque é sempre mais rápido criar um objeto totalmente novo do que alterar um já existente",
+        "Porque apenas funções que não recebem nenhum parâmetro têm permissão de alterar objetos recebidos",
+        "Porque o teste automático do projeto sempre falha quando qualquer objeto recebido é alterado"
       ],
       correctIndex: 0
     },
@@ -784,11 +784,11 @@
       materia: 'Prog. de Aplicativos — ClipZone',
       prompt: "No ClipZone, a função formatarCurtidas abrevia números grandes (ex: 1500 vira '1.5K'). Por que esse tipo de abreviação é comum em apps de rede social de verdade?",
       options: [
-        'Porque mostrar o número exato completo (como 2350) polui a tela, e a versão abreviada é mais fácil de ler rapidamente',
-        'Porque números grandes trocam o app inteiro de idioma',
-        'Porque o JavaScript não consegue mostrar números maiores que 999',
-        'Porque abreviar sempre deixa o número mais preciso',
-        'Porque é uma exigência do protocolo HTTP'
+        "Porque mostrar o número exato completo (como 2350) polui a tela, e a versão abreviada é mais fácil de ler",
+        "Porque números grandes, quando aparecem na tela, trocam o idioma inteiro do aplicativo",
+        "Porque o JavaScript, como linguagem de programação, não consegue exibir números maiores que 999",
+        "Porque abreviar um número sempre deixa o valor mostrado mais preciso do que o original",
+        "Porque abreviar números grandes é uma exigência obrigatória do próprio protocolo HTTP"
       ],
       correctIndex: 0
     }
