@@ -192,31 +192,31 @@
   const CHALLENGES = [
     {
       id: 1,
-      title: 'Sensor em fazenda isolada',
-      icon: '🌾',
-      explanation: 'O satélite é a opção certa quando não existe NENHUMA infraestrutura terrestre (torre de celular, roteador) por perto — o alcance dele é o único que resolve, mesmo custando mais por dado enviado.',
-      desc: 'Você precisa monitorar um sensor de umidade do solo numa <b>fazenda muito isolada</b>, sem torre de celular nem roteador WiFi por perto, alimentado só por uma placa solar. Qual tecnologia de conectividade resolve isso?',
-      hint: 'Pense em qual tecnologia funciona mesmo sem NENHUMA infraestrutura terrestre por perto.',
-      options: ['Conectividade via satélite', 'WiFi', 'Bluetooth', 'Cabo de rede (Ethernet)'],
+      title: 'GPS do drone em voo',
+      icon: '🛰️',
+      explanation: 'O GPS (junto com GLONASS e Galileo) é recebido direto de satélites em órbita — funciona em praticamente qualquer lugar aberto, sem depender de nenhuma infraestrutura terrestre por perto, exatamente o que o drone precisa pra ficar paradinho no ar sozinho.',
+      desc: 'Durante o voo do <b>DJI Mini 4 Pro</b>, ele precisa saber sua posição exata pra ficar paradinho no ar (hover) sozinho, mesmo num campo aberto, longe de qualquer roteador ou torre de celular. Qual tecnologia o drone usa pra isso?',
+      hint: 'Pense em qual tecnologia funciona mesmo sem NENHUMA infraestrutura terrestre por perto — a mesma que orienta um GPS de carro.',
+      options: ['Conectividade via satélite (GPS/GNSS)', 'WiFi', 'Bluetooth', 'Cabo de rede (Ethernet)'],
       correctIndex: 0
     },
     {
       id: 2,
-      title: 'Pulseira de frequência cardíaca',
-      icon: '⌚',
-      explanation: 'Bluetooth (BLE) foi feito exatamente pra isso: curtíssimo alcance entre o sensor e um dispositivo próximo, com consumo de energia baixíssimo — ideal pra baterias pequenas que precisam durar dias.',
-      desc: 'Uma pulseira inteligente envia a frequência cardíaca pro celular do usuário, que fica sempre a <b>poucos metros</b> de distância. A bateria da pulseira precisa durar vários dias sem recarregar. Qual tecnologia é a mais indicada?',
-      hint: 'Curto alcance + baixíssimo consumo de energia — qual das opções tem exatamente esse perfil?',
-      options: ['Bluetooth (BLE)', 'WiFi', 'Conectividade via satélite', 'Rádio AM/FM'],
+      title: 'Fone de ouvido do instrutor',
+      icon: '🎧',
+      explanation: 'Bluetooth (BLE) foi feito exatamente pra isso: curtíssimo alcance entre dois dispositivos próximos, com consumo de energia baixo — ideal pra acessórios pessoais com bateria pequena.',
+      desc: 'Antes do voo, o instrutor empareia um fone de ouvido sem fio com o celular pra dar as instruções da aula sem precisar gritar. O fone fica sempre a poucos metros dele e a bateria precisa durar a aula inteira. Qual tecnologia é a mais indicada?',
+      hint: 'Curto alcance + baixo consumo de energia — qual das opções tem exatamente esse perfil?',
+      options: ['Bluetooth', 'WiFi', 'Conectividade via satélite', 'Rádio AM/FM'],
       correctIndex: 0
     },
     {
       id: 3,
-      title: 'Câmera de segurança residencial',
-      icon: '📷',
-      explanation: 'Com roteador já disponível no local e a necessidade de banda alta pra vídeo contínuo, o WiFi é a escolha certa — o Bluetooth não teria banda suficiente, e o satélite seria caro e desnecessário.',
-      desc: 'Uma câmera de segurança precisa transmitir vídeo em tempo real quase o dia inteiro pro <b>roteador que já existe na casa</b>. Qual tecnologia de conectividade é a mais indicada?',
-      hint: 'Já existe roteador no local, e o volume de dados (vídeo) é grande.',
+      title: 'Transferir fotos do drone pro celular',
+      icon: '📸',
+      explanation: 'Com o drone parado e por perto, o WiFi dá a banda necessária pra transferir arquivos de foto/vídeo (que são pesados) rapidamente — o Bluetooth seria lento demais pra isso, e o satélite não faz sentido aqui.',
+      desc: 'O <b>Mini 4 Pro</b> já pousou depois do voo. Você quer puxar as fotos e vídeos gravados direto da memória do drone pro celular, sem tirar o cartão de memória. Qual tecnologia de conectividade é a mais indicada nessa hora?',
+      hint: 'O drone está parado e por perto — e os arquivos de foto/vídeo são pesados.',
       options: ['WiFi', 'Bluetooth', 'Conectividade via satélite', 'Rádio frequência simples (RF)'],
       correctIndex: 0
     },
@@ -232,22 +232,62 @@
     },
     {
       id: 5,
-      title: 'Fechadura inteligente',
+      title: 'Fechadura da sala onde o drone fica guardado',
       icon: '🔐',
-      explanation: 'De novo o perfil do Bluetooth (BLE): curtíssimo alcance (só quando o morador está bem perto) e consumo de energia mínimo, essencial pra um dispositivo que funciona a pilha por meses.',
-      desc: 'Uma fechadura inteligente só precisa "conversar" com o smartphone do morador quando ele está a <b>poucos metros da porta</b>, com o menor consumo de energia possível — ela funciona a pilha. Qual tecnologia é a mais indicada?',
+      explanation: 'De novo o perfil do Bluetooth (BLE): curtíssimo alcance (só quando o professor está bem perto) e consumo de energia mínimo, essencial pra um dispositivo que funciona a pilha por meses.',
+      desc: 'A sala onde o <b>Mini 4 Pro</b> fica guardado tem uma fechadura inteligente que só precisa "conversar" com o smartphone do professor quando ele está a <b>poucos metros da porta</b>, com o menor consumo de energia possível — ela funciona a pilha. Qual tecnologia é a mais indicada?',
       hint: 'Curtíssimo alcance + pilha que precisa durar meses: qual tecnologia já resolveu esse mesmo problema num chamado anterior?',
       options: ['Bluetooth (BLE)', 'WiFi', 'Conectividade via satélite', 'Cabo de rede (Ethernet)'],
       correctIndex: 0
     },
     {
       id: 6,
-      title: 'Drone em treinamento',
+      title: 'Vídeo e comandos de voo do Mini 4 Pro',
       icon: '🚁',
-      explanation: 'Vídeo em tempo real exige banda alta, e o piloto está sempre perto do drone — o mesmo cenário da câmera de segurança residencial, só que voando.',
-      desc: 'Um drone de treinamento (sensores de GPS, IMU e câmera a bordo) precisa transmitir o vídeo da câmera em tempo real pro celular do piloto, que fica sempre por perto. Qual tecnologia ele costuma usar pra isso?',
-      hint: 'Banda alta + curta/média distância — qual das tecnologias já resolveu esse mesmo perfil antes, na câmera de segurança?',
-      options: ['WiFi', 'Bluetooth', 'Conectividade via satélite', 'Cabo de rede (Ethernet)'],
+      explanation: 'O Mini 4 Pro usa o O4 (OcuSync 4), um link de rádio proprietário da DJI: ele usa as mesmas faixas de frequência do WiFi (2,4 GHz e 5,8 GHz), mas com um protocolo próprio, otimizado pra alcançar muito mais longe e resistir muito mais à interferência do que WiFi ou Bluetooth comuns.',
+      desc: 'Durante o voo, o controle remoto do <b>DJI Mini 4 Pro</b> precisa enviar comandos e receber vídeo em tempo real do drone, a até <b>20 km</b> de distância e com baixíssimo atraso, mesmo com outras redes WiFi por perto causando interferência. Qual tecnologia resolve isso?',
+      hint: 'Não é WiFi doméstico nem Bluetooth — pense numa tecnologia de rádio feita sob medida pra drones, com alcance de quilômetros.',
+      options: ['Link de rádio proprietário (DJI O4/OcuSync)', 'WiFi doméstico comum', 'Bluetooth (BLE)', 'Cabo de rede (Ethernet)'],
+      correctIndex: 0
+    },
+    {
+      id: 7,
+      title: 'Correção de rota de última hora',
+      icon: '⚡',
+      explanation: 'Latência baixa é o que garante que o comando do piloto chegue no drone a tempo de fazer diferença — banda alta sozinha não resolve se o comando demorar demais pra chegar.',
+      desc: 'O piloto precisa desviar o <b>Mini 4 Pro</b> de um obstáculo que apareceu de repente, e o comando do manche precisa chegar no drone quase instantaneamente. Além de banda alta pro vídeo, qual característica do link de rádio é essencial nesse momento?',
+      hint: 'Pense no tempo entre "mover o manche" e "o drone reagir" — não em quantos dados cabem por segundo.',
+      options: ['Latência baixa (resposta quase instantânea)', 'Maior número de fotos por segundo na câmera', 'Bateria com mais miliamperes', 'Cor da carcaça do drone'],
+      correctIndex: 0
+    },
+    {
+      id: 8,
+      title: 'Voo perto da escola cheia de WiFi',
+      icon: '📡',
+      explanation: 'O O4 monitora o espectro de rádio e troca automaticamente de canal/frequência (inclusive pra 5,8 GHz) assim que detecta interferência — sem o piloto precisar fazer nada.',
+      desc: 'Pilotando perto do prédio da escola, cheio de roteadores WiFi e celulares na faixa de 2,4 GHz, a imagem do <b>Mini 4 Pro</b> segue estável. Que mecanismo do sistema O4 explica isso?',
+      hint: 'O drone não "desliga" os outros sinais — ele foge deles trocando de canal sozinho.',
+      options: ['Ele troca automaticamente de canal/frequência pra fugir da interferência (agile frequency)', 'Ele desliga o WiFi de todos os celulares próximos', 'Ele para de transmitir vídeo até a área ficar vazia', 'Ele muda para conexão via cabo Ethernet'],
+      correctIndex: 0
+    },
+    {
+      id: 9,
+      title: 'Prédio bloqueando o sinal',
+      icon: '🏢',
+      explanation: 'Ondas de rádio viajam melhor em linha de visada — subir a altitude do drone (ou se reposicionar) tende a tirar o obstáculo do meio do caminho e restaurar o link.',
+      desc: 'Durante o voo, um prédio ficou entre o piloto e o <b>Mini 4 Pro</b>, e a imagem começou a engasgar. Qual ajuste tem mais chance de resolver, com base em como ondas de rádio se propagam?',
+      hint: 'Pense em "linha de visada": o que existe entre o controle e o drone importa.',
+      options: ['Voar mais alto ou se reposicionar pra tirar o prédio da linha de visada', 'Trocar a bateria do controle remoto', 'Reiniciar o aplicativo do celular', 'Desligar o GPS do drone'],
+      correctIndex: 0
+    },
+    {
+      id: 10,
+      title: 'Sinal do controle perdido em pleno voo',
+      icon: '🆘',
+      explanation: 'O failsafe do drone ativa o Retorno para Casa (RTH): usando o GPS, ele volta sozinho até o ponto exato de decolagem e pousa — por isso a conectividade também é um sistema de segurança, não só de vídeo.',
+      desc: 'Por algum motivo, o controle remoto perde o sinal com o <b>Mini 4 Pro</b> por tempo demais durante o voo. O que o drone é projetado pra fazer automaticamente nessa situação?',
+      hint: 'Pense em qual outra tecnologia de conectividade (a primeira que vimos na teoria) permite o drone "saber o caminho de volta" sozinho.',
+      options: ['Ativa o Retorno para Casa (RTH), usando GPS pra voltar sozinho ao ponto de decolagem', 'Cai imediatamente onde está', 'Liga o Bluetooth pra buscar qualquer celular por perto', 'Continua voando reto até a bateria acabar'],
       correctIndex: 0
     }
   ];
@@ -258,7 +298,7 @@
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'IoT: Central de Conectividade',
-      subtitle: 'Prática · Turma Sistemas',
+      subtitle: 'Prática · Turma Sistemas · Contexto: DJI Mini 4 Pro',
       items: CHALLENGES.map((c, i) => ({
         number: i + 1,
         title: c.title,

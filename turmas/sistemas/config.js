@@ -294,21 +294,21 @@ window.TURMA_CONFIG_SISTEMAS = {
         {
           key: 'iot-conectividade-hardware',
           label: 'Conectividade de Hardware',
-          desc: 'Aprenda a teoria e depois resolva chamados sobre satélite, Bluetooth e WiFi na conectividade de dispositivos IoT.',
+          desc: 'Ondas de rádio, WiFi, Bluetooth e satélite na conectividade de dispositivos IoT — com o DJI Mini 4 Pro como fio condutor pra aula prática de pilotagem.',
           capacidade: 'Integrar dispositivos de comunicação de dados; Integrar os princípios de qualidade às atividades sob sua responsabilidade.',
           modules: [
             {
               key: 'teoria', title: 'Teoria — Conectividade de Hardware',
-              desc: 'Conectividade via satélite, Bluetooth e WiFi na integração de dispositivos IoT.',
-              icon: '🛰️', src: 'atividades/iot-conectividade-teoria.html',
+              desc: 'Ondas de rádio, satélite, Bluetooth e WiFi — e como o drone DJI Mini 4 Pro usa cada uma delas em voo.',
+              icon: '🚁', src: 'atividades/iot-conectividade-teoria.html',
               progressKey: 'iot_conectividade_teoria_progress_', progressMode: 'flag',
               hasSlides: true, hasGabarito: true
             },
             {
               key: 'pratica', title: 'Prática — Central de IoT: Conectividade',
-              desc: 'Resolva chamados escolhendo a tecnologia de conectividade certa pra cada cenário de campo.',
+              desc: 'Resolva chamados escolhendo a tecnologia de conectividade certa pra cada cenário de campo, incluindo o dia de voo com o Mini 4 Pro.',
               icon: '📶', src: 'atividades/iot-conectividade-pratica.html',
-              progressKey: 'iot_conectividade_pratica_progress_', progressTotal: 6,
+              progressKey: 'iot_conectividade_pratica_progress_', progressTotal: 10,
               requires: 'teoria', hasGabarito: true
             }
           ]

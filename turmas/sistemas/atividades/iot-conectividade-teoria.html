@@ -146,16 +146,16 @@
 <script>
   const STEPS = [
     {
-      story: 'Olá! Eu sou a <b>Zenit</b>, engenheira de campo de IoT. Antes de você integrar qualquer dispositivo, precisa escolher COMO ele vai se comunicar. Vamos começar pela conectividade <b>via satélite</b>: o dispositivo transmite o sinal direto pra um satélite em órbita, que retransmite os dados pra uma estação em terra — por isso funciona em praticamente qualquer ponto do planeta, mesmo sem nenhuma rede terrestre por perto. É usada quando o dispositivo fica num local remoto, sem torre de celular e sem roteador WiFi por perto — como fazendas isoladas, boias no oceano ou estações de monitoramento ambiental. Ela cobre distâncias enormes, mas tem mais latência e custo por dado transmitido do que WiFi ou Bluetooth.',
+      story: 'Olá! Eu sou a <b>Zenit</b>, engenheira de campo de IoT — e hoje é dia de aula prática pilotando um <b>DJI Mini 4 Pro</b> de verdade! Mas antes de decolar, você precisa entender COMO um drone troca dados com o mundo. Tudo começa com <b>ondas de rádio</b>: sinais eletromagnéticos que viajam pelo ar em diferentes <b>frequências</b> (medidas em Hz). WiFi, Bluetooth, sinal de satélite e até o link do controle remoto do drone usam ondas de rádio — a diferença está em qual frequência, qual protocolo e qual alcance cada tecnologia usa. Vamos começar pela mais distante de todas: a conectividade <b>via satélite</b>. O dispositivo transmite (ou recebe) o sinal direto de um satélite em órbita, cobrindo praticamente qualquer ponto do planeta, mesmo sem nenhuma rede terrestre por perto. É assim que o <b>GPS</b> do Mini 4 Pro funciona: ele recebe sinais de rádio de satélites (GPS, GLONASS e Galileo) pra calcular sua posição exata e manter o drone paradinho no ar (hover) sozinho, sem você precisar segurar o manche o tempo todo.',
       question: {
         prompt: 'Você precisa enviar, uma vez por hora, a leitura de um sensor de umidade instalado numa fazenda muito isolada, sem cobertura de celular nem roteador WiFi por perto. Qual tecnologia de conectividade resolve isso?',
         options: ['Conectividade via satélite', 'Bluetooth', 'WiFi doméstico', 'Cabo de rede (Ethernet)'],
         correctIndex: 0,
-        explanation: 'Isso! Sem nenhuma infraestrutura terrestre por perto, o satélite é a única opção com alcance suficiente pra tirar o dado de lá — mesmo custando mais caro por mensagem enviada.'
+        explanation: 'Isso! Sem nenhuma infraestrutura terrestre por perto, o satélite é a única opção com alcance suficiente pra tirar o dado de lá — é o mesmo princípio que faz o GPS do drone funcionar até no meio de um campo aberto, longe de qualquer roteador.'
       }
     },
     {
-      story: 'Já o <b>Bluetooth</b> é um padrão de comunicação sem fio de curto alcance, criado justamente pra ligar dispositivos pessoais entre si sem cabo. Na versão de baixo consumo, chamada <b>BLE</b> (Bluetooth Low Energy), ele foi otimizado pro oposto do satélite: distâncias bem curtas — só alguns metros — entre um sensor e um dispositivo próximo, como um celular ou um gateway. A vantagem é o consumo de energia baixíssimo, o que faz sensores a pilha ou bateria pequena durarem meses ou até anos.',
+      story: 'Já o <b>Bluetooth</b> é um padrão de comunicação sem fio de curto alcance, criado pra ligar dispositivos pessoais entre si sem cabo. Ele também usa ondas de rádio, numa faixa de <b>2,4 GHz</b>, mas com potência bem mais baixa que o WiFi. Na versão de baixo consumo, chamada <b>BLE</b> (Bluetooth Low Energy), ele foi otimizado pro oposto do satélite: distâncias bem curtas — só alguns metros — entre dois dispositivos próximos, como um celular e um fone de ouvido. A vantagem é o consumo de energia baixíssimo, o que faz acessórios a bateria pequena durarem dias ou meses. Curiosidade pra hoje: o controle remoto do Mini 4 Pro <b>não</b> usa Bluetooth pra falar com o drone — vídeo em tempo real e comandos de voo exigem muito mais banda e alcance do que o Bluetooth aguenta.',
       question: {
         prompt: 'Uma pulseira inteligente mede a frequência cardíaca e envia os dados pro celular do usuário, que fica sempre a poucos metros de distância. A bateria da pulseira precisa durar vários dias sem recarregar. Qual tecnologia é a mais indicada?',
         options: ['Bluetooth (BLE)', 'WiFi', 'Conectividade via satélite', 'Rádio AM/FM'],
@@ -164,7 +164,7 @@
       }
     },
     {
-      story: 'Por fim, o <b>WiFi</b> é a tecnologia sem fio que conecta um dispositivo a uma rede local já existente — o mesmo roteador que seu celular ou notebook usa em casa. Ele entra em cena quando já existe essa rede local por perto (uma casa, um escritório, uma fábrica) e o dispositivo precisa de mais banda do que o Bluetooth oferece — como vídeo ou muitos dados por segundo. O alcance cobre um cômodo ou um andar inteiro, mas o consumo de energia é bem maior que o do Bluetooth, então não é ideal pra sensores a bateria minúscula.',
+      story: 'Por sua vez, o <b>WiFi</b> é a tecnologia sem fio que conecta um dispositivo a uma rede local já existente — o mesmo roteador que seu celular ou notebook usa em casa. Ele também usa ondas de rádio, geralmente nas faixas de <b>2,4 GHz</b> e <b>5 GHz</b>, e entra em cena quando já existe essa rede local por perto e o dispositivo precisa de mais banda do que o Bluetooth oferece — como vídeo ou muitos dados por segundo. O alcance cobre um cômodo ou um andar inteiro, mas cai bastante em campo aberto e longas distâncias. O Mini 4 Pro até usa WiFi puro em algumas situações — como transferir fotos e vídeos direto pro celular depois de pousar — mas não pra pilotar em voo: a distância e a estabilidade que um voo exige vão além do que o WiFi tradicional entrega.',
       question: {
         prompt: 'Uma câmera de segurança residencial precisa transmitir vídeo em tempo real quase o dia inteiro pro roteador que já existe na casa. Qual tecnologia de conectividade é a mais indicada?',
         options: ['WiFi', 'Bluetooth', 'Conectividade via satélite', 'Rádio frequência simples (RF)'],
@@ -173,17 +173,101 @@
       }
     },
     {
-      story: 'Pra fechar, vamos juntar tudo num dispositivo só: um <b>drone</b>. Um <b>sensor</b> é qualquer componente que mede algo do ambiente ou do próprio equipamento (posição, movimento, luz, temperatura...) e transforma isso em dado digital. Um drone carrega vários — <b>GPS</b> (posição), <b>IMU</b> (giroscópio + acelerômetro, pra estabilidade e orientação), <b>barômetro</b> (altitude) e <b>câmera</b> — e cada sensor gera um tipo de dado diferente. O vídeo da câmera é <b>pesado</b> (muitos dados por segundo), então drones de treinamento costumam criar sua própria rede <b>WiFi</b> pra transmitir a imagem em tempo real pro celular do piloto. Já dados pequenos e esporádicos — como o nível de bateria do controle remoto — podem ser trocados por <b>Bluetooth</b>, que gasta bem menos energia. E um drone agrícola sobrevoando uma área imensa, longe de qualquer roteador ou torre de celular, só consegue mandar sua telemetria em tempo real pra central de controle usando <b>satélite</b> — a mesma lógica que já vimos lá no início.',
+      story: 'Pra fechar, vamos entender como o <b>DJI Mini 4 Pro</b> junta tudo isso na prática. Ele carrega vários <b>sensores</b> — GPS/GLONASS/Galileo (posição), IMU (giroscópio + acelerômetro, pra estabilidade), barômetro (altitude) e câmera — e cada um gera um tipo de dado diferente. Pra levar o vídeo em tempo real e os comandos de voo entre o controle remoto e o drone, a até <b>20 km</b> de distância e com baixíssimo atraso, nem WiFi nem Bluetooth comuns dão conta do recado. Por isso a DJI criou uma tecnologia própria de rádio chamada <b>O4</b> (a 4ª geração do sistema OcuSync). O O4 usa as mesmas faixas de frequência do WiFi (2,4 GHz e 5,8 GHz) — a mesma "estrada" de ondas de rádio — só que com um protocolo próprio, feito pra ser muito mais robusto contra interferência e alcançar muito mais longe do que um roteador doméstico. Mesma faixa de frequência, protocolo diferente, resultado bem diferente.',
       question: {
-        prompt: 'Um drone de treinamento (como os usados em sala de aula) transmite o vídeo da câmera em tempo real pro celular do piloto, que fica sempre por perto. Qual tecnologia ele costuma usar pra isso, e por quê?',
+        prompt: 'O controle remoto do DJI Mini 4 Pro e o próprio drone conversam nas mesmas faixas de frequência que o WiFi (2,4 GHz e 5,8 GHz), mas NÃO usam o protocolo WiFi comum. Por quê?',
         options: [
-          'WiFi, porque o vídeo exige banda alta a curta/média distância',
-          'Bluetooth, porque o vídeo tem pouquíssimos dados',
-          'Satélite, porque o piloto pode estar em qualquer lugar do mundo',
-          'Nenhuma tecnologia sem fio — o vídeo precisa de cabo'
+          'Porque a DJI criou um protocolo de rádio próprio (O4/OcuSync), otimizado pra mais alcance e menos interferência do que o WiFi doméstico',
+          'Porque WiFi não consegue transmitir nenhum tipo de vídeo',
+          'Porque essas frequências são proibidas para uso de WiFi',
+          'Porque o drone não usa nenhum tipo de onda de rádio'
         ],
         correctIndex: 0,
-        explanation: 'Exato! Vídeo em tempo real exige banda alta, e o piloto está sempre perto do drone — exatamente o cenário em que o WiFi se encaixa melhor, o mesmo raciocínio da câmera de segurança.'
+        explanation: 'Exato! Frequência (a "estrada") e protocolo (as regras de uso dela) são coisas diferentes — o O4 usa a mesma faixa do WiFi, mas com regras próprias pra alcançar até 20 km com baixa latência, algo que o WiFi tradicional não foi projetado pra fazer.'
+      }
+    },
+    {
+      story: 'Voltando à ideia de "estrada" de ondas de rádio: a maioria dos dispositivos sem fio usa duas faixas livres de frequência, chamadas de bandas <b>ISM</b>: <b>2,4 GHz</b> e <b>5 GHz</b> (o drone usa uma variação próxima, <b>5,8 GHz</b>). A banda de 2,4 GHz atravessa paredes e obstáculos com mais facilidade e alcança mais longe, mas é a mais "lotada" — praticamente todo roteador doméstico, fone Bluetooth e forno de micro-ondas usa essa faixa, o que gera interferência. Já a de 5/5,8 GHz é mais "vazia" (menos dispositivos disputando o mesmo espaço) e permite mais velocidade, só que o sinal se degrada mais rápido com distância e obstáculos. O sistema O4 do Mini 4 Pro monitora as duas o tempo todo e escolhe automaticamente qual usar (ou alterna entre elas) conforme a interferência de cada ambiente — uma técnica chamada <b>agile frequency</b>.',
+      question: {
+        prompt: 'Você está pilotando numa área cheia de gente usando celular e roteadores WiFi 2,4 GHz por perto (a quadra da escola, por exemplo). Por que o link do drone tende a sofrer menos interferência se conseguir usar a faixa de 5,8 GHz nesse momento?',
+        options: [
+          'Porque menos dispositivos usam essa faixa por perto, deixando o "espaço" menos disputado',
+          'Porque 5,8 GHz atravessa paredes melhor que 2,4 GHz',
+          'Porque 5,8 GHz não é uma onda de rádio',
+          'Porque o Bluetooth do celular do instrutor bloqueia só o 2,4 GHz'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Menos aparelhos "brigando" pela mesma faixa significa menos interferência — é por isso que o O4 do Mini 4 Pro pode alternar pra 5,8 GHz quando o ambiente em 2,4 GHz está muito cheio.'
+      }
+    },
+    {
+      story: '"Banda" (ou largura de banda) é a quantidade de dados que cabem por segundo num link — quanto mais banda, mais nítido pode ser o vídeo, por exemplo. Já <b>latência</b> é o tempo que um dado leva pra ir de um lado a outro: no caso do drone, o tempo entre você mover o manche no controle e o drone realmente reagir no ar. Pra pilotar com segurança, o Mini 4 Pro precisa das duas coisas: banda suficiente pro vídeo em tempo real E latência baixíssima (poucos milissegundos) pros comandos de voo — porque um comando "atrasado" pode chegar tarde demais pra corrigir a trajetória. É por isso que o O4 foi desenhado priorizando latência baixa e estável, mesmo a quilômetros de distância, em vez de só focar em velocidade máxima como o WiFi doméstico costuma priorizar.',
+      question: {
+        prompt: 'Um piloto precisa desviar o drone de um obstáculo no último segundo. Por que a baixa LATÊNCIA do link de rádio é tão importante nesse momento, além da banda alta?',
+        options: [
+          'Porque um comando de voo atrasado pode chegar tarde demais pro drone reagir a tempo',
+          'Porque latência alta consome mais bateria do controle',
+          'Porque latência é só relevante pra transferir fotos',
+          'Latência não importa, só a banda importa'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Banda alta garante um vídeo nítido, mas é a latência baixa que garante que o comando do piloto chegue no drone a tempo de fazer diferença — as duas coisas são necessárias, não uma no lugar da outra.'
+      }
+    },
+    {
+      story: 'A faixa de 2,4 GHz em particular fica lotada de sinais concorrendo pelo mesmo "espaço": outros WiFis, fones Bluetooth, e até fornos de micro-ondas emitem nessa frequência. Isso causa <b>interferência</b> — o sinal que você quer captar se mistura com "ruído" de outros aparelhos, podendo travar a imagem ou atrasar comandos. Pra resolver isso, o O4 do Mini 4 Pro monitora o espectro em tempo real e pula automaticamente pra um canal ou faixa menos ocupada assim que detecta interferência — sem o piloto precisar fazer nada. É a mesma ideia por trás do WiFi de um roteador bom, que também tenta trocar de canal quando o seu vizinho liga um monte de aparelho na mesma faixa.',
+      question: {
+        prompt: 'Durante o voo, perto do prédio da escola (cheio de roteadores WiFi e celulares), a imagem do drone quase não engasga, mesmo com tanto sinal por perto. Por que isso acontece?',
+        options: [
+          'O sistema O4 detecta a interferência e troca automaticamente de canal/frequência em tempo real',
+          'O drone desliga o WiFi de todos os celulares próximos',
+          'A imagem nunca engasga em nenhuma tecnologia de rádio',
+          'O Bluetooth do controle bloqueia os outros sinais'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! Essa troca automática de frequência pra fugir da interferência (agile frequency) é uma das razões do O4 ser mais robusto que um link de rádio comum em ambientes cheios de sinal.'
+      }
+    },
+    {
+      story: 'Ondas de rádio viajam melhor em <b>linha de visada</b> — ou seja, quando não existe obstáculo sólido entre quem transmite e quem recebe. Paredes, prédios, morros e até o próprio corpo do piloto podem atenuar (enfraquecer) o sinal entre o controle e o drone, reduzindo alcance e aumentando a chance de instabilidade na imagem. É por isso que instrutores de voo recomendam manter o drone o mais alto possível e evitar prédios ou árvores entre você e ele: quanto mais "livre" o caminho da onda de rádio, mais forte e estável fica o link — vale pro O4 do drone, pro WiFi de casa e pra qualquer outra tecnologia de rádio que a gente já viu aqui.',
+      question: {
+        prompt: 'Durante o voo, um prédio ficou entre o piloto e o drone, e a imagem começou a engasgar. Qual é a explicação mais provável?',
+        options: [
+          'O prédio está bloqueando parte da linha de visada, atenuando o sinal de rádio entre controle e drone',
+          'O prédio está emitindo Bluetooth que atrapalha o WiFi',
+          'A bateria do drone acabou',
+          'Prédios nunca afetam sinais de rádio'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Obstáculos sólidos entre transmissor e receptor atenuam o sinal — voar mais alto ou se posicionar sem prédios no meio do caminho costuma resolver, porque melhora a linha de visada.'
+      }
+    },
+    {
+      story: 'As frequências e a potência que um transmissor de rádio pode usar não são escolha livre do fabricante: elas são reguladas por órgãos de cada país — no Brasil, a <b>Anatel</b>; nos EUA, a FCC; na Europa, normas como a CE. Esses órgãos limitam a potência máxima de transmissão (chamada <b>EIRP</b>) justamente pra um aparelho não atrapalhar outros serviços de rádio que usam a mesma faixa. É exatamente por isso que o alcance máximo do Mini 4 Pro muda dependendo da região: até 20 km sob as regras da FCC (EUA), mas só uns 6 km sob as regras da CE (Europa) — mesmo drone, mesma tecnologia O4, potência de transmissão diferente por exigência regulatória de cada lugar.',
+      question: {
+        prompt: 'O alcance máximo divulgado pra um mesmo modelo de drone muda de país pra país (por exemplo, mais longe nos EUA do que na Europa). Por que isso acontece, se a tecnologia de rádio é a mesma?',
+        options: [
+          'Porque cada país regula (via órgãos como Anatel, FCC ou normas CE) a potência máxima de transmissão permitida naquela faixa',
+          'Porque o GPS funciona diferente em cada país',
+          'Porque o Bluetooth muda de protocolo em cada continente',
+          'Porque a bateria do drone dura menos em alguns países'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! A regulação do espectro de rádio (Anatel no Brasil, FCC nos EUA, normas CE na Europa) limita a potência de transmissão pra evitar interferência com outros serviços — por isso o mesmo drone tem alcances oficiais diferentes por região.'
+      }
+    },
+    {
+      story: 'Pra fechar: e se o link entre controle e drone cair no meio do voo — por interferência forte, obstáculo ou distância demais? Drones modernos como o Mini 4 Pro têm um sistema de segurança chamado <b>failsafe</b>: ao perder o sinal de rádio do controle por tempo demais, o drone entra automaticamente em <b>Retorno para Casa</b> (Return to Home, RTH) — ele usa o GPS (o mesmo sistema de satélite que vimos lá no início) pra voltar sozinho, voando, até o ponto exato de onde decolou, e pousa ali. Ou seja: a conectividade de um drone não é só sobre vídeo bonito — é parte do sistema de segurança do voo. É por isso que antes de qualquer voo o instrutor confere o sinal do GPS e do controle: sem conectividade confiável, não existe failsafe confiável.',
+      question: {
+        prompt: 'O piloto perde o sinal do controle com o drone durante o voo (por exemplo, um obstáculo bloqueou o link por tempo demais). O que o Mini 4 Pro é projetado pra fazer automaticamente nessa situação?',
+        options: [
+          'Ativar o Retorno para Casa (RTH), usando o GPS pra voltar sozinho até o ponto de decolagem e pousar',
+          'Cair imediatamente no lugar onde perdeu o sinal',
+          'Ligar o Bluetooth pra tentar se conectar a qualquer celular por perto',
+          'Continuar voando na mesma direção até a bateria acabar'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso mesmo! O Return to Home depende do GPS pra funcionar — é o mesmo sistema de satélite do início da aula, agora atuando como uma rede de segurança essencial quando a conectividade de rádio falha.'
       }
     }
   ];
@@ -191,7 +275,7 @@
   window.generateSlidesForGestao = function () {
     return window.PortalSlides.generate({
       title: 'Internet das Coisas — Conectividade de Hardware',
-      subtitle: 'Aula Teórica · Trilha Conectividade de Hardware · Turma Sistemas',
+      subtitle: 'Aula Teórica · Trilha Conectividade de Hardware (DJI Mini 4 Pro) · Turma Sistemas',
       capacidade: 'Integrar dispositivos de comunicação de dados; Integrar os princípios de qualidade às atividades sob sua responsabilidade.',
       steps: STEPS,
       fileName: 'iot-conectividade-teoria-slides.pptx',
@@ -208,7 +292,7 @@
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Internet das Coisas — Conectividade de Hardware',
-      subtitle: 'Aula Teórica · Trilha Conectividade de Hardware · Turma Sistemas',
+      subtitle: 'Aula Teórica · Trilha Conectividade de Hardware (DJI Mini 4 Pro) · Turma Sistemas',
       items: STEPS.map((step, i) => ({
         number: i + 1,
         prompt: step.question.prompt,
@@ -224,11 +308,11 @@
     activityLocation: "iot_conectividade_teoria",
     steps: STEPS,
     reportLabel: "IoT — Conectividade de Hardware",
-    mentor: { rowClass: "eri", avatar: "🛰️", name: "Zenit, Engenheira de Campo IoT" },
+    mentor: { rowClass: "eri", avatar: "🚁", name: "Zenit, Engenheira de Campo IoT" },
     finishPassed: {
       title: "Conectividade de Hardware concluída!",
-      introHtml: "<p>Você já sabe quando usar satélite, Bluetooth e WiFi na conectividade de dispositivos IoT — e viu os três juntando forças num drone.</p>",
-      closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de IoT.</p>",
+      introHtml: "<p>Você já sabe quando usar satélite, Bluetooth, WiFi e até o link de rádio próprio de um drone (O4) — e entendeu por que o Mini 4 Pro não pilota por WiFi comum.</p>",
+      closingHtml: "<p>Agora é hora de colocar a mão na massa: volte à trilha e abra o módulo de prática da Central de IoT antes de ir pro campo pilotar o drone de verdade.</p>",
       restartLabel: "🔁 Rever a teoria"
     }
   });
