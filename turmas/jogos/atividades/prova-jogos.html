@@ -149,14 +149,14 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 78 QUESTÕES — cobre todas as matérias/trilhas com
+  // BANCO DE 82 QUESTÕES — cobre todas as matérias/trilhas com
   // conteúdo real trabalhadas na turma Jogos Digitais (Projeto de
   // Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de
   // Projetos, Codificação de Jogos, Fundamentos de Programação de
   // Jogos e Testes de Jogos Digitais). Mesmo esquema de
   // turmas/sistemas/atividades/prova-sistemas.html: 5 alternativas
   // por questão, posição NUNCA fixa (reembaralhadas a cada exibição
-  // — ver renderQuestion), e 20 das 78 sorteadas por aluno (ver
+  // — ver renderQuestion), e 20 das 82 sorteadas por aluno (ver
   // pickExamIndices). As questões de Projeto de Vida e Mundo do
   // Trabalho reaproveitam o mesmo conteúdo da prova de Sistemas —
   // são exatamente as mesmas trilhas, copiadas entre as duas turmas.
@@ -165,7 +165,10 @@
   // não perguntas de definição — a trilha em si é toda roteiro
   // prático + quiz de teoria próprio (ver cod-godot-pratica.html e
   // cod-godot-teoria.html), então o banco compartilhado só cobre o
-  // que dá pra testar sem reproduzir o quiz de teoria dela aqui.
+  // que dá pra testar sem reproduzir o quiz de teoria dela aqui. Pelo
+  // mesmo motivo, JavaScript e C# ganharam 2 questões práticas cada
+  // (função real de um desafio da trilha, não só sintaxe isolada),
+  // além das 2 conceituais que já existiam pra cada uma.
   const QUESTION_POOL = [
     // ---- Projeto de Vida ----
     {
@@ -741,6 +744,30 @@
       correctIndex: 0
     },
     {
+      materia: 'Fundamentos — JavaScript',
+      prompt: 'Na trilha de JavaScript, um dos desafios pede a função liderDoExercito(poderes), que recebe um array de números e devolve o MAIOR valor dele. Qual das opções resolve isso corretamente?',
+      options: [
+        'function liderDoExercito(poderes) { return Math.max(...poderes); }',
+        'function liderDoExercito(poderes) { return poderes[0]; }',
+        'function liderDoExercito(poderes) { return poderes.length; }',
+        'function liderDoExercito(poderes) { return Math.min(...poderes); }',
+        'function liderDoExercito(poderes) { return poderes.join(""); }'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — JavaScript',
+      prompt: 'Outro desafio da trilha de JavaScript pede a função sobreviventes(vidas), que recebe um array de números e devolve um NOVO array só com os valores MAIORES que 0. Qual das opções resolve isso corretamente?',
+      options: [
+        'function sobreviventes(vidas) { return vidas.filter(v => v > 0); }',
+        'function sobreviventes(vidas) { return vidas.map(v => v > 0); }',
+        'function sobreviventes(vidas) { return vidas.length > 0; }',
+        'function sobreviventes(vidas) { return vidas.filter(v => v < 0); }',
+        'function sobreviventes(vidas) { vidas.push(0); return vidas; }'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Fundamentos — C#',
       prompt: 'O C# foi criado pela Microsoft e se tornou muito usado em jogos principalmente porque:',
       options: [
@@ -756,6 +783,24 @@
       materia: 'Fundamentos — C#',
       prompt: 'Diferente do GDScript (tipagem mais flexível), o C# costuma exigir que o TIPO da variável seja declarado já na criação. Qual das opções é uma declaração de variável válida em C#?',
       options: ['int vidas = 3;', 'let vidas = 3;', 'vidas := 3;', 'var vidas -> 3;', 'vidas == 3;'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — C#',
+      prompt: 'Na trilha de C#, um desafio diz: a variável idade já existe; se idade for maior ou igual a 18, resultado deve ser "Maior"; senão, "Menor". Qual trecho resolve isso corretamente?',
+      options: [
+        'if (idade >= 18) { resultado = "Maior"; } else { resultado = "Menor"; }',
+        'if (idade > 18) resultado == "Maior"; else resultado == "Menor";',
+        'if idade >= 18: resultado = "Maior" else resultado = "Menor"',
+        'resultado = idade >= 18 ? "Menor" : "Maior";',
+        'if (idade <= 18) { resultado = "Maior"; } else { resultado = "Menor"; }'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — C#',
+      prompt: 'Em outro desafio de C#, a função Dobro(int numero) devolve o dobro do número recebido. Se o código cria resultado com o valor de Dobro(5), qual deve ser o valor de resultado?',
+      options: ['10', '5', '25', '0', '"Dobro(5)"'],
       correctIndex: 0
     },
     {
@@ -847,7 +892,7 @@
   ];
 
   // ============================================================
-  // SORTEIO: 20 das 78, embaralhadas — recalculado só na primeira
+  // SORTEIO: 20 das 82, embaralhadas — recalculado só na primeira
   // vez que o aluno clica "Iniciar" (persistido em SELECTION_KEY
   // pra não mudar no meio de uma tentativa em andamento). As
   // ALTERNATIVAS de cada questão são reembaralhadas a cada exibição
@@ -1210,7 +1255,7 @@
         <h2>📋 Prova Diagnóstica — Turma Jogos Digitais</h2>
         <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
         <ul>
-          <li>Existe um banco de <b>78 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>82 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
           <li>Dá pra <b>pular uma questão</b> sem responder — mas ela conta como <b>errada</b>, sem chance de voltar depois.</li>
@@ -1233,13 +1278,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 78 questões (não só as 20 que um
+  // Gabarito: lista o BANCO INTEIRO de 82 questões (não só as 20 que um
   // aluno específico recebeu), agrupado por matéria — referência completa
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 78 questões',
-      subtitle: 'Diagnóstico (20 sorteadas de 78, por aluno) · Turma Jogos Digitais',
+      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 82 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 82, por aluno) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,
