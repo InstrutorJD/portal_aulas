@@ -910,7 +910,7 @@ window.TURMA_CONFIG_JOGOS = {
         {
           key: 'prova-diagnostica',
           label: 'Prova Diagnóstica',
-          desc: 'Diagnóstico do conhecimento dos alunos em todas as matérias trabalhadas na turma — 20 questões sorteadas de um banco de 60 (teoria e prática), com 5 alternativas embaralhadas e trava anti-saída durante a prova.',
+          desc: 'Diagnóstico do conhecimento dos alunos em todas as matérias trabalhadas na turma — 20 questões sorteadas de um banco de 76 (teoria e prática), com 5 alternativas embaralhadas e trava anti-saída durante a prova.',
           // TODO(professor): capacidade PROVISÓRIA — esta prova é diagnóstica
           // (cobre várias capacidades de várias matérias ao mesmo tempo, pra
           // identificar o que a turma já domina e onde ainda falta reforço),
@@ -926,9 +926,35 @@ window.TURMA_CONFIG_JOGOS = {
               // bloqueio" via shared/exam-proctor.js. Desbloqueio: token de
               // 6 dígitos do professor (shared/professor-visto.js).
               key: 'prova', title: 'Prova Diagnóstica — Turma Jogos Digitais',
-              desc: '20 questões (sorteadas de um banco de 60) cobrindo Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.',
+              desc: '20 questões (sorteadas de um banco de 76) cobrindo Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.',
               icon: '📋', src: 'atividades/prova-jogos.html',
               progressKey: 'prova_jogos_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Trilha individual, adaptada — visível só pro Engel (e sempre pro
+          // professor). Não reaproveita o motor da prova padrão (banco
+          // grande, sorteio, 5 alternativas, trava anti-saída de aba): usa
+          // o mesmo motor leve das outras atividades adaptadas dele (ver
+          // teste-roteiros-questionario-engel.html) — lista curta e fixa de
+          // 15 perguntas, 3 alternativas cada, sem trava nenhuma, conclui
+          // sozinha. Cobre só as 3 trilhas dele que têm resposta certa/
+          // errada de verdade (JavaScript Básico, Roteiros de Teste e
+          // Formar Frases) — "Ponto de Virada"/"A Jornada do Lucas" ficam de
+          // fora por serem narrativas sem certo ou errado.
+          key: 'prova-diagnostica-engel',
+          label: 'Prova Diagnóstica (Engel)',
+          desc: 'Revisão adaptada do que o Engel já aprendeu: JavaScript Básico, Roteiros de Teste e Formar Frases — 15 perguntas curtas, 3 alternativas cada, sem trava.',
+          visibleFor: ['engel.fraga'],
+          capacidade: 'Diagnóstico adaptado do conjunto de capacidades trabalhadas nas trilhas individuais do Engel, pra identificar o que ele já domina e onde ainda precisa de reforço.',
+          modules: [
+            {
+              key: 'prova', title: 'Prova Diagnóstica (Engel)',
+              desc: '15 perguntas (3 alternativas cada, sem trava) cobrindo JavaScript Básico, Roteiros de Teste e Formar Frases.',
+              icon: '📋', src: 'atividades/prova-jogos-engel.html',
+              progressKey: 'prova_jogos_engel_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]

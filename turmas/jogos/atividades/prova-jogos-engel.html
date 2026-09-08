@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Prova Diagnóstica (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); min-height:100vh;
+  }
+
+  .env{
+    max-width:760px; margin:0 auto; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+    min-height:calc(100vh - 20px);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .steps{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; padding:12px 12px 0; }
+  .step-dot{
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; border:2px solid var(--line); background:var(--panel2); border-radius:8px;
+  }
+  .step-dot.active{ border-color:var(--green); }
+  .step-dot.done{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+
+  .stage{ flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:20px; }
+  .card .big-icon{ font-size:56px; line-height:1; text-align:center; margin-bottom:10px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--yellow);
+    margin:0 0 12px; letter-spacing:1px; text-align:center;
+  }
+
+  .lead{ font-size:18px; line-height:1.7; text-align:center; margin:0 0 6px; }
+
+  .bloco-label{
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px;
+    margin:0 0 6px; text-align:center;
+  }
+  .question-lead{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:30px; color:var(--green);
+    text-align:center; margin:0 0 6px; letter-spacing:0.5px;
+  }
+  .question-sub{ font-size:17px; text-align:center; margin:0 0 16px; color:var(--ink-dim); }
+
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option{
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    border:2px solid var(--line); background:var(--panel2); cursor:pointer; font-size:19px; font-weight:700;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:28px; height:28px; flex-shrink:0; border:2px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink-dim); font-weight:800;
+  }
+  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.1); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.1); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:16px; padding:14px 16px; font-size:16px; line-height:1.6;
+    border:1px dashed var(--line); text-align:center;
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--green); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+
+  .step-nav{ display:flex; justify-content:flex-end; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 26px; cursor:pointer; border-radius:8px;
+  }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .score-box{ text-align:center; }
+  .score-box .score{ font-size:22px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  @media (max-width: 600px) {
+    .card{ padding:14px; }
+    .question-lead{ font-size:24px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'prova_jogos_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>📋 PROVA DIAGNÓSTICA</div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">17</span></div>
+  </div>
+  <div class="steps" id="stepsRow"></div>
+  <div class="stage">
+    <div id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `prova_jogos_engel_progress_${username}`;
+
+  // Prova diagnóstica adaptada pro Engel: mesmo espírito de simplicidade
+  // de teste-roteiros-questionario-engel.html (Cor e Título) — não o motor
+  // "de verdade" da prova padrão (prova-jogos.html: sorteio de 20 de um
+  // banco de 76, 5 alternativas, trava anti-saída de aba, visto do
+  // professor pra desbloquear). Aqui: lista curta e fixa (sem sorteio),
+  // só 3 alternativas por pergunta (nunca 5), sem trava de aba nenhuma, e
+  // conclui sozinha ao terminar — o placar aparece só como retorno pro
+  // aluno e pro professor, não como bloqueio.
+  //
+  // Cobre só as trilhas do Engel que têm resposta certa/errada de verdade
+  // (ele também tem "Ponto de Virada"/"A Jornada do Lucas", mas são
+  // narrativas sem certo ou errado — não davam pra virar pergunta de
+  // prova do mesmo jeito):
+  //  - JavaScript Básico (Engel): reconhecer o sinal de cada operação
+  //    (mesmo vocabulário/emoji de js-basico-adaptado-engel.html).
+  //  - Roteiros de Teste (Engel): reconhecer o tipo de teste a partir da
+  //    definição (mesmo conteúdo de teste-roteiros-trabalho-engel.html,
+  //    só que definição→nome em vez de cor→nome, pra não repetir
+  //    literalmente o questionário que ele já resolve lá).
+  //  - Comunicação — Formar Frases (Engel): completar a frase com a
+  //    palavra certa (reaproveita, com a mesma redação, uma amostra das
+  //    frases já validadas em frases-engel.html, cobrindo os 3 níveis).
+  const QUESTIONS = [
+    // ---- JavaScript Básico (Engel) ----
+    { bloco: 'JavaScript', icon: '➕', lead: '🐱 + 🐶', sub: 'Qual sinal você usa pra SOMAR?', options: ['-', '*', '+'], certa: 2 },
+    { bloco: 'JavaScript', icon: '➖', lead: '🚗 − 🏍️', sub: 'Qual sinal você usa pra TIRAR (subtrair)?', options: ['-', '+', '/'], certa: 0 },
+    { bloco: 'JavaScript', icon: '✖️', lead: '🐵 × 2', sub: 'Qual sinal você usa pra MULTIPLICAR?', options: ['+', '*', '%'], certa: 1 },
+    { bloco: 'JavaScript', icon: '➗', lead: '🚗 ÷ 2', sub: 'Qual sinal você usa pra DIVIDIR?', options: ['*', '-', '/'], certa: 2 },
+    { bloco: 'JavaScript', icon: '⚖️', lead: '🐭 ___ 🦆', sub: 'Qual sinal você usa pra saber se um número é MAIOR que o outro?', options: ['>', '<', '==='], certa: 0 },
+
+    // ---- Roteiros de Teste (Engel) ----
+    { bloco: 'Roteiros de Teste', icon: '🎖️', lead: 'Feito ANTES de vender o jogo numa loja de console, seguindo as regras do fabricante.', sub: 'Qual teste é esse?', options: ['Smoke Test', 'Certificação Técnica', 'Teste Exploratório'], certa: 1 },
+    { bloco: 'Roteiros de Teste', icon: '🖥️', lead: 'Verifica se o jogo funciona em telas de tamanhos diferentes — grande, pequena e no meio.', sub: 'Qual teste é esse?', options: ['Certificação Técnica', 'Smoke Test', 'Teste de Plataforma'], certa: 2 },
+    { bloco: 'Roteiros de Teste', icon: '💨', lead: 'Teste RÁPIDO, feito só pra ver se o básico funciona antes de publicar.', sub: 'Qual teste é esse?', options: ['Smoke Test', 'Teste Exploratório', 'Certificação Técnica'], certa: 0 },
+    { bloco: 'Roteiros de Teste', icon: '🔎', lead: 'Jogar bastante tentando QUEBRAR o jogo, sem seguir um roteiro fixo.', sub: 'Qual teste é esse?', options: ['Smoke Test', 'Teste Exploratório', 'Teste de Plataforma'], certa: 1 },
+
+    // ---- Comunicação — Formar Frases (Engel) ----
+    { bloco: 'Formar Frases', icon: '☀️', lead: '"Bom ___"', sub: 'Qual palavra completa certo?', options: ['Noite', 'Carro', 'Dia'], certa: 2 },
+    { bloco: 'Formar Frases', icon: '🐶', lead: '"Meu ___"', sub: 'Qual palavra completa certo?', options: ['Cachorro', 'Gato', 'Livro'], certa: 0 },
+    { bloco: 'Formar Frases', icon: '💧', lead: '"Eu quero ___"', sub: 'Qual palavra completa certo?', options: ['Suco', 'Água', 'Bola'], certa: 1 },
+    { bloco: 'Formar Frases', icon: '👫', lead: '"Nós somos ___"', sub: 'Qual palavra completa certo?', options: ['Irmãos', 'Vizinhos', 'Amigos'], certa: 2 },
+    { bloco: 'Formar Frases', icon: '😴', lead: '"O cachorro está ___"', sub: 'Qual palavra completa certo?', options: ['Dormindo', 'Correndo', 'Comendo'], certa: 0 },
+    { bloco: 'Formar Frases', icon: '🎉', lead: '"Amanhã vai ter ___"', sub: 'Qual palavra completa certo?', options: ['Aula', 'Festa', 'Chuva'], certa: 1 }
+  ];
+  const TOTAL_STEPS = 1 + QUESTIONS.length; // apresentação + perguntas
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  let progress = loadProgress();
+  if (!progress || !Array.isArray(progress.respostas) || progress.respostas.length !== QUESTIONS.length) {
+    progress = { iniciado: false, respostas: new Array(QUESTIONS.length).fill(null), completed: false, correctCount: 0 };
+  }
+
+  // Mesma regra de navegação de teste-roteiros-questionario-engel.html:
+  // nunca reabre uma pergunta já respondida (recarregar a página não
+  // libera tentativa de novo).
+  let currentIndex;
+  if (progress.completed) {
+    currentIndex = TOTAL_STEPS;
+  } else {
+    const firstUnanswered = progress.respostas.findIndex(r => r === null);
+    if (firstUnanswered === -1) {
+      currentIndex = TOTAL_STEPS;
+    } else if (!progress.iniciado) {
+      currentIndex = 0;
+    } else {
+      currentIndex = firstUnanswered + 1;
+    }
+  }
+
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+  })();
+
+  const stepsRowEl = document.getElementById('stepsRow');
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  lblStepTotal.textContent = TOTAL_STEPS + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('prova_jogos_engel', label, { step: currentIndex + 1, total: TOTAL_STEPS + 1, correctCount: progress.correctCount });
+    }
+  }
+
+  function stepIcon(i) {
+    if (i === 0) return '📋';
+    if (i >= 1 && i <= QUESTIONS.length) return QUESTIONS[i - 1].icon;
+    return '🏆';
+  }
+
+  function renderStepsRow() {
+    let html = '';
+    for (let i = 0; i < TOTAL_STEPS; i++) {
+      const done = i < currentIndex;
+      const active = i === currentIndex;
+      html += `<div class="step-dot${active ? ' active' : ''}${done ? ' done' : ''}">${done ? '✅' : stepIcon(i)}</div>`;
+    }
+    const finalDone = currentIndex >= TOTAL_STEPS;
+    html += `<div class="step-dot${finalDone ? ' active done' : ''}">${finalDone ? '✅' : '🏆'}</div>`;
+    stepsRowEl.innerHTML = html;
+  }
+
+  function renderApresentacao() {
+    stepWrap.innerHTML = `
+      <div class="card">
+        <div class="big-icon">📋</div>
+        <h2>Vamos revisar o que você aprendeu!</h2>
+        <p class="lead">São ${QUESTIONS.length} perguntas: JavaScript, Roteiros de Teste e Formar Frases. Em cada uma, escolha 1 das 3 opções.</p>
+        <p class="lead">Se errar, sem problema: a resposta certa aparece na hora, pra você aprender.</p>
+      </div>
+      <div class="step-nav"><button class="btn" id="btnNext">Começar ➡️</button></div>
+    `;
+    document.getElementById('btnNext').addEventListener('click', () => {
+      progress.iniciado = true;
+      saveProgress(progress);
+      currentIndex++;
+      renderStep();
+    });
+  }
+
+  function renderQuestion(qIdx) {
+    const q = QUESTIONS[qIdx];
+    const letters = ['A', 'B', 'C'];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="big-icon">${q.icon}</div>
+      <p class="bloco-label">${escapeHtml(q.bloco)} · Pergunta ${qIdx + 1}</p>
+      <p class="question-lead">${escapeHtml(q.lead)}</p>
+      <p class="question-sub">${escapeHtml(q.sub)}</p>
+    `;
+
+    const optionsWrap = document.createElement('div');
+    optionsWrap.className = 'options';
+    let answered = false;
+
+    q.options.forEach((texto, i) => {
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${escapeHtml(texto)}</span>`;
+      opt.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        selectAnswer(i);
+      });
+      optionsWrap.appendChild(opt);
+    });
+    card.appendChild(optionsWrap);
+
+    if (isProfessor) {
+      const profNav = document.createElement('div');
+      profNav.className = 'step-nav';
+      profNav.style.marginTop = '10px';
+      profNav.innerHTML = `<button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>`;
+      card.appendChild(profNav);
+    }
+
+    stepWrap.innerHTML = '';
+    stepWrap.appendChild(card);
+
+    if (isProfessor) {
+      document.getElementById('btnSkipProfessor').addEventListener('click', () => {
+        currentIndex++;
+        renderStep();
+      });
+    }
+
+    function selectAnswer(chosenIdx) {
+      const allOptionEls = optionsWrap.querySelectorAll('.option');
+      allOptionEls.forEach(el => el.classList.add('disabled'));
+
+      const isCorrect = chosenIdx === q.certa;
+      allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (!isCorrect) allOptionEls[q.certa].classList.add('correct');
+
+      progress.respostas[qIdx] = isCorrect;
+      if (isCorrect) progress.correctCount++;
+      saveProgress(progress);
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      feedback.textContent = isCorrect
+        ? `✅ Isso! A resposta certa é "${q.options[q.certa]}".`
+        : `❌ Quase! A resposta certa é "${q.options[q.certa]}".`;
+      card.appendChild(feedback);
+
+      const nav = document.createElement('div');
+      nav.className = 'step-nav';
+      nav.style.marginTop = '16px';
+      nav.innerHTML = `<button class="btn" id="btnNext">Próximo ➡️</button>`;
+      card.appendChild(nav);
+
+      reportStep(`Prova Diagnóstica (Engel) — Pergunta ${qIdx + 1}: respondida`);
+
+      document.getElementById('btnNext').addEventListener('click', () => {
+        currentIndex++;
+        renderStep();
+      });
+    }
+  }
+
+  function renderResultado() {
+    const total = QUESTIONS.length;
+    progress.completed = true;
+    saveProgress(progress);
+    reportStep(`Prova Diagnóstica (Engel) — Concluído (${progress.correctCount}/${total})`);
+
+    stepWrap.innerHTML = `
+      <div class="card score-box">
+        <div class="big-icon">🏆</div>
+        <h2>Você terminou!</h2>
+        <p class="lead">Você acertou ${progress.correctCount} de ${total} perguntas.</p>
+        <div class="score">${progress.correctCount}/${total} 🎉</div>
+      </div>
+    `;
+  }
+
+  function renderStep() {
+    if (currentIndex >= TOTAL_STEPS) { renderResultado(); return; }
+    lblStepNum.textContent = currentIndex + 1;
+    renderStepsRow();
+
+    if (currentIndex === 0) {
+      reportStep('Prova Diagnóstica (Engel) — Apresentação');
+      renderApresentacao();
+    } else {
+      const qIdx = currentIndex - 1;
+      reportStep(`Prova Diagnóstica (Engel) — Pergunta ${qIdx + 1}`);
+      renderQuestion(qIdx);
+    }
+  }
+
+  // Gabarito pro professor: pergunta → resposta certa de cada uma das 15.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Prova Diagnóstica (Engel) — Gabarito',
+      subtitle: 'Prova adaptada (3 alternativas, sem trava, sem sorteio) · Turma Jogos Digitais',
+      items: QUESTIONS.map((q, i) => ({
+        number: i + 1,
+        title: q.bloco,
+        prompt: `${q.lead} — ${q.sub}`,
+        options: q.options,
+        correctIndex: q.certa,
+        answer: q.options[q.certa]
+      })),
+      fileName: 'prova-jogos-engel-gabarito.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
