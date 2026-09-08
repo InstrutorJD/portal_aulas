@@ -1,9 +1,10 @@
 // @ts-check
 // "Prova — Turma Jogos Digitais" (matéria Prova, trilha Prova Diagnóstica):
-// mesmo mecanismo de tests/prova-sistemas.spec.js — banco de 82 questões (5
-// alternativas cada, com 2 questões práticas de Motor Godot e mais 2
-// práticas cada pra JavaScript/C# — ver turmas/jogos/atividades/
-// prova-jogos.html), sorteando 20 por aluno na primeira vez que ele clica
+// mesmo mecanismo de tests/prova-sistemas.spec.js — banco de 80 questões (5
+// alternativas cada, sem nenhuma sobre Motor Godot — a pedido explícito
+// do professor — e com 2 questões práticas cada pra JavaScript/C# — ver
+// turmas/jogos/atividades/prova-jogos.html), sorteando 20 por aluno na
+// primeira vez que ele clica
 // "Iniciar prova" (sorteio travado em localStorage pelo resto da
 // tentativa), trava de integridade (shared/exam-proctor.js: 1ª saída da
 // aba avisa, 2ª bloqueia até o professor liberar com token) e uma única
@@ -49,7 +50,7 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
   test('mostra a tela de regras antes de iniciar, não a prova direto', async ({ page }) => {
     await page.goto(PROVA_URL);
     await expect(page.locator('#gateWrap')).toContainText('Prova Diagnóstica — Turma Jogos Digitais');
-    await expect(page.locator('#gateWrap')).toContainText('82 questões');
+    await expect(page.locator('#gateWrap')).toContainText('80 questões');
     await expect(page.locator('#gateWrap')).toContainText('20');
     await expect(page.locator('#storyWrap')).toBeHidden();
     await expect(page.locator('#btnIniciar')).toBeVisible();
@@ -179,12 +180,12 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
     await expect(page.locator('.option')).toHaveCount(5);
     const selectionAfter = await page.evaluate(u => localStorage.getItem(`prova_jogos_selecao_${u}`), 'admin');
     expect(selectionAfter).not.toBeNull();
-    // Praticamente impossível o sorteio de 20 de 82 repetir por acaso —
+    // Praticamente impossível o sorteio de 20 de 80 repetir por acaso —
     // confirma que reiniciar de fato gerou uma seleção nova.
     expect(selectionAfter).not.toBe(selectionBefore);
   });
 
-  test('gabarito lista o banco inteiro de 82 questões', async ({ page }) => {
+  test('gabarito lista o banco inteiro de 80 questões', async ({ page }) => {
     await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
@@ -202,9 +203,9 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
     const fs = require('node:fs');
     const content = fs.readFileSync(filePath, 'utf-8');
     expect(content).toContain('GABARITO');
-    expect(content).toContain('82)');
-    expect(content).not.toContain('83)');
-    expect(content).toContain('Motor Godot: Construa o Pacman');
+    expect(content).toContain('80)');
+    expect(content).not.toContain('81)');
+    expect(content).not.toContain('Motor Godot: Construa o Pacman');
     expect(content).toContain('liderDoExercito');
     expect(content).toContain('Dobro(5)');
   });

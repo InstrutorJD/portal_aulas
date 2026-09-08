@@ -149,26 +149,26 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 82 QUESTÕES — cobre todas as matérias/trilhas com
+  // BANCO DE 80 QUESTÕES — cobre todas as matérias/trilhas com
   // conteúdo real trabalhadas na turma Jogos Digitais (Projeto de
   // Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de
   // Projetos, Codificação de Jogos, Fundamentos de Programação de
   // Jogos e Testes de Jogos Digitais). Mesmo esquema de
   // turmas/sistemas/atividades/prova-sistemas.html: 5 alternativas
   // por questão, posição NUNCA fixa (reembaralhadas a cada exibição
-  // — ver renderQuestion), e 20 das 82 sorteadas por aluno (ver
+  // — ver renderQuestion), e 20 das 80 sorteadas por aluno (ver
   // pickExamIndices). As questões de Projeto de Vida e Mundo do
   // Trabalho reaproveitam o mesmo conteúdo da prova de Sistemas —
   // são exatamente as mesmas trilhas, copiadas entre as duas turmas.
-  // As 2 questões de Motor Godot são práticas (leem o comportamento
-  // real do código do roteiro, igual às 2 da Cobrinha logo abaixo),
-  // não perguntas de definição — a trilha em si é toda roteiro
-  // prático + quiz de teoria próprio (ver cod-godot-pratica.html e
-  // cod-godot-teoria.html), então o banco compartilhado só cobre o
-  // que dá pra testar sem reproduzir o quiz de teoria dela aqui. Pelo
-  // mesmo motivo, JavaScript e C# ganharam 2 questões práticas cada
-  // (função real de um desafio da trilha, não só sintaxe isolada),
-  // além das 2 conceituais que já existiam pra cada uma.
+  // Sem NENHUMA questão de Motor Godot (nem conceitual nem prática) —
+  // a pedido explícito do professor: a trilha "Motor Godot: Construa
+  // o Pacman" é toda roteiro prático + visto do professor + quiz de
+  // teoria próprio (ver cod-godot-pratica.html e cod-godot-teoria.html),
+  // então não entra também no banco compartilhado desta prova. Pelo
+  // mesmo espírito de reforçar código real (não só sintaxe isolada),
+  // JavaScript e C# ganharam 2 questões práticas cada (função real de
+  // um desafio da trilha), além das 2 conceituais que já existiam pra
+  // cada uma.
   const QUESTION_POOL = [
     // ---- Projeto de Vida ----
     {
@@ -574,30 +574,6 @@
       correctIndex: 0
     },
     {
-      materia: 'Codificação — Motor Godot: Construa o Pacman',
-      prompt: 'No jogo do Pacman construído na Godot, o Pacman e os fantasmas andam célula por célula (nunca "no meio do caminho"): o código anda até o centro da PRÓXIMA célula com move_toward(alvo, velocidade * delta), e só avança pra próxima célula quando a posição chega exatamente nesse alvo. Por que esse esquema garante que o personagem nunca atravessa uma parede, mesmo o jogo não usando nenhum CollisionShape2D?',
-      options: [
-        "Porque a troca de direção só é aceita quando a próxima célula não é parede (is_wall), e o movimento nunca ultrapassa o centro da célula-alvo",
-        "Porque a Godot bloqueia automaticamente qualquer movimento sobre um retângulo desenhado com draw_rect()",
-        "Porque o valor de SPEED, nesse jogo, é baixo demais pra atravessar qualquer coisa",
-        "Porque o grid do labirinto tem colisão física própria, sem precisar de nenhum código",
-        "Porque _draw() impede sozinho o movimento por cima de qualquer coisa desenhada nele"
-      ],
-      correctIndex: 0
-    },
-    {
-      materia: 'Codificação — Motor Godot: Construa o Pacman',
-      prompt: 'No mesmo jogo, os scripts pacman.gd, ghost.gd e main.gd chamam GameManager.add_score(10) e GameManager.lose_life() direto, sem NUNCA declarar essa variável em nenhum desses arquivos. Isso só funciona porque game_manager.gd foi configurado como:',
-      options: [
-        "Autoload (Project Settings > Globals), virando um singleton global chamado GameManager, acessível de qualquer script do projeto",
-        "Um nó filho direto do Pacman, herdando as variáveis dele automaticamente",
-        "Uma constante declarada dentro de maze.gd",
-        "Um parâmetro passado toda vez que _process(delta) é chamado",
-        "Um arquivo de configuração JSON carregado no início do jogo"
-      ],
-      correctIndex: 0
-    },
-    {
       materia: 'Codificação — Projeto: Construa seu Jogo',
       prompt: 'No jogo da Cobrinha construído no portal, a função que faz a cobrinha andar recebe a cobrinha (array), a nova cabeça e um "cresce" (true/false). Se ela cresce, o rabo NÃO deve sair da lista. Qual lógica está correta?',
       options: [
@@ -892,7 +868,7 @@
   ];
 
   // ============================================================
-  // SORTEIO: 20 das 82, embaralhadas — recalculado só na primeira
+  // SORTEIO: 20 das 80, embaralhadas — recalculado só na primeira
   // vez que o aluno clica "Iniciar" (persistido em SELECTION_KEY
   // pra não mudar no meio de uma tentativa em andamento). As
   // ALTERNATIVAS de cada questão são reembaralhadas a cada exibição
@@ -1255,7 +1231,7 @@
         <h2>📋 Prova Diagnóstica — Turma Jogos Digitais</h2>
         <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
         <ul>
-          <li>Existe um banco de <b>82 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
           <li>Dá pra <b>pular uma questão</b> sem responder — mas ela conta como <b>errada</b>, sem chance de voltar depois.</li>
@@ -1278,13 +1254,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 82 questões (não só as 20 que um
+  // Gabarito: lista o BANCO INTEIRO de 80 questões (não só as 20 que um
   // aluno específico recebeu), agrupado por matéria — referência completa
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 82 questões',
-      subtitle: 'Diagnóstico (20 sorteadas de 82, por aluno) · Turma Jogos Digitais',
+      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 80 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 80, por aluno) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,
