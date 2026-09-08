@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Jogos: Central de Codificação — Motor Godot</title>
+<title>PixelForge Studios — Roteiro: Construa o Pacman no Godot</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -29,95 +29,68 @@
     font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
   }
 
-  .stage{ flex:1; min-height:0; padding:12px; overflow:hidden; display:flex; }
-  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:14px; width:100%; height:100%; }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--blue); width:0%; transition:width 0.4s ease; }
 
-  .sidebar{
-    width:190px; flex-shrink:0; height:100%; overflow-y:auto;
-    background:var(--panel); border:1px solid var(--line); padding:8px;
-  }
-  .sidebar-title{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding:0 2px; }
-  .challenge-item{
-    display:flex; align-items:center; gap:8px; padding:8px 8px; margin-bottom:4px;
-    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:11px;
-  }
-  .challenge-item .status{ font-size:13px; width:16px; text-align:center; flex-shrink:0; }
-  .challenge-item.active{ border-color:var(--blue); color:var(--blue); }
-  .challenge-item.completed{ color:var(--ink); }
-  .challenge-item.locked{ opacity:0.4; cursor:not-allowed; }
-  .challenge-item .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
 
-  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; height:100%; overflow-y:auto; }
-
-  .challenge-header{ flex:1 1 0%; min-height:90px; overflow-y:auto; background:var(--panel); border:1px solid var(--line); padding:10px 14px; }
-  .challenge-header h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:19px; color:var(--blue); margin:0 0 8px; letter-spacing:1px; }
-  .challenge-header p{ font-size:14px; color:var(--ink-dim); margin:8px 0 0; line-height:1.5; }
-  .challenge-header code{ color:var(--gold); }
-
-  .explanation-box{
-    background:#08111c; border:1px solid var(--blue-dim); padding:10px 12px;
-    font-size:11.5px; color:var(--ink); line-height:1.6;
-  }
-  .explanation-box .exp-title{
-    color:var(--blue); font-weight:800; text-transform:uppercase; font-size:10px; letter-spacing:1px; margin-bottom:6px;
-  }
-  .explanation-box code{ color:var(--gold); }
-  .explanation-box pre{
-    background:#000; border:1px solid var(--line); padding:8px; margin:6px 0 0;
-    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--gold); white-space:pre;
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--gold); margin:0 0 14px; letter-spacing:1px;
   }
 
-  .given-vars{ font-size:10.5px; color:var(--ink-dim); margin-top:8px; }
-  .given-vars b{ color:var(--gold); }
-
-  .hint-toggle{
-    display:inline-block; margin-top:8px; font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase;
-    background:transparent; color:var(--gold); border:1px solid var(--blue-dim); padding:5px 10px; cursor:pointer; border-radius:2px;
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--blue); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
   }
-  .hint-toggle:hover{ background:rgba(224,184,74,0.1); }
-  .hint-box{
-    display:none; margin-top:8px; background:var(--panel2); border:1px dashed var(--gold);
-    padding:8px 10px; font-size:11.5px; color:var(--ink); line-height:1.5;
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--blue); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
   }
-  .hint-box.show{ display:block; }
-  .hint-box b{ color:var(--gold); }
-
-  textarea#codeInput{
-    width:100%; flex:0 0 230px; min-height:140px; resize:vertical; background:#000; color:var(--blue);
-    border:1px solid var(--line); font-family:'JetBrains Mono', monospace; font-size:12px;
-    padding:10px; outline:none; line-height:1.5; tab-size:4;
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--blue-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--blue-dim); color:var(--gold); font-style:italic;
   }
-  textarea#codeInput:focus{ border-color:var(--blue); }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--gold); }
 
-  .actions{ display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap; }
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
   button.btn{
-    font-family:inherit; font-weight:800; font-size:11px; letter-spacing:1px; text-transform:uppercase;
-    background:var(--blue); color:#04162a; border:none; padding:9px 16px; cursor:pointer; border-radius:2px;
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--blue); color:#04162a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
   }
-  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
   button.btn-secondary{ background:transparent; color:var(--blue); border:1px solid var(--blue-dim); }
 
-  .console{
-    background:#08090f; border:1px solid var(--line); padding:8px 10px; font-size:11px;
-    flex:0 0 100px; min-height:70px; overflow-y:auto; line-height:1.6;
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
   }
-  .console .line.info{ color:var(--ink-dim); }
-  .console .line.pass{ color:var(--blue); }
-  .console .line.fail{ color:var(--blood-bright); }
-  .console .line.success{ color:var(--blue); font-weight:bold; }
-  .console .line.warn{ color:var(--gold); }
+  .visto-form input:focus{ outline:none; border-color:var(--blue-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--blue); color:var(--blue); }
 
-  /* Celular/telas estreitas: mesma regra das outras práticas de desafio —
-     empilha tudo numa coluna só e deixa a página inteira rolar. */
   @media (max-width: 700px) {
     body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
     .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
-    .stage{ overflow:visible; padding:8px; }
-    .layout{ flex-direction:column; height:auto; }
-    .sidebar{ width:100%; height:auto; max-height:150px; }
-    .main-panel{ height:auto; overflow-y:visible; }
-    textarea#codeInput{ min-height:200px; }
-    .console{ flex:none; max-height:160px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
   }
 </style>
 <script>
@@ -129,264 +102,924 @@
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
-<script src="../../../shared/gdscript-challenge-engine.js"></script>
 </head>
 <body>
 
 <div class="env">
   <div class="topbar">
-    <div>CODIFICAÇÃO — CENTRAL DE CODIFICAÇÃO: MOTOR GODOT</div>
-    <div>CONCLUÍDOS: <span id="lblProgress">0/0</span></div>
+    <div>CODIFICAÇÃO — ROTEIRO: PACMAN NO GODOT</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">18</span></div>
   </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
   <div class="stage">
-    <div class="layout">
-      <div class="sidebar">
-        <div class="sidebar-title">Desafios</div>
-        <div id="challengeList"></div>
-      </div>
-
-      <div class="main-panel">
-        <div class="challenge-header">
-          <h2 id="challengeTitle">--</h2>
-
-          <div class="explanation-box">
-            <div class="exp-title">📖 Como funciona</div>
-            <div id="explanationText"></div>
-          </div>
-
-          <p id="challengeDesc"></p>
-          <div class="given-vars" id="givenVarsLabel" style="display:none;"></div>
-
-          <button class="hint-toggle" id="btnHint">💡 Ver dica</button>
-          <div class="hint-box" id="hintBox"></div>
-        </div>
-
-        <textarea id="codeInput" spellcheck="false"></textarea>
-
-        <div class="actions">
-          <button class="btn" id="btnRun">▶ Executar</button>
-          <button class="btn btn-secondary" id="btnNext" style="display:none;">Próximo desafio →</button>
-        </div>
-
-        <div class="console" id="consoleOutput"></div>
-      </div>
-    </div>
+    <div class="step-wrap" id="stepWrap"></div>
   </div>
 </div>
 
 <script>
-  // Constrói, passo a passo, o pipeline de movimentação top-down do Guia
-  // Definitivo Godot 4 (seção 6) como código GDScript de verdade: direção a
-  // partir do Input (respeitando a pegadinha do eixo Y), detecção de
-  // diagonal, normalização, velocidade final e deslocamento por delta —
-  // fechando com uma função só que junta tudo. Só usa a sintaxe que o
-  // shared/gdscript-challenge-engine.js reconhece (var/const/print/if-else/
-  // for/func — ver esse arquivo pro porquê de Vector2/Array/while não
-  // aparecerem aqui como código executável; eles são cobertos na Teoria).
-  const CHALLENGES = [
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `cod_godot_pratica_progress_${username}`;
+  const STEP_KEY = `cod_godot_pratica_step_${username}`;
+
+  // Atividade sem correção automática (o "produto" é um projeto Godot 4
+  // aberto no computador do aluno, fora do portal) — cada tela só navega
+  // com Voltar/Próximo, sem quiz. Quem marca como concluída é o professor,
+  // na última etapa (ver renderVisto), o mesmo padrão de
+  // cod-godot-personagem-roteiro.html (trilha anterior) e
+  // oficina-comunicacao-trabalho.html.
+  //
+  // Código GDScript idêntico ao roteiro de referência (pacman-godot-completo.md,
+  // na raiz do repositório) — qualquer alteração de conteúdo técnico deve
+  // manter os dois em sincronia.
+  const STEPS = [
     {
-      id: 1,
-      title: 'Direção X a partir do input',
-      givenVars: ['pressionando_direita', 'pressionando_esquerda'],
-      starter: '# crie a funcao direcaoX(direita, esquerda)\n# 1 se so a direita estiver pressionada\n# -1 se so a esquerda estiver pressionada\n# 0 nos outros casos (nenhuma ou as duas)\nfunc direcaoX(direita, esquerda):\n\t\n\n# depois, crie resultado chamando a funcao\nvar resultado = direcaoX(pressionando_direita, pressionando_esquerda)\n',
-      explanation: 'Pra montar o vetor direção a partir do <code>Input.is_action_pressed()</code>, cada eixo soma ou subtrai 1 dependendo da tecla — combine condições com <code>&&</code> (e) e <code>!</code> (não).<pre>if direita && !esquerda:\n\treturn 1</pre>',
-      desc: 'Crie a função <code>direcaoX(direita, esquerda)</code>, que devolve <b>1</b> se só <code>direita</code> estiver pressionada, <b>-1</b> se só <code>esquerda</code> estiver pressionada, e <b>0</b> nos outros casos (nenhuma, ou as duas ao mesmo tempo). Depois, crie <code>resultado</code> chamando a função com <code>pressionando_direita</code> e <code>pressionando_esquerda</code>.',
-      hint: 'Use <code>if</code>/<code>else</code> aninhados: primeiro teste "direita e não esquerda"; depois, dentro do <code>else</code>, teste "esquerda e não direita". O <code>!</code> inverte um valor lógico.',
-      solution: 'func direcaoX(direita, esquerda):\n\tif direita && !esquerda:\n\t\treturn 1\n\telse:\n\t\tif esquerda && !direita:\n\t\t\treturn -1\n\t\telse:\n\t\t\treturn 0\nvar resultado = direcaoX(pressionando_direita, pressionando_esquerda)',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { pressionando_direita: true, pressionando_esquerda: false }, expected: 1 },
-        { values: { pressionando_direita: false, pressionando_esquerda: true }, expected: -1 },
-        { values: { pressionando_direita: false, pressionando_esquerda: false }, expected: 0 },
-        { values: { pressionando_direita: true, pressionando_esquerda: true }, expected: 0 }
-      ]
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios quer ver você construir um jogo completo dentro do editor da Godot — sem nenhum sprite pronto, tudo desenhado por código, com ¤_draw()¤. É o clássico Pacman: labirinto, pastilhas, power pellets, três fantasmas com dois comportamentos (perseguir / fugir assustado) e placar.
+
+### O que entregar
+
+Um projeto Godot 4 com o jogo rodando de ponta a ponta: labirinto gerado por código, Pacman controlado pelas setas do teclado, 3 fantasmas, pontuação na tela, power pellet que assusta os fantasmas por alguns segundos, e vitória (comer tudo) ou derrota (perder as 3 vidas).
+
+### Como funciona aqui
+
+1. Siga o roteiro passo a passo: primeiro os 5 scripts (¤.gd¤) do jogo, depois a configuração do Autoload, depois a montagem da cena inteira no editor.
+2. Ao final, rode o jogo (F6) e jogue uma partida de verdade.
+3. Chame o professor e mostre o jogo funcionando na tela.
+4. Peça o visto pessoalmente — só aí esta atividade é marcada como concluída.
+5. Só depois disso a trilha de teoria sobre o que você construiu aqui é liberada.`
     },
     {
-      id: 2,
-      title: 'Direção Y e a pegadinha do eixo',
-      givenVars: ['pressionando_baixo', 'pressionando_cima'],
-      starter: '# crie a funcao direcaoY(baixo, cima)\n# lembre: em Godot, Y positivo aponta pra BAIXO\n# 1 se so baixo estiver pressionado\n# -1 se so cima estiver pressionado\n# 0 nos outros casos\nfunc direcaoY(baixo, cima):\n\t\n\n# depois, crie resultado chamando a funcao\nvar resultado = direcaoY(pressionando_baixo, pressionando_cima)\n',
-      explanation: 'Igual ao eixo X, só que invertido pela pegadinha do eixo Y: "Baixo" SOMA (Y positivo), "Cima" SUBTRAI (Y negativo).<pre>if baixo && !cima:\n\treturn 1</pre>',
-      desc: 'Crie a função <code>direcaoY(baixo, cima)</code>. Lembre-se: na Godot, <b>Y positivo aponta pra baixo</b>. Ela deve devolver <b>1</b> se só <code>baixo</code> estiver pressionado, <b>-1</b> se só <code>cima</code> estiver pressionado, e <b>0</b> nos outros casos. Depois, crie <code>resultado</code> chamando a função com <code>pressionando_baixo</code> e <code>pressionando_cima</code>.',
-      hint: 'Mesma estrutura do desafio anterior (direcaoX), só trocando os nomes — e lembrando que "Baixo" é o valor POSITIVO aqui, não "Cima".',
-      solution: 'func direcaoY(baixo, cima):\n\tif baixo && !cima:\n\t\treturn 1\n\telse:\n\t\tif cima && !baixo:\n\t\t\treturn -1\n\t\telse:\n\t\t\treturn 0\nvar resultado = direcaoY(pressionando_baixo, pressionando_cima)',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { pressionando_baixo: true, pressionando_cima: false }, expected: 1 },
-        { values: { pressionando_baixo: false, pressionando_cima: true }, expected: -1 },
-        { values: { pressionando_baixo: false, pressionando_cima: false }, expected: 0 },
-        { values: { pressionando_baixo: true, pressionando_cima: true }, expected: 0 }
-      ]
+      titulo: '1. Criando o projeto',
+      corpo: `
+### Abra o Godot
+
+Você vai cair numa tela chamada **Project Manager**, com uma lista de projetos (provavelmente vazia).
+
+1. Clique no botão **Create** (ou **Novo Projeto**), no canto superior.
+2. No campo **Project Name**, digite ¤Pacman¤.
+3. No campo **Project Path**, escolha uma pasta vazia no seu computador clicando em **Browse** — por exemplo, crie uma pasta ¤Pacman¤ dentro de Documentos.
+4. Em **Renderer**, deixe marcado **Mobile** (é mais leve, e esse jogo não precisa de gráficos avançados).
+5. Clique em **Create & Edit**. O Godot abre o editor com o projeto vazio.
+
+### Os painéis principais do editor
+
+- **FileSystem** (canto inferior esquerdo): é ali que os arquivos do projeto aparecem.
+- **Scene** (canto superior esquerdo): é ali que a estrutura da cena aparece.
+- **Inspector** (lado direito): é onde você edita as propriedades de cada coisa que selecionar.
+
+- [ ] Projeto "Pacman" criado e o editor abriu vazio`
     },
     {
-      id: 3,
-      title: 'Está andando na diagonal?',
-      givenVars: ['direcao_x', 'direcao_y'],
-      starter: '# as variaveis direcao_x e direcao_y ja existem (vindas dos desafios anteriores)\n# resultado deve ser true so quando as DUAS forem diferentes de 0 (diagonal)\n\nvar resultado\n\n',
-      explanation: 'Andar na diagonal acontece quando os dois eixos estão ativos ao mesmo tempo — é justamente por isso que existe o próximo bloco de desafios (normalização).<pre>if x != 0 && y != 0:\n\tresultado = true</pre>',
-      desc: 'As variáveis <code>direcao_x</code> e <code>direcao_y</code> já existem. <code>resultado</code> deve ser <code>true</code> só quando as DUAS forem diferentes de <b>0</b> (ou seja, o jogador está andando na diagonal); senão, <code>false</code>.',
-      hint: 'Use <code>!=</code> pra checar "diferente de zero" nos dois eixos ao mesmo tempo, combinando com <code>&&</code>.',
-      solution: 'var resultado\nif direcao_x != 0 && direcao_y != 0:\n\tresultado = true\nelse:\n\tresultado = false',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { direcao_x: 1, direcao_y: 0 }, expected: false },
-        { values: { direcao_x: 0, direcao_y: -1 }, expected: false },
-        { values: { direcao_x: 1, direcao_y: -1 }, expected: true },
-        { values: { direcao_x: 0, direcao_y: 0 }, expected: false }
-      ]
+      titulo: '2. Criando os 5 arquivos de script',
+      corpo: `
+Vamos criar 5 arquivos de código (¤.gd¤). O processo é o mesmo pros 5, mudando só o nome:
+
+1. No painel **FileSystem** (canto inferior esquerdo), clique com o **botão direito** em cima de ¤res://¤ (a pasta raiz do projeto).
+2. No menu que abrir, clique em **New Script...** (Novo Script).
+3. Uma janela abre perguntando o nome do script. No campo **Path**, apague o que tiver depois de ¤res://¤ e digite o nome do arquivo.
+4. Pode deixar **Template** como está (Default). Clique em **Create**.
+5. O Godot abre o script vazio, já com uma linha ¤extends Node2D¤ gerada automaticamente — deixe assim por enquanto, o código de cada um vem nos próximos passos deste roteiro.
+6. Salve com **Ctrl+S**.
+
+Repita esse processo pra criar os 5 arquivos, com estes nomes exatos:
+
+- ¤maze.gd¤
+- ¤pacman.gd¤
+- ¤ghost.gd¤
+- ¤game_manager.gd¤
+- ¤main.gd¤
+
+- [ ] Os 5 arquivos .gd criados dentro de res:// (visíveis no painel FileSystem)`
     },
     {
-      id: 4,
-      title: 'Normalizando o eixo X',
-      givenVars: ['direcao_x', 'magnitude'],
-      starter: '# direcao_x e magnitude ja existem (magnitude ja foi calculada com Pitagoras)\n# crie resultado com direcao_x dividido pela magnitude\n\n',
-      explanation: 'Normalizar significa dividir cada componente pela magnitude (o "tamanho") total do vetor, deixando o vetor com tamanho 1 — é o que <code>.normalized()</code> faz por trás dos panos.<pre>var x_normalizado = direcao_x / magnitude</pre>',
-      desc: 'As variáveis <code>direcao_x</code> e <code>magnitude</code> já existem. Crie <code>resultado</code> com <code>direcao_x</code> dividido por <code>magnitude</code> — o componente X do vetor já normalizado.',
-      hint: 'Normalizar é só dividir o componente pela magnitude total do vetor.',
-      solution: 'var resultado = direcao_x / magnitude',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { direcao_x: 1, magnitude: 2 }, expected: 0.5 },
-        { values: { direcao_x: -1, magnitude: 2 }, expected: -0.5 },
-        { values: { direcao_x: 0, magnitude: 2 }, expected: 0 },
-        { values: { direcao_x: 2, magnitude: 4 }, expected: 0.5 }
-      ]
+      titulo: '3. Script: maze.gd — o labirinto',
+      corpo: `
+Abra ¤maze.gd¤ (clique duas vezes nele no FileSystem). **Apague todo o conteúdo** e cole o código abaixo. Depois salve com **Ctrl+S**.
+
+Esse script gera o grid do labirinto por código (parede / pastilha / vazio), desenha tudo com ¤_draw()¤ e expõe funções de consulta: se uma célula é parede, comer a pastilha de uma célula, e converter célula ↔ pixel.
+
+§§§gdscript
+extends Node2D
+class_name Maze
+
+const CELL_SIZE = 24
+const WIDTH = 21
+const HEIGHT = 21
+
+var grid: Array = []
+
+func _ready():
+	_generate_grid()
+	queue_redraw()
+
+# Gera um labirinto tipo "grade": pilares nas posições pares,
+# corredores nas ímpares. Sempre conectado, de qualquer tamanho.
+func _generate_grid():
+	grid.clear()
+	for y in HEIGHT:
+		var row = []
+		for x in WIDTH:
+			if y == 0 or y == HEIGHT - 1 or x == 0 or x == WIDTH - 1:
+				row.append(1)
+			elif x % 2 == 0 and y % 2 == 0:
+				row.append(1)
+			else:
+				row.append(2)
+		grid.append(row)
+
+	# power pellets nos 4 cantos internos
+	grid[1][1] = 3
+	grid[1][WIDTH - 2] = 3
+	grid[HEIGHT - 2][1] = 3
+	grid[HEIGHT - 2][WIDTH - 2] = 3
+
+	# sala vazia no centro pros fantasmas
+	var cx = WIDTH / 2
+	var cy = HEIGHT / 2
+	for y in range(cy - 1, cy + 2):
+		for x in range(cx - 2, cx + 3):
+			grid[y][x] = 0
+
+# Desenha paredes (retângulo azul), pastilhas (pontinho branco)
+# e power pellets (bolinha branca maior). Sem sprite nenhum.
+func _draw():
+	for y in grid.size():
+		for x in grid[y].size():
+			var cell = grid[y][x]
+			var pos = Vector2(x, y) * CELL_SIZE
+			if cell == 1:
+				draw_rect(Rect2(pos, Vector2(CELL_SIZE, CELL_SIZE)), Color(0.1, 0.1, 0.6))
+			elif cell == 2:
+				draw_circle(pos + Vector2(CELL_SIZE / 2.0, CELL_SIZE / 2.0), 3, Color.WHITE)
+			elif cell == 3:
+				draw_circle(pos + Vector2(CELL_SIZE / 2.0, CELL_SIZE / 2.0), 7, Color.WHITE)
+
+# true se a célula é parede ou está fora do grid (conta como parede)
+func is_wall(cell: Vector2i) -> bool:
+	if cell.y < 0 or cell.y >= grid.size():
+		return true
+	if cell.x < 0 or cell.x >= grid[cell.y].size():
+		return true
+	return grid[cell.y][cell.x] == 1
+
+# come a pastilha da célula (se houver) e devolve o que tinha: 0/2/3
+func try_eat(cell: Vector2i) -> int:
+	if cell.y < 0 or cell.y >= grid.size():
+		return 0
+	if cell.x < 0 or cell.x >= grid[cell.y].size():
+		return 0
+	var val = grid[cell.y][cell.x]
+	if val == 2 or val == 3:
+		grid[cell.y][cell.x] = 0
+		queue_redraw()
+	return val
+
+# quantas pastilhas (normais + power) ainda restam no mapa
+func pellets_left() -> int:
+	var count = 0
+	for row in grid:
+		for cell in row:
+			if cell == 2 or cell == 3:
+				count += 1
+	return count
+
+# posição em pixels -> coordenada de célula (linha/coluna)
+func world_to_cell(world_pos: Vector2) -> Vector2i:
+	return Vector2i(int(world_pos.x / CELL_SIZE), int(world_pos.y / CELL_SIZE))
+
+# coordenada de célula -> posição em pixels (centro da célula)
+func cell_to_world(cell: Vector2i) -> Vector2:
+	return Vector2(cell.x * CELL_SIZE + CELL_SIZE / 2.0, cell.y * CELL_SIZE + CELL_SIZE / 2.0)
+§§§
+
+- [ ] Código de maze.gd colado e salvo`
     },
     {
-      id: 5,
-      title: 'Normalizando o eixo Y',
-      givenVars: ['direcao_y', 'magnitude'],
-      starter: '# direcao_y e magnitude ja existem (magnitude ja foi calculada com Pitagoras)\n# crie resultado com direcao_y dividido pela magnitude\n\n',
-      explanation: 'Mesma ideia do eixo X, só que aplicada ao componente Y do vetor.<pre>var y_normalizado = direcao_y / magnitude</pre>',
-      desc: 'As variáveis <code>direcao_y</code> e <code>magnitude</code> já existem. Crie <code>resultado</code> com <code>direcao_y</code> dividido por <code>magnitude</code> — o componente Y do vetor já normalizado.',
-      hint: 'Mesma conta do desafio anterior, agora com direcao_y no lugar de direcao_x.',
-      solution: 'var resultado = direcao_y / magnitude',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { direcao_y: 1, magnitude: 2 }, expected: 0.5 },
-        { values: { direcao_y: -1, magnitude: 2 }, expected: -0.5 },
-        { values: { direcao_y: 0, magnitude: 2 }, expected: 0 },
-        { values: { direcao_y: 2, magnitude: 4 }, expected: 0.5 }
-      ]
+      titulo: '4. Script: pacman.gd — o jogador',
+      corpo: `
+Abra ¤pacman.gd¤, apague o conteúdo padrão, cole o código abaixo e salve.
+
+Esse script controla o Pacman: movimento em grade (célula por célula, nunca "no meio do caminho"), leitura do teclado, e o desenho de um círculo amarelo com uma "fatia" preta simulando a boca.
+
+§§§gdscript
+extends Node2D
+class_name Pacman
+
+const SPEED = 120.0
+const CELL_SIZE = 24
+
+var maze: Maze
+var current_cell: Vector2i
+var direction := Vector2i.ZERO
+var next_direction := Vector2i.ZERO
+var mouth_open := true
+var mouth_timer := 0.0
+
+# chamado pelo main.gd depois de atribuir "maze"
+# (NÃO usar _ready aqui: o _ready dos filhos roda antes do _ready do pai)
+func initialize():
+	current_cell = maze.world_to_cell(position)
+	position = maze.cell_to_world(current_cell)
+
+func _process(delta):
+	delta = min(delta, 0.05)  # trava pico de lag, evita atravessar parede
+	if maze == null:
+		return
+	_read_input()
+	_move(delta)
+	_animate_mouth(delta)
+	queue_redraw()
+
+# lê as setas do teclado e guarda a direção desejada
+func _read_input():
+	if Input.is_action_pressed("ui_right"):
+		next_direction = Vector2i(1, 0)
+	elif Input.is_action_pressed("ui_left"):
+		next_direction = Vector2i(-1, 0)
+	elif Input.is_action_pressed("ui_up"):
+		next_direction = Vector2i(0, -1)
+	elif Input.is_action_pressed("ui_down"):
+		next_direction = Vector2i(0, 1)
+
+# anda até o centro da PRÓXIMA célula usando move_toward
+# (nunca ultrapassa o alvo, por isso nunca atravessa parede)
+func _move(delta):
+	if direction == Vector2i.ZERO:
+		if next_direction != Vector2i.ZERO and not maze.is_wall(current_cell + next_direction):
+			direction = next_direction
+		return
+
+	var target = maze.cell_to_world(current_cell + direction)
+	position = position.move_toward(target, SPEED * delta)
+
+	if position == target:
+		current_cell += direction
+
+		var eaten = maze.try_eat(current_cell)
+		if eaten == 2:
+			GameManager.add_score(10)
+		elif eaten == 3:
+			GameManager.add_score(50)
+			GameManager.start_frightened()
+
+		# troca de direção só é aceita se a próxima célula não for parede
+		if next_direction != Vector2i.ZERO and not maze.is_wall(current_cell + next_direction):
+			direction = next_direction
+		if maze.is_wall(current_cell + direction):
+			direction = Vector2i.ZERO
+
+# pisca a "boca" abrindo e fechando
+func _animate_mouth(delta):
+	mouth_timer += delta
+	if mouth_timer > 0.15:
+		mouth_timer = 0.0
+		mouth_open = not mouth_open
+
+# desenha o círculo amarelo + fatia preta (boca) na direção do movimento
+func _draw():
+	var radius = CELL_SIZE / 2.0 - 2
+	draw_circle(Vector2.ZERO, radius, Color.YELLOW)
+
+	if mouth_open and direction != Vector2i.ZERO:
+		var angle = Vector2(direction).angle()
+		var wedge = PackedVector2Array([
+			Vector2.ZERO,
+			Vector2(radius * 2, 0).rotated(angle - 0.4),
+			Vector2(radius * 2, 0).rotated(angle + 0.4)
+		])
+		# cor igual ao fundo simula a "boca" aberta
+		draw_colored_polygon(wedge, Color.BLACK)
+§§§
+
+Repare em duas decisões importantes:
+
+- **¤initialize()¤, não ¤_ready()¤**: o main.gd chama esse método manualmente depois de atribuir ¤maze¤ ao Pacman — se a inicialização estivesse dentro de ¤_ready()¤, ela rodaria ANTES do main.gd conseguir passar a referência do labirinto, porque o ¤_ready()¤ dos filhos executa antes do ¤_ready()¤ do nó pai.
+- **¤delta = min(delta, 0.05)¤**: trava um possível pico de lag (um frame muito longo) pra o Pacman nunca "pular" célula suficiente pra atravessar uma parede.
+
+- [ ] Código de pacman.gd colado e salvo`
     },
     {
-      id: 6,
-      title: 'Velocidade final no eixo X',
-      givenVars: ['direcao_x_normalizada', 'velocidade_jogador'],
-      starter: '# direcao_x_normalizada e velocidade_jogador ja existem\n# crie resultado multiplicando as duas\n\n',
-      explanation: 'A propriedade <code>velocity</code> do CharacterBody2D é a direção normalizada multiplicada pela velocidade escalar do jogador.<pre>velocity.x = direcao.x * velocidade_do_jogador</pre>',
-      desc: 'As variáveis <code>direcao_x_normalizada</code> e <code>velocidade_jogador</code> já existem. Crie <code>resultado</code> multiplicando as duas.',
-      hint: 'É só multiplicar as duas variáveis já existentes.',
-      solution: 'var resultado = direcao_x_normalizada * velocidade_jogador',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { direcao_x_normalizada: 0.5, velocidade_jogador: 200 }, expected: 100 },
-        { values: { direcao_x_normalizada: -1, velocidade_jogador: 150 }, expected: -150 },
-        { values: { direcao_x_normalizada: 0, velocidade_jogador: 300 }, expected: 0 },
-        { values: { direcao_x_normalizada: 1, velocidade_jogador: 250 }, expected: 250 }
-      ]
+      titulo: '5. Script: ghost.gd — o fantasma',
+      corpo: `
+Abra ¤ghost.gd¤, apague o conteúdo padrão, cole o código abaixo e salve.
+
+Mesmo esquema de movimento em grade do Pacman. Em modo normal, o fantasma persegue o Pacman escolhendo a direção que mais aproxima; em modo assustado, ele anda aleatório e pode ser "comido".
+
+§§§gdscript
+extends Node2D
+class_name Ghost
+
+const SPEED = 100.0
+const CELL_SIZE = 24
+
+@export var color: Color = Color.RED
+
+var maze: Maze
+var pacman: Pacman
+var current_cell: Vector2i
+var direction := Vector2i.ZERO
+var frightened := false
+
+# chamado pelo main.gd depois de atribuir "maze" e "pacman"
+func initialize():
+	current_cell = maze.world_to_cell(position)
+	position = maze.cell_to_world(current_cell)
+	_pick_direction()
+
+func _process(delta):
+	delta = min(delta, 0.05)  # mesma trava de segurança do Pacman
+	if maze == null:
+		return
+	_move(delta)
+	queue_redraw()
+
+# anda até o centro da próxima célula; ao chegar, escolhe pra onde ir
+func _move(delta):
+	var target = maze.cell_to_world(current_cell + direction)
+	position = position.move_toward(target, SPEED * delta)
+	if position == target:
+		current_cell += direction
+		_pick_direction()
+
+# decide a próxima direção: persegue o Pacman (normal) ou anda
+# aleatório (assustado), nunca voltando pra célula anterior à toa
+func _pick_direction():
+	var options: Array = []
+	for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		if d == -direction:
+			continue
+		if not maze.is_wall(current_cell + d):
+			options.append(d)
+
+	if options.is_empty():
+		direction = -direction
+		return
+
+	if frightened or pacman == null:
+		direction = options[randi() % options.size()]
+		return
+
+	# perseguição simples: escolhe a direção que mais aproxima do Pacman
+	var target_cell = maze.world_to_cell(pacman.position)
+	var best = options[0]
+	var best_dist = INF
+	for d in options:
+		var dist = (current_cell + d).distance_to(Vector2(target_cell))
+		if dist < best_dist:
+			best_dist = dist
+			best = d
+	direction = best
+
+func set_frightened(value: bool):
+	frightened = value
+
+# desenha um círculo colorido; fica azul enquanto assustado
+func _draw():
+	var radius = CELL_SIZE / 2.0 - 2
+	var c = Color.BLUE if frightened else color
+	draw_circle(Vector2.ZERO, radius, c)
+§§§
+
+- [ ] Código de ghost.gd colado e salvo`
     },
     {
-      id: 7,
-      title: 'Velocidade final no eixo Y',
-      givenVars: ['direcao_y_normalizada', 'velocidade_jogador'],
-      starter: '# direcao_y_normalizada e velocidade_jogador ja existem\n# crie resultado multiplicando as duas\n\n',
-      explanation: 'Mesma conta do eixo X, agora pro componente Y da velocidade final.<pre>velocity.y = direcao.y * velocidade_do_jogador</pre>',
-      desc: 'As variáveis <code>direcao_y_normalizada</code> e <code>velocidade_jogador</code> já existem. Crie <code>resultado</code> multiplicando as duas.',
-      hint: 'Mesma conta do desafio anterior, agora com direcao_y_normalizada no lugar de direcao_x_normalizada.',
-      solution: 'var resultado = direcao_y_normalizada * velocidade_jogador',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { direcao_y_normalizada: 0.5, velocidade_jogador: 200 }, expected: 100 },
-        { values: { direcao_y_normalizada: -1, velocidade_jogador: 150 }, expected: -150 },
-        { values: { direcao_y_normalizada: 0, velocidade_jogador: 300 }, expected: 0 },
-        { values: { direcao_y_normalizada: 1, velocidade_jogador: 250 }, expected: 250 }
-      ]
+      titulo: '6. Script: game_manager.gd — estado global do jogo',
+      corpo: `
+Abra ¤game_manager.gd¤, apague o conteúdo padrão, cole o código abaixo e salve.
+
+Esse script guarda a pontuação, as vidas e o cronômetro do modo "assustado" — no próximo passo, ele vira uma variável global (Autoload) chamada ¤GameManager¤, acessível de qualquer outro script do jogo.
+
+§§§gdscript
+extends Node
+
+signal score_changed(new_score)
+signal frightened_ended
+signal game_over
+signal game_won
+
+var score := 0
+var lives := 3
+var frightened_time := 6.0
+var frightened_timer := 0.0
+var is_frightened := false
+
+# conta regressiva do modo "assustado" (depois de comer power pellet)
+func _process(delta):
+	if is_frightened:
+		frightened_timer -= delta
+		if frightened_timer <= 0:
+			is_frightened = false
+			emit_signal("frightened_ended")
+
+func add_score(amount: int):
+	score += amount
+	emit_signal("score_changed", score)
+
+func start_frightened():
+	is_frightened = true
+	frightened_timer = frightened_time
+
+func lose_life():
+	lives -= 1
+	if lives <= 0:
+		emit_signal("game_over")
+§§§
+
+- [ ] Código de game_manager.gd colado e salvo`
     },
     {
-      id: 8,
-      title: 'Deslocamento do quadro (delta)',
-      givenVars: ['velocidade_x', 'delta'],
-      starter: '# velocidade_x e delta ja existem\n# crie resultado multiplicando as duas\n\n',
-      explanation: 'Dentro de <code>_physics_process(delta)</code> (não <code>_process(delta)</code> — código que mexe com CharacterBody2D precisa do ritmo fixo da física), o deslocamento de um quadro é a velocidade vezes o tempo daquele quadro — é isso que torna o movimento independente da taxa de FPS.<pre>var deslocamento = velocidade * delta</pre>',
-      desc: 'As variáveis <code>velocidade_x</code> e <code>delta</code> já existem. Crie <code>resultado</code> multiplicando as duas — o deslocamento deste quadro.',
-      hint: 'É só multiplicar a velocidade pelo tempo do quadro (delta).',
-      solution: 'var resultado = velocidade_x * delta',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { velocidade_x: 100, delta: 0.5 }, expected: 50 },
-        { values: { velocidade_x: 200, delta: 0.25 }, expected: 50 },
-        { values: { velocidade_x: -160, delta: 0.5 }, expected: -80 },
-        { values: { velocidade_x: 0, delta: 0.5 }, expected: 0 }
-      ]
+      titulo: '7. Script: main.gd — liga tudo',
+      corpo: `
+Abra ¤main.gd¤, apague o conteúdo padrão, cole o código abaixo e salve.
+
+Esse script liga o labirinto, o Pacman e os fantasmas entre si, checa colisão (com invulnerabilidade temporária pra não descontar várias vidas de uma encostada só) e atualiza o placar na tela.
+
+§§§gdscript
+extends Node2D
+
+var maze: Maze
+var pacman: Pacman
+var ghosts: Array = []
+var invulnerable := false
+var invulnerable_timer := 0.0
+
+func _ready():
+	maze = $Maze
+	pacman = $Pacman
+	pacman.maze = maze
+	pacman.initialize()
+
+	for ghost in $Ghosts.get_children():
+		ghost.maze = maze
+		ghost.pacman = pacman
+		ghost.initialize()
+		ghosts.append(ghost)
+
+	GameManager.score_changed.connect(_on_score_changed)
+	GameManager.game_over.connect(_on_game_over)
+
+	if has_node("UI/ScoreLabel"):
+		$UI/ScoreLabel.add_theme_font_size_override("font_size", 24)
+	_on_score_changed(GameManager.score)
+
+# a cada frame: atualiza modo assustado dos fantasmas e checa colisão
+func _process(delta):
+	if invulnerable:
+		invulnerable_timer -= delta
+		if invulnerable_timer <= 0:
+			invulnerable = false
+
+	for ghost in ghosts:
+		ghost.set_frightened(GameManager.is_frightened)
+		if ghost.current_cell == pacman.current_cell:
+			if GameManager.is_frightened:
+				# Pacman "come" o fantasma: ele volta pro centro
+				ghost.position = maze.cell_to_world(Vector2i(10, 10))
+				GameManager.add_score(200)
+			elif not invulnerable:
+				# perde 1 vida e fica 1.5s protegido antes de poder perder outra
+				GameManager.lose_life()
+				pacman.position = maze.cell_to_world(Vector2i(10, 19))
+				invulnerable = true
+				invulnerable_timer = 1.5
+
+	if maze.pellets_left() == 0:
+		GameManager.emit_signal("game_won")
+
+func _on_score_changed(new_score):
+	if has_node("UI/ScoreLabel"):
+		$UI/ScoreLabel.text = "Pontuação: %d" % new_score
+
+func _on_game_over():
+	print("Game Over")
+	get_tree().paused = true
+§§§
+
+- [ ] Código de main.gd colado e salvo
+
+Com os 5 arquivos criados e salvos, feche as abas de script (não precisa, mas ajuda a não se perder) e siga pro próximo passo: transformar o game_manager.gd numa variável global.`
     },
     {
-      id: 9,
-      title: 'Nova posição após um quadro',
-      givenVars: ['posicao_x', 'deslocamento_x'],
-      starter: '# posicao_x e deslocamento_x ja existem\n# crie resultado somando as duas\n\n',
-      explanation: 'A posição nova é sempre a posição atual somada ao deslocamento calculado naquele quadro.<pre>position.x += deslocamento.x</pre>',
-      desc: 'As variáveis <code>posicao_x</code> e <code>deslocamento_x</code> já existem. Crie <code>resultado</code> somando as duas — a nova posição do jogador depois deste quadro.',
-      hint: 'É só somar a posição atual com o deslocamento deste quadro.',
-      solution: 'var resultado = posicao_x + deslocamento_x',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { posicao_x: 100, deslocamento_x: 50 }, expected: 150 },
-        { values: { posicao_x: 0, deslocamento_x: -30 }, expected: -30 },
-        { values: { posicao_x: 200, deslocamento_x: 0 }, expected: 200 },
-        { values: { posicao_x: 500, deslocamento_x: 25 }, expected: 525 }
-      ]
+      titulo: '8. Transformando o game_manager.gd numa variável global (Autoload)',
+      corpo: `
+Isso é necessário porque ¤pacman.gd¤, ¤ghost.gd¤ e ¤main.gd¤ usam a palavra ¤GameManager¤ direto no código (ex: ¤GameManager.add_score(10)¤), sem nunca declarar essa variável. Pra isso funcionar, o Godot precisa saber que ¤GameManager¤ é o ¤game_manager.gd¤ carregado globalmente.
+
+1. No menu superior, clique em **Project**.
+2. No menu que abrir, clique em **Project Settings...**.
+3. Uma janela grande abre. No topo dela, clique na aba **Globals** (em algumas traduções aparece como **Globais**).
+4. Dentro dessa aba, tem sub-abas: **Autoload**, **Shader Globals**, **Groups**. Clique em **Autoload** (já deve estar selecionada por padrão).
+5. Clique no botão **Select Script/Scene...** (ou **Selecionar Script/Cena**).
+6. Uma janela de arquivos abre. Clique em ¤game_manager.gd¤ na lista pra selecionar.
+7. Clique em **Open** (Abrir).
+8. Você volta pra tela de Autoload. Repare que agora tem um campo de texto com o nome sugerido (algo como ¤game_manager¤). **Apague e digite ¤GameManager¤**, com essa capitalização exata (G e M maiúsculos, sem espaço, sem underline).
+9. Clique no botão **Add** (Adicionar), à direita do campo de nome.
+10. Confira a lista que aparece embaixo: deve ter uma linha com **Nome** ¤GameManager¤ e **Path** (Caminho) preenchido com ¤res://game_manager.gd¤. Se a coluna Path estiver vazia, clique no ícone de lixeira daquela linha pra remover, e repita os passos 5 a 9 — às vezes essa tela tem um bug de exibição e o caminho não salva de primeira.
+11. Clique em **Close** (Fechar) pra sair da janela de configurações.
+
+- [ ] GameManager aparece na lista de Autoload, com Path preenchido`
     },
     {
-      id: 10,
-      title: 'Um quadro completo de movimento',
-      givenVars: ['direcao_normalizada', 'velocidade_jogador', 'posicao_x', 'delta'],
-      starter: '# crie a funcao moverEixo(direcao, velocidade, posicao, delta)\n# que devolve a nova posicao apos este quadro\nfunc moverEixo(direcao, velocidade, posicao, delta):\n\t\n\n# depois, crie resultado chamando a funcao\nvar resultado = moverEixo(direcao_normalizada, velocidade_jogador, posicao_x, delta)\n',
-      explanation: 'É o pipeline inteiro da movimentação num só lugar: direção normalizada vezes velocidade dá a velocidade final; velocidade final vezes delta dá o deslocamento do quadro; deslocamento somado à posição atual dá a nova posição.<pre>func moverEixo(direcao, velocidade, posicao, delta):\n\treturn posicao + direcao * velocidade * delta</pre>',
-      desc: 'Crie a função <code>moverEixo(direcao, velocidade, posicao, delta)</code>, que devolve a nova posição depois de um quadro (direção normalizada vezes velocidade vezes delta, somada à posição atual). Depois, crie <code>resultado</code> chamando a função com <code>direcao_normalizada</code>, <code>velocidade_jogador</code>, <code>posicao_x</code> e <code>delta</code>.',
-      hint: 'Junte tudo numa linha só dentro do <code>return</code>: posição + direção * velocidade * delta.',
-      solution: 'func moverEixo(direcao, velocidade, posicao, delta):\n\treturn posicao + direcao * velocidade * delta\nvar resultado = moverEixo(direcao_normalizada, velocidade_jogador, posicao_x, delta)',
-      check: { type: 'variable', name: 'resultado' },
-      tests: [
-        { values: { direcao_normalizada: 0.5, velocidade_jogador: 200, posicao_x: 100, delta: 0.5 }, expected: 150 },
-        { values: { direcao_normalizada: -1, velocidade_jogador: 160, posicao_x: 300, delta: 0.5 }, expected: 220 },
-        { values: { direcao_normalizada: 0, velocidade_jogador: 300, posicao_x: 50, delta: 1 }, expected: 50 },
-        { values: { direcao_normalizada: 1, velocidade_jogador: 100, posicao_x: 0, delta: 0.25 }, expected: 25 }
-      ]
+      titulo: '9. Criando a cena e o nó raiz',
+      corpo: `
+Uma "cena" no Godot é a estrutura de objetos (chamados de **nós**, ou *nodes*) que formam uma tela do jogo. Vamos montar a cena principal do zero.
+
+1. No menu superior, clique em **Scene**.
+2. Clique em **New Scene** (Nova Cena).
+3. No painel **Scene** (canto superior esquerdo), aparecem alguns botões perguntando qual tipo de nó raiz criar (2D Scene, 3D Scene, User Interface, Other Node).
+4. Clique em **2D Scene** (Cena 2D). Isso cria um nó raiz do tipo ¤Node2D¤ já pronto.
+5. O nó aparece no painel Scene com o nome ¤Node2D¤. Renomeie: clique duas vezes (devagar, não é duplo-clique rápido) em cima do nome até o texto virar editável, apague e digite ¤Main¤, e aperte **Enter**.
+6. Salve a cena: **Ctrl+S**. Na janela que abrir, digite o nome do arquivo como ¤Main¤ (o Godot já completa com ¤.tscn¤) e clique em **Save**.
+
+- [ ] Cena criada, com nó raiz Node2D renomeado pra "Main", salva como Main.tscn`
+    },
+    {
+      titulo: '10. Anexando o main.gd no nó Main',
+      corpo: `
+1. Com o nó ¤Main¤ selecionado no painel Scene, clique com o **botão direito** em cima dele.
+2. No menu, clique em **Attach Script...** (Anexar Script).
+3. Abre uma janela. Mude o botão de opção no topo da janela de **New Script File** (Novo Arquivo de Script) para **Load** (Carregar).
+4. Selecione o arquivo ¤main.gd¤ na lista de arquivos e clique em **Open**.
+5. O ícone do nó ¤Main¤ no painel Scene agora deve mostrar um pequeno pergaminho, indicando que tem um script anexado.
+
+- [ ] main.gd anexado ao nó Main`
+    },
+    {
+      titulo: '11. Criando os nós filhos',
+      corpo: `
+Vamos adicionar, dentro de ¤Main¤, os nós: ¤Maze¤, ¤Pacman¤, ¤Ghosts¤ (e dentro dele ¤Ghost1¤, ¤Ghost2¤, ¤Ghost3¤), e ¤UI¤ (com ¤ScoreLabel¤ dentro).
+
+**Para cada nó Node2D (Maze, Pacman, Ghosts, Ghost1, Ghost2, Ghost3):**
+
+1. Selecione o nó que vai ser o **pai** (por exemplo, clique em ¤Main¤ pra criar um filho direto dele).
+2. Clique no botão **+** no canto superior esquerdo do painel Scene (ou clique com o botão direito no nó pai e escolha **Add Child Node...**).
+3. Abre uma janela de busca de tipos de nó. Digite ¤Node2D¤ na caixa de busca.
+4. Clique duas vezes em cima de **Node2D** na lista (ou selecione e clique **Create**).
+5. O novo nó aparece com o nome ¤Node2D¤ (ou ¤Node2D2¤, etc). Renomeie clicando duas vezes devagar no nome, como você fez com ¤Main¤.
+
+Repita seguindo esta ordem e hierarquia:
+
+- Selecione ¤Main¤ → crie um filho ¤Node2D¤ → renomeie pra ¤Maze¤.
+- Selecione ¤Main¤ → crie um filho ¤Node2D¤ → renomeie pra ¤Pacman¤.
+- Selecione ¤Main¤ → crie um filho ¤Node2D¤ → renomeie pra ¤Ghosts¤.
+- Selecione ¤Ghosts¤ → crie um filho ¤Node2D¤ → renomeie pra ¤Ghost1¤.
+- Selecione ¤Ghosts¤ → crie um filho ¤Node2D¤ → renomeie pra ¤Ghost2¤.
+- Selecione ¤Ghosts¤ → crie um filho ¤Node2D¤ → renomeie pra ¤Ghost3¤.
+
+**Para o UI (que é de um tipo diferente, CanvasLayer):**
+
+1. Selecione ¤Main¤.
+2. Clique no **+** de novo, mas dessa vez digite ¤CanvasLayer¤ na busca.
+3. Clique duas vezes em **CanvasLayer** pra criar.
+4. Renomeie pra ¤UI¤.
+5. Selecione ¤UI¤.
+6. Clique no **+**, digite ¤Label¤ na busca.
+7. Clique duas vezes em **Label** pra criar.
+8. Renomeie pra ¤ScoreLabel¤.
+
+Árvore final esperada:
+
+§§§
+Main
+├── Maze
+├── Pacman
+├── Ghosts
+│   ├── Ghost1
+│   ├── Ghost2
+│   └── Ghost3
+└── UI
+    └── ScoreLabel
+§§§
+
+- [ ] Árvore de nós montada exatamente como acima (use a setinha ao lado de cada nó pra expandir/conferir)`
+    },
+    {
+      titulo: '12. Anexando os scripts nos nós certos',
+      corpo: `
+Repita o processo do passo anterior (botão direito → **Attach Script...** → mudar pra **Load** → selecionar o arquivo) pra cada um destes nós:
+
+| Nó | Script |
+| --- | --- |
+| Maze | maze.gd |
+| Pacman | pacman.gd |
+| Ghost1 | ghost.gd |
+| Ghost2 | ghost.gd |
+| Ghost3 | ghost.gd |
+
+¤Ghosts¤ e ¤UI¤ **não** recebem script nenhum, só agrupam outros nós. ¤ScoreLabel¤ também não recebe script.
+
+- [ ] maze.gd anexado em Maze
+- [ ] pacman.gd anexado em Pacman
+- [ ] ghost.gd anexado em Ghost1, Ghost2 e Ghost3 (os 3)`
+    },
+    {
+      titulo: '13. Configurando o texto inicial do ScoreLabel',
+      corpo: `
+1. Clique no nó ¤ScoreLabel¤ pra selecioná-lo.
+2. No painel **Inspector** (lado direito da tela), procure o campo **Text**.
+3. Clique no campo de texto ao lado de **Text** e digite: ¤Pontuação: 0¤.
+4. Ainda no Inspector, procure a seção **Layout** ou **Transform** → **Position**, e defina X = ¤10¤, Y = ¤10¤, pra ele ficar no canto superior esquerdo da tela.
+
+- [ ] ScoreLabel com texto "Pontuação: 0" e posição (10, 10)`
+    },
+    {
+      titulo: '14. Posicionando Pacman e fantasmas',
+      corpo: `
+O labirinto tem 21 colunas por 21 linhas, cada célula com 24 pixels. Não dá pra posicionar arrastando visualmente no editor, porque o desenho do labirinto só aparece quando o jogo está rodando (o código usa ¤_draw()¤, que não executa em modo de edição) — então vamos digitar as posições diretamente.
+
+Para cada um dos nós abaixo: clique nele no painel Scene, procure no Inspector a seção **Transform**, clique na setinha pra expandir se estiver fechada, ache o campo **Position**, clique no primeiro número (X), apague, digite o valor da tabela, aperte **Tab**, apague o segundo número (Y) e digite o valor, aperte **Enter**.
+
+| Nó | X | Y |
+| --- | --- | --- |
+| Pacman | 252 | 468 |
+| Ghost1 | 228 | 252 |
+| Ghost2 | 252 | 252 |
+| Ghost3 | 276 | 252 |
+
+O nó ¤Maze¤ pode ficar em X=0, Y=0 (posição padrão, não precisa mexer).
+
+Depois de posicionar os 4 nós, aperte **Ctrl+S** de novo pra garantir que a cena salvou com toda essa estrutura.
+
+- [ ] Pacman e os 3 fantasmas posicionados conforme a tabela
+- [ ] Cena salva (Ctrl+S)`
+    },
+    {
+      titulo: '15. Rodando o jogo',
+      corpo: `
+1. Aperte **F6** (roda a cena que está aberta no momento) — ou clique no ícone de clapboard/filme no canto superior direito da tela, chamado **Run Current Scene**.
+2. Uma janela separada abre com o jogo. Clique **dentro** dessa janela pra ela ficar em foco.
+3. Use as **setas do teclado** (↑ ↓ ← →) pra mover o Pacman. Elas já vêm mapeadas por padrão no Godot, não precisa configurar nada.
+
+### O que esperar
+
+- O labirinto azul aparece com pontinhos brancos (pastilhas) e bolinhas maiores nos 4 cantos internos (power pellets).
+- Comer pastilha pequena = 10 pontos. Power pellet = 50 pontos + fantasmas ficam azuis (assustados) por 6 segundos.
+- Encostar num fantasma assustado (azul) = come ele, +200 pontos. Encostar num fantasma normal (vermelho) = perde 1 vida, com 1.5s de proteção depois.
+- Comer todas as pastilhas = vitória. Perder as 3 vidas = fim de jogo (o jogo pausa e aparece "Game Over" no painel **Output**, embaixo).
+
+Se algum erro aparecer no painel **Output** (embaixo, em vermelho), leia a mensagem — ela geralmente aponta o arquivo e a linha exata do problema.
+
+- [ ] O jogo roda sem erro no Output
+- [ ] O Pacman se move nas 4 direções e come pastilhas (o placar sobe)
+- [ ] Comer um power pellet deixa os fantasmas azuis por alguns segundos
+- [ ] Encostar num fantasma normal desconta 1 vida`
+    },
+    {
+      titulo: '16. Pra ir além (opcional)',
+      corpo: `
+Com o jogo completo rodando, dá pra ir além — nada disso é obrigatório pra fechar esta atividade, mas vale a pena experimentar:
+
+- **Tamanho do mapa**: abra ¤maze.gd¤ e mude os valores de ¤WIDTH¤ e ¤HEIGHT¤ no topo (mantenha números ímpares). Depois recalcule e ajuste as posições de Pacman e fantasmas do passo 14.
+- **Dificuldade**: ¤SPEED¤ no ¤pacman.gd¤ e no ¤ghost.gd¤, ¤frightened_time¤ no ¤game_manager.gd¤.
+- **Sprites de verdade**: quando tiver arte pronta, troque o ¤_draw()¤ por um nó filho do tipo ¤AnimatedSprite2D¤ dentro de Pacman/Ghost — a lógica de movimento em grade não muda nada.
+
+Quando terminar de testar, avance pra pedir o visto do professor.`
     }
   ];
 
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de cod-godot-personagem-roteiro.html /
+  // oficina-comunicacao-trabalho.html (cabeçalhos, blocos §§§lang...§§§,
+  // tabela, listas/checklist, citação).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('cod_godot_pratica', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Roteiro — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Roteiro — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>Seu Pacman já roda de ponta a ponta — labirinto, pastilhas, power pellet, fantasmas e placar — sem nenhum erro no painel de saída?</p>
+        <p>Chame o professor e mostre o jogo funcionando dentro do editor da Godot. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída, e é isso que libera a trilha de teoria sobre este projeto.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui é o checklist técnico pra o professor conferir o projeto
+  // Godot aberto na tela do aluno, sem precisar reabrir este roteiro.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Codificação de Jogos — Motor Godot',
-      subtitle: 'Prática · Trilha Motor Godot · Turma Jogos Digitais',
-      items: CHALLENGES.map((c, i) => ({
-        number: i + 1,
-        title: c.title,
-        prompt: c.desc,
-        answer: c.tests.map(t => {
-          const inputs = Object.entries(t.values || {}).map(([k, v]) => `${k} = ${JSON.stringify(v)}`).join(', ');
-          const prefix = inputs ? `Com ${inputs}` : 'Sem variáveis de entrada';
-          if (c.check.type === 'console') {
-            return `${prefix} → print deve mostrar ${JSON.stringify(t.expected)}`;
-          }
-          return `${prefix} → ${c.check.name} deve ser ${JSON.stringify(t.expected)}`;
-        }).join('\n') + '\n\nCódigo de referência (não é a única forma correta):\n' + c.solution
-      })),
-      fileName: 'cod-godot-pratica-gabarito.txt'
+      title: 'Roteiro — Construa o Pacman no Godot — Checklist de correção',
+      subtitle: 'Roteiro prático (projeto Godot 4, verificado presencialmente) · Codificação de Jogos · Turma Jogos Digitais',
+      items: [
+        { number: 1, title: 'Estrutura de nós', prompt: 'A cena segue a árvore Main > Maze, Pacman, Ghosts (Ghost1/2/3), UI/ScoreLabel, cada um com o script certo anexado?', answer: 'Main(main.gd) > Maze(maze.gd), Pacman(pacman.gd), Ghosts > Ghost1/Ghost2/Ghost3 (ghost.gd cada), UI > ScoreLabel (sem script).' },
+        { number: 2, title: 'Autoload', prompt: 'GameManager aparece em Project Settings > Autoload, com Path apontando pra game_manager.gd?', answer: 'Nome exato "GameManager" (maiúsculas certas), Path "res://game_manager.gd".' },
+        { number: 3, title: 'Labirinto por código', prompt: 'O labirinto aparece desenhado (sem sprites), com pastilhas espalhadas e 4 power pellets nos cantos internos?', answer: 'Gerado por _generate_grid()/_draw() em maze.gd — paredes azuis, pastilhas brancas pequenas, power pellets brancos maiores nos 4 cantos internos.' },
+        { number: 4, title: 'Movimento em grade', prompt: 'O Pacman anda célula a célula, sem atravessar parede, e sem acelerar/desacelerar de forma estranha?', answer: 'move_toward até o centro da célula-alvo; direção só muda se a próxima célula não for parede (is_wall).' },
+        { number: 5, title: 'Fantasmas e estado assustado', prompt: 'Os fantasmas perseguem o Pacman normalmente, e ficam azuis (andando aleatório) por alguns segundos depois de um power pellet?', answer: 'frightened=false: persegue (menor distância até o Pacman). frightened=true: sorteia direção e fica azul, por 6s (frightened_time).' },
+        { number: 6, title: 'Pontuação e vidas', prompt: 'Pastilha pequena soma 10, power pellet soma 50 e assusta os fantasmas, comer fantasma assustado soma 200, e encostar num fantasma normal desconta 1 vida (com breve invulnerabilidade)?', answer: 'add_score(10)/add_score(50)+start_frightened() em maze.try_eat(); add_score(200) ao comer fantasma assustado; lose_life() com invulnerable por 1.5s em main.gd.' },
+        { number: 7, title: 'Fim de jogo', prompt: 'Comer todas as pastilhas conta como vitória, e perder as 3 vidas mostra "Game Over" (pausando o jogo), sem erros no Output?', answer: 'maze.pellets_left() == 0 emite game_won; lives <= 0 emite game_over, main.gd pausa a árvore (get_tree().paused = true) e imprime "Game Over".' }
+      ],
+      fileName: 'cod-godot-pratica-checklist.txt'
     });
   };
 
-  window.PortalGdscriptChallenges.run({
-    activityLocation: 'cod_godot_pratica',
-    challenges: CHALLENGES,
-    reportLabel: 'Codificação — Motor Godot'
-  });
+  renderStep();
 </script>
-
 <script src="../../../shared/vlibras-widget.js"></script>
-
 </body>
 </html>

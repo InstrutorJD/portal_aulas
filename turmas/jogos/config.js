@@ -453,48 +453,28 @@ window.TURMA_CONFIG_JOGOS = {
         },
         {
           key: 'cod-godot',
-          label: 'Motor Godot',
-          desc: 'Aprenda a teoria e depois escreva GDScript de verdade: arquitetura de nós e cenas, configuração de projeto, tipagem, controle de fluxo e o pipeline completo de movimentação top-down — depois aprofunde na estruturação de um personagem jogável (CharacterBody2D x RigidBody2D, colisor, Pixel Art, Z-Index, convenção de nomes de cena) e construa a cena de verdade no editor da Godot.',
-          capacidade: 'Reconhecer a arquitetura de nós e cenas de uma engine de jogos (Godot) e a configuração de projeto associada / Aplicar linguagem de programação (GDScript) na implementação de lógica de movimentação de personagens / Aplicar boas práticas de configuração, geometria e organização de cenas na estruturação de um personagem jogável em Godot 4.',
-          // Trilha unificada — antes eram duas ("Motor Godot" e "Motor Godot:
-          // Personagem Jogável") com conteúdo redundante só no nome/capacidade;
-          // o conteúdo de cada módulo continua intacto, só a organização virou
-          // uma sequência única de 5 módulos com requires em cadeia.
+          label: 'Motor Godot: Construa o Pacman',
+          desc: 'Construa um Pacman completo dentro do editor da Godot — do projeto vazio ao jogo rodando, sem nenhum sprite pronto, tudo desenhado por código — e só depois responda perguntas sobre as decisões técnicas por trás do que você mesmo construiu.',
+          capacidade: 'Estruturar um projeto completo em Godot 4 (nós, cenas, Autoload/singleton, GDScript) pra implementar um jogo funcional, aplicando movimentação em grade, detecção de colisão por célula, máquina de estados simples (perseguir/assustado) e organização de projeto em várias cenas e scripts.',
+          // Trilha reformulada em cima de um roteiro único (pacman-godot-completo.md,
+          // na raiz do repositório): a prática vem primeiro, sem trava — o aluno
+          // constrói o jogo de verdade fora do portal, na Godot — e só o visto do
+          // professor libera a teoria (requires), que revisa as decisões técnicas
+          // do próprio projeto que ele construiu.
           modules: [
             {
-              key: 'teoria', title: 'Teoria — Motor Godot',
-              desc: 'Nós e cenas, hierarquia pai-filho, Main Scene/Stretch Mode, sistema de coordenadas, tipagem explícita, operadores, controle de fluxo, funções nativas com delta, Arrays e o fluxo de movimentação top-down.',
+              key: 'pratica', title: 'Prática — Construa o Pacman no Godot',
+              desc: 'Mão na massa de verdade: monte o projeto do zero no editor da Godot — 5 scripts, Autoload, montagem da cena — até o jogo completo rodando, com labirinto, pastilhas, power pellets e fantasmas — depois peça o visto do professor.',
+              icon: '🎮', src: 'atividades/cod-godot-pratica.html',
+              progressKey: 'cod_godot_pratica_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'teoria', title: 'Teoria — Motor Godot: o Pacman por trás do código',
+              desc: 'Autoload/singleton, _draw() e queue_redraw(), movimento em grade sem colisão física, ordem de _ready() entre pai e filhos, trava de delta, máquina de estado dos fantasmas e organização da árvore de nós — tudo revisado a partir do jogo que você acabou de construir.',
               icon: '🐞', src: 'atividades/cod-godot-teoria.html',
               progressKey: 'cod_godot_teoria_progress_', progressMode: 'flag',
-              hasSlides: true, hasGabarito: true
-            },
-            {
-              key: 'pratica', title: 'Prática — Central de Codificação: Motor Godot',
-              desc: 'Escreva GDScript de verdade: monte a direção a partir do input, normalize o vetor e implemente o pipeline de movimentação com delta.',
-              icon: '🎮', src: 'atividades/cod-godot-pratica.html',
-              progressKey: 'cod_godot_pratica_progress_', progressTotal: 10,
-              requires: 'teoria', hasGabarito: true
-            },
-            {
-              key: 'teoria-personagem', title: 'Teoria — Personagem Jogável em Godot',
-              desc: 'CharacterBody2D x RigidBody2D, filtro de textura pra Pixel Art, CollisionShape2D/CircleShape2D, pivô centralizado, Z-Index e convenção de nomes/pastas de cena.',
-              icon: '🐞', src: 'atividades/cod-godot-personagem-teoria.html',
-              progressKey: 'cod_godot_personagem_teoria_progress_', progressMode: 'flag',
               requires: 'pratica', hasSlides: true, hasGabarito: true
-            },
-            {
-              key: 'pratica-personagem', title: 'Prática — Central de Codificação: Personagem Jogável',
-              desc: 'Escreva GDScript de verdade: centralize o pivô, dimensione o colisor, organize o Z-Index e monte o caminho da cena seguindo a convenção de nomes.',
-              icon: '🧍', src: 'atividades/cod-godot-personagem-pratica.html',
-              progressKey: 'cod_godot_personagem_pratica_progress_', progressTotal: 10,
-              requires: 'teoria-personagem', hasGabarito: true
-            },
-            {
-              key: 'roteiro', title: 'Roteiro — Construa seu Personagem no Godot',
-              desc: 'Mão na massa de verdade: monte a cena do personagem no editor da Godot, configure o Input Map e escreva o script de movimentação — depois peça o visto do professor.',
-              icon: '🕹️', src: 'atividades/cod-godot-personagem-roteiro.html',
-              progressKey: 'cod_godot_personagem_roteiro_progress_', progressMode: 'flag',
-              requires: 'pratica-personagem', hasGabarito: true
             }
           ]
         },
