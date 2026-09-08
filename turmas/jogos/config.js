@@ -953,13 +953,13 @@ window.TURMA_CONFIG_JOGOS = {
           // fora por serem narrativas sem certo ou errado.
           key: 'prova-diagnostica-engel',
           label: 'Prova Diagnóstica (Engel)',
-          desc: 'Revisão adaptada do que o Engel já aprendeu: JavaScript Básico, Roteiros de Teste e Formar Frases — 15 perguntas curtas, 3 alternativas cada, sem trava.',
+          desc: 'Revisão adaptada do que o Engel já aprendeu: JavaScript Básico, Roteiros de Teste e Formar Frases — 15 perguntas curtas, 3 alternativas cada, com trava anti-saída de tela.',
           visibleFor: ['engel.fraga'],
           capacidade: 'Diagnóstico adaptado do conjunto de capacidades trabalhadas nas trilhas individuais do Engel, pra identificar o que ele já domina e onde ainda precisa de reforço.',
           modules: [
             {
               key: 'prova', title: 'Prova Diagnóstica (Engel)',
-              desc: '15 perguntas (3 alternativas cada, sem trava) cobrindo JavaScript Básico, Roteiros de Teste e Formar Frases.',
+              desc: '15 perguntas (3 alternativas cada, com trava anti-saída de tela) cobrindo JavaScript Básico, Roteiros de Teste e Formar Frases.',
               icon: '📋', src: 'atividades/prova-jogos-engel.html',
               progressKey: 'prova_jogos_engel_progress_', progressMode: 'flag',
               hasGabarito: true

@@ -92,6 +92,32 @@
   .score-box{ text-align:center; }
   .score-box .score{ font-size:22px; color:var(--yellow); font-weight:800; margin:14px 0; }
 
+  /* Tela de regras/início e tela de bloqueio (trava de tela — sair da aba
+     conta aviso, ver shared/exam-proctor.js) */
+  .gate-wrap{ width:100%; min-height:calc(100vh - 20px); display:none; align-items:center; justify-content:center; padding:14px; }
+  .gate-card{ max-width:440px; width:100%; text-align:center; }
+  .gate-card .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .gate-card p{ font-size:15px; line-height:1.7; color:var(--ink); margin:0 0 8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:280px; margin:16px auto 0; text-align:left; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(5,10,16,0.88); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:380px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:15px; line-height:1.7; margin:0 0 14px; color:var(--ink); }
+
   @media (max-width: 600px) {
     .card{ padding:14px; }
     .question-lead{ font-size:24px; }
@@ -106,6 +132,8 @@
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
@@ -113,11 +141,16 @@
 <div class="env">
   <div class="topbar">
     <div>📋 PROVA DIAGNÓSTICA</div>
-    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">17</span></div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">16</span></div>
   </div>
-  <div class="steps" id="stepsRow"></div>
-  <div class="stage">
-    <div id="stepWrap"></div>
+
+  <div class="gate-wrap" id="gateWrap"></div>
+
+  <div id="stageWrap" style="display:none;">
+    <div class="steps" id="stepsRow"></div>
+    <div class="stage">
+      <div id="stepWrap"></div>
+    </div>
   </div>
 </div>
 
@@ -127,13 +160,14 @@
   const PROGRESS_KEY = `prova_jogos_engel_progress_${username}`;
 
   // Prova diagnóstica adaptada pro Engel: mesmo espírito de simplicidade
-  // de teste-roteiros-questionario-engel.html (Cor e Título) — não o motor
-  // "de verdade" da prova padrão (prova-jogos.html: sorteio de 20 de um
-  // banco de 76, 5 alternativas, trava anti-saída de aba, visto do
-  // professor pra desbloquear). Aqui: lista curta e fixa (sem sorteio),
-  // só 3 alternativas por pergunta (nunca 5), sem trava de aba nenhuma, e
-  // conclui sozinha ao terminar — o placar aparece só como retorno pro
-  // aluno e pro professor, não como bloqueio.
+  // de teste-roteiros-questionario-engel.html (Cor e Título) na PERGUNTA
+  // em si (lista curta e fixa, sem sorteio, só 3 alternativas, nunca 5) —
+  // mas com a MESMA trava de integridade da prova padrão (prova-jogos.html)
+  // e das outras atividades avaliativas do Engel (frases-engel.html e
+  // afins): sair da aba conta aviso, a 2ª vez bloqueia até o professor
+  // liberar com o token (shared/exam-proctor.js). É uma "prova" de
+  // verdade — não faria sentido ficar sem essa trava só porque o resto do
+  // formato é mais leve.
   //
   // Cobre só as trilhas do Engel que têm resposta certa/errada de verdade
   // (ele também tem "Ponto de Virada"/"A Jornada do Lucas", mas são
@@ -170,7 +204,7 @@
     { bloco: 'Formar Frases', icon: '😴', lead: '"O cachorro está ___"', sub: 'Qual palavra completa certo?', options: ['Dormindo', 'Correndo', 'Comendo'], certa: 0 },
     { bloco: 'Formar Frases', icon: '🎉', lead: '"Amanhã vai ter ___"', sub: 'Qual palavra completa certo?', options: ['Aula', 'Festa', 'Chuva'], certa: 1 }
   ];
-  const TOTAL_STEPS = 1 + QUESTIONS.length; // apresentação + perguntas
+  const TOTAL_STEPS = QUESTIONS.length;
 
   function loadProgress() {
     try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
@@ -179,25 +213,21 @@
 
   let progress = loadProgress();
   if (!progress || !Array.isArray(progress.respostas) || progress.respostas.length !== QUESTIONS.length) {
-    progress = { iniciado: false, respostas: new Array(QUESTIONS.length).fill(null), completed: false, correctCount: 0 };
+    progress = { respostas: new Array(QUESTIONS.length).fill(null), completed: false, correctCount: 0 };
   }
 
-  // Mesma regra de navegação de teste-roteiros-questionario-engel.html:
-  // nunca reabre uma pergunta já respondida (recarregar a página não
-  // libera tentativa de novo).
-  let currentIndex;
-  if (progress.completed) {
-    currentIndex = TOTAL_STEPS;
-  } else {
-    const firstUnanswered = progress.respostas.findIndex(r => r === null);
-    if (firstUnanswered === -1) {
-      currentIndex = TOTAL_STEPS;
-    } else if (!progress.iniciado) {
-      currentIndex = 0;
-    } else {
-      currentIndex = firstUnanswered + 1;
-    }
+  // Nunca reabre uma pergunta já respondida (recarregar a página não
+  // libera tentativa de novo) — mesma regra do resto do portal.
+  function allQuestionsAttempted() {
+    return progress.respostas.every(r => r !== null);
   }
+
+  let currentIndex = progress.completed
+    ? TOTAL_STEPS
+    : (() => {
+        const firstUnanswered = progress.respostas.findIndex(r => r === null);
+        return firstUnanswered === -1 ? TOTAL_STEPS : firstUnanswered;
+      })();
 
   let isProfessor = false;
   (async function () {
@@ -222,8 +252,7 @@
   }
 
   function stepIcon(i) {
-    if (i === 0) return '📋';
-    if (i >= 1 && i <= QUESTIONS.length) return QUESTIONS[i - 1].icon;
+    if (i >= 0 && i < QUESTIONS.length) return QUESTIONS[i].icon;
     return '🏆';
   }
 
@@ -237,24 +266,6 @@
     const finalDone = currentIndex >= TOTAL_STEPS;
     html += `<div class="step-dot${finalDone ? ' active done' : ''}">${finalDone ? '✅' : '🏆'}</div>`;
     stepsRowEl.innerHTML = html;
-  }
-
-  function renderApresentacao() {
-    stepWrap.innerHTML = `
-      <div class="card">
-        <div class="big-icon">📋</div>
-        <h2>Vamos revisar o que você aprendeu!</h2>
-        <p class="lead">São ${QUESTIONS.length} perguntas: JavaScript, Roteiros de Teste e Formar Frases. Em cada uma, escolha 1 das 3 opções.</p>
-        <p class="lead">Se errar, sem problema: a resposta certa aparece na hora, pra você aprender.</p>
-      </div>
-      <div class="step-nav"><button class="btn" id="btnNext">Começar ➡️</button></div>
-    `;
-    document.getElementById('btnNext').addEventListener('click', () => {
-      progress.iniciado = true;
-      saveProgress(progress);
-      currentIndex++;
-      renderStep();
-    });
   }
 
   function renderQuestion(qIdx) {
@@ -358,22 +369,15 @@
     if (currentIndex >= TOTAL_STEPS) { renderResultado(); return; }
     lblStepNum.textContent = currentIndex + 1;
     renderStepsRow();
-
-    if (currentIndex === 0) {
-      reportStep('Prova Diagnóstica (Engel) — Apresentação');
-      renderApresentacao();
-    } else {
-      const qIdx = currentIndex - 1;
-      reportStep(`Prova Diagnóstica (Engel) — Pergunta ${qIdx + 1}`);
-      renderQuestion(qIdx);
-    }
+    reportStep(`Prova Diagnóstica (Engel) — Pergunta ${currentIndex + 1}`);
+    renderQuestion(currentIndex);
   }
 
   // Gabarito pro professor: pergunta → resposta certa de cada uma das 15.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Prova Diagnóstica (Engel) — Gabarito',
-      subtitle: 'Prova adaptada (3 alternativas, sem trava, sem sorteio) · Turma Jogos Digitais',
+      subtitle: 'Prova adaptada (3 alternativas, sem sorteio, com trava anti-saída) · Turma Jogos Digitais',
       items: QUESTIONS.map((q, i) => ({
         number: i + 1,
         title: q.bloco,
@@ -386,7 +390,139 @@
     });
   };
 
-  renderStep();
+  // Trava de tela: sair da aba/janela durante a prova conta 1 aviso; na
+  // 2ª vez, bloqueia até o professor liberar com o token — mesmo
+  // mecanismo (shared/exam-proctor.js) da prova padrão (prova-jogos.html)
+  // e das outras atividades avaliativas do Engel (frases-engel.html e
+  // afins).
+  const gateWrap = document.getElementById('gateWrap');
+  const stageWrapEl = document.getElementById('stageWrap');
+
+  function startExam() {
+    gateWrap.style.display = 'none';
+    stageWrapEl.style.display = 'block';
+    renderStep();
+  }
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Aviso ${count}/2</h2>
+        <p>Você saiu da tela da prova. Na <b>2ª vez</b>, ela fica <b>bloqueada</b> até o professor liberar.</p>
+        <div class="step-nav" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen(guard) {
+    stageWrapEl.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🔒</div>
+        <h2>Prova bloqueada</h2>
+        <p>Você saiu da tela 2 vezes. Peça ajuda ao professor.</p>
+        <p>Ele libera com o mesmo token de "Dar visto" (Gestão → Token).</p>
+        <div class="token-form">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen(guard);
+    });
+  }
+
+  function renderStartScreen(guard) {
+    stageWrapEl.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">📋</div>
+        <h2>Antes de começar</h2>
+        <p>São ${QUESTIONS.length} perguntas: JavaScript, Roteiros de Teste e Formar Frases. Em cada uma, escolha 1 das 3 opções.</p>
+        <p>Se errar, sem problema: a resposta certa aparece na hora, pra você aprender.</p>
+        <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar — sair da tela conta um aviso, e a 2ª vez bloqueia até o professor liberar.</p>
+        <div class="step-nav" style="justify-content:center; margin-top:10px;">
+          <button class="btn" id="btnIniciar">▶ Começar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen(guard),
+        isCompleted: allQuestionsAttempted
+      });
+      startExam();
+    });
+  }
+
+  (async function boot() {
+    const guard = await window.PortalExamGuard.create('prova_jogos_engel');
+
+    // Sem sessão de aluno reconhecida (professor, ou iframe oculto da
+    // Gestão gerando gabarito remotamente) ou prova já 100% respondida —
+    // guarda desligada: abre direto, sem tela de regras nem risco de bloqueio.
+    if (guard.disabled || allQuestionsAttempted()) {
+      startExam();
+      return;
+    }
+
+    // Já respondeu pelo menos 1 pergunta antes (ex.: recarregou a página
+    // no meio) — sinal de que essa tentativa já foi iniciada: volta
+    // direto pra prova, sem passar pela tela de regras de novo, só
+    // rearmando a trava silenciosamente — mesmo padrão de prova-jogos.html.
+    const alreadyStarted = progress.respostas.some(r => r !== null);
+
+    if (guard.blocked) {
+      renderBlockedScreen(guard);
+    } else if (alreadyStarted) {
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen(guard),
+        isCompleted: allQuestionsAttempted
+      });
+      startExam();
+    } else {
+      renderStartScreen(guard);
+    }
+  })();
 </script>
 <script src="../../../shared/vlibras-widget.js"></script>
 </body>
