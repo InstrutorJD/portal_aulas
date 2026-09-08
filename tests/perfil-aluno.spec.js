@@ -14,10 +14,10 @@ const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254
 // js/basico, js/intermediario, os 4 módulos da trilha csharp (teoria,
 // comparação, prática simples, desafios) e os 5 da trilha gdscript (os
 // mesmos 4 + 'cenarios', só dela), e mais 4 trilhas (teoria+prática cada)
-// de fundamentos gerais de jogos. (Os outros 5 módulos novos, das trilhas
-// 'cod-godot' (teoria+prática) e 'cod-godot-personagem' (teoria+prática+
-// roteiro), ficam na matéria "Codificação de Jogos"; o módulo "Prova —
-// Turma Jogos Digitais" fica na matéria "Prova".)
+// de fundamentos gerais de jogos. (Os outros 5 módulos novos, da trilha
+// unificada 'cod-godot' (teoria, prática, teoria-personagem,
+// prática-personagem, roteiro, em cadeia), ficam na matéria "Codificação
+// de Jogos"; o módulo "Prova — Turma Jogos Digitais" fica na matéria "Prova".)
 const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [

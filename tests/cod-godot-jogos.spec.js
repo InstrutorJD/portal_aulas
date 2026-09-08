@@ -116,16 +116,27 @@ test.describe('turmas/jogos/atividades/cod-godot-pratica.html', () => {
   });
 });
 
-test.describe('turmas/jogos/plataforma.html — trilha Motor Godot', () => {
-  test('aparece em Codificação de Jogos, com a prática travada até a teoria ser concluída', async ({ page }) => {
+test.describe('turmas/jogos/plataforma.html — trilha Motor Godot (unificada)', () => {
+  test('aparece em Codificação de Jogos com os 5 módulos em cadeia, cada um travado até o anterior ser concluído', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
     await page.click('.game-card:has-text("Codificação de Jogos")');
     await page.selectOption('#trilhaSelect', 'cod-godot');
-    await expect(page.locator('#moduleSelector_cod-godot')).toContainText('Teoria — Motor Godot');
+    const selector = page.locator('#moduleSelector_cod-godot');
+    await expect(selector).toContainText('Teoria — Motor Godot');
+    await expect(selector).toContainText('Teoria — Personagem Jogável em Godot');
+    await expect(selector).toContainText('Roteiro — Construa seu Personagem no Godot');
 
-    const praticaCard = page.locator('#moduleSelector_cod-godot .game-card', { hasText: 'Prática' });
+    // Só a 1ª teoria (sem requires) vem destravada — as outras 4 exigem o
+    // módulo anterior da cadeia (ver requires em turmas/jogos/config.js).
+    const praticaCard = selector.locator('.game-card', { hasText: 'Prática — Central de Codificação: Motor Godot' });
     await expect(praticaCard).toHaveClass(/locked/);
     await expect(praticaCard).toContainText('Bloqueado');
+
+    const teoriaPersonagemCard = selector.locator('.game-card', { hasText: 'Teoria — Personagem Jogável em Godot' });
+    await expect(teoriaPersonagemCard).toHaveClass(/locked/);
+
+    const roteiroCard = selector.locator('.game-card', { hasText: 'Roteiro — Construa seu Personagem no Godot' });
+    await expect(roteiroCard).toHaveClass(/locked/);
   });
 });

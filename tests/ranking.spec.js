@@ -9,11 +9,12 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 // Turma Jogos tem 68 módulos ao todo (teoria+prática de todas as trilhas de
 // todas as matérias com conteúdo, incluindo os 4 módulos da trilha 'csharp'
 // (teoria/comparacao/pratica-simples/desafios), os 5 da trilha 'gdscript'
-// (os mesmos 4 + 'cenarios', só dela), os 2 da trilha 'cod-godot' (teoria +
-// prática), os 3 da trilha 'cod-godot-personagem' (teoria + prática +
-// roteiro) e o módulo "Prova Diagnóstica — Turma Jogos Digitais" — usados como base do
-// % geral. O % de cada aluno é a MÉDIA da fração current/total de cada um
-// dos 68 módulos, não uma simples contagem de módulos concluídos.
+// (os mesmos 4 + 'cenarios', só dela), os 5 da trilha unificada 'cod-godot'
+// (teoria, prática, teoria-personagem, prática-personagem, roteiro, em
+// cadeia) e o módulo "Prova Diagnóstica — Turma Jogos Digitais" — usados
+// como base do % geral. O % de cada aluno é a MÉDIA da fração
+// current/total de cada um dos 68 módulos, não uma simples contagem de
+// módulos concluídos.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
 // (syncAllModulesProgress roda no load e reescreve student_module_progress

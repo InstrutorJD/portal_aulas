@@ -1,9 +1,11 @@
 // @ts-check
-// Trilha "Motor Godot: Personagem Jogável" (matéria Codificação de Jogos,
-// turma Jogos Digitais): Teoria (quiz-teoria-engine.js, mentor Bia) +
-// Prática de código sobre shared/gdscript-challenge-engine.js — implementa,
-// em GDScript de verdade, a lógica por trás das boas práticas da Proposta
-// de Arquitetura Técnica (pivô, colisor, Z-Index, nomes/pastas de cena).
+// 3 últimos módulos ("Personagem Jogável") da trilha unificada "Motor
+// Godot" (matéria Codificação de Jogos, turma Jogos Digitais) — ver
+// tests/cod-godot-jogos.spec.js pros 2 primeiros. Teoria
+// (quiz-teoria-engine.js, mentor Bia) + Prática de código sobre
+// shared/gdscript-challenge-engine.js — implementa, em GDScript de
+// verdade, a lógica por trás das boas práticas da Proposta de Arquitetura
+// Técnica (pivô, colisor, Z-Index, nomes/pastas de cena).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
 
@@ -185,20 +187,10 @@ test.describe('turmas/jogos/atividades/cod-godot-personagem-roteiro.html', () =>
   });
 });
 
-test.describe('turmas/jogos/plataforma.html — trilha Motor Godot: Personagem Jogável', () => {
-  test('aparece em Codificação de Jogos, com a prática travada até a teoria ser concluída', async ({ page }) => {
-    await stubSupabaseFake(page, {});
-    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
-    await page.click('.game-card:has-text("Codificação de Jogos")');
-    await page.selectOption('#trilhaSelect', 'cod-godot-personagem');
-    await expect(page.locator('#moduleSelector_cod-godot-personagem')).toContainText('Teoria — Personagem Jogável em Godot');
-
-    const praticaCard = page.locator('#moduleSelector_cod-godot-personagem .game-card', { hasText: 'Prática' });
-    await expect(praticaCard).toHaveClass(/locked/);
-    await expect(praticaCard).toContainText('Bloqueado');
-
-    await expect(page.locator('#moduleSelector_cod-godot-personagem')).toContainText('Roteiro — Construa seu Personagem no Godot');
-    const roteiroCard = page.locator('#moduleSelector_cod-godot-personagem .game-card', { hasText: 'Roteiro' });
-    await expect(roteiroCard).toHaveClass(/locked/);
-  });
-});
+// O check de navegação pela plataforma (trilhaSelect, cadeado por módulo)
+// mudou pra um único bloco cobrindo os 5 módulos em sequência — ver
+// tests/cod-godot-jogos.spec.js, describe "trilha Motor Godot (unificada)".
+// As trilhas "Motor Godot" e "Motor Godot: Personagem Jogável" foram
+// fundidas numa só (turmas/jogos/config.js) por terem nome/capacidade
+// redundantes — o conteúdo de cada módulo (testado acima, direto pela URL
+// da atividade) continua o mesmo.
