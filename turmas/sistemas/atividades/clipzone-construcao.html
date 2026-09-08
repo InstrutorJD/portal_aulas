@@ -77,6 +77,18 @@
     border:1px solid var(--line); padding:3px 7px; cursor:pointer; border-radius:2px;
   }
 
+  .sim-off{
+    position:absolute; inset:0; background:#000; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:12px; text-align:center; padding:20px;
+  }
+  .sim-off .sim-icon{ font-size:26px; }
+  .sim-off .sim-label{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; }
+  .sim-start-btn{
+    font-family:inherit; font-weight:800; font-size:10.5px; letter-spacing:0.5px; text-transform:uppercase;
+    background:var(--green); color:#04162a; border:none; padding:9px 14px; cursor:pointer; border-radius:4px;
+  }
+  .tab-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+
   .login-form{ padding:10px; display:flex; flex-direction:column; gap:8px; flex:1; }
   .login-form label{ font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
   .login-form input{
@@ -226,10 +238,11 @@
           <div class="preview-info">
             <div>Seu app, ao vivo:</div>
             <div class="preview-tabs">
-              <button class="tab-btn active" id="tabLogin">🔐 Login</button>
-              <button class="tab-btn" id="tabFeed">🏠 Feed</button>
+              <button class="tab-btn active" id="tabLogin" disabled>🔐 Login</button>
+              <button class="tab-btn" id="tabFeed" disabled>🏠 Feed</button>
+              <button class="tab-btn" id="btnPararSim" style="display:none;">⏹ Parar</button>
             </div>
-            <div class="preview-hint">Cada desafio resolvido entra aqui na hora.</div>
+            <div class="preview-hint" id="previewHint">Clique em "Iniciar Simulador" pra ligar o app.</div>
           </div>
         </div>
 
@@ -252,9 +265,12 @@
 const phoneScreen = document.getElementById('phoneScreen');
 const tabLogin = document.getElementById('tabLogin');
 const tabFeed = document.getElementById('tabFeed');
+const btnPararSim = document.getElementById('btnPararSim');
+const previewHint = document.getElementById('previewHint');
 
 const slots = {};
 let activeScreen = 'login';
+let simuladorOn = false; // o aluno precisa ligar o simulador, igual numa IDE de verdade
 let feedState = null;
 let tema = { bg: '#0d1620', accent: '#3aa0ff', card: '#0a121a' };
 let likeIcon = '❤️';
@@ -284,9 +300,50 @@ tabFeed.addEventListener('click', () => setActiveScreen('feed'));
 
 function renderPhone() {
   aplicarTema();
+  if (!simuladorOn) { renderSimuladorDesligado(); return; }
   if (activeScreen === 'login') renderLoginScreen();
   else renderFeedScreen();
 }
+
+function renderSimuladorDesligado() {
+  phoneScreen.innerHTML = `
+    <div class="sim-off">
+      <div class="sim-icon">📴</div>
+      <div class="sim-label">Simulador desligado</div>
+      <button class="sim-start-btn" id="btnIniciarSim">▶ Iniciar Simulador</button>
+    </div>
+  `;
+  document.getElementById('btnIniciarSim').addEventListener('click', iniciarSimulador);
+}
+
+// Igual abrir o emulador numa IDE de verdade: o app não fica rodando
+// sozinho, o aluno precisa ligar o simulador pra ver alguma coisa.
+function iniciarSimulador() {
+  phoneScreen.innerHTML = `
+    <div class="sim-off">
+      <div class="sim-icon">⏳</div>
+      <div class="sim-label">Inicializando...</div>
+    </div>
+  `;
+  setTimeout(() => {
+    simuladorOn = true;
+    tabLogin.disabled = false;
+    tabFeed.disabled = false;
+    btnPararSim.style.display = 'inline-block';
+    previewHint.textContent = 'Cada desafio resolvido entra aqui na hora.';
+    renderPhone();
+  }, 700);
+}
+
+function pararSimulador() {
+  simuladorOn = false;
+  tabLogin.disabled = true;
+  tabFeed.disabled = true;
+  btnPararSim.style.display = 'none';
+  previewHint.textContent = 'Clique em "Iniciar Simulador" pra ligar o app.';
+  renderPhone();
+}
+btnPararSim.addEventListener('click', pararSimulador);
 
 function renderLoginScreen() {
   // Cada pedaço da tela só nasce quando o slot correspondente existe —
@@ -402,9 +459,9 @@ const STEPS = [
     <p>Repare no <code>return</code>: é ele quem diz "esse aqui é o resultado". <b>Sem <code>return</code>, a função não devolve nada</b> — o teste recebe <code>undefined</code>, mesmo que sua lógica esteja certa por dentro.</p>
     <p>Não existe um jeito único de escrever a lógica — o teste só confere o QUE sua função devolve, não COMO você chegou lá.</p>` },
 
-  { id: 'usuario-exp', type: 'explicacao', title: 'Validar o usuário', screen: 'login', corpo: `
+  { id: 'usuario-exp', type: 'explicacao', title: 'Por que validar o usuário', screen: 'login', corpo: `
     <p>Toda tela de login precisa validar o que a pessoa digita ANTES de deixar ela entrar. Vamos começar pelo campo de usuário: ele só é considerado válido com pelo menos <b>3 caracteres</b>.</p>` },
-  { id: 'usuario-des', type: 'desafio', title: 'Validar o usuário', screen: 'login',
+  { id: 'usuario-des', type: 'desafio', title: 'Função validarUsuario', screen: 'login',
     fnName: 'validarUsuario', checkType: 'value',
     solution: `function validarUsuario(usuario) {
   return usuario.length >= 3;
@@ -422,9 +479,9 @@ const STEPS = [
     ]
   },
 
-  { id: 'senha-exp', type: 'explicacao', title: 'Validar a senha', screen: 'login', corpo: `
+  { id: 'senha-exp', type: 'explicacao', title: 'Por que validar a senha', screen: 'login', corpo: `
     <p>Agora o campo de senha: por segurança, ela só é considerada válida com pelo menos <b>6 caracteres</b>.</p>` },
-  { id: 'senha-des', type: 'desafio', title: 'Validar a senha', screen: 'login',
+  { id: 'senha-des', type: 'desafio', title: 'Função validarSenha', screen: 'login',
     fnName: 'validarSenha', checkType: 'value',
     solution: `function validarSenha(senha) {
   return senha.length >= 6;
@@ -440,9 +497,9 @@ const STEPS = [
     ]
   },
 
-  { id: 'entrar-exp', type: 'explicacao', title: 'Liberar o botão "Entrar"', screen: 'login', corpo: `
+  { id: 'entrar-exp', type: 'explicacao', title: 'Quando liberar o botão "Entrar"', screen: 'login', corpo: `
     <p>O botão "Entrar" só deve ficar liberado quando os DOIS campos — usuário e senha — estiverem válidos ao mesmo tempo.</p>` },
-  { id: 'entrar-des', type: 'desafio', title: 'Liberar o botão "Entrar"', screen: 'login',
+  { id: 'entrar-des', type: 'desafio', title: 'Função podeEntrar', screen: 'login',
     fnName: 'podeEntrar', checkType: 'value',
     solution: `function podeEntrar(usuarioValido, senhaValida) {
   return usuarioValido && senhaValida;
@@ -460,9 +517,9 @@ const STEPS = [
     ]
   },
 
-  { id: 'erro-exp', type: 'explicacao', title: 'Mostrar a mensagem certa', screen: 'login', corpo: `
+  { id: 'erro-exp', type: 'explicacao', title: 'Como avisar o motivo do erro', screen: 'login', corpo: `
     <p>Quando o login falha, o app precisa avisar POR QUÊ. A prioridade é: se o usuário estiver inválido, mostra o erro de usuário (não importa a senha); senão, se a senha estiver inválida, mostra o erro de senha; se os dois estiverem certos, não mostra erro nenhum (texto vazio).</p>` },
-  { id: 'erro-des', type: 'desafio', title: 'Mostrar a mensagem certa', screen: 'login',
+  { id: 'erro-des', type: 'desafio', title: 'Função mensagemErro', screen: 'login',
     fnName: 'mensagemErro', checkType: 'value',
     solution: `function mensagemErro(usuarioValido, senhaValida) {
   if (!usuarioValido) {
@@ -492,10 +549,10 @@ const STEPS = [
     ]
   },
 
-  { id: 'post-exp', type: 'explicacao', title: 'Criar um post', screen: 'feed', corpo: `
+  { id: 'post-exp', type: 'explicacao', title: 'O que é um post', screen: 'feed', corpo: `
     <p>Login pronto — hora da tela inicial! No ClipZone, cada vídeo do feed é representado por um <b>post</b>: um objeto com o usuário que postou, a legenda do vídeo, e o número de curtidas.</p>
     <pre><code>{ usuario: "@ana.criativa", legenda: "Bom dia!", curtidas: 10 }</code></pre>` },
-  { id: 'post-des', type: 'desafio', title: 'Criar um post', screen: 'feed',
+  { id: 'post-des', type: 'desafio', title: 'Função criarPost', screen: 'feed',
     fnName: 'criarPost', checkType: 'json',
     solution: `function criarPost(usuario, legenda, curtidas) {
   return { usuario: usuario, legenda: legenda, curtidas: curtidas };
@@ -511,9 +568,9 @@ const STEPS = [
     ]
   },
 
-  { id: 'curtir-exp', type: 'explicacao', title: 'Curtir um post', screen: 'feed', corpo: `
+  { id: 'curtir-exp', type: 'explicacao', title: 'Como funciona curtir', screen: 'feed', corpo: `
     <p>Quando alguém toca no ❤️, o número de curtidas daquele post sobe 1. Só um detalhe importante: em vez de MUDAR o post que já existe, sua função deve devolver um post NOVO, com a contagem atualizada — os outros dados (usuário, legenda) continuam iguais.</p>` },
-  { id: 'curtir-des', type: 'desafio', title: 'Curtir um post', screen: 'feed',
+  { id: 'curtir-des', type: 'desafio', title: 'Função curtir', screen: 'feed',
     fnName: 'curtir', checkType: 'json',
     solution: `function curtir(post) {
   return { usuario: post.usuario, legenda: post.legenda, curtidas: post.curtidas + 1 };
@@ -529,9 +586,9 @@ const STEPS = [
     ]
   },
 
-  { id: 'formatar-exp', type: 'explicacao', title: 'Abreviar números grandes', screen: 'feed', corpo: `
+  { id: 'formatar-exp', type: 'explicacao', title: 'Por que abreviar números', screen: 'feed', corpo: `
     <p>Um vídeo popular pode ter milhares de curtidas — mostrar "2350" polui a tela. Apps de verdade abreviam: números de 4+ dígitos (1000 ou mais) viram um valor dividido por mil, com 1 casa decimal, seguido de "K".</p>` },
-  { id: 'formatar-des', type: 'desafio', title: 'Abreviar números grandes', screen: 'feed',
+  { id: 'formatar-des', type: 'desafio', title: 'Função formatarCurtidas', screen: 'feed',
     fnName: 'formatarCurtidas', checkType: 'value',
     solution: `function formatarCurtidas(numero) {
   if (numero < 1000) {
@@ -555,7 +612,7 @@ const STEPS = [
     ]
   },
 
-  { id: 'tema-exp', type: 'explicacao', title: 'Escolher o tema visual', corpo: `
+  { id: 'tema-exp', type: 'explicacao', title: 'A cara do seu app', corpo: `
     <p>Hora de dar a cara do ClipZone pro seu app! Escolha as cores de fundo, destaque e dos cartões de post.</p>` },
   { id: 'tema-esc', type: 'escolha', title: 'Escolher o tema visual',
     opcoes: [
@@ -566,7 +623,7 @@ const STEPS = [
     ]
   },
 
-  { id: 'icone-exp', type: 'explicacao', title: 'Escolher o ícone de curtir', corpo: `
+  { id: 'icone-exp', type: 'explicacao', title: 'O ícone de curtir', corpo: `
     <p>Por último, escolha qual ícone representa uma curtida no seu app.</p>` },
   { id: 'icone-esc', type: 'escolha', title: 'Escolher o ícone de curtir',
     opcoes: [
