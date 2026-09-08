@@ -149,14 +149,14 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 60 QUESTÕES — cobre todas as matérias/trilhas com
+  // BANCO DE 80 QUESTÕES — cobre todas as matérias/trilhas com
   // conteúdo real trabalhadas na turma Jogos Digitais (Projeto de
   // Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de
   // Projetos, Codificação de Jogos, Fundamentos de Programação de
   // Jogos e Testes de Jogos Digitais). Mesmo esquema de
   // turmas/sistemas/atividades/prova-sistemas.html: 5 alternativas
   // por questão, posição NUNCA fixa (reembaralhadas a cada exibição
-  // — ver renderQuestion), e 20 das 60 sorteadas por aluno (ver
+  // — ver renderQuestion), e 20 das 80 sorteadas por aluno (ver
   // pickExamIndices). As questões de Projeto de Vida e Mundo do
   // Trabalho reaproveitam o mesmo conteúdo da prova de Sistemas —
   // são exatamente as mesmas trilhas, copiadas entre as duas turmas.
@@ -183,6 +183,18 @@
         "Porque motivadores profissionais sempre anulam por completo qualquer motivador pessoal que exista",
         "Porque isso nunca acontece de verdade — os dois tipos de motivador são sempre idênticos",
         "Porque motivadores pessoais só passam a existir depois que a pessoa se aposenta do trabalho"
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Autoconhecimento',
+      prompt: 'Refletir sobre seus pontos fortes, pontos fracos, oportunidades e ameaças (uma ferramenta emprestada do mundo corporativo, aplicada à vida pessoal) é conhecida como:',
+      options: [
+        'Análise SWOT (ou FOFA) pessoal',
+        'Game loop pessoal',
+        'Object pooling de carreira',
+        'Requisito funcional de vida',
+        'Spritesheet de metas'
       ],
       correctIndex: 0
     },
@@ -247,6 +259,18 @@
       correctIndex: 0
     },
     {
+      materia: 'Projeto de Vida — Equipe',
+      prompt: 'Um colega de equipe recebe uma crítica sobre um erro no trabalho de forma calma, agradece, e ajusta o que precisa — em vez de ficar na defensiva. Essa atitude é um exemplo de saber:',
+      options: [
+        'Receber feedback de forma madura',
+        'Ignorar o feedback por completo',
+        'Discutir com quem deu o feedback',
+        'Repassar a culpa pra outra pessoa da equipe',
+        'Sair da equipe imediatamente'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Projeto de Vida — Metas e Carreira',
       prompt: 'Um aluno quer aprender uma nova linguagem de programação. Em vez de só pensar "quero aprender algum dia", ele descreve pra uma ferramenta de IA por que quer aprender, quanto tempo tem disponível por semana e o que já sabe — e usa a resposta pra montar um plano de estudos com etapas e prazos. Isso é um exemplo de quê?',
       options: [
@@ -258,12 +282,30 @@
       ],
       correctIndex: 0
     },
+    {
+      materia: 'Projeto de Vida — Metas e Carreira',
+      prompt: "Definir uma meta como 'estudar lógica de programação 3 vezes por semana, por 40 minutos, durante os próximos 2 meses' (em vez de só 'quero aprender lógica algum dia') é um exemplo de meta:",
+      options: [
+        'Específica e mensurável, com prazo definido',
+        'Vaga, porque não menciona nenhuma ferramenta de IA',
+        'Impossível de cumprir, só por ter um prazo definido',
+        'Coletiva, porque envolve mais de uma pessoa',
+        'Profissional, nunca podendo ser pessoal ao mesmo tempo'
+      ],
+      correctIndex: 0
+    },
 
     // ---- Mundo do Trabalho ----
     {
       materia: 'Mundo do Trabalho — Revoluções Industriais',
       prompt: 'A substituição da força humana e animal pela máquina a vapor nas fábricas de tecelagem, no final do século 18, marca qual Revolução Industrial?',
       options: ['1ª Revolução Industrial', '2ª Revolução Industrial', '3ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)', 'Nenhuma revolução industrial específica'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Revoluções Industriais',
+      prompt: 'A introdução de computadores, eletrônica e automação parcial nas linhas de produção, a partir da segunda metade do século 20, marca qual Revolução Industrial?',
+      options: ['3ª Revolução Industrial', '1ª Revolução Industrial', '2ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)', 'Nenhuma revolução industrial específica'],
       correctIndex: 0
     },
     {
@@ -315,6 +357,12 @@
       correctIndex: 0
     },
     {
+      materia: 'Mundo do Trabalho — Inovação',
+      prompt: 'Partir de uma regra geral já conhecida e aplicá-la a um caso específico pra chegar numa conclusão é o raciocínio:',
+      options: ['Dedutivo', 'Indutivo', 'Hipotético', 'Inferencial isolado', 'Não existe esse tipo de raciocínio'],
+      correctIndex: 0
+    },
+    {
       materia: 'Mundo do Trabalho — Trabalho em Equipe',
       prompt: 'Numa gestão de conflitos construtiva, em vez de dizer "você errou", a pergunta mais adequada é:',
       options: [
@@ -327,6 +375,12 @@
       correctIndex: 0
     },
     {
+      materia: 'Mundo do Trabalho — Trabalho em Equipe',
+      prompt: 'Durante uma reunião de equipe, ouvir o colega até o fim, sem interromper, e só depois responder ao que ele realmente disse (não ao que você presumiu que ele ia dizer) é um exemplo de:',
+      options: ['Escuta ativa', 'Autocontrole', 'Cardinalidade', 'Requisito não funcional', 'Manufatura aditiva'],
+      correctIndex: 0
+    },
+    {
       materia: 'Mundo do Trabalho — Comprometimento',
       prompt: 'Numa simulação de prazo crítico, um aluno precisa terminar um cálculo em um tempo bem curto. Em vez de travar com a pressão, ele respira, organiza os passos e entrega dentro do prazo combinado. Isso é um exemplo de quê?',
       options: [
@@ -335,6 +389,18 @@
         'Falta de planejamento, pois ele só organizou os passos durante a prova',
         'Um comportamento isolado, sem relação com compromisso ou prazos',
         'Urbanidade, por ter respeitado o tempo dos outros colegas'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Comprometimento',
+      prompt: 'Um integrante da equipe percebe que não vai conseguir entregar sua parte no prazo combinado. Qual atitude demonstra mais comprometimento?',
+      options: [
+        'Avisar a equipe o quanto antes, explicando o motivo e buscando ajuda ou um novo combinado',
+        'Ficar quieto e só explicar depois que o prazo já tiver passado',
+        'Entregar qualquer coisa, mesmo incompleta, sem avisar ninguém',
+        'Culpar outro colega pelo atraso, sem assumir a própria parte',
+        'Esperar que alguém perceba o atraso sozinho, sem falar nada'
       ],
       correctIndex: 0
     },
@@ -376,6 +442,12 @@
       options: ['Viabilidade técnica e financeira', 'Pesquisa de anterioridade', 'Execução', 'Registro e patente', 'Comunicação e documentação'],
       correctIndex: 0
     },
+    {
+      materia: 'Introdução ao Dev. de Projetos — Fases',
+      prompt: 'Antes de começar a desenvolver um jogo, a equipe pesquisa se já existe algo muito parecido no mercado, pra não reinventar (ou copiar sem perceber) algo que já existe. Essa etapa é a:',
+      options: ['Pesquisa de anterioridade', 'Viabilidade técnica e financeira', 'Execução', 'Registro e patente', 'Comunicação e documentação'],
+      correctIndex: 0
+    },
 
     // ---- Codificação de Jogos ----
     {
@@ -415,6 +487,12 @@
       correctIndex: 0
     },
     {
+      materia: 'Codificação — Linguagens, Dados e GDD',
+      prompt: '"O jogo deve manter pelo menos 60 FPS mesmo com muitos inimigos na tela" é um exemplo de requisito, dentro de um GDD, do tipo:',
+      options: ['Não funcional — descreve COMO o jogo se comporta', 'Funcional — descreve O QUE o jogo faz', 'Nenhum dos dois, é só um comentário', 'De formato de dados', 'De pipeline de renderização'],
+      correctIndex: 0
+    },
+    {
       materia: 'Codificação — Segurança da Informação e Debugging',
       prompt: 'Um sistema de login de jogo depende de três pilares de segurança da informação: dados acessíveis só por quem deve, não alterados indevidamente, e disponíveis quando precisa. Esses pilares formam a sigla:',
       options: [
@@ -430,6 +508,12 @@
       materia: 'Codificação — Segurança da Informação e Debugging',
       prompt: 'No debugger do VSCode, qual ferramenta mostra a SEQUÊNCIA de funções chamadas até chegar no ponto do erro?',
       options: ['Call Stack', 'Watch', 'PATH', 'GDD', 'Sprite sheet'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Segurança da Informação e Debugging',
+      prompt: 'No debugger do VSCode, qual painel permite acompanhar o VALOR de uma variável específica enquanto o código executa, passo a passo?',
+      options: ['Watch', 'Call Stack', 'PATH', 'GDD', 'Sprite sheet'],
       correctIndex: 0
     },
     {
@@ -460,6 +544,12 @@
         "RGB, o sistema de cores formado por vermelho, verde e azul",
         "GDD, o documento que registra o design completo de um jogo"
       ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Metodologia Ágil e Clean Code',
+      prompt: 'Um período curto e fixo de tempo (geralmente 1 a 4 semanas), no fim do qual a equipe entrega um incremento funcional do jogo, é chamado de:',
+      options: ['Sprint', 'Kanban', 'GDD', 'Smoke Test', 'Merge'],
       correctIndex: 0
     },
     {
@@ -511,6 +601,18 @@
       correctIndex: 0
     },
     {
+      materia: 'Codificação — Motor Godot: Personagem Jogável',
+      prompt: 'O personagem anda normalmente, mas a animação de caminhada não troca pra animação de pulo quando ele pula. O que provavelmente falta no script?',
+      options: [
+        "Trocar o estado da animação (ex: play(\"pular\")) toda vez que a condição de pulo for detectada",
+        'Aumentar a velocidade de movimento do personagem',
+        'Trocar o CharacterBody2D por um Area2D',
+        'Diminuir o tamanho do CollisionShape2D',
+        'Remover o Sprite2D da cena por completo'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Codificação — Projeto: Construa seu Jogo',
       prompt: 'No jogo da Cobrinha construído no portal, a função que faz a cobrinha andar recebe a cobrinha (array), a nova cabeça e um "cresce" (true/false). Se ela cresce, o rabo NÃO deve sair da lista. Qual lógica está correta?',
       options: [
@@ -519,6 +621,18 @@
         "Sempre devolve [novaCabeca, ...cobrinha.slice(0,-1)], não importa se cresce é true ou false",
         "Se cresce for true, remove apenas a cabeça antiga e mantém todo o resto exatamente igual",
         "A cobrinha, nesse jogo específico, nunca muda de tamanho — ela sempre só muda de posição na tela"
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Codificação — Projeto: Construa seu Jogo',
+      prompt: 'No jogo da Cobrinha construído no portal, como o código detecta que o jogo deve terminar (Game Over) quando a cabeça bate no próprio corpo?',
+      options: [
+        'Verificando se a posição da nova cabeça já existe em algum outro segmento do array da cobrinha',
+        'Contando quantos segundos o jogo já está rodando, sem checar posição nenhuma',
+        'Verificando apenas se a cobrinha chegou até o tamanho máximo da tela',
+        'O jogo nunca termina, ele continua rodando pra sempre sem parar',
+        'Checando se o jogador apertou a tecla ESC durante a partida'
       ],
       correctIndex: 0
     },
@@ -540,6 +654,12 @@
       materia: 'Fundamentos — Ambiente e Ferramentas',
       prompt: 'Qual linguagem é a própria da engine Godot?',
       options: ['GDScript', 'C#', 'C++', 'HTML', 'PL/SQL'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — Ambiente e Ferramentas',
+      prompt: 'Pra rodar comandos como git ou instalar pacotes sem depender só de cliques na interface gráfica, um programador usa o(a):',
+      options: ['Terminal (linha de comando)', 'Spritesheet', 'GDD', 'Colisor AABB', 'Pipeline de renderização'],
       correctIndex: 0
     },
     {
@@ -615,9 +735,27 @@
       correctIndex: 0
     },
     {
+      materia: 'Fundamentos — Multimídia e Versionamento',
+      prompt: 'Uma pessoa quer testar uma ideia arriscada sem bagunçar a versão principal do jogo, que já está funcionando. Qual prática do Git resolve isso?',
+      options: [
+        'Criar uma branch separada pra experimentar, sem afetar a branch principal até estar pronta',
+        'Apagar o repositório inteiro e recomeçar do zero',
+        'Editar direto os arquivos sem nenhum commit',
+        'Nunca versionar mudanças arriscadas, só as seguras',
+        'Enviar os arquivos por e-mail pro resto da equipe'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Fundamentos — JavaScript',
       prompt: 'Em JavaScript, qual comando cria uma variável chamada pontos com o valor 10?',
       options: ['let pontos = 10;', 'pontos == 10;', 'const 10 = pontos;', 'if (pontos = 10)', 'pontos -> 10;'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — JavaScript',
+      prompt: 'Em JavaScript, qual trecho de código verifica corretamente se a variável vidas é igual a zero?',
+      options: ['if (vidas === 0) { ... }', 'if (vidas = 0) { ... }', 'if vidas === 0 then ...', 'if (vidas -> 0) { ... }', 'when (vidas == 0): ...'],
       correctIndex: 0
     },
     {
@@ -633,6 +771,12 @@
       correctIndex: 0
     },
     {
+      materia: 'Fundamentos — C#',
+      prompt: 'Diferente do GDScript (tipagem mais flexível), o C# costuma exigir que o TIPO da variável seja declarado já na criação. Qual das opções é uma declaração de variável válida em C#?',
+      options: ['int vidas = 3;', 'let vidas = 3;', 'vidas := 3;', 'var vidas -> 3;', 'vidas == 3;'],
+      correctIndex: 0
+    },
+    {
       materia: 'Fundamentos — GDScript',
       prompt: 'Por que a equipe da Godot criou o GDScript em vez de usar uma linguagem pronta como Python?',
       options: [
@@ -642,6 +786,12 @@
         "Pra conseguir vender a linguagem separadamente do resto da engine Godot no mercado",
         "Porque usar Python era, na época em que a Godot surgiu, proibido em qualquer projeto de jogos"
       ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Fundamentos — GDScript',
+      prompt: 'Em GDScript, qual função especial roda automaticamente UMA vez, assim que o nó entra na árvore de cena?',
+      options: ['_ready()', '_process(delta)', '_physics_process(delta)', '_input(event)', '_exit_tree()'],
       correctIndex: 0
     },
 
@@ -677,6 +827,12 @@
       correctIndex: 0
     },
     {
+      materia: 'Testes — Planejamento de Testes',
+      prompt: "Um documento descrevendo passo a passo o que fazer (ex: 'abrir o menu, clicar em Novo Jogo'), o resultado ESPERADO, e um campo pra marcar se passou ou falhou, é chamado de:",
+      options: ['Caso de teste', 'Escopo', 'Rastreabilidade', 'Cronograma', 'Critério de aceite'],
+      correctIndex: 0
+    },
+    {
       materia: 'Testes — Execução por Versão',
       prompt: 'Na fase em que só a própria equipe do estúdio joga, e várias funcionalidades ainda nem existem, o foco é caçar bugs estruturais grandes. Essa fase é a:',
       options: ['Alfa', 'Beta', 'Release Candidate', 'Gold', 'Smoke Test'],
@@ -699,11 +855,17 @@
       prompt: 'Um checklist rápido que confere só o básico (o jogo abre, a tela inicial carrega, o controle responde, fecha sem travar) antes de uma publicação, sem substituir um teste completo, é chamado de:',
       options: ['Smoke Test', 'Teste de Regressão', 'Teste Exploratório', 'Certificação Técnica', 'Teste de Plataforma'],
       correctIndex: 0
+    },
+    {
+      materia: 'Testes — Roteiros Avançados',
+      prompt: 'Depois de corrigir um bug, a equipe roda de novo os testes de funcionalidades que já estavam funcionando antes, só pra garantir que a correção não quebrou nada que já funcionava. Esse é o teste de:',
+      options: ['Regressão', 'Smoke Test', 'Teste Exploratório', 'Certificação Técnica', 'Teste de Plataforma'],
+      correctIndex: 0
     }
   ];
 
   // ============================================================
-  // SORTEIO: 20 das 60, embaralhadas — recalculado só na primeira
+  // SORTEIO: 20 das 80, embaralhadas — recalculado só na primeira
   // vez que o aluno clica "Iniciar" (persistido em SELECTION_KEY
   // pra não mudar no meio de uma tentativa em andamento). As
   // ALTERNATIVAS de cada questão são reembaralhadas a cada exibição
@@ -1030,7 +1192,7 @@
         <h2>📋 Prova Diagnóstica — Turma Jogos Digitais</h2>
         <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
         <ul>
-          <li>Existe um banco de <b>60 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
           <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
@@ -1052,13 +1214,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 60 questões (não só as 20 que um
+  // Gabarito: lista o BANCO INTEIRO de 80 questões (não só as 20 que um
   // aluno específico recebeu), agrupado por matéria — referência completa
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 60 questões',
-      subtitle: 'Diagnóstico (20 sorteadas de 60, por aluno) · Turma Jogos Digitais',
+      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 80 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 80, por aluno) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,

@@ -149,7 +149,7 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 60 QUESTÕES — cobre todas as matérias/trilhas com
+  // BANCO DE 80 QUESTÕES — cobre todas as matérias/trilhas com
   // conteúdo real trabalhadas na turma Sistemas (Banco de Dados,
   // Desenvolvimento de Sistemas 1, Redes de Computadores, Internet
   // das Coisas, Introdução de Desenvolvimento de Projetos,
@@ -158,7 +158,7 @@
   // (não 4) — a posição da certa NUNCA é fixa: as opções são
   // reembaralhadas a cada exibição (ver renderQuestion), então o
   // correctIndex abaixo é só a posição "de origem" no array, nunca
-  // a posição real na tela. Cada aluno recebe 20 dessas 60,
+  // a posição real na tela. Cada aluno recebe 20 dessas 80,
   // sorteadas (ver pickExamIndices) — dois alunos raramente pegam o
   // mesmo conjunto, e mesmo quando uma pergunta se repete entre
   // eles, a ordem de exibição e a posição das alternativas mudam.
@@ -237,9 +237,27 @@
       correctIndex: 0
     },
     {
+      materia: 'Banco de Dados — PL/SQL',
+      prompt: 'Dentro de um bloco PL/SQL, qual é a estrutura correta pra testar uma condição e executar um trecho de código só se ela for verdadeira?',
+      options: [
+        'IF condição THEN ... END IF;',
+        "IF condição { ... }",
+        'WHEN condição DO ... END WHEN;',
+        'condição ? ... : ...;',
+        'SWITCH condição CASE ... END SWITCH;'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Banco de Dados — Documentação',
       prompt: 'Você quer explicar, em várias linhas, o que uma consulta complexa com vários JOINs está tentando responder. Qual sintaxe de comentário SQL serve pra isso?',
       options: ['/* comentário de várias linhas */', '-- comentário de várias linhas', '# comentário de várias linhas', '// comentário de várias linhas', '<!-- comentário de várias linhas -->'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — Documentação',
+      prompt: 'Você quer deixar uma anotação rápida, de uma linha só, explicando por que um filtro foi adicionado numa consulta SQL. Qual sintaxe é a certa pra um comentário de UMA linha?',
+      options: ['-- comentário de uma linha', '/* comentário de uma linha */', '# comentário de uma linha', '// comentário de uma linha', '<!-- comentário de uma linha -->'],
       correctIndex: 0
     },
     {
@@ -251,6 +269,18 @@
         "A tabela usuarios só aceita conexões vindas diretamente do próprio painel administrativo do Supabase",
         "Faltava reiniciar o servidor inteiro do Supabase depois de ter criado a tabela usuarios",
         "O RLS do Supabase só afeta comandos INSERT e UPDATE, nunca chega a afetar comandos SELECT"
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Banco de Dados — Conexão com Supabase',
+      prompt: 'No código do frontend (que roda no navegador de qualquer visitante do site), qual chave do Supabase deve ser usada, e por quê?',
+      options: [
+        "A chave anon (pública), porque é segura pra expor no cliente — o controle real de acesso fica nas policies de RLS",
+        "A service_role key, porque tem mais permissões e por isso é sempre a mais segura de usar no navegador",
+        "Qualquer uma das duas, tanto faz, porque as duas têm exatamente o mesmo nível de acesso ao banco",
+        "Nenhuma chave é necessária — por padrão, o Supabase libera acesso irrestrito a qualquer visitante",
+        "A senha do próprio banco de dados, escrita diretamente dentro do código do frontend"
       ],
       correctIndex: 0
     },
@@ -347,9 +377,27 @@
       correctIndex: 0
     },
     {
+      materia: 'Dev Sistemas 1 — Requisitos',
+      prompt: '"O sistema deve permitir que o usuário redefina a senha recebendo um link por e-mail." Que tipo de requisito é esse?',
+      options: [
+        "Requisito funcional, porque descreve uma ação concreta que o próprio sistema executa",
+        "Requisito não funcional, só porque a frase menciona o envio de um e-mail",
+        "Não é um requisito de verdade — é apenas uma sugestão totalmente opcional",
+        "Requisito não funcional, porque fala sobre redefinir uma senha",
+        "Requisito funcional, mas só depois que o sistema inteiro já estiver pronto e no ar"
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Dev Sistemas 1 — Linguagem e Plataforma',
       prompt: 'Uma equipe vai desenvolver um app NATIVO para iOS. Qual linguagem é a preferida nesse cenário?',
       options: ['Swift', 'Kotlin', 'C#', 'Electron', 'PL/SQL'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Dev Sistemas 1 — Linguagem e Plataforma',
+      prompt: 'Uma equipe vai desenvolver um app NATIVO para Android. Qual linguagem é a preferida nesse cenário?',
+      options: ['Kotlin', 'Swift', 'Ruby', 'Assembly', 'PL/SQL'],
       correctIndex: 0
     },
 
@@ -385,6 +433,18 @@
       correctIndex: 0
     },
     {
+      materia: 'Redes — Conexão e Endereçamento',
+      prompt: "Dentro de uma rede local, qual é a função do 'gateway padrão' configurado num computador?",
+      options: [
+        "É o dispositivo (geralmente o roteador) por onde o tráfego sai da rede local pra alcançar outras redes, como a internet",
+        "É o endereço IP fixo e exclusivo de cada computador dentro da própria rede local",
+        "É a senha usada exclusivamente pra conectar ao Wi-Fi daquela rede específica",
+        "É o nome da rede Wi-Fi (SSID) que aparece na lista de redes disponíveis",
+        "É a velocidade máxima de download contratada junto ao provedor de internet"
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Redes — Resolução de Problemas',
       prompt: 'Ao investigar por que um computador perdeu a conexão de rede, qual é a ORDEM correta de diagnóstico recomendada?',
       options: [
@@ -409,6 +469,18 @@
       correctIndex: 0
     },
     {
+      materia: 'Redes — Resolução de Problemas',
+      prompt: 'Você quer confirmar rapidamente se um servidor está respondendo na rede, antes de investigar qualquer coisa mais profunda. Qual comando é o mais indicado pra esse primeiro teste?',
+      options: [
+        'ping, que envia pacotes de teste e mostra se o destino respondeu e em quanto tempo',
+        'tracert (ou traceroute), que já lista todos os roteadores do caminho até o destino',
+        'ipconfig, que só mostra a configuração de rede do próprio dispositivo local',
+        'GROUP BY, um comando de banco de dados, não de rede',
+        'RDP, um protocolo de acesso remoto gráfico'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Redes — Serviços e Modelos',
       prompt: 'Qual é a porta padrão do protocolo HTTPS, usado para navegação segura na web?',
       options: ['443', '80', '25', '22', '21'],
@@ -427,6 +499,18 @@
       correctIndex: 0
     },
     {
+      materia: 'Redes — Serviços e Modelos',
+      prompt: "Qual serviço é responsável por traduzir um endereço como 'portal-aulas.com' pro endereço IP numérico do servidor correspondente?",
+      options: [
+        'DNS (Domain Name System)',
+        'DHCP, que atribui endereços IP automaticamente aos dispositivos',
+        'HTTP, o protocolo usado pra transferir páginas web',
+        'FTP, o protocolo usado pra transferir arquivos',
+        'SSH, o protocolo usado pra acesso remoto seguro'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Redes — Armazenamento',
       prompt: 'Um plano de internet anuncia 100 Mbps. Aproximadamente qual é a velocidade real de download de um arquivo, em MB/s (megabytes por segundo)?',
       options: [
@@ -435,6 +519,18 @@
         'Cerca de 800 MB/s, multiplicando por 8',
         'Cerca de 1 MB/s, dividindo por 100',
         'Não é possível calcular isso de jeito nenhum'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Redes — Armazenamento',
+      prompt: 'Por que um SSD costuma ser tão mais rápido do que um HD (HDD) tradicional pra ler e gravar arquivos?',
+      options: [
+        'Porque o SSD grava os dados eletronicamente em chips de memória flash, sem partes mecânicas girando como o HD',
+        'Porque o SSD sempre tem mais capacidade total de armazenamento do que qualquer HD existente',
+        'Porque o HD usa Wi-Fi pra gravar dados, e o SSD usa um cabo de rede',
+        'Porque o SSD, na prática, é mais lento que o HD — ele só custa mais caro',
+        'Porque o HD grava os dados direto na nuvem, e o SSD grava só localmente'
       ],
       correctIndex: 0
     },
@@ -464,6 +560,12 @@
       options: ['Bluetooth (BLE)', 'WiFi', 'Conectividade via satélite', 'Rádio AM/FM', 'Cabo de rede (Ethernet)'],
       correctIndex: 0
     },
+    {
+      materia: 'Internet das Coisas — Conectividade',
+      prompt: 'Um sensor converte a leitura de temperatura em bits e os codifica sobre uma onda de rádio, variando amplitude, frequência ou fase, pra que o receptor consiga reconhecer cada 0 e 1. Esse processo é chamado de:',
+      options: ['Modulação', 'Roteamento', 'Cardinalidade', 'Renderização', 'Paginação'],
+      correctIndex: 0
+    },
 
     // ---- Introdução de Desenvolvimento de Projetos ----
     {
@@ -487,6 +589,18 @@
         '"A gente decidiu fazer um cadastro, sei lá, meio doido."',
         '"Talvez dê pra pensar num cadastro, se der tempo."',
         '"Cara, o cadastro ficou show de bola."'
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Introdução de Dev. de Projetos',
+      prompt: 'Durante o desenvolvimento, o cliente pede pra adicionar várias funcionalidades novas que não estavam combinadas no início, sem ajustar prazo nem orçamento. Esse fenômeno é chamado de:',
+      options: [
+        'Scope creep (aumento descontrolado do escopo)',
+        'Requisito não funcional',
+        'Cardinalidade 1:N',
+        'Chave estrangeira',
+        'Manufatura aditiva'
       ],
       correctIndex: 0
     },
@@ -540,6 +654,18 @@
       ],
       correctIndex: 0
     },
+    {
+      materia: 'Modelagem — Laboratório de Autonomia',
+      prompt: 'Depois de assumir uma interpretação razoável pra um requisito ambíguo (sem travar esperando resposta), qual é o passo seguinte mais importante dessa técnica?',
+      options: [
+        'Documentar a hipótese assumida, pra confirmar (ou corrigir) com quem pediu assim que possível',
+        'Nunca mais tocar nesse requisito de novo, em nenhuma hipótese',
+        'Apagar qualquer rastro da decisão tomada durante o trabalho',
+        'Esperar a próxima reunião, sem registrar nada por escrito',
+        'Refazer o trabalho inteiro do zero toda vez que surgir uma dúvida'
+      ],
+      correctIndex: 0
+    },
 
     // ---- Projeto de Vida ----
     {
@@ -563,6 +689,18 @@
         "Porque motivadores profissionais sempre anulam por completo qualquer motivador pessoal que exista",
         "Porque isso nunca acontece de verdade — os dois tipos de motivador são sempre idênticos",
         "Porque motivadores pessoais só passam a existir depois que a pessoa se aposenta do trabalho"
+      ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Autoconhecimento',
+      prompt: 'Refletir sobre seus pontos fortes, pontos fracos, oportunidades e ameaças (uma ferramenta emprestada do mundo corporativo, aplicada à vida pessoal) é conhecida como:',
+      options: [
+        'Análise SWOT (ou FOFA) pessoal',
+        'Cardinalidade pessoal',
+        'User story pessoal',
+        'Requisito funcional de vida',
+        'Chave primária de carreira'
       ],
       correctIndex: 0
     },
@@ -591,6 +729,18 @@
       correctIndex: 0
     },
     {
+      materia: 'Projeto de Vida — Cidadania',
+      prompt: 'Participar de um conselho comunitário do bairro, opinando sobre prioridades de investimento público, é um exemplo de:',
+      options: [
+        'Participação cidadã ativa na vida coletiva',
+        'Urbanidade individual, sem nenhuma relação com a coletividade',
+        'Um requisito funcional de sistema',
+        'Um direito exclusivamente individual, sem efeito coletivo',
+        'Algo que só o prefeito da cidade pode fazer'
+      ],
+      correctIndex: 0
+    },
+    {
       materia: 'Projeto de Vida — Inteligência Emocional',
       prompt: 'Perceber uma emoção forte (raiva, frustração) e escolher como reagir, em vez de simplesmente explodir no impulso, é a definição de:',
       options: ['Autocontrole', 'Empatia', 'Networking', 'Cardinalidade', 'Urbanidade'],
@@ -600,6 +750,12 @@
       materia: 'Projeto de Vida — Inteligência Emocional',
       prompt: 'Se colocar no lugar de alguém ANTES de agir, de forma que suas atitudes causem um impacto melhor nas outras pessoas, é a definição de:',
       options: ['Empatia', 'Autocontrole', 'Adaptabilidade', 'Feedback', 'Networking'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Projeto de Vida — Inteligência Emocional',
+      prompt: 'Depois de um fracasso (por exemplo, não passar numa seleção), conseguir se reerguer, aprender com o que aconteceu e tentar de novo é a definição de:',
+      options: ['Resiliência', 'Empatia', 'Autocontrole', 'Networking', 'Urbanidade'],
       correctIndex: 0
     },
     {
@@ -626,12 +782,30 @@
       ],
       correctIndex: 0
     },
+    {
+      materia: 'Projeto de Vida — Equipe',
+      prompt: 'Um colega de equipe recebe uma crítica sobre um erro no trabalho de forma calma, agradece, e ajusta o que precisa — em vez de ficar na defensiva. Essa atitude é um exemplo de saber:',
+      options: [
+        'Receber feedback de forma madura',
+        'Ignorar o feedback por completo',
+        'Discutir com quem deu o feedback',
+        'Repassar a culpa pra outra pessoa da equipe',
+        'Sair da equipe imediatamente'
+      ],
+      correctIndex: 0
+    },
 
     // ---- Mundo do Trabalho ----
     {
       materia: 'Mundo do Trabalho — Revoluções Industriais',
       prompt: 'A substituição da força humana e animal pela máquina a vapor nas fábricas de tecelagem, no final do século 18, marca qual Revolução Industrial?',
       options: ['1ª Revolução Industrial', '2ª Revolução Industrial', '3ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)', 'Nenhuma revolução industrial específica'],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Revoluções Industriais',
+      prompt: 'A introdução de computadores, eletrônica e automação parcial nas linhas de produção, a partir da segunda metade do século 20, marca qual Revolução Industrial?',
+      options: ['3ª Revolução Industrial', '1ª Revolução Industrial', '2ª Revolução Industrial', '4ª Revolução Industrial (Indústria 4.0)', 'Nenhuma revolução industrial específica'],
       correctIndex: 0
     },
     {
@@ -683,6 +857,12 @@
       correctIndex: 0
     },
     {
+      materia: 'Mundo do Trabalho — Inovação',
+      prompt: 'Partir de uma regra geral já conhecida e aplicá-la a um caso específico pra chegar numa conclusão é o raciocínio:',
+      options: ['Dedutivo', 'Indutivo', 'Hipotético', 'Inferencial isolado', 'Não existe esse tipo de raciocínio'],
+      correctIndex: 0
+    },
+    {
       materia: 'Mundo do Trabalho — Trabalho em Equipe',
       prompt: 'Numa gestão de conflitos construtiva, em vez de dizer "você errou", a pergunta mais adequada é:',
       options: [
@@ -692,6 +872,12 @@
         "\"Isso aqui nunca vai ter jeito de ser resolvido mesmo, então nem adianta.\"",
         "\"Prefiro não falar mais sobre esse assunto com você nunca mais.\""
       ],
+      correctIndex: 0
+    },
+    {
+      materia: 'Mundo do Trabalho — Trabalho em Equipe',
+      prompt: 'Durante uma reunião de equipe, ouvir o colega até o fim, sem interromper, e só depois responder ao que ele realmente disse (não ao que você presumiu que ele ia dizer) é um exemplo de:',
+      options: ['Escuta ativa', 'Autocontrole', 'Cardinalidade', 'Requisito não funcional', 'Manufatura aditiva'],
       correctIndex: 0
     },
 
@@ -791,11 +977,23 @@
         "Porque abreviar números grandes é uma exigência obrigatória do próprio protocolo HTTP"
       ],
       correctIndex: 0
+    },
+    {
+      materia: 'Prog. de Aplicativos — ClipZone',
+      prompt: "No ClipZone, uma função foi escrita certinha por dentro, mas esqueceram do 'return' no final. O que acontece quando o teste chama essa função?",
+      options: [
+        "Ela devolve undefined, mesmo que a lógica interna esteja certa, porque sem return não existe valor de saída",
+        "O teste ignora a ausência do return e considera a resposta certa mesmo assim",
+        "O JavaScript adiciona um return automaticamente ao final de toda função",
+        "A função trava a execução do programa inteiro até o navegador travar",
+        "O valor calculado aparece normalmente na tela, mesmo sem o return"
+      ],
+      correctIndex: 0
     }
   ];
 
   // ============================================================
-  // SORTEIO: 20 das 60, embaralhadas — recalculado só na primeira
+  // SORTEIO: 20 das 80, embaralhadas — recalculado só na primeira
   // vez que o aluno inicia (persistido em SELECTION_KEY pra não
   // mudar no meio de uma tentativa em andamento). As ALTERNATIVAS
   // de cada questão são reembaralhadas a cada exibição (ver
@@ -1123,7 +1321,7 @@
         <h2>📋 Prova Diagnóstica — Turma Sistemas</h2>
         <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Banco de Dados, Desenvolvimento de Sistemas 1, Redes de Computadores, Internet das Coisas, Introdução de Desenvolvimento de Projetos, Modelagem de Sistemas 1, Projeto de Vida, Mundo do Trabalho e Programação de Aplicativos.</p>
         <ul>
-          <li>Existe um banco de <b>60 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
           <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
@@ -1145,13 +1343,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 60 questões (não só as 20 que um
+  // Gabarito: lista o BANCO INTEIRO de 80 questões (não só as 20 que um
   // aluno específico recebeu), agrupado por matéria — referência completa
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Diagnóstica — Turma Sistemas — Banco de 60 questões',
-      subtitle: 'Diagnóstico (20 sorteadas de 60, por aluno) · Turma Sistemas',
+      title: 'Prova Diagnóstica — Turma Sistemas — Banco de 80 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 80, por aluno) · Turma Sistemas',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,
