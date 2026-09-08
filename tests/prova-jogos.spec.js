@@ -108,6 +108,35 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
     await expect(page.locator('.finish-screen .score')).toContainText(`Nota: ${stored.nota} de 100 pontos`);
   });
 
+  test('pular uma questão marca como perdida — não conta como acerto, e não dá pra responder de novo depois', async ({ page }) => {
+    await page.goto(PROVA_URL);
+    await page.click('#btnIniciar');
+    await expect(page.locator('.option')).toHaveCount(5);
+
+    await page.click('#btnPularQuestao');
+    await expect(page.locator('.feedback')).toContainText('Questão pulada');
+    await expect(page.locator('.option.disabled')).toHaveCount(5);
+    await expect(page.locator('#btnPularQuestao')).toHaveCount(0);
+    await page.click('#btnNextAfterAnswer');
+    await expect(page.locator('#lblStepNum')).toHaveText('2');
+
+    // Recarregar não deve voltar pra questão pulada — o motor trata "pulada"
+    // igual a "respondida" (mesma trava anti-repetição).
+    await page.reload();
+    await expect(page.locator('#lblStepNum')).toHaveText('2');
+
+    // Pula as 19 restantes também, pra provar que nenhum pulo soma ponto.
+    for (let i = 1; i < 20; i++) {
+      await page.click('#btnPularQuestao');
+      await page.click('#btnNextAfterAnswer');
+    }
+
+    await expect(page.locator('.finish-screen .score')).toContainText('Nota: 0 de 100 pontos');
+    const stored = await page.evaluate(u => JSON.parse(localStorage.getItem(`prova_jogos_progress_${u}`)), 'breno.silva80');
+    expect(stored.correctCount).toBe(0);
+    expect(stored.nota).toBe(0);
+  });
+
   test('1ª saída da aba avisa, 2ª bloqueia — e o professor desbloqueia com o token', async ({ page }) => {
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');

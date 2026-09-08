@@ -1121,6 +1121,66 @@
     const order = shuffleIndexes(q.options.length);
     const correctPos = order.indexOf(q.correctIndex);
 
+    // Fecha a questão (respondida OU pulada) e mostra o botão de avançar —
+    // usado tanto por selectAnswer quanto por skipQuestion, já que dali pra
+    // frente o fluxo é idêntico nos dois casos.
+    function proceedAfterAnswer(stepLabel) {
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      actions.style.marginTop = '14px';
+      actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">${currentIndex + 1 >= EXAM_SIZE ? 'Ver resultado' : 'Próxima →'}</button>`;
+      card.appendChild(actions);
+
+      state = { currentIndex, correctCount, answered: true };
+      saveState(state);
+      reportStep(`Prova — Questão ${currentIndex + 1}/${EXAM_SIZE} (${stepLabel})`);
+
+      document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
+        currentIndex++;
+        if (currentIndex >= EXAM_SIZE) {
+          finishExam();
+        } else {
+          state = { currentIndex, correctCount, answered: false };
+          saveState(state);
+          storyWrap.innerHTML = '';
+          renderQuestion();
+        }
+      });
+    }
+
+    function selectAnswer(chosenIdx) {
+      const allOptionEls = optionsWrap.querySelectorAll('.option');
+      allOptionEls.forEach(el => el.classList.add('disabled'));
+      pularWrap.remove();
+
+      const isCorrect = chosenIdx === correctPos;
+      allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (isCorrect) correctCount++;
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      feedback.textContent = isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.';
+      card.appendChild(feedback);
+
+      proceedAfterAnswer('respondida');
+    }
+
+    // Pular: o aluno abre mão da questão atual (não conta como acerto) em
+    // troca de seguir em frente sem responder — mesma trava de "não dá pra
+    // responder de novo depois" da resposta normal (answered: true).
+    function skipQuestion() {
+      const allOptionEls = optionsWrap.querySelectorAll('.option');
+      allOptionEls.forEach(el => el.classList.add('disabled'));
+      pularWrap.remove();
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback incorrect';
+      feedback.textContent = '⏭️ Questão pulada — não conta como acerto.';
+      card.appendChild(feedback);
+
+      proceedAfterAnswer('pulada');
+    }
+
     order.forEach((origIdx, pos) => {
       const optText = q.options[origIdx];
       const opt = document.createElement('div');
@@ -1132,45 +1192,15 @@
         selectAnswer(pos);
       });
       optionsWrap.appendChild(opt);
-
-      function selectAnswer(chosenIdx) {
-        const allOptionEls = optionsWrap.querySelectorAll('.option');
-        allOptionEls.forEach(el => el.classList.add('disabled'));
-
-        const isCorrect = chosenIdx === correctPos;
-        allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
-        if (isCorrect) correctCount++;
-
-        const feedback = document.createElement('div');
-        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-        feedback.textContent = isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.';
-        card.appendChild(feedback);
-
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        actions.style.marginTop = '14px';
-        actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">${currentIndex + 1 >= EXAM_SIZE ? 'Ver resultado' : 'Próxima →'}</button>`;
-        card.appendChild(actions);
-
-        state = { currentIndex, correctCount, answered: true };
-        saveState(state);
-        reportStep(`Prova — Questão ${currentIndex + 1}/${EXAM_SIZE} (respondida)`);
-
-        document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
-          currentIndex++;
-          if (currentIndex >= EXAM_SIZE) {
-            finishExam();
-          } else {
-            state = { currentIndex, correctCount, answered: false };
-            saveState(state);
-            storyWrap.innerHTML = '';
-            renderQuestion();
-          }
-        });
-      }
     });
 
     card.appendChild(optionsWrap);
+
+    const pularWrap = document.createElement('div');
+    pularWrap.className = 'actions';
+    pularWrap.style.marginTop = '10px';
+    pularWrap.innerHTML = `<button class="btn btn-secondary" id="btnPularQuestao">⏭️ Pular questão (perde esta questão, sem chance de responder de novo)</button>`;
+    card.appendChild(pularWrap);
 
     if (isProfessor) {
       const profActions = document.createElement('div');
@@ -1185,6 +1215,12 @@
 
     storyWrap.innerHTML = '';
     storyWrap.appendChild(card);
+
+    document.getElementById('btnPularQuestao').addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      skipQuestion();
+    });
 
     if (isProfessor) {
       // Reinicia com uma seleção de 20 questões nova (embaralhada de novo),
@@ -1324,6 +1360,7 @@
           <li>Existe um banco de <b>80 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
+          <li>Dá pra <b>pular uma questão</b> sem responder — mas ela conta como <b>errada</b>, sem chance de voltar depois.</li>
           <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
           <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
           <li>Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor libera de novo.</li>
