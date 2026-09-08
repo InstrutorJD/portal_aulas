@@ -289,15 +289,30 @@ function renderPhone() {
 }
 
 function renderLoginScreen() {
+  // Cada pedaço da tela só nasce quando o slot correspondente existe —
+  // a tela de login vai ganhando campos/botão aos poucos, na mesma ordem
+  // em que os desafios são resolvidos (não existe uma tela pronta).
+  const temUsuario = !!slots.validarUsuario;
+  const temSenha = !!slots.validarSenha;
+  const temBotao = !!slots.podeEntrar;
+  const temErro = !!slots.mensagemErro;
+
+  if (!temUsuario) {
+    phoneScreen.innerHTML = `
+      <div class="app-header">📱 ClipZone</div>
+      <div class="feed-vazio">sua tela de login vai nascer aqui, aos poucos...</div>
+    `;
+    return;
+  }
+
   phoneScreen.innerHTML = `
     <div class="app-header">📱 ClipZone</div>
     <div class="login-form">
       <label>Usuário</label>
       <input type="text" id="fldUsuario" placeholder="@seu.usuario" autocomplete="off">
-      <label>Senha</label>
-      <input type="password" id="fldSenha" placeholder="••••••••" autocomplete="off">
-      <div class="login-erro" id="loginErro"></div>
-      <button class="app-btn" id="btnLoginEntrar" disabled>Entrar</button>
+      ${temSenha ? `<label>Senha</label><input type="password" id="fldSenha" placeholder="••••••••" autocomplete="off">` : ''}
+      ${temErro ? `<div class="login-erro" id="loginErro"></div>` : ''}
+      ${temBotao ? `<button class="app-btn" id="btnLoginEntrar" disabled>Entrar</button>` : ''}
     </div>
   `;
   const fldUsuario = document.getElementById('fldUsuario');
@@ -307,21 +322,26 @@ function renderLoginScreen() {
 
   function atualizar() {
     const usuario = fldUsuario.value;
-    const senha = fldSenha.value;
-    const usuarioValido = slots.validarUsuario ? !!slots.validarUsuario(usuario) : null;
-    const senhaValida = slots.validarSenha ? !!slots.validarSenha(senha) : null;
+    const senha = fldSenha ? fldSenha.value : '';
+    const usuarioValido = !!slots.validarUsuario(usuario);
+    const senhaValida = temSenha ? !!slots.validarSenha(senha) : null;
 
     fldUsuario.classList.toggle('campo-ok', usuarioValido === true);
     fldUsuario.classList.toggle('campo-erro', usuarioValido === false && usuario.length > 0);
-    fldSenha.classList.toggle('campo-ok', senhaValida === true);
-    fldSenha.classList.toggle('campo-erro', senhaValida === false && senha.length > 0);
-
-    btnEntrar.disabled = !(slots.podeEntrar && slots.podeEntrar(usuarioValido === true, senhaValida === true));
-    loginErro.textContent = slots.mensagemErro ? slots.mensagemErro(usuarioValido === true, senhaValida === true) : '';
+    if (fldSenha) {
+      fldSenha.classList.toggle('campo-ok', senhaValida === true);
+      fldSenha.classList.toggle('campo-erro', senhaValida === false && senha.length > 0);
+    }
+    if (btnEntrar) {
+      btnEntrar.disabled = !(temBotao && slots.podeEntrar(usuarioValido, senhaValida === true));
+    }
+    if (loginErro) {
+      loginErro.textContent = temErro ? slots.mensagemErro(usuarioValido, senhaValida === true) : '';
+    }
   }
   fldUsuario.addEventListener('input', atualizar);
-  fldSenha.addEventListener('input', atualizar);
-  btnEntrar.addEventListener('click', () => setActiveScreen('feed'));
+  if (fldSenha) fldSenha.addEventListener('input', atualizar);
+  if (btnEntrar) btnEntrar.addEventListener('click', () => setActiveScreen('feed'));
   atualizar();
 }
 
@@ -340,6 +360,9 @@ function renderFeedScreen() {
     feedList.innerHTML = '<div class="feed-vazio">seu feed ainda não existe...</div>';
     return;
   }
+  // O botão de curtir só nasce no cartão quando slots.curtir existir —
+  // até lá o cartão mostra só vídeo/usuário/legenda.
+  const temCurtir = !!slots.curtir;
   feedState.forEach((post, idx) => {
     const card = document.createElement('div');
     card.className = 'post-card';
@@ -348,13 +371,14 @@ function renderFeedScreen() {
       <div class="post-video">▶️</div>
       <div class="post-user">${post.usuario}</div>
       <div class="post-legenda">${post.legenda}</div>
-      <button class="post-like"><span class="like-icon">${likeIcon}</span><span>${curtidasTexto}</span></button>
+      ${temCurtir ? `<button class="post-like"><span class="like-icon">${likeIcon}</span><span>${curtidasTexto}</span></button>` : ''}
     `;
-    card.querySelector('.post-like').addEventListener('click', () => {
-      if (!slots.curtir) return;
-      feedState[idx] = slots.curtir(feedState[idx]);
-      renderFeedScreen();
-    });
+    if (temCurtir) {
+      card.querySelector('.post-like').addEventListener('click', () => {
+        feedState[idx] = slots.curtir(feedState[idx]);
+        renderFeedScreen();
+      });
+    }
     feedList.appendChild(card);
   });
 }
