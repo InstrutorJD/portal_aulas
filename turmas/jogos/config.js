@@ -899,6 +899,13 @@ window.TURMA_CONFIG_JOGOS = {
               icon: '🧠', src: 'atividades/frases-avancado-engel.html',
               progressKey: 'frases_engel_avancado_progress_', progressTotal: 15,
               requires: 'jogo', hasGabarito: true
+            },
+            {
+              key: 'jogo-nivel3', title: 'Formar Frases — Nível 3',
+              desc: '15 frases no nível mais difícil: até 5 palavras faltando por frase (na ordem certa) e mais opções erradas misturadas no meio, pra descartar antes de achar a certa.',
+              icon: '🔥', src: 'atividades/frases-nivel3-engel.html',
+              progressKey: 'frases_engel_nivel3_progress_', progressTotal: 15,
+              requires: 'jogo-avancado', hasGabarito: true
             }
           ]
         }
