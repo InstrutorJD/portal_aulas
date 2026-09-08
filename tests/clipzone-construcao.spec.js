@@ -52,7 +52,7 @@ test.describe('turmas/sistemas/atividades/clipzone-construcao.html', () => {
     await page.click('#btnContinuar');
     await expect(page.locator('.card h2')).toContainText('Como funciona');
     await page.click('#btnContinuar');
-    await expect(page.locator('.card h2')).toContainText('Validar o usuário');
+    await expect(page.locator('.card h2')).toContainText('Por que validar o usuário');
     await page.click('#btnContinuar');
 
     await expect(page.locator('#codeInput')).toBeVisible();
@@ -95,6 +95,9 @@ test.describe('turmas/sistemas/atividades/clipzone-construcao.html', () => {
     // Com os 4 desafios de login resolvidos, o celular (moldura, fora do
     // fluxo de missões) já reage de verdade ao que o "usuário de teste"
     // digitar nos campos — prova que os slots foram ligados no motor.
+    // Precisa ligar o simulador primeiro, igual numa IDE de verdade.
+    await page.click('#btnIniciarSim');
+    await expect(page.locator('#tabLogin')).toBeEnabled({ timeout: 5000 });
     await page.click('#tabLogin');
     const fldUsuario = page.locator('#fldUsuario');
     const fldSenha = page.locator('#fldSenha');
@@ -137,6 +140,9 @@ test.describe('turmas/sistemas/atividades/clipzone-construcao.html', () => {
 
     // Com criarPost resolvido, o feed já mostra os 3 posts de demonstração —
     // e o botão de curtir (curtir() resolvido também) atualiza ao vivo.
+    // Precisa ligar o simulador primeiro, igual numa IDE de verdade.
+    await page.click('#btnIniciarSim');
+    await expect(page.locator('#tabFeed')).toBeEnabled({ timeout: 5000 });
     await page.click('#tabFeed');
     const firstLike = page.locator('.post-card').first().locator('.post-like');
     await expect(firstLike).toContainText('128');
