@@ -149,17 +149,21 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 80 QUESTÕES — cobre todas as matérias/trilhas com
+  // BANCO DE 76 QUESTÕES — cobre todas as matérias/trilhas com
   // conteúdo real trabalhadas na turma Jogos Digitais (Projeto de
   // Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de
   // Projetos, Codificação de Jogos, Fundamentos de Programação de
   // Jogos e Testes de Jogos Digitais). Mesmo esquema de
   // turmas/sistemas/atividades/prova-sistemas.html: 5 alternativas
   // por questão, posição NUNCA fixa (reembaralhadas a cada exibição
-  // — ver renderQuestion), e 20 das 80 sorteadas por aluno (ver
+  // — ver renderQuestion), e 20 das 76 sorteadas por aluno (ver
   // pickExamIndices). As questões de Projeto de Vida e Mundo do
   // Trabalho reaproveitam o mesmo conteúdo da prova de Sistemas —
   // são exatamente as mesmas trilhas, copiadas entre as duas turmas.
+  // (Sem questões de Motor Godot: a trilha "Motor Godot: Construa o
+  // Pacman" é toda prática de roteiro/visto do professor + teoria em
+  // quiz próprio — não sobra conteúdo específico dela pra virar
+  // pergunta de banco compartilhado com sorteio aleatório.)
   const QUESTION_POOL = [
     // ---- Projeto de Vida ----
     {
@@ -565,54 +569,6 @@
       correctIndex: 0
     },
     {
-      materia: 'Codificação — Motor Godot',
-      prompt: 'Por que o CharacterBody2D é a escolha certa pra um personagem jogável controlado pelo jogador, em vez do RigidBody2D?',
-      options: [
-        "Porque dá controle cinemático absoluto via script, sem a física automática do motor interferir",
-        "Porque o RigidBody2D, dentro da Godot, não pode de forma nenhuma ter um Sprite2D como nó filho",
-        "Porque o CharacterBody2D é, simplesmente, mais bonito visualmente do que o outro",
-        "Porque o RigidBody2D, nessa engine, só existe e funciona dentro de projetos feitos em 3D",
-        "Porque o CharacterBody2D não precisa de absolutamente nenhum script pra funcionar"
-      ],
-      correctIndex: 0
-    },
-    {
-      materia: 'Codificação — Motor Godot',
-      prompt: 'Por que o movimento de um CharacterBody2D (usando move_and_slide()) deve rodar dentro de _physics_process(delta), e não de _process(delta)?',
-      options: [
-        "Porque a física roda num ritmo fixo, separado do FPS de tela, e precisa ficar sincronizada com o motor",
-        "Porque a função _process(delta), na prática, simplesmente não existe mais dentro da Godot 4",
-        "Porque o método move_and_slide() só funciona quando chamado dentro de _ready()",
-        "Porque o _physics_process roda apenas uma única vez, no momento da criação do nó",
-        "Porque, na prática, não faz absolutamente nenhuma diferença real usar um ou outro dos dois"
-      ],
-      correctIndex: 0
-    },
-    {
-      materia: 'Codificação — Motor Godot: Personagem Jogável',
-      prompt: 'O sprite de um personagem em Pixel Art aparece borrado na tela em vez de nítido. Qual ajuste do projeto resolve isso?',
-      options: [
-        'Trocar o Default Texture Filter de Linear pra Nearest',
-        'Aumentar o tamanho do CollisionShape2D',
-        'Mudar o Z Index do Sprite2D',
-        'Trocar o CharacterBody2D por um RigidBody2D',
-        'Diminuir a velocidade do personagem'
-      ],
-      correctIndex: 0
-    },
-    {
-      materia: 'Codificação — Motor Godot: Personagem Jogável',
-      prompt: 'O personagem anda normalmente, mas a animação de caminhada não troca pra animação de pulo quando ele pula. O que provavelmente falta no script?',
-      options: [
-        "Trocar o estado da animação (ex: play(\"pular\")) toda vez que a condição de pulo for detectada",
-        'Aumentar a velocidade de movimento do personagem',
-        'Trocar o CharacterBody2D por um Area2D',
-        'Diminuir o tamanho do CollisionShape2D',
-        'Remover o Sprite2D da cena por completo'
-      ],
-      correctIndex: 0
-    },
-    {
       materia: 'Codificação — Projeto: Construa seu Jogo',
       prompt: 'No jogo da Cobrinha construído no portal, a função que faz a cobrinha andar recebe a cobrinha (array), a nova cabeça e um "cresce" (true/false). Se ela cresce, o rabo NÃO deve sair da lista. Qual lógica está correta?',
       options: [
@@ -865,7 +821,7 @@
   ];
 
   // ============================================================
-  // SORTEIO: 20 das 80, embaralhadas — recalculado só na primeira
+  // SORTEIO: 20 das 76, embaralhadas — recalculado só na primeira
   // vez que o aluno clica "Iniciar" (persistido em SELECTION_KEY
   // pra não mudar no meio de uma tentativa em andamento). As
   // ALTERNATIVAS de cada questão são reembaralhadas a cada exibição
@@ -1228,7 +1184,7 @@
         <h2>📋 Prova Diagnóstica — Turma Jogos Digitais</h2>
         <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.</p>
         <ul>
-          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>76 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
           <li>Dá pra <b>pular uma questão</b> sem responder — mas ela conta como <b>errada</b>, sem chance de voltar depois.</li>
@@ -1251,13 +1207,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 80 questões (não só as 20 que um
+  // Gabarito: lista o BANCO INTEIRO de 76 questões (não só as 20 que um
   // aluno específico recebeu), agrupado por matéria — referência completa
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 80 questões',
-      subtitle: 'Diagnóstico (20 sorteadas de 80, por aluno) · Turma Jogos Digitais',
+      title: 'Prova Diagnóstica — Turma Jogos Digitais — Banco de 76 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 76, por aluno) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,
