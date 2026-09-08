@@ -155,6 +155,20 @@
       }
     },
     {
+      story: 'Antes de seguir, vale entender o que "frequência" realmente significa. Uma onda de rádio oscila (vibra) um certo número de vezes por segundo, e essa contagem é medida em <b>Hertz (Hz)</b>: 1 Hz é 1 oscilação por segundo, 1 quilohertz (kHz) são mil oscilações, 1 megahertz (MHz) é um milhão, e 1 <b>gigahertz (GHz)</b> é um <b>bilhão</b> de oscilações por segundo. Quando um WiFi ou Bluetooth opera em <b>2,4 GHz</b>, a onda está oscilando 2,4 bilhões de vezes a cada segundo; em <b>5 GHz</b>, são 5 bilhões — mais do que o dobro. Essa diferença física muda o comportamento do sinal: frequências mais baixas (2,4 GHz) têm um comprimento de onda maior, o que ajuda a atravessar paredes e obstáculos e alcançar mais longe; frequências mais altas (5 GHz) têm comprimento de onda menor, perdem força mais rápido ao esbarrar em obstáculos, mas — por oscilarem mais vezes por segundo — conseguem carregar mais informação no mesmo intervalo de tempo, ou seja, mais velocidade. Alcance contra velocidade: essa troca está por trás de quase toda escolha de frequência em conectividade sem fio.',
+      question: {
+        prompt: 'Uma onda de 5 GHz oscila aproximadamente quantas vezes por segundo, e o que isso costuma significar na prática comparado a uma onda de 2,4 GHz?',
+        options: [
+          '5 bilhões de vezes por segundo — mais velocidade de transmissão, porém menos alcance e mais dificuldade pra atravessar obstáculos',
+          '5 mil vezes por segundo — exatamente igual ao 2,4 GHz, só muda o nome comercial',
+          '5 vezes por segundo — uma onda muito mais lenta que o 2,4 GHz',
+          '5 bilhões de vezes por segundo — mais alcance e mais facilidade pra atravessar paredes do que o 2,4 GHz'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! "GHz" quer dizer bilhões de oscilações por segundo, então 5 GHz vibra mais que o dobro de vezes por segundo que 2,4 GHz — o que permite mais velocidade de transmissão, só que à custa de alcance e capacidade de atravessar obstáculos, já que o comprimento de onda fica menor.'
+      }
+    },
+    {
       story: 'Já o <b>Bluetooth</b> é um padrão de comunicação sem fio de curto alcance, criado pra ligar dispositivos pessoais entre si sem cabo. Ele também usa ondas de rádio, numa faixa de <b>2,4 GHz</b>, mas com potência bem mais baixa que o WiFi. Na versão de baixo consumo, chamada <b>BLE</b> (Bluetooth Low Energy), ele foi otimizado pro oposto do satélite: distâncias bem curtas — só alguns metros — entre dois dispositivos próximos, como um celular e um fone de ouvido. A vantagem é o consumo de energia baixíssimo, o que faz acessórios a bateria pequena durarem dias ou meses. Curiosidade pra hoje: o controle remoto do Mini 4 Pro <b>não</b> usa Bluetooth pra falar com o drone — vídeo em tempo real e comandos de voo exigem muito mais banda e alcance do que o Bluetooth aguenta.',
       question: {
         prompt: 'Uma pulseira inteligente mede a frequência cardíaca e envia os dados pro celular do usuário, que fica sempre a poucos metros de distância. A bateria da pulseira precisa durar vários dias sem recarregar. Qual tecnologia é a mais indicada?',
@@ -170,6 +184,34 @@
         options: ['WiFi', 'Bluetooth', 'Conectividade via satélite', 'Rádio frequência simples (RF)'],
         correctIndex: 0,
         explanation: 'Isso mesmo! Com roteador por perto e a necessidade de banda alta pra vídeo contínuo, o WiFi é a escolha certa — o Bluetooth não teria banda suficiente, e o satélite seria caro e desnecessário aqui.'
+      }
+    },
+    {
+      story: 'Vamos juntar as três tecnologias que já vimos numa comparação direta, lado a lado. <b>GPS/satélite</b>: usa uma faixa própria de rádio vinda do espaço (perto de 1,5 GHz, dedicada só à navegação), alcance praticamente global, banda muito baixa (dá só pra receber coordenadas de posição, não serve pra vídeo) e não depende de nenhuma infraestrutura terrestre por perto. <b>Bluetooth (BLE)</b>: opera em 2,4 GHz, alcance de poucos metros, banda baixa (não aguenta vídeo em tempo real) e consumo de energia baixíssimo — ideal pra acessórios com bateria pequena, como fones e pulseiras. <b>WiFi</b>: opera em 2,4 GHz e 5 GHz, alcance de um cômodo ou andar (dezenas de metros), banda alta (aguenta vídeo, streaming e vários dispositivos ao mesmo tempo), mas exige um roteador (uma rede local) por perto e consome mais energia que o Bluetooth. Repare que nenhuma das três é "a melhor" no geral — cada uma equilibra alcance, banda e consumo de energia de um jeito diferente, e a tecnologia certa depende do que a situação exige.',
+      question: {
+        prompt: 'Comparando GPS/satélite, Bluetooth e WiFi, qual afirmação está CORRETA?',
+        options: [
+          'Cada uma equilibra alcance, banda e consumo de energia de um jeito diferente — não existe uma "melhor" tecnologia no geral, existe a mais adequada pra cada situação',
+          'WiFi sempre tem mais alcance do que GPS/satélite',
+          'Bluetooth foi feito pra transmitir vídeo em tempo real com o mesmo desempenho do WiFi',
+          'GPS/satélite serve pra qualquer tipo de dado, inclusive vídeo em alta definição'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Cada tecnologia foi projetada com prioridades diferentes: satélite prioriza alcance global (com banda mínima), Bluetooth prioriza economia de energia em curta distância, e WiFi prioriza banda alta com um roteador por perto — escolher a certa depende do que a situação exige, não existe uma que vença as outras em tudo.'
+      }
+    },
+    {
+      story: 'Mas como um número — a leitura de um sensor de umidade, por exemplo — realmente "viaja" dentro de uma onda de rádio? O transmissor não manda a palavra "42%" pelo ar: primeiro ele converte a informação numa sequência de <b>bits</b> (0s e 1s), e depois <b>modula</b> essa sequência sobre a onda de rádio, variando alguma característica dela (amplitude, frequência ou fase) de um jeito que o receptor consiga reconhecer cada 0 e cada 1. Esse processo — transformar dados digitais num sinal de rádio capaz de viajar pelo ar — chama-se <b>modulação</b>; o processo inverso, feito pelo receptor pra reconstruir os bits originais, chama-se demodulação. Cada tecnologia sem fio usa um esquema de modulação diferente, otimizado pra uma prioridade diferente: velocidade máxima, economia de energia, ou robustez contra interferência a longa distância. É exatamente por isso que duas tecnologias podem usar a mesma faixa de frequência — como o O4 do drone e o WiFi, ambos por volta de 2,4/5,8 GHz — e mesmo assim se comportarem de formas bem diferentes: a "estrada" (frequência) é a mesma, mas o "idioma" (o jeito de modular e organizar os bits) é outro.',
+      question: {
+        prompt: 'O sensor de umidade da fazenda mede 42% e precisa mandar esse valor pro celular do produtor via rádio. O que realmente viaja pelo ar entre o sensor e o receptor?',
+        options: [
+          'Uma sequência de bits (0s e 1s) codificada sobre a onda de rádio por meio de modulação',
+          'O texto "42%" exatamente do jeito que aparece na tela do celular',
+          'Uma gravação de voz falando o valor em voz alta',
+          'Nada viaja pelo ar; o valor só é transmitido depois, quando os dois aparelhos são ligados por cabo'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! Todo dado — seja um número de sensor ou um quadro de vídeo — é convertido em bits e depois modulado sobre a onda de rádio; o receptor demodula o sinal de volta em bits e só então reconstrói o valor original (os 42%, nesse caso).'
       }
     },
     {
