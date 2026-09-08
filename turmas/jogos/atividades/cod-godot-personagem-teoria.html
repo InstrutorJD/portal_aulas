@@ -154,7 +154,7 @@
       }
     },
     {
-      story: 'O nó <code>Sprite2D</code> é quem mostra a textura/animação do personagem na tela. Só que, por padrão, a Godot 4 aplica um filtro de textura <b>Linear</b> — que suaviza (borra) os pixels ao ampliar a imagem. Pra um jogo em estilo <b>Pixel Art</b>, isso é um problema: os pixels ficam borrados em vez de nítidos e quadrados. A correção fica em <code>Project > Project Settings > Rendering > Textures > Default Texture Filter</code>: trocar de <b>Linear</b> pra <b>Nearest</b>, que preserva a nitidez de cada pixel.',
+      story: 'O nó <code>Sprite2D</code> é quem mostra a textura/animação do personagem na tela. Só que, por padrão, a Godot 4 aplica um filtro de textura <b>Linear</b> — que suaviza (borra) os pixels ao ampliar a imagem. Pra um jogo em estilo <b>Pixel Art</b>, isso é um problema: os pixels ficam borrados em vez de nítidos e quadrados. A correção fica em <code>Project > Project Settings > Rendering > Textures > Canvas Textures > Default Texture Filter</code> (ligue o toggle <b>Advanced Settings</b> no topo da janela se essa categoria não aparecer): trocar de <b>Linear</b> pra <b>Nearest</b>, que preserva a nitidez de cada pixel.',
       question: {
         prompt: 'O sprite do personagem, feito em Pixel Art, aparece borrado/suavizado na tela em vez de nítido. Qual ajuste do projeto resolve isso?',
         options: [

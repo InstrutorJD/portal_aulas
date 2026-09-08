@@ -146,7 +146,7 @@ A PixelForge Studios quer ver você estruturar um personagem jogável de verdade
 
 ### O que entregar
 
-Um projeto Godot 4 com uma cena de personagem jogável (¤Jogador.tscn¤), com ¤CharacterBody2D¤ como raiz, colisor e sprite configurados, e um script (¤jogador.gd¤) que move o personagem nas 4 direções — inclusive na diagonal, sem acelerar.
+Um projeto Godot 4 com uma cena de personagem jogável (¤jogador.tscn¤), com ¤CharacterBody2D¤ como raiz, colisor e sprite configurados, e um script (¤jogador.gd¤) que move o personagem nas 4 direções — inclusive na diagonal, sem acelerar.
 
 ### Como funciona aqui
 
@@ -203,7 +203,7 @@ Se o seu sprite for em **Pixel Art**, a Godot deixa ele borrado por padrão — 
 
 ### Corrigir globalmente (recomendado)
 
-Vá em **Project > Project Settings > Rendering > Textures > Canvas Textures** e mude o **Default Texture Filter** de ¤Linear¤ pra ¤Nearest¤. Vale pra todo o projeto.
+Vá em **Project > Project Settings**. Se a categoria **Rendering > Textures** não aparecer na lista, ligue o toggle **Advanced Settings** no canto superior direito da janela — essa categoria fica escondida no modo básico. Depois, em **Rendering > Textures > Canvas Textures**, mude o **Default Texture Filter** de ¤Linear¤ pra ¤Nearest¤. Vale pra todo o projeto.
 
 > Se a imagem já estava importada antes dessa mudança, ela pode continuar borrada: selecione o arquivo PNG, abra a aba **Import** e clique em **Reimport**.
 
