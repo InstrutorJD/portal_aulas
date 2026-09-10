@@ -83,6 +83,14 @@
   }
   .type-form button:disabled{ opacity:0.5; cursor:not-allowed; }
 
+  .hint-row{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  .hint-row button{
+    font-family:inherit; font-weight:800; font-size:13px; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:2px dashed var(--yellow); padding:8px 16px; cursor:pointer; border-radius:8px;
+  }
+  .hint-row button:disabled{ opacity:0.4; cursor:not-allowed; }
+  .hint-text{ font-size:14px; color:var(--yellow); font-weight:800; min-height:20px; }
+
   .feedback{
     min-height:26px; font-size:17px; font-weight:800; text-align:center;
   }
@@ -190,6 +198,10 @@
           <input type="text" id="wordInput" autocomplete="off" placeholder="Digite a palavra...">
           <button type="submit" id="btnConfirmWord">Confirmar</button>
         </form>
+        <div class="hint-row">
+          <button type="button" id="btnHint">💡 Dica</button>
+          <span class="hint-text" id="hintText"></span>
+        </div>
         <div class="feedback" id="feedback"></div>
 
         <div class="actions">
@@ -280,6 +292,8 @@
   const typeForm = document.getElementById('typeForm');
   const wordInput = document.getElementById('wordInput');
   const btnConfirmWord = document.getElementById('btnConfirmWord');
+  const btnHint = document.getElementById('btnHint');
+  const hintTextEl = document.getElementById('hintText');
   const feedbackEl = document.getElementById('feedback');
   const btnNext = document.getElementById('btnNext');
   const lblProgress = document.getElementById('lblProgress');
@@ -288,6 +302,13 @@
   const skipToken = document.getElementById('skipToken');
   const btnConfirmSkip = document.getElementById('btnConfirmSkip');
   const skipMsg = document.getElementById('skipMsg');
+
+  // Dica: mostra só a 1ª letra da palavra atual (não conta como erro nem
+  // trava a frase) — reseta a cada nova palavra/frase.
+  function resetHint() {
+    hintTextEl.textContent = '';
+    btnHint.disabled = false;
+  }
 
   function hideSkipForm() {
     skipForm.classList.remove('show');
@@ -387,6 +408,7 @@
     wordInput.disabled = false;
     btnConfirmWord.disabled = false;
     wordInput.focus();
+    resetHint();
 
     renderSidebar();
 
@@ -410,6 +432,7 @@
       renderSentence(challenge, filledCount);
       renderClueRow(challenge, filledCount);
       wordInput.value = '';
+      resetHint();
 
       if (filledCount < challenge.blanks.length) {
         wordInput.focus();
@@ -425,6 +448,7 @@
   function finalizeChallenge(challenge, isCorrect) {
     wordInput.disabled = true;
     btnConfirmWord.disabled = true;
+    btnHint.disabled = true;
     feedbackEl.textContent = isCorrect ? '✅ Isso mesmo!' : '❌ Não foi dessa vez';
     feedbackEl.className = 'feedback ' + (isCorrect ? 'ok' : 'fail');
 
@@ -480,6 +504,8 @@
     renderClueRow(challenge, filledCount);
     wordInput.disabled = true;
     btnConfirmWord.disabled = true;
+    btnHint.disabled = true;
+    hintTextEl.textContent = '';
     feedbackEl.textContent = `⏭️ Pulado pelo professor (${nomeProfessor}).`;
     feedbackEl.className = 'feedback ok';
 
@@ -504,6 +530,14 @@
     if (challenge && !wordInput.disabled) submitWord(challenge);
   });
   wordInput.addEventListener('input', () => wordInput.classList.remove('wrong-input'));
+
+  btnHint.addEventListener('click', () => {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge || wordInput.disabled) return;
+    const letter = challenge.blanks[filledCount].word.charAt(0).toUpperCase();
+    hintTextEl.textContent = `Começa com "${letter}"`;
+    wordInput.focus();
+  });
 
   btnSkip.addEventListener('click', () => {
     skipForm.classList.toggle('show');
@@ -640,6 +674,7 @@
         <h2>Antes de começar</h2>
         <p>São 15 frases — agora você <b>digita</b> a palavra que falta, em vez de escolher numa lista. Começa com <b>1</b> palavra faltando e vai até <b>4</b>.</p>
         <p>A pista (emoji) de cada palavra só aparece quando chega a vez dela. Não se preocupe com acento ou maiúscula, só a palavra certa importa.</p>
+        <p>Se travar, use o botão <b>💡 Dica</b> — ele mostra a 1ª letra da palavra.</p>
         <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar — sair da tela conta um aviso, e a 2ª vez bloqueia até o professor liberar.</p>
         <div class="actions" style="justify-content:center; margin-top:10px;">
           <button class="btn" id="btnIniciar">▶ Começar</button>

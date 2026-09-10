@@ -909,7 +909,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'jogo-digitar', title: 'Formar Frases — Digitando',
-              desc: '15 frases pra digitar (não clicar) a palavra que falta, sempre com emoji grande de pista — começa fácil, com 1 palavra por frase, e vai crescendo até 4.',
+              desc: '15 frases pra digitar (não clicar) a palavra que falta, sempre com emoji grande de pista e botão de Dica (mostra a 1ª letra) — começa fácil, com 1 palavra por frase, e vai crescendo até 4.',
               icon: '⌨️', src: 'atividades/frases-digitar-engel.html',
               progressKey: 'frases_engel_digitar_progress_', progressTotal: 15,
               requires: 'jogo-nivel3', hasGabarito: true

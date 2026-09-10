@@ -126,6 +126,19 @@ test.describe('Jogo "Formar Frases — Digitando (Engel)"', () => {
     await expect(frame.locator('#sentenceBox .filled')).toHaveText('dormir');
   });
 
+  test('botão de Dica mostra a 1ª letra da palavra atual e some na próxima', async ({ page }) => {
+    const frame = await openJogoDigitar(page);
+    await expect(frame.locator('#hintText')).toHaveText('');
+
+    await frame.locator('#btnHint').click();
+    await expect(frame.locator('#hintText')).toContainText('"D"'); // "dormir"
+
+    // Some ao avançar pra próxima frase (nova palavra).
+    await typeWord(frame, 'dormir');
+    await frame.locator('#btnNext').click();
+    await expect(frame.locator('#hintText')).toHaveText('');
+  });
+
   test('ignora acento e maiúscula/minúscula na comparação', async ({ page }) => {
     const frame = await openJogoDigitar(page);
     for (let i = 0; i < 8; i++) {
@@ -149,6 +162,7 @@ test.describe('Jogo "Formar Frases — Digitando (Engel)"', () => {
 
     await expect(frame.locator('#btnNext')).toBeVisible();
     await expect(frame.locator('.step-icon').first()).toHaveClass(/wrong/);
+    await expect(frame.locator('#btnHint')).toBeDisabled();
   });
 
   test('acertar as palavras em ordem completa a frase e libera a próxima', async ({ page }) => {
