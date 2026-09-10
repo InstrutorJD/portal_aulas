@@ -96,3 +96,59 @@ test.describe('Aba Perfil (só aluno)', () => {
     await expect(page.locator('#tabBtnJogos')).toHaveClass(/disabled/);
   });
 });
+
+// O aluno vê a própria nota, matéria a matéria, sem precisar da Gestão —
+// mesma fórmula (e mesmo bimestre "atual") que o professor usa em Gestão
+// → Lançar Notas, pra nunca mostrar um número diferente do que o
+// professor vê lá (ver tests/professor-chamada-notas.spec.js).
+test.describe('Aba Perfil — NOTA por matéria', () => {
+  test('mostra a nota do bimestre atual por matéria, igual à fórmula de Lançar Notas (Gestão)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      // Intervalo bem largo, sempre cobre "hoje" — não importa quando o teste roda.
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+      ],
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+        // prática só com 3 dos 5 pareceres — teoria 100% + prática 60% = 80% de conclusão da trilha.
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'pratica', progress_current: 3, progress_total: 5 },
+      ],
+      student_activity_state: [
+        { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 16, total: 20, nota: 80 } },
+      ],
+      grades: [
+        { student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', bimestre: 1, nota3: 6, nota4: 4 },
+      ],
+    });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    // Projeto de Vida: (80%*5=4,00 + Prova 8,00 + Nota3 6 + Nota4 4) / 4 = 5.50.
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    await expect(card).toContainText('NOTA:');
+    await expect(card).toContainText('5.50');
+  });
+
+  test('sem calendário de bimestres cadastrado (fora do período letivo), mostra "NOTA: —"', async ({ page }) => {
+    await stubSupabaseFake(page, { bimestre_dates: [] });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    await expect(card).toContainText('NOTA: —');
+    await expect(card).toContainText('fora do período letivo');
+  });
+
+  test('a matéria "Prova" não mostra campo de NOTA (ela já É a nota Prova)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+    });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Prova' });
+    await expect(card).not.toContainText('NOTA:');
+  });
+});

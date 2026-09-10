@@ -1575,6 +1575,22 @@
     return trilha ? trilha.key : null;
   }
 
+  // Em qual bimestre "estamos" hoje, segundo o calendário cadastrado em
+  // bimestre_dates (Gestão → "Bimestres — Início e Fim") — usado pro
+  // aluno ver a nota atual de cada matéria no Perfil (ver renderPerfilTab)
+  // sem precisar escolher um bimestre, como o professor faz em Lançar
+  // Notas. null fora de qualquer intervalo cadastrado (calendário não
+  // preenchido, ou entre um bimestre e outro) — sem bimestre "atual", não
+  // tem nota pra mostrar ainda.
+  function currentBimestreNum() {
+    const hoje = todayStr();
+    for (const num of BIMESTRE_NUMS) {
+      const b = bimestreDatesCache[num];
+      if (b && b.inicio && b.fim && hoje >= b.inicio && hoje <= b.fim) return num;
+    }
+    return null;
+  }
+
   // Matérias que ganham coluna própria em Lançar Notas — todas, menos
   // "Prova" (ela já é a coluna "Prova" em si, não faz sentido também ter
   // uma nota "matéria" pra ela mesma).
@@ -1896,6 +1912,33 @@
       return;
     }
 
+    // Nota de cada matéria no bimestre ATUAL (ver currentBimestreNum) —
+    // mesma fórmula que o professor vê em Gestão → Lançar Notas: média de
+    // (% de conclusão só das trilhas DAQUELA matéria neste bimestre,
+    // escalada até 5,0) + Prova + Nota 3 + Nota 4. A matéria "Prova" fica
+    // de fora (ela É a nota "Prova", não faz sentido ter nota de si mesma).
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    const bimestreAtual = currentBimestreNum();
+    const notaPorMateria = {};
+    if (bimestreAtual) {
+      const [gradeRes, notaProvaByStudent] = await Promise.all([
+        sbClient.from('grades').select('nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
+        fetchNotaProvaByStudent(),
+      ]);
+      const g = gradeRes.data || {};
+      const n3 = g.nota3 ?? 0, n4 = g.nota4 ?? 0;
+      const provaKey = provaTrilhaKey();
+      const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestreAtual;
+      const notaProva = notaProvaByStudent[targetEmail];
+      const n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+
+      materias.filter(m => m.key !== 'prova').forEach(m => {
+        const pctMateria = bimestreMateriaPercentForStudent(m, bimestreAtual, rows, targetEmail);
+        const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 5 * 100) / 100;
+        notaPorMateria[m.key] = { nota: calcMedia(mn1, n2, n3, n4), semTrilha: pctMateria === null };
+      });
+    }
+
     materiasEl.innerHTML = materias.map(m => {
       const pct = materiaPercentForStudent(m, rows, targetEmail);
       const pctDisplay = pct === null ? 0 : pct;
@@ -1907,6 +1950,15 @@
         }).length;
         return `<div class="perfil-trilha-row"><span>${t.label}</span><span>${doneCount}/${mods.length}</span></div>`;
       }).join('');
+
+      let notaHtml = '';
+      if (m.key !== 'prova') {
+        const info = notaPorMateria[m.key];
+        notaHtml = info
+          ? `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b>${info.semTrilha ? ' <span style="color:var(--ink-dim); font-size:11px;">(sem trilha neste bimestre)</span>' : ''}</div>`
+          : `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`;
+      }
+
       return `
         <div class="perfil-materia-card">
           <div class="perfil-materia-head">
@@ -1914,6 +1966,7 @@
             <span>${pctDisplay}%</span>
           </div>
           <div class="perfil-progress-bar"><div class="perfil-progress-fill" style="width:${pctDisplay}%;"></div></div>
+          ${notaHtml}
           <div class="perfil-trilhas-list">${trilhasHtml}</div>
         </div>
       `;
