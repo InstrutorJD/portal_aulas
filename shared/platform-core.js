@@ -323,7 +323,7 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Portal" é calculada sozinha (até 5,0, pela % de conclusão das trilhas atribuídas a este bimestre — ver "Liberação por Trilha") — só Nota 2, 3 e 4 são digitadas. A média é calculada sozinha.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Portal" (até 5,0, pela % de conclusão das trilhas deste bimestre) e "Prova" (até 10,0, nota da prova diagnóstica) são calculadas sozinhas — só Nota 3 e Nota 4 são digitadas. A média é calculada sozinha.</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -337,7 +337,7 @@
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="audit-table">
-                    <thead><tr><th>Aluno</th><th>Portal</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
+                    <thead><tr><th>Aluno</th><th>Portal</th><th>Prova</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
                     <tbody id="notasBody"></tbody>
                   </table>
                 </div>
@@ -1554,9 +1554,10 @@
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(6); return; }
 
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
-    const [gradesRes, progressRes] = await Promise.all([
+    const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
       sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
+      fetchNotaProvaByStudent(),
     ]);
     const byStudent = {};
     (gradesRes.data || []).forEach(r => { byStudent[r.student_email] = r; });
@@ -1569,14 +1570,22 @@
     tbody.innerHTML = students.map(u => {
       const pct = bimestrePortalPercentForStudent(bimestre, progressByStudent[u.email] || [], u.email);
       const n1 = pct === null ? 0 : Math.round((pct / 100) * 5 * 100) / 100;
-      const g = byStudent[u.email] || {};
-      const n2 = g.nota2 ?? '', n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
       const semTrilha = pct === null ? ' <span style="color:var(--ink-dim); font-size:10px;">(sem trilha neste bimestre)</span>' : '';
+
+      // "Prova" (nota2) não é por bimestre — a prova diagnóstica é única
+      // pra turma inteira, então mostra o mesmo valor (0-10, escalado do
+      // 0-100 salvo pela prova) não importa qual bimestre está selecionado.
+      const notaProva = notaProvaByStudent[u.email];
+      const n2 = notaProva === undefined ? 0 : Math.round((notaProva / 10) * 100) / 100;
+      const semProva = notaProva === undefined ? ' <span style="color:var(--ink-dim); font-size:10px;">(não fez a prova)</span>' : '';
+
+      const g = byStudent[u.email] || {};
+      const n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
       return `
         <tr data-email="${u.email}">
           <td>${u.nome}</td>
           <td class="portal-cell" data-nota1="${n1}">${n1.toFixed(2)}${semTrilha}</td>
-          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota2" value="${n2}"></td>
+          <td class="prova-cell" data-nota2="${n2}">${n2.toFixed(2)}${semProva}</td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
           <td class="media-cell">${calcMedia(n1, n2, n3, n4).toFixed(2)}</td>
@@ -1586,12 +1595,13 @@
 
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
       const n1 = parseFloat(tr.querySelector('.portal-cell').dataset.nota1);
+      const n2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const inputs = tr.querySelectorAll('.nota-input');
       const mediaCell = tr.querySelector('.media-cell');
       inputs.forEach(inp => {
         inp.addEventListener('input', () => {
           const vals = Array.from(inputs).map(i => i.value);
-          mediaCell.textContent = calcMedia(n1, vals[0], vals[1], vals[2]).toFixed(2);
+          mediaCell.textContent = calcMedia(n1, n2, vals[0], vals[1]).toFixed(2);
         });
       });
     });
@@ -1608,6 +1618,7 @@
       const email = tr.getAttribute('data-email');
       const u = turmaStudentByEmail(email);
       const nota1 = parseFloat(tr.querySelector('.portal-cell').dataset.nota1);
+      const nota2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const get = campo => {
         const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
         const v = inp ? inp.value : '';
@@ -1617,7 +1628,7 @@
         student_email: email,
         student_name: u ? u.nome : email,
         turma: cfg.id, bimestre,
-        nota1, nota2: get('nota2'), nota3: get('nota3'), nota4: get('nota4'),
+        nota1, nota2, nota3: get('nota3'), nota4: get('nota4'),
         updated_at: now
       };
     });
@@ -1861,6 +1872,25 @@
     switchTab('gestao');
   }
 
+  // Nota da prova diagnóstica (0 a 100), por aluno — não vem de
+  // student_module_progress (que só sabe "concluiu ou não" pro módulo
+  // progressMode:'flag' da prova, sem o valor da nota) e sim direto de
+  // student_activity_state, a mesma tabela que shared/progress-sync.js já
+  // mantém atualizada com o `state` completo de cada atividade. A prova
+  // (turmas/*/atividades/prova-*.html) salva `state.nota` (0 a 100 pontos)
+  // ao concluir — ver finishExam() lá. progress_key segue o mesmo
+  // ACTIVITY_LOCATION da prova: `prova_<turma>`. Usado tanto pelo
+  // Relatório de Notas ("Nota da Prova") quanto por Lançar Notas (coluna
+  // "Prova", que escala pra 0-10 — ver loadNotas).
+  async function fetchNotaProvaByStudent() {
+    const { data } = await sbClient.from('student_activity_state').select('student_email, state').eq('progress_key', `prova_${cfg.id}`);
+    const map = {};
+    (data || []).forEach(r => {
+      if (r.state && typeof r.state.nota === 'number') map[r.student_email] = r.state.nota;
+    });
+    return map;
+  }
+
   async function renderRelatorioNotas() {
     const materias = cfg.materias || [];
     const students = turmaStudents();
@@ -1873,17 +1903,10 @@
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
 
-    // "Nota da Prova" não vem de student_module_progress (que só sabe
-    // "concluiu ou não" pra módulos progressMode:'flag', sem o valor da
-    // nota) — vem direto de student_activity_state, a mesma tabela que
-    // shared/progress-sync.js já mantém atualizada com o `state` completo
-    // de cada atividade. A prova (turmas/*/atividades/prova-*.html) salva
-    // `state.nota` (0 a 100 pontos) ao concluir — ver finishExam() lá.
-    // progress_key segue o mesmo ACTIVITY_LOCATION da prova: `prova_<turma>`.
-    const [gradesRes, progressRes, notaProvaRes] = await Promise.all([
+    const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id),
       sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
-      sbClient.from('student_activity_state').select('student_email, state').eq('progress_key', `prova_${cfg.id}`)
+      fetchNotaProvaByStudent()
     ]);
 
     const gradesByStudent = {};
@@ -1895,10 +1918,6 @@
     (progressRes.data || []).forEach(r => {
       progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
       progressByStudent[r.student_email].push(r);
-    });
-    const notaProvaByStudent = {};
-    (notaProvaRes.data || []).forEach(r => {
-      if (r.state && typeof r.state.nota === 'number') notaProvaByStudent[r.student_email] = r.state.nota;
     });
 
     tbody.innerHTML = students.map(u => {
