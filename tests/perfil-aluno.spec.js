@@ -89,7 +89,7 @@ test.describe('Aba Perfil (só aluno)', () => {
   });
 
   test('trocar de aba pra Perfil não mexe no cadeado de Jogos', async ({ page }) => {
-    await stubSupabaseFake(page, { daily_module_releases: [] });
+    await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
     await openPerfil(page);
     await expect(page.locator('#tabContentPerfil')).toBeVisible();

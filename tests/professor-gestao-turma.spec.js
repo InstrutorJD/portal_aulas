@@ -48,46 +48,28 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     expect(scrollTopAfter).toBeGreaterThan(0);
   });
 
-  test('professor vê só os alunos desta turma, não os de Sistemas', async ({ page }) => {
+  // Liberação de jogos não é mais por aluno individual — só "Liberar Todos"/
+  // "Bloquear Todos" pra turma inteira (student_overrides continua uma linha
+  // por aluno por baixo dos panos, mas a Gestão só expõe o controle em lote).
+  test('Liberar Todos / Bloquear Todos grava o override em lote e atualiza o status agregado', async ({ page }) => {
     await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
-    await expect(page.locator('#tblGestaoStudentsBody')).toContainText('Breno Silva');
-    await expect(page.locator('#tblGestaoStudentsBody')).not.toContainText('Alexandre Natal');
-  });
-
-  test('liberar jogos de um aluno específico grava o override certo', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
-    await page.goto(JOGOS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Bloqueios e Liberações');
-
-    const row = page.locator('#tblGestaoStudentsBody tr', { hasText: 'Breno Silva' });
-    await expect(row).toContainText('BLOQUEADO');
-    await row.locator('button').click();
-    await expect(row).toContainText('LIBERADO');
-
-    const rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
-    expect(rows.find(r => r.student_email === 'breno.silva80')).toMatchObject({ games_unlocked: true });
-  });
-
-  test('liberar jogos (todos) só afeta alunos desta turma', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
-    await page.goto(JOGOS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Bloqueios e Liberações');
+    await expect(page.locator('#gamesUnlockStatus')).toContainText('Bloqueado para todos');
 
     await page.click('#btnUnlockGamesTurma');
-    await page.waitForTimeout(200);
-
-    const rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
+    await expect(page.locator('#gamesUnlockStatus')).toContainText('Liberado para todos');
+    let rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
     expect(rows.some(r => r.student_email === 'breno.silva80' && r.games_unlocked === true)).toBe(true);
-    expect(rows.some(r => r.student_email === 'alexandre.natal')).toBe(false);
+    expect(rows.some(r => r.student_email === 'alexandre.natal')).toBe(false); // só alunos desta turma
+
+    await page.click('#btnLockGamesTurma');
+    await expect(page.locator('#gamesUnlockStatus')).toContainText('Bloqueado para todos');
+    rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
+    expect(rows.every(r => r.games_unlocked === false)).toBe(true);
   });
 
   test('bloquear Ctrl+C/V grava configuração com id da turma, não "global"', async ({ page }) => {
@@ -108,14 +90,14 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
 
   // Token temporário do professor pra "Dar visto"/"Pular etapa" dentro de
   // uma atividade (shared/professor-visto.js) — substitui digitar a senha
-  // real numa tela que é fisicamente do aluno (ver PENDENCIAS.md).
-  test('gerar token do professor mostra um código de 6 dígitos com prazo, e reabrir a Gestão mantém o mesmo token', async ({ page }) => {
+  // real numa tela que é fisicamente do aluno (ver PENDENCIAS.md). Fica
+  // atrás do atalho "🔑 Token" na barra de navegação, não dentro da Gestão.
+  test('gerar token do professor mostra um código de 6 dígitos com prazo, e reabrir o popover mantém o mesmo token', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(JOGOS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Token — Dar Visto / Pular Etapa');
 
+    await page.click('#btnQuickToken');
+    await expect(page.locator('#professorTokenOverlay')).toBeVisible();
     await expect(page.locator('#professorTokenValue')).toHaveText('------');
     await page.click('#btnGerarProfessorToken');
 
@@ -127,12 +109,12 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ token: tokenGerado, created_by: 'fake-admin' });
 
-    // Trocar de aba e voltar pra Gestão não gera um token novo — mostra o
-    // mesmo, senão qualquer navegação do professor invalidaria o token que
-    // um aluno já pode estar digitando em outra atividade.
-    await page.click('#mainNavTabs .tab-btn[data-tab="aulas"]');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
+    // Fechar e reabrir o popover não gera um token novo — mostra o mesmo,
+    // senão qualquer navegação do professor invalidaria o token que um
+    // aluno já pode estar digitando em outra atividade.
+    await page.click('#btnFecharProfessorToken');
+    await expect(page.locator('#professorTokenOverlay')).toBeHidden();
+    await page.click('#btnQuickToken');
     await expect(page.locator('#professorTokenValue')).toHaveText(tokenGerado);
   });
 
@@ -191,8 +173,8 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
     await expect(page.locator('#btnQuickAtividadeInatividade')).toHaveCount(0);
-    await expect(page.locator('#btnQuickToggleGames')).toHaveCount(0);
     await expect(page.locator('#btnQuickToggleClipboard')).toHaveCount(0);
+    await expect(page.locator('#btnQuickToken')).toHaveCount(0);
   });
 
   test('atalho "Atividade / Inatividade" abre a Gestão com as duas seções já expandidas, sem precisar navegar manualmente', async ({ page }) => {
@@ -212,33 +194,6 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     // Sub-seções de Relatórios (Inatividade é uma delas) ficam visíveis já expandidas.
     await expect(page.locator('#inatividadeBody')).toBeVisible();
     await expect(page.locator('#tblGestaoActivityBody')).toBeVisible();
-  });
-
-  test('atalho de jogos liga/desliga os jogos da turma inteira, e reflete o mesmo estado da tabela dentro da Gestão', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
-    await page.goto(JOGOS_URL);
-
-    // Estado inicial (ninguém liberado ainda) já carregado sem precisar abrir a Gestão.
-    await expect(page.locator('#btnQuickToggleGames')).toHaveText('🔓 Liberar Jogos');
-
-    await page.click('#btnQuickToggleGames');
-    await expect(page.locator('#btnQuickToggleGames')).toHaveText('🔒 Bloquear Jogos');
-
-    let rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
-    expect(rows.every(r => r.games_unlocked === true)).toBe(true);
-    expect(rows.some(r => r.student_email === 'breno.silva80')).toBe(true);
-
-    // A tabela de "Bloqueios e Liberações" (dentro da Gestão) mostra o mesmo estado.
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await expandGestaoSection(page, 'Bloqueios e Liberações');
-    await expect(page.locator('#tblGestaoStudentsBody')).toContainText('LIBERADO');
-    await expect(page.locator('#tblGestaoStudentsBody')).not.toContainText('BLOQUEADO');
-
-    // Clicar de novo bloqueia todo mundo outra vez.
-    await page.click('#btnQuickToggleGames');
-    await expect(page.locator('#btnQuickToggleGames')).toHaveText('🔓 Liberar Jogos');
-    rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
-    expect(rows.every(r => r.games_unlocked === false)).toBe(true);
   });
 
   test('atalho de Ctrl+C/V liga/desliga o bloqueio da turma, e reflete o mesmo estado do botão dentro da Gestão', async ({ page }) => {

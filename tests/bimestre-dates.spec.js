@@ -1,11 +1,12 @@
 // @ts-check
-// Calendário letivo por bimestre (aba Gestão, seção "Bloqueios e
-// Liberações" → "Bimestres — Início e Fim"). Cada trilha pertence ao
-// bimestre cujo intervalo contém a data de início EFETIVA dela (ver
-// trilhaBimestreInfo em shared/platform-core.js) — passado o fim desse
-// bimestre, a trilha some da aba Aulas pra todo mundo, inclusive o
-// professor (diferente de trilha_release_dates/prazo, que só bloqueia o
-// aluno — ver tests/trilha-release-dates.spec.js).
+// Calendário letivo por bimestre + liberação por matéria (aba Gestão,
+// seção "Bloqueios e Liberações" → "Bimestres — Início e Fim" e
+// "Liberação por Matéria"). Cada matéria é atribuída a um bimestre — a
+// janela [início, fim] desse bimestre vira o período em que TODAS as
+// trilhas da matéria ficam visíveis/liberadas. Passado o fim, as trilhas
+// da matéria somem da aba Aulas pra todo mundo, inclusive o professor (o
+// card da matéria em si continua aparecendo — só fica "Em breve", igual
+// já valia pra matéria sem nenhuma trilha disponível).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
@@ -37,39 +38,48 @@ test.describe('Gestão — calendário de bimestres (professor)', () => {
       turma: 'sistemas', inicio: '2026-02-01', fim: '2026-04-15',
     });
   });
+});
 
-  test('tabela de trilhas mostra a qual bimestre cada trilha pertence, deduzido pelo início dela', async ({ page }) => {
-    await stubSupabaseFake(page, {
-      bimestre_dates: [{ turma: 'sistemas', bimestre: 1, inicio: '2026-02-01', fim: '2026-04-15' }],
-      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', inicio: '2026-02-10' }],
-    });
+test.describe('Gestão — liberação por matéria (professor)', () => {
+  test('lista todas as matérias e salva o bimestre atribuído a cada uma em lote', async ({ page }) => {
+    await stubSupabaseFake(page, { materia_bimestre: [] });
     await page.goto(SISTEMAS_PROFESSOR_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
-    const row = page.locator('#tblGestaoTrilhasBody tr[data-trilha="sql"]');
-    await expect(row).toContainText('1º Bimestre');
+    const row = page.locator('#tblGestaoMateriasBody tr[data-materia="banco-dados"]');
+    await expect(row).toContainText('Banco de Dados');
+    await expect(row).toContainText('Sempre visível');
+
+    await row.locator('select').selectOption('1');
+    await page.click('#btnSalvarMateriaBimestre');
+
+    await expect(page.locator('#materiaBimestreStatus')).toContainText('Salvo');
+    const saved = await page.evaluate(() => window.__FAKE_DB__.materia_bimestre || []);
+    expect(saved.find(r => r.materia_key === 'banco-dados')).toMatchObject({ turma: 'sistemas', bimestre: 1 });
   });
 });
 
-test.describe('Trilha com bimestre encerrado', () => {
-  test('some pro aluno', async ({ page }) => {
+test.describe('Matéria com bimestre encerrado', () => {
+  test('trilhas somem pro aluno — matéria vira "Em breve"', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'sistemas', bimestre: 1, inicio: '2000-01-01', fim: '2000-03-31' }],
-      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', inicio: '2000-02-01' }],
+      materia_bimestre: [{ turma: 'sistemas', materia_key: 'banco-dados', bimestre: 1 }],
     });
     await page.goto(SISTEMAS_ALUNO_URL);
-    await page.click('.game-card:has-text("Banco de Dados")');
 
+    const card = page.locator('.game-card:has-text("Banco de Dados")');
+    await expect(card).toContainText('Em breve');
+    await card.click();
     await expect(page.locator('#materiaDetailArea')).not.toContainText('Trilha SQL');
     await expect(page.locator('#moduleSelector_sql')).toHaveCount(0);
   });
 
-  test('some pro professor também, diferente do início/prazo por trilha', async ({ page }) => {
+  test('trilhas somem pro professor também, diferente do bloqueio antigo (início/prazo por trilha)', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'sistemas', bimestre: 1, inicio: '2000-01-01', fim: '2000-03-31' }],
-      trilha_release_dates: [{ turma: 'sistemas', trilha_key: 'sql', inicio: '2000-02-01' }],
+      materia_bimestre: [{ turma: 'sistemas', materia_key: 'banco-dados', bimestre: 1 }],
     });
     await page.goto(SISTEMAS_PROFESSOR_URL);
     await page.click('.game-card:has-text("Banco de Dados")');
@@ -78,14 +88,32 @@ test.describe('Trilha com bimestre encerrado', () => {
     await expect(page.locator('#moduleSelector_sql')).toHaveCount(0);
   });
 
-  test('trilha sem início definido nunca é afetada, mesmo com bimestres cadastrados', async ({ page }) => {
+  test('matéria sem bimestre atribuído nunca é afetada, mesmo com bimestres cadastrados', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'sistemas', bimestre: 1, inicio: '2000-01-01', fim: '2000-03-31' }],
-      trilha_release_dates: [],
+      materia_bimestre: [],
     });
     await page.goto(SISTEMAS_ALUNO_URL);
     await page.click('.game-card:has-text("Banco de Dados")');
 
+    await expect(page.locator('#materiaDetailArea')).toContainText('Trilha SQL');
+  });
+});
+
+test.describe('Matéria com bimestre futuro', () => {
+  test('trilhas somem pro aluno, mas o professor continua vendo (revisão de conteúdo)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      bimestre_dates: [{ turma: 'sistemas', bimestre: 1, inicio: '2999-01-01', fim: '2999-03-31' }],
+      materia_bimestre: [{ turma: 'sistemas', materia_key: 'banco-dados', bimestre: 1 }],
+    });
+    await page.goto(SISTEMAS_ALUNO_URL);
+    const card = page.locator('.game-card:has-text("Banco de Dados")');
+    await expect(card).toContainText('Em breve');
+    await card.click();
+    await expect(page.locator('#materiaDetailArea')).not.toContainText('Trilha SQL');
+
+    await page.goto(SISTEMAS_PROFESSOR_URL);
+    await page.click('.game-card:has-text("Banco de Dados")');
     await expect(page.locator('#materiaDetailArea')).toContainText('Trilha SQL');
   });
 });

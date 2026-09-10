@@ -993,66 +993,25 @@ alter table public.student_module_progress enable trigger trg_student_module_pro
 
 
 -- ============================================================
--- BLOCO 8 — Início/prazo por trilha, definidos pelo professor na aba
--- Gestão. Organiza o currículo por bimestre pro aluno: antes do início
--- a trilha nem aparece pra ele, depois do prazo sem concluir ela entra
--- em "Em atraso" — não muda a regra interna da trilha (um módulo que
--- já dependia de outro via `requires` continua dependendo dele).
+-- BLOCO 8 — Calendário letivo por bimestre + liberação por matéria (aba
+-- Gestão → "Bloqueios e Liberações"). Cada matéria é atribuída a um dos 4
+-- bimestres (materia_bimestre); o bimestre em si tem início/fim
+-- (bimestre_dates). Antes do início, a matéria (e todas as trilhas dela)
+-- nem aparece pro aluno; depois do fim, ela some da aba Aulas pra TODO
+-- MUNDO, inclusive o professor — não muda a regra interna da trilha (um
+-- módulo que já dependia de outro via `requires` continua dependendo dele).
 --
--- Substitui o antigo bloqueio manual liga/desliga de trilha inteira
--- (trilha_overrides): o mesmo resultado (trilha inacessível pro aluno)
--- agora vem de deixar `inicio` no futuro, só que sem precisar lembrar
--- de liberar depois — a trilha aparece sozinha na data.
+-- Substitui tanto o antigo bloqueio manual liga/desliga de trilha inteira
+-- (trilha_overrides) quanto o início/prazo por TRILHA individual
+-- (trilha_release_dates) e a liberação diária/semanal por módulo
+-- (daily_module_releases, ver git history) — um único período por matéria
+-- (o do bimestre a que ela pertence) substitui as três coisas.
 -- ============================================================
 
 drop table if exists public.trilha_overrides cascade;
+drop table if exists public.trilha_release_dates cascade;
+drop table if exists public.daily_module_releases cascade;
 
-create table if not exists public.trilha_release_dates (
-  turma text not null,
-  trilha_key text not null,
-  inicio date,
-  prazo date,
-  updated_at timestamptz not null default now(),
-  primary key (turma, trilha_key)
-);
-
-alter table public.trilha_release_dates enable row level security;
-
-drop policy if exists "trilha_release_dates_select_all" on public.trilha_release_dates;
-create policy "trilha_release_dates_select_all"
-  on public.trilha_release_dates for select
-  using (true);
-
-drop policy if exists "trilha_release_dates_insert_all" on public.trilha_release_dates;
-drop policy if exists "trilha_release_dates_insert_professor" on public.trilha_release_dates;
-create policy "trilha_release_dates_insert_professor"
-  on public.trilha_release_dates for insert
-  with check (public.is_professor());
-
-drop policy if exists "trilha_release_dates_update_all" on public.trilha_release_dates;
-drop policy if exists "trilha_release_dates_update_professor" on public.trilha_release_dates;
-create policy "trilha_release_dates_update_professor"
-  on public.trilha_release_dates for update
-  using (public.is_professor())
-  with check (public.is_professor());
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trilha_release_dates'
-  ) then
-    alter publication supabase_realtime add table public.trilha_release_dates;
-  end if;
-end $$;
-
--- Calendário letivo por bimestre (início/fim de cada um dos 4 bimestres da
--- turma) — define a que bimestre uma trilha pertence (o bimestre cujo
--- intervalo contém a data de início efetiva dela, ver trilhaBimestreInfo em
--- shared/platform-core.js): passado o fim desse bimestre, a trilha some da
--- aba Aulas pra todo mundo, inclusive o professor — diferente do
--- início/prazo por trilha acima (trilha_release_dates), que só bloqueia o
--- aluno e nunca esconde nada de ninguém.
 create table if not exists public.bimestre_dates (
   turma text not null,
   bimestre smallint not null check (bimestre between 1 and 4),
@@ -1087,6 +1046,45 @@ begin
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'bimestre_dates'
   ) then
     alter publication supabase_realtime add table public.bimestre_dates;
+  end if;
+end $$;
+
+-- bimestre nullable de propósito: ausência de linha OU bimestre = null
+-- significam a mesma coisa ("Sem bimestre" na Gestão) — a matéria fica
+-- sempre visível, sem período nenhum.
+create table if not exists public.materia_bimestre (
+  turma text not null,
+  materia_key text not null,
+  bimestre smallint check (bimestre between 1 and 4),
+  updated_at timestamptz not null default now(),
+  primary key (turma, materia_key)
+);
+
+alter table public.materia_bimestre enable row level security;
+
+drop policy if exists "materia_bimestre_select_all" on public.materia_bimestre;
+create policy "materia_bimestre_select_all"
+  on public.materia_bimestre for select
+  using (true);
+
+drop policy if exists "materia_bimestre_insert_professor" on public.materia_bimestre;
+create policy "materia_bimestre_insert_professor"
+  on public.materia_bimestre for insert
+  with check (public.is_professor());
+
+drop policy if exists "materia_bimestre_update_professor" on public.materia_bimestre;
+create policy "materia_bimestre_update_professor"
+  on public.materia_bimestre for update
+  using (public.is_professor())
+  with check (public.is_professor());
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'materia_bimestre'
+  ) then
+    alter publication supabase_realtime add table public.materia_bimestre;
   end if;
 end $$;
 
@@ -1161,78 +1159,6 @@ begin
     alter publication supabase_realtime add table public.game_scores;
   end if;
 end $$;
-
--- ============================================================
--- BLOCO 10 — Liberação diária/semanal de atividades (aba Gestão,
--- seção "Liberação Diária de Atividades" dentro de "Bloqueios e
--- Liberações"). O professor escolhe um módulo (atividade) que precisa
--- ser concluído numa data específica ou toda vez que cair num certo
--- dia da semana, pra turma inteira ou só um aluno.
---
--- checkGamesUnlock (shared/platform-core.js) troca a regra padrão de
--- desbloqueio ("completou tudo") por "completou o que foi liberado
--- pra HOJE" sempre que existe pelo menos uma linha valendo hoje pro
--- aluno — student_email = '' vale pra turma inteira, um e-mail vale
--- só pra aquele aluno. Como a checagem é sempre contra a data/dia da
--- semana atual, o cadeado volta sozinho no dia seguinte, sem nenhuma
--- ação nova do professor (a menos que a mesma atividade continue
--- valendo hoje também, aí seguiria liberada por já estar concluída).
--- ============================================================
-
-create table if not exists public.daily_module_releases (
-  id uuid primary key default gen_random_uuid(),
-  turma text not null,
-  scope text not null check (scope in ('data', 'semana')),
-
-  -- scope='data': target_date preenchido (um dia específico), target_weekday nulo.
-  -- scope='semana': target_weekday preenchido (0=domingo..6=sábado, igual
-  -- JS Date.getDay()), target_date nulo — vale toda vez que cair nesse dia.
-  target_date date,
-  target_weekday smallint check (target_weekday between 0 and 6),
-
-  -- '' = turma inteira; senão, e-mail do aluno específico (USERS_JSON[].email).
-  student_email text not null default '',
-
-  trilha_key text not null,
-  module_key text not null,
-  -- cache do rótulo pra exibir na tabela da aba Gestão sem cruzar com o TURMA_CONFIG de cada turma.
-  trilha_label text,
-  module_title text,
-
-  created_at timestamptz not null default now()
-);
-
-create index if not exists idx_daily_module_releases_turma on public.daily_module_releases (turma);
-
-alter table public.daily_module_releases enable row level security;
-
-drop policy if exists "daily_module_releases_select_all" on public.daily_module_releases;
-create policy "daily_module_releases_select_all"
-  on public.daily_module_releases for select
-  using (true);
-
-drop policy if exists "daily_module_releases_insert_all" on public.daily_module_releases;
-drop policy if exists "daily_module_releases_insert_professor" on public.daily_module_releases;
-create policy "daily_module_releases_insert_professor"
-  on public.daily_module_releases for insert
-  with check (public.is_professor());
-
-drop policy if exists "daily_module_releases_delete_all" on public.daily_module_releases;
-drop policy if exists "daily_module_releases_delete_professor" on public.daily_module_releases;
-create policy "daily_module_releases_delete_professor"
-  on public.daily_module_releases for delete
-  using (public.is_professor());
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'daily_module_releases'
-  ) then
-    alter publication supabase_realtime add table public.daily_module_releases;
-  end if;
-end $$;
-
 
 -- ============================================================
 -- BLOCO 11 — QuizRush do portal (aba Jogos). O professor escolhe uma
@@ -1622,8 +1548,8 @@ create policy "behavioral_observations_update_professor"
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
--- student_activity, student_overrides, trilha_release_dates, bimestre_dates,
--- game_scores, daily_module_releases, quizrush_sessions/quizrush_players/
+-- student_activity, student_overrides, bimestre_dates, materia_bimestre,
+-- game_scores, quizrush_sessions/quizrush_players/
 -- quizrush_answers, student_activity_state, professor_tokens e
 -- behavioral_observations foram criadas, se network_nodes ganhou as
 -- colunas current_ip e turma, e se
