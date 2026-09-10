@@ -376,8 +376,9 @@
                   </div>
                   <button class="btn btn-secondary" id="btnGerarPdfPresenca">🖨️ Gerar PDF do Mês</button>
                 </div>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos com frequência abaixo de 75% neste mês:</p>
                 <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Dias com chamada</th><th>Faltas</th><th>% Presença</th></tr></thead>
+                  <thead><tr><th>Aluno</th><th>Faltas (mês)</th><th>% Presença (mês)</th></tr></thead>
                   <tbody id="presencaBody"></tbody>
                 </table>
 
@@ -1404,29 +1405,43 @@
     document.getElementById('chamadaResumoStatus').textContent = '';
   }
 
+  // Não mostra mais a grade completa (todo mundo, o tempo todo) — só um
+  // alerta com quem está com frequência baixa NESTE MÊS, pra chamar
+  // atenção sem lotar a tela. O histórico completo/outros meses continua
+  // disponível pelo PDF (ver gerarPdfChamadaMes, mesInput separado).
   async function renderRelatorioPresenca() {
     const mesInput = document.getElementById('presencaPdfMes');
     if (mesInput && !mesInput.value) mesInput.value = new Date().toISOString().slice(0, 7);
 
     const tbody = document.getElementById('presencaBody');
-    if (!sbClient) { tbody.innerHTML = noSupabaseRow(4); return; }
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
 
     const students = turmaStudents();
-    if (students.length === 0) { tbody.innerHTML = noStudentsRow(4); return; }
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
 
+    const mesAtual = new Date().toISOString().slice(0, 7); // 'YYYY-MM' — sempre o mês corrente, independente do mês escolhido pro PDF
     const { data: rows } = await sbClient.from('attendance').select('*').eq('turma', cfg.id);
     const byStudent = {};
-    (rows || []).forEach(r => {
+    (rows || []).filter(r => r.data && r.data.startsWith(mesAtual)).forEach(r => {
       byStudent[r.student_email] = byStudent[r.student_email] || { dias: 0, faltas: 0 };
       byStudent[r.student_email].dias += 1;
       if (!r.presente) byStudent[r.student_email].faltas += 1;
     });
 
-    tbody.innerHTML = students.map(u => {
-      const s = byStudent[u.email] || { dias: 0, faltas: 0 };
-      const pct = s.dias > 0 ? Math.round(((s.dias - s.faltas) / s.dias) * 100) : null;
-      return `<tr><td>${u.nome}</td><td>${s.dias}</td><td>${s.faltas}</td><td>${pct === null ? '—' : pct + '%'}</td></tr>`;
-    }).join('');
+    const comFaltaAlta = students
+      .map(u => {
+        const s = byStudent[u.email] || { dias: 0, faltas: 0 };
+        const pct = s.dias > 0 ? Math.round(((s.dias - s.faltas) / s.dias) * 100) : null;
+        return { nome: u.nome, faltas: s.faltas, pct };
+      })
+      // Sem nenhuma chamada este mês ainda (pct null) não é "falta" — só
+      // entra quem já tem pelo menos 1 dia registrado e ficou abaixo de 75%.
+      .filter(r => r.pct !== null && r.pct < 75)
+      .sort((a, b) => a.pct - b.pct);
+
+    tbody.innerHTML = comFaltaAlta.length === 0
+      ? `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno com frequência abaixo de 75% este mês.</td></tr>`
+      : comFaltaAlta.map(r => `<tr><td>${r.nome}</td><td>${r.faltas}</td><td style="color:var(--blood-bright); font-weight:700;">${r.pct}%</td></tr>`).join('');
   }
 
   const MESES_PT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];

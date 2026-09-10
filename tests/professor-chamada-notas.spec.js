@@ -8,6 +8,7 @@ const { stubSupabaseFake, jogosAlunoProfiles, sistemasAlunoProfiles } = require(
 const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const SISTEMAS_URL = '/turmas/sistemas/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=sistemas';
 const today = new Date().toISOString().slice(0, 10);
+const thisMonth = today.slice(0, 7); // 'YYYY-MM' — o "mês atual" que o relatório de presença usa
 
 // A tabela de chamada/notas lista turmaStudents() (profiles) — semeia o
 // roster certo pra turma da URL, além do que o teste já pedir.
@@ -76,21 +77,43 @@ test.describe('Chamada — dentro do portal da turma', () => {
     expect(clipboard).toBe(resumo);
   });
 
-  test('relatório de presença calcula % corretamente a partir do histórico', async ({ page }) => {
+  // Não mostra mais a grade completa (todo mundo, o tempo todo) — só um
+  // alerta com quem está com frequência abaixo de 75% NESTE MÊS.
+  test('relatório de presença mostra só quem está abaixo de 75% de frequência neste mês', async ({ page }) => {
     await openGestao(page, JOGOS_URL, {
       attendance: [
-        { turma: 'jogos', data: '2026-03-01', student_email: 'breno.silva80', presente: true },
-        { turma: 'jogos', data: '2026-03-02', student_email: 'breno.silva80', presente: false },
-        { turma: 'jogos', data: '2026-03-03', student_email: 'breno.silva80', presente: true },
-        { turma: 'jogos', data: '2026-03-04', student_email: 'breno.silva80', presente: true },
+        // Breno: 1 presença de 4 dias este mês = 25% — abaixo de 75%, deve aparecer.
+        { turma: 'jogos', data: `${thisMonth}-01`, student_email: 'breno.silva80', presente: true },
+        { turma: 'jogos', data: `${thisMonth}-02`, student_email: 'breno.silva80', presente: false },
+        { turma: 'jogos', data: `${thisMonth}-03`, student_email: 'breno.silva80', presente: false },
+        { turma: 'jogos', data: `${thisMonth}-04`, student_email: 'breno.silva80', presente: false },
+        // Edward: 4 presenças de 4 dias este mês = 100% — não deve aparecer na lista.
+        { turma: 'jogos', data: `${thisMonth}-01`, student_email: 'edward.guzman', presente: true },
+        { turma: 'jogos', data: `${thisMonth}-02`, student_email: 'edward.guzman', presente: true },
+        { turma: 'jogos', data: `${thisMonth}-03`, student_email: 'edward.guzman', presente: true },
+        { turma: 'jogos', data: `${thisMonth}-04`, student_email: 'edward.guzman', presente: true },
+        // Falta de um mês antigo — não conta pro relatório do mês atual.
+        { turma: 'jogos', data: '2000-01-01', student_email: 'iago.moreira', presente: false },
       ],
     });
     await expandGestaoSection(page, 'Relatórios');
 
     const row = page.locator('#presencaBody tr', { hasText: 'Breno Silva' });
-    await expect(row).toContainText('4'); // dias com chamada
-    await expect(row).toContainText('1'); // faltas
-    await expect(row).toContainText('75%'); // 3 presenças de 4 dias
+    const cells = row.locator('td');
+    await expect(cells.nth(1)).toHaveText('3'); // faltas no mês
+    await expect(cells.nth(2)).toContainText('25%');
+
+    await expect(page.locator('#presencaBody')).not.toContainText('Edward Guzman'); // 100% não entra na lista
+    await expect(page.locator('#presencaBody')).not.toContainText('Iago Moreira'); // sem chamada este mês, não entra
+  });
+
+  test('sem ninguém abaixo de 75% este mês, mostra mensagem de que não há alunos', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      attendance: [{ turma: 'jogos', data: `${thisMonth}-01`, student_email: 'breno.silva80', presente: true }],
+    });
+    await expandGestaoSection(page, 'Relatórios');
+
+    await expect(page.locator('#presencaBody')).toContainText('Nenhum aluno com frequência abaixo de 75%');
   });
 
   test('PDF do mês abre uma aba com a tabela aluno×dia do mês selecionado e aciona a impressão', async ({ page }) => {
