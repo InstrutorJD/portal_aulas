@@ -1109,13 +1109,13 @@
     renderGestaoTrilhaBimestre();
   }
 
-  // Rótulo pro professor na Gestão: só olha o bimestre atribuído, nunca o
-  // progresso de um aluno específico (não faria sentido "concluída" aqui —
-  // conclusão é por aluno; quem vê isso é o trilhaStatus() que cada aluno
-  // usa pra si).
-  function trilhaBimestreStatusLabel(trilhaKey) {
+  // Rótulo pro professor na Gestão: recebe o NÚMERO do bimestre (não a
+  // trilha_key), pra dar pra recalcular ao vivo com uma escolha ainda não
+  // salva (ver renderTrilhaBimestreTable) — nunca olha o progresso de um
+  // aluno específico (não faria sentido "concluída" aqui — conclusão é por
+  // aluno; quem vê isso é o trilhaStatus() que cada aluno usa pra si).
+  function trilhaBimestreStatusLabel(num) {
     const hoje = todayStr();
-    const num = trilhaBimestreCache[trilhaKey];
     if (!num) return { text: 'Sempre visível', color: 'var(--ink-dim)' };
     const b = bimestreDatesCache[num] || {};
     if (b.inicio && b.inicio > hoje) return { text: 'Ainda não iniciada', color: 'var(--ink-dim)' };
@@ -1123,35 +1123,89 @@
     return { text: 'Em andamento', color: 'var(--green)' };
   }
 
+  function trilhaBimestreRowHtml({ materiaLabel, trilha }, selected) {
+    const status = trilhaBimestreStatusLabel(selected);
+    const options = ['<option value="">Sem bimestre</option>'].concat(
+      BIMESTRE_NUMS.map(num => `<option value="${num}" ${String(selected) === String(num) ? 'selected' : ''}>${BIMESTRE_LABELS[num]}</option>`)
+    );
+    return `
+      <tr data-trilha="${trilha.key}">
+        <td>${materiaLabel}</td>
+        <td>${trilha.label}</td>
+        <td>
+          <select class="trilha-bimestre-input">${options.join('')}</select>
+          <span style="color:${status.color}; margin-left:8px; font-size:11px;">${status.text}</span>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Agrupa as trilhas por bimestre (sem bimestre primeiro, à parte, depois
+  // 1º a 4º — só os grupos com pelo menos 1 trilha aparecem) e desenha a
+  // tabela. selecaoAtual(trilhaKey) decide o bimestre de cada trilha: no
+  // primeiro carregamento vem do banco (trilhaBimestreCache); ao trocar
+  // qualquer <select> da tabela (ver wireGestaoTrilhasRegroup), vem do
+  // valor ainda não salvo escolhido na tela — é isso que faz o
+  // agrupamento reagir na hora, sem precisar clicar em "Salvar" antes.
+  function renderTrilhaBimestreTable(pares, selecaoAtual) {
+    const tbody = document.getElementById('tblGestaoTrilhasBody');
+    if (!tbody) return;
+    if (pares.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
+      return;
+    }
+
+    const semBimestre = [];
+    const porBimestre = { 1: [], 2: [], 3: [], 4: [] };
+    pares.forEach(par => {
+      const num = selecaoAtual(par.trilha.key);
+      (num && porBimestre[num] ? porBimestre[num] : semBimestre).push(par);
+    });
+
+    const groupHeaderHtml = label => `<tr class="trilha-bimestre-group"><td colspan="3" style="background:var(--panel2); color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; font-size:11px;">${label}</td></tr>`;
+
+    let html = '';
+    if (semBimestre.length > 0) {
+      html += groupHeaderHtml('Sem bimestre');
+      html += semBimestre.map(par => trilhaBimestreRowHtml(par, '')).join('');
+    }
+    BIMESTRE_NUMS.forEach(num => {
+      if (porBimestre[num].length === 0) return;
+      html += groupHeaderHtml(BIMESTRE_LABELS[num]);
+      html += porBimestre[num].map(par => trilhaBimestreRowHtml(par, num)).join('');
+    });
+    tbody.innerHTML = html;
+
+    wireGestaoTrilhasRegroup(pares);
+  }
+
+  // Reagrupa ao vivo sempre que QUALQUER <select> de bimestre da tabela
+  // muda — refaz a tabela inteira lendo o valor atual de cada <select>
+  // (não o que está salvo no banco), preservando o que o professor já
+  // escolheu nas outras linhas. Precisa ser rechamada depois de cada
+  // innerHTML novo, já que ele destrói os <select> (e os listeners) antigos.
+  function wireGestaoTrilhasRegroup(pares) {
+    const tbody = document.getElementById('tblGestaoTrilhasBody');
+    if (!tbody) return;
+    tbody.querySelectorAll('.trilha-bimestre-input').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const valores = {};
+        tbody.querySelectorAll('tr[data-trilha]').forEach(tr => {
+          const s = tr.querySelector('.trilha-bimestre-input');
+          valores[tr.getAttribute('data-trilha')] = s ? s.value : '';
+        });
+        renderTrilhaBimestreTable(pares, key => (valores[key] ? parseInt(valores[key], 10) : null));
+      });
+    });
+  }
+
   // Uma linha por TRILHA (não por matéria) — a mesma matéria pode ter
   // trilhas em bimestres diferentes (currículo que se repete/continua ao
   // longo do ano), então o bimestre precisa ser escolhido trilha a trilha.
   async function renderGestaoTrilhaBimestre() {
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
-    const tbody = document.getElementById('tblGestaoTrilhasBody');
-    if (!tbody) return;
     const pares = allTrilhasComMateria();
-    if (pares.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = pares.map(({ materiaLabel, trilha }) => {
-      const selected = trilhaBimestreCache[trilha.key] || '';
-      const status = trilhaBimestreStatusLabel(trilha.key);
-      const options = ['<option value="">Sem bimestre</option>'].concat(
-        BIMESTRE_NUMS.map(num => `<option value="${num}" ${String(selected) === String(num) ? 'selected' : ''}>${BIMESTRE_LABELS[num]}</option>`)
-      );
-      return `
-        <tr data-trilha="${trilha.key}">
-          <td>${materiaLabel}</td>
-          <td>${trilha.label}</td>
-          <td>
-            <select class="trilha-bimestre-input">${options.join('')}</select>
-            <span style="color:${status.color}; margin-left:8px; font-size:11px;">${status.text}</span>
-          </td>
-        </tr>
-      `;
-    }).join('');
+    renderTrilhaBimestreTable(pares, trilhaKey => trilhaBimestreCache[trilhaKey] || null);
   }
 
   // Salva TODAS as linhas de uma vez (igual salvarBimestreDatas/salvarNotas).

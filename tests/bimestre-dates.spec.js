@@ -58,6 +58,51 @@ test.describe('Gestão — liberação por trilha (professor)', () => {
     const saved = await page.evaluate(() => window.__FAKE_DB__.trilha_bimestre || []);
     expect(saved.find(r => r.trilha_key === 'sql')).toMatchObject({ turma: 'sistemas', bimestre: 1 });
   });
+
+  // Lê a estrutura de grupos da tabela direto do DOM: cada linha
+  // .trilha-bimestre-group vira um cabeçalho novo, e as linhas de trilha
+  // que vêm depois (até o próximo cabeçalho) entram na lista dele.
+  async function readGroups(page) {
+    return page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('#tblGestaoTrilhasBody tr'));
+      const out = {};
+      let atual = null;
+      rows.forEach(tr => {
+        if (tr.classList.contains('trilha-bimestre-group')) {
+          atual = tr.textContent.trim();
+          out[atual] = [];
+        } else if (tr.dataset.trilha) {
+          out[atual].push(tr.dataset.trilha);
+        }
+      });
+      return out;
+    });
+  }
+
+  test('trilhas sem bimestre ficam num grupo separado, e escolher um bimestre agrupa a trilha com as demais do mesmo bimestre na hora, antes de salvar', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      // "sql-comentarios" já começa no 1º Bimestre — as outras 2 trilhas de
+      // Banco de Dados (sql, db-conexao-supabase) ainda não têm bimestre.
+      trilha_bimestre: [{ turma: 'sistemas', trilha_key: 'sql-comentarios', bimestre: 1 }],
+    });
+    await page.goto(SISTEMAS_PROFESSOR_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
+
+    const before = await readGroups(page);
+    expect(before['Sem bimestre']).toEqual(expect.arrayContaining(['sql', 'db-conexao-supabase']));
+    expect(before['1º Bimestre']).toEqual(['sql-comentarios']);
+
+    // Escolhe o 1º Bimestre pra "sql" — reagrupa na hora, sem precisar
+    // clicar em "Salvar" nem recarregar a tabela.
+    await page.locator('#tblGestaoTrilhasBody tr[data-trilha="sql"] select').selectOption('1');
+
+    const after = await readGroups(page);
+    expect(after['1º Bimestre']).toEqual(expect.arrayContaining(['sql-comentarios', 'sql']));
+    expect(after['Sem bimestre']).toContain('db-conexao-supabase');
+    expect(after['Sem bimestre']).not.toContain('sql');
+  });
 });
 
 test.describe('Trilha com bimestre encerrado', () => {
