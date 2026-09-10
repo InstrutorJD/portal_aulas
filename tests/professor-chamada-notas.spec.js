@@ -134,15 +134,17 @@ test.describe('Chamada — dentro do portal da turma', () => {
 });
 
 test.describe('Notas — dentro do portal da turma', () => {
-  // "Portal" (nota1) e "Prova" (nota2) não são mais digitadas — as duas
-  // seguem a mesma regra: só contam no bimestre a que a TRILHA delas foi
-  // atribuída (trilha_bimestre, "Liberação por Trilha"). "Portal" vem da %
-  // de conclusão (teoria + prática) das trilhas comuns atribuídas a esse
-  // bimestre, até 5,0; "Prova" vem da nota da prova diagnóstica (0-100,
-  // salva em student_activity_state ao concluir), escalada pra 0-10, só
-  // quando a trilha "prova-diagnostica" também está atribuída a esse
-  // mesmo bimestre.
-  test('"Portal" e "Prova" são calculadas sozinhas, e a média recalcula ao vivo com Nota 3/4', async ({ page }) => {
+  // "Prova" (nota2) não é digitada — vem da nota da prova diagnóstica
+  // (0-100, salva em student_activity_state ao concluir), escalada pra
+  // 0-10, só quando a trilha "prova-diagnostica" está atribuída a ESTE
+  // bimestre (trilha_bimestre, "Liberação por Trilha"). Não existe mais
+  // uma "Média" única — cada MATÉRIA tem sua própria nota: média de
+  // (% de conclusão só das trilhas DAQUELA matéria neste bimestre,
+  // escalada até 5,0) + Prova + Nota 3 + Nota 4. "Projeto de Vida" é a
+  // matéria dona de "vida-autoconhecimento"/"vida-cidadania" (turma
+  // Jogos) — sua coluna é sempre a primeira (materiasParaNotas segue a
+  // ordem de cfg.materias, e "Prova" é excluída da lista).
+  test('cada matéria tem sua própria nota (% da matéria + Prova + Nota 3 + Nota 4), e recalcula ao vivo com Nota 3/4', async ({ page }) => {
     await openGestao(page, JOGOS_URL, {
       grades: [],
       trilha_bimestre: [
@@ -160,28 +162,33 @@ test.describe('Notas — dentro do portal da turma', () => {
     });
     await expandGestaoSection(page, 'Chamada e Notas');
 
+    await expect(page.locator('#notasHead')).toContainText('Projeto de Vida');
+    await expect(page.locator('#notasHead')).not.toContainText('Portal');
+    await expect(page.locator('#notasHead')).not.toContainText('Média');
+
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
-    // 80% de conclusão * 5,0 pontos = 4,00.
-    await expect(row.locator('.portal-cell')).toContainText('4.00');
     // Nota da prova 80/100 * 10 pontos = 8,00 — prova-diagnostica está no 1º Bimestre, igual o selecionado.
     await expect(row.locator('.prova-cell')).toContainText('8.00');
 
     await row.locator('[data-campo="nota3"]').fill('6');
     await row.locator('[data-campo="nota4"]').fill('4');
 
-    // Média = (4 + 8 + 6 + 4) / 4 = 5.50.
-    await expect(row.locator('.media-cell')).toHaveText('5.50');
+    // Projeto de Vida: (80%*5=4,00 + 8 + 6 + 4) / 4 = 5.50.
+    const materiaCell = row.locator('.materia-grade-cell').first();
+    await expect(materiaCell).toContainText('5.50');
 
     await page.click('#btnSalvarNotas');
     await expect(page.locator('#notasStatus')).toContainText('Notas salvas');
 
+    // nota1 continua sendo salva por baixo dos panos (não aparece mais
+    // como coluna própria) só pra grades.media não regredir.
     const saved = await page.evaluate(() =>
       (window.__FAKE_DB__.grades || []).find(r => r.student_email === 'breno.silva80' && r.bimestre === 1)
     );
     expect(saved).toMatchObject({ nota1: 4, nota2: 8, nota3: 6, nota4: 4, turma: 'jogos' });
   });
 
-  test('sem trilha atribuída ao bimestre, "Portal" fica 0,00 com aviso; prova de outro bimestre (ou sem bimestre) não conta em "Prova"', async ({ page }) => {
+  test('sem trilha da matéria atribuída ao bimestre, a nota da matéria mostra "sem trilha"; prova de outro bimestre (ou sem bimestre) não conta em "Prova"', async ({ page }) => {
     await openGestao(page, JOGOS_URL, {
       grades: [], trilha_bimestre: [],
       student_module_progress: [
@@ -196,13 +203,15 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expandGestaoSection(page, 'Chamada e Notas');
 
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
-    await expect(row.locator('.portal-cell')).toContainText('0.00');
-    await expect(row.locator('.portal-cell')).toContainText('sem trilha neste bimestre');
     await expect(row.locator('.prova-cell')).toContainText('0.00');
     await expect(row.locator('.prova-cell')).toContainText('prova não é deste bimestre');
+
+    const materiaCell = row.locator('.materia-grade-cell').first(); // Projeto de Vida
+    await expect(materiaCell).toContainText('0.00');
+    await expect(materiaCell).toContainText('sem trilha');
   });
 
-  test('trocar de bimestre recalcula "Portal" E "Prova" — as duas só contam no bimestre a que a trilha delas foi atribuída', async ({ page }) => {
+  test('trocar de bimestre recalcula a nota de cada matéria E "Prova" — as duas só contam no bimestre a que a trilha foi atribuída', async ({ page }) => {
     await openGestao(page, JOGOS_URL, {
       grades: [],
       trilha_bimestre: [
@@ -222,13 +231,18 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expandGestaoSection(page, 'Chamada e Notas');
 
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
-    await expect(row.locator('.portal-cell')).toContainText('5.00'); // 1º Bimestre: vida-autoconhecimento 100%
-    await expect(row.locator('.prova-cell')).toContainText('10.00'); // prova-diagnostica também está no 1º Bimestre
+    const materiaCell = row.locator('.materia-grade-cell').first(); // Projeto de Vida (dona das duas trilhas)
+
+    await expect(row.locator('.prova-cell')).toContainText('10.00'); // 100/100 * 10
+    // 1º Bimestre: só vida-autoconhecimento conta (100%) — (5,00 + 10 + 0 + 0) / 4 = 3.75.
+    await expect(materiaCell).toContainText('3.75');
 
     await page.selectOption('#notasBimestre', '2');
-    await expect(row.locator('.portal-cell')).toContainText('0.00'); // 2º Bimestre: vida-cidadania 0%
-    await expect(row.locator('.prova-cell')).toContainText('0.00'); // prova é do 1º Bimestre, não conta aqui
+    // Prova é do 1º Bimestre — não conta mais aqui.
+    await expect(row.locator('.prova-cell')).toContainText('0.00');
     await expect(row.locator('.prova-cell')).toContainText('prova não é deste bimestre');
+    // 2º Bimestre: só vida-cidadania conta (0%) — (0 + 0 + 0 + 0) / 4 = 0.00.
+    await expect(materiaCell).toContainText('0.00');
   });
 
   test('relatório de notas mostra só médias e o % de conclusão por matéria', async ({ page }) => {

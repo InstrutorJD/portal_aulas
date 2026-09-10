@@ -323,7 +323,7 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Portal" (até 5,0) e "Prova" (até 10,0, nota da prova diagnóstica) são calculadas sozinhas, sempre pelas trilhas atribuídas a ESTE bimestre (ver "Liberação por Trilha") — só Nota 3 e Nota 4 são digitadas. A média é calculada sozinha.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só Nota 3 e Nota 4 são digitadas. Cada MATÉRIA tem sua própria nota (média de Prova + Nota 3 + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -337,7 +337,7 @@
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="audit-table">
-                    <thead><tr><th>Aluno</th><th>Portal</th><th>Prova</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
+                    <thead><tr id="notasHead"></tr></thead>
                     <tbody id="notasBody"></tbody>
                   </table>
                 </div>
@@ -1524,18 +1524,17 @@
     return Math.round(((vals[0] + vals[1] + vals[2] + vals[3]) / 4) * 100) / 100;
   }
 
-  // % de conclusão (teoria + prática, mesma conta ponderada de
-  // materiaPercentForStudent) das trilhas atribuídas a ESTE bimestre
-  // (trilha_bimestre, ver "Liberação por Trilha") — usado só pra calcular
-  // a nota "Portal" em Lançar Notas. Exclui a trilha da prova diagnóstica
-  // de propósito: ela já vira nota separada ("Prova", ver
-  // provaTrilhaKey/loadNotas), não pode contar nas duas ao mesmo tempo.
+  // % de conclusão (teoria + prática, crédito parcial por módulo) de um
+  // conjunto de trilhas, contando só as atribuídas a ESTE bimestre
+  // (trilha_bimestre, ver "Liberação por Trilha"). Base de
+  // bimestrePortalPercentForStudent e bimestreMateriaPercentForStudent,
+  // abaixo — a única diferença entre as duas é QUAIS trilhas entram.
   // Trilha sem bimestre atribuído nunca entra aqui (não é "do bimestre
-  // nenhum"). null quando nenhuma trilha da turma está atribuída a esse
-  // bimestre ainda — nada pra calcular.
-  function bimestrePortalPercentForStudent(bimestreNum, progressRows, studentEmail) {
-    const modules = allTrilhas()
-      .filter(t => t.key !== provaTrilhaKey() && trilhaBimestreCache[t.key] === bimestreNum && isTrilhaVisibleToEmail(t, studentEmail))
+  // nenhum"). null quando nenhuma das trilhas passadas está atribuída a
+  // esse bimestre ainda — nada pra calcular.
+  function bimestreModulesPercent(trilhas, bimestreNum, progressRows, studentEmail) {
+    const modules = trilhas
+      .filter(t => trilhaBimestreCache[t.key] === bimestreNum && isTrilhaVisibleToEmail(t, studentEmail))
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -1546,6 +1545,22 @@
       sum += Math.min((row.progress_current || 0) / total, 1);
     });
     return Math.round((sum / modules.length) * 100);
+  }
+
+  // % geral (todas as matérias juntas, exceto a prova) — usado só
+  // internamente pra manter nota1 (grades.media, ver Relatório de Notas)
+  // preenchido; não aparece mais como coluna própria em Lançar Notas,
+  // que agora mostra uma nota por MATÉRIA (ver bimestreMateriaPercentForStudent).
+  function bimestrePortalPercentForStudent(bimestreNum, progressRows, studentEmail) {
+    const provaKey = provaTrilhaKey();
+    return bimestreModulesPercent(allTrilhas().filter(t => t.key !== provaKey), bimestreNum, progressRows, studentEmail);
+  }
+
+  // % de conclusão só das trilhas de UMA matéria — é isso que faz a nota
+  // de cada matéria em Lançar Notas ser diferente da nota das outras
+  // (mesma Prova/Nota 3/Nota 4, mas essa % muda conforme a matéria).
+  function bimestreMateriaPercentForStudent(materia, bimestreNum, progressRows, studentEmail) {
+    return bimestreModulesPercent(materia.trilhas || [], bimestreNum, progressRows, studentEmail);
   }
 
   // Chave da trilha da prova diagnóstica ("Prova" na Gestão): a matéria
@@ -1560,13 +1575,26 @@
     return trilha ? trilha.key : null;
   }
 
+  // Matérias que ganham coluna própria em Lançar Notas — todas, menos
+  // "Prova" (ela já é a coluna "Prova" em si, não faz sentido também ter
+  // uma nota "matéria" pra ela mesma).
+  function materiasParaNotas() {
+    return (cfg.materias || []).filter(m => m.key !== 'prova');
+  }
+
   async function loadNotas() {
     const tbody = document.getElementById('notasBody');
-    if (!sbClient) { tbody.innerHTML = noSupabaseRow(6); return; }
+    const theadRow = document.getElementById('notasHead');
+    const materias = materiasParaNotas();
+    const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3, Nota 4 + 1 por matéria
+
+    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>Nota 3</th><th>Nota 4</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
+
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
 
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const students = turmaStudents();
-    if (students.length === 0) { tbody.innerHTML = noStudentsRow(6); return; }
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
 
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
@@ -1582,17 +1610,21 @@
       progressByStudent[r.student_email].push(r);
     });
 
-    // "Prova" (nota2) segue a MESMA regra do "Portal": só conta no
-    // bimestre a que a trilha da prova foi atribuída (Liberação por
-    // Trilha) — trilha sem bimestre, ou atribuída a outro bimestre, não
-    // conta em nenhum/nesse bimestre selecionado.
+    // "Prova" (nota2) só conta no bimestre a que a trilha da prova foi
+    // atribuída (mesma "Liberação por Trilha") — trilha sem bimestre, ou
+    // atribuída a outro bimestre, não conta em nenhum/nesse bimestre
+    // selecionado.
     const provaKey = provaTrilhaKey();
     const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestre;
 
     tbody.innerHTML = students.map(u => {
-      const pct = bimestrePortalPercentForStudent(bimestre, progressByStudent[u.email] || [], u.email);
-      const n1 = pct === null ? 0 : Math.round((pct / 100) * 5 * 100) / 100;
-      const semTrilha = pct === null ? ' <span style="color:var(--ink-dim); font-size:10px;">(sem trilha neste bimestre)</span>' : '';
+      const pRows = progressByStudent[u.email] || [];
+
+      // nota1 não aparece mais como coluna própria — continua sendo
+      // calculada e salva por baixo dos panos só pra grades.media (Média
+      // B1-B4 no Relatório de Notas) não regredir.
+      const pctGeral = bimestrePortalPercentForStudent(bimestre, pRows, u.email);
+      const n1 = pctGeral === null ? 0 : Math.round((pctGeral / 100) * 5 * 100) / 100;
 
       const notaProva = notaProvaByStudent[u.email];
       const n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
@@ -1602,27 +1634,39 @@
 
       const g = byStudent[u.email] || {};
       const n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
+
+      const materiaCellsHtml = materias.map(m => {
+        const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
+        const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 5 * 100) / 100;
+        const semTrilha = pctMateria === null ? ' <span style="color:var(--ink-dim); font-size:10px;">(sem trilha)</span>' : '';
+        return `<td class="materia-grade-cell" data-materia-n1="${mn1}"><span class="materia-grade-value">${calcMedia(mn1, n2, n3, n4).toFixed(2)}</span>${semTrilha}</td>`;
+      }).join('');
+
       return `
-        <tr data-email="${u.email}">
+        <tr data-email="${u.email}" data-nota1="${n1}">
           <td>${u.nome}</td>
-          <td class="portal-cell" data-nota1="${n1}">${n1.toFixed(2)}${semTrilha}</td>
           <td class="prova-cell" data-nota2="${n2}">${n2.toFixed(2)}${semProva}</td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
-          <td class="media-cell">${calcMedia(n1, n2, n3, n4).toFixed(2)}</td>
+          ${materiaCellsHtml}
         </tr>
       `;
     }).join('');
 
+    // Nota 3/4 mudam a nota de TODAS as matérias ao mesmo tempo (são
+    // compartilhadas entre elas) — recalcula as células de matéria ao
+    // vivo, cada uma com o próprio % já guardado em data-materia-n1.
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
-      const n1 = parseFloat(tr.querySelector('.portal-cell').dataset.nota1);
       const n2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const inputs = tr.querySelectorAll('.nota-input');
-      const mediaCell = tr.querySelector('.media-cell');
+      const materiaCells = tr.querySelectorAll('.materia-grade-cell');
       inputs.forEach(inp => {
         inp.addEventListener('input', () => {
           const vals = Array.from(inputs).map(i => i.value);
-          mediaCell.textContent = calcMedia(n1, n2, vals[0], vals[1]).toFixed(2);
+          materiaCells.forEach(cell => {
+            const mn1 = parseFloat(cell.dataset.materiaN1);
+            cell.querySelector('.materia-grade-value').textContent = calcMedia(mn1, n2, vals[0], vals[1]).toFixed(2);
+          });
         });
       });
     });
@@ -1638,7 +1682,7 @@
     const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
       const email = tr.getAttribute('data-email');
       const u = turmaStudentByEmail(email);
-      const nota1 = parseFloat(tr.querySelector('.portal-cell').dataset.nota1);
+      const nota1 = parseFloat(tr.dataset.nota1);
       const nota2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const get = campo => {
         const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
