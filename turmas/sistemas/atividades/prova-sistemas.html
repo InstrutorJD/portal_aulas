@@ -149,7 +149,7 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 80 QUESTÕES — cobre todas as matérias/trilhas com
+  // BANCO DE 78 QUESTÕES — cobre todas as matérias/trilhas com
   // conteúdo real trabalhadas na turma Sistemas (Banco de Dados,
   // Desenvolvimento de Sistemas 1, Redes de Computadores, Internet
   // das Coisas, Introdução de Desenvolvimento de Projetos,
@@ -158,7 +158,7 @@
   // (não 4) — a posição da certa NUNCA é fixa: as opções são
   // reembaralhadas a cada exibição (ver renderQuestion), então o
   // correctIndex abaixo é só a posição "de origem" no array, nunca
-  // a posição real na tela. Cada aluno recebe 20 dessas 80,
+  // a posição real na tela. Cada aluno recebe 20 dessas 78,
   // sorteadas (ver pickExamIndices) — dois alunos raramente pegam o
   // mesmo conjunto, e mesmo quando uma pergunta se repete entre
   // eles, a ordem de exibição e a posição das alternativas mudam.
@@ -642,30 +642,6 @@
       ],
       correctIndex: 0
     },
-    {
-      materia: 'Modelagem — Laboratório de Autonomia',
-      prompt: 'Diante de um requisito ambíguo, uma técnica de análise é assumir uma interpretação razoável e seguir o trabalho, confirmando depois — sem travar esperando resposta. Como essa técnica é chamada?',
-      options: [
-        'Levantar hipóteses e validar',
-        'Ignorar o requisito por completo',
-        'Esperar uma resposta perfeita antes de fazer qualquer coisa',
-        'Copiar a solução de outro projeto sem analisar',
-        'Sortear uma interpretação aleatória sem revisar depois'
-      ],
-      correctIndex: 0
-    },
-    {
-      materia: 'Modelagem — Laboratório de Autonomia',
-      prompt: 'Depois de assumir uma interpretação razoável pra um requisito ambíguo (sem travar esperando resposta), qual é o passo seguinte mais importante dessa técnica?',
-      options: [
-        'Documentar a hipótese assumida, pra confirmar (ou corrigir) com quem pediu assim que possível',
-        'Nunca mais tocar nesse requisito de novo, em nenhuma hipótese',
-        'Apagar qualquer rastro da decisão tomada durante o trabalho',
-        'Esperar a próxima reunião, sem registrar nada por escrito',
-        'Refazer o trabalho inteiro do zero toda vez que surgir uma dúvida'
-      ],
-      correctIndex: 0
-    },
 
     // ---- Projeto de Vida ----
     {
@@ -993,7 +969,7 @@
   ];
 
   // ============================================================
-  // SORTEIO: 20 das 80, embaralhadas — recalculado só na primeira
+  // SORTEIO: 20 das 78, embaralhadas — recalculado só na primeira
   // vez que o aluno inicia (persistido em SELECTION_KEY pra não
   // mudar no meio de uma tentativa em andamento). As ALTERNATIVAS
   // de cada questão são reembaralhadas a cada exibição (ver
@@ -1357,7 +1333,7 @@
         <h2>📋 Prova Diagnóstica — Turma Sistemas</h2>
         <p>Esta é uma prova diagnóstica: o objetivo é identificar o que você já aprendeu (e o que ainda precisa reforçar) em TODAS as matérias trabalhadas até agora — Banco de Dados, Desenvolvimento de Sistemas 1, Redes de Computadores, Internet das Coisas, Introdução de Desenvolvimento de Projetos, Modelagem de Sistemas 1, Projeto de Vida, Mundo do Trabalho e Programação de Aplicativos.</p>
         <ul>
-          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>78 questões</b> — você vai responder <b>20</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Cada questão tem <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada pro professor.</li>
           <li>Dá pra <b>pular uma questão</b> sem responder — mas ela conta como <b>errada</b>, sem chance de voltar depois.</li>
@@ -1380,13 +1356,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 80 questões (não só as 20 que um
+  // Gabarito: lista o BANCO INTEIRO de 78 questões (não só as 20 que um
   // aluno específico recebeu), agrupado por matéria — referência completa
   // pro professor, sem precisar abrir esta tela.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Diagnóstica — Turma Sistemas — Banco de 80 questões',
-      subtitle: 'Diagnóstico (20 sorteadas de 80, por aluno) · Turma Sistemas',
+      title: 'Prova Diagnóstica — Turma Sistemas — Banco de 78 questões',
+      subtitle: 'Diagnóstico (20 sorteadas de 78, por aluno) · Turma Sistemas',
       items: QUESTION_POOL.map((q, i) => ({
         number: i + 1,
         title: q.materia,

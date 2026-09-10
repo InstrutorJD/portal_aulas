@@ -1,6 +1,6 @@
 // @ts-check
 // "Prova — Turma Sistemas" (matéria Prova, trilha Prova Diagnóstica):
-// diagnóstico cobrindo todas as matérias da turma. Banco de 80 questões (5
+// diagnóstico cobrindo todas as matérias da turma. Banco de 78 questões (5
 // alternativas cada), sorteando 20 por aluno na primeira vez que ele clica
 // "Iniciar prova" — o sorteio fica travado (localStorage) pelo resto da
 // tentativa. Trava de integridade (shared/exam-proctor.js), mesmo padrão de
@@ -47,7 +47,7 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
   test('mostra a tela de regras antes de iniciar, não a prova direto', async ({ page }) => {
     await page.goto(PROVA_URL);
     await expect(page.locator('#gateWrap')).toContainText('Prova Diagnóstica — Turma Sistemas');
-    await expect(page.locator('#gateWrap')).toContainText('80 questões');
+    await expect(page.locator('#gateWrap')).toContainText('78 questões');
     await expect(page.locator('#gateWrap')).toContainText('20');
     await expect(page.locator('#storyWrap')).toBeHidden();
     await expect(page.locator('#btnIniciar')).toBeVisible();
@@ -181,12 +181,12 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
     await expect(page.locator('.option')).toHaveCount(5);
     const selectionAfter = await page.evaluate(u => localStorage.getItem(`prova_sistemas_selecao_${u}`), 'admin');
     expect(selectionAfter).not.toBeNull();
-    // Praticamente impossível o sorteio de 20 de 80 repetir por acaso —
+    // Praticamente impossível o sorteio de 20 de 78 repetir por acaso —
     // confirma que reiniciar de fato gerou uma seleção nova.
     expect(selectionAfter).not.toBe(selectionBefore);
   });
 
-  test('gabarito lista o banco inteiro de 80 questões', async ({ page }) => {
+  test('gabarito lista o banco inteiro de 78 questões', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor');
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
@@ -204,8 +204,8 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
     const fs = require('node:fs');
     const content = fs.readFileSync(filePath, 'utf-8');
     expect(content).toContain('GABARITO');
-    expect(content).toContain('80)');
-    expect(content).not.toContain('81)');
+    expect(content).toContain('78)');
+    expect(content).not.toContain('79)');
   });
 });
 
