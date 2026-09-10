@@ -124,7 +124,7 @@
           ${currentUser.role === 'aluno' ? '<button class="tab-btn" data-tab="perfil">Perfil 👤</button>' : ''}
           ${currentUser.role === 'professor' ? `
             <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
-            <button class="quick-action-btn" id="btnQuickAtividadeInatividade" title="Ir direto pra Atividade em Tempo Real e Relatório de Inatividade">📡 Atividade / Inatividade</button>
+            <button class="quick-action-btn" id="btnQuickAtividadeInatividade" title="Ir direto pro relatório de Atividade e Inatividade">📡 Atividade / Inatividade</button>
             <button class="quick-action-btn" id="btnQuickToggleClipboard" title="Bloquear ou liberar Ctrl+C/Ctrl+V pra turma inteira">🔒 Bloquear Copiar/Colar</button>
             <button class="quick-action-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑 Token</button>
           ` : ''}
@@ -350,20 +350,6 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Atividade em Tempo Real</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;">Onde cada aluno desta turma está agora — atualiza sozinho.</p>
-                <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Onde está</th><th>Há quanto tempo</th><th>Status</th><th>Última atualização</th></tr></thead>
-                  <tbody id="tblGestaoActivityBody"></tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Relatórios</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -392,10 +378,10 @@
                   <button class="btn btn-secondary" id="btnGerarRelatorioNotas">📊 Gerar Relatório Completo</button>
                 </div>
 
-                <h3 class="gestao-subhead">Relatório de Inatividade</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;" id="inatividadeResumo">Quem nunca acessou o portal ou acessou mas não avançou em nenhuma atividade — listados primeiro.</p>
+                <h3 class="gestao-subhead">Atividade e Inatividade</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;" id="inatividadeResumo">Quem nunca acessou o portal ou acessou mas não avançou em nenhuma atividade — listados primeiro. Onde está e status ao vivo atualizam sozinhos.</p>
                 <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th>Status</th><th>Última vez visto no portal</th></tr></thead>
+                  <thead><tr><th>Aluno</th><th>Situação</th><th>Onde está agora</th><th>Há quanto tempo</th><th>Última atualização</th></tr></thead>
                   <tbody id="inatividadeBody"></tbody>
                 </table>
 
@@ -1021,7 +1007,6 @@
   let gestaoClipboardBlocked = false;
   let gestaoActivityRealtimeStarted = false;
   let gestaoActivityPollStarted = false;
-  let gestaoInatividadePollStarted = false;
 
   function turmaStudents() {
     return turmaStudentsCache;
@@ -1277,7 +1262,7 @@
     return row.status || 'offline';
   }
 
-  // "Há quanto tempo" (Atividade em Tempo Real) — location_started_at é
+  // "Há quanto tempo" (Atividade e Inatividade) — location_started_at é
   // mantido pelo gatilho track_daily_active_seconds() no banco (só reseta
   // quando `location` muda de verdade, ao contrário de updated_at, que
   // muda a cada heartbeat de 15s mesmo na mesma tela). Formata a diferença
@@ -1292,32 +1277,6 @@
     const h = Math.floor(totalMin / 60);
     const min = totalMin % 60;
     return h > 0 ? `${h}h${String(min).padStart(2, '0')}min` : `${min}min`;
-  }
-
-  async function renderGestaoActivity() {
-    const tbody = document.getElementById('tblGestaoActivityBody');
-    if (!tbody || !sbClient) return;
-
-    const { data, error } = await sbClient.from('student_activity').select('*').eq('turma', cfg.id).order('student_name', { ascending: true });
-    const rows = error ? [] : (data || []);
-
-    if (rows.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum registro de atividade ainda.</td></tr>`;
-      return;
-    }
-
-    const statusMeta = {
-      active: { color: 'var(--green)', label: '🟢 Ativo' },
-      idle: { color: 'var(--yellow)', label: '🟡 Inativo' },
-      offline: { color: 'var(--ink-dim)', label: '⚫ Offline' }
-    };
-
-    tbody.innerHTML = rows.map(r => {
-      const meta = statusMeta[computeGestaoDisplayStatus(r)] || statusMeta.offline;
-      const lastUpdate = r.updated_at ? new Date(r.updated_at).toLocaleTimeString() : '--';
-      const duration = formatDurationSince(r.location_started_at);
-      return `<tr><td><b>${r.student_name || r.student_email}</b></td><td>${r.location_label || r.location || '--'}</td><td>${duration}</td><td><span style="color:${meta.color}">${meta.label}</span></td><td>${lastUpdate}</td></tr>`;
-    }).join('');
   }
 
   // ---------- Chamada / Notas (dentro da aba Gestão, já sabe a turma) ----------
@@ -2171,13 +2130,25 @@
     return (rows || []).some(r => (r.progress_current || 0) > 0 || r.completed);
   }
 
+  // Junta o que antes eram dois relatórios separados ("Atividade em Tempo
+  // Real" e "Relatório de Inatividade") num só: a classificação de
+  // inatividade (nunca acessou / acessou sem fazer nada) continua
+  // decidindo a ordem — quem precisa de atenção sobe pro topo — mas quem
+  // JÁ tem progresso real agora mostra o status AO VIVO (Ativo/Inativo/
+  // Offline) mais onde está e há quanto tempo, em vez de um "ATIVO" genérico.
+  const LIVE_STATUS_META = {
+    active: { label: '🟢 Ativo', color: 'var(--green)' },
+    idle: { label: '🟡 Inativo', color: 'var(--yellow)' },
+    offline: { label: '⚫ Offline', color: 'var(--ink-dim)' },
+  };
+
   async function renderRelatorioInatividade() {
     const tbody = document.getElementById('inatividadeBody');
     const resumo = document.getElementById('inatividadeResumo');
-    if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(5); return; }
 
     const students = turmaStudents();
-    if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(5); return; }
 
     const [activityRes, progressRes] = await Promise.all([
       sbClient.from('student_activity').select('*').eq('turma', cfg.id),
@@ -2193,31 +2164,35 @@
       progressByStudent[r.student_email].push(r);
     });
 
-    const STATUS = {
-      nunca: { rank: 0, label: 'NUNCA ACESSOU', color: 'var(--blood-bright)' },
-      semAtividade: { rank: 1, label: 'ACESSOU, SEM ATIVIDADE', color: 'var(--yellow)' },
-      ativo: { rank: 2, label: 'ATIVO', color: 'var(--green)' }
-    };
-
     const linhas = students.map(u => {
       const activity = activityByStudent[u.email];
-      const status = !activity
-        ? STATUS.nunca
-        : hasRealProgress(progressByStudent[u.email])
-          ? STATUS.ativo
-          : STATUS.semAtividade;
+      const temProgresso = hasRealProgress(progressByStudent[u.email]);
+
+      let rank, label, color;
+      if (!activity) {
+        rank = 0; label = 'NUNCA ACESSOU'; color = 'var(--blood-bright)';
+      } else if (!temProgresso) {
+        rank = 1; label = 'SEM ATIVIDADE'; color = 'var(--yellow)';
+      } else {
+        const meta = LIVE_STATUS_META[computeGestaoDisplayStatus(activity)] || LIVE_STATUS_META.offline;
+        rank = 2; label = meta.label; color = meta.color;
+      }
+
       const ultimaVez = activity && (activity.updated_at || activity.last_interaction_at)
         ? new Date(activity.updated_at || activity.last_interaction_at).toLocaleString('pt-BR')
         : '—';
-      return { email: u.email, nome: u.nome, status, ultimaVez };
+      const ondeEsta = activity ? (activity.location_label || activity.location || '--') : '—';
+      const haQuanto = activity ? formatDurationSince(activity.location_started_at) : '—';
+
+      return { email: u.email, nome: u.nome, rank, label, color, ondeEsta, haQuanto, ultimaVez };
     });
 
     // Quem precisa de atenção (nunca acessou / acessou sem fazer nada) sobe
     // pro topo — o professor não deveria ter que rolar a turma toda pra achar.
-    linhas.sort((a, b) => a.status.rank - b.status.rank || a.nome.localeCompare(b.nome, 'pt-BR'));
+    linhas.sort((a, b) => a.rank - b.rank || a.nome.localeCompare(b.nome, 'pt-BR'));
 
-    const nuncaCount = linhas.filter(l => l.status === STATUS.nunca).length;
-    const semAtividadeCount = linhas.filter(l => l.status === STATUS.semAtividade).length;
+    const nuncaCount = linhas.filter(l => l.rank === 0).length;
+    const semAtividadeCount = linhas.filter(l => l.rank === 1).length;
     if (resumo) {
       resumo.textContent = `${nuncaCount} de ${students.length} aluno(s) nunca acessaram o portal; ${semAtividadeCount} acessaram mas não fizeram nenhuma atividade ainda.`;
     }
@@ -2225,7 +2200,9 @@
     tbody.innerHTML = linhas.map(l => `
       <tr>
         <td><button class="aluno-nome-link" data-perfil-email="${l.email}" title="Ver o Perfil (progresso completo) deste aluno">${l.nome}</button></td>
-        <td><span style="color:${l.status.color}; font-weight:800;">${l.status.label}</span></td>
+        <td><span style="color:${l.color}; font-weight:800;">${l.label}</span></td>
+        <td>${l.ondeEsta}</td>
+        <td>${l.haQuanto}</td>
         <td>${l.ultimaVez}</td>
       </tr>
     `).join('');
@@ -2551,23 +2528,18 @@
     renderRelatorioInatividade();
 
     if (!sbClient) return;
-    renderGestaoActivity();
+    // "Atividade e Inatividade" junta os dois relatórios antigos — usa a
+    // cadência mais rápida (realtime + 15s) do antigo "Atividade em Tempo
+    // Real", já que agora essa mesma tabela também carrega o status ao vivo.
     if (!gestaoActivityRealtimeStarted) {
       gestaoActivityRealtimeStarted = true;
       sbClient.channel('realtime_gestao_activity_' + cfg.id)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'student_activity', filter: `turma=eq.${cfg.id}` }, () => renderGestaoActivity())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'student_activity', filter: `turma=eq.${cfg.id}` }, () => renderRelatorioInatividade())
         .subscribe();
     }
     if (!gestaoActivityPollStarted) {
       gestaoActivityPollStarted = true;
-      setInterval(renderGestaoActivity, 15000);
-    }
-    // Não precisa ser em tempo real feito a atividade acima (o professor não
-    // fica de olho o tempo todo), mas o relatório não pode ficar parado do
-    // jeito que a turma estava quando a aba Gestão foi aberta.
-    if (!gestaoInatividadePollStarted) {
-      gestaoInatividadePollStarted = true;
-      setInterval(renderRelatorioInatividade, 60000);
+      setInterval(renderRelatorioInatividade, 15000);
     }
   }
 
@@ -2580,15 +2552,15 @@
     if (rows.length) await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
   }
 
-  // Abre a Gestão já com "Atividade em Tempo Real" e "Relatórios" (onde
-  // mora o Relatório de Inatividade) expandidos, e rola até lá — evita o
-  // professor ter que procurar/abrir essas duas seções toda vez.
+  // Abre a Gestão já com "Relatórios" (onde mora "Atividade e Inatividade")
+  // expandido, e rola até lá — evita o professor ter que procurar/abrir
+  // essa seção toda vez.
   function openGestaoAtividadeInatividade() {
     switchTab('gestao');
     let scrollTarget = null;
     document.querySelectorAll('.collapsible-card').forEach(card => {
       const titulo = card.querySelector('.collapsible-head h2')?.textContent.trim();
-      if (titulo === 'Relatórios' || titulo === 'Atividade em Tempo Real') {
+      if (titulo === 'Relatórios') {
         card.classList.add('expanded');
         if (!scrollTarget) scrollTarget = card;
       }

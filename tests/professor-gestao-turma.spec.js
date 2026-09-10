@@ -177,7 +177,7 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#btnQuickToken')).toHaveCount(0);
   });
 
-  test('atalho "Atividade / Inatividade" abre a Gestão com as duas seções já expandidas, sem precisar navegar manualmente', async ({ page }) => {
+  test('atalho "Atividade / Inatividade" abre a Gestão com "Relatórios" já expandido, sem precisar navegar manualmente', async ({ page }) => {
     await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_URL);
 
@@ -188,12 +188,9 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
 
     await expect(page.locator('#tabContentGestao')).toBeVisible();
     const relatorios = page.locator('.collapsible-card', { has: page.locator('h2', { hasText: 'Relatórios' }) });
-    const atividade = page.locator('.collapsible-card', { has: page.locator('h2', { hasText: 'Atividade em Tempo Real' }) });
     await expect(relatorios).toHaveClass(/expanded/);
-    await expect(atividade).toHaveClass(/expanded/);
-    // Sub-seções de Relatórios (Inatividade é uma delas) ficam visíveis já expandidas.
+    // "Atividade e Inatividade" (sub-seção de Relatórios) fica visível já expandida.
     await expect(page.locator('#inatividadeBody')).toBeVisible();
-    await expect(page.locator('#tblGestaoActivityBody')).toBeVisible();
   });
 
   test('atalho de Ctrl+C/V liga/desliga o bloqueio da turma, e reflete o mesmo estado do botão dentro da Gestão', async ({ page }) => {
@@ -215,21 +212,27 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
   });
 
-  test('atividade em tempo real mostra só alunos desta turma', async ({ page }) => {
+  test('status ao vivo (onde está, há quanto tempo) só aparece pra quem tem progresso real, e só alunos desta turma', async ({ page }) => {
     await stubSupabaseFake(page, {
+      profiles: jogosAlunoProfiles(),
       student_activity: [
         { student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', status: 'active', location_label: 'JavaScript', updated_at: new Date().toISOString() },
         { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', status: 'idle', location_label: 'Aulas', updated_at: new Date().toISOString() },
+      ],
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
       ],
     });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Atividade em Tempo Real');
+    await expandGestaoSection(page, 'Relatórios');
 
-    const rows = page.locator('#tblGestaoActivityBody tr');
-    await expect(rows).toHaveCount(1);
-    await expect(page.locator('#tblGestaoActivityBody')).toContainText('Breno Silva');
-    await expect(page.locator('#tblGestaoActivityBody')).not.toContainText('Alexandre Natal');
+    const row = page.locator('#inatividadeBody tr', { hasText: 'Breno Silva' });
+    await expect(row).toContainText('Ativo');
+    await expect(row).toContainText('JavaScript');
+
+    // Alexandre é da turma Sistemas — não aparece na Gestão de Jogos.
+    await expect(page.locator('#inatividadeBody')).not.toContainText('Alexandre Natal');
   });
 });

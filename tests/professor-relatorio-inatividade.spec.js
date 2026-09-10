@@ -1,7 +1,10 @@
 // @ts-check
-// Relatório de Inatividade (dentro de "Relatórios", na aba Gestão): mostra
-// quem nunca acessou o portal e quem acessou mas não avançou em nenhuma
-// atividade — pra o professor achar rápido quem precisa de um empurrão.
+// "Atividade e Inatividade" (dentro de "Relatórios", na aba Gestão) — junta
+// dois relatórios que antes eram separados: mostra quem nunca acessou o
+// portal e quem acessou mas não avançou em nenhuma atividade (pra o
+// professor achar rápido quem precisa de um empurrão), e pra quem JÁ tem
+// progresso real, mostra o status AO VIVO (Ativo/Inativo/Offline) mais
+// onde está e há quanto tempo, em vez de um "ATIVO" genérico.
 //
 // "Acessou o portal" é aproximado por uma linha em student_activity (o
 // heartbeat de shared/activity-tracker.js grava isso assim que a plataforma
@@ -24,15 +27,15 @@ async function expandGestaoSection(page, titulo) {
   await page.locator('.collapsible-card .collapsible-head', { hasText: titulo }).click();
 }
 
-test.describe('Relatório de Inatividade — dentro do portal da turma', () => {
-  test('classifica cada aluno como nunca acessou / acessou sem atividade / ativo', async ({ page }) => {
+test.describe('Atividade e Inatividade — dentro do portal da turma', () => {
+  test('classifica cada aluno como nunca acessou / sem atividade / status ao vivo (com onde está e há quanto tempo)', async ({ page }) => {
     await openGestao(page, {
       // alexandre.natal: nunca aparece em student_activity => nunca acessou.
       student_activity: [
         // bianca.bernardi: tem linha de presença no portal, mas nenhum módulo com progresso real.
         { student_email: 'bianca.bernardi', student_name: 'Bianca Bernardi', turma: 'sistemas', status: 'idle', location_label: 'Aulas', updated_at: '2026-08-10T12:00:00.000Z' },
-        // bruno.gomes1: acessou E tem progresso de verdade.
-        { student_email: 'bruno.gomes1', student_name: 'Bruno Gomes', turma: 'sistemas', status: 'active', location_label: 'SQL', updated_at: '2026-08-15T09:30:00.000Z' },
+        // bruno.gomes1: acessou E tem progresso de verdade — updated_at recente pra sair "Ativo" no status ao vivo.
+        { student_email: 'bruno.gomes1', student_name: 'Bruno Gomes', turma: 'sistemas', status: 'active', location_label: 'SQL', updated_at: new Date().toISOString() },
       ],
       student_module_progress: [
         // linha existe mas com progresso zero — não deveria contar como "atividade".
@@ -45,10 +48,12 @@ test.describe('Relatório de Inatividade — dentro do portal da turma', () => {
     const rowFor = (nome) => page.locator('#inatividadeBody tr', { hasText: nome });
 
     await expect(rowFor('Alexandre Natal')).toContainText('NUNCA ACESSOU');
-    await expect(rowFor('Bianca Bernardi')).toContainText('ACESSOU, SEM ATIVIDADE');
-    await expect(rowFor('Bruno Gomes')).toContainText('ATIVO');
+    await expect(rowFor('Bianca Bernardi')).toContainText('SEM ATIVIDADE');
+    // Quem já tem progresso real mostra o status AO VIVO (não mais um "ATIVO" genérico), com onde está.
+    await expect(rowFor('Bruno Gomes')).toContainText('Ativo');
+    await expect(rowFor('Bruno Gomes')).toContainText('SQL');
 
-    // Quem precisa de atenção vem antes de quem já está ativo.
+    // Quem precisa de atenção vem antes de quem já está com progresso.
     const nomes = await page.locator('#inatividadeBody tr td:first-child').allTextContents();
     expect(nomes.indexOf('Alexandre Natal')).toBeLessThan(nomes.indexOf('Bruno Gomes'));
     expect(nomes.indexOf('Bianca Bernardi')).toBeLessThan(nomes.indexOf('Bruno Gomes'));
