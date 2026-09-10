@@ -30,8 +30,8 @@
   let teacherUnlockOverride = false;
   let turmaStudentsCache = []; // alunos da turma (profiles), só carregado/usado pro professor — ver turmaStudents()
   let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
-  let materiaBimestreCache = {}; // materiaKey -> bimestre (1-4) atribuído pelo professor na Gestão (materia_bimestre), ver trilhaWindow()
-  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/materiaBimestreCache muda ao vivo
+  let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
+  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
   let librasLoadFailed = false; // ver setupVLibras — script de terceiro (vlibras.gov.br) pode ser bloqueado pelo navegador
   let currentGameKey = null;
@@ -240,7 +240,7 @@
 
                 <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Calendário letivo da turma — usado pela "Liberação por Matéria" abaixo. Deixe em branco pra não usar esse bimestre.
+                  Calendário letivo da turma — usado pela "Liberação por Trilha" abaixo. Deixe em branco pra não usar esse bimestre.
                 </p>
                 <table class="audit-table">
                   <thead><tr><th>Bimestre</th><th>Início</th><th>Fim</th></tr></thead>
@@ -251,17 +251,17 @@
                   <span class="status-msg" id="bimestreDatasStatus"></span>
                 </div>
 
-                <h3 class="gestao-subhead">Liberação por Matéria</h3>
+                <h3 class="gestao-subhead">Liberação por Trilha</h3>
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Atribua cada matéria a um bimestre (cadastrado acima) — antes do início dele, a matéria nem aparece pro aluno; depois do fim, ela some da aba Aulas pra todo mundo, inclusive você. Escolha "Sem bimestre" pra deixar a matéria sempre visível/liberada.
+                  Atribua cada trilha a um bimestre (cadastrado acima) — antes do início dele, a trilha nem aparece pro aluno; depois do fim, ela some da aba Aulas pra todo mundo, inclusive você. Escolha "Sem bimestre" pra deixar a trilha sempre visível/liberada. Trilhas da mesma matéria podem ficar em bimestres diferentes.
                 </p>
                 <table class="audit-table">
-                  <thead><tr><th>Matéria</th><th>Bimestre</th></tr></thead>
-                  <tbody id="tblGestaoMateriasBody"></tbody>
+                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Bimestre</th></tr></thead>
+                  <tbody id="tblGestaoTrilhasBody"></tbody>
                 </table>
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
-                  <button class="btn" id="btnSalvarMateriaBimestre">Salvar</button>
-                  <span class="status-msg" id="materiaBimestreStatus"></span>
+                  <button class="btn" id="btnSalvarTrilhaBimestre">Salvar</button>
+                  <span class="status-msg" id="trilhaBimestreStatus"></span>
                 </div>
               </div>
             </div>
@@ -636,21 +636,24 @@
   const BIMESTRE_LABELS = { 1: '1º Bimestre', 2: '2º Bimestre', 3: '3º Bimestre', 4: '4º Bimestre' };
 
   // A matéria dona de uma trilha — trilha keys são únicas na turma inteira
-  // (ver allTrilhas), então a busca é sempre inequívoca. Usada só por
-  // trilhaWindow abaixo, pra achar o bimestre atribuído à matéria.
+  // (ver allTrilhas), então a busca é sempre inequívoca. Usada só pra
+  // exibição (coluna "Matéria" da tabela de Gestão), não pra decidir
+  // visibilidade — isso é por TRILHA (ver trilhaWindow abaixo), já que a
+  // mesma matéria pode ter trilhas em bimestres diferentes.
   function materiaOfTrilha(trilhaKey) {
     return (cfg.materias || []).find(m => (m.trilhas || []).some(t => t.key === trilhaKey)) || null;
   }
 
-  // Janela [inicio, fim] em que uma trilha fica visível/liberada: a da
-  // MATÉRIA dona dela (Gestão → Bloqueios e Liberações → "Liberação por
-  // Matéria", materiaBimestreCache) cruzada com o calendário de bimestres
-  // (bimestreDatesCache). Matéria sem bimestre atribuído (ou bimestre sem
-  // datas cadastradas) não tem janela — a trilha fica sempre visível/aberta,
-  // mesma filosofia de "sem período = sempre visível" de antes.
+  // Janela [inicio, fim] em que uma trilha fica visível/liberada: o
+  // bimestre atribuído a ELA (Gestão → Bloqueios e Liberações →
+  // "Liberação por Trilha", trilhaBimestreCache) cruzado com o calendário
+  // de bimestres (bimestreDatesCache). Trilha sem bimestre atribuído (ou
+  // bimestre sem datas cadastradas) não tem janela — fica sempre
+  // visível/aberta, mesma filosofia de "sem período = sempre visível" de
+  // antes. Por trilha, não por matéria: duas trilhas da mesma matéria podem
+  // pertencer a bimestres diferentes (currículo que se repete/continua).
   function trilhaWindow(trilha) {
-    const materia = materiaOfTrilha(trilha.key);
-    const bimestreNum = materia && materiaBimestreCache[materia.key];
+    const bimestreNum = trilhaBimestreCache[trilha.key];
     const b = bimestreNum && bimestreDatesCache[bimestreNum];
     return { inicio: (b && b.inicio) || null, fim: (b && b.fim) || null };
   }
@@ -976,10 +979,10 @@
     });
   }
 
-  // Refaz tudo que depende de bimestreDatesCache/materiaBimestreCache pra
+  // Refaz tudo que depende de bimestreDatesCache/trilhaBimestreCache pra
   // refletir uma mudança ao vivo (o professor editou datas/atribuições em
   // outra aba, ou o próprio salvamento local) — compartilhado por
-  // fetchBimestreDates() e fetchMateriaBimestre() abaixo, já que os dois
+  // fetchBimestreDates() e fetchTrilhaBimestre() abaixo, já que os dois
   // afetam a mesma coisa (quais trilhas aparecem, e com qual status).
   function refreshTrilhaVisibilityUI() {
     refreshAllModuleCards();
@@ -1014,18 +1017,18 @@
       .subscribe();
   }
 
-  async function fetchMateriaBimestre() {
+  async function fetchTrilhaBimestre() {
     if (!sbClient) return;
-    const { data } = await sbClient.from('materia_bimestre').select('*').eq('turma', cfg.id);
-    materiaBimestreCache = {};
-    (data || []).forEach(r => { materiaBimestreCache[r.materia_key] = r.bimestre; });
+    const { data } = await sbClient.from('trilha_bimestre').select('*').eq('turma', cfg.id);
+    trilhaBimestreCache = {};
+    (data || []).forEach(r => { trilhaBimestreCache[r.trilha_key] = r.bimestre; });
     refreshTrilhaVisibilityUI();
   }
 
-  function setupMateriaBimestreRealtime() {
+  function setupTrilhaBimestreRealtime() {
     if (!sbClient) return;
-    sbClient.channel('realtime_materia_bimestre_' + cfg.id)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'materia_bimestre', filter: `turma=eq.${cfg.id}` }, () => fetchMateriaBimestre())
+    sbClient.channel('realtime_trilha_bimestre_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_bimestre', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaBimestre())
       .subscribe();
   }
 
@@ -1103,7 +1106,7 @@
     }).join('');
   }
 
-  // Mesmo padrão de salvarMateriaBimestre: as 4 linhas (sempre fixas, 1º a
+  // Mesmo padrão de salvarTrilhaBimestre: as 4 linhas (sempre fixas, 1º a
   // 4º bimestre) salvam de uma vez só.
   async function salvarBimestreDatas() {
     if (!sbClient) return;
@@ -1120,19 +1123,19 @@
     const status = document.getElementById('bimestreDatasStatus');
     if (status) status.textContent = `Bimestres salvos às ${new Date().toLocaleTimeString('pt-BR')}.`;
     renderGestaoBimestres();
-    // A coluna de status da tabela de matérias depende das datas que
+    // A coluna de status da tabela de trilhas depende das datas que
     // acabaram de mudar — sem isso ela só atualizaria na próxima vez que a
     // aba Gestão fosse reaberta.
-    renderGestaoMaterias();
+    renderGestaoTrilhaBimestre();
   }
 
   // Rótulo pro professor na Gestão: só olha o bimestre atribuído, nunca o
   // progresso de um aluno específico (não faria sentido "concluída" aqui —
   // conclusão é por aluno; quem vê isso é o trilhaStatus() que cada aluno
   // usa pra si).
-  function materiaBimestreStatusLabel(materiaKey) {
+  function trilhaBimestreStatusLabel(trilhaKey) {
     const hoje = todayStr();
-    const num = materiaBimestreCache[materiaKey];
+    const num = trilhaBimestreCache[trilhaKey];
     if (!num) return { text: 'Sempre visível', color: 'var(--ink-dim)' };
     const b = bimestreDatesCache[num] || {};
     if (b.inicio && b.inicio > hoje) return { text: 'Ainda não iniciada', color: 'var(--ink-dim)' };
@@ -1140,26 +1143,30 @@
     return { text: 'Em andamento', color: 'var(--green)' };
   }
 
-  async function renderGestaoMaterias() {
-    await Promise.all([fetchBimestreDates(), fetchMateriaBimestre()]);
-    const tbody = document.getElementById('tblGestaoMateriasBody');
+  // Uma linha por TRILHA (não por matéria) — a mesma matéria pode ter
+  // trilhas em bimestres diferentes (currículo que se repete/continua ao
+  // longo do ano), então o bimestre precisa ser escolhido trilha a trilha.
+  async function renderGestaoTrilhaBimestre() {
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    const tbody = document.getElementById('tblGestaoTrilhasBody');
     if (!tbody) return;
-    const materias = cfg.materias || [];
-    if (materias.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="2" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma matéria cadastrada ainda nesta turma.</td></tr>`;
+    const pares = allTrilhasComMateria();
+    if (pares.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
       return;
     }
-    tbody.innerHTML = materias.map(m => {
-      const selected = materiaBimestreCache[m.key] || '';
-      const status = materiaBimestreStatusLabel(m.key);
+    tbody.innerHTML = pares.map(({ materiaLabel, trilha }) => {
+      const selected = trilhaBimestreCache[trilha.key] || '';
+      const status = trilhaBimestreStatusLabel(trilha.key);
       const options = ['<option value="">Sem bimestre</option>'].concat(
         BIMESTRE_NUMS.map(num => `<option value="${num}" ${String(selected) === String(num) ? 'selected' : ''}>${BIMESTRE_LABELS[num]}</option>`)
       );
       return `
-        <tr data-materia="${m.key}">
-          <td>${m.label}</td>
+        <tr data-trilha="${trilha.key}">
+          <td>${materiaLabel}</td>
+          <td>${trilha.label}</td>
           <td>
-            <select class="materia-bimestre-input">${options.join('')}</select>
+            <select class="trilha-bimestre-input">${options.join('')}</select>
             <span style="color:${status.color}; margin-left:8px; font-size:11px;">${status.text}</span>
           </td>
         </tr>
@@ -1168,19 +1175,19 @@
   }
 
   // Salva TODAS as linhas de uma vez (igual salvarBimestreDatas/salvarNotas).
-  async function salvarMateriaBimestre() {
+  async function salvarTrilhaBimestre() {
     if (!sbClient) return;
     const now = new Date().toISOString();
-    const rows = Array.from(document.querySelectorAll('#tblGestaoMateriasBody tr[data-materia]')).map(tr => {
-      const sel = tr.querySelector('.materia-bimestre-input');
+    const rows = Array.from(document.querySelectorAll('#tblGestaoTrilhasBody tr[data-trilha]')).map(tr => {
+      const sel = tr.querySelector('.trilha-bimestre-input');
       const bimestre = sel && sel.value ? parseInt(sel.value, 10) : null;
-      return { turma: cfg.id, materia_key: tr.getAttribute('data-materia'), bimestre, updated_at: now };
+      return { turma: cfg.id, trilha_key: tr.getAttribute('data-trilha'), bimestre, updated_at: now };
     });
     if (rows.length === 0) return;
-    await sbClient.from('materia_bimestre').upsert(rows, { onConflict: 'turma,materia_key' });
-    const status = document.getElementById('materiaBimestreStatus');
+    await sbClient.from('trilha_bimestre').upsert(rows, { onConflict: 'turma,trilha_key' });
+    const status = document.getElementById('trilhaBimestreStatus');
     if (status) status.textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
-    renderGestaoMaterias();
+    renderGestaoTrilhaBimestre();
   }
 
   // Atualiza tanto o botão de dentro da Gestão quanto o atalho da barra de
@@ -2304,7 +2311,7 @@
   function renderGestaoTab() {
     renderGestaoGamesStatus();
     renderGestaoBimestres();
-    renderGestaoMaterias();
+    renderGestaoTrilhaBimestre();
     fetchClipboardStateGestao();
     renderGestaoSlidesList();
     renderGestaoGabaritoList();
@@ -2403,7 +2410,7 @@
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarFichaObservacao').addEventListener('click', salvarFichaObservacao);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
-    document.getElementById('btnSalvarMateriaBimestre').addEventListener('click', salvarMateriaBimestre);
+    document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
   }
 
@@ -2678,15 +2685,15 @@
     document.getElementById('txtUserNom').textContent = currentUser.nome;
     document.getElementById('txtUserTurma').textContent = currentUser.role === 'professor' ? 'Corpo Docente' : cfg.label;
 
-    // Bimestres/matéria-bimestre valem pros dois papéis: o aluno depende
+    // Bimestres/trilha-bimestre valem pros dois papéis: o aluno depende
     // deles pra saber o que está visível, e agora o professor também —
-    // matéria com bimestre encerrado some pra ele igual (ver
+    // trilha com bimestre encerrado some pra ele igual (ver
     // isTrilhaBimestreEncerrado/visibleTrilhas), não só depois de abrir a
     // aba Gestão (que já buscava essas mesmas datas por conta própria).
     fetchBimestreDates();
     setupBimestreDatesRealtime();
-    fetchMateriaBimestre();
-    setupMateriaBimestreRealtime();
+    fetchTrilhaBimestre();
+    setupTrilhaBimestreRealtime();
 
     if (currentUser.role === 'aluno') {
       fetchTeacherOverride();

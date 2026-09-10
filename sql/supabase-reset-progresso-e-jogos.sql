@@ -19,7 +19,7 @@
 -- O QUE **NÃO** É TOCADO (de propósito):
 --   • attendance (chamada) e grades (notas) — são registro oficial do
 --     bimestre, não "progresso de jogo"
---   • classroom_settings, bimestre_dates, materia_bimestre —
+--   • classroom_settings, bimestre_dates, trilha_bimestre —
 --     são configuração do PROFESSOR, não dado do aluno
 --   • student_activity — presença em tempo real, já expira sozinha
 --     (fica "offline" depois de ~45s sem heartbeat)

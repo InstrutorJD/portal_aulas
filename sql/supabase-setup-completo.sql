@@ -993,24 +993,27 @@ alter table public.student_module_progress enable trigger trg_student_module_pro
 
 
 -- ============================================================
--- BLOCO 8 — Calendário letivo por bimestre + liberação por matéria (aba
--- Gestão → "Bloqueios e Liberações"). Cada matéria é atribuída a um dos 4
--- bimestres (materia_bimestre); o bimestre em si tem início/fim
--- (bimestre_dates). Antes do início, a matéria (e todas as trilhas dela)
--- nem aparece pro aluno; depois do fim, ela some da aba Aulas pra TODO
--- MUNDO, inclusive o professor — não muda a regra interna da trilha (um
--- módulo que já dependia de outro via `requires` continua dependendo dele).
+-- BLOCO 8 — Calendário letivo por bimestre + liberação por trilha (aba
+-- Gestão → "Bloqueios e Liberações"). Cada TRILHA é atribuída a um dos 4
+-- bimestres (trilha_bimestre) — por trilha, não por matéria, porque a
+-- mesma matéria costuma ter trilhas que se repetem/continuam em bimestres
+-- diferentes ao longo do ano; o bimestre em si tem início/fim
+-- (bimestre_dates). Antes do início, a trilha nem aparece pro aluno;
+-- depois do fim, ela some da aba Aulas pra TODO MUNDO, inclusive o
+-- professor — não muda a regra interna da trilha (um módulo que já
+-- dependia de outro via `requires` continua dependendo dele).
 --
 -- Substitui tanto o antigo bloqueio manual liga/desliga de trilha inteira
--- (trilha_overrides) quanto o início/prazo por TRILHA individual
--- (trilha_release_dates) e a liberação diária/semanal por módulo
--- (daily_module_releases, ver git history) — um único período por matéria
--- (o do bimestre a que ela pertence) substitui as três coisas.
+-- (trilha_overrides) quanto o início/prazo por trilha em formato de data
+-- solta (trilha_release_dates, ver git history) e a liberação diária/
+-- semanal por módulo (daily_module_releases, ver git history) — um select
+-- de bimestre por trilha substitui as três coisas.
 -- ============================================================
 
 drop table if exists public.trilha_overrides cascade;
 drop table if exists public.trilha_release_dates cascade;
 drop table if exists public.daily_module_releases cascade;
+drop table if exists public.materia_bimestre cascade;
 
 create table if not exists public.bimestre_dates (
   turma text not null,
@@ -1050,31 +1053,31 @@ begin
 end $$;
 
 -- bimestre nullable de propósito: ausência de linha OU bimestre = null
--- significam a mesma coisa ("Sem bimestre" na Gestão) — a matéria fica
+-- significam a mesma coisa ("Sem bimestre" na Gestão) — a trilha fica
 -- sempre visível, sem período nenhum.
-create table if not exists public.materia_bimestre (
+create table if not exists public.trilha_bimestre (
   turma text not null,
-  materia_key text not null,
+  trilha_key text not null,
   bimestre smallint check (bimestre between 1 and 4),
   updated_at timestamptz not null default now(),
-  primary key (turma, materia_key)
+  primary key (turma, trilha_key)
 );
 
-alter table public.materia_bimestre enable row level security;
+alter table public.trilha_bimestre enable row level security;
 
-drop policy if exists "materia_bimestre_select_all" on public.materia_bimestre;
-create policy "materia_bimestre_select_all"
-  on public.materia_bimestre for select
+drop policy if exists "trilha_bimestre_select_all" on public.trilha_bimestre;
+create policy "trilha_bimestre_select_all"
+  on public.trilha_bimestre for select
   using (true);
 
-drop policy if exists "materia_bimestre_insert_professor" on public.materia_bimestre;
-create policy "materia_bimestre_insert_professor"
-  on public.materia_bimestre for insert
+drop policy if exists "trilha_bimestre_insert_professor" on public.trilha_bimestre;
+create policy "trilha_bimestre_insert_professor"
+  on public.trilha_bimestre for insert
   with check (public.is_professor());
 
-drop policy if exists "materia_bimestre_update_professor" on public.materia_bimestre;
-create policy "materia_bimestre_update_professor"
-  on public.materia_bimestre for update
+drop policy if exists "trilha_bimestre_update_professor" on public.trilha_bimestre;
+create policy "trilha_bimestre_update_professor"
+  on public.trilha_bimestre for update
   using (public.is_professor())
   with check (public.is_professor());
 
@@ -1082,9 +1085,9 @@ do $$
 begin
   if not exists (
     select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'materia_bimestre'
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trilha_bimestre'
   ) then
-    alter publication supabase_realtime add table public.materia_bimestre;
+    alter publication supabase_realtime add table public.trilha_bimestre;
   end if;
 end $$;
 
@@ -1548,7 +1551,7 @@ create policy "behavioral_observations_update_professor"
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
--- student_activity, student_overrides, bimestre_dates, materia_bimestre,
+-- student_activity, student_overrides, bimestre_dates, trilha_bimestre,
 -- game_scores, quizrush_sessions/quizrush_players/
 -- quizrush_answers, student_activity_state, professor_tokens e
 -- behavioral_observations foram criadas, se network_nodes ganhou as

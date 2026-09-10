@@ -3,12 +3,11 @@
 // visibleTrilhas/visibleTrilhasOrdered) — sem isso, o currículo de vários
 // bimestres somados lotaria a tela do aluno com tudo junto, misturado.
 //
-// "Futura"/"encerrada" agora é sempre no nível da MATÉRIA (bimestre_dates +
-// materia_bimestre, ver tests/bimestre-dates.spec.js pra cobertura
-// detalhada) — não existe mais início/prazo por TRILHA individual nem
-// grupo "Em atraso" (ver git history). Este arquivo cobre só o que ainda é
-// por trilha: a ordenação/agrupamento dentro de uma matéria já visível
-// (aberta vs. concluída).
+// "Futura"/"encerrada" agora é sempre no nível da TRILHA (bimestre_dates +
+// trilha_bimestre, ver tests/bimestre-dates.spec.js pra cobertura
+// detalhada) — não existe mais início/prazo por trilha em data solta nem
+// grupo "Em atraso" (ver git history). Este arquivo cobre só a ordenação/
+// agrupamento dentro de uma matéria já visível (aberta vs. concluída).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
@@ -35,10 +34,13 @@ test.describe('Organização das trilhas (em aberto / concluídas)', () => {
     await expect(page.locator('#moduleSelector_vida-equipe h2')).toContainText('Concluída');
   });
 
-  test('matéria com o bimestre ainda não iniciado ganha o selo "Em breve", mesmo já tendo trilhas cadastradas', async ({ page }) => {
+  test('matéria com TODAS as trilhas num bimestre ainda não iniciado ganha o selo "Em breve"', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2999-01-01', fim: '2999-03-31' }],
-      materia_bimestre: [{ turma: 'jogos', materia_key: 'intro-dev-projetos', bimestre: 1 }],
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'projetos-metodos', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'projetos-fases', bimestre: 1 },
+      ],
     });
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
 
@@ -48,5 +50,26 @@ test.describe('Organização das trilhas (em aberto / concluídas)', () => {
     // Continua clicável — só avisa que ainda não tem nada disponível, não trava.
     await card.click();
     await expect(page.locator('#aulasSubTabPages')).toContainText('Nenhuma trilha disponível nesta matéria no momento');
+  });
+
+  // Motivo de ser por TRILHA e não por matéria: a mesma matéria pode ter
+  // trilhas em bimestres diferentes — uma pode estar num bimestre futuro
+  // enquanto outra, sem bimestre atribuído, já fica disponível.
+  test('matéria com só UMA trilha num bimestre futuro continua acessível pelas outras', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2999-01-01', fim: '2999-03-31' }],
+      trilha_bimestre: [{ turma: 'jogos', trilha_key: 'projetos-metodos', bimestre: 1 }],
+    });
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+
+    const card = page.locator('.game-card:has-text("Introdução ao Desenvolvimento de Projetos")');
+    await expect(card).not.toContainText('Em breve');
+    await card.click();
+
+    // Só sobrou 1 trilha visível ("Fases de Elaboração de um Projeto") —
+    // com uma trilha só o <select> nem existe, a matéria abre direto nela.
+    await expect(page.locator('#trilhaSelect')).toHaveCount(0);
+    await expect(page.locator('#moduleSelector_projetos-fases')).toBeVisible();
+    await expect(page.locator('#moduleSelector_projetos-metodos')).toHaveCount(0);
   });
 });
