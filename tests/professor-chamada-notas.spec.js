@@ -268,7 +268,36 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(materiaCell).toContainText('0.00');
   });
 
-  test('relatório de notas mostra só médias e o % de conclusão por matéria', async ({ page }) => {
+  // Não mostra mais a tabela completa (todo mundo, todas as colunas) na
+  // tela — só um alerta com quem tem pior desempenho (ver descrição
+  // abaixo). A tabela completa (médias, nota da prova, % por matéria)
+  // agora só existe no relatório gerado pelo botão (popup + impressão,
+  // mesmo padrão do PDF de presença).
+  test('alerta de pior desempenho mostra o aluno com quase tudo abaixo de 50%, com % geral e contagem de matérias', async ({ page }) => {
+    await openGestao(page, SISTEMAS_URL, {
+      grades: [], student_activity_state: [],
+      student_module_progress: [
+        // Alexandre só tem progresso em Banco de Dados (3 de 6 módulos =
+        // 50%) — 0% em todas as outras ~9 matérias de Sistemas, então a
+        // maioria das matérias fica abaixo de 50%: entra no alerta.
+        { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 8, progress_total: 8, completed: true },
+        { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'join', progress_current: 5, progress_total: 5, completed: true },
+      ],
+    });
+    await expandGestaoSection(page, 'Relatórios');
+
+    const row = page.locator('#relatorioNotasBody tr', { hasText: 'Alexandre Natal' });
+    await expect(row).toBeVisible();
+    const cells = row.locator('td');
+    // % geral baixo (só 1 de ~10 matérias com progresso, e mesmo essa só 50%).
+    await expect(cells.nth(1)).toContainText('%');
+    // Contagem "X/Y" de matérias abaixo de 50% (formato genérico — o valor
+    // exato de Y depende de quantas matérias a turma Sistemas tiver).
+    await expect(cells.nth(2)).toContainText('/');
+  });
+
+  test('Relatório Completo (botão) mostra médias, nota da prova, % por matéria, e destaca quem tem pior desempenho', async ({ page }) => {
     await openGestao(page, SISTEMAS_URL, {
       grades: [
         { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', bimestre: 1, nota1: 10, nota2: 10, nota3: 10, nota4: 10, media: 10 },
@@ -293,13 +322,20 @@ test.describe('Notas — dentro do portal da turma', () => {
     });
     await expandGestaoSection(page, 'Relatórios');
 
-    // Só a média aparece no relatório — nunca os 4 campos de nota.
-    await expect(page.locator('#relatorioNotasBody')).not.toContainText('nota1');
-    // A coluna é por MATÉRIA, não por trilha.
-    await expect(page.locator('#relatorioNotasHead')).toContainText('Banco de Dados');
-    await expect(page.locator('#relatorioNotasHead')).toContainText('Nota da Prova');
+    await page.context().addInitScript(() => { window.print = () => { window.__printed = true; }; });
 
-    const row = page.locator('#relatorioNotasBody tr', { hasText: 'Alexandre Natal' });
+    const [popup] = await Promise.all([
+      page.waitForEvent('popup'),
+      page.click('#btnGerarRelatorioNotas'),
+    ]);
+
+    await expect(popup.locator('h1')).toContainText('Relatório de Notas');
+    // A coluna é por MATÉRIA, não por trilha; nunca os 4 campos de nota crus.
+    await expect(popup.locator('table thead')).toContainText('Banco de Dados');
+    await expect(popup.locator('table thead')).toContainText('Nota da Prova');
+    await expect(popup.locator('table')).not.toContainText('nota1');
+
+    const row = popup.locator('table tbody tr', { hasText: 'Alexandre Natal' });
     await expect(row).toContainText('10.00'); // média B1
     await expect(row).toContainText('8.00');  // média B2
     await expect(row).toContainText('9.00');  // média geral (10 e 8, sem B3/B4)
@@ -308,13 +344,23 @@ test.describe('Notas — dentro do portal da turma', () => {
     // sql-comentarios: teoria + db-conexao-supabase: pratica).
     // 3 concluídos, 3 nunca abertos => 3/6 = 50%.
     await expect(row).toContainText('50%');
+    // Pior desempenho (maioria das matérias abaixo de 50%) sai destacado.
+    await expect(row).toHaveClass(/pior/);
+    await expect(row).toContainText('⚠️');
+
+    await expect.poll(() => popup.evaluate(() => window.__printed)).toBe(true);
   });
 
-  test('relatório de notas mostra "—" pra quem ainda não fez a prova', async ({ page }) => {
+  test('Relatório Completo mostra "—" pra quem ainda não fez a prova', async ({ page }) => {
     await openGestao(page, SISTEMAS_URL, { grades: [], student_module_progress: [], student_activity_state: [] });
     await expandGestaoSection(page, 'Relatórios');
 
-    const row = page.locator('#relatorioNotasBody tr', { hasText: 'Alexandre Natal' });
+    const [popup] = await Promise.all([
+      page.waitForEvent('popup'),
+      page.click('#btnGerarRelatorioNotas'),
+    ]);
+
+    const row = popup.locator('table tbody tr', { hasText: 'Alexandre Natal' });
     await expect(row).toContainText('—');
     await expect(row).not.toContainText('/100');
   });

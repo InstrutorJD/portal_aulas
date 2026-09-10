@@ -383,12 +383,13 @@
                 </table>
 
                 <h3 class="gestao-subhead">Relatório de Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">Só as médias — os 4 campos de nota ficam em "Chamada e Notas".</p>
-                <div style="overflow-x:auto;">
-                  <table class="audit-table">
-                    <thead><tr id="relatorioNotasHead"></tr></thead>
-                    <tbody id="relatorioNotasBody"></tbody>
-                  </table>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos com pior desempenho (quase nenhuma atividade feita, ou a maioria das matérias abaixo de 50%):</p>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>Progresso Geral</th><th>Matérias abaixo de 50%</th></tr></thead>
+                  <tbody id="relatorioNotasBody"></tbody>
+                </table>
+                <div style="display:flex; align-items:center; gap:12px; margin-top:10px;">
+                  <button class="btn btn-secondary" id="btnGerarRelatorioNotas">📊 Gerar Relatório Completo</button>
                 </div>
 
                 <h3 class="gestao-subhead">Relatório de Inatividade</h3>
@@ -2024,22 +2025,71 @@
     return map;
   }
 
+  // "Pior desempenho": praticamente não fez nenhuma atividade (progresso
+  // médio entre as matérias quase zero) OU a maioria das matérias está
+  // abaixo de 50% de conclusão — usado tanto pro alerta sempre visível
+  // (renderRelatorioNotas) quanto pro destaque dentro do relatório
+  // completo (gerarRelatorioNotasCompleto). Ignora a matéria "Prova" (não
+  // é "atividade" no sentido de progresso de trilha) e matéria sem
+  // nenhuma trilha visível pro aluno (materiaPercentForStudent null).
+  function piorDesempenhoInfo(materias, progressRows, studentEmail) {
+    const pcts = materias
+      .filter(m => m.key !== 'prova')
+      .map(m => materiaPercentForStudent(m, progressRows, studentEmail))
+      .filter(p => p !== null);
+    if (pcts.length === 0) return { overallPct: 0, abaixoDe50: 0, total: 0, isPior: false };
+    const overallPct = Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length);
+    const abaixoDe50 = pcts.filter(p => p < 50).length;
+    const praticamenteNada = overallPct < 5;
+    const maioriaAbaixoDe50 = abaixoDe50 > pcts.length / 2;
+    return { overallPct, abaixoDe50, total: pcts.length, isPior: praticamenteNada || maioriaAbaixoDe50 };
+  }
+
+  // Não mostra mais a tabela completa (todo mundo, todas as colunas) —
+  // só um alerta com quem está com pior desempenho, pra chamar atenção
+  // sem lotar a tela. A tabela completa continua disponível pelo botão
+  // "Gerar Relatório Completo" (ver gerarRelatorioNotasCompleto).
   async function renderRelatorioNotas() {
     const materias = cfg.materias || [];
     const students = turmaStudents();
-    const theadRow = document.getElementById('relatorioNotasHead');
     const tbody = document.getElementById('relatorioNotasBody');
-    const totalCols = 7 + materias.length;
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th><th>Nota da Prova</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
+    if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
+    if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
 
-    if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
-    if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
+    const { data: progressRows } = await sbClient.from('student_module_progress').select('*').eq('turma', cfg.id);
+    const progressByStudent = {};
+    (progressRows || []).forEach(r => {
+      progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
+      progressByStudent[r.student_email].push(r);
+    });
+
+    const piores = students
+      .map(u => ({ u, info: piorDesempenhoInfo(materias, progressByStudent[u.email] || [], u.email) }))
+      .filter(r => r.info.isPior)
+      .sort((a, b) => a.info.overallPct - b.info.overallPct);
+
+    tbody.innerHTML = piores.length === 0
+      ? `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum aluno com desempenho abaixo do esperado.</td></tr>`
+      : piores.map(({ u, info }) => `<tr><td>${u.nome}</td><td style="color:var(--blood-bright); font-weight:700;">${info.overallPct}%</td><td>${info.abaixoDe50}/${info.total}</td></tr>`).join('');
+  }
+
+  // Abre uma aba só com a tabela completa (todo mundo, todas as colunas —
+  // o mesmo conteúdo que o antigo Relatório de Notas mostrava direto na
+  // tela) e aciona a impressão, igual gerarPdfChamadaMes — os alunos com
+  // pior desempenho (ver piorDesempenhoInfo) saem destacados em vermelho.
+  async function gerarRelatorioNotasCompleto() {
+    if (!sbClient) return;
+    // Mesmo motivo de gerarPdfChamadaMes: abre a aba já aqui, síncrono
+    // dentro do clique, senão o navegador bloqueia o popup.
+    const printWin = window.open('', '_blank');
+    const materias = cfg.materias || [];
+    const students = turmaStudents();
 
     const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id),
       sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
-      fetchNotaProvaByStudent()
+      fetchNotaProvaByStudent(),
     ]);
 
     const gradesByStudent = {};
@@ -2053,7 +2103,7 @@
       progressByStudent[r.student_email].push(r);
     });
 
-    tbody.innerHTML = students.map(u => {
+    const linhas = students.map(u => {
       const bims = gradesByStudent[u.email] || {};
       const bimCells = [1, 2, 3, 4].map(b => `<td>${bims[b] !== undefined && bims[b] !== null ? Number(bims[b]).toFixed(2) : '—'}</td>`).join('');
       const lancadas = [1, 2, 3, 4].map(b => bims[b]).filter(v => v !== undefined && v !== null);
@@ -2067,8 +2117,46 @@
         return `<td>${pct === null ? '—' : pct + '%'}</td>`;
       }).join('');
 
-      return `<tr><td>${u.nome}</td>${bimCells}<td><b>${mediaGeral}</b></td>${notaProvaCell}${materiaCells}</tr>`;
+      const info = piorDesempenhoInfo(materias, pRows, u.email);
+      const linhaClasse = info.isPior ? ' class="pior"' : '';
+      const aviso = info.isPior ? ' ⚠️' : '';
+
+      return `<tr${linhaClasse}><td class="aluno">${u.nome}${aviso}</td>${bimCells}<td class="media">${mediaGeral}</td>${notaProvaCell}${materiaCells}</tr>`;
     }).join('');
+
+    const materiaHead = materias.map(m => `<th>${m.label}</th>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Relatório de Notas — ${cfg.label}</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p.sub { font-size: 11px; color: #555; margin: 0 0 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 9px; }
+  th, td { border: 1px solid #999; padding: 3px 4px; text-align: center; }
+  th.aluno, td.aluno { text-align: left; white-space: nowrap; }
+  td.media { font-weight: bold; }
+  tr.pior { background: #fdecea; }
+  tr.pior td.aluno { color: #b3261e; font-weight: bold; }
+  p.legenda { margin-top: 10px; font-size: 10px; color: #555; }
+</style></head>
+<body>
+  <h1>Relatório de Notas — ${cfg.label}</h1>
+  <p class="sub">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+  <table>
+    <thead><tr><th class="aluno">Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th><th>Nota da Prova</th>${materiaHead}</tr></thead>
+    <tbody>${linhas}</tbody>
+  </table>
+  <p class="legenda">⚠️ = pior desempenho (quase nenhuma atividade feita, ou a maioria das matérias abaixo de 50%)</p>
+</body></html>`;
+
+    if (!printWin) return;
+    printWin.document.write(html);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 250);
   }
 
   // "Acessou o portal" é aproximado pela existência de uma linha em
@@ -2546,6 +2634,7 @@
       }
     });
     document.getElementById('btnGerarPdfPresenca').addEventListener('click', gerarPdfChamadaMes);
+    document.getElementById('btnGerarRelatorioNotas').addEventListener('click', gerarRelatorioNotasCompleto);
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
