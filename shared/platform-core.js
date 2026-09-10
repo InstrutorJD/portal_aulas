@@ -323,7 +323,7 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Portal" (até 5,0, pela % de conclusão das trilhas deste bimestre) e "Prova" (até 10,0, nota da prova diagnóstica) são calculadas sozinhas — só Nota 3 e Nota 4 são digitadas. A média é calculada sozinha.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Portal" (até 5,0) e "Prova" (até 10,0, nota da prova diagnóstica) são calculadas sozinhas, sempre pelas trilhas atribuídas a ESTE bimestre (ver "Liberação por Trilha") — só Nota 3 e Nota 4 são digitadas. A média é calculada sozinha.</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -1527,12 +1527,15 @@
   // % de conclusão (teoria + prática, mesma conta ponderada de
   // materiaPercentForStudent) das trilhas atribuídas a ESTE bimestre
   // (trilha_bimestre, ver "Liberação por Trilha") — usado só pra calcular
-  // a nota "Portal" em Lançar Notas. Trilha sem bimestre atribuído nunca
-  // entra aqui (não é "do bimestre nenhum"). null quando nenhuma trilha da
-  // turma está atribuída a esse bimestre ainda — nada pra calcular.
+  // a nota "Portal" em Lançar Notas. Exclui a trilha da prova diagnóstica
+  // de propósito: ela já vira nota separada ("Prova", ver
+  // provaTrilhaKey/loadNotas), não pode contar nas duas ao mesmo tempo.
+  // Trilha sem bimestre atribuído nunca entra aqui (não é "do bimestre
+  // nenhum"). null quando nenhuma trilha da turma está atribuída a esse
+  // bimestre ainda — nada pra calcular.
   function bimestrePortalPercentForStudent(bimestreNum, progressRows, studentEmail) {
     const modules = allTrilhas()
-      .filter(t => trilhaBimestreCache[t.key] === bimestreNum && isTrilhaVisibleToEmail(t, studentEmail))
+      .filter(t => t.key !== provaTrilhaKey() && trilhaBimestreCache[t.key] === bimestreNum && isTrilhaVisibleToEmail(t, studentEmail))
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -1543,6 +1546,18 @@
       sum += Math.min((row.progress_current || 0) / total, 1);
     });
     return Math.round((sum / modules.length) * 100);
+  }
+
+  // Chave da trilha da prova diagnóstica ("Prova" na Gestão): a matéria
+  // 'prova' tem uma única trilha (prova-diagnostica, ver turmas/*/
+  // config.js) — buscada pela estrutura em vez de hardcoded, pra não
+  // quebrar se o key da trilha mudar. Usado só pra achar o bimestre
+  // atribuído a ela em trilhaBimestreCache (ver loadNotas), já que a
+  // prova é "só mais uma trilha" pro mesmo mecanismo de bimestre.
+  function provaTrilhaKey() {
+    const materiaProva = (cfg.materias || []).find(m => m.key === 'prova');
+    const trilha = materiaProva && (materiaProva.trilhas || [])[0];
+    return trilha ? trilha.key : null;
   }
 
   async function loadNotas() {
@@ -1567,17 +1582,23 @@
       progressByStudent[r.student_email].push(r);
     });
 
+    // "Prova" (nota2) segue a MESMA regra do "Portal": só conta no
+    // bimestre a que a trilha da prova foi atribuída (Liberação por
+    // Trilha) — trilha sem bimestre, ou atribuída a outro bimestre, não
+    // conta em nenhum/nesse bimestre selecionado.
+    const provaKey = provaTrilhaKey();
+    const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestre;
+
     tbody.innerHTML = students.map(u => {
       const pct = bimestrePortalPercentForStudent(bimestre, progressByStudent[u.email] || [], u.email);
       const n1 = pct === null ? 0 : Math.round((pct / 100) * 5 * 100) / 100;
       const semTrilha = pct === null ? ' <span style="color:var(--ink-dim); font-size:10px;">(sem trilha neste bimestre)</span>' : '';
 
-      // "Prova" (nota2) não é por bimestre — a prova diagnóstica é única
-      // pra turma inteira, então mostra o mesmo valor (0-10, escalado do
-      // 0-100 salvo pela prova) não importa qual bimestre está selecionado.
       const notaProva = notaProvaByStudent[u.email];
-      const n2 = notaProva === undefined ? 0 : Math.round((notaProva / 10) * 100) / 100;
-      const semProva = notaProva === undefined ? ' <span style="color:var(--ink-dim); font-size:10px;">(não fez a prova)</span>' : '';
+      const n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+      const semProva = !provaEhDesteBimestre
+        ? ' <span style="color:var(--ink-dim); font-size:10px;">(prova não é deste bimestre)</span>'
+        : (notaProva === undefined ? ' <span style="color:var(--ink-dim); font-size:10px;">(não fez a prova)</span>' : '');
 
       const g = byStudent[u.email] || {};
       const n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
