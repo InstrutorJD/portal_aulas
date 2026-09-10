@@ -1046,6 +1046,50 @@ begin
   end if;
 end $$;
 
+-- Calendário letivo por bimestre (início/fim de cada um dos 4 bimestres da
+-- turma) — define a que bimestre uma trilha pertence (o bimestre cujo
+-- intervalo contém a data de início efetiva dela, ver trilhaBimestreInfo em
+-- shared/platform-core.js): passado o fim desse bimestre, a trilha some da
+-- aba Aulas pra todo mundo, inclusive o professor — diferente do
+-- início/prazo por trilha acima (trilha_release_dates), que só bloqueia o
+-- aluno e nunca esconde nada de ninguém.
+create table if not exists public.bimestre_dates (
+  turma text not null,
+  bimestre smallint not null check (bimestre between 1 and 4),
+  inicio date,
+  fim date,
+  updated_at timestamptz not null default now(),
+  primary key (turma, bimestre)
+);
+
+alter table public.bimestre_dates enable row level security;
+
+drop policy if exists "bimestre_dates_select_all" on public.bimestre_dates;
+create policy "bimestre_dates_select_all"
+  on public.bimestre_dates for select
+  using (true);
+
+drop policy if exists "bimestre_dates_insert_professor" on public.bimestre_dates;
+create policy "bimestre_dates_insert_professor"
+  on public.bimestre_dates for insert
+  with check (public.is_professor());
+
+drop policy if exists "bimestre_dates_update_professor" on public.bimestre_dates;
+create policy "bimestre_dates_update_professor"
+  on public.bimestre_dates for update
+  using (public.is_professor())
+  with check (public.is_professor());
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'bimestre_dates'
+  ) then
+    alter publication supabase_realtime add table public.bimestre_dates;
+  end if;
+end $$;
+
 -- ============================================================
 -- BLOCO 9 — Placar dos minigames (Digitação, Campo Minado) por turma.
 -- Cada aluno guarda o MELHOR resultado dele em cada jogo; o jogo
@@ -1578,10 +1622,11 @@ create policy "behavioral_observations_update_professor"
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
--- student_activity, student_overrides, trilha_release_dates, game_scores,
--- daily_module_releases, quizrush_sessions/quizrush_players/quizrush_answers,
--- student_activity_state, professor_tokens e behavioral_observations foram
--- criadas, se network_nodes ganhou as colunas current_ip e turma, e se
+-- student_activity, student_overrides, trilha_release_dates, bimestre_dates,
+-- game_scores, daily_module_releases, quizrush_sessions/quizrush_players/
+-- quizrush_answers, student_activity_state, professor_tokens e
+-- behavioral_observations foram criadas, se network_nodes ganhou as
+-- colunas current_ip e turma, e se
 -- network_nodes/node_permissions/node_shields aparecem com RLS
 -- habilitado (ícone de cadeado no Table Editor). Se profiles estiver
 -- vazia, rode scripts/migrate-users-to-auth.mjs antes de testar login.

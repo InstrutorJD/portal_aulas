@@ -30,7 +30,8 @@
   let teacherUnlockOverride = false;
   let turmaStudentsCache = []; // alunos da turma (profiles), só carregado/usado pro professor — ver turmaStudents()
   let trilhaDatesCache = {}; // trilhaKey -> {inicio, prazo} definidos pelo professor na Gestão (trilha_release_dates), ver trilhaStatus()
-  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando trilhaDatesCache muda ao vivo
+  let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaBimestreInfo()
+  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando trilhaDatesCache/bimestreDatesCache muda ao vivo
   let dailyReleasesCache = []; // linhas de daily_module_releases da turma inteira (todas as datas/dias), ver releasesForToday()
   let dailyReleasesLoadedOnce = false; // evita notificar sobre liberações que já existiam antes do carregamento inicial
   let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
@@ -269,12 +270,25 @@
                   <tbody id="tblDailyReleasesBody"></tbody>
                 </table>
 
+                <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Calendário letivo da turma: cada trilha pertence ao bimestre cujo intervalo contém a data de início dela (coluna "Bimestre" na tabela abaixo). Passado o fim do bimestre, a trilha some da aba Aulas pra todo mundo — inclusive pra você. Deixe em branco pra não vincular nenhuma trilha a esse bimestre.
+                </p>
+                <table class="audit-table">
+                  <thead><tr><th>Bimestre</th><th>Início</th><th>Fim</th></tr></thead>
+                  <tbody id="tblGestaoBimestresBody"></tbody>
+                </table>
+                <div style="display:flex; align-items:center; gap:12px; margin:10px 0 16px;">
+                  <button class="btn" id="btnSalvarBimestreDatas">Salvar Bimestres</button>
+                  <span class="status-msg" id="bimestreDatasStatus"></span>
+                </div>
+
                 <h3 class="gestao-subhead">Trilhas — Início e Prazo</h3>
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
                   Organiza o currículo por bimestre pro aluno: antes do início, a trilha nem aparece pra ele — depois do prazo sem concluir, ela entra em "Em atraso". Deixe em branco pra "sempre visível"/"sem prazo" (não muda a regra interna da trilha, como a prática exigir a teoria concluída).
                 </p>
                 <table class="audit-table">
-                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Início</th><th>Prazo</th><th>Status</th></tr></thead>
+                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Início</th><th>Prazo</th><th>Bimestre</th><th>Status</th></tr></thead>
                   <tbody id="tblGestaoTrilhasBody"></tbody>
                 </table>
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
@@ -697,6 +711,39 @@
     };
   }
 
+  const BIMESTRE_NUMS = [1, 2, 3, 4];
+  const BIMESTRE_LABELS = { 1: '1º Bimestre', 2: '2º Bimestre', 3: '3º Bimestre', 4: '4º Bimestre' };
+
+  // A qual bimestre uma trilha pertence: o bimestre (ver bimestreDatesCache,
+  // Gestão → Bloqueios e Liberações → "Bimestres — Início e Fim") cujo
+  // intervalo [inicio, fim] contém a data de início EFETIVA da trilha
+  // (trilhaDates, acima) — nenhuma trilha do config.js precisa ser marcada
+  // na mão com o número do bimestre. Sem início definido pra trilha, ou sem
+  // nenhum bimestre cadastrado cobrindo essa data, ela não pertence a
+  // bimestre nenhum e nunca é afetada por isTrilhaBimestreEncerrado (mesma
+  // filosofia de "sem prazo = sempre visível" que já vale pra trilhaStatus).
+  function trilhaBimestreInfo(trilha) {
+    const { inicio } = trilhaDates(trilha);
+    if (!inicio) return null;
+    for (const num of BIMESTRE_NUMS) {
+      const b = bimestreDatesCache[num];
+      if (b && b.inicio && b.fim && inicio >= b.inicio && inicio <= b.fim) {
+        return { bimestre: num, inicio: b.inicio, fim: b.fim };
+      }
+    }
+    return null;
+  }
+
+  // Passou do FIM DO BIMESTRE a que a trilha pertence — diferente de
+  // isTrilhaPastDeadline (prazo da própria trilha), que só bloqueia o aluno
+  // e nunca some pro professor: aqui a trilha inteira desaparece da aba
+  // Aulas pra TODO MUNDO (ver visibleTrilhas), porque o bimestre em si já
+  // fechou — não faz mais sentido nem revisar o conteúdo por lá.
+  function isTrilhaBimestreEncerrado(trilha) {
+    const info = trilhaBimestreInfo(trilha);
+    return !!(info && info.fim < todayStr());
+  }
+
   // Classifica uma trilha pra organizar a tela do aluno conforme o currículo
   // cresce (bimestre a bimestre) sem precisar de um "bimestre ativo"
   // configurado à parte — só usa inicio/prazo (ver trilhaDates) contra o
@@ -726,16 +773,20 @@
     return 'aberta';
   }
 
-  // Esconde trilha 'futura' só pro aluno — o professor sempre vê tudo, pra
-  // poder revisar/gerenciar conteúdo já cadastrado antes da data de início
-  // (mesma lógica de bypass que já vale pra cadeado de pré-requisito). Uma
-  // liberação diária (ver releasesForToday) pra QUALQUER módulo dessa
-  // trilha faz ela aparecer mesmo antes do início — "faça isso hoje" do
-  // professor sempre vence, igual já valia pro antigo bloqueio de trilha.
+  // Trilha com o BIMESTRE encerrado some pra TODO MUNDO, sem exceção pro
+  // professor (diferente de tudo mais aqui) — ver isTrilhaBimestreEncerrado.
+  // Só depois disso é que entra o filtro de 'futura', esse sim só pro aluno
+  // — o professor sempre vê trilha 'futura', pra poder revisar/gerenciar
+  // conteúdo já cadastrado antes da data de início (mesma lógica de bypass
+  // que já vale pra cadeado de pré-requisito). Uma liberação diária (ver
+  // releasesForToday) pra QUALQUER módulo dessa trilha faz ela aparecer
+  // mesmo antes do início — "faça isso hoje" do professor sempre vence,
+  // igual já valia pro antigo bloqueio de trilha.
   function visibleTrilhas(trilhas) {
-    if (currentUser.role !== 'aluno') return trilhas;
+    const emBimestre = trilhas.filter(t => !isTrilhaBimestreEncerrado(t));
+    if (currentUser.role !== 'aluno') return emBimestre;
     const liberadasHoje = new Set(releasesForToday(paramUser).map(r => r.trilha_key));
-    return trilhas.filter(t => trilhaStatus(t) !== 'futura' || liberadasHoje.has(t.key));
+    return emBimestre.filter(t => trilhaStatus(t) !== 'futura' || liberadasHoje.has(t.key));
   }
 
   // Igual trilhaStatus, mas só com os 3 status que fazem sentido pra
@@ -1069,11 +1120,12 @@
     });
   }
 
-  async function fetchTrilhaDates() {
-    if (!sbClient) return;
-    const { data } = await sbClient.from('trilha_release_dates').select('*').eq('turma', cfg.id);
-    trilhaDatesCache = {};
-    (data || []).forEach(r => { trilhaDatesCache[r.trilha_key] = { inicio: r.inicio, prazo: r.prazo }; });
+  // Refaz tudo que depende de trilhaDatesCache/bimestreDatesCache pra
+  // refletir uma mudança ao vivo (o professor editou datas em outra aba, ou
+  // o próprio salvamento local) — compartilhado por fetchTrilhaDates() e
+  // fetchBimestreDates() abaixo, já que os dois afetam a mesma coisa
+  // (quais trilhas aparecem, e com qual status).
+  function refreshTrilhaVisibilityUI() {
     refreshAllModuleCards();
     renderMaterias();
     // Refaz o <select> de trilha da matéria que o aluno tem aberta agora,
@@ -1090,10 +1142,33 @@
     }
   }
 
+  async function fetchTrilhaDates() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('trilha_release_dates').select('*').eq('turma', cfg.id);
+    trilhaDatesCache = {};
+    (data || []).forEach(r => { trilhaDatesCache[r.trilha_key] = { inicio: r.inicio, prazo: r.prazo }; });
+    refreshTrilhaVisibilityUI();
+  }
+
   function setupTrilhaDatesRealtime() {
     if (!sbClient) return;
     sbClient.channel('realtime_trilha_release_dates_' + cfg.id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_release_dates', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaDates())
+      .subscribe();
+  }
+
+  async function fetchBimestreDates() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('bimestre_dates').select('*').eq('turma', cfg.id);
+    bimestreDatesCache = {};
+    (data || []).forEach(r => { bimestreDatesCache[r.bimestre] = { inicio: r.inicio, fim: r.fim }; });
+    refreshTrilhaVisibilityUI();
+  }
+
+  function setupBimestreDatesRealtime() {
+    if (!sbClient) return;
+    sbClient.channel('realtime_bimestre_dates_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bimestre_dates', filter: `turma=eq.${cfg.id}` }, () => fetchBimestreDates())
       .subscribe();
   }
 
@@ -1237,12 +1312,12 @@
   }
 
   async function renderGestaoTrilhas() {
-    await fetchTrilhaDates();
+    await Promise.all([fetchTrilhaDates(), fetchBimestreDates()]);
     const tbody = document.getElementById('tblGestaoTrilhasBody');
     if (!tbody) return;
     const pares = allTrilhasComMateria();
     if (pares.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
       return;
     }
     tbody.innerHTML = pares.map(({ materiaLabel, trilha }) => {
@@ -1250,12 +1325,17 @@
       const inicio = saved.inicio || trilha.inicio || '';
       const prazo = saved.prazo || trilha.prazo || '';
       const status = trilhaDateStatusLabel(inicio, prazo);
+      const bimestreInfo = trilhaBimestreInfo(trilha);
+      const bimestreCell = !bimestreInfo
+        ? '—'
+        : `${BIMESTRE_LABELS[bimestreInfo.bimestre]}${bimestreInfo.fim < todayStr() ? ' <span style="color:var(--blood-bright);">(encerrado — some da Aulas)</span>' : ''}`;
       return `
         <tr data-trilha="${trilha.key}">
           <td>${materiaLabel}</td>
           <td>${trilha.label}</td>
           <td><input type="date" class="trilha-data-input" data-campo="inicio" value="${inicio}"></td>
           <td><input type="date" class="trilha-data-input" data-campo="prazo" value="${prazo}"></td>
+          <td>${bimestreCell}</td>
           <td><span style="color:${status.color}">${status.text}</span></td>
         </tr>
       `;
@@ -1278,6 +1358,45 @@
     await sbClient.from('trilha_release_dates').upsert(rows, { onConflict: 'turma,trilha_key' });
     const status = document.getElementById('trilhaDatasStatus');
     if (status) status.textContent = `Datas salvas às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    renderGestaoTrilhas();
+  }
+
+  async function renderGestaoBimestres() {
+    await fetchBimestreDates();
+    const tbody = document.getElementById('tblGestaoBimestresBody');
+    if (!tbody) return;
+    tbody.innerHTML = BIMESTRE_NUMS.map(num => {
+      const saved = bimestreDatesCache[num] || {};
+      return `
+        <tr data-bimestre="${num}">
+          <td>${BIMESTRE_LABELS[num]}</td>
+          <td><input type="date" class="bimestre-data-input" data-campo="inicio" value="${saved.inicio || ''}"></td>
+          <td><input type="date" class="bimestre-data-input" data-campo="fim" value="${saved.fim || ''}"></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Mesmo padrão de salvarTrilhaDatas: as 4 linhas (sempre fixas, 1º a 4º
+  // bimestre) salvam de uma vez só.
+  async function salvarBimestreDatas() {
+    if (!sbClient) return;
+    const now = new Date().toISOString();
+    const rows = Array.from(document.querySelectorAll('#tblGestaoBimestresBody tr[data-bimestre]')).map(tr => {
+      const get = campo => {
+        const inp = tr.querySelector(`.bimestre-data-input[data-campo="${campo}"]`);
+        return inp && inp.value ? inp.value : null;
+      };
+      return { turma: cfg.id, bimestre: parseInt(tr.getAttribute('data-bimestre'), 10), inicio: get('inicio'), fim: get('fim'), updated_at: now };
+    });
+    if (rows.length === 0) return;
+    await sbClient.from('bimestre_dates').upsert(rows, { onConflict: 'turma,bimestre' });
+    const status = document.getElementById('bimestreDatasStatus');
+    if (status) status.textContent = `Bimestres salvos às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    renderGestaoBimestres();
+    // A coluna "Bimestre" da tabela de trilhas depende das datas que acabaram
+    // de mudar — sem isso ela só atualizaria na próxima vez que a aba Gestão
+    // fosse reaberta.
     renderGestaoTrilhas();
   }
 
@@ -2475,6 +2594,7 @@
   function renderGestaoTab() {
     renderGestaoStudents();
     renderProfessorTokenBox();
+    renderGestaoBimestres();
     renderGestaoTrilhas();
     renderGestaoDailyReleases();
     renderGestaoLogs();
@@ -2632,6 +2752,7 @@
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarFichaObservacao').addEventListener('click', salvarFichaObservacao);
     document.getElementById('btnSalvarTrilhaDatas').addEventListener('click', salvarTrilhaDatas);
+    document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
   }
 
@@ -2910,11 +3031,19 @@
     document.getElementById('txtUserNom').textContent = currentUser.nome;
     document.getElementById('txtUserTurma').textContent = currentUser.role === 'professor' ? 'Corpo Docente' : cfg.label;
 
+    // Datas de trilha/bimestre valem pros dois papéis: o aluno depende delas
+    // pra saber o que está visível/bloqueado, e agora o professor também —
+    // trilha com bimestre encerrado some pra ele igual (ver
+    // isTrilhaBimestreEncerrado/visibleTrilhas), não só depois de abrir a
+    // aba Gestão (que já buscava essas mesmas datas por conta própria).
+    fetchTrilhaDates();
+    setupTrilhaDatesRealtime();
+    fetchBimestreDates();
+    setupBimestreDatesRealtime();
+
     if (currentUser.role === 'aluno') {
       fetchTeacherOverride();
       setupOverrideRealtime();
-      fetchTrilhaDates();
-      setupTrilhaDatesRealtime();
       fetchDailyReleases();
       setupDailyReleasesRealtime();
       renderRankingBadge();
