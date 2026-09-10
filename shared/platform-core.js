@@ -323,7 +323,7 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">4 notas por bimestre — a média é calculada sozinha.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Portal" é calculada sozinha (até 5,0, pela % de conclusão das trilhas atribuídas a este bimestre — ver "Liberação por Trilha") — só Nota 2, 3 e 4 são digitadas. A média é calculada sozinha.</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -337,7 +337,7 @@
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="audit-table">
-                    <thead><tr><th>Aluno</th><th>Nota 1</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
+                    <thead><tr><th>Aluno</th><th>Portal</th><th>Nota 2</th><th>Nota 3</th><th>Nota 4</th><th>Média</th></tr></thead>
                     <tbody id="notasBody"></tbody>
                   </table>
                 </div>
@@ -1524,6 +1524,27 @@
     return Math.round(((vals[0] + vals[1] + vals[2] + vals[3]) / 4) * 100) / 100;
   }
 
+  // % de conclusão (teoria + prática, mesma conta ponderada de
+  // materiaPercentForStudent) das trilhas atribuídas a ESTE bimestre
+  // (trilha_bimestre, ver "Liberação por Trilha") — usado só pra calcular
+  // a nota "Portal" em Lançar Notas. Trilha sem bimestre atribuído nunca
+  // entra aqui (não é "do bimestre nenhum"). null quando nenhuma trilha da
+  // turma está atribuída a esse bimestre ainda — nada pra calcular.
+  function bimestrePortalPercentForStudent(bimestreNum, progressRows, studentEmail) {
+    const modules = allTrilhas()
+      .filter(t => trilhaBimestreCache[t.key] === bimestreNum && isTrilhaVisibleToEmail(t, studentEmail))
+      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+    if (modules.length === 0) return null;
+    let sum = 0;
+    modules.forEach(({ trilhaKey, mod }) => {
+      const row = progressRows.find(r => r.trilha_key === trilhaKey && r.module_key === mod.key);
+      if (!row) return;
+      const total = row.progress_total || 1;
+      sum += Math.min((row.progress_current || 0) / total, 1);
+    });
+    return Math.round((sum / modules.length) * 100);
+  }
+
   async function loadNotas() {
     const tbody = document.getElementById('notasBody');
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(6); return; }
@@ -1532,17 +1553,29 @@
     const students = turmaStudents();
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(6); return; }
 
-    const { data: rows } = await sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre);
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    const [gradesRes, progressRes] = await Promise.all([
+      sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
+      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
+    ]);
     const byStudent = {};
-    (rows || []).forEach(r => { byStudent[r.student_email] = r; });
+    (gradesRes.data || []).forEach(r => { byStudent[r.student_email] = r; });
+    const progressByStudent = {};
+    (progressRes.data || []).forEach(r => {
+      progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
+      progressByStudent[r.student_email].push(r);
+    });
 
     tbody.innerHTML = students.map(u => {
+      const pct = bimestrePortalPercentForStudent(bimestre, progressByStudent[u.email] || [], u.email);
+      const n1 = pct === null ? 0 : Math.round((pct / 100) * 5 * 100) / 100;
       const g = byStudent[u.email] || {};
-      const n1 = g.nota1 ?? '', n2 = g.nota2 ?? '', n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
+      const n2 = g.nota2 ?? '', n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
+      const semTrilha = pct === null ? ' <span style="color:var(--ink-dim); font-size:10px;">(sem trilha neste bimestre)</span>' : '';
       return `
         <tr data-email="${u.email}">
           <td>${u.nome}</td>
-          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota1" value="${n1}"></td>
+          <td class="portal-cell" data-nota1="${n1}">${n1.toFixed(2)}${semTrilha}</td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota2" value="${n2}"></td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
@@ -1552,12 +1585,13 @@
     }).join('');
 
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
+      const n1 = parseFloat(tr.querySelector('.portal-cell').dataset.nota1);
       const inputs = tr.querySelectorAll('.nota-input');
       const mediaCell = tr.querySelector('.media-cell');
       inputs.forEach(inp => {
         inp.addEventListener('input', () => {
           const vals = Array.from(inputs).map(i => i.value);
-          mediaCell.textContent = calcMedia(vals[0], vals[1], vals[2], vals[3]).toFixed(2);
+          mediaCell.textContent = calcMedia(n1, vals[0], vals[1], vals[2]).toFixed(2);
         });
       });
     });
@@ -1573,6 +1607,7 @@
     const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
       const email = tr.getAttribute('data-email');
       const u = turmaStudentByEmail(email);
+      const nota1 = parseFloat(tr.querySelector('.portal-cell').dataset.nota1);
       const get = campo => {
         const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
         const v = inp ? inp.value : '';
@@ -1582,7 +1617,7 @@
         student_email: email,
         student_name: u ? u.nome : email,
         turma: cfg.id, bimestre,
-        nota1: get('nota1'), nota2: get('nota2'), nota3: get('nota3'), nota4: get('nota4'),
+        nota1, nota2: get('nota2'), nota3: get('nota3'), nota4: get('nota4'),
         updated_at: now
       };
     });

@@ -853,7 +853,11 @@ create policy "attendance_update_professor"
   with check (public.is_professor());
 
 -- Notas: uma linha por (aluno, bimestre), com 4 campos de nota. A
--- média é uma coluna gerada (calculada pelo próprio banco).
+-- média é uma coluna gerada (calculada pelo próprio banco). nota1
+-- ("Portal", ver shared/platform-core.js) não é digitada pelo professor —
+-- o front calcula sozinho, a partir da % de conclusão (student_module_
+-- progress) das trilhas atribuídas àquele bimestre (trilha_bimestre), até
+-- 5,0 pontos, e só grava o resultado aqui igual às outras notas.
 create table if not exists public.grades (
   id uuid primary key default gen_random_uuid(),
   student_email text not null,

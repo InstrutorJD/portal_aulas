@@ -134,17 +134,31 @@ test.describe('Chamada — dentro do portal da turma', () => {
 });
 
 test.describe('Notas — dentro do portal da turma', () => {
-  test('média recalcula ao vivo enquanto digita e salvar grava as 4 notas', async ({ page }) => {
-    await openGestao(page, JOGOS_URL, { grades: [] });
+  // "Portal" (nota1) não é mais digitada — vem sozinha da % de conclusão
+  // (teoria + prática) das trilhas atribuídas a ESTE bimestre (ver
+  // trilha_bimestre, "Liberação por Trilha"), até 5,0 pontos.
+  test('"Portal" é calculada pela % de conclusão das trilhas do bimestre, e a média recalcula ao vivo com as outras notas', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      grades: [],
+      trilha_bimestre: [{ turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 }],
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+        // prática só com 3 dos 5 pareceres — teoria 100% + prática 60% = 80% de conclusão da trilha.
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'pratica', progress_current: 3, progress_total: 5 },
+      ],
+    });
     await expandGestaoSection(page, 'Chamada e Notas');
 
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
-    await row.locator('[data-campo="nota1"]').fill('10');
+    // 80% de conclusão * 5,0 pontos = 4,00.
+    await expect(row.locator('.portal-cell')).toContainText('4.00');
+
     await row.locator('[data-campo="nota2"]').fill('8');
     await row.locator('[data-campo="nota3"]').fill('6');
     await row.locator('[data-campo="nota4"]').fill('4');
 
-    await expect(row.locator('.media-cell')).toHaveText('7.00');
+    // Média = (4 + 8 + 6 + 4) / 4 = 5.50.
+    await expect(row.locator('.media-cell')).toHaveText('5.50');
 
     await page.click('#btnSalvarNotas');
     await expect(page.locator('#notasStatus')).toContainText('Notas salvas');
@@ -152,7 +166,43 @@ test.describe('Notas — dentro do portal da turma', () => {
     const saved = await page.evaluate(() =>
       (window.__FAKE_DB__.grades || []).find(r => r.student_email === 'breno.silva80' && r.bimestre === 1)
     );
-    expect(saved).toMatchObject({ nota1: 10, nota2: 8, nota3: 6, nota4: 4, turma: 'jogos' });
+    expect(saved).toMatchObject({ nota1: 4, nota2: 8, nota3: 6, nota4: 4, turma: 'jogos' });
+  });
+
+  test('sem nenhuma trilha atribuída a este bimestre, "Portal" fica 0,00 com aviso, mesmo com progresso em outras trilhas', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      grades: [], trilha_bimestre: [],
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+      ],
+    });
+    await expandGestaoSection(page, 'Chamada e Notas');
+
+    const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
+    await expect(row.locator('.portal-cell')).toContainText('0.00');
+    await expect(row.locator('.portal-cell')).toContainText('sem trilha neste bimestre');
+  });
+
+  test('trocar de bimestre recalcula "Portal" só com as trilhas atribuídas àquele bimestre', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      grades: [],
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'vida-cidadania', bimestre: 2 },
+      ],
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'pratica', progress_current: 5, progress_total: 5, completed: true },
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-cidadania', module_key: 'teoria', progress_current: 0, progress_total: 1 },
+      ],
+    });
+    await expandGestaoSection(page, 'Chamada e Notas');
+
+    const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
+    await expect(row.locator('.portal-cell')).toContainText('5.00'); // 1º Bimestre: vida-autoconhecimento 100%
+
+    await page.selectOption('#notasBimestre', '2');
+    await expect(row.locator('.portal-cell')).toContainText('0.00'); // 2º Bimestre: vida-cidadania 0%
   });
 
   test('relatório de notas mostra só médias e o % de conclusão por matéria', async ({ page }) => {
