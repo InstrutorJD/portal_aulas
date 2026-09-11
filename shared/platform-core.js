@@ -268,19 +268,6 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Apresentações (Slides)</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Gera um .pptx pronto pra apresentar em aula, a partir de cada aula teórica — sem precisar abrir o módulo pra achar o botão.
-                </p>
-                <div id="gestaoSlidesList"></div>
-              </div>
-            </div>
-
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Gabarito</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -2294,67 +2281,12 @@
   // Carrega o módulo (aula teórica) num iframe escondido só pra rodar a
   // geração de slides dele — o professor não precisa abrir o módulo na
   // aba "Aulas & Atividades" nem achar o botão lá dentro pra gerar o .pptx.
-  function generateSlidesFor(mod) {
-    return new Promise((resolve) => {
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
-      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
-
-      const cleanup = () => { iframe.remove(); resolve(); };
-      iframe.onload = async () => {
-        try {
-          const win = iframe.contentWindow;
-          if (win && typeof win.generateSlidesForGestao === 'function') {
-            await win.generateSlidesForGestao();
-          }
-        } catch (e) {
-          // best-effort: se der erro, só limpa o iframe e segue
-        }
-        setTimeout(cleanup, 400);
-      };
-      iframe.onerror = cleanup;
-      document.body.appendChild(iframe);
-    });
-  }
-
-  function renderGestaoSlidesList() {
-    const container = document.getElementById('gestaoSlidesList');
-    if (!container) return;
-
-    const slideModules = [];
-    allTrilhas().forEach(trilha => {
-      (trilha.modules || []).forEach(mod => {
-        if (mod.hasSlides) slideModules.push(mod);
-      });
-    });
-
-    if (slideModules.length === 0) {
-      container.innerHTML = `<div class="empty-state">Nenhuma aula teórica com geração de slides nesta turma ainda.</div>`;
-      return;
-    }
-
-    container.innerHTML = slideModules.map((mod, i) => `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);">
-        <span>${mod.title}</span>
-        <button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" data-slide-mod="${i}">🖨️ Gerar Slides</button>
-      </div>
-    `).join('');
-
-    container.querySelectorAll('[data-slide-mod]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const mod = slideModules[parseInt(btn.getAttribute('data-slide-mod'), 10)];
-        const original = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = '⏳ Gerando...';
-        await generateSlidesFor(mod);
-        btn.disabled = false;
-        btn.textContent = original;
-      });
-    });
-  }
-
-  // Mesmo esquema do generateSlidesFor acima: carrega o módulo num iframe
-  // escondido só pra rodar a geração do gabarito (.txt) dele.
+  // Carrega o módulo num iframe escondido só pra rodar a geração do
+  // gabarito (.txt) dele — o professor já tem um jeito mais direto de
+  // gerar (o botão flutuante "📋 Gerar Gabarito" que aparece pra ele
+  // dentro da própria atividade, teórica ou prática — ver
+  // shared/gabarito-generator.js), mas essa lista continua útil pra gerar
+  // vários gabaritos em lote sem abrir cada módulo um por um.
   function generateGabaritoFor(mod) {
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
@@ -2519,7 +2451,6 @@
     renderGestaoBimestres();
     renderGestaoTrilhaBimestre();
     fetchClipboardStateGestao();
-    renderGestaoSlidesList();
     renderGestaoGabaritoList();
     loadChamada();
     renderRelatorioPresenca();

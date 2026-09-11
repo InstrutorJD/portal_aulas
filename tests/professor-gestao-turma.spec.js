@@ -118,28 +118,6 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#professorTokenValue')).toHaveText(tokenGerado);
   });
 
-  test('Apresentações (Slides) lista a aula teórica e gera o .pptx com um clique, sem abrir o módulo', async ({ page }) => {
-    await stubSupabaseFake(page, {});
-    await page.goto(JOGOS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Apresentações (Slides)');
-
-    await expect(page.locator('#gestaoSlidesList')).toContainText('Teoria — Multimídia e Versionamento');
-
-    // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
-    await expect(page.locator('#tabContentAulas')).toBeHidden();
-
-    const row = page.locator('#gestaoSlidesList > div', { hasText: 'Teoria — Multimídia e Versionamento' });
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-slide-mod]').click(),
-    ]);
-    expect(download.suggestedFilename()).toBe('fund-multimidia-teoria-slides.pptx');
-
-    await expect(page.locator('#tabContentAulas')).toBeHidden();
-  });
-
   test('Gabarito lista a atividade e gera o .txt com pergunta + resposta esperada, sem abrir o módulo', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(JOGOS_URL);

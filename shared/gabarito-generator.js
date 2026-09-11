@@ -121,4 +121,53 @@
   }
 
   window.PortalGabarito = { generate, buildText, stripHtml };
+
+  // Botão flutuante "Gerar Gabarito" — some sozinho em qualquer atividade
+  // (teórica ou prática) que defina window.generateGabaritoForGestao, sem
+  // precisar de nenhum elemento HTML próprio nem alteração por atividade
+  // (ao contrário do botão de Slides, que cada aula teórica declara na
+  // mão — ver <button id="btnGenSlides"> nos arquivos de teoria). Só
+  // aparece pro professor/admin, mesma checagem de PortalSession usada lá.
+  //
+  // Espera o documento terminar de carregar antes de checar
+  // generateGabaritoForGestao: essa função só existe depois que o
+  // <script> inline de CADA atividade roda, e esse script vem DEPOIS
+  // deste arquivo no HTML — na hora que o código abaixo executa (carga
+  // do <script src="gabarito-generator.js">), ainda não dá pra saber se a
+  // atividade vai defini-la ou não.
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (typeof window.generateGabaritoForGestao !== 'function') return;
+    if (!window.PortalSession) return;
+    let user = null;
+    try {
+      user = await window.PortalSession.getUser();
+    } catch (e) {
+      return;
+    }
+    if (!user || user.role !== 'professor') return;
+
+    const btn = document.createElement('button');
+    btn.id = 'btnGenGabaritoFloat';
+    btn.textContent = '📋 Gerar Gabarito';
+    // Canto inferior ESQUERDO de propósito: o topo de cada atividade já é
+    // ocupado pela .topbar de cada arquivo (com o botão de Slides, "Pular
+    // (professor)" etc. — tudo em fluxo normal, não fixed, mas ainda assim
+    // na mesma faixa onde um botão fixed no topo entraria por cima) e o
+    // canto inferior direito já é do widget de Libras (vlibras-widget.js).
+    btn.style.cssText = 'position:fixed; bottom:16px; left:16px; z-index:9997; padding:8px 14px; font-family:Arial,Helvetica,sans-serif; font-size:12px; font-weight:700; background:#1a7a1a; color:#fff; border:1px solid #0d4d0d; border-radius:3px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.4);';
+    btn.addEventListener('click', () => {
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = '⏳ Gerando...';
+      setTimeout(() => {
+        try {
+          window.generateGabaritoForGestao();
+        } finally {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      }, 50);
+    });
+    document.body.appendChild(btn);
+  });
 })();
