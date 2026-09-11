@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Trabalho: Kickoff do Projeto Mural</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0d0912; --panel:#171022; --panel2:#130d1c; --line:#2e2340;
+    --accent:#b98cff; --accent-dim:#7c56b3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#e7defa; --ink-dim:#8b7aa8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--accent-dim); background:#0a0710;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--accent); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--yellow); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--accent); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--accent); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--accent-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--accent-dim); color:var(--yellow); font-style:italic;
+  }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--yellow); }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--accent); color:#150a24; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--accent); border:1px solid var(--accent-dim); }
+
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--accent-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--accent); color:var(--accent); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'projeto_mural_kickoff_trabalho';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>INTRODUÇÃO DE DESENVOLVIMENTO DE PROJETOS — TRABALHO: KICKOFF DO PROJETO MURAL</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `projeto_mural_kickoff_trabalho_progress_${username}`;
+  const STEP_KEY = `projeto_mural_kickoff_trabalho_step_${username}`;
+
+  // Atividade sem correção automática (o "produto" é um repositório real no
+  // GitHub, fora do portal) — cada tela só navega com Voltar/Próximo, sem
+  // quiz nenhum. Quem marca como concluída é o professor, na última etapa
+  // (ver renderVisto), o mesmo padrão de modelagem-dados-requisitos-trabalho.html
+  // e oficina-comunicacao-trabalho.html (mesma matéria). Este é o 1º de 6
+  // módulos do projeto interdisciplinar "Mural" (rede social da escola) —
+  // ver Atividades/Desenvolvimento de Sistemas/Projeto Mural — *.md para as
+  // próximas 5 peças (Modelagem, Banco de Dados, Redes, Dev. de Sistemas 1,
+  // Programação de Aplicativos), todas usando o MESMO repositório GitHub
+  // criado aqui.
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios foi contratada pela escola pra criar uma rede social interna — o **Mural** —, onde alunos e professores possam se conectar, compartilhar o que estão fazendo e ver as novidades da turma. Você faz parte do time.
+
+Este é só o **primeiro** de 6 passos de um projeto que vai atravessar o curso inteiro, um passo por matéria: aqui você cuida do kickoff (GitHub); os próximos ficam por conta de Modelagem de Sistemas, Banco de Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e Programação de Aplicativos — todos usando o MESMO repositório que você vai criar agora.
+
+### 1ª versão do Mural
+
+- [ ] Cadastro e login
+- [ ] Perfil (nome, turma, foto)
+- [ ] Criar post (texto)
+- [ ] Feed com posts de todos
+- [ ] Curtir um post
+
+### O que entregar aqui
+
+Nada de código ainda — só a organização inicial: conta no GitHub, repositório, README e o plano de trabalho em issues.
+
+### Como funciona aqui
+
+1. Leia os blocos de conteúdo (fases, GitHub, repositório, README, issues).
+2. Faça cada ação no GitHub de verdade, conforme for pedido.
+3. Peça o visto pessoalmente ao professor no final, mostrando o repositório.`
+    },
+    {
+      titulo: 'Fases de um projeto, agora na prática',
+      corpo: `
+Você já estudou, na trilha **Oficina de Comunicação**, as fases de elaboração de um projeto: levantamento, planejamento, desenvolvimento, testes e entrega.
+
+O Kickoff do Mural é a fase de **planejamento** virando ação de verdade — em vez de só documentar as fases, você vai criar a estrutura real (repositório, README, issues) do projeto que vai continuar sendo construído nas próximas matérias.
+
+> Pense: em qual fase o projeto está agora? E em qual fase ele vai estar quando o Diagrama de Entidade-Relacionamento (DER) do Mural estiver pronto, na Modelagem de Sistemas?`
+    },
+    {
+      titulo: 'Controle de versão e GitHub',
+      corpo: `
+Times de desenvolvimento usam **controle de versão** (Git) pra guardar o histórico de tudo que foi feito no projeto, sem perder nada — quem mudou o quê, e quando.
+
+O **GitHub** hospeda esse histórico na nuvem e também funciona como um portfólio: qualquer pessoa (inclusive um recrutador, no futuro) pode ver o que você construiu.
+
+### Faça
+
+1. Se ainda não tiver, crie sua conta em §§§text
+github.com
+§§§
+2. Confirme seu e-mail, se pedido.`
+    },
+    {
+      titulo: 'Criar o repositório do Mural',
+      corpo: `
+Um **repositório** é a "casa" do projeto: todo código, documentação e histórico moram ali.
+
+### Faça
+
+1. No GitHub, clique em **New repository**.
+2. Nome do repositório:
+§§§text
+mural-seuusuario
+§§§
+(troque \`seuusuario\` pelo seu usuário do portal — ex.: \`mural-joao\`)
+3. Marque **Public**.
+4. Marque a opção de já criar um \`README.md\`.
+5. Crie o repositório.
+
+### Entrega
+
+O projeto deverá possuir um repositório próprio no GitHub, chamado \`mural-seuusuario\`.`
+    },
+    {
+      titulo: 'README como cartão de visita',
+      corpo: `
+O **README** é a primeira coisa que qualquer pessoa vê ao abrir o repositório — ele precisa explicar o projeto sem exigir que ninguém pergunte nada.
+
+### Faça
+
+Edite o \`README.md\` do seu repositório e escreva:
+
+- [ ] **Objetivo** — o que é o Mural, com suas palavras.
+- [ ] **Funcionalidades** — a lista das 5 funcionalidades da 1ª versão.
+- [ ] **Tecnologias** — HTML, CSS, JavaScript, GitHub, Supabase.
+
+> Dica: pode editar o README direto pelo navegador, clicando no ícone de lápis na página do arquivo — não precisa de Codespace ainda.`
+    },
+    {
+      titulo: 'Issues como plano de trabalho',
+      corpo: `
+**Issues** (no GitHub) são tarefas — o jeito de quebrar um projeto grande em pedaços pequenos e acompanháveis, em vez de uma tarefa gigante e vaga.
+
+### Faça
+
+Na aba **Issues** do seu repositório, crie 5 issues, uma por funcionalidade:
+
+1. Cadastro e login
+2. Perfil do usuário
+3. Criar post
+4. Feed com posts de todos
+5. Curtir post
+
+Cada issue pode ficar só com o título — o objetivo aqui é planejar, não descrever tudo ainda.`
+    },
+    {
+      titulo: 'Documentar decisões desde o início',
+      corpo: `
+Decisões de projeto (nome, público-alvo, escopo) documentadas desde o começo evitam retrabalho e desalinhamento mais pra frente.
+
+### Faça
+
+Adicione ao \`README.md\` uma seção:
+
+§§§text
+## Decisões de Projeto
+§§§
+
+Com:
+
+- [ ] **Nome do app** (pode manter "Mural" ou escolher outro).
+- [ ] **Público-alvo** (ex.: alunos e professores da turma/escola).`
+    },
+    {
+      titulo: 'Checklist antes do visto',
+      corpo: `
+Confira antes de chamar o professor:
+
+- [ ] Conta no GitHub criada.
+- [ ] Repositório \`mural-seuusuario\` criado (público, com README).
+- [ ] README com objetivo, as 5 funcionalidades, tecnologias e "Decisões de Projeto".
+- [ ] 5 issues criadas (uma por funcionalidade).
+
+Quando estiver tudo certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Modelagem de Sistemas.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
+  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('projeto_mural_kickoff_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Trabalho — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Trabalho — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+          <p>A próxima peça do projeto Mural (Modelagem de Sistemas) já pode ser liberada pelo professor.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>Seu repositório <code>mural-seuusuario</code> já está com README (objetivo, funcionalidades, tecnologias, decisões de projeto) e as 5 issues criadas?</p>
+        <p>Chame o professor pra conferir o repositório no GitHub. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui é o checklist de critérios pro professor conferir o
+  // repositório GitHub do aluno sem precisar reabrir este módulo.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Projeto Mural — Kickoff — Checklist de correção',
+      subtitle: 'Trabalho (repositório GitHub real, fora do portal) · Introdução de Desenvolvimento de Projetos · Turma Sistemas',
+      items: [
+        { number: 1, title: 'Conta e repositório', prompt: 'O aluno tem conta no GitHub e criou o repositório?', answer: 'Repositório público chamado mural-<usuario>, com README inicial criado.' },
+        { number: 2, title: 'README', prompt: 'O README cobre o esperado?', answer: 'Objetivo do Mural, lista das 5 funcionalidades da 1ª versão (cadastro/login, perfil, criar post, feed, curtir), tecnologias (HTML, CSS, JavaScript, GitHub, Supabase) e seção "Decisões de Projeto" (nome + público-alvo).' },
+        { number: 3, title: 'Issues', prompt: 'As issues foram criadas?', answer: '5 issues, uma por funcionalidade: Cadastro e login; Perfil do usuário; Criar post; Feed com posts de todos; Curtir post.' }
+      ],
+      fileName: 'projeto-mural-kickoff-checklist.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

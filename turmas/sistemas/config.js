@@ -340,6 +340,30 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // 1ª peça do projeto interdisciplinar "Mural" (rede social da
+          // escola) — mesmo repositório GitHub criado aqui é reaproveitado
+          // pelas próximas 5 peças (Modelagem de Sistemas 1, Banco de
+          // Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e
+          // Programação de Aplicativos). Ver Atividades/Desenvolvimento de
+          // Sistemas/Projeto Mural — *.md pra especificação completa de
+          // cada peça. Reaproveita a MESMA capacidade de "Oficina de
+          // Comunicação" (mesma matéria) — produto diferente (repositório
+          // GitHub real, não CodePen).
+          key: 'projeto-mural-kickoff',
+          label: 'Kickoff: Rede Social da Escola (Mural)',
+          desc: 'Projeto integrador: ao longo do curso você vai construir, matéria por matéria, uma rede social da escola de verdade — aqui você dá o pontapé inicial, criando o repositório no GitHub e planejando o trabalho.',
+          capacidade: 'Reconhecer as diferentes fases pertinentes à elaboração de um projeto.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Kickoff do Projeto Mural (GitHub)',
+              desc: 'Crie sua conta no GitHub, o repositório mural-seuusuario, um README completo e as 5 issues do MVP. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🚀', src: 'atividades/projeto-mural-kickoff-trabalho.html',
+              progressKey: 'projeto_mural_kickoff_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },
