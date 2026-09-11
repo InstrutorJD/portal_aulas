@@ -13,7 +13,7 @@
 //    movimento em grade, ordem de _ready(), delta clamp, máquina de estado
 //    do fantasma) — só desbloqueia depois do visto na prática (requires).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const PRATICA_URL = '/turmas/jogos/atividades/cod-godot-pratica.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const TEORIA_URL = '/turmas/jogos/atividades/cod-godot-teoria.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
@@ -107,17 +107,9 @@ test.describe('turmas/jogos/atividades/cod-godot-pratica.html (roteiro Pacman)',
   });
 
   test('gabarito lista o checklist técnico pro professor conferir o projeto', async ({ page }) => {
-    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/cod-godot-pratica.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'Construa o Pacman no Godot');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('cod-godot-pratica-checklist.txt');
 
     const filePath = await download.path();
@@ -142,17 +134,9 @@ test.describe('turmas/jogos/atividades/cod-godot-teoria.html (quiz Pacman)', () 
   });
 
   test('gabarito lista as 9 perguntas com a resposta certa pra cada uma', async ({ page }) => {
-    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/cod-godot-teoria.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'o Pacman por trás do código');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('cod-godot-teoria-gabarito.txt');
 
     const filePath = await download.path();

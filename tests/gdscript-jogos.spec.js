@@ -7,7 +7,7 @@
 // `;` nem `{ }` — ver esse arquivo pro porquê de não dar pra rodar GDScript
 // de verdade no navegador).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const TEORIA_URL = '/turmas/jogos/atividades/gdscript-teoria.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const COMPARACAO_URL = '/turmas/jogos/atividades/gdscript-comparacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
@@ -219,17 +219,9 @@ test.describe('turmas/jogos/atividades/gdscript-desafios-pratica.html', () => {
   });
 
   test('gabarito lista os 14 desafios com o critério certo pra cada tipo de checagem', async ({ page }) => {
-    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/gdscript-desafios-pratica.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'Desafios de GDScript');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('gdscript-desafios-pratica-gabarito.txt');
 
     const filePath = await download.path();
@@ -304,17 +296,9 @@ test.describe('turmas/jogos/atividades/gdscript-cenarios-pratica.html', () => {
   });
 
   test('gabarito lista os 15 cenários, com o grupo (Movimento/Colisão/Ataque/Defesa) no título', async ({ page }) => {
-    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/gdscript-cenarios-pratica.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'Cenários de Jogo (GDScript)');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('gdscript-cenarios-pratica-gabarito.txt');
 
     const filePath = await download.path();

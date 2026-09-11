@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, jogosAlunoProfiles, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
 const JOGOS_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
@@ -116,35 +116,6 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#professorTokenOverlay')).toBeHidden();
     await page.click('#btnQuickToken');
     await expect(page.locator('#professorTokenValue')).toHaveText(tokenGerado);
-  });
-
-  test('Gabarito lista a atividade e gera o .txt com pergunta + resposta esperada, sem abrir o módulo', async ({ page }) => {
-    await stubSupabaseFake(page, {});
-    await page.goto(JOGOS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await expandGestaoSection(page, 'Gabarito');
-
-    await expect(page.locator('#gestaoGabaritoList')).toContainText('Teoria — Multimídia e Versionamento');
-
-    // a aba de Aulas & Atividades continua fechada — a geração não precisa abrir o módulo visível
-    await expect(page.locator('#tabContentAulas')).toBeHidden();
-
-    const multimidiaRow = await expandGabaritoRow(page, 'Teoria — Multimídia e Versionamento');
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      multimidiaRow.locator('[data-gabarito-mod]').click(),
-    ]);
-    expect(download.suggestedFilename()).toBe('fund-multimidia-teoria-gabarito.txt');
-
-    const filePath = await download.path();
-    const fs = require('node:fs');
-    const content = fs.readFileSync(filePath, 'utf-8');
-    expect(content).toContain('GABARITO');
-    expect(content).toContain('Depois de importar a imagem de um personagem pro projeto');
-    expect(content).toContain('RESPOSTA ESPERADA: Associar a imagem a um objeto do jogo e definir sua posição/comportamento no código');
-
-    await expect(page.locator('#tabContentAulas')).toBeHidden();
   });
 
   test('atalhos de acesso rápido (barra de navegação) só aparecem pro professor', async ({ page }) => {

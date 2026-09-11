@@ -8,7 +8,7 @@
 // e a trava de tela (shared/exam-proctor.js) bloqueia depois de sair da
 // aba 2 vezes, só o professor libera com token.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ENGEL_URL = '/turmas/jogos/plataforma.html?user=engel.fraga&ip=192.168.1.20&saldo=1000.00&role=aluno&turma=jogos';
@@ -182,19 +182,9 @@ test.describe('Jogo "Formar Frases (Engel)"', () => {
 
   test('gabarito lista as 15 frases com a resposta completa', async ({ page }) => {
     await stubSupabaseFake(page, {});
-    await page.goto(PROFESSOR_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/frases-engel.html?user=admin&role=professor&turma=jogos');
 
-    // Título completo, não só "Formar Frases" — a trilha agora tem 2
-    // módulos com gabarito (este + "Avançado"), e ambos começam com esse
-    // prefixo.
-    const row = await expandGabaritoRow(page, 'Associação de Palavras');
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('frases-engel-gabarito.txt');
 
     const filePath = await download.path();

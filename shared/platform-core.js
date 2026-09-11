@@ -268,19 +268,6 @@
 
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-                <h2>Gabarito</h2>
-                <span class="collapsible-arrow">▶</span>
-              </div>
-              <div class="collapsible-body">
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Gera um .txt com o enunciado de cada pergunta/chamado e a resposta esperada — principalmente das atividades práticas, sem precisar abrir o módulo ou decorar as respostas.
-                </p>
-                <div id="gestaoGabaritoList"></div>
-              </div>
-            </div>
-
-            <div class="card collapsible-card">
-              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Chamada e Notas</h2>
                 <span class="collapsible-arrow">▶</span>
               </div>
@@ -399,7 +386,7 @@
   }
 
   // Igual allTrilhas, mas preservando o rótulo da matéria dona — usada pra
-  // exibição agrupada (Gabarito, Apresentações).
+  // exibição agrupada ("Liberação por Trilha" em Gestão).
   function allTrilhasComMateria() {
     return (cfg.materias || []).flatMap(m => (m.trilhas || []).map(t => ({ materiaLabel: m.label, trilha: t })));
   }
@@ -2278,101 +2265,6 @@
     return '< 1min';
   }
 
-  // Carrega o módulo (aula teórica) num iframe escondido só pra rodar a
-  // geração de slides dele — o professor não precisa abrir o módulo na
-  // aba "Aulas & Atividades" nem achar o botão lá dentro pra gerar o .pptx.
-  // Carrega o módulo num iframe escondido só pra rodar a geração do
-  // gabarito (.txt) dele — o professor já tem um jeito mais direto de
-  // gerar (o botão flutuante "📋 Gerar Gabarito" que aparece pra ele
-  // dentro da própria atividade, teórica ou prática — ver
-  // shared/gabarito-generator.js), mas essa lista continua útil pra gerar
-  // vários gabaritos em lote sem abrir cada módulo um por um.
-  function generateGabaritoFor(mod) {
-    return new Promise((resolve) => {
-      const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
-      iframe.src = `${mod.src}?user=${encodeURIComponent(paramUser)}&name=${encodeURIComponent(currentUser.nome)}&turma=${encodeURIComponent(cfg.id)}`;
-
-      const cleanup = () => { iframe.remove(); resolve(); };
-      iframe.onload = async () => {
-        try {
-          const win = iframe.contentWindow;
-          if (win && typeof win.generateGabaritoForGestao === 'function') {
-            await win.generateGabaritoForGestao();
-          }
-        } catch (e) {
-          // best-effort: se der erro, só limpa o iframe e segue
-        }
-        setTimeout(cleanup, 400);
-      };
-      iframe.onerror = cleanup;
-      document.body.appendChild(iframe);
-    });
-  }
-
-  // Agrupado por matéria (cada matéria colapsável, fechada por padrão) —
-  // uma lista achatada com ~60+ módulos (turma Jogos) tomava a tela toda;
-  // agrupar deixa só os títulos das matérias visíveis até o professor abrir
-  // a que precisa. Reaproveita o mesmo mecanismo de .collapsible-card (ver
-  // toggleGestaoSection) numa variante mais compacta (.nested, sem fundo/
-  // borda própria) — closest('.collapsible-card') no clique do cabeçalho da
-  // matéria acha o card ANINHADO mais próximo, não o card "Gabarito" de fora.
-  function renderGestaoGabaritoList() {
-    const container = document.getElementById('gestaoGabaritoList');
-    if (!container) return;
-
-    const gabaritoModules = [];
-    const groups = [];
-    const groupByLabel = {};
-
-    allTrilhasComMateria().forEach(({ materiaLabel, trilha }) => {
-      (trilha.modules || []).forEach(mod => {
-        if (!mod.hasGabarito) return;
-        const idx = gabaritoModules.length;
-        gabaritoModules.push(mod);
-        if (!groupByLabel[materiaLabel]) {
-          groupByLabel[materiaLabel] = { label: materiaLabel, items: [] };
-          groups.push(groupByLabel[materiaLabel]);
-        }
-        groupByLabel[materiaLabel].items.push({ mod, idx });
-      });
-    });
-
-    if (gabaritoModules.length === 0) {
-      container.innerHTML = `<div class="empty-state">Nenhuma atividade com gabarito disponível nesta turma ainda.</div>`;
-      return;
-    }
-
-    container.innerHTML = groups.map(group => `
-      <div class="collapsible-card nested">
-        <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
-          <h3>${group.label}<span class="count">(${group.items.length})</span></h3>
-          <span class="collapsible-arrow">▶</span>
-        </div>
-        <div class="collapsible-body">
-          ${group.items.map(({ mod, idx }) => `
-            <div class="gabarito-row" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);">
-              <span>${mod.title}</span>
-              <button class="btn btn-secondary" style="padding:6px 12px; font-size:10px;" data-gabarito-mod="${idx}">📄 Gerar Gabarito</button>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `).join('');
-
-    container.querySelectorAll('[data-gabarito-mod]').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const mod = gabaritoModules[parseInt(btn.getAttribute('data-gabarito-mod'), 10)];
-        const original = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = '⏳ Gerando...';
-        await generateGabaritoFor(mod);
-        btn.disabled = false;
-        btn.textContent = original;
-      });
-    });
-  }
-
   function toggleGestaoSection(headEl) {
     headEl.closest('.collapsible-card').classList.toggle('expanded');
   }
@@ -2451,7 +2343,6 @@
     renderGestaoBimestres();
     renderGestaoTrilhaBimestre();
     fetchClipboardStateGestao();
-    renderGestaoGabaritoList();
     loadChamada();
     renderRelatorioPresenca();
     loadNotas();

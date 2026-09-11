@@ -7,7 +7,7 @@
 // certa numa lista, o aluno DIGITA a palavra que falta num campo de texto —
 // de 1 palavra (nível 1) até 4 (nível 4).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 const ENGEL_URL = '/turmas/jogos/plataforma.html?user=engel.fraga&ip=192.168.1.20&saldo=1000.00&role=aluno&turma=jogos';
@@ -222,16 +222,9 @@ test.describe('Jogo "Formar Frases — Digitando (Engel)"', () => {
 
   test('gabarito lista as 15 frases com a resposta completa', async ({ page }) => {
     await stubSupabaseFake(page, {});
-    await page.goto(PROFESSOR_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/frases-digitar-engel.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'Formar Frases — Digitando');
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('frases-digitar-engel-gabarito.txt');
 
     const filePath = await download.path();

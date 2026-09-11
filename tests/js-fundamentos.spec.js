@@ -9,7 +9,7 @@
 // `check.type` ('variable'/'console'/'function') — ver
 // turmas/sistemas/atividades/js-fundamentos-basico.html e -intermediario.html.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const BASICO_URL = '/turmas/sistemas/atividades/js-fundamentos-basico.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 const INTERMEDIARIO_URL = '/turmas/sistemas/atividades/js-fundamentos-intermediario.html?user=alexandre.natal&role=aluno&name=Alexandre%20Natal&turma=sistemas';
@@ -58,19 +58,11 @@ async function solveAll(page, solutions) {
   }
 }
 
-async function downloadGabarito(page, moduleTitleHint, expectedFileName) {
+async function downloadGabarito(page, activityUrlHint, expectedFileName) {
   await stubSupabaseFake(page, {});
-  await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor&turma=sistemas');
-  await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-  await page.waitForTimeout(200);
-  await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+  await page.goto(`${activityUrlHint}?user=admin&role=professor&turma=sistemas`);
 
-  const row = await expandGabaritoRow(page, moduleTitleHint);
-  await expect(row).toBeVisible();
-  const [download] = await Promise.all([
-    page.waitForEvent('download', { timeout: 15000 }),
-    row.locator('[data-gabarito-mod]').click(),
-  ]);
+  const download = await gerarGabaritoFlutuante(page);
   expect(download.suggestedFilename()).toBe(expectedFileName);
 
   const filePath = await download.path();
@@ -124,7 +116,7 @@ test.describe('turmas/sistemas/atividades/js-fundamentos-basico.html', () => {
   });
 
   test('gabarito do Básico lista os 10 desafios com o critério certo pra cada tipo de checagem', async ({ page }) => {
-    const content = await downloadGabarito(page, 'Básico — Desafios de JavaScript', 'js-fundamentos-basico-gabarito.txt');
+    const content = await downloadGabarito(page, '/turmas/sistemas/atividades/js-fundamentos-basico.html', 'js-fundamentos-basico-gabarito.txt');
     expect(content).toContain('GABARITO');
     expect(content).toContain('a = 2, b = 3 → resultado deve ser 5'); // variable
     expect(content).toContain('idade = 10 → console/alert deve mostrar [10]'); // console
@@ -187,7 +179,7 @@ test.describe('turmas/sistemas/atividades/js-fundamentos-intermediario.html', ()
   });
 
   test('gabarito do Intermediário lista os 15 desafios com o critério certo pra cada tipo de checagem', async ({ page }) => {
-    const content = await downloadGabarito(page, 'Intermediário — Desafios de JavaScript', 'js-fundamentos-intermediario-gabarito.txt');
+    const content = await downloadGabarito(page, '/turmas/sistemas/atividades/js-fundamentos-intermediario.html', 'js-fundamentos-intermediario-gabarito.txt');
     expect(content).toContain('GABARITO');
     expect(content).toContain('saudacao() deve retornar "Olá!"'); // function
     expect(content).toContain('dobro(5) deve retornar 10'); // function

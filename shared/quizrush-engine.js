@@ -68,9 +68,9 @@ window.QuizRushEngine = (function () {
     return out;
   }
 
-  // Carrega o módulo num iframe escondido (mesmo esquema de
-  // generateGabaritoFor/generateSlidesFor em shared/platform-core.js) e
-  // chama a função de gabarito que ele já expõe — só que aqui a gente
+  // Carrega o módulo num iframe escondido (mesmo esquema do botão
+  // flutuante de shared/gabarito-generator.js) e chama a função de
+  // gabarito que ele já expõe — só que aqui a gente
   // INTERCEPTA window.PortalGabarito.generate antes de chamar, pra
   // capturar a lista `items` estruturada (prompt/options/correctIndex)
   // em vez de baixar o .txt. Zero mudança em qualquer atividade

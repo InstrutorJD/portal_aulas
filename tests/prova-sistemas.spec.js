@@ -8,7 +8,7 @@
 // bloqueia até o professor liberar com token. Sem "tentar de novo": uma
 // única tentativa oficial, a pontuação final fica registrada pro professor.
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const PROVA_URL = '/turmas/sistemas/atividades/prova-sistemas.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
@@ -187,17 +187,9 @@ test.describe('turmas/sistemas/atividades/prova-sistemas.html', () => {
   });
 
   test('gabarito lista o banco inteiro de 78 questões', async ({ page }) => {
-    await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/sistemas/atividades/prova-sistemas.html?user=admin&role=professor&turma=sistemas');
 
-    const row = await expandGabaritoRow(page, 'Prova Diagnóstica — Turma Sistemas');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('prova-sistemas-gabarito.txt');
 
     const filePath = await download.path();

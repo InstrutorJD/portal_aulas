@@ -6,7 +6,7 @@
 // subconjunto restrito de C# pra JS antes de rodar contra os testes — ver
 // esse arquivo pro porquê de não dar pra rodar C# de verdade no navegador).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const TEORIA_URL = '/turmas/jogos/atividades/csharp-teoria.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
 const COMPARACAO_URL = '/turmas/jogos/atividades/csharp-comparacao.html?user=breno.silva80&role=aluno&name=Breno%20Silva&turma=jogos';
@@ -245,17 +245,9 @@ test.describe('turmas/jogos/atividades/csharp-desafios-pratica.html', () => {
   });
 
   test('gabarito lista os 14 desafios com o critério certo pra cada tipo de checagem', async ({ page }) => {
-    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/csharp-desafios-pratica.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'Desafios de C#');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('csharp-desafios-pratica-gabarito.txt');
 
     const filePath = await download.path();

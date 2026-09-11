@@ -8,7 +8,7 @@
 // padrão e das outras atividades avaliativas do Engel (frases-engel.html
 // e afins).
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const PROVA_URL = '/turmas/jogos/atividades/prova-jogos-engel.html?user=engel.fraga&role=aluno&turma=jogos';
 
@@ -106,17 +106,9 @@ test.describe('turmas/jogos/atividades/prova-jogos-engel.html', () => {
 
   test('gabarito lista as 15 perguntas com a resposta certa pra cada uma', async ({ page }) => {
     await stubSupabaseFake(page, {});
-    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/jogos/atividades/prova-jogos-engel.html?user=admin&role=professor&turma=jogos');
 
-    const row = await expandGabaritoRow(page, 'Prova Diagnóstica (Engel)');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('prova-jogos-engel-gabarito.txt');
 
     const filePath = await download.path();

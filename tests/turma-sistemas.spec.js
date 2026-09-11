@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { stubSupabaseFake, expandGabaritoRow } = require('./helpers');
+const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
@@ -88,16 +88,9 @@ test.describe('turmas/sistemas/plataforma.html', () => {
   // o gabarito de uma atividade de Sistemas diria "Turma Jogos Digitais".
   test('gabarito de Projeto de Vida gerado em Sistemas diz "Turma Sistemas", não "Jogos Digitais"', async ({ page }) => {
     await stubSupabaseFake(page, {});
-    await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor&turma=sistemas');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/sistemas/atividades/vida-autoconhecimento-teoria.html?user=admin&role=professor&turma=sistemas');
 
-    const row = await expandGabaritoRow(page, 'Autoconhecimento e Valores Pessoais');
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
 
     const filePath = await download.path();
     const fs = require('node:fs');
@@ -112,17 +105,9 @@ test.describe('turmas/sistemas/plataforma.html', () => {
   // professor conferir sem precisar abrir o roteiro inteiro de novo.
   test('gabarito da atividade de Conexão com Supabase lista as perguntas do caderno com resposta modelo', async ({ page }) => {
     await stubSupabaseFake(page, {});
-    await page.goto('/turmas/sistemas/plataforma.html?user=admin&ip=192.168.2.254&saldo=9999.00&role=professor&turma=sistemas');
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await page.waitForTimeout(200);
-    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Gabarito' }).click();
+    await page.goto('/turmas/sistemas/atividades/db-conexao-supabase-pratica.html?user=admin&role=professor&turma=sistemas');
 
-    const row = await expandGabaritoRow(page, 'Sistema Web com HTML, JavaScript e Supabase');
-    await expect(row).toBeVisible();
-    const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 15000 }),
-      row.locator('[data-gabarito-mod]').click(),
-    ]);
+    const download = await gerarGabaritoFlutuante(page);
     expect(download.suggestedFilename()).toBe('db-conexao-supabase-pratica-gabarito.txt');
 
     const filePath = await download.path();
