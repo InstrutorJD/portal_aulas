@@ -118,47 +118,26 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#professorTokenValue')).toHaveText(tokenGerado);
   });
 
-  test('atalhos de acesso rápido (barra de navegação) só aparecem pro professor', async ({ page }) => {
+  test('atalho de acesso rápido (barra de navegação) só aparece pro professor', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
-    await expect(page.locator('#btnQuickAtividadeInatividade')).toHaveCount(0);
-    await expect(page.locator('#btnQuickToggleClipboard')).toHaveCount(0);
     await expect(page.locator('#btnQuickToken')).toHaveCount(0);
   });
 
-  test('atalho "Atividade / Inatividade" abre a Gestão com "Relatórios" já expandido, sem precisar navegar manualmente', async ({ page }) => {
-    await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
-    await page.goto(JOGOS_URL);
-
-    // Ainda na aba Aulas & Atividades (tela padrão) — a Gestão nem foi aberta uma vez.
-    await expect(page.locator('#tabContentGestao')).toBeHidden();
-
-    await page.click('#btnQuickAtividadeInatividade');
-
-    await expect(page.locator('#tabContentGestao')).toBeVisible();
-    const relatorios = page.locator('.collapsible-card', { has: page.locator('h2', { hasText: 'Relatórios' }) });
-    await expect(relatorios).toHaveClass(/expanded/);
-    // "Atividade e Inatividade" (sub-seção de Relatórios) fica visível já expandida.
-    await expect(page.locator('#inatividadeBody')).toBeVisible();
-  });
-
-  test('atalho de Ctrl+C/V liga/desliga o bloqueio da turma, e reflete o mesmo estado do botão dentro da Gestão', async ({ page }) => {
+  test('botão de Bloquear Copiar/Colar (dentro da Gestão) liga/desliga o bloqueio da turma', async ({ page }) => {
     await stubSupabaseFake(page, { classroom_settings: [] });
     await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
 
-    await expect(page.locator('#btnQuickToggleClipboard')).toHaveText('🔒 Bloquear Copiar/Colar');
+    await expect(page.locator('#btnToggleClipboard')).toHaveText('Bloquear Copiar/Colar');
 
-    await page.click('#btnQuickToggleClipboard');
-    await expect(page.locator('#btnQuickToggleClipboard')).toHaveText('🔓 Liberar Copiar/Colar');
+    await page.click('#btnToggleClipboard');
+    await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
 
     const rows = await page.evaluate(() => window.__FAKE_DB__.classroom_settings || []);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ id: 'jogos', clipboard_blocked: true });
-
-    // O botão de dentro da Gestão reflete o mesmo estado.
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await expandGestaoSection(page, 'Bloqueios e Liberações');
-    await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
   });
 
   test('status ao vivo (onde está, há quanto tempo) só aparece pra quem tem progresso real, e só alunos desta turma', async ({ page }) => {

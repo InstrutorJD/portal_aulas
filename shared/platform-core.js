@@ -124,8 +124,6 @@
           ${currentUser.role === 'aluno' ? '<button class="tab-btn" data-tab="perfil">Perfil 👤</button>' : ''}
           ${currentUser.role === 'professor' ? `
             <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
-            <button class="quick-action-btn" id="btnQuickAtividadeInatividade" title="Ir direto pro relatório de Atividade e Inatividade">📡 Atividade / Inatividade</button>
-            <button class="quick-action-btn" id="btnQuickToggleClipboard" title="Bloquear ou liberar Ctrl+C/Ctrl+V pra turma inteira">🔒 Bloquear Copiar/Colar</button>
             <button class="quick-action-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑 Token</button>
           ` : ''}
         </div>
@@ -1185,8 +1183,6 @@
     renderGestaoTrilhaBimestre();
   }
 
-  // Atualiza tanto o botão de dentro da Gestão quanto o atalho da barra de
-  // navegação — os dois refletem o mesmo estado (gestaoClipboardBlocked).
   function renderClipboardButtonGestao() {
     const btn = document.getElementById('btnToggleClipboard');
     if (btn) {
@@ -1197,13 +1193,6 @@
         btn.textContent = 'Bloquear Copiar/Colar';
         btn.classList.remove('btn-danger');
       }
-    }
-
-    const quickBtn = document.getElementById('btnQuickToggleClipboard');
-    if (quickBtn) {
-      quickBtn.textContent = gestaoClipboardBlocked ? '🔓 Liberar Copiar/Colar' : '🔒 Bloquear Copiar/Colar';
-      quickBtn.style.color = gestaoClipboardBlocked ? 'var(--blood-bright)' : '';
-      quickBtn.style.borderColor = gestaoClipboardBlocked ? 'var(--blood-bright)' : '';
     }
   }
 
@@ -2374,22 +2363,6 @@
     if (rows.length) await sbClient.from('student_overrides').upsert(rows, { onConflict: 'student_email' });
   }
 
-  // Abre a Gestão já com "Relatórios" (onde mora "Atividade e Inatividade")
-  // expandido, e rola até lá — evita o professor ter que procurar/abrir
-  // essa seção toda vez.
-  function openGestaoAtividadeInatividade() {
-    switchTab('gestao');
-    let scrollTarget = null;
-    document.querySelectorAll('.collapsible-card').forEach(card => {
-      const titulo = card.querySelector('.collapsible-head h2')?.textContent.trim();
-      if (titulo === 'Relatórios') {
-        card.classList.add('expanded');
-        if (!scrollTarget) scrollTarget = card;
-      }
-    });
-    scrollTarget?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   function setupGestaoButtons() {
     document.getElementById('btnUnlockGamesTurma').addEventListener('click', async () => {
       await setGamesUnlockedForTurma(true);
@@ -2403,8 +2376,6 @@
 
     document.getElementById('btnToggleClipboard').addEventListener('click', toggleClipboardBlock);
     document.getElementById('btnGerarProfessorToken').addEventListener('click', gerarProfessorToken);
-    document.getElementById('btnQuickToggleClipboard').addEventListener('click', toggleClipboardBlock);
-    document.getElementById('btnQuickAtividadeInatividade').addEventListener('click', openGestaoAtividadeInatividade);
     document.getElementById('btnQuickToken').addEventListener('click', () => {
       document.getElementById('professorTokenOverlay').style.display = 'flex';
     });
