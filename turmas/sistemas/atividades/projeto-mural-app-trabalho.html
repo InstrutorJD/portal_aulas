@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Trabalho: Kickoff do Projeto Mural</title>
+<title>PixelForge Studios — Trabalho: Mural — Construa o Aplicativo</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -94,7 +94,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'projeto_mural_kickoff_trabalho';
+  window.ACTIVITY_LOCATION = 'projeto_mural_app_trabalho';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -109,8 +109,8 @@
 
 <div class="env">
   <div class="topbar">
-    <div>INTRODUÇÃO DE DESENVOLVIMENTO DE PROJETOS — TRABALHO: KICKOFF DO PROJETO MURAL</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">7</span></div>
+    <div>PROGRAMAÇÃO DE APLICATIVOS — TRABALHO: MURAL — CONSTRUA O APLICATIVO</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">9</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -122,137 +122,117 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `projeto_mural_kickoff_trabalho_progress_${username}`;
-  const STEP_KEY = `projeto_mural_kickoff_trabalho_step_${username}`;
+  const PROGRESS_KEY = `projeto_mural_app_trabalho_progress_${username}`;
+  const STEP_KEY = `projeto_mural_app_trabalho_step_${username}`;
 
-  // Atividade sem correção automática (o "produto" é um repositório real no
-  // GitHub, fora do portal) — cada tela só navega com Voltar/Próximo, sem
-  // quiz nenhum. Quem marca como concluída é o professor, na última etapa
-  // (ver renderVisto), o mesmo padrão de modelagem-dados-requisitos-trabalho.html
-  // e oficina-comunicacao-trabalho.html (mesma matéria). Este é o 1º de 6
-  // módulos do projeto interdisciplinar "Mural" (rede social da escola) —
-  // ver Atividades/Desenvolvimento de Sistemas/Projeto Mural — *.md para as
-  // próximas 5 peças (Modelagem, Banco de Dados, Redes, Dev. de Sistemas 1,
-  // Programação de Aplicativos), todas usando o MESMO repositório GitHub
-  // criado aqui.
+  // 6ª e última peça do projeto interdisciplinar "Mural". Diferente da spec
+  // original (aluno construía HTML/CSS/JS), esta atividade foi ajustada
+  // pra focar só em JAVASCRIPT: o professor entrega index.html/style.css
+  // JÁ PRONTOS (fora do portal) com os IDs documentados na ETAPA 2 abaixo —
+  // o aluno só escreve o JS que liga esses elementos às funções de
+  // app.js/mural.js escritas na peça anterior (Desenvolvimento de Sistemas
+  // 1). Sem correção automática (produto real, testado com Supabase de
+  // verdade) — visto do professor no final, mesmo padrão do ClipZone/TikTak.
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios foi contratada pela escola pra criar uma rede social interna — o **Mural** —, onde alunos e professores possam se conectar, compartilhar o que estão fazendo e ver as novidades da turma. Você faz parte do time.
+Esta é a **última das 6 peças** do projeto Mural. O Mural já tem banco (Banco de Dados) e lógica de backend (Desenvolvimento de Sistemas 1, funções em \`app.js\`/\`mural.js\`). Falta a interface que os alunos e professores vão realmente usar.
 
-Este é só o **primeiro** de 6 passos de um projeto que vai atravessar o curso inteiro, um passo por matéria: aqui você cuida do kickoff (GitHub); os próximos ficam por conta de Modelagem de Sistemas, Banco de Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e Programação de Aplicativos — todos usando o MESMO repositório que você vai criar agora.
+### Importante: HTML e CSS já vêm prontos
 
-### 1ª versão do Mural
-
-- [ ] Cadastro e login
-- [ ] Perfil (nome, turma, foto)
-- [ ] Criar post (texto)
-- [ ] Feed com posts de todos
-- [ ] Curtir um post
+O professor vai te entregar \`index.html\` e \`style.css\` **já prontos** — seu trabalho aqui é **só JavaScript**: ligar os elementos que já existem no HTML às funções que você escreveu na matéria anterior.
 
 ### O que entregar aqui
 
-Nada de código ainda — só a organização inicial: conta no GitHub, repositório, README e o plano de trabalho em issues.
+Um arquivo de JavaScript que conecta o HTML fornecido às 5 funções do backend, entregando o app funcionando de ponta a ponta: cadastro → login → perfil → feed → postar → curtir, com dados reais no Supabase.
 
 ### Como funciona aqui
 
-1. Leia os blocos de conteúdo (fases, repositório, README, issues).
-2. Faça cada ação no GitHub de verdade, conforme for pedido.
-3. Peça o visto pessoalmente ao professor no final, mostrando o repositório.`
+1. Leia os blocos de conteúdo (o contrato do HTML fornecido, e cada parte da lógica).
+2. Escreva o JavaScript no mesmo repositório \`mural-seuusuario\`, usando o HTML/CSS entregues pelo professor.
+3. Teste tudo com dados reais.
+4. Chame o professor pra conferir o app funcionando de ponta a ponta.`
     },
     {
-      titulo: 'Fases de um projeto, agora na prática',
+      titulo: 'Conheça o HTML já pronto',
       corpo: `
-Você já estudou, na trilha **Oficina de Comunicação**, as fases de elaboração de um projeto: levantamento, planejamento, desenvolvimento, testes e entrega.
+O \`index.html\` entregue pelo professor já tem os formulários, o container do feed e os botões — você não precisa (e não deve) criar HTML novo, só selecionar o que já existe e reagir a eventos.
 
-O Kickoff do Mural é a fase de **planejamento** virando ação de verdade — em vez de só documentar as fases, você vai criar a estrutura real (repositório, README, issues) do projeto que vai continuar sendo construído nas próximas matérias.
+### O contrato do HTML fornecido
 
-> Pense: em qual fase o projeto está agora? E em qual fase ele vai estar quando o Diagrama de Entidade-Relacionamento (DER) do Mural estiver pronto, na Modelagem de Sistemas?`
+- [ ] Formulário de cadastro com campos de nome, turma, usuário e senha.
+- [ ] Formulário de login com campos de usuário e senha.
+- [ ] Uma área de perfil, pra mostrar nome/turma/foto do usuário logado.
+- [ ] Um container de feed, onde cada post vira um elemento novo na tela.
+- [ ] Um formulário de novo post (campo de texto + botão publicar).
+- [ ] Um botão de curtir em cada post, com um contador ao lado.
+
+> Se o HTML do seu professor usar nomes de \`id\`/\`class\` diferentes dos que você imaginou, ajuste o seu **JavaScript** pra usar os nomes certos — nunca mude o HTML fornecido.`
     },
     {
-      titulo: 'Criar o repositório do Mural',
+      titulo: 'Cadastro',
       corpo: `
-Um **repositório** é a "casa" do projeto: todo código, documentação e histórico moram ali. O **GitHub** hospeda esse histórico na nuvem e também funciona como um portfólio: qualquer pessoa (inclusive um recrutador, no futuro) pode ver o que você construiu.
+Validação de formulário impede que dados incompletos cheguem ao banco.
 
 ### Faça
 
-1. Acesse sua conta no GitHub.
-2. Clique em **New repository**.
-3. Nome do repositório:
-§§§text
-mural-seuusuario
-§§§
-(troque \`seuusuario\` pelo seu usuário do portal — ex.: \`mural-joao\`)
-4. Marque **Public**.
-5. Marque a opção de já criar um \`README.md\`.
-6. Crie o repositório.
-
-### Entrega
-
-O projeto deverá possuir um repositório próprio no GitHub, chamado \`mural-seuusuario\`.`
+Escreva \`validarCadastro()\`: leia os valores do formulário de cadastro já existente no HTML, confira que nenhum campo está vazio e, se estiver tudo certo, chame \`cadastrarUsuario()\` (função da matéria anterior).`
     },
     {
-      titulo: 'README como cartão de visita',
+      titulo: 'Login',
       corpo: `
-O **README** é a primeira coisa que qualquer pessoa vê ao abrir o repositório — ele precisa explicar o projeto sem exigir que ninguém pergunte nada.
+O front-end chama a função de backend e reage ao resultado (sucesso/erro).
 
 ### Faça
 
-Edite o \`README.md\` do seu repositório e escreva:
-
-- [ ] **Objetivo** — o que é o Mural, com suas palavras.
-- [ ] **Funcionalidades** — a lista das 5 funcionalidades da 1ª versão.
-- [ ] **Tecnologias** — HTML, CSS, JavaScript, GitHub, Supabase.
-
-> Dica: pode editar o README direto pelo navegador, clicando no ícone de lápis na página do arquivo — não precisa de Codespace ainda.`
+Escreva \`validarLogin()\`: leia usuário/senha do formulário de login, chame \`fazerLogin()\` e, se autenticar, guarde o usuário logado (ex.: \`sessionStorage\`) e mostre o feed.`
     },
     {
-      titulo: 'Issues como plano de trabalho',
+      titulo: 'Perfil',
       corpo: `
-**Issues** (no GitHub) são tarefas — o jeito de quebrar um projeto grande em pedaços pequenos e acompanháveis, em vez de uma tarefa gigante e vaga.
+### Faça
+
+Preencha a área de perfil já existente no HTML com nome, turma e foto do usuário logado (o dado que você guardou depois do login).`
+    },
+    {
+      titulo: 'Feed',
+      corpo: `
+Renderizar uma lista dinâmica significa transformar um array de dados em elementos HTML na tela.
 
 ### Faça
 
-Na aba **Issues** do seu repositório, crie 5 issues, uma por funcionalidade:
-
-1. Cadastro e login
-2. Perfil do usuário
-3. Criar post
-4. Feed com posts de todos
-5. Curtir post
-
-Cada issue pode ficar só com o título — o objetivo aqui é planejar, não descrever tudo ainda.`
+Implemente \`renderPost()\` pra cada item retornado por \`carregarFeed()\`, inserindo dentro do container de feed já existente no HTML. Implemente \`formatarData()\` pra exibir a data de forma amigável (ex.: "há 2 horas").`
     },
     {
-      titulo: 'Documentar decisões desde o início',
+      titulo: 'Criar Post',
       corpo: `
-Decisões de projeto (nome, público-alvo, escopo) documentadas desde o começo evitam retrabalho e desalinhamento mais pra frente.
+### Faça
+
+Capture o envio do formulário de post já existente no HTML, chame \`criarPost()\` e atualize o feed na tela **sem recarregar a página**.`
+    },
+    {
+      titulo: 'Curtir',
+      corpo: `
+Um toggle de estado alterna entre dois visuais (curtido/não curtido) e mantém contador.
 
 ### Faça
 
-Adicione ao \`README.md\` uma seção:
-
-§§§text
-## Decisões de Projeto
-§§§
-
-Com:
-
-- [ ] **Nome do app** (pode manter "Mural" ou escolher outro).
-- [ ] **Público-alvo** (ex.: alunos e professores da turma/escola).`
+Implemente o clique no botão de curtir já existente no HTML, chamando \`curtir()\` e atualizando o contador de curtidas na tela.`
     },
     {
-      titulo: 'Checklist antes do visto',
+      titulo: 'Checklist final antes do visto',
       corpo: `
 Confira antes de chamar o professor:
 
-- [ ] Conta no GitHub criada.
-- [ ] Repositório \`mural-seuusuario\` criado (público, com README).
-- [ ] README com objetivo, as 5 funcionalidades, tecnologias e "Decisões de Projeto".
-- [ ] 5 issues criadas (uma por funcionalidade).
+- [ ] Cadastro e login funcionando com validação.
+- [ ] Perfil exibindo dados reais.
+- [ ] Feed renderizando posts reais, mais recentes primeiro.
+- [ ] Criar post funcionando e atualizando o feed.
+- [ ] Curtir funcionando com contador.
+- [ ] Nenhuma alteração feita no HTML/CSS fornecidos pelo professor — só JavaScript.
 
-Quando estiver tudo certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Modelagem de Sistemas.`
+Chame o professor pra conferir o app funcionando de ponta a ponta: cadastro → login → postar → curtir, com dados reais no Supabase.`
     }
   ];
 
@@ -288,8 +268,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     return t;
   }
 
-  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
-  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html.
   function mdToHtml(md) {
     const lines = md.replace(/\r\n/g, '\n').split('\n');
     let html = '';
@@ -366,7 +345,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('projeto_mural_kickoff_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+      window.reportActivity('projeto_mural_app_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
     }
   }
 
@@ -412,7 +391,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
         <div class="card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
-          <p>A próxima peça do projeto Mural (Modelagem de Sistemas) já pode ser liberada pelo professor.</p>
+          <p>Parabéns — o projeto Mural está completo, de ponta a ponta!</p>
         </div>
         ${renderNav(true, false)}
       `;
@@ -423,8 +402,8 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     stepWrap.innerHTML = `
       <div class="card visto-box">
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
-        <p>Seu repositório <code>mural-seuusuario</code> já está com README (objetivo, funcionalidades, tecnologias, decisões de projeto) e as 5 issues criadas?</p>
-        <p>Chame o professor pra conferir o repositório no GitHub. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <p>Seu app está funcionando de ponta a ponta (cadastro → login → perfil → feed → postar → curtir), usando o HTML/CSS fornecidos e dados reais no Supabase?</p>
+        <p>Chame o professor pra ver o app funcionando ao vivo. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
         <div class="visto-form">
           <label>Token do professor
             <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -474,18 +453,19 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     });
   }
 
-  // Gabarito aqui é o checklist de critérios pro professor conferir o
-  // repositório GitHub do aluno sem precisar reabrir este módulo.
+  // Gabarito aqui é o checklist de critérios pro professor conferir o app
+  // funcionando de ponta a ponta, com HTML/CSS fornecidos e JS do aluno.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto Mural — Kickoff — Checklist de correção',
-      subtitle: 'Trabalho (repositório GitHub real, fora do portal) · Introdução de Desenvolvimento de Projetos · Turma Sistemas',
+      title: 'Projeto Mural — Construa o Aplicativo — Checklist de correção',
+      subtitle: 'Trabalho (só JavaScript — HTML/CSS fornecidos pelo professor) · Programação de Aplicativos · Turma Sistemas',
       items: [
-        { number: 1, title: 'Repositório', prompt: 'O aluno criou o repositório?', answer: 'Repositório público chamado mural-<usuario>, com README inicial criado.' },
-        { number: 2, title: 'README', prompt: 'O README cobre o esperado?', answer: 'Objetivo do Mural, lista das 5 funcionalidades da 1ª versão (cadastro/login, perfil, criar post, feed, curtir), tecnologias (HTML, CSS, JavaScript, GitHub, Supabase) e seção "Decisões de Projeto" (nome + público-alvo).' },
-        { number: 3, title: 'Issues', prompt: 'As issues foram criadas?', answer: '5 issues, uma por funcionalidade: Cadastro e login; Perfil do usuário; Criar post; Feed com posts de todos; Curtir post.' }
+        { number: 1, title: 'Cadastro e login', prompt: 'Funcionam com validação?', answer: 'validarCadastro() e validarLogin() leem os campos do HTML fornecido, chamam cadastrarUsuario()/fazerLogin() e reagem ao resultado.' },
+        { number: 2, title: 'Perfil e feed', prompt: 'Exibem dados reais?', answer: 'Perfil mostra nome/turma/foto do usuário logado; feed renderiza posts reais via renderPost(), mais recentes primeiro, com formatarData().' },
+        { number: 3, title: 'Criar post e curtir', prompt: 'Funcionam sem recarregar a página?', answer: 'criarPost() atualiza o feed ao vivo; curtir() atualiza o contador de curtidas na tela.' },
+        { number: 4, title: 'HTML/CSS preservados', prompt: 'O aluno alterou o HTML/CSS fornecidos?', answer: 'Não deveria — só JavaScript deve ter sido escrito/alterado pelo aluno.' }
       ],
-      fileName: 'projeto-mural-kickoff-checklist.txt'
+      fileName: 'projeto-mural-app-checklist.txt'
     });
   };
 

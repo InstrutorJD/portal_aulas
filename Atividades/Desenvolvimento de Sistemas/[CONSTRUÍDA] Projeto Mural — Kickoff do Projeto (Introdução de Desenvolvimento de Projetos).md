@@ -40,7 +40,6 @@ Antes de escrever qualquer código, todo projeto de verdade passa por uma fase d
 
 Ao finalizar, você deverá conseguir:
 - identificar em qual fase de um projeto uma atividade está;
-- criar uma conta no GitHub;
 - criar um repositório;
 - escrever um README que serve de cartão de visita do projeto;
 - quebrar um projeto em tarefas (issues), uma por funcionalidade;
@@ -88,27 +87,17 @@ Identifique: em qual fase o projeto está agora, e em qual fase ele vai estar qu
 
 ---
 
-# ETAPA 3 — Controle de versão e GitHub
+# ETAPA 3 — Criar o repositório do Mural
 
 ## Conceito
-Times de desenvolvimento usam controle de versão (Git) pra guardar o histórico de tudo que foi feito, sem perder nada. O GitHub hospeda esse histórico na nuvem e também funciona como portfólio.
-
-## Comando
-Crie sua conta no GitHub (se ainda não tiver uma).
-
----
-
-# ETAPA 4 — Criar o repositório do Mural
-
-## Conceito
-Um repositório é a "casa" do projeto: todo código, documentação e histórico moram ali.
+Um repositório é a "casa" do projeto: todo código, documentação e histórico moram ali. Toda a turma já tem conta no GitHub — não precisa de etapa de criação de conta.
 
 ## Comando
 Crie um repositório novo, público, chamado `mural-<seuusuario>` (ex.: `mural-joao`), já marcando a opção de criar um `README.md`.
 
 ---
 
-# ETAPA 5 — README como cartão de visita
+# ETAPA 4 — README como cartão de visita
 
 ## Conceito
 O README é a primeira coisa que qualquer pessoa vê ao abrir o repositório — ele precisa explicar o projeto sem exigir que ninguém pergunte nada.
@@ -118,7 +107,7 @@ Escreva no README: objetivo do Mural, a lista das 5 funcionalidades da 1ª vers�
 
 ---
 
-# ETAPA 6 — Issues como plano de trabalho
+# ETAPA 5 — Issues como plano de trabalho
 
 ## Conceito
 Issues (no GitHub) são tarefas — o jeito de quebrar um projeto grande em pedaços pequenos e acompanháveis.
@@ -128,7 +117,7 @@ Crie 5 issues, uma por funcionalidade: "Cadastro e login", "Perfil do usuário",
 
 ---
 
-# ETAPA 7 — Documentar decisões desde o início
+# ETAPA 6 — Documentar decisões desde o início
 
 ## Conceito
 Decisões de projeto (nome, público-alvo, escopo) documentadas desde o começo evitam retrabalho e desalinhamento mais pra frente.
@@ -139,7 +128,6 @@ Adicione ao README uma seção "Decisões de Projeto" com o nome escolhido pro a
 ---
 
 # CHECKLIST DE ENTREGA
-- [ ] Conta no GitHub criada.
 - [ ] Repositório `mural-<usuario>` criado (público, com README).
 - [ ] README com objetivo, as 5 funcionalidades, tecnologias e "Decisões de Projeto".
 - [ ] 5 issues criadas (uma por funcionalidade).

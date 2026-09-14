@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Trabalho: Kickoff do Projeto Mural</title>
+<title>PixelForge Studios — Mural: Como o Mural Conversa com a Internet</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -94,7 +94,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'projeto_mural_kickoff_trabalho';
+  window.ACTIVITY_LOCATION = 'redes_servicos_mural_pratica';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -109,8 +109,8 @@
 
 <div class="env">
   <div class="topbar">
-    <div>INTRODUÇÃO DE DESENVOLVIMENTO DE PROJETOS — TRABALHO: KICKOFF DO PROJETO MURAL</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">7</span></div>
+    <div>REDES DE COMPUTADORES — MURAL: COMO O MURAL CONVERSA COM A INTERNET</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -122,137 +122,94 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `projeto_mural_kickoff_trabalho_progress_${username}`;
-  const STEP_KEY = `projeto_mural_kickoff_trabalho_step_${username}`;
+  const PROGRESS_KEY = `redes_servicos_mural_pratica_progress_${username}`;
+  const STEP_KEY = `redes_servicos_mural_pratica_step_${username}`;
 
-  // Atividade sem correção automática (o "produto" é um repositório real no
-  // GitHub, fora do portal) — cada tela só navega com Voltar/Próximo, sem
-  // quiz nenhum. Quem marca como concluída é o professor, na última etapa
-  // (ver renderVisto), o mesmo padrão de modelagem-dados-requisitos-trabalho.html
-  // e oficina-comunicacao-trabalho.html (mesma matéria). Este é o 1º de 6
-  // módulos do projeto interdisciplinar "Mural" (rede social da escola) —
-  // ver Atividades/Desenvolvimento de Sistemas/Projeto Mural — *.md para as
-  // próximas 5 peças (Modelagem, Banco de Dados, Redes, Dev. de Sistemas 1,
-  // Programação de Aplicativos), todas usando o MESMO repositório GitHub
-  // criado aqui.
+  // 4ª de 6 peças do projeto interdisciplinar "Mural" — módulo EXTRA dentro
+  // da trilha JÁ EXISTENTE "Serviços de Internet e Modelos" (não é trilha
+  // nova, pra não duplicar a capacidade sem necessidade — ver config.js,
+  // requires:'pratica'). Usa o banco Supabase criado na peça 3 (Banco de
+  // Dados) pra observar tráfego HTTP real com o DevTools. Sem correção
+  // automática — visto do professor no final.
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios foi contratada pela escola pra criar uma rede social interna — o **Mural** —, onde alunos e professores possam se conectar, compartilhar o que estão fazendo e ver as novidades da turma. Você faz parte do time.
+Esta é a **4ª de 6 peças** do projeto Mural. O time de Redes da PixelForge Studios precisa garantir que a comunicação entre o navegador do usuário e o servidor do Mural (Supabase) é entendida e monitorável.
 
-Este é só o **primeiro** de 6 passos de um projeto que vai atravessar o curso inteiro, um passo por matéria: aqui você cuida do kickoff (GitHub); os próximos ficam por conta de Modelagem de Sistemas, Banco de Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e Programação de Aplicativos — todos usando o MESMO repositório que você vai criar agora.
-
-### 1ª versão do Mural
-
-- [ ] Cadastro e login
-- [ ] Perfil (nome, turma, foto)
-- [ ] Criar post (texto)
-- [ ] Feed com posts de todos
-- [ ] Curtir um post
+Você vai abrir o Mural (ou só o projeto Supabase da peça de Banco de Dados), inspecionar o tráfego real com o **DevTools** e responder sobre o que está vendo.
 
 ### O que entregar aqui
 
-Nada de código ainda — só a organização inicial: conta no GitHub, repositório, README e o plano de trabalho em issues.
+Anotações sobre a requisição HTTP real observada: método, URL, headers, papel do DNS, HTTPS, um status code de erro provocado de propósito, e a relação com a camada de aplicação do modelo TCP/IP.
 
 ### Como funciona aqui
 
-1. Leia os blocos de conteúdo (fases, repositório, README, issues).
-2. Faça cada ação no GitHub de verdade, conforme for pedido.
-3. Peça o visto pessoalmente ao professor no final, mostrando o repositório.`
+1. Leia os blocos de conteúdo.
+2. Abra o DevTools de verdade e observe o tráfego.
+3. Responda cada comando por escrito (num arquivo, README ou papel — o professor confere na hora do visto).
+4. Peça o visto pessoalmente ao professor.`
     },
     {
-      titulo: 'Fases de um projeto, agora na prática',
+      titulo: 'Requisição HTTP',
       corpo: `
-Você já estudou, na trilha **Oficina de Comunicação**, as fases de elaboração de um projeto: levantamento, planejamento, desenvolvimento, testes e entrega.
-
-O Kickoff do Mural é a fase de **planejamento** virando ação de verdade — em vez de só documentar as fases, você vai criar a estrutura real (repositório, README, issues) do projeto que vai continuar sendo construído nas próximas matérias.
-
-> Pense: em qual fase o projeto está agora? E em qual fase ele vai estar quando o Diagrama de Entidade-Relacionamento (DER) do Mural estiver pronto, na Modelagem de Sistemas?`
-    },
-    {
-      titulo: 'Criar o repositório do Mural',
-      corpo: `
-Um **repositório** é a "casa" do projeto: todo código, documentação e histórico moram ali. O **GitHub** hospeda esse histórico na nuvem e também funciona como um portfólio: qualquer pessoa (inclusive um recrutador, no futuro) pode ver o que você construiu.
+Uma requisição HTTP tem **método** (GET/POST/...), **URL**, **headers** e, em alguns casos, **corpo**.
 
 ### Faça
 
-1. Acesse sua conta no GitHub.
-2. Clique em **New repository**.
-3. Nome do repositório:
-§§§text
-mural-seuusuario
-§§§
-(troque \`seuusuario\` pelo seu usuário do portal — ex.: \`mural-joao\`)
-4. Marque **Public**.
-5. Marque a opção de já criar um \`README.md\`.
-6. Crie o repositório.
-
-### Entrega
-
-O projeto deverá possuir um repositório próprio no GitHub, chamado \`mural-seuusuario\`.`
+1. Abra o DevTools (aba **Network**) do navegador.
+2. Faça login ou carregue o feed do Mural (ou dispare uma consulta no SQL Editor/Data API do projeto Supabase \`mural\`).
+3. Encontre a requisição pro seu projeto Supabase.
+4. Anote o **método**, a **URL** e **2 headers**.`
     },
     {
-      titulo: 'README como cartão de visita',
+      titulo: 'DNS',
       corpo: `
-O **README** é a primeira coisa que qualquer pessoa vê ao abrir o repositório — ele precisa explicar o projeto sem exigir que ninguém pergunte nada.
+**DNS** traduz um domínio (nome) em endereço IP, pra o navegador saber pra onde mandar a requisição.
 
 ### Faça
 
-Edite o \`README.md\` do seu repositório e escreva:
-
-- [ ] **Objetivo** — o que é o Mural, com suas palavras.
-- [ ] **Funcionalidades** — a lista das 5 funcionalidades da 1ª versão.
-- [ ] **Tecnologias** — HTML, CSS, JavaScript, GitHub, Supabase.
-
-> Dica: pode editar o README direto pelo navegador, clicando no ícone de lápis na página do arquivo — não precisa de Codespace ainda.`
+Identifique o domínio \`*.supabase.co\` na requisição e explique o que aconteceria se o DNS não conseguisse resolvê-lo.`
     },
     {
-      titulo: 'Issues como plano de trabalho',
+      titulo: 'HTTPS',
       corpo: `
-**Issues** (no GitHub) são tarefas — o jeito de quebrar um projeto grande em pedaços pequenos e acompanháveis, em vez de uma tarefa gigante e vaga.
+**HTTPS** criptografa a comunicação — essencial quando trafegam dados como senha.
 
 ### Faça
 
-Na aba **Issues** do seu repositório, crie 5 issues, uma por funcionalidade:
-
-1. Cadastro e login
-2. Perfil do usuário
-3. Criar post
-4. Feed com posts de todos
-5. Curtir post
-
-Cada issue pode ficar só com o título — o objetivo aqui é planejar, não descrever tudo ainda.`
+Confira o cadeado do navegador e o protocolo (\`https://\`) na URL da requisição.`
     },
     {
-      titulo: 'Documentar decisões desde o início',
+      titulo: 'Status code',
       corpo: `
-Decisões de projeto (nome, público-alvo, escopo) documentadas desde o começo evitam retrabalho e desalinhamento mais pra frente.
+O **status code** (200 OK, 201 Created, 401 Unauthorized, 403 Forbidden) diz o resultado da requisição.
 
 ### Faça
 
-Adicione ao \`README.md\` uma seção:
-
-§§§text
-## Decisões de Projeto
-§§§
-
-Com:
-
-- [ ] **Nome do app** (pode manter "Mural" ou escolher outro).
-- [ ] **Público-alvo** (ex.: alunos e professores da turma/escola).`
+Force um erro (ex.: desative temporariamente uma policy de RLS no Supabase, ou tente uma operação sem permissão) e leia o status code retornado na aba Network. Depois, reative a policy.`
     },
     {
-      titulo: 'Checklist antes do visto',
+      titulo: 'Camada de aplicação',
+      corpo: `
+No modelo TCP/IP, HTTP roda na **camada de aplicação** — a mais próxima do usuário.
+
+### Faça
+
+Relacione a requisição observada com a camada de aplicação, explicando o que aconteceria se essa camada não existisse.`
+    },
+    {
+      titulo: 'Checklist final antes do visto',
       corpo: `
 Confira antes de chamar o professor:
 
-- [ ] Conta no GitHub criada.
-- [ ] Repositório \`mural-seuusuario\` criado (público, com README).
-- [ ] README com objetivo, as 5 funcionalidades, tecnologias e "Decisões de Projeto".
-- [ ] 5 issues criadas (uma por funcionalidade).
+- [ ] Requisição HTTP real identificada (método/URL/headers).
+- [ ] Domínio Supabase e papel do DNS explicados.
+- [ ] HTTPS conferido.
+- [ ] Status code de erro observado e explicado.
+- [ ] Camada de aplicação relacionada à requisição.
 
-Quando estiver tudo certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Modelagem de Sistemas.`
+Quando tudo estiver certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Desenvolvimento de Sistemas 1.`
     }
   ];
 
@@ -288,8 +245,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     return t;
   }
 
-  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
-  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html.
   function mdToHtml(md) {
     const lines = md.replace(/\r\n/g, '\n').split('\n');
     let html = '';
@@ -366,7 +322,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('projeto_mural_kickoff_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+      window.reportActivity('redes_servicos_mural_pratica', label, { step: currentIndex + 1, total: STEPS.length + 1 });
     }
   }
 
@@ -412,7 +368,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
         <div class="card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
-          <p>A próxima peça do projeto Mural (Modelagem de Sistemas) já pode ser liberada pelo professor.</p>
+          <p>A próxima peça do projeto Mural (Desenvolvimento de Sistemas 1) já pode ser liberada pelo professor.</p>
         </div>
         ${renderNav(true, false)}
       `;
@@ -423,8 +379,8 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     stepWrap.innerHTML = `
       <div class="card visto-box">
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
-        <p>Seu repositório <code>mural-seuusuario</code> já está com README (objetivo, funcionalidades, tecnologias, decisões de projeto) e as 5 issues criadas?</p>
-        <p>Chame o professor pra conferir o repositório no GitHub. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <p>Você já observou a requisição HTTP real (DevTools), identificou DNS/HTTPS, provocou e leu um status code de erro, e relacionou tudo à camada de aplicação?</p>
+        <p>Chame o professor pra conferir suas anotações. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
         <div class="visto-form">
           <label>Token do professor
             <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -474,18 +430,19 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     });
   }
 
-  // Gabarito aqui é o checklist de critérios pro professor conferir o
-  // repositório GitHub do aluno sem precisar reabrir este módulo.
+  // Gabarito aqui é o checklist de critérios pro professor conferir as
+  // observações do aluno sobre o tráfego HTTP real do projeto Mural.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto Mural — Kickoff — Checklist de correção',
-      subtitle: 'Trabalho (repositório GitHub real, fora do portal) · Introdução de Desenvolvimento de Projetos · Turma Sistemas',
+      title: 'Projeto Mural — Como o Mural Conversa com a Internet — Checklist de correção',
+      subtitle: 'Módulo extra (observação real com DevTools) · Serviços de Internet e Modelos · Turma Sistemas',
       items: [
-        { number: 1, title: 'Repositório', prompt: 'O aluno criou o repositório?', answer: 'Repositório público chamado mural-<usuario>, com README inicial criado.' },
-        { number: 2, title: 'README', prompt: 'O README cobre o esperado?', answer: 'Objetivo do Mural, lista das 5 funcionalidades da 1ª versão (cadastro/login, perfil, criar post, feed, curtir), tecnologias (HTML, CSS, JavaScript, GitHub, Supabase) e seção "Decisões de Projeto" (nome + público-alvo).' },
-        { number: 3, title: 'Issues', prompt: 'As issues foram criadas?', answer: '5 issues, uma por funcionalidade: Cadastro e login; Perfil do usuário; Criar post; Feed com posts de todos; Curtir post.' }
+        { number: 1, title: 'Requisição HTTP', prompt: 'O aluno identificou uma requisição real?', answer: 'Método (GET/POST), URL do projeto Supabase e pelo menos 2 headers anotados a partir do DevTools.' },
+        { number: 2, title: 'DNS e HTTPS', prompt: 'As explicações estão corretas?', answer: 'Domínio *.supabase.co reconhecido, com explicação do papel do DNS; cadeado/HTTPS conferido na URL.' },
+        { number: 3, title: 'Status code', prompt: 'O aluno observou e explicou um erro real?', answer: 'Status code de erro (401/403, tipicamente) provocado de propósito (ex.: policy de RLS desativada) e relacionado à causa.' },
+        { number: 4, title: 'Camada de aplicação', prompt: 'A relação com o modelo TCP/IP está correta?', answer: 'HTTP relacionado à camada de aplicação do modelo TCP/IP, com explicação do que aconteceria sem essa camada.' }
       ],
-      fileName: 'projeto-mural-kickoff-checklist.txt'
+      fileName: 'projeto-mural-redes-checklist.txt'
     });
   };
 

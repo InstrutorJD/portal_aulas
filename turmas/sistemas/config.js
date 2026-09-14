@@ -91,6 +91,28 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // 3ª de 6 peças do projeto interdisciplinar "Mural" (ver
+          // projeto-mural-kickoff-trabalho.html, matéria Introdução de
+          // Desenvolvimento de Projetos, pra 1ª peça, e
+          // projeto-mural-modelagem-trabalho.html, matéria Modelagem de
+          // Sistemas 1, pra 2ª). O DER da peça anterior vira tabelas reais
+          // num projeto Supabase próprio, com RLS — mesmo padrão de ponta a
+          // ponta de "Conexão com Supabase" (TikTak), aplicado ao Mural.
+          key: 'projeto-mural-banco-dados',
+          label: 'Mural — Banco de Dados e RLS',
+          desc: 'Projeto integrador: crie, num projeto Supabase próprio, as 3 tabelas do DER do Mural (usuários, posts, curtidas), com chaves estrangeiras e políticas de RLS.',
+          capacidade: 'Aplicar procedimentos de segurança e backup no SGBD.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Mural: Banco de Dados e RLS',
+              desc: 'Criem o projeto Supabase mural, as 3 tabelas do DER com FK, habilitem RLS e criem as policies de leitura/inserção/atualização. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🗄️', src: 'atividades/projeto-mural-banco-dados-trabalho.html',
+              progressKey: 'projeto_mural_banco_dados_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },
@@ -190,6 +212,28 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // 5ª de 6 peças do projeto interdisciplinar "Mural" — a PRIMEIRA
+          // peça com código de verdade (ver
+          // projeto-mural-banco-dados-trabalho.html, matéria Banco de
+          // Dados, pra 3ª peça). Aluno escreve, em JavaScript, as funções
+          // que usam supabase-js pra implementar o MVP do Mural. Só
+          // JavaScript aqui — a interface (HTML/CSS) já vem pronta na
+          // próxima peça (Programação de Aplicativos).
+          key: 'projeto-mural-backend',
+          label: 'Mural — Lógica de Backend com Supabase',
+          desc: 'Projeto integrador: escrevam, em JavaScript, as funções (cadastrarUsuario, fazerLogin, criarPost, carregarFeed, curtir) que usam supabase-js pra implementar o backend do Mural.',
+          capacidade: 'Aplicar linguagem de programação por meio de apis, bibliotecas, frameworks na construção de rotinas de software.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Mural: Lógica de Backend com Supabase',
+              desc: 'Escrevam as 5 funções assíncronas do backend do Mural em JavaScript, com supabase-js e tratamento de erro. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '⚙️', src: 'atividades/projeto-mural-backend-trabalho.html',
+              progressKey: 'projeto_mural_backend_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },
@@ -260,6 +304,20 @@ window.TURMA_CONFIG_SISTEMAS = {
               icon: '🛰️', src: 'atividades/redes-servicos-pratica.html',
               progressKey: 'redes_servicos_pratica_progress_', progressTotal: 5,
               requires: 'teoria', hasGabarito: true
+            },
+            {
+              // 4ª de 6 peças do projeto interdisciplinar "Mural" — módulo
+              // EXTRA dentro desta trilha JÁ EXISTENTE (não é trilha nova,
+              // pra não duplicar a capacidade sem necessidade). Usa o banco
+              // Supabase da peça anterior (Banco de Dados) pra observar
+              // tráfego HTTP real com o DevTools. Sem correção automática —
+              // visto do professor no final, mesmo padrão dos demais
+              // trabalhos do projeto Mural.
+              key: 'pratica-mural', title: 'Mural — Como o Mural Conversa com a Internet',
+              desc: 'Usem o projeto Supabase do Mural pra observar, no DevTools, uma requisição HTTP real: método, URL, headers, DNS, HTTPS, status code e a camada de aplicação. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🌐', src: 'atividades/redes-servicos-mural-pratica.html',
+              progressKey: 'redes_servicos_mural_pratica_progress_', progressMode: 'flag',
+              requires: 'pratica', hasGabarito: true
             }
           ]
         },
@@ -407,6 +465,29 @@ window.TURMA_CONFIG_SISTEMAS = {
               icon: '📝', src: 'atividades/modelagem-dados-requisitos-questionario.html',
               progressKey: 'modelagem_dados_requisitos_questionario_progress_', progressMode: 'flag',
               requires: 'trabalho', hasSlides: true, hasGabarito: true
+            }
+          ]
+        },
+        {
+          // 2ª de 6 peças do projeto interdisciplinar "Mural" (ver
+          // projeto-mural-kickoff-trabalho.html, matéria Introdução de
+          // Desenvolvimento de Projetos, pra 1ª peça). Reaproveita a MESMA
+          // capacidade da trilha "Modelagem de Dados e Requisitos" (acima,
+          // mesma matéria) — produto diferente (DER real do projeto Mural,
+          // commitado no repositório GitHub, não uma apresentação isolada)
+          // — por isso não repete o questionário já coberto por aquela
+          // trilha.
+          key: 'projeto-mural-modelagem',
+          label: 'Mural — Modelagem de Dados e Requisitos',
+          desc: 'Projeto integrador: modelem os requisitos e os dados do Mural (entidades, atributos, cardinalidade, chaves) e desenhem o DER, commitado no MESMO repositório GitHub criado no Kickoff.',
+          capacidade: 'Elaborar modelo de dados e definir requisitos funcionais e não funcionais de um sistema.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Mural: Modelagem de Dados e Requisitos',
+              desc: 'Levantem os requisitos funcionais/não funcionais do Mural, modelem as entidades/atributos/relacionamentos e desenhem o DER, commitado em docs/der.png. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🧩', src: 'atividades/projeto-mural-modelagem-trabalho.html',
+              progressKey: 'projeto_mural_modelagem_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
             }
           ]
         }
@@ -637,6 +718,28 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'A PixelForge Studios te contratou! Cada desafio resolvido entra ao vivo no seu app — tela de login e feed. No final, apresente o app pronto pro professor.',
               icon: '📱', src: 'atividades/clipzone-construcao.html',
               progressKey: 'clipzone_construcao_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
+          // 6ª e última peça do projeto interdisciplinar "Mural" (ver
+          // projeto-mural-backend-trabalho.html, matéria Desenvolvimento de
+          // Sistemas 1, pra 5ª peça). Diferente da spec original do projeto
+          // (aluno construía HTML/CSS/JS), esta peça foi ajustada pra focar
+          // só em JAVASCRIPT: o professor entrega index.html/style.css já
+          // prontos (fora do portal) e o aluno só escreve o JS que liga
+          // esses elementos às funções da peça anterior.
+          key: 'projeto-mural-app',
+          label: 'Mural — Construa o Aplicativo',
+          desc: 'Projeto integrador: com o HTML/CSS já entregues pelo professor, escrevam o JavaScript que liga a interface às funções de backend da peça anterior — cadastro, login, perfil, feed, postar e curtir, com dados reais.',
+          capacidade: 'Aplicar, de forma integrada, lógica de programação, manipulação de objetos e validação de formulário na construção de um aplicativo completo em JavaScript.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Mural: Construa o Aplicativo (JavaScript)',
+              desc: 'Liguem o HTML/CSS fornecidos pelo professor às funções de backend já escritas — cadastro, login, perfil, feed, criar post e curtir, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '📱', src: 'atividades/projeto-mural-app-trabalho.html',
+              progressKey: 'projeto_mural_app_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]

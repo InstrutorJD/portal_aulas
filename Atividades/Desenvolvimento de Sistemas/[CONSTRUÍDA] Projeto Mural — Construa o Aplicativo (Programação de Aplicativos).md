@@ -1,5 +1,13 @@
 # Projeto Mural — Construa o Aplicativo
 
+> **NOTA DE IMPLEMENTAÇÃO:** ao construir esta peça no portal, o escopo foi
+> ajustado pra focar só em **JavaScript** — o professor entrega
+> `index.html`/`style.css` já prontos (fora do portal), e o aluno só
+> escreve o JS que liga esses elementos às funções da matéria anterior.
+> As etapas abaixo (1-6) continuam valendo como lógica a implementar; a
+> ETAPA 7 (escolher tema visual) foi removida, já que o CSS já vem pronto.
+> Ver `turmas/sistemas/atividades/projeto-mural-app-trabalho.html`.
+
 ## 1. Apresentação
 6ª e última etapa do projeto Mural. O aluno constrói a interface (HTML/CSS/JS) que chama as funções REAIS escritas na matéria anterior, entregando o app funcionando de ponta a ponta: cadastro → login → perfil → feed → postar → curtir.
 

@@ -340,10 +340,11 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(row).toContainText('8.00');  // média B2
     await expect(row).toContainText('9.00');  // média geral (10 e 8, sem B3/B4)
     await expect(row).toContainText('85/100'); // nota da prova, em pontos — nunca em %
-    // Banco de Dados tem 6 módulos ao todo (sql: teoria/basico/join/agregacao +
-    // sql-comentarios: teoria + db-conexao-supabase: pratica).
-    // 3 concluídos, 3 nunca abertos => 3/6 = 50%.
-    await expect(row).toContainText('50%');
+    // Banco de Dados tem 7 módulos ao todo (sql: teoria/basico/join/agregacao +
+    // sql-comentarios: teoria + db-conexao-supabase: pratica +
+    // projeto-mural-banco-dados: trabalho).
+    // 3 concluídos, 4 nunca abertos => 3/7 ≈ 43%.
+    await expect(row).toContainText('43%');
     // Pior desempenho (maioria das matérias abaixo de 50%) sai destacado.
     await expect(row).toHaveClass(/pior/);
     await expect(row).toContainText('⚠️');

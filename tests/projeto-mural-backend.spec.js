@@ -1,15 +1,13 @@
 // @ts-check
-// Trilha "Kickoff: Rede Social da Escola (Mural)" (Introdução de
-// Desenvolvimento de Projetos, turma Sistemas) — 1ª peça do projeto
-// interdisciplinar "Mural": o aluno cria um repositório real no GitHub
-// (fora do portal) e só navega pelas telas com Voltar/Próximo; quem marca
-// como concluída é o professor, dando "visto" com um token temporário
-// (mesmo padrão de oficina-comunicacao-trabalho.html e
-// modelagem-dados-requisitos-trabalho.html).
+// Trilha "Mural — Lógica de Backend com Supabase" (Desenvolvimento de
+// Sistemas 1, turma Sistemas) — 5ª de 6 peças do projeto interdisciplinar
+// Mural (ver tests/projeto-mural-kickoff.spec.js pra 1ª peça). Aluno navega
+// pelas telas com Voltar/Próximo e o professor dá "visto" com um token
+// temporário (mesmo padrão de projeto-mural-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-kickoff-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-backend-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
 const TOKEN_VALIDO = '482913';
 
@@ -28,16 +26,16 @@ async function darVisto(page, token) {
   await page.click('#btnDarVisto');
 }
 
-test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
+test.describe('turmas/sistemas — trilha Mural: Lógica de Backend com Supabase', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Introdução de Desenvolvimento de Projetos, ao lado da Oficina de Comunicação', async ({ page }) => {
+  test('aparece na matéria Desenvolvimento de Sistemas 1, ao lado das demais trilhas', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Introdução de Desenvolvimento de Projetos")');
-    await page.selectOption('#trilhaSelect', 'projeto-mural-kickoff');
-    await expect(page.locator('#moduleSelector_projeto-mural-kickoff')).toContainText('Kickoff do Projeto Mural (GitHub)');
+    await page.click('.game-card:has-text("Desenvolvimento de Sistemas 1")');
+    await page.selectOption('#trilhaSelect', 'projeto-mural-backend');
+    await expect(page.locator('#moduleSelector_projeto-mural-backend')).toContainText('Mural: Lógica de Backend com Supabase');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
@@ -45,15 +43,15 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Fases de um projeto, agora na prática');
+    await expect(page.locator('.card h2')).toHaveText('Biblioteca vs. requisição na mão');
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Criar o repositório do Mural');
+    await expect(page.locator('.card h2')).toHaveText('cadastrarUsuario');
 
     await page.reload();
-    await expect(page.locator('.card h2')).toHaveText('Criar o repositório do Mural');
+    await expect(page.locator('.card h2')).toHaveText('cadastrarUsuario');
 
     await page.click('#btnBack');
-    await expect(page.locator('.card h2')).toHaveText('Fases de um projeto, agora na prática');
+    await expect(page.locator('.card h2')).toHaveText('Biblioteca vs. requisição na mão');
   });
 
   test('depois da última tela de conteúdo, chega na tela de visto do professor', async ({ page }) => {
@@ -72,7 +70,7 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
     await darVisto(page, '000000');
     await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
-    const progress = await page.evaluate(u => localStorage.getItem(`projeto_mural_kickoff_trabalho_progress_${u}`), 'alexandre.natal');
+    const progress = await page.evaluate(u => localStorage.getItem(`projeto_mural_backend_trabalho_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
@@ -85,10 +83,9 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_mural_kickoff_trabalho_progress_${u}`)), 'alexandre.natal');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_mural_backend_trabalho_progress_${u}`)), 'alexandre.natal');
     expect(progress).toMatchObject({ completed: true, vistoPor: 'Instrutor / Professor' });
 
-    // Recarregar mostra a tela de concluído, não o formulário de novo.
     await page.reload();
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
   });

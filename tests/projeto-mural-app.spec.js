@@ -1,15 +1,15 @@
 // @ts-check
-// Trilha "Kickoff: Rede Social da Escola (Mural)" (Introdução de
-// Desenvolvimento de Projetos, turma Sistemas) — 1ª peça do projeto
-// interdisciplinar "Mural": o aluno cria um repositório real no GitHub
-// (fora do portal) e só navega pelas telas com Voltar/Próximo; quem marca
-// como concluída é o professor, dando "visto" com um token temporário
-// (mesmo padrão de oficina-comunicacao-trabalho.html e
-// modelagem-dados-requisitos-trabalho.html).
+// Trilha "Mural — Construa o Aplicativo" (Programação de Aplicativos,
+// turma Sistemas) — 6ª e última peça do projeto interdisciplinar Mural (ver
+// tests/projeto-mural-kickoff.spec.js pra 1ª peça). Diferente da spec
+// original, o aluno só escreve JavaScript aqui — o HTML/CSS já vem pronto,
+// entregue pelo professor. Aluno navega pelas telas com Voltar/Próximo e o
+// professor dá "visto" com um token temporário (mesmo padrão de
+// projeto-mural-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-kickoff-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-app-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
 const TOKEN_VALIDO = '482913';
 
@@ -28,16 +28,21 @@ async function darVisto(page, token) {
   await page.click('#btnDarVisto');
 }
 
-test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
+test.describe('turmas/sistemas — trilha Mural: Construa o Aplicativo', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Introdução de Desenvolvimento de Projetos, ao lado da Oficina de Comunicação', async ({ page }) => {
+  test('aparece na matéria Programação de Aplicativos, ao lado do ClipZone', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Introdução de Desenvolvimento de Projetos")');
-    await page.selectOption('#trilhaSelect', 'projeto-mural-kickoff');
-    await expect(page.locator('#moduleSelector_projeto-mural-kickoff')).toContainText('Kickoff do Projeto Mural (GitHub)');
+    await page.click('.game-card:has-text("Programação de Aplicativos")');
+    await page.selectOption('#trilhaSelect', 'projeto-mural-app');
+    await expect(page.locator('#moduleSelector_projeto-mural-app')).toContainText('Mural: Construa o Aplicativo (JavaScript)');
+  });
+
+  test('a apresentação explica que o HTML/CSS já vêm prontos', async ({ page }) => {
+    await page.goto(ACTIVITY_URL);
+    await expect(page.locator('.card')).toContainText('HTML e CSS já vêm prontos');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
@@ -45,15 +50,15 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Fases de um projeto, agora na prática');
+    await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Criar o repositório do Mural');
+    await expect(page.locator('.card h2')).toHaveText('Cadastro');
 
     await page.reload();
-    await expect(page.locator('.card h2')).toHaveText('Criar o repositório do Mural');
+    await expect(page.locator('.card h2')).toHaveText('Cadastro');
 
     await page.click('#btnBack');
-    await expect(page.locator('.card h2')).toHaveText('Fases de um projeto, agora na prática');
+    await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
   });
 
   test('depois da última tela de conteúdo, chega na tela de visto do professor', async ({ page }) => {
@@ -72,7 +77,7 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
     await darVisto(page, '000000');
     await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
-    const progress = await page.evaluate(u => localStorage.getItem(`projeto_mural_kickoff_trabalho_progress_${u}`), 'alexandre.natal');
+    const progress = await page.evaluate(u => localStorage.getItem(`projeto_mural_app_trabalho_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
@@ -85,10 +90,9 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto Mural', () => {
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_mural_kickoff_trabalho_progress_${u}`)), 'alexandre.natal');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_mural_app_trabalho_progress_${u}`)), 'alexandre.natal');
     expect(progress).toMatchObject({ completed: true, vistoPor: 'Instrutor / Professor' });
 
-    // Recarregar mostra a tela de concluído, não o formulário de novo.
     await page.reload();
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
   });
