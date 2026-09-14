@@ -93,23 +93,23 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 3ª de 6 peças do projeto interdisciplinar "Mural" (ver
-          // projeto-mural-kickoff-trabalho.html, matéria Introdução de
+          // 3ª de 6 peças do projeto interdisciplinar "FinancApp" (ver
+          // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
           // Desenvolvimento de Projetos, pra 1ª peça, e
-          // projeto-mural-modelagem-trabalho.html, matéria Modelagem de
+          // projeto-financapp-modelagem-trabalho.html, matéria Modelagem de
           // Sistemas 1, pra 2ª). O DER da peça anterior vira tabelas reais
           // num projeto Supabase próprio, com RLS — mesmo padrão de ponta a
-          // ponta de "Conexão com Supabase" (TikTak), aplicado ao Mural.
-          key: 'projeto-mural-banco-dados',
-          label: 'Mural — Banco de Dados e RLS',
-          desc: 'Projeto integrador: crie, num projeto Supabase próprio, as 3 tabelas do DER do Mural (usuários, posts, curtidas), com chaves estrangeiras e políticas de RLS.',
+          // ponta de "Conexão com Supabase" (TikTak), aplicado ao FinancApp.
+          key: 'projeto-financapp-banco-dados',
+          label: 'FinancApp — Banco de Dados e RLS',
+          desc: 'Projeto integrador: crie, num projeto Supabase próprio, as 4 tabelas do DER do FinancApp (usuários, lançamentos, tags, lancamento_tags — a última é a junção do relacionamento N:N), com chaves estrangeiras e políticas de RLS.',
           capacidade: 'Aplicar procedimentos de segurança e backup no SGBD.',
           modules: [
             {
-              key: 'trabalho', title: 'Trabalho — Mural: Banco de Dados e RLS',
-              desc: 'Criem o projeto Supabase mural, as 3 tabelas do DER com FK, habilitem RLS e criem as policies de leitura/inserção/atualização. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🗄️', src: 'atividades/projeto-mural-banco-dados-trabalho.html',
-              progressKey: 'projeto_mural_banco_dados_trabalho_progress_', progressMode: 'flag',
+              key: 'trabalho', title: 'Trabalho — FinancApp: Banco de Dados e RLS',
+              desc: 'Criem o projeto Supabase financapp, as 4 tabelas do DER com FK, habilitem RLS e criem as policies de leitura/inserção/atualização. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🗄️', src: 'atividades/projeto-financapp-banco-dados-trabalho.html',
+              progressKey: 'projeto_financapp_banco_dados_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]
@@ -214,23 +214,23 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 5ª de 6 peças do projeto interdisciplinar "Mural" — a PRIMEIRA
-          // peça com código de verdade (ver
-          // projeto-mural-banco-dados-trabalho.html, matéria Banco de
+          // 5ª de 6 peças do projeto interdisciplinar "FinancApp" — a
+          // PRIMEIRA peça com código de verdade (ver
+          // projeto-financapp-banco-dados-trabalho.html, matéria Banco de
           // Dados, pra 3ª peça). Aluno escreve, em JavaScript, as funções
-          // que usam supabase-js pra implementar o MVP do Mural. Só
+          // que usam supabase-js pra implementar o MVP do FinancApp. Só
           // JavaScript aqui — a interface (HTML/CSS) já vem pronta na
           // próxima peça (Programação de Aplicativos).
-          key: 'projeto-mural-backend',
-          label: 'Mural — Lógica de Backend com Supabase',
-          desc: 'Projeto integrador: escrevam, em JavaScript, as funções (cadastrarUsuario, fazerLogin, criarPost, carregarFeed, curtir) que usam supabase-js pra implementar o backend do Mural.',
+          key: 'projeto-financapp-backend',
+          label: 'FinancApp — Lógica de Backend com Supabase',
+          desc: 'Projeto integrador: escrevam, em JavaScript, as funções (cadastrarUsuario, fazerLogin, criarLancamento, carregarLancamentos, adicionarTag) que usam supabase-js pra implementar o backend do FinancApp.',
           capacidade: 'Aplicar linguagem de programação por meio de apis, bibliotecas, frameworks na construção de rotinas de software.',
           modules: [
             {
-              key: 'trabalho', title: 'Trabalho — Mural: Lógica de Backend com Supabase',
-              desc: 'Escrevam as 5 funções assíncronas do backend do Mural em JavaScript, com supabase-js e tratamento de erro. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '⚙️', src: 'atividades/projeto-mural-backend-trabalho.html',
-              progressKey: 'projeto_mural_backend_trabalho_progress_', progressMode: 'flag',
+              key: 'trabalho', title: 'Trabalho — FinancApp: Lógica de Backend com Supabase',
+              desc: 'Escrevam as 5 funções assíncronas do backend do FinancApp em JavaScript, com supabase-js e tratamento de erro. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '⚙️', src: 'atividades/projeto-financapp-backend-trabalho.html',
+              progressKey: 'projeto_financapp_backend_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]
@@ -306,17 +306,17 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             },
             {
-              // 4ª de 6 peças do projeto interdisciplinar "Mural" — módulo
-              // EXTRA dentro desta trilha JÁ EXISTENTE (não é trilha nova,
-              // pra não duplicar a capacidade sem necessidade). Usa o banco
-              // Supabase da peça anterior (Banco de Dados) pra observar
-              // tráfego HTTP real com o DevTools. Sem correção automática —
-              // visto do professor no final, mesmo padrão dos demais
-              // trabalhos do projeto Mural.
-              key: 'pratica-mural', title: 'Mural — Como o Mural Conversa com a Internet',
-              desc: 'Usem o projeto Supabase do Mural pra observar, no DevTools, uma requisição HTTP real: método, URL, headers, DNS, HTTPS, status code e a camada de aplicação. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🌐', src: 'atividades/redes-servicos-mural-pratica.html',
-              progressKey: 'redes_servicos_mural_pratica_progress_', progressMode: 'flag',
+              // 4ª de 6 peças do projeto interdisciplinar "FinancApp" —
+              // módulo EXTRA dentro desta trilha JÁ EXISTENTE (não é trilha
+              // nova, pra não duplicar a capacidade sem necessidade). Usa o
+              // banco Supabase da peça anterior (Banco de Dados) pra
+              // observar tráfego HTTP real com o DevTools. Sem correção
+              // automática — visto do professor no final, mesmo padrão dos
+              // demais trabalhos do projeto FinancApp.
+              key: 'pratica-financapp', title: 'FinancApp — Como o FinancApp Conversa com a Internet',
+              desc: 'Usem o projeto Supabase do FinancApp pra observar, no DevTools, uma requisição HTTP real: método, URL, headers, DNS, HTTPS, status code e a camada de aplicação. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🌐', src: 'atividades/redes-servicos-financapp-pratica.html',
+              progressKey: 'redes_servicos_financapp_pratica_progress_', progressMode: 'flag',
               requires: 'pratica', hasGabarito: true
             }
           ]
@@ -400,25 +400,25 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 1ª peça do projeto interdisciplinar "Mural" (rede social da
-          // escola) — mesmo repositório GitHub criado aqui é reaproveitado
-          // pelas próximas 5 peças (Modelagem de Sistemas 1, Banco de
-          // Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e
-          // Programação de Aplicativos). Ver Atividades/Desenvolvimento de
-          // Sistemas/Projeto Mural — *.md pra especificação completa de
-          // cada peça. Reaproveita a MESMA capacidade de "Oficina de
-          // Comunicação" (mesma matéria) — produto diferente (repositório
-          // GitHub real, não CodePen).
-          key: 'projeto-mural-kickoff',
-          label: 'Kickoff: Rede Social da Escola (Mural)',
-          desc: 'Projeto integrador: ao longo do curso você vai construir, matéria por matéria, uma rede social da escola de verdade — aqui você dá o pontapé inicial, criando o repositório no GitHub e planejando o trabalho.',
+          // 1ª peça do projeto interdisciplinar "FinancApp" (app de
+          // controle financeiro pessoal) — mesmo repositório GitHub criado
+          // aqui é reaproveitado pelas próximas 5 peças (Modelagem de
+          // Sistemas 1, Banco de Dados, Redes de Computadores,
+          // Desenvolvimento de Sistemas 1 e Programação de Aplicativos).
+          // Ver Atividades/Desenvolvimento de Sistemas/Projeto FinancApp —
+          // *.md pra especificação completa de cada peça. Reaproveita a
+          // MESMA capacidade de "Oficina de Comunicação" (mesma matéria) —
+          // produto diferente (repositório GitHub real, não CodePen).
+          key: 'projeto-financapp-kickoff',
+          label: 'Kickoff: App de Controle Financeiro (FinancApp)',
+          desc: 'Projeto integrador: ao longo do curso você vai construir, matéria por matéria, um app de controle financeiro de verdade — aqui você dá o pontapé inicial, criando o repositório no GitHub e planejando o trabalho.',
           capacidade: 'Reconhecer as diferentes fases pertinentes à elaboração de um projeto.',
           modules: [
             {
-              key: 'trabalho', title: 'Trabalho — Kickoff do Projeto Mural (GitHub)',
-              desc: 'Crie sua conta no GitHub, o repositório mural-seuusuario, um README completo e as 5 issues do MVP. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🚀', src: 'atividades/projeto-mural-kickoff-trabalho.html',
-              progressKey: 'projeto_mural_kickoff_trabalho_progress_', progressMode: 'flag',
+              key: 'trabalho', title: 'Trabalho — Kickoff do Projeto FinancApp (GitHub)',
+              desc: 'Crie o repositório financapp-seuusuario, um README completo e as 5 issues do MVP. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🚀', src: 'atividades/projeto-financapp-kickoff-trabalho.html',
+              progressKey: 'projeto_financapp_kickoff_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]
@@ -469,24 +469,24 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 2ª de 6 peças do projeto interdisciplinar "Mural" (ver
-          // projeto-mural-kickoff-trabalho.html, matéria Introdução de
+          // 2ª de 6 peças do projeto interdisciplinar "FinancApp" (ver
+          // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
           // Desenvolvimento de Projetos, pra 1ª peça). Reaproveita a MESMA
           // capacidade da trilha "Modelagem de Dados e Requisitos" (acima,
-          // mesma matéria) — produto diferente (DER real do projeto Mural,
-          // commitado no repositório GitHub, não uma apresentação isolada)
-          // — por isso não repete o questionário já coberto por aquela
-          // trilha.
-          key: 'projeto-mural-modelagem',
-          label: 'Mural — Modelagem de Dados e Requisitos',
-          desc: 'Projeto integrador: modelem os requisitos e os dados do Mural (entidades, atributos, cardinalidade, chaves) e desenhem o DER, commitado no MESMO repositório GitHub criado no Kickoff.',
+          // mesma matéria) — produto diferente (DER real do projeto
+          // FinancApp, commitado no repositório GitHub, não uma
+          // apresentação isolada) — por isso não repete o questionário já
+          // coberto por aquela trilha.
+          key: 'projeto-financapp-modelagem',
+          label: 'FinancApp — Modelagem de Dados e Requisitos',
+          desc: 'Projeto integrador: modelem os requisitos e os dados do FinancApp (entidades, atributos, cardinalidade, chaves — incluindo a relação N:N entre lançamentos e tags) e desenhem o DER, commitado no MESMO repositório GitHub criado no Kickoff.',
           capacidade: 'Elaborar modelo de dados e definir requisitos funcionais e não funcionais de um sistema.',
           modules: [
             {
-              key: 'trabalho', title: 'Trabalho — Mural: Modelagem de Dados e Requisitos',
-              desc: 'Levantem os requisitos funcionais/não funcionais do Mural, modelem as entidades/atributos/relacionamentos e desenhem o DER, commitado em docs/der.png. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🧩', src: 'atividades/projeto-mural-modelagem-trabalho.html',
-              progressKey: 'projeto_mural_modelagem_trabalho_progress_', progressMode: 'flag',
+              key: 'trabalho', title: 'Trabalho — FinancApp: Modelagem de Dados e Requisitos',
+              desc: 'Levantem os requisitos funcionais/não funcionais do FinancApp, modelem as entidades/atributos/relacionamentos (incluindo a tabela de junção lançamento↔tag) e desenhem o DER, commitado em docs/der.png. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🧩', src: 'atividades/projeto-financapp-modelagem-trabalho.html',
+              progressKey: 'projeto_financapp_modelagem_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]
@@ -723,23 +723,44 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 6ª e última peça do projeto interdisciplinar "Mural" (ver
-          // projeto-mural-backend-trabalho.html, matéria Desenvolvimento de
-          // Sistemas 1, pra 5ª peça). Diferente da spec original do projeto
-          // (aluno construía HTML/CSS/JS), esta peça foi ajustada pra focar
-          // só em JAVASCRIPT: o professor entrega index.html/style.css já
-          // prontos (fora do portal) e o aluno só escreve o JS que liga
-          // esses elementos às funções da peça anterior.
-          key: 'projeto-mural-app',
-          label: 'Mural — Construa o Aplicativo',
-          desc: 'Projeto integrador: com o HTML/CSS já entregues pelo professor, escrevam o JavaScript que liga a interface às funções de backend da peça anterior — cadastro, login, perfil, feed, postar e curtir, com dados reais.',
+          // 6ª e última peça do projeto interdisciplinar "FinancApp" (ver
+          // projeto-financapp-backend-trabalho.html, matéria Desenvolvimento
+          // de Sistemas 1, pra 5ª peça). Foco só em JAVASCRIPT: o professor
+          // entrega index.html/style.css já prontos (Atividades/
+          // Desenvolvimento de Sistemas/financapp-starter/) e o aluno só
+          // escreve o JS que liga esses elementos às funções da peça
+          // anterior.
+          key: 'projeto-financapp-app',
+          label: 'FinancApp — Construa o Aplicativo',
+          desc: 'Projeto integrador: com o HTML/CSS já entregues pelo professor, escrevam o JavaScript que liga a interface às funções de backend da peça anterior — cadastro, login, perfil, saldo/extrato, registrar lançamento e tags, com dados reais.',
           capacidade: 'Aplicar, de forma integrada, lógica de programação, manipulação de objetos e validação de formulário na construção de um aplicativo completo em JavaScript.',
           modules: [
             {
-              key: 'trabalho', title: 'Trabalho — Mural: Construa o Aplicativo (JavaScript)',
-              desc: 'Liguem o HTML/CSS fornecidos pelo professor às funções de backend já escritas — cadastro, login, perfil, feed, criar post e curtir, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '📱', src: 'atividades/projeto-mural-app-trabalho.html',
-              progressKey: 'projeto_mural_app_trabalho_progress_', progressMode: 'flag',
+              key: 'trabalho', title: 'Trabalho — FinancApp: Construa o Aplicativo (JavaScript)',
+              desc: 'Liguem o HTML/CSS fornecidos pelo professor às funções de backend já escritas — cadastro, login, perfil, saldo/extrato, registrar lançamento e marcar tags, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '📱', src: 'atividades/projeto-financapp-app-trabalho.html',
+              progressKey: 'projeto_financapp_app_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Trilha STANDALONE (não é uma das 6 peças do projeto FinancApp)
+          // — fundamento complementar sobre boas práticas de segurança
+          // (tipos de chave do Supabase, .env, .gitignore) que valem pra
+          // qualquer app conectado a um banco, não só o FinancApp. Sem
+          // correção automática (produto é o .env/.gitignore reais do
+          // repositório do aluno) — visto do professor no final.
+          key: 'prog-conexao-segura',
+          label: 'Conexão Segura com Banco de Dados',
+          desc: 'Aprenda a diferença entre os tipos de chave do Supabase (anon/publishable x service_role), o que é uma variável de ambiente (.env) e por que ela precisa estar no .gitignore — aplicando isso no seu próprio projeto (FinancApp ou TikTak).',
+          capacidade: 'Aplicar procedimentos de segurança e backup no SGBD.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Conexão Segura com Banco de Dados',
+              desc: 'Entenda os tipos de chave do Supabase, crie um .env protegido por .gitignore no seu projeto e ajuste o código pra ler a chave de lá, em vez de escrita direto no arquivo. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🔐', src: 'atividades/prog-conexao-segura-trabalho.html',
+              progressKey: 'prog_conexao_segura_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]

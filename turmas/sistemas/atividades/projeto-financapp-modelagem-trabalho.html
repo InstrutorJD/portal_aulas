@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Trabalho: Projeto Empreendedor (Crie seu App)</title>
+<title>PixelForge Studios — Trabalho: FinancApp — Modelagem de Dados e Requisitos</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -94,7 +94,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'projeto_app_empreendedor_trabalho';
+  window.ACTIVITY_LOCATION = 'projeto_financapp_modelagem_trabalho';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -109,8 +109,8 @@
 
 <div class="env">
   <div class="topbar">
-    <div>PROVA — TRABALHO: PROJETO EMPREENDEDOR (CRIE SEU APP)</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">10</span></div>
+    <div>MODELAGEM DE SISTEMAS 1 — TRABALHO: FINANCAPP — MODELAGEM DE DADOS E REQUISITOS</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -122,177 +122,113 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `projeto_app_empreendedor_trabalho_progress_${username}`;
-  const STEP_KEY = `projeto_app_empreendedor_trabalho_step_${username}`;
+  const PROGRESS_KEY = `projeto_financapp_modelagem_trabalho_progress_${username}`;
+  const STEP_KEY = `projeto_financapp_modelagem_trabalho_step_${username}`;
 
-  // Atividade em DUPLA, sem correção automática (o "produto" é uma
-  // apresentação ao vivo pra turma + um protótipo no Figma, fora do portal)
-  // — cada tela só navega com Voltar/Próximo, sem quiz nenhum. Quem marca
-  // como concluída é o professor, depois da apresentação (ver renderVisto),
-  // mesmo padrão de modelagem-dados-requisitos-trabalho.html e
-  // projeto-financapp-kickoff-trabalho.html. A NOTA (até 10 pontos, valendo pra
-  // todas as matérias) não é lançada aqui — o professor lança em "Lançar
-  // Notas", coluna Nota 3 ou Nota 4 (essas duas já contam pra todas as
-  // matérias ao mesmo tempo, ver shared/platform-core.js).
+  // 2ª de 6 peças do projeto interdisciplinar "FinancApp" (ver
+  // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
+  // Desenvolvimento de Projetos, pra 1ª peça). Mesmo padrão de trabalho sem
+  // correção automática (produto vai pro MESMO repositório GitHub criado no
+  // Kickoff — docs/der.png) — visto do professor no final. Reaproveita a
+  // MESMA capacidade da trilha genérica "Modelagem de Dados e Requisitos"
+  // (mesma matéria) — produto diferente (DER real do projeto FinancApp, não
+  // uma apresentação Canva/Slides isolada) — por isso não repete o
+  // questionário já coberto por aquela trilha.
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios abriu um programa interno de inovação: cada dupla vai bancar o papel de fundadora de uma startup e apresentar sua ideia de app pra "diretoria" (a turma e o professor), como se estivesse buscando investimento de verdade.
+A PixelForge Studios já tem o repositório do FinancApp criado (Kickoff, em Introdução de Desenvolvimento de Projetos). Esta é a **2ª de 6 peças** do mesmo projeto.
 
-### O desafio
+Antes de criar qualquer tabela, o time de modelagem precisa definir: **o que o sistema precisa fazer** (requisitos) e **como os dados vão se organizar** (entidades, atributos, relacionamentos).
 
-Em **dupla**, criem a ideia de um app que **geraria dinheiro** — pensem num problema real que ele resolve e em como ele se sustentaria financeiramente.
+### 1ª versão do FinancApp (relembrando)
 
-### O que vocês vão entregar
+- [ ] Cadastro e login
+- [ ] Perfil (nome, turma, foto)
+- [ ] Registrar lançamento (receita ou despesa)
+- [ ] Ver extrato (lista de lançamentos + saldo)
+- [ ] Marcar lançamentos com tags (ex.: "mercado", "transporte", "lazer")
 
-Uma apresentação (Slides, Canva ou PowerPoint) com:
+### O que entregar aqui
 
-1. A ideia do app (problema, solução, monetização)
-2. Modelagem de sistemas (requisitos + fluxo principal)
-3. Modelagem de banco de dados (DER/MER)
-4. Protótipo de telas no **Figma**
-5. Estimativa de custo e receita ao longo do tempo
-
-Depois, apresentem tudo **ao vivo pra turma**.
+Requisitos funcionais/não funcionais, entidades e atributos, cardinalidade, chave primária/estrangeira, e um **DER** (Diagrama de Entidade-Relacionamento) desenhado e salvo como ¤docs/der.png¤ no MESMO repositório ¤financapp-seuusuario¤ do Kickoff.
 
 ### Como funciona aqui
 
-1. Formem a dupla.
-2. Sigam as próximas etapas, uma de cada vez — cada uma é uma parte obrigatória da apresentação.
-3. Montem os slides por fora, com o material de cada etapa.
-4. Apresentem pra turma no dia combinado com o professor.
-5. Depois de apresentar, peçam o visto aqui — é isso que marca a atividade como concluída.
-
-> ⚠️ A **nota** (até 10 pontos, valendo pra **todas as matérias**) é dada pelo professor separadamente, avaliando a apresentação ao vivo — o visto aqui só confirma que a etapa foi cumprida.`
+1. Leia os blocos de conteúdo (requisitos, entidades, relacionamentos, chaves).
+2. Monte cada parte por fora (papel, Canva, draw.io ou dbdiagram.io).
+3. Desenhe o DER, exporte como imagem e commite no repositório.
+4. Peça o visto pessoalmente ao professor, mostrando o ¤docs/der.png¤ commitado.`
     },
     {
-      titulo: 'A ideia do app',
+      titulo: 'Requisitos funcionais e não funcionais',
       corpo: `
-Toda empresa de sucesso nasce de um **problema real** que alguém decidiu resolver. Com sua dupla, definam:
-
-- [ ] **O problema** — o que incomoda ou falta hoje, na vida de quem? Seja específico (não "as pessoas têm dificuldade com X" — diga QUEM e QUANDO).
-- [ ] **A solução** — o que o app faz pra resolver esse problema, em 2-3 frases.
-- [ ] **Público-alvo** — quem usaria esse app? (idade, perfil, hábito)
-- [ ] **Nome do app** — algo curto e fácil de lembrar.
-- [ ] **Monetização** — como o app ganharia dinheiro? Escolham (ou combinem) um modelo:
-  - **Assinatura** (mensalidade pra usar)
-  - **Anúncios** (marcas pagam pra aparecer)
-  - **Comissão** (uma % de cada transação feita pelo app)
-  - **Freemium** (grátis no básico, paga pra desbloquear mais)
-  - **Venda direta** (paga uma vez pra comprar/usar)
-
-> Dica: pensem em problemas do dia a dia de vocês — escola, transporte, lazer, trabalho dos pais — ideias assim costumam ser as mais fáceis de defender na apresentação.`
-    },
-    {
-      titulo: 'Modelagem de sistemas',
-      corpo: `
-Antes de desenhar qualquer tela, definam **o que o sistema precisa fazer** (e com que qualidade).
-
-- [ ] **Requisitos funcionais** — liste pelo menos 5 AÇÕES que o app faz (ex.: "o usuário cadastra uma conta", "o app calcula o valor da comissão").
-- [ ] **Requisitos não funcionais** — liste pelo menos 2 QUALIDADES do app (ex.: tempo de resposta, segurança dos dados, funcionar offline).
-- [ ] **Fluxo principal** — um diagrama simples (pode ser à mão e fotografado, ou em qualquer ferramenta) mostrando o caminho do usuário desde abrir o app até completar a ação principal (ex.: login → tela inicial → usar a funcionalidade central → confirmação).
-
-> Isso é a mesma lógica que vocês já viram em Modelagem de Dados e Requisitos — só que agora aplicada na ideia de vocês, não num sistema pronto.`
-    },
-    {
-      titulo: 'Modelagem de banco de dados',
-      corpo: `
-Todo app precisa guardar dados em algum lugar. Modelem o banco de dados por trás da ideia:
-
-- [ ] **Entidades** — pelo menos 4 (ex.: Usuário, Post, Pedido, Pagamento — depende do app).
-- [ ] **Atributos** — as colunas de cada entidade (ex.: Usuário: nome, e-mail, senha).
-- [ ] **Chave primária** — em cada entidade.
-- [ ] **Relacionamentos e cardinalidade** — como as entidades se conectam (1:1, 1:N ou N:N), com pelo menos 2 relacionamentos.
-- [ ] **Chave estrangeira** — indicando onde o relacionamento vira coluna.
-- [ ] **Diagrama DER/MER** — desenhado (pode ser à mão, fotografado, ou em qualquer ferramenta).
-
-> Reaproveitem o mesmo raciocínio do trabalho de Modelagem de Dados e Requisitos — a diferença é que agora o banco de dados é do app de vocês.`
-    },
-    {
-      titulo: 'Protótipo de telas no Figma',
-      corpo: `
-Um protótipo mostra como o app **pareceria de verdade**, mesmo sem nenhuma linha de código funcionando por trás.
+Requisito funcional é uma **AÇÃO** que o sistema faz; requisito não funcional é uma **QUALIDADE** do sistema (desempenho, segurança, usabilidade).
 
 ### Faça
 
-1. Crie uma conta gratuita em
-§§§text
-figma.com
-§§§
-2. Crie um novo arquivo ("Design file").
-3. Monte pelo menos **3 telas**:
-   - [ ] Tela de login/cadastro
-   - [ ] Tela principal (a primeira que o usuário vê depois de entrar)
-   - [ ] 1 tela da funcionalidade-chave do app (a ação principal que resolve o problema)
-4. Use componentes básicos: botões, campos de texto, ícones, cores e nome do app.
-5. Compartilhe o arquivo com permissão de visualização (**Share** → **Anyone with the link** → **can view**) e guardem o link.
-
-> Não precisa ficar perfeito nem ter interatividade — o objetivo é mostrar visualmente a ideia, não programar o app.`
+- [ ] Liste **5 requisitos funcionais** — um por funcionalidade do MVP (cadastro/login, perfil, registrar lançamento, extrato/saldo, tags).
+- [ ] Liste **3 requisitos não funcionais** (ex.: o extrato precisa carregar rápido mesmo com muitos lançamentos, layout responsivo, senha nunca aparece em texto puro na tela).`
     },
     {
-      titulo: 'Estimativa de custo e receita',
+      titulo: 'Entidades e atributos',
       corpo: `
-Todo investidor quer saber: **esse negócio se paga?** Montem uma estimativa simples, em uma tabela:
+**Entidade** é algo do mundo real que vira tabela; **atributo** é uma característica dela, que vira coluna.
 
-| Período | Custo estimado | Receita estimada |
-|---|---|---|
-| Mês 1 | ? | ? |
-| Mês 6 | ? | ? |
-| Mês 12 | ? | ? |
+### Faça
 
-- [ ] **Custos** — o que custaria manter o app rodando (ex.: servidor/hospedagem, manutenção, marketing, equipe).
-- [ ] **Receita** — quanto o app arrecadaria, considerando o modelo de monetização escolhido (ex.: nº de usuários pagantes × valor da assinatura).
-- [ ] **Ponto de equilíbrio (aproximado)** — em que mês a receita passaria a cobrir o custo?
+Liste os atributos de cada entidade:
 
-> Não precisa ser um número exato de mercado — o importante é o RACIOCÍNIO por trás da conta (quantos usuários? quanto cada um geraria?), não acertar o valor certo.`
+- [ ] **Usuário** — nome, turma, foto, usuário, senha.
+- [ ] **Lançamento** — descrição, valor, tipo (receita ou despesa), data.
+- [ ] **Tag** — nome (ex.: "mercado", "transporte", "lazer", "salário").`
     },
     {
-      titulo: 'Montando a apresentação',
+      titulo: 'Relacionamentos e cardinalidade',
       corpo: `
-A apresentação (Slides, Canva ou PowerPoint) precisa ter, nessa ordem:
+Cardinalidade descreve quantos registros de uma entidade se relacionam com quantos de outra (1:N, N:N).
 
-1. **Capa** — nome do app + nomes da dupla.
-2. **A ideia** — problema, solução, público-alvo e monetização.
-3. **Modelagem de sistemas** — requisitos funcionais/não funcionais e o fluxo principal.
-4. **Modelagem de banco de dados** — o diagrama DER/MER.
-5. **Protótipo** — prints das telas feitas no Figma.
-6. **Custo e receita** — a tabela da etapa anterior.
-7. **Encerramento** — por que esse app daria certo, em 1 frase de impacto.
+### Faça
 
-### Critérios de formatação — valem nota
-
-- [ ] **Fontes**: no máximo 2 (título + corpo), legíveis, tamanho igual em slides do mesmo tipo.
-- [ ] **Alinhamento**: título sempre no mesmo lugar em todos os slides; texto e imagens alinhados, não jogados de qualquer jeito.`
+- [ ] Defina: um **Usuário** pode ter quantos **Lançamentos**?
+- [ ] Defina: um **Lançamento** pode ter quantas **Tags**? E uma **Tag** pode estar em quantos **Lançamentos** diferentes? (pense bem nessa — não é a mesma resposta da pergunta anterior!)`
     },
     {
-      titulo: 'Como apresentar pra turma',
+      titulo: 'Chave primária e chave estrangeira',
       corpo: `
-### No dia combinado com o professor
+A **chave primária** identifica um registro de forma única; a **chave estrangeira** cria o link entre duas tabelas. Quando duas entidades se relacionam N:N (muitos-pra-muitos), como Lançamento e Tag, é preciso uma **tabela de junção** no meio, com uma FK pra cada lado.
 
-1. A dupla toda apresenta junto — cada um fala pelo menos uma parte.
-2. Tempo sugerido: 5 a 8 minutos.
-3. Levem o link do Figma aberto pra mostrar o protótipo ao vivo, além dos prints nos slides.
-4. Respondam às perguntas da turma/professor sobre a ideia, a modelagem ou os números.
+### Faça
 
-### Como a nota funciona
+- [ ] Marque a **PK** de cada uma das 3 entidades (Usuário, Lançamento, Tag).
+- [ ] Marque a FK: Lançamento → Usuário.
+- [ ] Desenhe a tabela de junção **LancamentoTag**, com 2 FKs: uma pra Lançamento, outra pra Tag.`
+    },
+    {
+      titulo: 'Desenhar o DER',
+      corpo: `
+O Diagrama de Entidade-Relacionamento (**DER/MER**) é o "mapa" visual do banco de dados antes de criar qualquer tabela.
 
-O professor avalia a apresentação ao vivo e dá **uma nota de até 10 pontos** — essa nota conta pra **todas as matérias** do bimestre (não é preciso apresentar de novo em cada matéria).`
+### Faça
+
+1. Desenhe o DER do FinancApp, com as 4 "tabelas" (Usuário, Lançamento, Tag, LancamentoTag), atributos, PK/FK e cardinalidade — use Canva, draw.io ou dbdiagram.io.
+2. Exporte como imagem.
+3. Salve como ¤docs/der.png¤ no repositório ¤financapp-seuusuario¤.
+4. Faça commit + push.`
     },
     {
       titulo: 'Checklist final antes do visto',
       corpo: `
-Confiram tudo antes de chamar o professor:
+Confira antes de chamar o professor:
 
-- [ ] Ideia do app definida (problema, solução, público-alvo, monetização).
-- [ ] Requisitos funcionais/não funcionais e fluxo principal.
-- [ ] DER/MER do banco de dados.
-- [ ] Protótipo no Figma com pelo menos 3 telas, com link compartilhado.
-- [ ] Tabela de custo e receita (Mês 1, 6 e 12).
-- [ ] Apresentação montada, seguindo a ordem e os critérios de formatação.
-- [ ] Apresentação feita ao vivo pra turma.
+- [ ] 5 requisitos funcionais + 3 não funcionais listados.
+- [ ] Entidades Usuário/Lançamento/Tag com atributos definidos.
+- [ ] Cardinalidade Usuário→Lançamento (1:N) e Lançamento↔Tag (N:N) definida.
+- [ ] PK/FK marcadas, incluindo a tabela de junção LancamentoTag.
+- [ ] DER desenhado, exportado e commitado em ¤docs/der.png¤.
 
-Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e peçam o visto — é isso que marca a atividade como concluída pro portal.`
+Quando tudo estiver certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Banco de Dados.`
     }
   ];
 
@@ -328,8 +264,7 @@ Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e pe�
     return t;
   }
 
-  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
-  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html.
   function mdToHtml(md) {
     const lines = md.replace(/\r\n/g, '\n').split('\n');
     let html = '';
@@ -406,7 +341,7 @@ Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e pe�
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('projeto_app_empreendedor_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+      window.reportActivity('projeto_financapp_modelagem_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
     }
   }
 
@@ -452,7 +387,7 @@ Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e pe�
         <div class="card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
-          <p>A nota (até 10 pontos, valendo pra todas as matérias) é lançada pelo professor em "Lançar Notas".</p>
+          <p>A próxima peça do projeto FinancApp (Banco de Dados) já pode ser liberada pelo professor.</p>
         </div>
         ${renderNav(true, false)}
       `;
@@ -463,8 +398,8 @@ Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e pe�
     stepWrap.innerHTML = `
       <div class="card visto-box">
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
-        <p>A dupla já apresentou pra turma — ideia, modelagem de sistemas, modelagem de banco de dados, protótipo no Figma e estimativa de custo/receita?</p>
-        <p>Chame o professor pra confirmar. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída. A nota é lançada separadamente pelo professor.</p>
+        <p>Seu repositório <code>financapp-seuusuario</code> já está com o <code>docs/der.png</code> commitado, junto dos requisitos, entidades/atributos, cardinalidade e chaves documentados?</p>
+        <p>Chame o professor pra conferir. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
         <div class="visto-form">
           <label>Token do professor
             <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -514,23 +449,19 @@ Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e pe�
     });
   }
 
-  // Gabarito aqui é o checklist de critérios pro professor avaliar a
-  // apresentação ao vivo (ideia, modelagem, protótipo, números e formato) e
-  // decidir a nota (até 10 pontos) que depois lança em Lançar Notas.
+  // Gabarito aqui é o checklist de critérios pro professor conferir o DER e
+  // os requisitos commitados no repositório GitHub do aluno.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto Empreendedor (Crie seu App) — Checklist de avaliação',
-      subtitle: 'Trabalho em dupla (apresentação ao vivo + protótipo no Figma) · Prova · Turma Sistemas',
+      title: 'Projeto FinancApp — Modelagem de Dados e Requisitos — Checklist de correção',
+      subtitle: 'Trabalho (DER real, commitado no GitHub) · Modelagem de Sistemas 1 · Turma Sistemas',
       items: [
-        { number: 1, title: 'A ideia', prompt: 'A dupla definiu a ideia do app com clareza?', answer: 'Problema real e específico; solução em 2-3 frases; público-alvo definido; nome do app; modelo de monetização coerente (assinatura, anúncios, comissão, freemium ou venda direta).' },
-        { number: 2, title: 'Modelagem de sistemas', prompt: 'A apresentação cobre requisitos e fluxo?', answer: 'Pelo menos 5 requisitos funcionais (ações do app) e 2 não funcionais (qualidades), mais um diagrama do fluxo principal do usuário (login até a ação central).' },
-        { number: 3, title: 'Modelagem de banco de dados', prompt: 'O DER/MER está correto?', answer: 'Pelo menos 4 entidades, com atributos, chave primária, chave estrangeira e pelo menos 2 relacionamentos com cardinalidade indicada.' },
-        { number: 4, title: 'Protótipo no Figma', prompt: 'O protótipo existe e foi compartilhado?', answer: 'Link do Figma funcional, com pelo menos 3 telas (login/cadastro, tela principal, funcionalidade-chave), usando componentes básicos (botões, campos, cores, nome do app).' },
-        { number: 5, title: 'Custo e receita', prompt: 'A estimativa financeira está presente e coerente?', answer: 'Tabela com Mês 1, 6 e 12 (custo estimado x receita estimada), com raciocínio explicado (não precisa ser exato) e menção ao ponto de equilíbrio aproximado.' },
-        { number: 6, title: 'Formatação e apresentação', prompt: 'Os slides seguem os critérios e a dupla apresentou ao vivo?', answer: 'No máximo 2 fontes, tamanho consistente, título sempre no mesmo lugar, conteúdo alinhado; apresentação feita pra turma com participação dos dois integrantes da dupla.' },
-        { number: 7, title: 'Nota final', prompt: 'Como lançar a nota?', answer: 'Nota de 0 a 10, atribuída após a apresentação ao vivo. Lance em "Lançar Notas" (Nota 3 ou Nota 4) pra cada aluno da dupla — essas colunas já contam automaticamente pra TODAS as matérias do bimestre, não precisa repetir em cada matéria.' }
+        { number: 1, title: 'Requisitos', prompt: 'Os requisitos foram listados?', answer: '5 requisitos funcionais (um por funcionalidade do MVP) e 3 não funcionais (ex.: desempenho do extrato, layout responsivo, senha protegida).' },
+        { number: 2, title: 'Entidades e atributos', prompt: 'As 3 entidades estão completas?', answer: 'Usuário (nome, turma, foto, usuário, senha), Lançamento (descrição, valor, tipo, data), Tag (nome).' },
+        { number: 3, title: 'Cardinalidade e chaves', prompt: 'A modelagem está correta?', answer: 'Usuário 1:N Lançamento; Lançamento N:N Tag (via tabela de junção LancamentoTag); PK em cada entidade; FK Lançamento→Usuário e as 2 FKs de LancamentoTag.' },
+        { number: 4, title: 'DER commitado', prompt: 'O arquivo existe no repositório?', answer: '`docs/der.png` presente no repositório `financapp-<usuario>`, com as 4 "tabelas" (Usuário, Lançamento, Tag, LancamentoTag), atributos, PK/FK e cardinalidade visíveis no diagrama.' }
       ],
-      fileName: 'projeto-app-empreendedor-checklist.txt'
+      fileName: 'projeto-financapp-modelagem-checklist.txt'
     });
   };
 

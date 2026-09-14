@@ -1,17 +1,13 @@
 // @ts-check
-// Módulo "Mural — Como o Mural Conversa com a Internet" (dentro da trilha
-// JÁ EXISTENTE "Serviços de Internet e Modelos", Redes de Computadores,
-// turma Sistemas) — 4ª de 6 peças do projeto interdisciplinar Mural (ver
-// tests/projeto-mural-kickoff.spec.js pra 1ª peça). Não é trilha nova (pra
-// não duplicar a capacidade já coberta por "Serviços de Internet e
-// Modelos") — só um módulo extra, travado até a prática normal da trilha
-// (requires:'pratica') ser concluída. Aluno navega pelas telas com Voltar/
-// Próximo e o professor dá "visto" com um token temporário (mesmo padrão de
-// projeto-mural-kickoff-trabalho.html).
+// Trilha "Conexão Segura com Banco de Dados" (Programação de Aplicativos,
+// turma Sistemas) — fundamento standalone (não é uma das 6 peças do
+// projeto FinancApp) sobre tipos de chave do Supabase, .env e .gitignore.
+// Aluno navega pelas telas com Voltar/Próximo e o professor dá "visto" com
+// um token temporário (mesmo padrão de projeto-financapp-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const ACTIVITY_URL = '/turmas/sistemas/atividades/redes-servicos-mural-pratica.html?user=alexandre.natal&role=aluno&turma=sistemas';
+const ACTIVITY_URL = '/turmas/sistemas/atividades/prog-conexao-segura-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
 const TOKEN_VALIDO = '482913';
 
@@ -30,18 +26,16 @@ async function darVisto(page, token) {
   await page.click('#btnDarVisto');
 }
 
-test.describe('turmas/sistemas — módulo Mural: Como o Mural Conversa com a Internet', () => {
+test.describe('turmas/sistemas — trilha Conexão Segura com Banco de Dados', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('fica bloqueado até a prática normal da trilha ser concluída', async ({ page }) => {
+  test('aparece na matéria Programação de Aplicativos, ao lado do FinancApp', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Redes de Computadores")');
-    await page.selectOption('#trilhaSelect', 'redes-servicos-modelos');
-    const card = page.locator('#moduleSelector_redes-servicos-modelos .game-card', { hasText: 'Mural — Como o Mural Conversa com a Internet' });
-    await expect(card).toHaveClass(/locked/);
-    await expect(card).toContainText('Bloqueado');
+    await page.click('.game-card:has-text("Programação de Aplicativos")');
+    await page.selectOption('#trilhaSelect', 'prog-conexao-segura');
+    await expect(page.locator('#moduleSelector_prog-conexao-segura')).toContainText('Conexão Segura com Banco de Dados');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
@@ -49,15 +43,22 @@ test.describe('turmas/sistemas — módulo Mural: Como o Mural Conversa com a In
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Requisição HTTP');
+    await expect(page.locator('.card h2')).toHaveText('Nem toda chave é igual');
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('DNS');
+    await expect(page.locator('.card h2')).toHaveText('O que é uma variável de ambiente');
 
     await page.reload();
-    await expect(page.locator('.card h2')).toHaveText('DNS');
+    await expect(page.locator('.card h2')).toHaveText('O que é uma variável de ambiente');
 
     await page.click('#btnBack');
-    await expect(page.locator('.card h2')).toHaveText('Requisição HTTP');
+    await expect(page.locator('.card h2')).toHaveText('Nem toda chave é igual');
+  });
+
+  test('explica a diferença entre anon/publishable e service_role', async ({ page }) => {
+    await page.goto(ACTIVITY_URL);
+    await page.click('#btnNext');
+    await expect(page.locator('.card')).toContainText('anon / publishable');
+    await expect(page.locator('.card')).toContainText('service_role');
   });
 
   test('depois da última tela de conteúdo, chega na tela de visto do professor', async ({ page }) => {
@@ -76,7 +77,7 @@ test.describe('turmas/sistemas — módulo Mural: Como o Mural Conversa com a In
     await darVisto(page, '000000');
     await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
-    const progress = await page.evaluate(u => localStorage.getItem(`redes_servicos_mural_pratica_progress_${u}`), 'alexandre.natal');
+    const progress = await page.evaluate(u => localStorage.getItem(`prog_conexao_segura_trabalho_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
@@ -89,7 +90,7 @@ test.describe('turmas/sistemas — módulo Mural: Como o Mural Conversa com a In
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`redes_servicos_mural_pratica_progress_${u}`)), 'alexandre.natal');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`prog_conexao_segura_trabalho_progress_${u}`)), 'alexandre.natal');
     expect(progress).toMatchObject({ completed: true, vistoPor: 'Instrutor / Professor' });
 
     await page.reload();

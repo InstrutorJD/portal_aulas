@@ -1,17 +1,15 @@
 // @ts-check
-// Trilha "Projeto Empreendedor: Crie seu App" (matéria Prova, turma
-// Sistemas) — trabalho em dupla: o aluno navega pelas telas com
-// Voltar/Próximo (ideia, modelagem de sistemas, modelagem de banco de
-// dados, protótipo no Figma, custo/receita, apresentação) e o professor dá
-// "visto" com um token temporário no final (mesmo padrão de
-// projeto-financapp-kickoff-trabalho.html e
-// modelagem-dados-requisitos-trabalho.html). A nota (até 10 pontos) não é
-// lançada nesta tela — é lançada em Lançar Notas (Nota 3/4), fora do
-// escopo deste teste.
+// Trilha "FinancApp — Construa o Aplicativo" (Programação de Aplicativos,
+// turma Sistemas) — 6ª e última peça do projeto interdisciplinar FinancApp
+// (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça). O aluno só
+// escreve JavaScript aqui — o HTML/CSS já vem pronto, entregue pelo
+// professor. Aluno navega pelas telas com Voltar/Próximo e o professor dá
+// "visto" com um token temporário (mesmo padrão de
+// projeto-financapp-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-app-empreendedor-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-financapp-app-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
 const TOKEN_VALIDO = '482913';
 
@@ -30,16 +28,21 @@ async function darVisto(page, token) {
   await page.click('#btnDarVisto');
 }
 
-test.describe('turmas/sistemas — trilha Projeto Empreendedor: Crie seu App', () => {
+test.describe('turmas/sistemas — trilha FinancApp: Construa o Aplicativo', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Prova, ao lado da Prova Diagnóstica', async ({ page }) => {
+  test('aparece na matéria Programação de Aplicativos, ao lado do ClipZone', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Prova")');
-    await page.selectOption('#trilhaSelect', 'projeto-app-empreendedor');
-    await expect(page.locator('#moduleSelector_projeto-app-empreendedor')).toContainText('Projeto Empreendedor: Crie seu App (Dupla)');
+    await page.click('.game-card:has-text("Programação de Aplicativos")');
+    await page.selectOption('#trilhaSelect', 'projeto-financapp-app');
+    await expect(page.locator('#moduleSelector_projeto-financapp-app')).toContainText('FinancApp: Construa o Aplicativo (JavaScript)');
+  });
+
+  test('a apresentação explica que o HTML/CSS já vêm prontos', async ({ page }) => {
+    await page.goto(ACTIVITY_URL);
+    await expect(page.locator('.card')).toContainText('HTML e CSS já vêm prontos');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
@@ -47,15 +50,15 @@ test.describe('turmas/sistemas — trilha Projeto Empreendedor: Crie seu App', (
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('A ideia do app');
+    await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Modelagem de sistemas');
+    await expect(page.locator('.card h2')).toHaveText('Cadastro');
 
     await page.reload();
-    await expect(page.locator('.card h2')).toHaveText('Modelagem de sistemas');
+    await expect(page.locator('.card h2')).toHaveText('Cadastro');
 
     await page.click('#btnBack');
-    await expect(page.locator('.card h2')).toHaveText('A ideia do app');
+    await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
   });
 
   test('depois da última tela de conteúdo, chega na tela de visto do professor', async ({ page }) => {
@@ -74,7 +77,7 @@ test.describe('turmas/sistemas — trilha Projeto Empreendedor: Crie seu App', (
     await darVisto(page, '000000');
     await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
-    const progress = await page.evaluate(u => localStorage.getItem(`projeto_app_empreendedor_trabalho_progress_${u}`), 'alexandre.natal');
+    const progress = await page.evaluate(u => localStorage.getItem(`projeto_financapp_app_trabalho_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
@@ -87,10 +90,9 @@ test.describe('turmas/sistemas — trilha Projeto Empreendedor: Crie seu App', (
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_app_empreendedor_trabalho_progress_${u}`)), 'alexandre.natal');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_financapp_app_trabalho_progress_${u}`)), 'alexandre.natal');
     expect(progress).toMatchObject({ completed: true, vistoPor: 'Instrutor / Professor' });
 
-    // Recarregar mostra a tela de concluído, não o formulário de novo.
     await page.reload();
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
   });

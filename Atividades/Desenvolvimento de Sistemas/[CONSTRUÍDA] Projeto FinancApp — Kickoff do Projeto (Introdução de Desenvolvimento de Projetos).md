@@ -1,4 +1,14 @@
-# Projeto Mural — Kickoff do Projeto (GitHub)
+# Projeto FinancApp — Kickoff do Projeto (GitHub)
+
+> **NOTA DE PIVÔ (domínio trocado):** o projeto interdisciplinar deixou de
+> ser o "Mural" (rede social da escola) e virou o **FinancApp**, um app de
+> controle financeiro pessoal — mais simples de implementar e mais fácil de
+> deixar visualmente bom. A estrutura pedagógica abaixo (fases, repositório,
+> README, issues) continua igual; só o domínio muda: em vez de posts/
+> curtidas, o app tem lançamentos (receita/despesa) marcados com tags (N:N
+> de verdade, via tabela de junção). Ver
+> `turmas/sistemas/atividades/projeto-financapp-kickoff-trabalho.html` pro
+> conteúdo real, já atualizado.
 
 ## 1. Apresentação
 

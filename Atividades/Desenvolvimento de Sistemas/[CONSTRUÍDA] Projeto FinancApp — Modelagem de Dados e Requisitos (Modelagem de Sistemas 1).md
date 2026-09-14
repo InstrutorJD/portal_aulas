@@ -1,12 +1,20 @@
-# Projeto Mural — Modelagem de Dados e Requisitos
+# Projeto FinancApp — Modelagem de Dados e Requisitos
 
+> **NOTA DE PIVÔ (domínio trocado):** projeto passou de "Mural" (rede
+> social) pra **FinancApp** (controle financeiro pessoal). Entidades atuais:
+> Usuário, Lançamento (descrição, valor, tipo receita/despesa) e Tag, com
+> Lançamento↔Tag em relacionamento **N:N de verdade** via tabela de junção
+> (LancamentoTag) — mantém a mesma estrutura relacional do plano original
+> (3-4 tabelas, FK, cardinalidade), só troca posts/curtidas por lançamentos/
+> tags.
+>
 > **NOTA DE IMPLEMENTAÇÃO:** ao construir esta peça no portal, o
 > questionário (ETAPA 6 original) foi removido — a trilha genérica
 > "Modelagem de Dados e Requisitos" (mesma matéria) já cobre essa
 > capacidade com quiz próprio, e repetir aqui duplicaria a cobrança sem
 > necessidade. A entrega segue só até o DER commitado + visto do professor
 > (sem envio por e-mail — o material já fica no repositório GitHub). Ver
-> `turmas/sistemas/atividades/projeto-mural-modelagem-trabalho.html`.
+> `turmas/sistemas/atividades/projeto-financapp-modelagem-trabalho.html`.
 
 ## 1. Apresentação
 2ª etapa do projeto interdisciplinar Mural (rede social da escola — ver ETAPA 1 do Kickoff, em Introdução de Desenvolvimento de Projetos). Aqui o aluno modela, em cima do repositório `mural-<usuario>` já criado, os requisitos e os dados que vão virar as tabelas reais na próxima matéria (Banco de Dados).

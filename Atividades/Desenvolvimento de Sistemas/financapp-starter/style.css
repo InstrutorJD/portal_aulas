@@ -1,14 +1,15 @@
-/* ARQUIVO ENTREGUE PELO PROFESSOR — Peça 6 do projeto Mural. Não precisa
-   (e não deve) ser alterado — o trabalho desta peça é só o JavaScript
-   (mural.js), que usa os ids/classes definidos aqui e no index.html. */
+/* ARQUIVO ENTREGUE PELO PROFESSOR — Peça 6 do projeto FinancApp. Não
+   precisa (e não deve) ser alterado — o trabalho desta peça é só o
+   JavaScript (financapp.js), que usa os ids/classes definidos aqui e no
+   index.html. */
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: #f4f2fb;
-  color: #221a33;
+  background: #eef6f0;
+  color: #17301f;
 }
 
 .topbar {
@@ -16,7 +17,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #6d3fc0;
+  background: #1f7a4d;
   color: #fff;
 }
 .topbar h1 { margin: 0; font-size: 20px; }
@@ -44,18 +45,17 @@ label {
   font-size: 13px;
   margin-bottom: 10px;
 }
-input, textarea {
+input, select {
   font: inherit;
   padding: 8px 10px;
-  border: 1px solid #d8d3e8;
+  border: 1px solid #cfe3d5;
   border-radius: 4px;
 }
-textarea { resize: vertical; min-height: 60px; }
 
 .btn {
   font: inherit;
   font-weight: 600;
-  background: #6d3fc0;
+  background: #1f7a4d;
   color: #fff;
   border: none;
   padding: 9px 16px;
@@ -71,26 +71,43 @@ textarea { resize: vertical; min-height: 60px; }
 #perfilArea { display: flex; align-items: center; gap: 12px; }
 #perfilFoto { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
 #perfilNome { font-weight: 700; }
-#perfilTurma { font-size: 12px; color: #6b6280; }
+#perfilTurma { font-size: 12px; color: #5c6f61; }
 
-.post-card {
+#saldoArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+.saldo-label { font-size: 12px; color: #5c6f61; text-transform: uppercase; letter-spacing: .5px; }
+.saldo-valor { font-size: 28px; font-weight: 800; }
+.saldo-valor.negativo { color: #c1121f; }
+.saldo-valor.positivo { color: #1a7f37; }
+
+.lancamento-card {
   background: #fff;
   border-radius: 8px;
   padding: 14px;
   margin-bottom: 10px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .06);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
 }
-.post-autor { font-weight: 700; margin: 0 0 4px; }
-.post-texto { margin: 0 0 8px; white-space: pre-wrap; }
-.post-data { font-size: 11px; color: #6b6280; }
+.lancamento-desc { font-weight: 700; margin: 0 0 4px; }
+.lancamento-data { font-size: 11px; color: #5c6f61; }
+.lancamento-valor { font-weight: 800; white-space: nowrap; }
+.lancamento-valor.receita { color: #1a7f37; }
+.lancamento-valor.despesa { color: #c1121f; }
 
-.post-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
-.btn-curtir {
-  font: inherit;
-  background: none;
-  border: 1px solid #d8d3e8;
+.lancamento-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tag-badge {
+  font-size: 11px;
+  background: #eef6f0;
+  border: 1px solid #cfe3d5;
   border-radius: 20px;
-  padding: 5px 12px;
-  cursor: pointer;
+  padding: 3px 10px;
+  color: #1f7a4d;
 }
-.btn-curtir.curtido { border-color: #c1121f; color: #c1121f; }

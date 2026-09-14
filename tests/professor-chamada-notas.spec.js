@@ -342,7 +342,7 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(row).toContainText('85/100'); // nota da prova, em pontos — nunca em %
     // Banco de Dados tem 7 módulos ao todo (sql: teoria/basico/join/agregacao +
     // sql-comentarios: teoria + db-conexao-supabase: pratica +
-    // projeto-mural-banco-dados: trabalho).
+    // projeto-financapp-banco-dados: trabalho).
     // 3 concluídos, 4 nunca abertos => 3/7 ≈ 43%.
     await expect(row).toContainText('43%');
     // Pior desempenho (maioria das matérias abaixo de 50%) sai destacado.

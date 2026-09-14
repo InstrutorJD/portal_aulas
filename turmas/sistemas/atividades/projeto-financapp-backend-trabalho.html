@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Trabalho: Kickoff do Projeto Mural</title>
+<title>PixelForge Studios — Trabalho: FinancApp — Lógica de Backend com Supabase</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -94,7 +94,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'projeto_mural_kickoff_trabalho';
+  window.ACTIVITY_LOCATION = 'projeto_financapp_backend_trabalho';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -109,8 +109,8 @@
 
 <div class="env">
   <div class="topbar">
-    <div>INTRODUÇÃO DE DESENVOLVIMENTO DE PROJETOS — TRABALHO: KICKOFF DO PROJETO MURAL</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">7</span></div>
+    <div>DESENVOLVIMENTO DE SISTEMAS 1 — TRABALHO: FINANCAPP — LÓGICA DE BACKEND COM SUPABASE</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">10</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -122,137 +122,143 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `projeto_mural_kickoff_trabalho_progress_${username}`;
-  const STEP_KEY = `projeto_mural_kickoff_trabalho_step_${username}`;
+  const PROGRESS_KEY = `projeto_financapp_backend_trabalho_progress_${username}`;
+  const STEP_KEY = `projeto_financapp_backend_trabalho_step_${username}`;
 
-  // Atividade sem correção automática (o "produto" é um repositório real no
-  // GitHub, fora do portal) — cada tela só navega com Voltar/Próximo, sem
-  // quiz nenhum. Quem marca como concluída é o professor, na última etapa
-  // (ver renderVisto), o mesmo padrão de modelagem-dados-requisitos-trabalho.html
-  // e oficina-comunicacao-trabalho.html (mesma matéria). Este é o 1º de 6
-  // módulos do projeto interdisciplinar "Mural" (rede social da escola) —
-  // ver Atividades/Desenvolvimento de Sistemas/Projeto Mural — *.md para as
-  // próximas 5 peças (Modelagem, Banco de Dados, Redes, Dev. de Sistemas 1,
-  // Programação de Aplicativos), todas usando o MESMO repositório GitHub
-  // criado aqui.
+  // 5ª de 6 peças do projeto interdisciplinar "FinancApp" — a PRIMEIRA peça
+  // com código de verdade. Com as tabelas já criadas (peça 3, Banco de
+  // Dados), o aluno escreve, no mesmo repositório financapp-<usuario>
+  // (Codespace), as funções JavaScript que usam supabase-js pra
+  // implementar as 5 funcionalidades do MVP. Só JavaScript aqui — nenhuma
+  // interface (HTML/CSS) ainda; isso fica pra peça 6 (Programação de
+  // Aplicativos), e lá o HTML/CSS já vem pronto, entregue pelo professor (o
+  // aluno só liga a interface pronta a estas funções). Sem correção
+  // automática (código roda no Codespace, contra um banco real) — visto do
+  // professor no final.
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios foi contratada pela escola pra criar uma rede social interna — o **Mural** —, onde alunos e professores possam se conectar, compartilhar o que estão fazendo e ver as novidades da turma. Você faz parte do time.
+Esta é a **5ª de 6 peças** do projeto FinancApp — e a **primeira com código de verdade**. O FinancApp tem banco pronto (peça anterior), mas nenhuma linha de código ainda conecta a aplicação a ele.
 
-Este é só o **primeiro** de 6 passos de um projeto que vai atravessar o curso inteiro, um passo por matéria: aqui você cuida do kickoff (GitHub); os próximos ficam por conta de Modelagem de Sistemas, Banco de Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e Programação de Aplicativos — todos usando o MESMO repositório que você vai criar agora.
-
-### 1ª versão do Mural
-
-- [ ] Cadastro e login
-- [ ] Perfil (nome, turma, foto)
-- [ ] Criar post (texto)
-- [ ] Feed com posts de todos
-- [ ] Curtir um post
+Você vai escrever as **funções de backend** (cadastro, login, registrar lançamento, carregar extrato, marcar tag) em JavaScript. A interface visual só vem na próxima matéria — e virá **pronta**, você só vai ligar essas funções a ela.
 
 ### O que entregar aqui
 
-Nada de código ainda — só a organização inicial: conta no GitHub, repositório, README e o plano de trabalho em issues.
+Um arquivo (¤app.js¤ ou ¤financapp.js¤) no repositório ¤financapp-seuusuario¤, com 5 funções assíncronas usando a biblioteca ¤supabase-js¤, cada uma testada manualmente pelo console do navegador.
 
 ### Como funciona aqui
 
-1. Leia os blocos de conteúdo (fases, repositório, README, issues).
-2. Faça cada ação no GitHub de verdade, conforme for pedido.
-3. Peça o visto pessoalmente ao professor no final, mostrando o repositório.`
+1. Leia os blocos de conteúdo (biblioteca, cada função, tratamento de erro).
+2. Escreva o código de verdade no Codespace.
+3. Teste cada função pelo console e capture uma evidência.
+4. Commite o arquivo e peça o visto ao professor.`
     },
     {
-      titulo: 'Fases de um projeto, agora na prática',
+      titulo: 'Biblioteca vs. requisição na mão',
       corpo: `
-Você já estudou, na trilha **Oficina de Comunicação**, as fases de elaboração de um projeto: levantamento, planejamento, desenvolvimento, testes e entrega.
-
-O Kickoff do Mural é a fase de **planejamento** virando ação de verdade — em vez de só documentar as fases, você vai criar a estrutura real (repositório, README, issues) do projeto que vai continuar sendo construído nas próximas matérias.
-
-> Pense: em qual fase o projeto está agora? E em qual fase ele vai estar quando o Diagrama de Entidade-Relacionamento (DER) do Mural estiver pronto, na Modelagem de Sistemas?`
-    },
-    {
-      titulo: 'Criar o repositório do Mural',
-      corpo: `
-Um **repositório** é a "casa" do projeto: todo código, documentação e histórico moram ali. O **GitHub** hospeda esse histórico na nuvem e também funciona como um portfólio: qualquer pessoa (inclusive um recrutador, no futuro) pode ver o que você construiu.
+Uma **biblioteca/SDK** (como ¤supabase-js¤) encapsula chamadas HTTP repetitivas em funções prontas — em vez de montar a requisição HTTP na mão (que você observou na trilha de Redes), você chama um método.
 
 ### Faça
 
-1. Acesse sua conta no GitHub.
-2. Clique em **New repository**.
-3. Nome do repositório:
-§§§text
-mural-seuusuario
-§§§
-(troque \`seuusuario\` pelo seu usuário do portal — ex.: \`mural-joao\`)
-4. Marque **Public**.
-5. Marque a opção de já criar um \`README.md\`.
-6. Crie o repositório.
-
-### Entrega
-
-O projeto deverá possuir um repositório próprio no GitHub, chamado \`mural-seuusuario\`.`
+Adicione ¤supabase-js¤ ao projeto (CDN ou import) e crie o cliente com a **Project URL** e a **Publishable Key** do projeto ¤financapp¤ (peça anterior, Banco de Dados).`
     },
     {
-      titulo: 'README como cartão de visita',
+      titulo: 'cadastrarUsuario',
       corpo: `
-O **README** é a primeira coisa que qualquer pessoa vê ao abrir o repositório — ele precisa explicar o projeto sem exigir que ninguém pergunte nada.
+Uma **função assíncrona** é uma operação que espera uma resposta (do banco) sem travar o resto do programa.
 
 ### Faça
 
-Edite o \`README.md\` do seu repositório e escreva:
-
-- [ ] **Objetivo** — o que é o Mural, com suas palavras.
-- [ ] **Funcionalidades** — a lista das 5 funcionalidades da 1ª versão.
-- [ ] **Tecnologias** — HTML, CSS, JavaScript, GitHub, Supabase.
-
-> Dica: pode editar o README direto pelo navegador, clicando no ícone de lápis na página do arquivo — não precisa de Codespace ainda.`
-    },
-    {
-      titulo: 'Issues como plano de trabalho',
-      corpo: `
-**Issues** (no GitHub) são tarefas — o jeito de quebrar um projeto grande em pedaços pequenos e acompanháveis, em vez de uma tarefa gigante e vaga.
-
-### Faça
-
-Na aba **Issues** do seu repositório, crie 5 issues, uma por funcionalidade:
-
-1. Cadastro e login
-2. Perfil do usuário
-3. Criar post
-4. Feed com posts de todos
-5. Curtir post
-
-Cada issue pode ficar só com o título — o objetivo aqui é planejar, não descrever tudo ainda.`
-    },
-    {
-      titulo: 'Documentar decisões desde o início',
-      corpo: `
-Decisões de projeto (nome, público-alvo, escopo) documentadas desde o começo evitam retrabalho e desalinhamento mais pra frente.
-
-### Faça
-
-Adicione ao \`README.md\` uma seção:
+Escreva:
 
 §§§text
-## Decisões de Projeto
+async function cadastrarUsuario(nome, turma, usuario, senha)
 §§§
 
-Com:
-
-- [ ] **Nome do app** (pode manter "Mural" ou escolher outro).
-- [ ] **Público-alvo** (ex.: alunos e professores da turma/escola).`
+que faz ¤insert¤ na tabela ¤usuarios¤.`
     },
     {
-      titulo: 'Checklist antes do visto',
+      titulo: 'fazerLogin',
       corpo: `
-Confira antes de chamar o professor:
+Uma consulta condicional (¤.eq()¤) filtra linhas por um valor específico.
 
-- [ ] Conta no GitHub criada.
-- [ ] Repositório \`mural-seuusuario\` criado (público, com README).
-- [ ] README com objetivo, as 5 funcionalidades, tecnologias e "Decisões de Projeto".
-- [ ] 5 issues criadas (uma por funcionalidade).
+### Faça
 
-Quando estiver tudo certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Modelagem de Sistemas.`
+Escreva:
+
+§§§text
+async function fazerLogin(usuario, senha)
+§§§
+
+que faz ¤select¤ filtrando por usuário e senha, e retorna se autenticou.`
+    },
+    {
+      titulo: 'criarLancamento',
+      corpo: `
+Um insert com relação grava a **FK** (quem é o autor) junto com o dado. Aqui você registra uma **receita** ou uma **despesa**.
+
+### Faça
+
+Escreva:
+
+§§§text
+async function criarLancamento(autorId, descricao, valor, tipo)
+§§§
+
+que faz ¤insert¤ em ¤lancamentos¤ (¤tipo¤ é ¤'receita'¤ ou ¤'despesa'¤ — lembre do ¤check¤ que você criou no banco).`
+    },
+    {
+      titulo: 'carregarLancamentos',
+      corpo: `
+Select com **join** junta dados de duas (ou mais) tabelas relacionadas numa única consulta; **ordenação** define a sequência de exibição.
+
+### Faça
+
+Escreva:
+
+§§§text
+async function carregarLancamentos(autorId)
+§§§
+
+que retorna os lançamentos daquele usuário, **mais recentes primeiro**, já trazendo as tags de cada um (join com ¤lancamento_tags¤ e ¤tags¤ — pesquise sobre select aninhado do supabase-js, ex.: ¤select('*, lancamento_tags(tags(nome))')¤).`
+    },
+    {
+      titulo: 'adicionarTag',
+      corpo: `
+Uma tag pode já existir (reaproveita) ou ser nova (precisa ser criada) — sua função precisa lidar com os 2 casos antes de ligar a tag ao lançamento.
+
+### Faça
+
+Escreva:
+
+§§§text
+async function adicionarTag(lancamentoId, nomeTag)
+§§§
+
+que: 1) procura (¤select¤) se já existe uma tag com esse ¤nome¤; 2) se não existir, cria (¤insert¤) a tag nova; 3) insere a linha em ¤lancamento_tags¤ ligando ¤lancamento_id¤ e ¤tag_id¤ — tratando o erro de duplicidade (o ¤unique constraint¤ do banco ajuda, mas trate o erro no JavaScript também, já que a mesma tag não deve se repetir no mesmo lançamento).`
+    },
+    {
+      titulo: 'Tratamento de erro',
+      corpo: `
+Toda chamada ao Supabase retorna ¤{ data, error }¤ — ignorar ¤error¤ esconde falhas do usuário (e, num app financeiro, um lançamento que "sumiu" silenciosamente é um problema sério).
+
+### Faça
+
+Adicione ¤try/catch¤ e verificação de ¤error¤ em **todas** as funções escritas acima (¤cadastrarUsuario¤, ¤fazerLogin¤, ¤criarLancamento¤, ¤carregarLancamentos¤, ¤adicionarTag¤).`
+    },
+    {
+      titulo: 'Checklist final antes do visto',
+      corpo: `
+Teste cada função pelo console do navegador, capture uma evidência (print) de cada uma funcionando, e commite o arquivo. Confira:
+
+- [ ] ¤supabase-js¤ importado e cliente criado.
+- [ ] ¤cadastrarUsuario¤, ¤fazerLogin¤, ¤criarLancamento¤, ¤carregarLancamentos¤, ¤adicionarTag¤ implementadas.
+- [ ] Todas tratam erro (¤try/catch¤ + ¤error¤ do Supabase).
+- [ ] Evidência de teste de cada função.
+- [ ] Arquivo (¤app.js¤ ou ¤financapp.js¤) commitado no repositório.
+
+Quando tudo estiver certo, avance e peça o visto — é isso que libera a última peça do projeto, em Programação de Aplicativos.`
     }
   ];
 
@@ -288,8 +294,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     return t;
   }
 
-  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
-  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html.
   function mdToHtml(md) {
     const lines = md.replace(/\r\n/g, '\n').split('\n');
     let html = '';
@@ -366,7 +371,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('projeto_mural_kickoff_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+      window.reportActivity('projeto_financapp_backend_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
     }
   }
 
@@ -412,7 +417,7 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
         <div class="card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
-          <p>A próxima peça do projeto Mural (Modelagem de Sistemas) já pode ser liberada pelo professor.</p>
+          <p>A última peça do projeto FinancApp (Programação de Aplicativos) já pode ser liberada pelo professor.</p>
         </div>
         ${renderNav(true, false)}
       `;
@@ -423,8 +428,8 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
     stepWrap.innerHTML = `
       <div class="card visto-box">
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
-        <p>Seu repositório <code>mural-seuusuario</code> já está com README (objetivo, funcionalidades, tecnologias, decisões de projeto) e as 5 issues criadas?</p>
-        <p>Chame o professor pra conferir o repositório no GitHub. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <p>Suas 5 funções (<code>cadastrarUsuario</code>, <code>fazerLogin</code>, <code>criarLancamento</code>, <code>carregarLancamentos</code>, <code>adicionarTag</code>) estão escritas, testadas pelo console e commitadas no repositório <code>financapp-seuusuario</code>?</p>
+        <p>Chame o professor pra ver o código funcionando no console. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
         <div class="visto-form">
           <label>Token do professor
             <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -475,17 +480,18 @@ Quando estiver tudo certo, avance e peça o visto — é isso que libera a próx
   }
 
   // Gabarito aqui é o checklist de critérios pro professor conferir o
-  // repositório GitHub do aluno sem precisar reabrir este módulo.
+  // código JavaScript commitado no repositório do aluno.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto Mural — Kickoff — Checklist de correção',
-      subtitle: 'Trabalho (repositório GitHub real, fora do portal) · Introdução de Desenvolvimento de Projetos · Turma Sistemas',
+      title: 'Projeto FinancApp — Lógica de Backend com Supabase — Checklist de correção',
+      subtitle: 'Trabalho (código JS real, testado no console) · Desenvolvimento de Sistemas 1 · Turma Sistemas',
       items: [
-        { number: 1, title: 'Repositório', prompt: 'O aluno criou o repositório?', answer: 'Repositório público chamado mural-<usuario>, com README inicial criado.' },
-        { number: 2, title: 'README', prompt: 'O README cobre o esperado?', answer: 'Objetivo do Mural, lista das 5 funcionalidades da 1ª versão (cadastro/login, perfil, criar post, feed, curtir), tecnologias (HTML, CSS, JavaScript, GitHub, Supabase) e seção "Decisões de Projeto" (nome + público-alvo).' },
-        { number: 3, title: 'Issues', prompt: 'As issues foram criadas?', answer: '5 issues, uma por funcionalidade: Cadastro e login; Perfil do usuário; Criar post; Feed com posts de todos; Curtir post.' }
+        { number: 1, title: 'Cliente Supabase', prompt: 'O cliente foi criado corretamente?', answer: 'supabase-js importado (CDN ou import) e cliente criado com a Project URL e a Publishable Key do projeto financapp.' },
+        { number: 2, title: 'As 5 funções', prompt: 'Todas foram implementadas?', answer: 'cadastrarUsuario (insert em usuarios), fazerLogin (select com .eq() por usuário/senha), criarLancamento (insert com FK autor_id, valida tipo receita/despesa), carregarLancamentos (select com join até lancamento_tags/tags + ordenação por mais recente), adicionarTag (busca ou cria a tag, depois insere em lancamento_tags tratando duplicidade).' },
+        { number: 3, title: 'Tratamento de erro', prompt: 'Todas tratam erro?', answer: 'try/catch e verificação do campo error em todas as 5 funções.' },
+        { number: 4, title: 'Evidência e commit', prompt: 'O aluno testou e commitou?', answer: 'Print/evidência de cada função rodando no console do navegador; arquivo (app.js ou financapp.js) commitado no repositório financapp-<usuario>.' }
       ],
-      fileName: 'projeto-mural-kickoff-checklist.txt'
+      fileName: 'projeto-financapp-backend-checklist.txt'
     });
   };
 

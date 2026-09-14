@@ -1,7 +1,22 @@
-# Projeto Mural — Banco de Dados e RLS
+# Projeto FinancApp — Banco de Dados e RLS
+
+> **NOTA DE PIVÔ (domínio trocado):** projeto passou de "Mural" (rede
+> social) pra **FinancApp** (controle financeiro pessoal) — agora são 4
+> tabelas (não 3): `usuarios`, `lancamentos`, `tags` e `lancamento_tags`
+> (a tabela de JUNÇÃO do relacionamento N:N real entre lançamentos e tags).
+>
+> **NOTA DE IMPLEMENTAÇÃO:** a atividade no portal já traz o SQL completo
+> pronto pra copiar (`create table` das 4 tabelas, `alter table ... enable
+> row level security`, e as 10 `create policy`) — o aluno executa no SQL
+> Editor do Supabase e entende cada trecho, mesmo estilo de
+> `db-conexao-supabase-pratica.html`. A policy de update/delete por autor
+> (ETAPA 9 abaixo) usa `using (true)` com uma limitação documentada: sem
+> Supabase Auth, a restrição real fica no JavaScript da próxima peça, não
+> no banco. Ver
+> `turmas/sistemas/atividades/projeto-financapp-banco-dados-trabalho.html`.
 
 ## 1. Apresentação
-3ª etapa do projeto Mural. O aluno cria, num projeto Supabase próprio, as 3 tabelas definidas no DER da Modelagem (Usuário, Post, Curtida), com chaves estrangeiras e políticas de RLS — mesmo padrão de ponta a ponta já usado na trilha "Conexão com Supabase" (TikTak), agora aplicado ao Mural.
+3ª etapa do projeto FinancApp. O aluno cria, num projeto Supabase próprio, as 4 tabelas definidas no DER da Modelagem (Usuário, Lançamento, Tag, LancamentoTag), com chaves estrangeiras e políticas de RLS — mesmo padrão de ponta a ponta já usado na trilha "Conexão com Supabase" (TikTak), agora aplicado ao FinancApp.
 
 ---
 

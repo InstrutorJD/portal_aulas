@@ -130,7 +130,7 @@ test.describe('shared/clipboard-guard.js', () => {
   // clicar em botões e digitar nos campos onde o aluno escreve o próprio
   // código (Central de Dados, PixelCode, desafios de JavaScript etc.).
   test.describe('bloqueio de clique/seleção em áreas de leitura (texto e código de exemplo)', () => {
-    const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-kickoff-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+    const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-financapp-kickoff-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
     test('bloqueia clique+arrasto num <p> de texto de instrução quando clipboard_blocked=true', async ({ page }) => {
       await stubSupabaseFake(page, {

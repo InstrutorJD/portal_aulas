@@ -1,13 +1,13 @@
 // @ts-check
-// Trilha "Mural — Banco de Dados e RLS" (Banco de Dados, turma Sistemas) —
-// 3ª de 6 peças do projeto interdisciplinar Mural (ver
-// tests/projeto-mural-kickoff.spec.js pra 1ª peça). Aluno navega pelas
-// telas com Voltar/Próximo e o professor dá "visto" com um token temporário
-// (mesmo padrão de projeto-mural-kickoff-trabalho.html).
+// Trilha "FinancApp — Lógica de Backend com Supabase" (Desenvolvimento de
+// Sistemas 1, turma Sistemas) — 5ª de 6 peças do projeto interdisciplinar
+// FinancApp (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça).
+// Aluno navega pelas telas com Voltar/Próximo e o professor dá "visto" com
+// um token temporário (mesmo padrão de projeto-financapp-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-banco-dados-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-financapp-backend-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
 const TOKEN_VALIDO = '482913';
 
@@ -26,16 +26,16 @@ async function darVisto(page, token) {
   await page.click('#btnDarVisto');
 }
 
-test.describe('turmas/sistemas — trilha Mural: Banco de Dados e RLS', () => {
+test.describe('turmas/sistemas — trilha FinancApp: Lógica de Backend com Supabase', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Banco de Dados, ao lado das demais trilhas', async ({ page }) => {
+  test('aparece na matéria Desenvolvimento de Sistemas 1, ao lado das demais trilhas', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Banco de Dados")');
-    await page.selectOption('#trilhaSelect', 'projeto-mural-banco-dados');
-    await expect(page.locator('#moduleSelector_projeto-mural-banco-dados')).toContainText('Mural: Banco de Dados e RLS');
+    await page.click('.game-card:has-text("Desenvolvimento de Sistemas 1")');
+    await page.selectOption('#trilhaSelect', 'projeto-financapp-backend');
+    await expect(page.locator('#moduleSelector_projeto-financapp-backend')).toContainText('FinancApp: Lógica de Backend com Supabase');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
@@ -43,15 +43,15 @@ test.describe('turmas/sistemas — trilha Mural: Banco de Dados e RLS', () => {
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Criar o projeto Supabase');
+    await expect(page.locator('.card h2')).toHaveText('Biblioteca vs. requisição na mão');
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Tabela usuarios');
+    await expect(page.locator('.card h2')).toHaveText('cadastrarUsuario');
 
     await page.reload();
-    await expect(page.locator('.card h2')).toHaveText('Tabela usuarios');
+    await expect(page.locator('.card h2')).toHaveText('cadastrarUsuario');
 
     await page.click('#btnBack');
-    await expect(page.locator('.card h2')).toHaveText('Criar o projeto Supabase');
+    await expect(page.locator('.card h2')).toHaveText('Biblioteca vs. requisição na mão');
   });
 
   test('depois da última tela de conteúdo, chega na tela de visto do professor', async ({ page }) => {
@@ -70,7 +70,7 @@ test.describe('turmas/sistemas — trilha Mural: Banco de Dados e RLS', () => {
     await darVisto(page, '000000');
     await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
-    const progress = await page.evaluate(u => localStorage.getItem(`projeto_mural_banco_dados_trabalho_progress_${u}`), 'alexandre.natal');
+    const progress = await page.evaluate(u => localStorage.getItem(`projeto_financapp_backend_trabalho_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
@@ -83,7 +83,7 @@ test.describe('turmas/sistemas — trilha Mural: Banco de Dados e RLS', () => {
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_mural_banco_dados_trabalho_progress_${u}`)), 'alexandre.natal');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_financapp_backend_trabalho_progress_${u}`)), 'alexandre.natal');
     expect(progress).toMatchObject({ completed: true, vistoPor: 'Instrutor / Professor' });
 
     await page.reload();

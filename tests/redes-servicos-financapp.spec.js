@@ -1,15 +1,17 @@
 // @ts-check
-// Trilha "Mural — Construa o Aplicativo" (Programação de Aplicativos,
-// turma Sistemas) — 6ª e última peça do projeto interdisciplinar Mural (ver
-// tests/projeto-mural-kickoff.spec.js pra 1ª peça). Diferente da spec
-// original, o aluno só escreve JavaScript aqui — o HTML/CSS já vem pronto,
-// entregue pelo professor. Aluno navega pelas telas com Voltar/Próximo e o
-// professor dá "visto" com um token temporário (mesmo padrão de
-// projeto-mural-kickoff-trabalho.html).
+// Módulo "FinancApp — Como o FinancApp Conversa com a Internet" (dentro da
+// trilha JÁ EXISTENTE "Serviços de Internet e Modelos", Redes de
+// Computadores, turma Sistemas) — 4ª de 6 peças do projeto interdisciplinar
+// FinancApp (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça). Não é
+// trilha nova (pra não duplicar a capacidade já coberta por "Serviços de
+// Internet e Modelos") — só um módulo extra, travado até a prática normal
+// da trilha (requires:'pratica') ser concluída. Aluno navega pelas telas
+// com Voltar/Próximo e o professor dá "visto" com um token temporário
+// (mesmo padrão de projeto-financapp-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-app-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+const ACTIVITY_URL = '/turmas/sistemas/atividades/redes-servicos-financapp-pratica.html?user=alexandre.natal&role=aluno&turma=sistemas';
 
 const TOKEN_VALIDO = '482913';
 
@@ -28,21 +30,18 @@ async function darVisto(page, token) {
   await page.click('#btnDarVisto');
 }
 
-test.describe('turmas/sistemas — trilha Mural: Construa o Aplicativo', () => {
+test.describe('turmas/sistemas — módulo FinancApp: Como o FinancApp Conversa com a Internet', () => {
   test.beforeEach(async ({ page }) => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Programação de Aplicativos, ao lado do ClipZone', async ({ page }) => {
+  test('fica bloqueado até a prática normal da trilha ser concluída', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Programação de Aplicativos")');
-    await page.selectOption('#trilhaSelect', 'projeto-mural-app');
-    await expect(page.locator('#moduleSelector_projeto-mural-app')).toContainText('Mural: Construa o Aplicativo (JavaScript)');
-  });
-
-  test('a apresentação explica que o HTML/CSS já vêm prontos', async ({ page }) => {
-    await page.goto(ACTIVITY_URL);
-    await expect(page.locator('.card')).toContainText('HTML e CSS já vêm prontos');
+    await page.click('.game-card:has-text("Redes de Computadores")');
+    await page.selectOption('#trilhaSelect', 'redes-servicos-modelos');
+    const card = page.locator('#moduleSelector_redes-servicos-modelos .game-card', { hasText: 'FinancApp — Como o FinancApp Conversa com a Internet' });
+    await expect(card).toHaveClass(/locked/);
+    await expect(card).toContainText('Bloqueado');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
@@ -50,15 +49,15 @@ test.describe('turmas/sistemas — trilha Mural: Construa o Aplicativo', () => {
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
+    await expect(page.locator('.card h2')).toHaveText('Requisição HTTP');
     await page.click('#btnNext');
-    await expect(page.locator('.card h2')).toHaveText('Cadastro');
+    await expect(page.locator('.card h2')).toHaveText('DNS');
 
     await page.reload();
-    await expect(page.locator('.card h2')).toHaveText('Cadastro');
+    await expect(page.locator('.card h2')).toHaveText('DNS');
 
     await page.click('#btnBack');
-    await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
+    await expect(page.locator('.card h2')).toHaveText('Requisição HTTP');
   });
 
   test('depois da última tela de conteúdo, chega na tela de visto do professor', async ({ page }) => {
@@ -77,7 +76,7 @@ test.describe('turmas/sistemas — trilha Mural: Construa o Aplicativo', () => {
     await darVisto(page, '000000');
     await expect(page.locator('#vistoMsg')).toContainText('inválido ou expirado');
 
-    const progress = await page.evaluate(u => localStorage.getItem(`projeto_mural_app_trabalho_progress_${u}`), 'alexandre.natal');
+    const progress = await page.evaluate(u => localStorage.getItem(`redes_servicos_financapp_pratica_progress_${u}`), 'alexandre.natal');
     expect(progress).toBeNull();
   });
 
@@ -90,7 +89,7 @@ test.describe('turmas/sistemas — trilha Mural: Construa o Aplicativo', () => {
     await expect(page.locator('.visto-box h2')).toContainText('Atividade concluída');
     await expect(page.locator('.visto-box')).toContainText('Instrutor / Professor');
 
-    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`projeto_mural_app_trabalho_progress_${u}`)), 'alexandre.natal');
+    const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`redes_servicos_financapp_pratica_progress_${u}`)), 'alexandre.natal');
     expect(progress).toMatchObject({ completed: true, vistoPor: 'Instrutor / Professor' });
 
     await page.reload();

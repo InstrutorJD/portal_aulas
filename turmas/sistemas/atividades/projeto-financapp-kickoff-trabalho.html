@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PixelForge Studios — Trabalho: Mural — Modelagem de Dados e Requisitos</title>
+<title>PixelForge Studios — Trabalho: Kickoff do Projeto FinancApp</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
 
@@ -94,7 +94,7 @@
   }
 </style>
 <script>
-  window.ACTIVITY_LOCATION = 'projeto_mural_modelagem_trabalho';
+  window.ACTIVITY_LOCATION = 'projeto_financapp_kickoff_trabalho';
 </script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
@@ -109,8 +109,8 @@
 
 <div class="env">
   <div class="topbar">
-    <div>MODELAGEM DE SISTEMAS 1 — TRABALHO: MURAL — MODELAGEM DE DADOS E REQUISITOS</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></div>
+    <div>INTRODUÇÃO DE DESENVOLVIMENTO DE PROJETOS — TRABALHO: KICKOFF DO PROJETO FINANCAPP</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">7</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -122,112 +122,136 @@
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('user') || 'anon';
-  const PROGRESS_KEY = `projeto_mural_modelagem_trabalho_progress_${username}`;
-  const STEP_KEY = `projeto_mural_modelagem_trabalho_step_${username}`;
+  const PROGRESS_KEY = `projeto_financapp_kickoff_trabalho_progress_${username}`;
+  const STEP_KEY = `projeto_financapp_kickoff_trabalho_step_${username}`;
 
-  // 2ª de 6 peças do projeto interdisciplinar "Mural" (ver
-  // projeto-mural-kickoff-trabalho.html, matéria Introdução de
-  // Desenvolvimento de Projetos, pra 1ª peça). Mesmo padrão de trabalho sem
-  // correção automática (produto vai pro MESMO repositório GitHub criado no
-  // Kickoff — docs/der.png) — visto do professor no final. Reaproveita a
-  // MESMA capacidade da trilha genérica "Modelagem de Dados e Requisitos"
-  // (mesma matéria) — produto diferente (DER real do projeto Mural, não uma
-  // apresentação Canva/Slides isolada) — por isso não repete o questionário
-  // já coberto por aquela trilha.
+  // Atividade sem correção automática (o "produto" é um repositório real no
+  // GitHub, fora do portal) — cada tela só navega com Voltar/Próximo, sem
+  // quiz nenhum. Quem marca como concluída é o professor, na última etapa
+  // (ver renderVisto), o mesmo padrão de modelagem-dados-requisitos-trabalho.html
+  // e oficina-comunicacao-trabalho.html (mesma matéria). Este é o 1º de 6
+  // módulos do projeto interdisciplinar "FinancApp" (app de controle
+  // financeiro pessoal) — ver Atividades/Desenvolvimento de Sistemas/
+  // Projeto FinancApp — *.md para as próximas 5 peças (Modelagem, Banco de
+  // Dados, Redes, Dev. de Sistemas 1, Programação de Aplicativos), todas
+  // usando o MESMO repositório GitHub criado aqui.
   const STEPS = [
     {
       titulo: 'Apresentação',
       corpo: `
-A PixelForge Studios já tem o repositório do Mural criado (Kickoff, em Introdução de Desenvolvimento de Projetos). Esta é a **2ª de 6 peças** do mesmo projeto.
+A PixelForge Studios foi contratada por um grupo de investidores pra criar um app de **controle financeiro pessoal** — o **FinancApp** —, onde cada usuário registra seus gastos e ganhos e acompanha o próprio saldo. Você faz parte do time.
 
-Antes de criar qualquer tabela, o time de modelagem precisa definir: **o que o sistema precisa fazer** (requisitos) e **como os dados vão se organizar** (entidades, atributos, relacionamentos).
+Este é só o **primeiro** de 6 passos de um projeto que vai atravessar o curso inteiro, um passo por matéria: aqui você cuida do kickoff (repositório); os próximos ficam por conta de Modelagem de Sistemas, Banco de Dados, Redes de Computadores, Desenvolvimento de Sistemas 1 e Programação de Aplicativos — todos usando o MESMO repositório que você vai criar agora.
 
-### 1ª versão do Mural (relembrando)
+### 1ª versão do FinancApp
 
 - [ ] Cadastro e login
 - [ ] Perfil (nome, turma, foto)
-- [ ] Criar post (texto)
-- [ ] Feed com posts de todos
-- [ ] Curtir um post
+- [ ] Registrar lançamento (receita ou despesa)
+- [ ] Ver extrato (lista de lançamentos + saldo)
+- [ ] Marcar lançamentos com tags (ex.: "mercado", "transporte", "lazer")
 
 ### O que entregar aqui
 
-Requisitos funcionais/não funcionais, entidades e atributos, cardinalidade, chave primária/estrangeira, e um **DER** (Diagrama de Entidade-Relacionamento) desenhado e salvo como \`docs/der.png\` no MESMO repositório \`mural-seuusuario\` do Kickoff.
+Nada de código ainda — só a organização inicial: repositório, README e o plano de trabalho em issues.
 
 ### Como funciona aqui
 
-1. Leia os blocos de conteúdo (requisitos, entidades, relacionamentos, chaves).
-2. Monte cada parte por fora (papel, Canva, draw.io ou dbdiagram.io).
-3. Desenhe o DER, exporte como imagem e commite no repositório.
-4. Peça o visto pessoalmente ao professor, mostrando o \`docs/der.png\` commitado.`
+1. Leia os blocos de conteúdo (fases, repositório, README, issues).
+2. Faça cada ação no GitHub de verdade, conforme for pedido.
+3. Peça o visto pessoalmente ao professor no final, mostrando o repositório.`
     },
     {
-      titulo: 'Requisitos funcionais e não funcionais',
+      titulo: 'Fases de um projeto, agora na prática',
       corpo: `
-Requisito funcional é uma **AÇÃO** que o sistema faz; requisito não funcional é uma **QUALIDADE** do sistema (desempenho, segurança, usabilidade).
+Você já estudou, na trilha **Oficina de Comunicação**, as fases de elaboração de um projeto: levantamento, planejamento, desenvolvimento, testes e entrega.
+
+O Kickoff do FinancApp é a fase de **planejamento** virando ação de verdade — em vez de só documentar as fases, você vai criar a estrutura real (repositório, README, issues) do projeto que vai continuar sendo construído nas próximas matérias.
+
+> Pense: em qual fase o projeto está agora? E em qual fase ele vai estar quando o Diagrama de Entidade-Relacionamento (DER) do FinancApp estiver pronto, na Modelagem de Sistemas?`
+    },
+    {
+      titulo: 'Criar o repositório do FinancApp',
+      corpo: `
+Um **repositório** é a "casa" do projeto: todo código, documentação e histórico moram ali. O **GitHub** hospeda esse histórico na nuvem e também funciona como um portfólio: qualquer pessoa (inclusive um recrutador, no futuro) pode ver o que você construiu.
 
 ### Faça
 
-- [ ] Liste **5 requisitos funcionais** — um por funcionalidade do MVP (cadastro/login, perfil, criar post, feed, curtir).
-- [ ] Liste **3 requisitos não funcionais** (ex.: tempo de resposta do feed, layout responsivo, senha nunca aparece em texto puro na tela).`
+1. Acesse sua conta no GitHub.
+2. Clique em **New repository**.
+3. Nome do repositório:
+§§§text
+financapp-seuusuario
+§§§
+(troque ¤seuusuario¤ pelo seu usuário do portal — ex.: ¤financapp-joao¤)
+4. Marque **Public**.
+5. Marque a opção de já criar um ¤README.md¤.
+6. Crie o repositório.
+
+### Entrega
+
+O projeto deverá possuir um repositório próprio no GitHub, chamado ¤financapp-seuusuario¤.`
     },
     {
-      titulo: 'Entidades e atributos',
+      titulo: 'README como cartão de visita',
       corpo: `
-**Entidade** é algo do mundo real que vira tabela; **atributo** é uma característica dela, que vira coluna.
+O **README** é a primeira coisa que qualquer pessoa vê ao abrir o repositório — ele precisa explicar o projeto sem exigir que ninguém pergunte nada.
 
 ### Faça
 
-Liste os atributos de cada entidade:
+Edite o ¤README.md¤ do seu repositório e escreva:
 
-- [ ] **Usuário** — nome, turma, foto, usuário, senha.
-- [ ] **Post** — texto, data.
-- [ ] **Curtida** — data.`
+- [ ] **Objetivo** — o que é o FinancApp, com suas palavras.
+- [ ] **Funcionalidades** — a lista das 5 funcionalidades da 1ª versão.
+- [ ] **Tecnologias** — HTML, CSS, JavaScript, GitHub, Supabase.
+
+> Dica: pode editar o README direto pelo navegador, clicando no ícone de lápis na página do arquivo — não precisa de Codespace ainda.`
     },
     {
-      titulo: 'Relacionamentos e cardinalidade',
+      titulo: 'Issues como plano de trabalho',
       corpo: `
-Cardinalidade descreve quantos registros de uma entidade se relacionam com quantos de outra (1:N, N:N).
+**Issues** (no GitHub) são tarefas — o jeito de quebrar um projeto grande em pedaços pequenos e acompanháveis, em vez de uma tarefa gigante e vaga.
 
 ### Faça
 
-- [ ] Defina: um **Usuário** pode ter quantos **Posts**?
-- [ ] Defina: um **Post** pode ter quantas **Curtidas**, de quantos **Usuários** diferentes?`
+Na aba **Issues** do seu repositório, crie 5 issues, uma por funcionalidade:
+
+1. Cadastro e login
+2. Perfil do usuário
+3. Registrar lançamento
+4. Extrato e saldo
+5. Tags nos lançamentos
+
+Cada issue pode ficar só com o título — o objetivo aqui é planejar, não descrever tudo ainda.`
     },
     {
-      titulo: 'Chave primária e chave estrangeira',
+      titulo: 'Documentar decisões desde o início',
       corpo: `
-A **chave primária** identifica um registro de forma única; a **chave estrangeira** cria o link entre duas tabelas.
+Decisões de projeto (nome, público-alvo, escopo) documentadas desde o começo evitam retrabalho e desalinhamento mais pra frente.
 
 ### Faça
 
-- [ ] Marque a **PK** de cada uma das 3 entidades.
-- [ ] Marque as **FKs**: Post → Usuário, e Curtida → Post/Usuário.`
+Adicione ao ¤README.md¤ uma seção:
+
+§§§text
+## Decisões de Projeto
+§§§
+
+Com:
+
+- [ ] **Nome do app** (pode manter "FinancApp" ou escolher outro).
+- [ ] **Público-alvo** (ex.: alunos e professores da turma/escola, controlando o próprio dinheiro).`
     },
     {
-      titulo: 'Desenhar o DER',
-      corpo: `
-O Diagrama de Entidade-Relacionamento (**DER/MER**) é o "mapa" visual do banco de dados antes de criar qualquer tabela.
-
-### Faça
-
-1. Desenhe o DER do Mural, com as 3 entidades, atributos, PK/FK e cardinalidade — use Canva, draw.io ou dbdiagram.io.
-2. Exporte como imagem.
-3. Salve como \`docs/der.png\` no repositório \`mural-seuusuario\`.
-4. Faça commit + push.`
-    },
-    {
-      titulo: 'Checklist final antes do visto',
+      titulo: 'Checklist antes do visto',
       corpo: `
 Confira antes de chamar o professor:
 
-- [ ] 5 requisitos funcionais + 3 não funcionais listados.
-- [ ] Entidades Usuário/Post/Curtida com atributos definidos.
-- [ ] Cardinalidade definida entre as 3 entidades.
-- [ ] PK/FK marcadas.
-- [ ] DER desenhado, exportado e commitado em \`docs/der.png\`.
+- [ ] Repositório ¤financapp-seuusuario¤ criado (público, com README).
+- [ ] README com objetivo, as 5 funcionalidades, tecnologias e "Decisões de Projeto".
+- [ ] 5 issues criadas (uma por funcionalidade).
 
-Quando tudo estiver certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Banco de Dados.`
+Quando estiver tudo certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Modelagem de Sistemas.`
     }
   ];
 
@@ -341,7 +365,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
 
   function reportStep(label) {
     if (typeof window.reportActivity === 'function') {
-      window.reportActivity('projeto_mural_modelagem_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+      window.reportActivity('projeto_financapp_kickoff_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
     }
   }
 
@@ -387,7 +411,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
         <div class="card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
-          <p>A próxima peça do projeto Mural (Banco de Dados) já pode ser liberada pelo professor.</p>
+          <p>A próxima peça do projeto FinancApp (Modelagem de Sistemas) já pode ser liberada pelo professor.</p>
         </div>
         ${renderNav(true, false)}
       `;
@@ -398,8 +422,8 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
     stepWrap.innerHTML = `
       <div class="card visto-box">
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
-        <p>Seu repositório <code>mural-seuusuario</code> já está com o \`docs/der.png\` commitado, junto dos requisitos, entidades/atributos, cardinalidade e chaves documentados?</p>
-        <p>Chame o professor pra conferir. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <p>Seu repositório <code>financapp-seuusuario</code> já está com README (objetivo, funcionalidades, tecnologias, decisões de projeto) e as 5 issues criadas?</p>
+        <p>Chame o professor pra conferir o repositório no GitHub. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
         <div class="visto-form">
           <label>Token do professor
             <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -449,19 +473,18 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
     });
   }
 
-  // Gabarito aqui é o checklist de critérios pro professor conferir o DER e
-  // os requisitos commitados no repositório GitHub do aluno.
+  // Gabarito aqui é o checklist de critérios pro professor conferir o
+  // repositório GitHub do aluno sem precisar reabrir este módulo.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Projeto Mural — Modelagem de Dados e Requisitos — Checklist de correção',
-      subtitle: 'Trabalho (DER real, commitado no GitHub) · Modelagem de Sistemas 1 · Turma Sistemas',
+      title: 'Projeto FinancApp — Kickoff — Checklist de correção',
+      subtitle: 'Trabalho (repositório GitHub real, fora do portal) · Introdução de Desenvolvimento de Projetos · Turma Sistemas',
       items: [
-        { number: 1, title: 'Requisitos', prompt: 'Os requisitos foram listados?', answer: '5 requisitos funcionais (um por funcionalidade do MVP) e 3 não funcionais (ex.: tempo de resposta, layout responsivo, senha protegida).' },
-        { number: 2, title: 'Entidades e atributos', prompt: 'As 3 entidades estão completas?', answer: 'Usuário (nome, turma, foto, usuário, senha), Post (texto, data), Curtida (data).' },
-        { number: 3, title: 'Cardinalidade e chaves', prompt: 'A modelagem está correta?', answer: 'Cardinalidade Usuário→Post e Post/Usuário→Curtida definida; PK em cada entidade; FK Post→Usuário e Curtida→Post/Usuário.' },
-        { number: 4, title: 'DER commitado', prompt: 'O arquivo existe no repositório?', answer: '`docs/der.png` presente no repositório `mural-<usuario>`, com as 3 entidades, atributos, PK/FK e cardinalidade visíveis no diagrama.' }
+        { number: 1, title: 'Repositório', prompt: 'O aluno criou o repositório?', answer: 'Repositório público chamado financapp-<usuario>, com README inicial criado.' },
+        { number: 2, title: 'README', prompt: 'O README cobre o esperado?', answer: 'Objetivo do FinancApp, lista das 5 funcionalidades da 1ª versão (cadastro/login, perfil, registrar lançamento, extrato/saldo, tags), tecnologias (HTML, CSS, JavaScript, GitHub, Supabase) e seção "Decisões de Projeto" (nome + público-alvo).' },
+        { number: 3, title: 'Issues', prompt: 'As issues foram criadas?', answer: '5 issues, uma por funcionalidade: Cadastro e login; Perfil do usuário; Registrar lançamento; Extrato e saldo; Tags nos lançamentos.' }
       ],
-      fileName: 'projeto-mural-modelagem-checklist.txt'
+      fileName: 'projeto-financapp-kickoff-checklist.txt'
     });
   };
 

@@ -1,12 +1,18 @@
-# Projeto Mural — Como o Mural Conversa com a Internet
+# Projeto FinancApp — Como o FinancApp Conversa com a Internet
+
+> **NOTA DE PIVÔ (domínio trocado):** projeto passou de "Mural" (rede
+> social) pra **FinancApp** (controle financeiro pessoal) — o exercício de
+> observar o tráfego HTTP real no DevTools continua idêntico, só o nome do
+> projeto/banco muda. Ver
+> `turmas/sistemas/atividades/redes-servicos-financapp-pratica.html`.
 
 ## 1. Apresentação
-4ª etapa do projeto Mural — um módulo extra dentro da trilha JÁ EXISTENTE "Serviços de Internet e Modelos" (Redes de Computadores), não uma trilha nova. O aluno usa o próprio Mural (banco já criado na matéria anterior) pra observar, na prática, como o navegador conversa com a internet.
+4ª etapa do projeto FinancApp — um módulo extra dentro da trilha JÁ EXISTENTE "Serviços de Internet e Modelos" (Redes de Computadores), não uma trilha nova. O aluno usa o próprio FinancApp (banco já criado na matéria anterior) pra observar, na prática, como o navegador conversa com a internet.
 
 ---
 
 ## 2. Situação-problema
-O time de Redes da PixelForge Studios precisa garantir que a comunicação entre o navegador do usuário e o servidor do Mural (Supabase) é entendida e monitorável. Você vai abrir o Mural, inspecionar o tráfego real com o DevTools e responder sobre o que está vendo.
+O time de Redes da PixelForge Studios precisa garantir que a comunicação entre o navegador do usuário e o servidor do FinancApp (Supabase) é entendida e monitorável. Você vai abrir o FinancApp, inspecionar o tráfego real com o DevTools e responder sobre o que está vendo.
 
 ---
 

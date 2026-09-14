@@ -1,12 +1,19 @@
-# Projeto Mural — Lógica de Backend com Supabase
+# Projeto FinancApp — Lógica de Backend com Supabase
+
+> **NOTA DE PIVÔ (domínio trocado):** projeto passou de "Mural" (rede
+> social) pra **FinancApp** (controle financeiro pessoal). As 5 funções
+> viram: `cadastrarUsuario`, `fazerLogin`, `criarLancamento`,
+> `carregarLancamentos` (com join até tags) e `adicionarTag` (busca ou cria
+> a tag, depois liga em `lancamento_tags`). Ver
+> `turmas/sistemas/atividades/projeto-financapp-backend-trabalho.html`.
 
 ## 1. Apresentação
-5ª etapa do projeto Mural. Com as tabelas já criadas (Banco de Dados), o aluno escreve, no mesmo repositório `mural-<usuario>` (Codespace), as funções JavaScript que usam a biblioteca `supabase-js` pra implementar as 5 funcionalidades do MVP.
+5ª etapa do projeto FinancApp. Com as tabelas já criadas (Banco de Dados), o aluno escreve, no mesmo repositório `financapp-<usuario>` (Codespace), as funções JavaScript que usam a biblioteca `supabase-js` pra implementar as 5 funcionalidades do MVP.
 
 ---
 
 ## 2. Situação-problema
-O Mural tem banco pronto, mas nenhuma linha de código ainda conecta a aplicação a ele. Você vai escrever as funções de backend (cadastro, login, criar post, carregar feed, curtir) — a interface visual só vem na próxima matéria.
+O FinancApp tem banco pronto, mas nenhuma linha de código ainda conecta a aplicação a ele. Você vai escrever as funções de backend (cadastro, login, registrar lançamento, carregar extrato, marcar tag) — a interface visual só vem na próxima matéria.
 
 ---
 

@@ -1,17 +1,22 @@
-# Projeto Mural — Construa o Aplicativo
+# Projeto FinancApp — Construa o Aplicativo
 
+> **NOTA DE PIVÔ (domínio trocado):** projeto passou de "Mural" (rede
+> social) pra **FinancApp** (controle financeiro pessoal) — a interface
+> agora é cadastro/login, perfil, saldo + extrato de lançamentos, formulário
+> de novo lançamento e tags, em vez de feed/post/curtir.
+>
 > **NOTA DE IMPLEMENTAÇÃO:** ao construir esta peça no portal, o escopo foi
 > ajustado pra focar só em **JavaScript** — o professor entrega
 > `index.html`/`style.css` já prontos (fora do portal), e o aluno só
-> escreve o JS (`mural.js`) que liga esses elementos às funções da matéria
-> anterior. Os arquivos-base ficam em `Atividades/Desenvolvimento de
-> Sistemas/mural-starter/` (`index.html` + `style.css`, com o contrato de
-> ids documentado em comentário no próprio HTML) — copie os dois pro
-> repositório do aluno antes da aula. As etapas abaixo (1-6) continuam
-> valendo como lógica a implementar (a atividade no portal já mostra
-> esqueletos de código em JavaScript pra cada uma); a ETAPA 7 (escolher
-> tema visual) foi removida, já que o CSS já vem pronto. Ver
-> `turmas/sistemas/atividades/projeto-mural-app-trabalho.html`.
+> escreve o JS (`financapp.js`) que liga esses elementos às funções da
+> matéria anterior. Os arquivos-base ficam em `Atividades/Desenvolvimento
+> de Sistemas/financapp-starter/` (`index.html` + `style.css`, com o
+> contrato de ids documentado em comentário no próprio HTML) — copie os
+> dois pro repositório do aluno antes da aula. As etapas abaixo (1-6)
+> continuam valendo como lógica a implementar (a atividade no portal já
+> mostra esqueletos de código em JavaScript pra cada uma); a ETAPA 7
+> (escolher tema visual) foi removida, já que o CSS já vem pronto. Ver
+> `turmas/sistemas/atividades/projeto-financapp-app-trabalho.html`.
 
 ## 1. Apresentação
 6ª e última etapa do projeto Mural. O aluno constrói a interface (HTML/CSS/JS) que chama as funções REAIS escritas na matéria anterior, entregando o app funcionando de ponta a ponta: cadastro → login → perfil → feed → postar → curtir.
