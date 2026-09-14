@@ -23,6 +23,15 @@ async function contextMenuPrevented(page) {
   });
 }
 
+async function mousedownPrevented(page, selector) {
+  return page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    const ev = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    return ev.defaultPrevented;
+  }, selector);
+}
+
 test.describe('shared/clipboard-guard.js', () => {
   test('bloqueia Ctrl+V na plataforma do aluno quando clipboard_blocked=true pra turma dele', async ({ page }) => {
     await stubSupabaseFake(page, {
@@ -114,5 +123,54 @@ test.describe('shared/clipboard-guard.js', () => {
     await page.waitForTimeout(100);
 
     expect(await contextMenuPrevented(page)).toBe(false);
+  });
+
+  // Reforço pedido pelo professor: com o bloqueio ligado, nem dá pra
+  // clicar/selecionar o texto de instrução ou o código de exemplo — só
+  // clicar em botões e digitar nos campos onde o aluno escreve o próprio
+  // código (Central de Dados, PixelCode, desafios de JavaScript etc.).
+  test.describe('bloqueio de clique/seleção em áreas de leitura (texto e código de exemplo)', () => {
+    const ACTIVITY_URL = '/turmas/sistemas/atividades/projeto-mural-kickoff-trabalho.html?user=alexandre.natal&role=aluno&turma=sistemas';
+
+    test('bloqueia clique+arrasto num <p> de texto de instrução quando clipboard_blocked=true', async ({ page }) => {
+      await stubSupabaseFake(page, {
+        classroom_settings: [{ id: 'sistemas', clipboard_blocked: true }],
+      });
+      await page.goto(ACTIVITY_URL);
+
+      await expect.poll(() => mousedownPrevented(page, '.md-body p')).toBe(true);
+    });
+
+    test('não bloqueia clique+arrasto num <p> quando clipboard_blocked=false', async ({ page }) => {
+      await stubSupabaseFake(page, {
+        classroom_settings: [{ id: 'sistemas', clipboard_blocked: false }],
+      });
+      await page.goto(ACTIVITY_URL);
+      await page.waitForTimeout(100);
+
+      expect(await mousedownPrevented(page, '.md-body p')).toBe(false);
+    });
+
+    test('não bloqueia botões de navegação (Próximo →) mesmo com clipboard_blocked=true', async ({ page }) => {
+      await stubSupabaseFake(page, {
+        classroom_settings: [{ id: 'sistemas', clipboard_blocked: true }],
+      });
+      await page.goto(ACTIVITY_URL);
+      await expect.poll(() => mousedownPrevented(page, '.md-body p')).toBe(true); // confirma que o guard já está ativo
+
+      await expect(page.locator('.card h2')).toHaveText('Apresentação');
+      await page.click('#btnNext');
+      await expect(page.locator('.card h2')).toHaveText('Fases de um projeto, agora na prática');
+    });
+
+    test('não bloqueia clique/digitação no campo onde o aluno escreve o próprio código (textarea)', async ({ page }) => {
+      await stubSupabaseFake(page, {
+        classroom_settings: [{ id: 'sistemas', clipboard_blocked: true }],
+      });
+      await page.goto('/turmas/sistemas/atividades/sql-basico.html?user=alexandre.natal&role=aluno&turma=sistemas');
+      await expect.poll(() => mousedownPrevented(page, '#challengeDesc')).toBe(true); // guard ativo na descrição do chamado
+
+      expect(await mousedownPrevented(page, '#codeInput')).toBe(false);
+    });
   });
 });

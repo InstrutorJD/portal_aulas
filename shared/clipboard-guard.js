@@ -1,5 +1,8 @@
 // Bloqueio de Ctrl+C/Ctrl+V ligado pelo professor, por turma (aba "Gestão"
-// dentro de turmas/<turma>/plataforma.html).
+// dentro de turmas/<turma>/plataforma.html). Quando ligado, também bloqueia
+// clique/seleção em áreas de LEITURA (texto de instrução/enunciado e código
+// de exemplo) — o aluno só interage com botões, campos de digitação (Central
+// de Dados, desafios de JavaScript etc.) e outros controles reais.
 //
 // IMPORTANTE — isso é um desincentivo pedagógico, não segurança de verdade:
 // só intercepta copiar/colar DENTRO das páginas do portal. Um aluno pode
@@ -22,6 +25,44 @@
 
   let blocked = false;
   let toastTimer = null;
+
+  // Tags usadas SÓ pra conteúdo de leitura (texto de instrução/enunciado e
+  // código de exemplo mostrado como referência) em todo o portal — nunca
+  // pra controles interativos, que são sempre <button>, <input>/<textarea>
+  // (onde o aluno digita código de verdade: Central de Dados, desafios de
+  // JavaScript etc.) ou <div>/<span> com onclick próprio (cards de módulo,
+  // alternativas de quiz). Por isso dá pra bloquear clique/seleção nessas
+  // tags sem checar seletor específico de cada tipo de atividade.
+  const READONLY_SELECTOR = 'p, pre, code, li, td, th, blockquote, dt, dd, h1, h2, h3, h4, h5, h6';
+  const INTERACTIVE_SELECTOR = 'button, a, input, textarea, select, label, [contenteditable], [onclick]';
+
+  function isReadOnlyTarget(el) {
+    if (!el || typeof el.closest !== 'function') return false;
+    if (el.closest(INTERACTIVE_SELECTOR)) return false;
+    return !!el.closest(READONLY_SELECTOR);
+  }
+
+  // user-select:none é a 1ª linha de defesa (impede até seleção por
+  // teclado/mobile); os handlers de mousedown/click abaixo cobrem o que o
+  // CSS sozinho não pega e dão o mesmo aviso visual do copiar/colar.
+  function injectReadOnlyStyle() {
+    if (document.getElementById('__clipboardGuardStyle')) return;
+    const style = document.createElement('style');
+    style.id = '__clipboardGuardStyle';
+    style.textContent = `html.clipboard-guard-blocked :is(${READONLY_SELECTOR}) { user-select: none; -webkit-user-select: none; }`;
+    document.head.appendChild(style);
+  }
+
+  function onMousedownReadOnly(e) {
+    if (!blocked || !isReadOnlyTarget(e.target)) return;
+    e.preventDefault(); // corta a seleção por clique+arrasto antes de começar
+  }
+
+  function onClickReadOnly(e) {
+    if (!blocked || !isReadOnlyTarget(e.target)) return;
+    e.preventDefault();
+    showToast();
+  }
 
   function showToast() {
     let toast = document.getElementById('__clipboardGuardToast');
@@ -76,6 +117,9 @@
   document.addEventListener('cut', onClipboardEvent, true);
   document.addEventListener('paste', onClipboardEvent, true);
   document.addEventListener('contextmenu', onContextMenu, true);
+  document.addEventListener('mousedown', onMousedownReadOnly, true);
+  document.addEventListener('click', onClickReadOnly, true);
+  injectReadOnlyStyle();
 
   async function fetchState() {
     const { data } = await sb
@@ -84,6 +128,7 @@
       .eq('id', turma)
       .maybeSingle();
     blocked = !!(data && data.clipboard_blocked);
+    document.documentElement.classList.toggle('clipboard-guard-blocked', blocked);
   }
 
   function setupRealtime() {
