@@ -111,6 +111,7 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`oficina_comunicacao_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`projeto_mural_kickoff_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`prova_sistemas_progress_${user}`, JSON.stringify({ completed: true, correctCount: 20, total: 20 }));
+      localStorage.setItem(`projeto_app_empreendedor_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`vida_autoconhecimento_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`vida_autoconhecimento_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`vida_cidadania_teoria_progress_${user}`, JSON.stringify({ completed: true }));

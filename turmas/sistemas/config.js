@@ -674,6 +674,39 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // Trabalho em DUPLA, interdisciplinar: cada dupla cria a ideia de
+          // um app "que dá dinheiro" e apresenta modelagem de sistemas,
+          // modelagem de banco de dados, protótipo no Figma e estimativa de
+          // custo/receita numa apresentação ao vivo pra turma. Sem correção
+          // automática (produto é a apresentação + link do Figma) — visto
+          // do professor aqui, igual aos demais trabalhos. A NOTA (até 10
+          // pontos) não é lançada aqui: o professor lança em "Lançar Notas",
+          // coluna Nota 3 ou Nota 4 — essas duas já contam pra TODAS as
+          // matérias do bimestre ao mesmo tempo (ver loadNotas em
+          // shared/platform-core.js), então uma única nota por aluno já
+          // "vale pra todas as matérias" sem precisar de mecanismo novo.
+          // Entra como trilhas[1] da matéria 'prova' (não trilhas[0]) de
+          // propósito — provaTrilhaKey() em platform-core.js só olha pra
+          // trilhas[0] pra achar a Prova Diagnóstica; manter essa ordem
+          // evita quebrar a coluna "Prova" do relatório de notas.
+          // TODO(professor): capacidade PROVISÓRIA — atividade
+          // interdisciplinar (não mapeia numa única capacidade MSEP);
+          // ajuste o texto se a coordenação pedir enquadramento diferente.
+          key: 'projeto-app-empreendedor',
+          label: 'Projeto Empreendedor: Crie seu App',
+          desc: 'Trabalho em dupla: criem a ideia de um app que geraria dinheiro de verdade, modelem o sistema e o banco de dados, prototipem as telas no Figma, estimem custo e receita — e apresentem tudo pra turma em slides. Vale até 10 pontos, contando pra todas as matérias.',
+          capacidade: 'Aplicar, de forma integrada, modelagem de sistemas, modelagem de dados, prototipação de interface e viabilidade financeira na concepção de um produto próprio, com viés empreendedor.',
+          modules: [
+            {
+              key: 'trabalho', title: 'Trabalho — Projeto Empreendedor: Crie seu App (Dupla)',
+              desc: 'Em dupla: idealizem um app, modelem o sistema e o banco de dados, prototipem no Figma, estimem custo/receita e apresentem pra turma em slides. O portal não corrige essa atividade sozinho — depois da apresentação, chamem o professor pra dar o visto.',
+              icon: '💼', src: 'atividades/projeto-app-empreendedor-trabalho.html',
+              progressKey: 'projeto_app_empreendedor_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     }

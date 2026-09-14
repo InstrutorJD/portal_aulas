@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Trabalho: Projeto Empreendedor (Crie seu App)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0d0912; --panel:#171022; --panel2:#130d1c; --line:#2e2340;
+    --accent:#b98cff; --accent-dim:#7c56b3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#e7defa; --ink-dim:#8b7aa8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--accent-dim); background:#0a0710;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--accent); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--yellow); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--accent); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--accent); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--accent-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--accent-dim); color:var(--yellow); font-style:italic;
+  }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--yellow); }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--accent); color:#150a24; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--accent); border:1px solid var(--accent-dim); }
+
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--accent-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--accent); color:var(--accent); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'projeto_app_empreendedor_trabalho';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PROVA — TRABALHO: PROJETO EMPREENDEDOR (CRIE SEU APP)</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">10</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `projeto_app_empreendedor_trabalho_progress_${username}`;
+  const STEP_KEY = `projeto_app_empreendedor_trabalho_step_${username}`;
+
+  // Atividade em DUPLA, sem correção automática (o "produto" é uma
+  // apresentação ao vivo pra turma + um protótipo no Figma, fora do portal)
+  // — cada tela só navega com Voltar/Próximo, sem quiz nenhum. Quem marca
+  // como concluída é o professor, depois da apresentação (ver renderVisto),
+  // mesmo padrão de modelagem-dados-requisitos-trabalho.html e
+  // projeto-mural-kickoff-trabalho.html. A NOTA (até 10 pontos, valendo pra
+  // todas as matérias) não é lançada aqui — o professor lança em "Lançar
+  // Notas", coluna Nota 3 ou Nota 4 (essas duas já contam pra todas as
+  // matérias ao mesmo tempo, ver shared/platform-core.js).
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios abriu um programa interno de inovação: cada dupla vai bancar o papel de fundadora de uma startup e apresentar sua ideia de app pra "diretoria" (a turma e o professor), como se estivesse buscando investimento de verdade.
+
+### O desafio
+
+Em **dupla**, criem a ideia de um app que **geraria dinheiro** — pensem num problema real que ele resolve e em como ele se sustentaria financeiramente.
+
+### O que vocês vão entregar
+
+Uma apresentação (Slides, Canva ou PowerPoint) com:
+
+1. A ideia do app (problema, solução, monetização)
+2. Modelagem de sistemas (requisitos + fluxo principal)
+3. Modelagem de banco de dados (DER/MER)
+4. Protótipo de telas no **Figma**
+5. Estimativa de custo e receita ao longo do tempo
+
+Depois, apresentem tudo **ao vivo pra turma**.
+
+### Como funciona aqui
+
+1. Formem a dupla.
+2. Sigam as próximas etapas, uma de cada vez — cada uma é uma parte obrigatória da apresentação.
+3. Montem os slides por fora, com o material de cada etapa.
+4. Apresentem pra turma no dia combinado com o professor.
+5. Depois de apresentar, peçam o visto aqui — é isso que marca a atividade como concluída.
+
+> ⚠️ A **nota** (até 10 pontos, valendo pra **todas as matérias**) é dada pelo professor separadamente, avaliando a apresentação ao vivo — o visto aqui só confirma que a etapa foi cumprida.`
+    },
+    {
+      titulo: 'A ideia do app',
+      corpo: `
+Toda empresa de sucesso nasce de um **problema real** que alguém decidiu resolver. Com sua dupla, definam:
+
+- [ ] **O problema** — o que incomoda ou falta hoje, na vida de quem? Seja específico (não "as pessoas têm dificuldade com X" — diga QUEM e QUANDO).
+- [ ] **A solução** — o que o app faz pra resolver esse problema, em 2-3 frases.
+- [ ] **Público-alvo** — quem usaria esse app? (idade, perfil, hábito)
+- [ ] **Nome do app** — algo curto e fácil de lembrar.
+- [ ] **Monetização** — como o app ganharia dinheiro? Escolham (ou combinem) um modelo:
+  - **Assinatura** (mensalidade pra usar)
+  - **Anúncios** (marcas pagam pra aparecer)
+  - **Comissão** (uma % de cada transação feita pelo app)
+  - **Freemium** (grátis no básico, paga pra desbloquear mais)
+  - **Venda direta** (paga uma vez pra comprar/usar)
+
+> Dica: pensem em problemas do dia a dia de vocês — escola, transporte, lazer, trabalho dos pais — ideias assim costumam ser as mais fáceis de defender na apresentação.`
+    },
+    {
+      titulo: 'Modelagem de sistemas',
+      corpo: `
+Antes de desenhar qualquer tela, definam **o que o sistema precisa fazer** (e com que qualidade).
+
+- [ ] **Requisitos funcionais** — liste pelo menos 5 AÇÕES que o app faz (ex.: "o usuário cadastra uma conta", "o app calcula o valor da comissão").
+- [ ] **Requisitos não funcionais** — liste pelo menos 2 QUALIDADES do app (ex.: tempo de resposta, segurança dos dados, funcionar offline).
+- [ ] **Fluxo principal** — um diagrama simples (pode ser à mão e fotografado, ou em qualquer ferramenta) mostrando o caminho do usuário desde abrir o app até completar a ação principal (ex.: login → tela inicial → usar a funcionalidade central → confirmação).
+
+> Isso é a mesma lógica que vocês já viram em Modelagem de Dados e Requisitos — só que agora aplicada na ideia de vocês, não num sistema pronto.`
+    },
+    {
+      titulo: 'Modelagem de banco de dados',
+      corpo: `
+Todo app precisa guardar dados em algum lugar. Modelem o banco de dados por trás da ideia:
+
+- [ ] **Entidades** — pelo menos 4 (ex.: Usuário, Post, Pedido, Pagamento — depende do app).
+- [ ] **Atributos** — as colunas de cada entidade (ex.: Usuário: nome, e-mail, senha).
+- [ ] **Chave primária** — em cada entidade.
+- [ ] **Relacionamentos e cardinalidade** — como as entidades se conectam (1:1, 1:N ou N:N), com pelo menos 2 relacionamentos.
+- [ ] **Chave estrangeira** — indicando onde o relacionamento vira coluna.
+- [ ] **Diagrama DER/MER** — desenhado (pode ser à mão, fotografado, ou em qualquer ferramenta).
+
+> Reaproveitem o mesmo raciocínio do trabalho de Modelagem de Dados e Requisitos — a diferença é que agora o banco de dados é do app de vocês.`
+    },
+    {
+      titulo: 'Protótipo de telas no Figma',
+      corpo: `
+Um protótipo mostra como o app **pareceria de verdade**, mesmo sem nenhuma linha de código funcionando por trás.
+
+### Faça
+
+1. Crie uma conta gratuita em
+§§§text
+figma.com
+§§§
+2. Crie um novo arquivo ("Design file").
+3. Monte pelo menos **3 telas**:
+   - [ ] Tela de login/cadastro
+   - [ ] Tela principal (a primeira que o usuário vê depois de entrar)
+   - [ ] 1 tela da funcionalidade-chave do app (a ação principal que resolve o problema)
+4. Use componentes básicos: botões, campos de texto, ícones, cores e nome do app.
+5. Compartilhe o arquivo com permissão de visualização (**Share** → **Anyone with the link** → **can view**) e guardem o link.
+
+> Não precisa ficar perfeito nem ter interatividade — o objetivo é mostrar visualmente a ideia, não programar o app.`
+    },
+    {
+      titulo: 'Estimativa de custo e receita',
+      corpo: `
+Todo investidor quer saber: **esse negócio se paga?** Montem uma estimativa simples, em uma tabela:
+
+| Período | Custo estimado | Receita estimada |
+|---|---|---|
+| Mês 1 | ? | ? |
+| Mês 6 | ? | ? |
+| Mês 12 | ? | ? |
+
+- [ ] **Custos** — o que custaria manter o app rodando (ex.: servidor/hospedagem, manutenção, marketing, equipe).
+- [ ] **Receita** — quanto o app arrecadaria, considerando o modelo de monetização escolhido (ex.: nº de usuários pagantes × valor da assinatura).
+- [ ] **Ponto de equilíbrio (aproximado)** — em que mês a receita passaria a cobrir o custo?
+
+> Não precisa ser um número exato de mercado — o importante é o RACIOCÍNIO por trás da conta (quantos usuários? quanto cada um geraria?), não acertar o valor certo.`
+    },
+    {
+      titulo: 'Montando a apresentação',
+      corpo: `
+A apresentação (Slides, Canva ou PowerPoint) precisa ter, nessa ordem:
+
+1. **Capa** — nome do app + nomes da dupla.
+2. **A ideia** — problema, solução, público-alvo e monetização.
+3. **Modelagem de sistemas** — requisitos funcionais/não funcionais e o fluxo principal.
+4. **Modelagem de banco de dados** — o diagrama DER/MER.
+5. **Protótipo** — prints das telas feitas no Figma.
+6. **Custo e receita** — a tabela da etapa anterior.
+7. **Encerramento** — por que esse app daria certo, em 1 frase de impacto.
+
+### Critérios de formatação — valem nota
+
+- [ ] **Fontes**: no máximo 2 (título + corpo), legíveis, tamanho igual em slides do mesmo tipo.
+- [ ] **Alinhamento**: título sempre no mesmo lugar em todos os slides; texto e imagens alinhados, não jogados de qualquer jeito.`
+    },
+    {
+      titulo: 'Como apresentar pra turma',
+      corpo: `
+### No dia combinado com o professor
+
+1. A dupla toda apresenta junto — cada um fala pelo menos uma parte.
+2. Tempo sugerido: 5 a 8 minutos.
+3. Levem o link do Figma aberto pra mostrar o protótipo ao vivo, além dos prints nos slides.
+4. Respondam às perguntas da turma/professor sobre a ideia, a modelagem ou os números.
+
+### Como a nota funciona
+
+O professor avalia a apresentação ao vivo e dá **uma nota de até 10 pontos** — essa nota conta pra **todas as matérias** do bimestre (não é preciso apresentar de novo em cada matéria).`
+    },
+    {
+      titulo: 'Checklist final antes do visto',
+      corpo: `
+Confiram tudo antes de chamar o professor:
+
+- [ ] Ideia do app definida (problema, solução, público-alvo, monetização).
+- [ ] Requisitos funcionais/não funcionais e fluxo principal.
+- [ ] DER/MER do banco de dados.
+- [ ] Protótipo no Figma com pelo menos 3 telas, com link compartilhado.
+- [ ] Tabela de custo e receita (Mês 1, 6 e 12).
+- [ ] Apresentação montada, seguindo a ordem e os critérios de formatação.
+- [ ] Apresentação feita ao vivo pra turma.
+
+Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e peçam o visto — é isso que marca a atividade como concluída pro portal.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de modelagem-dados-requisitos-trabalho.html
+  // (cabeçalhos, blocos §§§lang...§§§, tabela, listas/checklist, citação).
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('projeto_app_empreendedor_trabalho', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Trabalho — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Trabalho — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+          <p>A nota (até 10 pontos, valendo pra todas as matérias) é lançada pelo professor em "Lançar Notas".</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>A dupla já apresentou pra turma — ideia, modelagem de sistemas, modelagem de banco de dados, protótipo no Figma e estimativa de custo/receita?</p>
+        <p>Chame o professor pra confirmar. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída. A nota é lançada separadamente pelo professor.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui é o checklist de critérios pro professor avaliar a
+  // apresentação ao vivo (ideia, modelagem, protótipo, números e formato) e
+  // decidir a nota (até 10 pontos) que depois lança em Lançar Notas.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Projeto Empreendedor (Crie seu App) — Checklist de avaliação',
+      subtitle: 'Trabalho em dupla (apresentação ao vivo + protótipo no Figma) · Prova · Turma Sistemas',
+      items: [
+        { number: 1, title: 'A ideia', prompt: 'A dupla definiu a ideia do app com clareza?', answer: 'Problema real e específico; solução em 2-3 frases; público-alvo definido; nome do app; modelo de monetização coerente (assinatura, anúncios, comissão, freemium ou venda direta).' },
+        { number: 2, title: 'Modelagem de sistemas', prompt: 'A apresentação cobre requisitos e fluxo?', answer: 'Pelo menos 5 requisitos funcionais (ações do app) e 2 não funcionais (qualidades), mais um diagrama do fluxo principal do usuário (login até a ação central).' },
+        { number: 3, title: 'Modelagem de banco de dados', prompt: 'O DER/MER está correto?', answer: 'Pelo menos 4 entidades, com atributos, chave primária, chave estrangeira e pelo menos 2 relacionamentos com cardinalidade indicada.' },
+        { number: 4, title: 'Protótipo no Figma', prompt: 'O protótipo existe e foi compartilhado?', answer: 'Link do Figma funcional, com pelo menos 3 telas (login/cadastro, tela principal, funcionalidade-chave), usando componentes básicos (botões, campos, cores, nome do app).' },
+        { number: 5, title: 'Custo e receita', prompt: 'A estimativa financeira está presente e coerente?', answer: 'Tabela com Mês 1, 6 e 12 (custo estimado x receita estimada), com raciocínio explicado (não precisa ser exato) e menção ao ponto de equilíbrio aproximado.' },
+        { number: 6, title: 'Formatação e apresentação', prompt: 'Os slides seguem os critérios e a dupla apresentou ao vivo?', answer: 'No máximo 2 fontes, tamanho consistente, título sempre no mesmo lugar, conteúdo alinhado; apresentação feita pra turma com participação dos dois integrantes da dupla.' },
+        { number: 7, title: 'Nota final', prompt: 'Como lançar a nota?', answer: 'Nota de 0 a 10, atribuída após a apresentação ao vivo. Lance em "Lançar Notas" (Nota 3 ou Nota 4) pra cada aluno da dupla — essas colunas já contam automaticamente pra TODAS as matérias do bimestre, não precisa repetir em cada matéria.' }
+      ],
+      fileName: 'projeto-app-empreendedor-checklist.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
