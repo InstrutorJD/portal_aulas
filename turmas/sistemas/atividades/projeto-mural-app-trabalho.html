@@ -157,18 +157,25 @@ Um arquivo de JavaScript que conecta o HTML fornecido às 5 funções do backend
     {
       titulo: 'Conheça o HTML já pronto',
       corpo: `
-O \`index.html\` entregue pelo professor já tem os formulários, o container do feed e os botões — você não precisa (e não deve) criar HTML novo, só selecionar o que já existe e reagir a eventos.
+O professor entrega 2 arquivos prontos pra colocar no seu repositório \`mural-seuusuario\`: \`index.html\` e \`style.css\`. Você não precisa (e não deve) alterar nenhum dos dois — só criar um arquivo novo, \`mural.js\`, e referenciá-lo no HTML (já está referenciado no arquivo entregue, junto com o \`app.js\` da matéria anterior).
 
-### O contrato do HTML fornecido
+### O contrato de ids que o HTML já tem
 
-- [ ] Formulário de cadastro com campos de nome, turma, usuário e senha.
-- [ ] Formulário de login com campos de usuário e senha.
-- [ ] Uma área de perfil, pra mostrar nome/turma/foto do usuário logado.
-- [ ] Um container de feed, onde cada post vira um elemento novo na tela.
-- [ ] Um formulário de novo post (campo de texto + botão publicar).
-- [ ] Um botão de curtir em cada post, com um contador ao lado.
+§§§text
+#telaAuth              seção com os 2 formulários (cadastro e login)
+#formCadastro           #cadNome #cadTurma #cadUsuario #cadSenha
+#formLogin              #loginUsuario #loginSenha
 
-> Se o HTML do seu professor usar nomes de \`id\`/\`class\` diferentes dos que você imaginou, ajuste o seu **JavaScript** pra usar os nomes certos — nunca mude o HTML fornecido.`
+#telaApp               seção do app (some por padrão — hidden)
+#perfilFoto #perfilNome #perfilTurma
+
+#formPost               #postTexto
+#feedContainer          onde cada post entra na tela
+§§§
+
+Cada post que você renderizar precisa ter a classe \`post-card\`, e dentro dela um botão com classe \`btn-curtir\` (com \`data-post-id\`) e um \`<span class="contador-curtidas">\`.
+
+> Peça esses 2 arquivos ao professor antes de começar. Se algum id/class estiver diferente do que está aqui, ajuste o seu \`mural.js\` — nunca o HTML/CSS entregues.`
     },
     {
       titulo: 'Cadastro',
@@ -177,7 +184,17 @@ Validação de formulário impede que dados incompletos cheguem ao banco.
 
 ### Faça
 
-Escreva \`validarCadastro()\`: leia os valores do formulário de cadastro já existente no HTML, confira que nenhum campo está vazio e, se estiver tudo certo, chame \`cadastrarUsuario()\` (função da matéria anterior).`
+No seu \`mural.js\`, escreva:
+
+§§§javascript
+document.getElementById('formCadastro').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // TODO: leia os valores de #cadNome, #cadTurma, #cadUsuario, #cadSenha
+  // TODO: se algum campo estiver vazio, mostre um aviso em #cadMsg e pare aqui (return)
+  // TODO: chame cadastrarUsuario(nome, turma, usuario, senha) — função do app.js
+  // TODO: trate o { data, error } — se deu erro, mostre em #cadMsg
+});
+§§§`
     },
     {
       titulo: 'Login',
@@ -186,14 +203,29 @@ O front-end chama a função de backend e reage ao resultado (sucesso/erro).
 
 ### Faça
 
-Escreva \`validarLogin()\`: leia usuário/senha do formulário de login, chame \`fazerLogin()\` e, se autenticar, guarde o usuário logado (ex.: \`sessionStorage\`) e mostre o feed.`
+§§§javascript
+document.getElementById('formLogin').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // TODO: leia #loginUsuario e #loginSenha
+  // TODO: chame fazerLogin(usuario, senha) — função do app.js
+  // TODO: se não autenticou, mostre um aviso em #loginMsg e pare aqui (return)
+  // TODO: guarde o usuário logado, ex.: sessionStorage.setItem('mural_usuario', JSON.stringify(usuario))
+  // TODO: esconda #telaAuth (telaAuth.hidden = true) e mostre #telaApp (telaApp.hidden = false)
+  // TODO: chame a função que preenche o perfil (próxima etapa) e a que carrega o feed (etapa Feed)
+});
+§§§`
     },
     {
       titulo: 'Perfil',
       corpo: `
 ### Faça
 
-Preencha a área de perfil já existente no HTML com nome, turma e foto do usuário logado (o dado que você guardou depois do login).`
+§§§javascript
+function mostrarPerfil(usuario) {
+  // TODO: preencha o texto de #perfilNome e #perfilTurma com os dados de "usuario"
+  // TODO: preencha o src de #perfilFoto (se o usuário não tiver foto, deixe o placeholder do próprio HTML)
+}
+§§§`
     },
     {
       titulo: 'Feed',
@@ -202,23 +234,61 @@ Renderizar uma lista dinâmica significa transformar um array de dados em elemen
 
 ### Faça
 
-Implemente \`renderPost()\` pra cada item retornado por \`carregarFeed()\`, inserindo dentro do container de feed já existente no HTML. Implemente \`formatarData()\` pra exibir a data de forma amigável (ex.: "há 2 horas").`
+§§§javascript
+async function atualizarFeed() {
+  const posts = await carregarFeed(); // função do app.js
+  const feedContainer = document.getElementById('feedContainer');
+  feedContainer.innerHTML = '';
+  // TODO: pra cada post, chame renderPost(post) e adicione o resultado dentro de feedContainer
+}
+
+function renderPost(post) {
+  // TODO: crie um elemento (document.createElement('div')) com a classe "post-card"
+  // TODO: preencha com o autor do post, post.texto e formatarData(post.criado_em)
+  // TODO: adicione dentro dele um botão .btn-curtir com data-post-id = post.id,
+  //       e um <span class="contador-curtidas"> com a contagem de curtidas
+  // TODO: retorne o elemento pronto (return elemento)
+}
+
+function formatarData(dataISO) {
+  // TODO: transforme a data em algo amigável (ex.: "há 2 horas", "agora mesmo")
+}
+§§§`
     },
     {
       titulo: 'Criar Post',
       corpo: `
 ### Faça
 
-Capture o envio do formulário de post já existente no HTML, chame \`criarPost()\` e atualize o feed na tela **sem recarregar a página**.`
+§§§javascript
+document.getElementById('formPost').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const texto = document.getElementById('postTexto').value;
+  // TODO: se o texto estiver vazio, pare aqui (return)
+  // TODO: chame criarPost(usuarioLogado.id, texto) — função do app.js
+  // TODO: limpe o campo #postTexto
+  // TODO: chame atualizarFeed() de novo, SEM recarregar a página
+});
+§§§`
     },
     {
       titulo: 'Curtir',
       corpo: `
-Um toggle de estado alterna entre dois visuais (curtido/não curtido) e mantém contador.
+Um toggle de estado alterna entre dois visuais (curtido/não curtido) e mantém contador. Como os botões de curtir são criados dinamicamente (um por post, dentro de \`renderPost()\`), o jeito mais simples é usar **delegação de evento**: um único listener no \`#feedContainer\`, que descobre em qual botão o clique caiu.
 
 ### Faça
 
-Implemente o clique no botão de curtir já existente no HTML, chamando \`curtir()\` e atualizando o contador de curtidas na tela.`
+§§§javascript
+document.getElementById('feedContainer').addEventListener('click', async (e) => {
+  const botao = e.target.closest('.btn-curtir');
+  if (!botao) return; // clique não foi num botão de curtir
+
+  // TODO: pegue o id do post em botao.dataset.postId
+  // TODO: chame curtir(postId, usuarioLogado.id) — função do app.js
+  // TODO: atualize o número dentro de botao.querySelector('.contador-curtidas')
+  // TODO: (opcional) alterne a classe "curtido" no botão, pra mudar a cor
+});
+§§§`
     },
     {
       titulo: 'Checklist final antes do visto',
@@ -230,7 +300,8 @@ Confira antes de chamar o professor:
 - [ ] Feed renderizando posts reais, mais recentes primeiro.
 - [ ] Criar post funcionando e atualizando o feed.
 - [ ] Curtir funcionando com contador.
-- [ ] Nenhuma alteração feita no HTML/CSS fornecidos pelo professor — só JavaScript.
+- [ ] Nenhuma alteração feita no \`index.html\`/\`style.css\` fornecidos pelo professor — todo o código escrito está em \`mural.js\`.
+- [ ] \`mural.js\` commitado no repositório \`mural-seuusuario\`, junto com \`index.html\`, \`style.css\` e o \`app.js\` da matéria anterior.
 
 Chame o professor pra conferir o app funcionando de ponta a ponta: cadastro → login → postar → curtir, com dados reais no Supabase.`
     }
@@ -454,16 +525,17 @@ Chame o professor pra conferir o app funcionando de ponta a ponta: cadastro → 
   }
 
   // Gabarito aqui é o checklist de critérios pro professor conferir o app
-  // funcionando de ponta a ponta, com HTML/CSS fornecidos e JS do aluno.
+  // funcionando de ponta a ponta, com HTML/CSS fornecidos (ver Atividades/
+  // Desenvolvimento de Sistemas/mural-starter/) e mural.js do aluno.
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Projeto Mural — Construa o Aplicativo — Checklist de correção',
-      subtitle: 'Trabalho (só JavaScript — HTML/CSS fornecidos pelo professor) · Programação de Aplicativos · Turma Sistemas',
+      subtitle: 'Trabalho (só JavaScript, em mural.js — HTML/CSS fornecidos pelo professor) · Programação de Aplicativos · Turma Sistemas',
       items: [
-        { number: 1, title: 'Cadastro e login', prompt: 'Funcionam com validação?', answer: 'validarCadastro() e validarLogin() leem os campos do HTML fornecido, chamam cadastrarUsuario()/fazerLogin() e reagem ao resultado.' },
-        { number: 2, title: 'Perfil e feed', prompt: 'Exibem dados reais?', answer: 'Perfil mostra nome/turma/foto do usuário logado; feed renderiza posts reais via renderPost(), mais recentes primeiro, com formatarData().' },
-        { number: 3, title: 'Criar post e curtir', prompt: 'Funcionam sem recarregar a página?', answer: 'criarPost() atualiza o feed ao vivo; curtir() atualiza o contador de curtidas na tela.' },
-        { number: 4, title: 'HTML/CSS preservados', prompt: 'O aluno alterou o HTML/CSS fornecidos?', answer: 'Não deveria — só JavaScript deve ter sido escrito/alterado pelo aluno.' }
+        { number: 1, title: 'Cadastro e login', prompt: 'Funcionam com validação?', answer: 'Listener de submit em #formCadastro/#formLogin, lendo os campos certos, chamando cadastrarUsuario()/fazerLogin() (app.js) e reagindo ao resultado (mensagem de erro em #cadMsg/#loginMsg, ou troca pra #telaApp no login).' },
+        { number: 2, title: 'Perfil e feed', prompt: 'Exibem dados reais?', answer: 'Perfil (#perfilNome/#perfilTurma/#perfilFoto) preenchido após o login; feed renderiza posts reais via renderPost() dentro de #feedContainer, mais recentes primeiro, com formatarData().' },
+        { number: 3, title: 'Criar post e curtir', prompt: 'Funcionam sem recarregar a página?', answer: 'criarPost() (via #formPost) atualiza o feed ao vivo (atualizarFeed()); curtir() (via delegação de evento em #feedContainer, alvo .btn-curtir) atualiza o .contador-curtidas na tela.' },
+        { number: 4, title: 'HTML/CSS preservados', prompt: 'O aluno alterou o index.html/style.css fornecidos?', answer: 'Não deveria — os ids/classes do contrato (ver mural-starter/index.html) continuam intactos; todo código novo está em mural.js.' }
       ],
       fileName: 'projeto-mural-app-checklist.txt'
     });
