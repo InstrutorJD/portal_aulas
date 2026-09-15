@@ -125,7 +125,7 @@
   const PROGRESS_KEY = `redes_servicos_financapp_pratica_progress_${username}`;
   const STEP_KEY = `redes_servicos_financapp_pratica_step_${username}`;
 
-  // 4ª de 6 peças do projeto interdisciplinar "FinancApp" — módulo EXTRA
+  // 4ª de 5 peças do projeto interdisciplinar "FinancApp" — módulo EXTRA
   // dentro da trilha JÁ EXISTENTE "Serviços de Internet e Modelos" (não é
   // trilha nova, pra não duplicar a capacidade sem necessidade — ver
   // config.js, requires:'pratica'). Usa o banco Supabase criado na peça 3
@@ -135,7 +135,7 @@
     {
       titulo: 'Apresentação',
       corpo: `
-Esta é a **4ª de 6 peças** do projeto FinancApp. O time de Redes da PixelForge Studios precisa garantir que a comunicação entre o navegador do usuário e o servidor do FinancApp (Supabase) é entendida e monitorável.
+Esta é a **4ª de 5 peças** do projeto FinancApp. O time de Redes da PixelForge Studios precisa garantir que a comunicação entre o navegador do usuário e o servidor do FinancApp (Supabase) é entendida e monitorável.
 
 Você vai abrir o FinancApp (ou só o projeto Supabase da peça de Banco de Dados), inspecionar o tráfego real com o **DevTools** e responder sobre o que está vendo.
 
@@ -209,7 +209,7 @@ Confira antes de chamar o professor:
 - [ ] Status code de erro observado e explicado.
 - [ ] Camada de aplicação relacionada à requisição.
 
-Quando tudo estiver certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Desenvolvimento de Sistemas 1.`
+Quando tudo estiver certo, avance e peça o visto — é isso que libera a próxima peça do projeto, em Programação de Aplicativos.`
     }
   ];
 
@@ -368,7 +368,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
         <div class="card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
-          <p>A próxima peça do projeto FinancApp (Desenvolvimento de Sistemas 1) já pode ser liberada pelo professor.</p>
+          <p>A próxima peça do projeto FinancApp (Programação de Aplicativos) já pode ser liberada pelo professor.</p>
         </div>
         ${renderNav(true, false)}
       `;

@@ -5,18 +5,31 @@
 > agora é cadastro/login, perfil, saldo + extrato de lançamentos, formulário
 > de novo lançamento e tags, em vez de feed/post/curtir.
 >
+> **NOTA DE MERGE (incorporou a peça de Backend):** esta peça ABSORVEU a
+> antiga peça de Desenvolvimento de Sistemas 1 ("Lógica de Backend com
+> Supabase" — ver o `.md` correspondente, agora só histórico). O projeto
+> passou de 6 pra 5 peças: esta é a **5ª e última**. O aluno agora escreve,
+> nesta mesma atividade e nesta ordem, as 5 funções de backend (`app.js`,
+> testadas pelo console), o JavaScript da interface (`financapp.js`) e o
+> Web App Manifest (`manifest.json`).
+>
 > **NOTA DE IMPLEMENTAÇÃO:** ao construir esta peça no portal, o escopo foi
-> ajustado pra focar só em **JavaScript** — o professor entrega
-> `index.html`/`style.css` já prontos (fora do portal), e o aluno só
-> escreve o JS (`financapp.js`) que liga esses elementos às funções da
-> matéria anterior. Os arquivos-base ficam em `Atividades/Desenvolvimento
-> de Sistemas/financapp-starter/` (`index.html` + `style.css`, com o
-> contrato de ids documentado em comentário no próprio HTML) — copie os
-> dois pro repositório do aluno antes da aula. As etapas abaixo (1-6)
-> continuam valendo como lógica a implementar (a atividade no portal já
-> mostra esqueletos de código em JavaScript pra cada uma); a ETAPA 7
-> (escolher tema visual) foi removida, já que o CSS já vem pronto. Ver
-> `turmas/sistemas/atividades/projeto-financapp-app-trabalho.html`.
+> ajustado pra focar só em **JavaScript** (e o manifest, JSON) — o
+> professor entrega `index.html`/`style.css` já prontos (fora do portal), e
+> o aluno digita o JS que liga esses elementos às funções que ele mesmo
+> escreveu no início desta peça. Os arquivos-base ficam em
+> `Atividades/Desenvolvimento de Sistemas/financapp-starter/` (`index.html`
+> + `style.css`, com o contrato de ids documentado em comentário no próprio
+> HTML, e o `<link rel="manifest">` já apontando pro `manifest.json` que o
+> aluno cria) — copie os dois pro repositório do aluno antes da aula. A
+> atividade no portal já traz o código **completo** de cada parte pronto
+> pra copiar (mesmo estilo "código pronto" da peça de Banco de Dados, em
+> vez de esqueletos com TODO). As etapas abaixo (1-8, que descrevem só a
+> interface) ficam desatualizadas quanto a isso e quanto ao backend, que
+> não existia como conteúdo separado quando este `.md` foi escrito; a
+> ETAPA 7 original (escolher tema visual) foi removida, já que o CSS já vem
+> pronto. Ver `turmas/sistemas/atividades/projeto-financapp-app-trabalho.html`
+> pro conteúdo real e atualizado.
 
 ## 1. Apresentação
 6ª e última etapa do projeto Mural. O aluno constrói a interface (HTML/CSS/JS) que chama as funções REAIS escritas na matéria anterior, entregando o app funcionando de ponta a ponta: cadastro → login → perfil → feed → postar → curtir.

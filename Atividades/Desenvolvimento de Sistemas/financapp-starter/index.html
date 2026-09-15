@@ -5,17 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FinancApp</title>
 <link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
 </head>
 <body>
 
 <!--
-  ARQUIVO ENTREGUE PELO PROFESSOR — Peça 6 do projeto FinancApp (Programação
-  de Aplicativos). NÃO altere este HTML nem o style.css: a atividade
-  (turmas/sistemas/atividades/projeto-financapp-app-trabalho.html) pede pra
-  escrever só JavaScript, usando exatamente os ids abaixo. Se precisar de um
-  id/class diferente, ajuste o SEU financapp.js — nunca este arquivo.
+  ARQUIVO ENTREGUE PELO PROFESSOR — última peça do projeto FinancApp
+  (Programação de Aplicativos). NÃO altere este HTML nem o style.css: a
+  atividade (turmas/sistemas/atividades/projeto-financapp-app-trabalho.html)
+  pede pra escrever só JavaScript, usando exatamente os ids abaixo. Se
+  precisar de um id/class diferente, ajuste o SEU financapp.js — nunca este
+  arquivo.
 
-  Contrato de ids que o app.js (peça 5) e o financapp.js (peça 6) esperam:
+  O <link rel="manifest" href="manifest.json"> acima JÁ está aqui de
+  propósito — é um dos arquivos que o aluno cria nesta peça, junto com
+  app.js e financapp.js (a atividade ensina os 3, nesta ordem: backend,
+  interface, manifest). Sem esse link, o navegador ignora o manifest.json
+  mesmo que ele exista no repositório.
+
+  Contrato de ids que o app.js e o financapp.js (ambos escritos nesta
+  mesma peça) esperam:
     #telaAuth, #formCadastro (#cadNome #cadTurma #cadUsuario #cadSenha),
     #formLogin (#loginUsuario #loginSenha)
     #telaApp, #perfilFoto #perfilNome #perfilTurma
@@ -90,11 +99,9 @@
 
 <!--
   Adicione aqui embaixo 2 tags de script, NESTA ORDEM, apontando pros 2
-  arquivos que já existem no SEU repositório financapp-seuusuario (não
-  existem neste template — cada um é criado numa peça diferente do
-  projeto):
-    1º) o script do app.js, da peça anterior (Desenvolvimento de Sistemas 1) — as 5 funções de backend.
-    2º) o script do financapp.js, desta peça, ligando o HTML acima a essas funções.
+  arquivos que você cria nesta mesma peça (não existem neste template):
+    1º) o script do app.js — as 5 funções de backend, escritas no começo desta atividade.
+    2º) o script do financapp.js — ligando o HTML acima a essas funções.
 -->
 </body>
 </html>

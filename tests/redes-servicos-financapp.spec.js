@@ -1,7 +1,7 @@
 // @ts-check
 // Módulo "FinancApp — Como o FinancApp Conversa com a Internet" (dentro da
 // trilha JÁ EXISTENTE "Serviços de Internet e Modelos", Redes de
-// Computadores, turma Sistemas) — 4ª de 6 peças do projeto interdisciplinar
+// Computadores, turma Sistemas) — 4ª de 5 peças do projeto interdisciplinar
 // FinancApp (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça). Não é
 // trilha nova (pra não duplicar a capacidade já coberta por "Serviços de
 // Internet e Modelos") — só um módulo extra, travado até a prática normal

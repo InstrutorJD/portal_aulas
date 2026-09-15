@@ -93,7 +93,7 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 3ª de 6 peças do projeto interdisciplinar "FinancApp" (ver
+          // 3ª de 5 peças do projeto interdisciplinar "FinancApp" (ver
           // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
           // Desenvolvimento de Projetos, pra 1ª peça, e
           // projeto-financapp-modelagem-trabalho.html, matéria Modelagem de
@@ -212,29 +212,15 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
-        },
-        {
-          // 5ª de 6 peças do projeto interdisciplinar "FinancApp" — a
-          // PRIMEIRA peça com código de verdade (ver
-          // projeto-financapp-banco-dados-trabalho.html, matéria Banco de
-          // Dados, pra 3ª peça). Aluno escreve, em JavaScript, as funções
-          // que usam supabase-js pra implementar o MVP do FinancApp. Só
-          // JavaScript aqui — a interface (HTML/CSS) já vem pronta na
-          // próxima peça (Programação de Aplicativos).
-          key: 'projeto-financapp-backend',
-          label: 'FinancApp — Lógica de Backend com Supabase',
-          desc: 'Projeto integrador: escrevam, em JavaScript, as funções (cadastrarUsuario, fazerLogin, criarLancamento, carregarLancamentos, adicionarTag) que usam supabase-js pra implementar o backend do FinancApp.',
-          capacidade: 'Aplicar linguagem de programação por meio de apis, bibliotecas, frameworks na construção de rotinas de software.',
-          modules: [
-            {
-              key: 'trabalho', title: 'Trabalho — FinancApp: Lógica de Backend com Supabase',
-              desc: 'Escrevam as 5 funções assíncronas do backend do FinancApp em JavaScript, com supabase-js e tratamento de erro. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '⚙️', src: 'atividades/projeto-financapp-backend-trabalho.html',
-              progressKey: 'projeto_financapp_backend_trabalho_progress_', progressMode: 'flag',
-              hasGabarito: true
-            }
-          ]
         }
+        // Havia aqui a 5ª de 6 peças do projeto interdisciplinar "FinancApp"
+        // ("Lógica de Backend com Supabase"). Foi INCORPORADA na peça de
+        // Programação de Aplicativos (trilha projeto-financapp-app, matéria
+        // prog-aplicativos abaixo), já que o conteúdo dela também era só
+        // JavaScript — o projeto passou de 6 pra 5 peças. Desenvolvimento de
+        // Sistemas 1 continua cobrindo a mesma capacidade (apis, bibliotecas,
+        // frameworks) através da trilha "APIs, Bibliotecas e Frameworks" logo
+        // acima, que já existia e não depende do projeto FinancApp.
       ]
     },
     {
@@ -306,7 +292,7 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             },
             {
-              // 4ª de 6 peças do projeto interdisciplinar "FinancApp" —
+              // 4ª de 5 peças do projeto interdisciplinar "FinancApp" —
               // módulo EXTRA dentro desta trilha JÁ EXISTENTE (não é trilha
               // nova, pra não duplicar a capacidade sem necessidade). Usa o
               // banco Supabase da peça anterior (Banco de Dados) pra
@@ -402,9 +388,10 @@ window.TURMA_CONFIG_SISTEMAS = {
         {
           // 1ª peça do projeto interdisciplinar "FinancApp" (app de
           // controle financeiro pessoal) — mesmo repositório GitHub criado
-          // aqui é reaproveitado pelas próximas 5 peças (Modelagem de
-          // Sistemas 1, Banco de Dados, Redes de Computadores,
-          // Desenvolvimento de Sistemas 1 e Programação de Aplicativos).
+          // aqui é reaproveitado pelas próximas 4 peças (Modelagem de
+          // Sistemas 1, Banco de Dados, Redes de Computadores e
+          // Programação de Aplicativos — esta última incorporou o que
+          // antes era a peça separada de Desenvolvimento de Sistemas 1).
           // Ver Atividades/Desenvolvimento de Sistemas/Projeto FinancApp —
           // *.md pra especificação completa de cada peça. Reaproveita a
           // MESMA capacidade de "Oficina de Comunicação" (mesma matéria) —
@@ -469,7 +456,7 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 2ª de 6 peças do projeto interdisciplinar "FinancApp" (ver
+          // 2ª de 5 peças do projeto interdisciplinar "FinancApp" (ver
           // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
           // Desenvolvimento de Projetos, pra 1ª peça). Reaproveita a MESMA
           // capacidade da trilha "Modelagem de Dados e Requisitos" (acima,
@@ -723,21 +710,23 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // 6ª e última peça do projeto interdisciplinar "FinancApp" (ver
-          // projeto-financapp-backend-trabalho.html, matéria Desenvolvimento
-          // de Sistemas 1, pra 5ª peça). Foco só em JAVASCRIPT: o professor
-          // entrega index.html/style.css já prontos (Atividades/
-          // Desenvolvimento de Sistemas/financapp-starter/) e o aluno só
-          // escreve o JS que liga esses elementos às funções da peça
-          // anterior.
+          // 5ª e última peça do projeto interdisciplinar "FinancApp" (antes
+          // eram 6 — esta peça INCORPOROU a antiga "Lógica de Backend com
+          // Supabase", que ficava em Desenvolvimento de Sistemas 1; ver
+          // comentário na trilha "JavaScript" daquela matéria). Foco em
+          // JAVASCRIPT de ponta a ponta: o aluno escreve as 5 funções de
+          // backend com supabase-js (app.js), depois o JS que liga o
+          // HTML/CSS já prontos (Atividades/Desenvolvimento de Sistemas/
+          // financapp-starter/) a essas funções (financapp.js), e por fim
+          // um Web App Manifest (manifest.json).
           key: 'projeto-financapp-app',
           label: 'FinancApp — Construa o Aplicativo',
-          desc: 'Projeto integrador: com o HTML/CSS já entregues pelo professor, escrevam o JavaScript que liga a interface às funções de backend da peça anterior — cadastro, login, perfil, saldo/extrato, registrar lançamento e tags, com dados reais.',
+          desc: 'Projeto integrador: escrevam, em JavaScript, as funções de backend (cadastrarUsuario, fazerLogin, criarLancamento, carregarLancamentos, adicionarTag) com supabase-js e, com o HTML/CSS já entregues pelo professor, o JavaScript que liga a interface a elas — cadastro, login, perfil, saldo/extrato, registrar lançamento e tags — mais o Web App Manifest, com dados reais.',
           capacidade: 'Aplicar, de forma integrada, lógica de programação, manipulação de objetos e validação de formulário na construção de um aplicativo completo em JavaScript.',
           modules: [
             {
               key: 'trabalho', title: 'Trabalho — FinancApp: Construa o Aplicativo (JavaScript)',
-              desc: 'Liguem o HTML/CSS fornecidos pelo professor às funções de backend já escritas — cadastro, login, perfil, saldo/extrato, registrar lançamento e marcar tags, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              desc: 'Escrevam as 5 funções assíncronas do backend do FinancApp (supabase-js, tratamento de erro) e, em seguida, liguem o HTML/CSS fornecidos pelo professor a elas — cadastro, login, perfil, saldo/extrato, registrar lançamento, tags e Web App Manifest, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
               icon: '📱', src: 'atividades/projeto-financapp-app-trabalho.html',
               progressKey: 'projeto_financapp_app_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
@@ -745,7 +734,7 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
-          // Trilha STANDALONE (não é uma das 6 peças do projeto FinancApp)
+          // Trilha STANDALONE (não é uma das 5 peças do projeto FinancApp)
           // — fundamento complementar sobre boas práticas de segurança
           // (tipos de chave do Supabase, .env, .gitignore) que valem pra
           // qualquer app conectado a um banco, não só o FinancApp. Sem

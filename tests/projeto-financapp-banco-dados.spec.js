@@ -1,6 +1,6 @@
 // @ts-check
 // Trilha "FinancApp — Banco de Dados e RLS" (Banco de Dados, turma
-// Sistemas) — 3ª de 6 peças do projeto interdisciplinar FinancApp (ver
+// Sistemas) — 3ª de 5 peças do projeto interdisciplinar FinancApp (ver
 // tests/projeto-financapp-kickoff.spec.js pra 1ª peça). Aluno navega pelas
 // telas com Voltar/Próximo e o professor dá "visto" com um token temporário
 // (mesmo padrão de projeto-financapp-kickoff-trabalho.html).

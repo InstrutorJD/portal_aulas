@@ -113,7 +113,6 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`projeto_financapp_modelagem_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`projeto_financapp_banco_dados_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`redes_servicos_financapp_pratica_progress_${user}`, JSON.stringify({ completed: true }));
-      localStorage.setItem(`projeto_financapp_backend_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`projeto_financapp_app_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`prog_conexao_segura_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`prova_sistemas_progress_${user}`, JSON.stringify({ completed: true, correctCount: 20, total: 20 }));

@@ -9,6 +9,11 @@
 > de verdade, via tabela de junção). Ver
 > `turmas/sistemas/atividades/projeto-financapp-kickoff-trabalho.html` pro
 > conteúdo real, já atualizado.
+>
+> **NOTA DE MERGE:** o projeto passou de 6 pra 5 peças — a peça 5 abaixo
+> (Desenvolvimento de Sistemas 1) foi INCORPORADA na peça 6 (Programação de
+> Aplicativos), que virou a 5ª e última. Ver a `NOTA DE MERGE` no `.md` de
+> "Lógica de Backend com Supabase" e no de "Construa o Aplicativo".
 
 ## 1. Apresentação
 

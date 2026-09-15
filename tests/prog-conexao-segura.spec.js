@@ -1,6 +1,6 @@
 // @ts-check
 // Trilha "Conexão Segura com Banco de Dados" (Programação de Aplicativos,
-// turma Sistemas) — fundamento standalone (não é uma das 6 peças do
+// turma Sistemas) — fundamento standalone (não é uma das 5 peças do
 // projeto FinancApp) sobre tipos de chave do Supabase, .env e .gitignore.
 // Aluno navega pelas telas com Voltar/Próximo e o professor dá "visto" com
 // um token temporário (mesmo padrão de projeto-financapp-kickoff-trabalho.html).

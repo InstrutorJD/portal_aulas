@@ -1,11 +1,13 @@
 // @ts-check
 // Trilha "FinancApp — Construa o Aplicativo" (Programação de Aplicativos,
-// turma Sistemas) — 6ª e última peça do projeto interdisciplinar FinancApp
-// (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça). O aluno só
-// escreve JavaScript aqui — o HTML/CSS já vem pronto, entregue pelo
-// professor. Aluno navega pelas telas com Voltar/Próximo e o professor dá
-// "visto" com um token temporário (mesmo padrão de
-// projeto-financapp-kickoff-trabalho.html).
+// turma Sistemas) — 5ª e última peça do projeto interdisciplinar FinancApp
+// (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça). Incorpora o que
+// antes era a peça separada de Desenvolvimento de Sistemas 1 ("Lógica de
+// Backend com Supabase", extinta) — o aluno escreve as 5 funções de backend
+// e depois o JavaScript da interface, tudo nesta mesma atividade; o HTML/CSS
+// já vêm prontos, entregues pelo professor. Aluno navega pelas telas com
+// Voltar/Próximo e o professor dá "visto" com um token temporário (mesmo
+// padrão de projeto-financapp-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
@@ -45,12 +47,29 @@ test.describe('turmas/sistemas — trilha FinancApp: Construa o Aplicativo', () 
     await expect(page.locator('.card')).toContainText('HTML e CSS já vêm prontos');
   });
 
-  test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {
+  test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou (bloco de backend)', async ({ page }) => {
     await page.goto(ACTIVITY_URL);
     await expect(page.locator('.card h2')).toHaveText('Apresentação');
 
     await page.click('#btnNext');
+    await expect(page.locator('.card h2')).toHaveText('Biblioteca vs. requisição na mão');
+    await page.click('#btnNext');
+    await expect(page.locator('.card h2')).toHaveText('cadastrarUsuario');
+
+    await page.reload();
+    await expect(page.locator('.card h2')).toHaveText('cadastrarUsuario');
+
+    await page.click('#btnBack');
+    await expect(page.locator('.card h2')).toHaveText('Biblioteca vs. requisição na mão');
+  });
+
+  test('navega até o bloco de interface (depois do backend)', async ({ page }) => {
+    await page.goto(ACTIVITY_URL);
+    // Apresentação -> Biblioteca -> cadastrarUsuario -> fazerLogin -> criarLancamento
+    // -> carregarLancamentos -> adicionarTag -> "Por que { data, error }..." -> Conheça o HTML já pronto = 8 cliques.
+    for (let i = 0; i < 8; i++) await page.click('#btnNext');
     await expect(page.locator('.card h2')).toHaveText('Conheça o HTML já pronto');
+
     await page.click('#btnNext');
     await expect(page.locator('.card h2')).toHaveText('Cadastro');
 

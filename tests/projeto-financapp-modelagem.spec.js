@@ -1,6 +1,6 @@
 // @ts-check
 // Trilha "FinancApp — Modelagem de Dados e Requisitos" (Modelagem de
-// Sistemas 1, turma Sistemas) — 2ª de 6 peças do projeto interdisciplinar
+// Sistemas 1, turma Sistemas) — 2ª de 5 peças do projeto interdisciplinar
 // FinancApp (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça).
 // Aluno navega pelas telas com Voltar/Próximo e o professor dá "visto" com
 // um token temporário (mesmo padrão de projeto-financapp-kickoff-trabalho.html).

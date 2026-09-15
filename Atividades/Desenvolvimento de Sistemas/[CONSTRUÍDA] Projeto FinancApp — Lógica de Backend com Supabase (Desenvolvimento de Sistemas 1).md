@@ -1,11 +1,28 @@
 # Projeto FinancApp — Lógica de Backend com Supabase
 
+> **NOTA DE MERGE (peça extinta):** esta peça deixou de existir como
+> atividade separada de Desenvolvimento de Sistemas 1 — foi INCORPORADA na
+> peça de Programação de Aplicativos ("Construa o Aplicativo"), que agora
+> ensina backend + interface + Web App Manifest numa única atividade
+> (`turmas/sistemas/atividades/projeto-financapp-app-trabalho.html`; o
+> arquivo `projeto-financapp-backend-trabalho.html` foi removido do
+> repositório). O projeto passou de 6 pra 5 peças. Desenvolvimento de
+> Sistemas 1 continua cobrindo a mesma capacidade (apis, bibliotecas,
+> frameworks) pela trilha "APIs, Bibliotecas e Frameworks", já existente e
+> não ligada ao projeto FinancApp. Este arquivo fica só como registro
+> histórico do conteúdo original — não reflete mais a atividade ao vivo.
+>
 > **NOTA DE PIVÔ (domínio trocado):** projeto passou de "Mural" (rede
 > social) pra **FinancApp** (controle financeiro pessoal). As 5 funções
 > viram: `cadastrarUsuario`, `fazerLogin`, `criarLancamento`,
 > `carregarLancamentos` (com join até tags) e `adicionarTag` (busca ou cria
-> a tag, depois liga em `lancamento_tags`). Ver
-> `turmas/sistemas/atividades/projeto-financapp-backend-trabalho.html`.
+> a tag, depois liga em `lancamento_tags`).
+>
+> **NOTA DE IMPLEMENTAÇÃO:** a atividade (antes de ser incorporada) já
+> trazia o código **completo** das 5 funções pronto pra copiar (mesmo
+> estilo "código pronto" da peça de Banco de Dados, em vez de só a
+> assinatura da função como nas ETAPAs 2-6 abaixo) — o aluno digitava,
+> entendia e testava cada uma pelo console.
 
 ## 1. Apresentação
 5ª etapa do projeto FinancApp. Com as tabelas já criadas (Banco de Dados), o aluno escreve, no mesmo repositório `financapp-<usuario>` (Codespace), as funções JavaScript que usam a biblioteca `supabase-js` pra implementar as 5 funcionalidades do MVP.
