@@ -364,28 +364,6 @@ window.TURMA_CONFIG_SISTEMAS = {
       label: 'Introdução de Desenvolvimento de Projetos',
       trilhas: [
         {
-          key: 'oficina-comunicacao',
-          label: 'Oficina de Comunicação',
-          desc: 'Monte, no CodePen, uma documentação técnica do sistema cobrindo as fases de elaboração de um projeto, usando linguagem clara e normativa — depois peça o visto do professor.',
-          capacidade: 'Reconhecer as diferentes fases pertinentes à elaboração de um projeto.',
-          modules: [
-            {
-              // Atividade não corrigível automaticamente pelo portal (o
-              // "produto" é uma página HTML publicada no CodePen) — por
-              // isso progressMode 'flag' sem nenhum quiz: o aluno só navega
-              // pelas etapas, e quem marca como concluída é o professor,
-              // dando "visto" com token na etapa final (ver
-              // shared/professor-visto.js), mesmo padrão de
-              // modelagem-dados-requisitos-trabalho.html.
-              key: 'trabalho', title: 'Trabalho — Documentação Técnica do Sistema (CodePen)',
-              desc: 'Documente, no CodePen, as fases de elaboração de um projeto de sistema, usando linguagem técnica clara e normativa. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '📄', src: 'atividades/oficina-comunicacao-trabalho.html',
-              progressKey: 'oficina_comunicacao_trabalho_progress_', progressMode: 'flag',
-              hasGabarito: true
-            }
-          ]
-        },
-        {
           // 1ª peça do projeto interdisciplinar "FinancApp" (app de
           // controle financeiro pessoal) — mesmo repositório GitHub criado
           // aqui é reaproveitado pelas próximas 4 peças (Modelagem de
@@ -393,9 +371,11 @@ window.TURMA_CONFIG_SISTEMAS = {
           // Programação de Aplicativos — esta última incorporou o que
           // antes era a peça separada de Desenvolvimento de Sistemas 1).
           // Ver Atividades/Desenvolvimento de Sistemas/Projeto FinancApp —
-          // *.md pra especificação completa de cada peça. Reaproveita a
-          // MESMA capacidade de "Oficina de Comunicação" (mesma matéria) —
-          // produto diferente (repositório GitHub real, não CodePen).
+          // *.md pra especificação completa de cada peça. Única trilha
+          // desta matéria — a antiga "Oficina de Comunicação" (CodePen)
+          // foi removida do portal (mesma capacidade, produto diferente:
+          // repositório GitHub real, não CodePen); ver
+          // sql/remover-visto-oficina-comunicacao.sql.
           key: 'projeto-financapp-kickoff',
           label: 'Kickoff: App de Controle Financeiro (FinancApp)',
           desc: 'Projeto integrador: ao longo do curso você vai construir, matéria por matéria, um app de controle financeiro de verdade — aqui você dá o pontapé inicial, criando o repositório no GitHub e planejando o trabalho.',

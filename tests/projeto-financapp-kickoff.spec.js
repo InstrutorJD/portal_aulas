@@ -1,10 +1,12 @@
 // @ts-check
 // Trilha "Kickoff: App de Controle Financeiro (FinancApp)" (Introdução de
 // Desenvolvimento de Projetos, turma Sistemas) — 1ª peça do projeto
-// interdisciplinar "FinancApp": o aluno cria um repositório real no GitHub
-// (fora do portal) e só navega pelas telas com Voltar/Próximo; quem marca
-// como concluída é o professor, dando "visto" com um token temporário
-// (mesmo padrão de oficina-comunicacao-trabalho.html e
+// interdisciplinar "FinancApp", e única trilha desta matéria (a antiga
+// "Oficina de Comunicação", CodePen, foi removida do portal — ver
+// sql/remover-visto-oficina-comunicacao.sql). O aluno cria um repositório
+// real no GitHub (fora do portal) e só navega pelas telas com
+// Voltar/Próximo; quem marca como concluída é o professor, dando "visto"
+// com um token temporário (mesmo padrão de
 // modelagem-dados-requisitos-trabalho.html).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
@@ -33,10 +35,10 @@ test.describe('turmas/sistemas — trilha Kickoff do Projeto FinancApp', () => {
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Introdução de Desenvolvimento de Projetos, ao lado da Oficina de Comunicação', async ({ page }) => {
+  test('aparece na matéria Introdução de Desenvolvimento de Projetos', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
     await page.click('.game-card:has-text("Introdução de Desenvolvimento de Projetos")');
-    await page.selectOption('#trilhaSelect', 'projeto-financapp-kickoff');
+    // Única trilha desta matéria — sem <select> (só aparece com 2+ trilhas).
     await expect(page.locator('#moduleSelector_projeto-financapp-kickoff')).toContainText('Kickoff do Projeto FinancApp (GitHub)');
   });
 

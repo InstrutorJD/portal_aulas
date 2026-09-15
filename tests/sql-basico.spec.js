@@ -108,7 +108,6 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`redes_armazenamento_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`iot_conectividade_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`iot_conectividade_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
-      localStorage.setItem(`oficina_comunicacao_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`projeto_financapp_kickoff_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`projeto_financapp_modelagem_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`projeto_financapp_banco_dados_trabalho_progress_${user}`, JSON.stringify({ completed: true }));
