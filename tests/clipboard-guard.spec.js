@@ -1,5 +1,5 @@
 // @ts-check
-// Valida o bloqueio de Ctrl+C/Ctrl+V ligado pelo professor: o toggle na aba
+// Valida o bloqueio de Ctrl+A/C/V/X ligado pelo professor: o toggle na aba
 // "Gestão" do portal de cada turma grava em classroom_settings (id = turma),
 // e shared/clipboard-guard.js (incluído nas páginas do aluno) passa a
 // cancelar o atalho quando o valor daquela turma é true. O toggle em si é
@@ -7,12 +7,16 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake } = require('./helpers');
 
-async function ctrlVPrevented(page) {
-  return page.evaluate(() => {
-    const ev = new KeyboardEvent('keydown', { key: 'v', ctrlKey: true, bubbles: true, cancelable: true });
+async function ctrlKeyPrevented(page, key) {
+  return page.evaluate((k) => {
+    const ev = new KeyboardEvent('keydown', { key: k, ctrlKey: true, bubbles: true, cancelable: true });
     document.dispatchEvent(ev);
     return ev.defaultPrevented;
-  });
+  }, key);
+}
+
+async function ctrlVPrevented(page) {
+  return ctrlKeyPrevented(page, 'v');
 }
 
 async function contextMenuPrevented(page) {
@@ -51,6 +55,29 @@ test.describe('shared/clipboard-guard.js', () => {
     await page.waitForTimeout(100); // dá tempo do fetchState (que já resolve false) rodar
 
     expect(await ctrlVPrevented(page)).toBe(false);
+  });
+
+  // Reforço pedido pelo professor: aluno selecionava a página inteira com
+  // Ctrl+A (inclusive código de exemplo protegido contra clique+arrasto) e
+  // arrastava o conteúdo pra fora — cortar o atalho fecha essa brecha.
+  test('bloqueia Ctrl+A (selecionar tudo) quando clipboard_blocked=true', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      classroom_settings: [{ id: 'jogos', clipboard_blocked: true }],
+    });
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+
+    await expect.poll(() => ctrlKeyPrevented(page, 'a')).toBe(true);
+    await expect(page.locator('#__clipboardGuardToast')).toBeVisible();
+  });
+
+  test('não bloqueia Ctrl+A quando clipboard_blocked=false', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      classroom_settings: [{ id: 'jogos', clipboard_blocked: false }],
+    });
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+    await page.waitForTimeout(100);
+
+    expect(await ctrlKeyPrevented(page, 'a')).toBe(false);
   });
 
   test('bloqueio de uma turma não afeta a outra', async ({ page }) => {

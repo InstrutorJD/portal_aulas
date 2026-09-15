@@ -1,8 +1,12 @@
-// Bloqueio de Ctrl+C/Ctrl+V ligado pelo professor, por turma (aba "Gestão"
+// Bloqueio de Ctrl+A/C/V/X ligado pelo professor, por turma (aba "Gestão"
 // dentro de turmas/<turma>/plataforma.html). Quando ligado, também bloqueia
 // clique/seleção em áreas de LEITURA (texto de instrução/enunciado e código
 // de exemplo) — o aluno só interage com botões, campos de digitação (Central
-// de Dados, desafios de JavaScript etc.) e outros controles reais.
+// de Dados, desafios de JavaScript etc.) e outros controles reais. Ctrl+A
+// selecionava a página inteira (inclusive código de exemplo) e dava pra
+// arrastar/copiar o conteúdo mesmo com a página protegida contra clique —
+// por isso o atalho de "selecionar tudo" é cortado junto com copiar/colar,
+// não só o clique+arrasto nas áreas de leitura.
 //
 // IMPORTANTE — isso é um desincentivo pedagógico, não segurança de verdade:
 // só intercepta copiar/colar DENTRO das páginas do portal. Um aluno pode
@@ -69,7 +73,7 @@
     if (!toast) {
       toast = document.createElement('div');
       toast.id = '__clipboardGuardToast';
-      toast.textContent = 'Copiar/colar desabilitado pelo professor.';
+      toast.textContent = 'Copiar/colar e selecionar tudo desabilitados pelo professor.';
       toast.style.cssText = [
         'position:fixed', 'left:50%', 'bottom:18px', 'transform:translateX(-50%)',
         'background:#1a1a1a', 'color:#f5f5f5', 'font:600 12px system-ui,sans-serif',
@@ -87,10 +91,16 @@
   function onKeydown(e) {
     if (!blocked) return;
     const key = (e.key || '').toLowerCase();
-    if ((e.ctrlKey || e.metaKey) && (key === 'c' || key === 'v' || key === 'x')) {
+    if ((e.ctrlKey || e.metaKey) && (key === 'c' || key === 'v' || key === 'x' || key === 'a')) {
       e.preventDefault();
       e.stopPropagation();
       showToast();
+      // Ctrl+A pode ter selecionado algo por outro caminho antes do
+      // preventDefault (ex.: repetição de tecla) — limpa a seleção do
+      // documento pra garantir que nada fica selecionável pra arrastar.
+      if (key === 'a' && window.getSelection) {
+        window.getSelection().removeAllRanges();
+      }
     }
   }
 
