@@ -479,6 +479,28 @@ window.TURMA_CONFIG_JOGOS = {
           ]
         },
         {
+          key: 'cod-phaser',
+          label: 'Motor Phaser: Construa o Pacman',
+          desc: 'Construa um Pacman completo com a biblioteca Phaser — HTML, JavaScript e sprites desenhados por você no Piskel, rodando de verdade no navegador a partir do seu Codespace.',
+          capacidade: 'Estruturar um projeto completo com uma biblioteca de jogos (Phaser 3) e JavaScript pra implementar um jogo funcional, aplicando spritesheets e animações, física arcade (colisão e overlap), grupos de objetos e eventos de teclado, além de produzir a arte do jogo numa ferramenta de pixel art (Piskel) e rodar o projeto num ambiente de desenvolvimento em nuvem (Codespaces).',
+          // Trilha em paralelo à 'cod-godot': mesmo jogo (Pacman), mesmo
+          // formato de roteiro prático com visto do professor (sem trava,
+          // sem teoria separada — ver pacman-phaser-completo.md, na raiz
+          // do repositório, pro roteiro de referência em sincronia com
+          // atividades/cod-phaser-pratica.html), mas em Phaser 3/JavaScript
+          // em vez de Godot/GDScript, com sprites de verdade desenhados
+          // pelo aluno no Piskel em vez de tudo desenhado por código.
+          modules: [
+            {
+              key: 'pratica', title: 'Prática — Construa o Pacman no Phaser',
+              desc: 'Mão na massa de verdade: monte os arquivos do zero no Codespace, ligue a biblioteca Phaser, desenhe o Pacman e o fantasma no Piskel, cole o código em blocos explicados até o jogo completo rodando no navegador — depois peça o visto do professor.',
+              icon: '👻', src: 'atividades/cod-phaser-pratica.html',
+              progressKey: 'cod_phaser_pratica_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
           key: 'projeto-cobrinha',
           label: 'Projeto: Construa seu Jogo',
           desc: 'Saia do zero e construa, peça por peça, um jogo de Cobrinha de verdade — direto aqui no portal.',

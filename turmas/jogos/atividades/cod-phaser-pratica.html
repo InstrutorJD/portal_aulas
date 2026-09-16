@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Roteiro: Construa o Pacman no Phaser</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0d0a14; --panel:#151020; --panel2:#110d1a; --line:#2a2138;
+    --violet:#c9a6ff; --violet-dim:#7a58b3; --blood:#c1121f; --blood-bright:#ff3b30;
+    --gold:#e0b84a; --ink:#e7e0f2; --ink-dim:#7d7391;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--violet-dim); background:#08060c;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(201,166,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--violet); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--gold); margin:0 0 14px; letter-spacing:1px;
+  }
+
+  .md-body{ font-size:13.5px; line-height:1.7; }
+  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
+    font-family:var(--user-font-display, 'VT323', monospace); color:var(--violet); letter-spacing:0.5px;
+    margin:16px 0 6px; font-size:16px;
+  }
+  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
+  .md-body h3:first-child{ padding-top:0; border-top:none; }
+  .md-body p{ margin:0 0 10px; }
+  .md-body code{ background:#000; color:var(--violet); padding:1px 5px; border-radius:2px; font-size:0.92em; }
+  .md-body pre{
+    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
+    margin:0 0 12px; border-radius:2px;
+  }
+  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
+  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
+  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
+  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
+  .md-body li.md-check::before{ content:'☐ '; color:var(--violet-dim); }
+  .md-body blockquote{
+    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--violet-dim); color:var(--gold); font-style:italic;
+  }
+  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
+  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
+  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  table.md-table th{ background:var(--panel2); color:var(--gold); }
+
+  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--violet); color:#1c0f2e; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:wait; }
+  button.btn-secondary{ background:transparent; color:var(--violet); border:1px solid var(--violet-dim); }
+
+  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
+  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
+  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .visto-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .visto-form input:focus{ outline:none; border-color:var(--violet-dim); }
+  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .visto-msg.ok{ border-color:var(--violet); color:var(--violet); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:14px 16px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cod_phaser_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>CODIFICAÇÃO — ROTEIRO: PACMAN NO PHASER</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">18</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="step-wrap" id="stepWrap"></div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `cod_phaser_pratica_progress_${username}`;
+  const STEP_KEY = `cod_phaser_pratica_step_${username}`;
+
+  // Atividade sem correção automática (o "produto" é um projeto Phaser
+  // aberto no Codespace do aluno e rodando no navegador, fora do portal) —
+  // cada tela só navega com Voltar/Próximo, sem quiz. Quem marca como
+  // concluída é o professor, na última etapa (ver renderVisto), mesmo
+  // padrão de cod-godot-pratica.html.
+  //
+  // Código JavaScript idêntico ao roteiro de referência
+  // (pacman-phaser-completo.md, na raiz do repositório) — qualquer
+  // alteração de conteúdo técnico deve manter os dois em sincronia.
+  const STEPS = [
+    {
+      titulo: 'Apresentação',
+      corpo: `
+A PixelForge Studios quer ver você construir um Pacman completo com a biblioteca **Phaser 3** — HTML, JavaScript, sprites desenhados por você no **Piskel**, rodando de verdade no navegador a partir do seu Codespace. Labirinto, moedas, dois fantasmas, placar e reinício.
+
+### O que entregar
+
+Um projeto rodando de ponta a ponta no navegador: labirinto vindo de um mapa em texto, Pacman controlado pelas setas do teclado, 2 fantasmas com movimento próprio, pontuação na tela, vitória (comer todas as moedas) ou derrota (esbarrar num fantasma) — e a possibilidade de reiniciar com a tecla R.
+
+### Como funciona aqui
+
+1. Siga o roteiro passo a passo: primeiro os arquivos e a biblioteca Phaser, depois a configuração inicial, depois a arte no Piskel, e por fim o código do jogo em blocos.
+2. Ao final, rode o jogo no navegador (via Live Server, no Codespace) e jogue uma partida de verdade.
+3. Chame o professor e mostre o jogo funcionando na tela.
+4. Peça o visto pessoalmente — só aí esta atividade é marcada como concluída.`
+    },
+    {
+      titulo: '1. Criando os arquivos do projeto',
+      corpo: `
+### Abra o Codespace
+
+1. No repositório do seu jogo (no GitHub), clique no botão verde **Code** → aba **Codespaces** → **Create codespace on main** (ou abra o Codespace que já existe, se já tiver criado um antes).
+2. Espere carregar — ele abre um VS Code inteiro dentro do navegador, com um explorador de arquivos à esquerda.
+
+### Criando os dois primeiros arquivos
+
+1. No painel **Explorer** (ícone de duas folhas, no topo da barra lateral esquerda), clique no ícone **New File** (uma folha com "+") na altura da pasta raiz do projeto.
+2. Digite ¤game.html¤ e aperte **Enter**.
+3. Clique em **New File** de novo, digite ¤game.js¤ e aperte **Enter**.
+
+Os dois devem ficar soltos na raiz do projeto, na mesma pasta. Mais adiante você também vai colocar ali dois arquivos de imagem exportados do Piskel.
+
+- [ ] game.html e game.js criados na raiz do projeto, dentro do Codespace`
+    },
+    {
+      titulo: '2. Ligando a biblioteca Phaser (CDN)',
+      corpo: `
+Phaser é a **biblioteca** que faz o trabalho pesado de jogo: desenhar na tela, física, animação, teclado. Sem build nem instalação, o jeito mais simples de ligar essa biblioteca num projeto só de HTML/JS é apontar uma tag ¤<script>¤ pra uma cópia hospedada num **CDN** (um servidor público que guarda bibliotecas prontas pra qualquer site carregar).
+
+> Se um dia você montar um projeto com um *bundler* (Vite, Webpack) em vez de HTML puro, existe o comando de terminal ¤npm install phaser¤ pra baixar a biblioteca como dependência. Neste roteiro isso **não é necessário** — a tag do CDN já resolve tudo.
+
+Abra ¤game.html¤ e cole o conteúdo abaixo. Repare na ordem das duas tags ¤<script>¤ no final do ¤<body>¤: a do Phaser vem **antes** da do ¤game.js¤, porque ¤game.js¤ usa coisas que só existem depois que o Phaser carrega.
+
+§§§html
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Pacman Evoluído</title>
+  <style>
+    body { margin: 0; background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    canvas { image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"><\/script>
+  <script src="game.js"><\/script>
+</body>
+</html>
+§§§
+
+- [ ] game.html colado e salvo (Ctrl+S)`
+    },
+    {
+      titulo: '3. Configuração inicial do jogo',
+      corpo: `
+Abra ¤game.js¤ (ainda vazio) e cole o bloco abaixo no topo do arquivo.
+
+§§§javascript
+const configuracao = {
+  type: Phaser.AUTO,
+  width: 640,
+  height: 480,
+  backgroundColor: '#000000',
+  physics: {
+    default: 'arcade',
+    arcade: { debug: false }
+  },
+  scene: { preload: preCarregar, create: criar, update: atualizar }
+};
+
+let jogador;
+let teclas;
+let paredes;
+let inimigos;
+let moedas;
+let textoPontuacao;
+let textoFimDeJogo;
+let pontuacao = 0;
+let jogoTerminou = false;
+let velocidade = 160;
+
+// Layout simples: 1 = parede, 0 = vazio
+const mapa = [
+  '1111111111111111',
+  '1000000001000001',
+  '1011110101011101',
+  '1010000101000001',
+  '1010111101110101',
+  '1000100000010001',
+  '1110101111101011',
+  '1000101000001011',
+  '1011101011101011',
+  '1000000010000001',
+  '1111111111111111'
+];
+
+const tamanhoBloco = 40;
+§§§
+
+- ¤configuracao¤ é o objeto que diz ao Phaser como criar o jogo: tamanho da tela (640×480), cor de fundo, o motor de física (¤arcade¤, o mais simples do Phaser) e as três funções do ciclo de vida da cena: ¤preCarregar¤ (carrega imagens antes de tudo), ¤criar¤ (monta o cenário uma vez) e ¤atualizar¤ (roda a cada frame, ~60 vezes por segundo).
+- As variáveis com ¤let¤ no escopo global ficam visíveis pras três funções do ciclo de vida (elas não recebem parâmetros pra passar esses dados).
+- ¤mapa¤ é o labirinto desenhado como texto: cada string é uma linha, cada caractere é uma célula — ¤1¤ vira parede, ¤0¤ vira espaço livre (onde uma moeda pode existir).
+- ¤tamanhoBloco¤ é quantos pixels cada célula do mapa ocupa na tela.
+
+- [ ] Bloco de configuração, variáveis e mapa colado no topo de game.js`
+    },
+    {
+      titulo: '4. Desenhando o Pacman e o fantasma no Piskel',
+      corpo: `
+O código de ¤preCarregar()¤ (próxima etapa) espera dois arquivos de imagem prontos: ¤pacman_sheet.png¤ (3 quadros de animação, 32×32 pixels cada) e ¤ghost_sheet.png¤ (2 quadros, 32×32 cada). Essas imagens não vêm prontas — você desenha no **Piskel**, um editor de pixel art gratuito que roda direto no navegador (funciona bem em Chromebook, sem instalar nada).
+
+### 4.1. Desenhando o Pacman (3 quadros, 32×32)
+
+1. Acesse ¤piskelapp.com¤ numa aba nova e clique em **Create Sprite** (ou já caia direto no editor).
+2. No topo, use o ícone de configurações do canvas (ou **Resize**) e defina o tamanho como **32 × 32 pixels**. Esse é o tamanho de cada quadro, não da imagem final.
+3. Desenhe o **quadro 1**: um círculo amarelo preenchendo boa parte do 32×32, com uma fatia preta (boca) aberta apontando pra direita.
+4. No painel de quadros, clique em **+** pra adicionar o **quadro 2**: o mesmo círculo amarelo, mas com a boca só um pouco aberta.
+5. Adicione o **quadro 3**: o círculo amarelo com a boca fechada (só o círculo, sem fatia nenhuma).
+6. Confira que você tem exatamente **3 quadros**, todos 32×32, nessa ordem (boca aberta → meio aberta → fechada) — é a ordem que a animação de mastigação do jogo espera.
+
+### 4.2. Exportando o Pacman
+
+1. No menu do Piskel (ícone **PISKEL**, canto superior esquerdo, ou o menu hambúrguer), clique em **Export**.
+2. Na aba **PNG**, confira que o layout está como tira horizontal (*row*) — é o padrão do Piskel, os quadros ficam lado a lado.
+3. Clique em **Download**.
+4. O arquivo deve ter **96×32 pixels** (3 quadros × 32px). Se o nome vier diferente, **renomeie** para ¤pacman_sheet.png¤.
+
+### 4.3. Desenhando e exportando o fantasma (2 quadros, 32×32)
+
+1. Clique em **New** (ou abra outra aba do Piskel) pra começar um sprite novo, também com canvas 32×32.
+2. Desenhe o **quadro 1**: um corpo arredondado colorido (qualquer cor viva) — é só a cor "normal", o jogo não troca essa cor por código nesta versão.
+3. Adicione o **quadro 2**: o mesmo fantasma com uma pequena diferença (por exemplo os "pés" ondulados embaixo trocando de posição) — o suficiente pra dar sensação de flutuação quando os dois quadros alternam rápido.
+4. Exporte do mesmo jeito da seção 4.2. O arquivo deve sair com **64×32 pixels** (2 quadros × 32px). Renomeie para ¤ghost_sheet.png¤.
+
+### 4.4. Levando os arquivos pro Codespace
+
+1. No Chromebook, os dois PNGs baixados ficam na pasta **Downloads** (ou no app **Arquivos**).
+2. Volte pro Codespace, no painel **Explorer**.
+3. Arraste os dois arquivos direto do gerenciador de arquivos do Chromebook pra dentro do Explorer, soltando na mesma pasta de ¤game.html¤ e ¤game.js¤. (Ou clique com o botão direito numa área vazia do Explorer e use **Upload...**.)
+4. Confira que os dois arquivos aparecem com os nomes exatos ¤pacman_sheet.png¤ e ¤ghost_sheet.png¤ — o código procura essas imagens exatamente por esse nome.
+
+### 4.5. Se o seu desenho não saiu 32×32, ou não tem o número exato de quadros
+
+Se você seguiu os tamanhos e quantidades de quadros à risca (3 quadros 32×32 pro Pacman, 2 quadros 32×32 pro fantasma), pode pular esta parte — o código das próximas etapas já está pronto pro seu caso. Mas se o seu canvas no Piskel ficou de outro tamanho, ou você desenhou mais ou menos quadros do que o pedido, **dois lugares do código precisam mudar** pra acompanhar:
+
+1. **Tamanho do quadro** — na etapa 5 (¤preCarregar()¤), os números ¤frameWidth: 32, frameHeight: 32¤ têm que ser o tamanho real de cada quadro do seu desenho. Pra conferir esse tamanho: abra o arquivo no Piskel (ou olhe em **Resize**, no menu do Piskel) — o valor mostrado ali é exatamente o que entra em ¤frameWidth¤/¤frameHeight¤. Se o Pacman e o fantasma tiverem tamanhos diferentes entre si, ajuste cada ¤this.load.spritesheet(...)¤ com o valor certo do seu respectivo desenho.
+2. **Quantidade de quadros** — na etapa 9 (as animações), ¤generateFrameNumbers('jogador', { start: 0, end: 2 })¤ espera 3 quadros (contados do 0 ao 2) e ¤generateFrameNumbers('inimigo', { start: 0, end: 1 })¤ espera 2 quadros (0 e 1). O número em ¤end¤ é sempre **a quantidade de quadros menos 1** — se você desenhou 4 quadros do Pacman, por exemplo, o valor vira ¤end: 3¤. Conte os quadros no painel de frames do Piskel antes de exportar, pra saber esse número.
+
+Se esses dois pontos não baterem com o seu desenho, o sintoma mais comum é o sprite aparecer cortado, esticado ou mostrando um pedaço errado da imagem.
+
+- [ ] pacman_sheet.png criado (3 quadros, 96×32 — ou outro tamanho, se você ajustou o código) e enviado pro Codespace
+- [ ] ghost_sheet.png criado (2 quadros, 64×32 — ou outro tamanho, se você ajustou o código) e enviado pro Codespace`
+    },
+    {
+      titulo: '5. Carregando os sprites (preCarregar)',
+      corpo: `
+Volte pra ¤game.js¤ e cole o bloco abaixo, logo depois do que você colou na etapa 3.
+
+§§§javascript
+function preCarregar() {
+  this.load.spritesheet('jogador', 'pacman_sheet.png', { frameWidth: 32, frameHeight: 32 });
+  this.load.spritesheet('inimigo', 'ghost_sheet.png', { frameWidth: 32, frameHeight: 32 });
+
+  // parede e moeda seguem gerados (sem asset externo)
+  const grafico = this.add.graphics();
+
+  grafico.fillStyle(0x2255cc, 1);
+  grafico.fillRect(0, 0, tamanhoBloco, tamanhoBloco);
+  grafico.generateTexture('parede', tamanhoBloco, tamanhoBloco);
+  grafico.clear();
+
+  grafico.fillStyle(0xffffff, 1);
+  grafico.fillCircle(4, 4, 4);
+  grafico.generateTexture('moeda', 8, 8);
+  grafico.destroy();
+}
+§§§
+
+- ¤this.load.spritesheet(chave, arquivo, { frameWidth, frameHeight })¤ carrega uma imagem e diz ao Phaser como cortá-la em quadros — por isso ¤frameWidth¤/¤frameHeight¤ (32×32) têm que bater exatamente com o tamanho que você desenhou no Piskel. Se não bater, os quadros saem cortados errado (rever etapa 4.5 se o seu desenho não ficou 32×32).
+- Parede e moeda **não** vêm de arquivo nenhum: ¤this.add.graphics()¤ desenha formas simples (retângulo azul, círculo branco) direto por código e ¤generateTexture()¤ transforma esse desenho numa textura reutilizável, com nome próprio, do mesmo jeito que uma imagem carregada de arquivo.
+
+- [ ] Função preCarregar() colada e salva`
+    },
+    {
+      titulo: '6. Montando o labirinto e as moedas',
+      corpo: `
+A função ¤criar()¤ roda **uma única vez**, depois de ¤preCarregar()¤ terminar de carregar tudo. É onde o cenário inteiro é montado. Vamos colar ela em partes — comece com esta:
+
+§§§javascript
+function criar() {
+  paredes = this.physics.add.staticGroup();
+  moedas = this.physics.add.staticGroup();
+
+  for (let linha = 0; linha < mapa.length; linha++) {
+    for (let coluna = 0; coluna < mapa[linha].length; coluna++) {
+      const x = coluna * tamanhoBloco + tamanhoBloco / 2;
+      const y = linha * tamanhoBloco + tamanhoBloco / 2;
+      if (mapa[linha][coluna] === '1') {
+        paredes.create(x, y, 'parede');
+      } else {
+        moedas.create(x, y, 'moeda');
+      }
+    }
+  }
+§§§
+
+- ¤staticGroup()¤ cria um grupo de objetos de física que **não se movem** (paredes e moedas nunca andam) — mais leve que um grupo dinâmico.
+- O laço duplo percorre cada linha e coluna do ¤mapa¤. ¤x¤/¤y¤ convertem a posição na grade (coluna/linha) pra posição em pixels na tela, centralizando o objeto dentro do bloco de ¤tamanhoBloco¤ pixels.
+- Onde o mapa tem ¤'1'¤, nasce uma parede; em qualquer outro caractere, nasce uma moeda.
+
+**Não feche a chave do fim da função ainda** — os próximos passos continuam colando dentro dela.
+
+- [ ] Grupos de paredes/moedas criados e preenchidos a partir do mapa`
+    },
+    {
+      titulo: '7. Criando o jogador',
+      corpo: `
+Continue colando, ainda dentro de ¤criar()¤:
+
+§§§javascript
+  jogador = this.physics.add.sprite(tamanhoBloco * 1.5, tamanhoBloco * 1.5, 'jogador');
+  jogador.setCollideWorldBounds(true);
+  jogador.setScale(3);
+  jogador.body.setSize(9, 9);
+§§§
+
+- ¤this.physics.add.sprite(x, y, chave)¤ cria um sprite **com física** (ao contrário de paredes/moedas, o Pacman se move) usando a textura ¤'jogador'¤ carregada em ¤preCarregar()¤.
+- ¤setCollideWorldBounds(true)¤ impede o Pacman de sair da área de 640×480.
+- ¤setScale(3)¤ amplia o sprite (desenhado em 32×32) pra ficar mais visível na tela.
+- ¤body.setSize(9, 9)¤ deixa a caixa de colisão bem menor que o desenho — assim o Pacman colide com precisão mesmo estando ampliado visualmente.
+
+- [ ] Sprite do jogador criado, com colisão de bordas e escala aplicadas`
+    },
+    {
+      titulo: '8. Criando os fantasmas e as colisões',
+      corpo: `
+Continue colando, ainda dentro de ¤criar()¤:
+
+§§§javascript
+  inimigos = this.physics.add.group();
+  const inimigo1 = inimigos.create(tamanhoBloco * 14.5, tamanhoBloco * 9.5, 'inimigo');
+  const inimigo2 = inimigos.create(tamanhoBloco * 8.5, tamanhoBloco * 5.5, 'inimigo');
+  [inimigo1, inimigo2].forEach(inimigo => {
+    inimigo.setCollideWorldBounds(true);
+    inimigo.body.setSize(28, 28);
+  });
+
+  this.physics.add.collider(jogador, paredes);
+  this.physics.add.collider(inimigos, paredes);
+  this.physics.add.collider(inimigos, inimigos);
+
+  this.physics.add.overlap(jogador, moedas, coletarMoeda, null, this);
+  this.physics.add.overlap(jogador, inimigos, colidirComInimigo, null, this);
+§§§
+
+- ¤inimigos¤ é um grupo dinâmico com 2 fantasmas, criados em posições fixas do mapa.
+- ¤collider(a, b)¤ faz dois grupos se empurrarem/pararem um no outro — é o que impede o jogador e os fantasmas de atravessarem paredes, e os fantasmas de se atravessarem entre si.
+- ¤overlap(a, b, funcao)¤ é diferente: não bloqueia o movimento, só chama uma função quando os dois se sobrepõem — é assim que comer uma moeda (¤coletarMoeda¤) ou encostar num fantasma (¤colidirComInimigo¤) disparam código sem travar o personagem fisicamente. Essas duas funções são criadas na etapa 10.
+
+- [ ] Fantasmas criados e todos os colliders/overlaps configurados`
+    },
+    {
+      titulo: '9. Animações, teclado e placar',
+      corpo: `
+Continue colando, ainda dentro de ¤criar()¤:
+
+§§§javascript
+  // animação do jogador: boca abrindo/fechando
+  this.anims.create({
+    key: 'jogadorMastigando',
+    frames: this.anims.generateFrameNumbers('jogador', { start: 0, end: 2 }),
+    frameRate: 10,
+    repeat: -1
+  });
+  jogador.play('jogadorMastigando');
+
+  // animação do inimigo: flutuando
+  this.anims.create({
+    key: 'inimigoFlutuando',
+    frames: this.anims.generateFrameNumbers('inimigo', { start: 0, end: 1 }),
+    frameRate: 4,
+    repeat: -1
+  });
+  inimigos.getChildren().forEach(inimigo => inimigo.play('inimigoFlutuando'));
+
+  teclas = this.input.keyboard.createCursorKeys();
+
+  textoPontuacao = this.add.text(10, 490 - 30, 'Pontos: 0', { fontSize: '20px', fill: '#fff' });
+  textoPontuacao.setDepth(10);
+
+  this.input.keyboard.on('keydown-R', () => {
+    if (jogoTerminou) this.scene.restart();
+  });
+§§§
+
+- ¤this.anims.create({...})¤ monta uma animação nomeada a partir de uma faixa de quadros do spritesheet. ¤generateFrameNumbers('jogador', {start: 0, end: 2})¤ pega exatamente os 3 quadros do Pacman que você desenhou no Piskel, na ordem em que foram salvos (¤end¤ é sempre a quantidade de quadros menos 1 — rever etapa 4.5 se você desenhou um número diferente de quadros). ¤repeat: -1¤ faz a animação ficar em loop pra sempre — o mesmo vale pra ¤'inimigoFlutuando'¤, usando os 2 quadros do fantasma.
+- ¤createCursorKeys()¤ já devolve um objeto pronto com ¤up¤/¤down¤/¤left¤/¤right¤, mapeados nas setas do teclado — sem precisar configurar tecla por tecla.
+- ¤textoPontuacao¤ é um elemento de texto fixo na tela, atualizado depois toda vez que uma moeda é comida.
+- O listener de ¤keydown-R¤ deixa reiniciar a partida com a tecla R, mas **só** depois que o jogo termina (¤jogoTerminou¤ vira ¤true¤).
+
+- [ ] Animações, cursores de teclado, placar e tecla de reinício colados`
+    },
+    {
+      titulo: '10. Movimento dos fantasmas e as funções de evento',
+      corpo: `
+Feche a função ¤criar()¤ com o bloco abaixo (repare na chave ¤}¤ no final, fechando a função):
+
+§§§javascript
+  // movimento simples dos inimigos: direção aleatória, muda periodicamente
+  [inimigo1, inimigo2].forEach(inimigo => {
+    inimigo.direcao = new Phaser.Math.Vector2(1, 0);
+    this.time.addEvent({
+      delay: 1500,
+      loop: true,
+      callback: () => {
+        const direcoes = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        const [dx, dy] = Phaser.Utils.Array.GetRandom(direcoes);
+        inimigo.direcao.set(dx, dy);
+      }
+    });
+  });
+
+  pontuacao = 0;
+  jogoTerminou = false;
+}
+§§§
+
+- Cada fantasma ganha uma propriedade extra ¤direcao¤ (um vetor 2D) — o Phaser não tem isso por padrão num sprite, o código simplesmente anexa a propriedade no objeto.
+- ¤this.time.addEvent({delay, loop, callback})¤ roda a função ¤callback¤ a cada 1500ms (1.5s), pra sempre. A cada disparo, sorteia uma das 4 direções cardeais e substitui a ¤direcao¤ atual do fantasma — é assim que eles mudam de rumo sozinhos.
+- As duas últimas linhas resetam a pontuação e a flag de fim de jogo — importa porque ¤criar()¤ roda de novo toda vez que ¤this.scene.restart()¤ é chamado.
+
+Agora cole as três funções de evento **depois** do fechamento de ¤criar()¤:
+
+§§§javascript
+function coletarMoeda(jogador, moeda) {
+  moeda.destroy();
+  pontuacao += 10;
+  textoPontuacao.setText('Pontos: ' + pontuacao);
+
+  if (moedas.countActive(true) === 0) {
+    encerrarJogo(this, 'Você venceu!');
+  }
+}
+
+function colidirComInimigo() {
+  encerrarJogo(this, 'Game Over');
+}
+
+function encerrarJogo(cena, mensagem) {
+  if (jogoTerminou) return;
+  jogoTerminou = true;
+  jogador.setVelocity(0, 0);
+  inimigos.getChildren().forEach(inimigo => inimigo.setVelocity(0, 0));
+
+  textoFimDeJogo = cena.add.text(320, 240, mensagem + '\\nPressione R', {
+    fontSize: '28px',
+    fill: '#fff',
+    align: 'center'
+  }).setOrigin(0.5).setDepth(10);
+}
+§§§
+
+- ¤coletarMoeda(jogador, moeda)¤ é chamada automaticamente pelo ¤overlap¤ da etapa 8, sempre que o jogador toca uma moeda: soma 10 pontos, some com a moeda, e checa se não sobrou mais nenhuma — se não sobrou, o jogo é vencido.
+- ¤colidirComInimigo()¤ é chamada pelo outro ¤overlap¤: qualquer toque num fantasma encerra o jogo.
+- ¤encerrarJogo(cena, mensagem)¤ centraliza o fim de jogo: trava tudo, zera a velocidade de todo mundo e mostra o texto final no centro da tela. O ¤if (jogoTerminou) return;¤ no início evita rodar duas vezes se o jogador tocar dois fantasmas quase ao mesmo tempo.
+
+- [ ] Bloco de movimento aleatório colado — função criar() completa
+- [ ] As três funções de evento coladas e salvas`
+    },
+    {
+      titulo: '11. O loop do jogo (atualizar)',
+      corpo: `
+Cole por último a função ¤atualizar()¤, que o Phaser chama sozinho a cada frame (por volta de 60 vezes por segundo):
+
+§§§javascript
+function atualizar() {
+  if (jogoTerminou) return;
+
+  jogador.setVelocity(0);
+  if (teclas.left.isDown) {
+    jogador.setVelocityX(-velocidade);
+    jogador.setAngle(180);
+  } else if (teclas.right.isDown) {
+    jogador.setVelocityX(velocidade);
+    jogador.setAngle(0);
+  }
+
+  if (teclas.up.isDown) {
+    jogador.setVelocityY(-velocidade);
+    jogador.setAngle(-90);
+  } else if (teclas.down.isDown) {
+    jogador.setVelocityY(velocidade);
+    jogador.setAngle(90);
+  }
+
+  inimigos.getChildren().forEach(inimigo => {
+    inimigo.setVelocity(inimigo.direcao.x * 90, inimigo.direcao.y * 90);
+    inimigo.setFlipX(inimigo.direcao.x < 0);
+  });
+}
+§§§
+
+- Se o jogo já terminou, a função sai logo no início — ninguém mais se move.
+- A cada frame, a velocidade do jogador é zerada e recalculada a partir de quais setas estão pressionadas **agora** — por isso o movimento para assim que a tecla é solta. ¤setAngle()¤ gira o sprite pra apontar na direção do movimento.
+- Horizontal (¤left¤/¤right¤) e vertical (¤up¤/¤down¤) usam ¤if¤/¤else if¤ **separados**: isso permite mover na diagonal, segurando duas setas ao mesmo tempo.
+- Os fantasmas não leem teclado: só aplicam a ¤direcao¤ sorteada periodicamente como velocidade constante, e ¤setFlipX¤ espelha o sprite quando estão indo pra esquerda.
+
+- [ ] Função atualizar() colada e salva`
+    },
+    {
+      titulo: '12. Ligando tudo',
+      corpo: `
+Uma última linha, fora de qualquer função, no final do arquivo:
+
+§§§javascript
+new Phaser.Game(configuracao);
+§§§
+
+Isso cria o jogo de verdade, usando o objeto ¤configuracao¤ da etapa 3 — é essa linha que efetivamente liga o motor e começa a chamar ¤preCarregar()¤ → ¤criar()¤ → ¤atualizar()¤ em loop.
+
+- [ ] Linha final new Phaser.Game(configuracao); colada e salva — game.js completo`
+    },
+    {
+      titulo: '13. Rodando o jogo no navegador',
+      corpo: `
+Abrir ¤game.html¤ direto (clicando duas vezes no arquivo) **não funciona**: o navegador bloqueia o carregamento das imagens quando a página é aberta como arquivo local, sem servidor. É preciso servir os arquivos por HTTP — no Codespace, o jeito mais simples é a extensão **Live Server**.
+
+1. No Codespace, abra o painel de **Extensions** (ícone de 4 quadradinhos na barra lateral esquerda, ou ¤Ctrl+Shift+X¤).
+2. Busque por **Live Server** (autor Ritwick Dey) e clique em **Install**.
+3. No Explorer, clique com o **botão direito** em ¤game.html¤ e escolha **Open with Live Server**.
+4. O Codespace mostra uma notificação de porta encaminhada (geralmente a 5500) — clique em **Open in Browser**. Isso abre uma nova aba do Chromebook com o jogo rodando de verdade.
+   - Se a notificação não aparecer, abra o painel **Ports** (aba embaixo do editor, ao lado de "Terminal"), ache a porta ¤5500¤ e clique no ícone de globo/link daquela linha.
+5. Use as **setas do teclado** (↑ ↓ ← →) pra mover o Pacman.
+
+### O que esperar
+
+- O labirinto azul aparece com pontinhos brancos (moedas) espalhados nos espaços livres do mapa.
+- Comer uma moeda soma 10 pontos e o placar no canto atualiza.
+- Encostar num fantasma encerra o jogo com "Game Over"; comer todas as moedas encerra com "Você venceu!".
+- Depois de terminar, apertar **R** reinicia a partida.
+
+Toda vez que você editar e salvar ¤game.js¤ (ou ¤game.html¤) com a aba do Live Server aberta, a página recarrega sozinha.
+
+Se algo não funcionar, abra o **Console** do navegador (tecla F12 → aba **Console**) — erros de JavaScript aparecem ali, geralmente apontando o arquivo e a linha exata do problema.
+
+- [ ] O jogo abre pelo Live Server, sem erro no Console
+- [ ] O Pacman se move nas 4 direções e come moedas (o placar sobe)
+- [ ] Encostar num fantasma encerra o jogo com "Game Over"
+- [ ] Comer todas as moedas encerra o jogo com "Você venceu!"
+- [ ] A tecla R reinicia a partida depois do fim de jogo`
+    },
+    {
+      titulo: '14. Pra ir além (opcional)',
+      corpo: `
+Com o jogo completo rodando, dá pra ir além — nada disso é obrigatório pra fechar esta atividade, mas vale a pena experimentar:
+
+- **Vidas**: hoje um único toque num fantasma encerra o jogo. Dá pra somar uma variável ¤vidas¤ (começando em 3), e só chamar ¤encerrarJogo¤ quando chegar a zero, reposicionando o jogador nas outras vezes.
+- **Fantasma persegue de verdade**: em vez de sortear direção periodicamente, comparar a posição do fantasma com a do jogador e escolher o movimento que mais aproxima — a mesma ideia usada na versão deste jogo feita em Godot.
+- **Power pellet**: uma moeda especial que deixa os fantasmas "assustados" por alguns segundos — nesse tempo, tocar neles soma pontos em vez de encerrar o jogo.
+- **Tamanho do mapa**: editar as strings de ¤mapa¤ pra um labirinto maior ou diferente, mantendo sempre ¤1¤ = parede e qualquer outro caractere = espaço livre.
+
+Quando terminar de testar, avance pra pedir o visto do professor.`
+    }
+  ];
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadStepIndex() {
+    try {
+      const n = parseInt(localStorage.getItem(STEP_KEY), 10);
+      return Number.isInteger(n) && n >= 0 && n <= STEPS.length ? n : 0;
+    } catch (e) { return 0; }
+  }
+  function saveStepIndex(i) { try { localStorage.setItem(STEP_KEY, String(i)); } catch (e) {} }
+
+  const savedProgress = loadProgress();
+  let currentIndex = (savedProgress && savedProgress.completed) ? STEPS.length : loadStepIndex();
+
+  const stepWrap = document.getElementById('stepWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = STEPS.length + 1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function inline(s) {
+    let t = escapeHtml(s);
+    t = t.replace(/¤([^¤]+)¤/g, '<code>$1</code>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    return t;
+  }
+
+  // Mesmo parser markdown-enxuto de cod-godot-pratica.html.
+  function mdToHtml(md) {
+    const lines = md.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
+      if (line === '') { i++; continue; }
+
+      if (line.startsWith('§§§')) {
+        i++;
+        const codeLines = [];
+        while (i < lines.length && lines[i].trim() !== '§§§') { codeLines.push(lines[i]); i++; }
+        i++;
+        html += `<pre><code>${escapeHtml(codeLines.join('\n'))}</code></pre>`;
+        continue;
+      }
+
+      const hm = line.match(/^(#{1,6})\s+(.*)$/);
+      if (hm) {
+        const level = Math.min(hm[1].length + 2, 6);
+        html += `<h${level}>${inline(hm[2])}</h${level}>`;
+        i++; continue;
+      }
+
+      if (line.startsWith('|') && lines[i + 1] && /^\s*\|[\s:-]+\|/.test(lines[i + 1])) {
+        const headerCells = line.slice(1, -1).split('|').map(s => s.trim());
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          rows.push(lines[i].trim().slice(1, -1).split('|').map(s => s.trim()));
+          i++;
+        }
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+          + headerCells.map(c => `<th>${inline(c)}</th>`).join('') + '</tr></thead><tbody>'
+          + rows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join('') + '</tr>').join('')
+          + '</tbody></table></div>';
+        continue;
+      }
+
+      if (/^\d+\.\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) { items.push(lines[i].trim().replace(/^\d+\.\s+/, '')); i++; }
+        html += '<ol class="md-list">' + items.map(it => `<li>${inline(it)}</li>`).join('') + '</ol>';
+        continue;
+      }
+
+      if (/^-\s+/.test(line)) {
+        const items = [];
+        while (i < lines.length && /^-\s+/.test(lines[i].trim())) { items.push(lines[i].trim()); i++; }
+        html += '<ul class="md-list">' + items.map(it => {
+          const cbm = it.match(/^-\s+\[( |x)\]\s*(.*)$/i);
+          if (cbm) return `<li class="md-check">${inline(cbm[2])}</li>`;
+          return `<li>${inline(it.replace(/^-\s+/, ''))}</li>`;
+        }).join('') + '</ul>';
+        continue;
+      }
+
+      if (line.startsWith('>')) {
+        const q = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) { q.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+        html += `<blockquote>${inline(q.join(' '))}</blockquote>`;
+        continue;
+      }
+
+      const para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(§§§|#|\||-|\d+\.|>)/.test(lines[i].trim())) {
+        para.push(lines[i].trim());
+        i++;
+      }
+      html += `<p>${inline(para.join(' '))}</p>`;
+    }
+    return html;
+  }
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('cod_phaser_pratica', label, { step: currentIndex + 1, total: STEPS.length + 1 });
+    }
+  }
+
+  function renderNav(showBack, showNext) {
+    return `
+      <div class="step-nav">
+        ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+      </div>`;
+  }
+
+  function renderStep() {
+    if (currentIndex >= STEPS.length) { renderVisto(); return; }
+    saveStepIndex(currentIndex);
+
+    const pct = Math.round((currentIndex / STEPS.length) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = currentIndex + 1;
+
+    const step = STEPS[currentIndex];
+    reportStep(`Roteiro — ${step.titulo}`);
+    stepWrap.innerHTML = `
+      <div class="card">
+        <h2>${escapeHtml(step.titulo)}</h2>
+        <div class="md-body">${mdToHtml(step.corpo)}</div>
+      </div>
+      ${renderNav(currentIndex > 0, true)}
+    `;
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
+    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+  }
+
+  function renderVisto() {
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = STEPS.length + 1;
+    reportStep('Roteiro — Visto do professor');
+
+    const already = loadProgress();
+    if (already && already.completed) {
+      const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `
+        <div class="card visto-box">
+          <h2>✅ Atividade concluída</h2>
+          <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
+        </div>
+        ${renderNav(true, false)}
+      `;
+      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      return;
+    }
+
+    stepWrap.innerHTML = `
+      <div class="card visto-box">
+        <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <p>Seu Pacman já roda de ponta a ponta no navegador — labirinto, moedas, fantasmas, placar, vitória/derrota e reinício com R — sem nenhum erro no Console?</p>
+        <p>Chame o professor e mostre o jogo funcionando no navegador (aberto pelo Live Server). Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
+        <div class="visto-form">
+          <label>Token do professor
+            <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnDarVisto">Dar visto</button>
+          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+        </div>
+      </div>
+      ${renderNav(true, false)}
+    `;
+    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+
+    const btnDarVisto = document.getElementById('btnDarVisto');
+    const vistoMsg = document.getElementById('vistoMsg');
+    btnDarVisto.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      vistoMsg.style.display = 'none';
+      if (!t) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Informe o token do professor.';
+        vistoMsg.style.display = 'block';
+        return;
+      }
+      btnDarVisto.disabled = true;
+      btnDarVisto.textContent = 'Verificando...';
+      try {
+        const result = window.PortalProfessorVisto
+          ? await window.PortalProfessorVisto.verificarToken(t)
+          : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!result.ok) {
+          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.textContent = result.erro;
+          vistoMsg.style.display = 'block';
+          btnDarVisto.disabled = false;
+          btnDarVisto.textContent = 'Dar visto';
+          return;
+        }
+        saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
+        renderVisto();
+      } catch (e) {
+        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+        vistoMsg.style.display = 'block';
+        btnDarVisto.disabled = false;
+        btnDarVisto.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  // Gabarito aqui é o checklist técnico pra o professor conferir o projeto
+  // Phaser aberto na tela do aluno, sem precisar reabrir este roteiro.
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Roteiro — Construa o Pacman no Phaser — Checklist de correção',
+      subtitle: 'Roteiro prático (projeto Phaser no Codespace, verificado presencialmente) · Codificação de Jogos · Turma Jogos Digitais',
+      items: [
+        { number: 1, title: 'Arquivos e biblioteca', prompt: 'game.html e game.js existem na raiz do projeto, e game.html carrega o Phaser via CDN antes de game.js?', answer: 'Duas tags <script>: phaser@3.80.1 via cdn.jsdelivr.net primeiro, depois game.js.' },
+        { number: 2, title: 'Sprites do Piskel', prompt: 'pacman_sheet.png (3 quadros, 96×32) e ghost_sheet.png (2 quadros, 64×32) foram desenhados no Piskel e estão na mesma pasta de game.js?', answer: 'Dois PNGs com frames de 32×32 cada, nomes exatos pacman_sheet.png e ghost_sheet.png, carregados em preCarregar() com frameWidth/frameHeight 32.' },
+        { number: 3, title: 'Labirinto e moedas', prompt: 'O labirinto aparece com paredes azuis (geradas por código) e moedas brancas espalhadas nos espaços livres do mapa?', answer: 'Grupos estáticos "paredes"/"moedas" preenchidos percorrendo o array mapa em criar(), usando as texturas geradas parede/moeda de preCarregar().' },
+        { number: 4, title: 'Jogador e fantasmas', prompt: 'O Pacman se move nas 4 direções (inclusive diagonal) sem atravessar parede, e os 2 fantasmas se movem sozinhos, mudando de direção periodicamente?', answer: 'atualizar() lê teclas.up/down/left/right com if/else if separados por eixo; fantasmas trocam "direcao" a cada 1.5s via time.addEvent, aplicada em atualizar().' },
+        { number: 5, title: 'Animações', prompt: 'O Pacman anima a boca (3 quadros) e os fantasmas animam flutuando (2 quadros), em loop?', answer: 'anims.create com generateFrameNumbers (jogador 0–2, inimigo 0–1) e repeat: -1, tocadas com .play() em criar().' },
+        { number: 6, title: 'Pontuação e fim de jogo', prompt: 'Comer moeda soma 10 pontos e atualiza o placar; esbarrar num fantasma encerra com "Game Over"; comer todas as moedas encerra com "Você venceu!"?', answer: 'overlap(jogador, moedas, coletarMoeda) soma pontuacao e chama encerrarJogo quando moedas.countActive(true) === 0; overlap(jogador, inimigos, colidirComInimigo) chama encerrarJogo com "Game Over".' },
+        { number: 7, title: 'Reinício', prompt: 'Depois do fim de jogo, apertar R reinicia a partida (placar, moedas e fantasmas voltando ao estado inicial)?', answer: 'keydown-R chama this.scene.restart() só quando jogoTerminou é true, o que roda criar() de novo do zero.' }
+      ],
+      fileName: 'cod-phaser-pratica-checklist.txt'
+    });
+  };
+
+  renderStep();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
