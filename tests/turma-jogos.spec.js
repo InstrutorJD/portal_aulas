@@ -24,7 +24,7 @@ function seedAllModulesComplete(user) {
     'vida_metas_carreira_teoria',
     'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria', 'mundo_comprometimento_teoria',
     'projetos_metodos_teoria', 'projetos_fases_teoria',
-    'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria', 'cod_godot_teoria', 'cod_godot_pratica',
+    'cod_ide_teoria', 'cod_linguagens_teoria', 'cod_seguranca_debug_teoria', 'cod_poo_teoria', 'cod_agil_clean_teoria', 'cod_seguranca_ia_teoria', 'cod_godot_teoria', 'cod_godot_pratica', 'cod_phaser_pratica',
     'fund_ambiente_teoria', 'fund_logica_teoria', 'fund_prog2d_teoria', 'fund_multimidia_teoria',
     'csharp_teoria', 'csharp_comparacao', 'gdscript_teoria', 'gdscript_comparacao',
     'teste_fundamentos_teoria', 'teste_planejamento_teoria', 'teste_execucao_teoria',

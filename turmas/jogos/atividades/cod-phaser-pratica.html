@@ -172,11 +172,11 @@ Os dois devem ficar soltos na raiz do projeto, na mesma pasta. Mais adiante voc�
     {
       titulo: '2. Ligando a biblioteca Phaser (CDN)',
       corpo: `
-Phaser é a **biblioteca** que faz o trabalho pesado de jogo: desenhar na tela, física, animação, teclado. Sem build nem instalação, o jeito mais simples de ligar essa biblioteca num projeto só de HTML/JS é apontar uma tag ¤<script>¤ pra uma cópia hospedada num **CDN** (um servidor público que guarda bibliotecas prontas pra qualquer site carregar).
+Phaser é a **biblioteca** que faz o trabalho pesado de jogo: desenhar na tela, física, animação, teclado. Sem build nem instalação, o jeito mais simples de ligar essa biblioteca num projeto só de HTML/JS é apontar uma tag de ¤script¤ pra uma cópia hospedada num **CDN** (um servidor público que guarda bibliotecas prontas pra qualquer site carregar).
 
 > Se um dia você montar um projeto com um *bundler* (Vite, Webpack) em vez de HTML puro, existe o comando de terminal ¤npm install phaser¤ pra baixar a biblioteca como dependência. Neste roteiro isso **não é necessário** — a tag do CDN já resolve tudo.
 
-Abra ¤game.html¤ e cole o conteúdo abaixo. Repare na ordem das duas tags ¤<script>¤ no final do ¤<body>¤: a do Phaser vem **antes** da do ¤game.js¤, porque ¤game.js¤ usa coisas que só existem depois que o Phaser carrega.
+Abra ¤game.html¤ e cole o conteúdo abaixo. Repare na ordem das duas tags de ¤script¤ no final do ¤<body>¤: a do Phaser vem **antes** da do ¤game.js¤, porque ¤game.js¤ usa coisas que só existem depois que o Phaser carrega.
 
 §§§html
 <!DOCTYPE html>
@@ -191,7 +191,7 @@ Abra ¤game.html¤ e cole o conteúdo abaixo. Repare na ordem das duas tags ¤<s
 </head>
 <body>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"><\/script>
-  <script src="game.js"><\/script>
+  <script src=\"game.js\"><\/script>
 </body>
 </html>
 §§§
@@ -834,7 +834,7 @@ Quando terminar de testar, avance pra pedir o visto do professor.`
       title: 'Roteiro — Construa o Pacman no Phaser — Checklist de correção',
       subtitle: 'Roteiro prático (projeto Phaser no Codespace, verificado presencialmente) · Codificação de Jogos · Turma Jogos Digitais',
       items: [
-        { number: 1, title: 'Arquivos e biblioteca', prompt: 'game.html e game.js existem na raiz do projeto, e game.html carrega o Phaser via CDN antes de game.js?', answer: 'Duas tags <script>: phaser@3.80.1 via cdn.jsdelivr.net primeiro, depois game.js.' },
+        { number: 1, title: 'Arquivos e biblioteca', prompt: 'game.html e game.js existem na raiz do projeto, e game.html carrega o Phaser via CDN antes de game.js?', answer: 'Duas tags de script: phaser@3.80.1 via cdn.jsdelivr.net primeiro, depois game.js.' },
         { number: 2, title: 'Sprites do Piskel', prompt: 'pacman_sheet.png (3 quadros, 96×32) e ghost_sheet.png (2 quadros, 64×32) foram desenhados no Piskel e estão na mesma pasta de game.js?', answer: 'Dois PNGs com frames de 32×32 cada, nomes exatos pacman_sheet.png e ghost_sheet.png, carregados em preCarregar() com frameWidth/frameHeight 32.' },
         { number: 3, title: 'Labirinto e moedas', prompt: 'O labirinto aparece com paredes azuis (geradas por código) e moedas brancas espalhadas nos espaços livres do mapa?', answer: 'Grupos estáticos "paredes"/"moedas" preenchidos percorrendo o array mapa em criar(), usando as texturas geradas parede/moeda de preCarregar().' },
         { number: 4, title: 'Jogador e fantasmas', prompt: 'O Pacman se move nas 4 direções (inclusive diagonal) sem atravessar parede, e os 2 fantasmas se movem sozinhos, mudando de direção periodicamente?', answer: 'atualizar() lê teclas.up/down/left/right com if/else if separados por eixo; fantasmas trocam "direcao" a cada 1.5s via time.addEvent, aplicada em atualizar().' },

@@ -6,14 +6,14 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
-// Turma Jogos tem 65 módulos ao todo (teoria+prática de todas as trilhas de
+// Turma Jogos tem 66 módulos ao todo (teoria+prática de todas as trilhas de
 // todas as matérias com conteúdo, incluindo os 4 módulos da trilha 'csharp'
 // (teoria/comparacao/pratica-simples/desafios), os 5 da trilha 'gdscript'
 // (os mesmos 4 + 'cenarios', só dela), os 2 da trilha 'cod-godot' (prática
-// sem trava + teoria, em cadeia) e o módulo "Prova Diagnóstica — Turma
-// Jogos Digitais" — usados como base do % geral. O % de cada aluno é a
-// MÉDIA da fração current/total de cada um dos 65 módulos, não uma simples
-// contagem de módulos concluídos.
+// sem trava + teoria, em cadeia), o módulo da trilha 'cod-phaser' (só
+// prática) e o módulo "Prova Diagnóstica — Turma Jogos Digitais" — usados
+// como base do % geral. O % de cada aluno é a MÉDIA da fração current/total
+// de cada um dos 66 módulos, não uma simples contagem de módulos concluídos.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
 // (syncAllModulesProgress roda no load e reescreve student_module_progress
@@ -24,14 +24,14 @@ const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
     // edward.guzman: completa 2 módulos pré-existentes (js/basico,
-    // js/intermediario) → soma 2 frações de 1.0 / 65 módulos = 3,08% → arredonda 3%.
+    // js/intermediario) → soma 2 frações de 1.0 / 66 módulos = 3,03% → arredonda 3%.
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
   ],
 };
 
 // breno.silva80 completa os 10 desafios de js/basico (progressTotal:10) e
-// nada mais → 1 fração de 1.0 / 65 módulos da turma = 1,54% → arredonda 2%.
+// nada mais → 1 fração de 1.0 / 66 módulos da turma = 1,52% → arredonda 2%.
 async function seedBrenoLocalProgress(page) {
   await page.addInitScript(() => {
     localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
