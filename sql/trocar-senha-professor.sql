@@ -21,6 +21,7 @@
 update auth.users
 set encrypted_password = extensions.crypt('NOVA_SENHA_AQUI', extensions.gen_salt('bf')),
     updated_at = now()
+
 where email = 'USERNAME_AQUI@aluno.portal.local'
 returning id, email, updated_at;
 
