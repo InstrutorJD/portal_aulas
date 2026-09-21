@@ -2560,8 +2560,8 @@
     quizrush: {
       title: 'QuizRush da Turma',
       desc: currentUser.role === 'professor'
-        ? 'Escolha uma aula teórica e hospedeie um quiz ao vivo pra turma — as perguntas vêm do gabarito, sem cadastrar nada novo.'
-        : 'Entre na partida ao vivo criada pelo professor. Quem acerta mais rápido, marca mais pontos!',
+        ? 'Hospede uma partida ao vivo pra turma: um quiz de múltipla escolha (perguntas do gabarito de uma aula) ou um Quizz Prático, com problemas curtos de código em JavaScript e SQL.'
+        : 'Entre na partida ao vivo criada pelo professor — quiz ou Quizz Prático, onde você escreve o código. Quem acerta mais rápido, marca mais pontos!',
       icon: '🎉',
       src: '../../games/quizrush.html'
     },

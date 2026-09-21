@@ -13,6 +13,9 @@
 // 3) Persistir/observar a sessão ao vivo no Supabase (quizrush_sessions/
 //    quizrush_players/quizrush_answers — ver sql/supabase-setup-completo.sql, bloco 11),
 //    incluindo o cálculo de pontuação (acerto + velocidade).
+// 4) Montar e gravar o "Quizz Prático" — partida de problemas de código em vez
+//    de múltipla escolha (banco em shared/quizrush-code-bank.js, correção em
+//    shared/quizrush-code.js).
 window.QuizRushEngine = (function () {
   const sb = window.PortalSession ? window.PortalSession.client() : null;
 
@@ -253,6 +256,51 @@ window.QuizRushEngine = (function () {
     return { isCorrect, score };
   }
 
+  // ---------- Quizz Prático (problemas de código) ----------
+  // Uma partida de código é uma sessão comum cujas `questions` são itens com
+  // type:'code' (ver shared/quizrush-code-bank.js) em vez de
+  // prompt/options/correctIndex — o resto (lobby, cronômetro, revelação,
+  // pódio, placar) é o mesmo fluxo. A correção acontece no aparelho do aluno
+  // (shared/quizrush-code.js); aqui só se monta a partida e se grava o resultado.
+
+  const isCodeQuestion = q => !!q && q.type === 'code';
+  const isCodeSession = s => !!(s && Array.isArray(s.questions) && s.questions.length && isCodeQuestion(s.questions[0]));
+
+  function listCodeTopics() {
+    const bank = window.QuizRushCodeBank;
+    if (!bank) return [];
+    return bank.topics.map(t => ({ key: t.key, lang: t.lang, label: t.label, count: t.problems.length }));
+  }
+
+  function buildCodeQuestions(topicKeys, count) {
+    const bank = window.QuizRushCodeBank;
+    return bank ? bank.pickProblems(topicKeys, count) : [];
+  }
+
+  // Cada tentativa do aluno é gravada (a errada com score 0, pra o professor
+  // ver quem está "tentando"); o acerto sobrescreve a mesma linha com a
+  // pontuação. `attempts` e `answer_text` são colunas novas (sql/quizrush-quizz-pratico.sql):
+  // se a migração ainda não rodou, o banco recusa o upsert inteiro — nesse
+  // caso tenta de novo só com as colunas antigas, pra o aluno NÃO perder o
+  // ponto por causa de um script que faltou rodar, e avisa no console.
+  async function submitCodeAnswer({ sessionId, email, name, questionIndex, isCorrect, score, attempts, answerText }) {
+    if (!sb || !sessionId || !email) return null;
+    const base = {
+      session_id: sessionId, student_email: email, student_name: name || email,
+      question_index: questionIndex, choice_index: 0, is_correct: !!isCorrect, score: score || 0
+    };
+    const opts = { onConflict: 'session_id,student_email,question_index' };
+    let { error } = await sb.from('quizrush_answers').upsert(
+      { ...base, attempts: attempts || 1, answer_text: String(answerText || '').slice(0, 4000) }, opts
+    );
+    if (error) {
+      console.warn('[QuizRushEngine] gravando a resposta de código sem attempts/answer_text (rode sql/quizrush-quizz-pratico.sql):', error);
+      ({ error } = await sb.from('quizrush_answers').upsert(base, opts));
+    }
+    if (error) { console.error('[QuizRushEngine] falha ao enviar resposta de código:', error); return null; }
+    return { isCorrect: !!isCorrect, score: score || 0 };
+  }
+
   function leaderboardFrom(answers) {
     const byStudent = {};
     answers.forEach(a => {
@@ -287,6 +335,7 @@ window.QuizRushEngine = (function () {
     loadTurmaConfig, listGabaritoModules, fetchModuleQuestions,
     getLatestSession, createSession, startSession, nextQuestion, getServerTimeMs, reveal, showPodium, endSession,
     joinSession, fetchPlayers, fetchAnswers, submitAnswer, scoreFor, leaderboardFrom,
+    isCodeQuestion, isCodeSession, listCodeTopics, buildCodeQuestions, submitCodeAnswer,
     watchSession, watchPlayers, watchAnswers, watchNewSessions
   };
 })();

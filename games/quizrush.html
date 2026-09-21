@@ -111,6 +111,35 @@
   @keyframes fall{ to{ transform:translateY(115vh) rotate(540deg); opacity:.2; } }
 
   .empty-state{ color:var(--ink-dim); font-size:12px; }
+
+  /* ---------- Quizz Prático (problemas de código) ---------- */
+  .mode-tabs{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .mode-tab{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:12px; padding:9px 16px; border-radius:6px;
+    border:2px solid var(--line); background:var(--panel2); color:var(--ink-dim); cursor:pointer; }
+  .mode-tab.active{ border-color:var(--green); color:var(--green); background:#0f1d0c; }
+  .topic-group{ text-align:left; }
+  .topic-group h4{ margin:8px 0 4px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.5px; }
+  .topic-check{ display:flex; gap:8px; align-items:center; font-size:12.5px; color:var(--ink); padding:4px 0; cursor:pointer; }
+  .topic-check small{ color:var(--ink-dim); }
+
+  .screen.code-mode{ justify-content:flex-start; }
+  .code-box{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:10px; text-align:left; }
+  .code-editor{ width:100%; min-height:170px; resize:vertical; background:#050805; color:#d9e6d2; border:1px solid var(--green-dim);
+    border-radius:8px; padding:12px 14px; font-family:'JetBrains Mono', monospace; font-size:13.5px; line-height:1.5; tab-size:2; }
+  .code-editor:focus{ outline:2px solid var(--green); outline-offset:1px; }
+  .code-editor:disabled{ opacity:.55; }
+  pre.code-static{ margin:0; background:#050805; border:1px solid var(--line); border-radius:8px; padding:12px 14px;
+    font-size:13px; line-height:1.5; color:#d9e6d2; overflow:auto; white-space:pre-wrap; text-align:left; font-family:'JetBrains Mono', monospace; }
+  .code-meta-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:11.5px; color:#c9b8ff; flex-wrap:wrap; }
+  .code-out{ display:flex; flex-direction:column; gap:2px; }
+  .code-out .line{ font-size:12px; color:#e7ddff; word-break:break-word; padding:2px 0; }
+  .code-out .line.pass{ color:var(--green); }
+  .code-out .line.fail{ color:var(--blood-bright); }
+  .code-hint{ background:rgba(255,166,2,.12); border:1px solid var(--k-yellow); color:#ffe2a8; border-radius:8px; padding:8px 12px; font-size:12px; line-height:1.5; }
+  .code-hint code, .q-prompt code{ background:rgba(255,255,255,.12); padding:1px 5px; border-radius:4px; font-family:'JetBrains Mono', monospace; font-size:.92em; }
+  .sql-preview{ border-collapse:collapse; font-size:11.5px; margin-top:4px; }
+  .sql-preview th, .sql-preview td{ border:1px solid rgba(255,255,255,.18); padding:3px 8px; text-align:left; }
+  .sql-preview th{ background:rgba(255,255,255,.08); }
 </style>
 </head>
 <body>
@@ -134,6 +163,12 @@
   <!-- ---------- Professor: montar um QuizRush novo ---------- -->
   <div class="screen" id="scrSetup">
     <h1 class="title">🎉 Criar um QuizRush</h1>
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tabModeQuiz">📝 Quiz de múltipla escolha</button>
+      <button class="mode-tab" id="tabModeCode">💻 Quizz Prático</button>
+    </div>
+
+    <div id="setupQuizPanel" style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
     <p class="subtitle">Escolha uma aula teórica com quiz — as perguntas vêm direto do gabarito dela</p>
     <div class="card" style="display:flex; flex-direction:column; gap:14px; align-items:stretch;">
       <label class="field">Atividade
@@ -147,6 +182,22 @@
           <input type="number" id="inpDuration" min="5" max="120" value="25">
         </label>
         <button class="btn btn-primary" id="btnCreateSession">🚀 Iniciar QuizRush</button>
+      </div>
+    </div>
+    </div>
+
+    <div id="setupCodePanel" style="display:none; flex-direction:column; align-items:center; gap:16px; width:100%;">
+      <p class="subtitle">Problemas curtos de programação — o aluno escreve o código e o portal corrige na hora</p>
+      <div class="card" style="display:flex; flex-direction:column; gap:14px; align-items:stretch;">
+        <div id="codeTopicList"></div>
+        <label class="field">Quantidade de problemas
+          <input type="number" id="inpCodeCount" min="1" max="15" value="5">
+        </label>
+        <label class="field">Tempo por problema (segundos)
+          <input type="number" id="inpCodeDuration" min="30" max="600" value="120">
+        </label>
+        <div id="codeSetupHint" class="hint"></div>
+        <button class="btn btn-primary" id="btnCreateCodeSession">🚀 Iniciar Quizz Prático</button>
       </div>
     </div>
   </div>
@@ -192,6 +243,14 @@
       </div>
     </div>
     <div class="tiles" id="qTiles"></div>
+    <div class="code-box" id="qCodeBox" style="display:none;">
+      <div class="code-meta-row"><span id="qCodeLang">--</span><span id="qCodeAttempts"></span></div>
+      <textarea class="code-editor" id="qCodeInput" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <pre class="code-static" id="qCodeStatic" style="display:none;"></pre>
+      <div class="btn-row"><button class="btn btn-primary" id="btnCodeRun">▶️ Executar e enviar</button></div>
+      <div class="code-hint" id="qCodeHint" style="display:none;"></div>
+      <div class="code-out" id="qCodeOutput"></div>
+    </div>
     <p class="hint" id="qHostStatus" style="display:none; color:#e7ddff;">0 de 0 responderam</p>
     <div class="btn-row" id="qHostActions" style="display:none;">
       <button class="btn" id="btnRevealNow">⏭️ Revelar agora</button>
@@ -237,6 +296,8 @@
 <script src="../shared/supabase-config.js"></script>
 <script src="../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/quizrush-code-bank.js"></script>
+<script src="../shared/quizrush-code.js"></script>
 <script src="../shared/quizrush-engine.js"></script>
 
 <script>
@@ -259,6 +320,7 @@
     answers: [],
     joined: false,
     myAnswerThisQuestion: null, // { choiceIndex, correct, score }
+    code: null, // estado do problema de código atual (aluno): { attempts, solved, running, timeUp }
     clockOffsetMs: 0, // Date.now() + clockOffsetMs ~= relógio do Supabase (ver init/getServerTimeMs)
     countdownTimer: null,
     unsubSession: null,
@@ -369,6 +431,81 @@
     resultBox.style.display = 'flex';
     resultText.innerHTML = `✅ <b>${questions.length} perguntas</b> encontradas em "<b>${escapeHtml(candidate.moduleTitle)}</b>". Pronto pra começar!`;
     document.getElementById('btnCreateSession').disabled = false;
+  }
+
+  // ---------- Quizz Prático: montar a partida ----------
+
+  function setSetupMode(mode) {
+    const isCode = mode === 'code';
+    document.getElementById('setupQuizPanel').style.display = isCode ? 'none' : 'flex';
+    document.getElementById('setupCodePanel').style.display = isCode ? 'flex' : 'none';
+    document.getElementById('tabModeQuiz').classList.toggle('active', !isCode);
+    document.getElementById('tabModeCode').classList.toggle('active', isCode);
+    if (isCode) renderCodeTopics();
+  }
+
+  function renderCodeTopics() {
+    const box = document.getElementById('codeTopicList');
+    if (box.dataset.ready) { updateCodeSetupHint(); return; }
+    const topics = window.QuizRushEngine.listCodeTopics();
+    const langs = { js: 'JavaScript', sql: 'SQL' };
+    let firstChecked = false;
+    box.innerHTML = Object.keys(langs).map(lang => {
+      const items = topics.filter(t => t.lang === lang);
+      if (!items.length) return '';
+      return `<div class="topic-group"><h4>${langs[lang]}</h4>${items.map(t => {
+        const checked = !firstChecked; firstChecked = true;
+        return `<label class="topic-check"><input type="checkbox" class="chkTopic" value="${escapeHtml(t.key)}" ${checked ? 'checked' : ''}> <span>${escapeHtml(t.label.replace(/^[^—]*— /, ''))} <small>(${t.count})</small></span></label>`;
+      }).join('')}</div>`;
+    }).join('');
+    box.dataset.ready = '1';
+    box.addEventListener('change', updateCodeSetupHint);
+    document.getElementById('inpCodeCount').addEventListener('input', updateCodeSetupHint);
+    updateCodeSetupHint();
+  }
+
+  function selectedTopicKeys() {
+    return [...document.querySelectorAll('.chkTopic:checked')].map(el => el.value);
+  }
+
+  function updateCodeSetupHint() {
+    const keys = selectedTopicKeys();
+    const available = window.QuizRushEngine.listCodeTopics().filter(t => keys.includes(t.key)).reduce((n, t) => n + t.count, 0);
+    const wanted = Math.max(1, parseInt(document.getElementById('inpCodeCount').value, 10) || 5);
+    const hint = document.getElementById('codeSetupHint');
+    const btn = document.getElementById('btnCreateCodeSession');
+    if (!keys.length) {
+      hint.textContent = '⚠️ Marque pelo menos um assunto.';
+      btn.disabled = true;
+      return;
+    }
+    btn.disabled = false;
+    hint.textContent = wanted > available
+      ? `Os assuntos escolhidos têm ${available} problema(s) — a partida terá esses ${available}. Do mais fácil pro mais difícil.`
+      : `Serão sorteados ${wanted} de ${available} problemas, do mais fácil pro mais difícil.`;
+  }
+
+  async function onCreateCodeSession() {
+    const keys = selectedTopicKeys();
+    if (!keys.length) return;
+    const count = Math.max(1, Math.min(15, parseInt(document.getElementById('inpCodeCount').value, 10) || 5));
+    const seconds = Math.max(30, Math.min(600, parseInt(document.getElementById('inpCodeDuration').value, 10) || 120));
+    const questions = window.QuizRushEngine.buildCodeQuestions(keys, count);
+    if (!questions.length) return;
+    const labels = window.QuizRushEngine.listCodeTopics().filter(t => keys.includes(t.key)).map(t => t.label.replace(/^[^—]*— /, ''));
+    const btn = document.getElementById('btnCreateCodeSession');
+    btn.disabled = true;
+    btn.textContent = '⏳ Criando...';
+    const session = await window.QuizRushEngine.createSession({
+      turma, email: username, trilhaLabel: 'Quizz Prático', moduleTitle: labels.join(' + '),
+      questions, durationMs: seconds * 1000
+    });
+    btn.disabled = false;
+    btn.textContent = '🚀 Iniciar Quizz Prático';
+    if (!session) { alert('Não foi possível criar o Quizz Prático agora. Tente de novo.'); return; }
+    setSession(session);
+    subscribeToSession();
+    renderForSession();
   }
 
   async function onCreateSession() {
@@ -527,19 +664,33 @@
     state.myAnswerThisQuestion = null;
 
     const q = currentQuestion();
-    document.getElementById('qMeta').textContent = `Pergunta ${state.session.current_index + 1} de ${state.session.questions.length}`;
+    const isCode = window.QuizRushEngine.isCodeQuestion(q);
+    document.getElementById('scrQuestion').classList.toggle('code-mode', isCode);
+    document.getElementById('qMeta').textContent = isCode
+      ? `Problema ${state.session.current_index + 1} de ${state.session.questions.length} · ${q.mode === 'fill' ? 'complete o código' : 'escreva o código'}`
+      : `Pergunta ${state.session.current_index + 1} de ${state.session.questions.length}`;
 
     // Pergunta e alternativas por extenso pros dois lados — o aluno
     // precisa dar pra jogar direto pelo próprio aparelho, sem depender de
     // enxergar a tela do professor (ex.: aula remota, sala sem telão).
     const tiles = document.getElementById('qTiles');
-    document.getElementById('qPrompt').innerHTML = q.prompt;
-    tiles.innerHTML = q.options.map((opt, i) => `
-      <button class="tile c${i}" data-choice="${i}" ${isHost ? 'disabled' : ''}>
-        <span class="shape">${SHAPES[i] || '?'}</span><span>${opt}</span>
-      </button>
-    `).join('');
-    if (!isHost) tiles.querySelectorAll('.tile').forEach(t => t.addEventListener('click', onTileClick));
+    document.getElementById('qCodeBox').style.display = isCode ? 'flex' : 'none';
+    if (isCode) {
+      document.getElementById('qPrompt').innerHTML = `<b>${escapeHtml(q.title)}</b><br>${q.prompt}`;
+      tiles.style.display = 'none';
+      tiles.innerHTML = '';
+      setupCodeQuestion(q);
+    } else {
+      state.code = null;
+      document.getElementById('qPrompt').innerHTML = q.prompt;
+      tiles.style.display = '';
+      tiles.innerHTML = q.options.map((opt, i) => `
+        <button class="tile c${i}" data-choice="${i}" ${isHost ? 'disabled' : ''}>
+          <span class="shape">${SHAPES[i] || '?'}</span><span>${opt}</span>
+        </button>
+      `).join('');
+      if (!isHost) tiles.querySelectorAll('.tile').forEach(t => t.addEventListener('click', onTileClick));
+    }
 
     document.getElementById('qHostStatus').style.display = isHost ? 'block' : 'none';
     document.getElementById('qHostActions').style.display = isHost ? 'flex' : 'none';
@@ -551,6 +702,13 @@
   function renderQuestionLiveCounts() {
     if (!isHost) return;
     const forThisQ = state.answers.filter(a => a.question_index === state.session.current_index);
+    if (window.QuizRushEngine.isCodeQuestion(currentQuestion())) {
+      // no código, quem errou continua tentando — "responderam" seria enganoso
+      const acertaram = forThisQ.filter(a => a.is_correct).length;
+      document.getElementById('qHostStatus').textContent =
+        `${acertaram} acertaram · ${forThisQ.length - acertaram} tentando · ${state.players.length} na sala`;
+      return;
+    }
     document.getElementById('qHostStatus').textContent = `${forThisQ.length} de ${state.players.length} responderam`;
   }
 
@@ -586,7 +744,17 @@
             renderForSession();
           });
         }
-        if (!isHost && !state.myAnswerThisQuestion) {
+        if (!isHost && state.code) {
+          state.code.timeUp = true;
+          document.getElementById('qCodeInput').disabled = true;
+          document.getElementById('btnCodeRun').disabled = true;
+          if (!state.code.solved) {
+            const fb = document.getElementById('qStudentFeedback');
+            fb.style.display = 'block';
+            document.getElementById('qStudentFeedbackText').className = 'feedback-big';
+            document.getElementById('qStudentFeedbackText').textContent = '⏱️ Tempo esgotado!';
+          }
+        } else if (!isHost && !state.myAnswerThisQuestion) {
           document.querySelectorAll('#qTiles .tile').forEach(t => t.disabled = true);
           const fb = document.getElementById('qStudentFeedback');
           fb.style.display = 'block';
@@ -622,6 +790,126 @@
     beep(520, 0.08);
   }
 
+  // ============================================================
+  // Quizz Prático — problema de código na tela de pergunta
+  // ============================================================
+
+  function setupCodeQuestion(q) {
+    state.code = isHost ? null : { attempts: 0, solved: false, running: false, timeUp: false };
+    const editor = document.getElementById('qCodeInput');
+    const stat = document.getElementById('qCodeStatic');
+    const btn = document.getElementById('btnCodeRun');
+    document.getElementById('qCodeLang').textContent = q.lang === 'sql' ? '🗄️ SQL' : '🟨 JavaScript';
+    document.getElementById('qCodeAttempts').textContent = '';
+    document.getElementById('qCodeOutput').innerHTML = '';
+    document.getElementById('qCodeHint').style.display = 'none';
+    document.getElementById('qStudentFeedback').style.display = 'none';
+
+    // O professor só acompanha (código inicial na tela projetada); o aluno edita.
+    editor.style.display = isHost ? 'none' : 'block';
+    stat.style.display = isHost ? 'block' : 'none';
+    btn.style.display = isHost ? 'none' : 'inline-block';
+    stat.textContent = q.starter;
+    editor.value = q.starter;
+    editor.disabled = false;
+    btn.disabled = false;
+    if (isHost) return;
+
+    // SQL: baixa o motor já agora, pra a 1ª correção não esperar o download.
+    if (q.lang === 'sql') window.QuizRushCode.loadSql().catch(() => {});
+
+    // Recarregou a página no meio do problema: se já tinha acertado (ou
+    // tentado), volta ao estado de antes em vez de deixar refazer/duplicar.
+    const mine = state.answers.find(a => a.question_index === state.session.current_index && a.student_email === username);
+    if (mine) {
+      state.code.attempts = mine.attempts || 1;
+      if (mine.is_correct) {
+        if (mine.answer_text) editor.value = mine.answer_text;
+        lockCodeSolved(mine.score, state.code.attempts);
+      } else {
+        document.getElementById('qCodeAttempts').textContent = `Tentativas: ${state.code.attempts}`;
+      }
+    }
+  }
+
+  function lockCodeSolved(score, attempts) {
+    state.code.solved = true;
+    state.myAnswerThisQuestion = { correct: true, score };
+    document.getElementById('qCodeInput').disabled = true;
+    document.getElementById('btnCodeRun').disabled = true;
+    document.getElementById('qCodeAttempts').textContent = `Tentativas: ${attempts}`;
+    const fb = document.getElementById('qStudentFeedback');
+    fb.style.display = 'block';
+    const big = document.getElementById('qStudentFeedbackText');
+    big.className = 'feedback-big correct';
+    big.textContent = `✅ Acertou! +${score} pts — aguardando os outros...`;
+  }
+
+  function renderCodeResult(result) {
+    const out = document.getElementById('qCodeOutput');
+    out.innerHTML = result.lines.map(l => `<div class="line ${l.pass ? 'pass' : 'fail'}">${escapeHtml(l.text)}</div>`).join('');
+    if (result.preview && result.preview.columns.length) {
+      const pv = result.preview;
+      out.innerHTML += `<table class="sql-preview"><thead><tr>${pv.columns.map(c => `<th>${escapeHtml(c)}</th>`).join('')}</tr></thead><tbody>${
+        pv.values.map(r => `<tr>${r.map(v => `<td>${v === null ? 'NULL' : escapeHtml(v)}</td>`).join('')}</tr>`).join('')
+      }</tbody></table>${pv.total > pv.values.length ? `<div class="line">... e mais ${pv.total - pv.values.length} linha(s)</div>` : ''}`;
+    }
+  }
+
+  async function onCodeRun() {
+    const c = state.code;
+    if (isHost || !c || c.solved || c.running || c.timeUp) return;
+    const q = currentQuestion();
+    const btn = document.getElementById('btnCodeRun');
+    const editor = document.getElementById('qCodeInput');
+    const code = editor.value;
+
+    // O tempo conta até o CLIQUE — a correção (sobretudo o 1º SQL, que baixa o
+    // motor) não pode tirar pontos de quem já enviou a tempo.
+    const startedAt = new Date(state.session.question_started_at).getTime();
+    const duration = state.session.question_duration_ms;
+    const elapsedMs = Math.max(0, (Date.now() + state.clockOffsetMs) - startedAt);
+    if (elapsedMs >= duration) return;
+
+    c.running = true;
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = '⏳ Corrigindo...';
+    const result = await window.QuizRushCode.evaluate(q, code);
+    btn.textContent = label;
+    c.running = false;
+    if (c.timeUp) return;
+    btn.disabled = false;
+
+    renderCodeResult(result);
+    if (result.skipped) return; // vazio / "____" sobrando: só avisa, não conta como tentativa
+
+    c.attempts++;
+    document.getElementById('qCodeAttempts').textContent = `Tentativas: ${c.attempts}`;
+
+    if (result.pass) {
+      const score = window.QuizRushCode.scoreForCode(elapsedMs, duration, c.attempts - 1);
+      lockCodeSolved(score, c.attempts);
+      playCorrect();
+      await window.QuizRushEngine.submitCodeAnswer({
+        sessionId: state.session.id, email: username, name: displayName,
+        questionIndex: state.session.current_index, isCorrect: true, score, attempts: c.attempts, answerText: code
+      });
+    } else {
+      playWrong();
+      // depois de 2 erros a dica aparece sozinha
+      if (c.attempts >= 2 && q.hint) {
+        const hint = document.getElementById('qCodeHint');
+        hint.innerHTML = '💡 <b>Dica:</b> ' + q.hint;
+        hint.style.display = 'block';
+      }
+      await window.QuizRushEngine.submitCodeAnswer({
+        sessionId: state.session.id, email: username, name: displayName,
+        questionIndex: state.session.current_index, isCorrect: false, score: 0, attempts: c.attempts, answerText: code
+      });
+    }
+  }
+
   async function onRevealNowClick() {
     if (state.countdownTimer) clearInterval(state.countdownTimer);
     await window.QuizRushEngine.reveal(state.session.id);
@@ -639,25 +927,51 @@
     state.answers = await window.QuizRushEngine.fetchAnswers(state.session.id);
 
     const q = currentQuestion();
+    const isCode = window.QuizRushEngine.isCodeQuestion(q);
     const forThisQ = state.answers.filter(a => a.question_index === state.session.current_index);
-    const counts = q.options.map((_, i) => forThisQ.filter(a => a.choice_index === i).length);
-    const maxCount = Math.max(1, ...counts);
-    const colors = ['var(--k-red)', 'var(--k-blue)', 'var(--k-yellow)', 'var(--k-green)'];
-
-    document.getElementById('revealPrompt').innerHTML = q.prompt;
-    document.getElementById('revealBars').innerHTML = q.options.map((opt, i) => `
-      <div class="bar-row">
-        <span class="shape">${SHAPES[i]}</span>
-        <div class="bar-track"><div class="bar-fill" style="width:${(counts[i] / maxCount) * 100}%; background:${colors[i]};"></div></div>
-        <span>${escapeHtml(opt)} ${i === q.correctIndex ? '✔' : ''} (${counts[i]})</span>
-      </div>
-    `).join('');
-
     const myAnswer = forThisQ.find(a => a.student_email === username);
-    document.getElementById('revealBig').textContent = q.options[q.correctIndex] ? `Resposta certa: ${q.options[q.correctIndex]}` : 'Revelação';
+
+    if (isCode) {
+      // Quizz Prático: em vez de barras por alternativa, a solução de exemplo e quem acertou.
+      const acertaram = forThisQ.filter(a => a.is_correct).sort((a, b) => b.score - a.score);
+      const naoFecharam = forThisQ.length - acertaram.length;
+      document.getElementById('revealBig').textContent = 'Solução de exemplo';
+      document.getElementById('revealPrompt').innerHTML = `<b>${escapeHtml(q.title)}</b><br>${q.prompt}`;
+      document.getElementById('revealBars').innerHTML = `
+        <pre class="code-static">${escapeHtml(q.solution)}</pre>
+        <p class="hint" style="max-width:none; color:#e7ddff;">✅ ${acertaram.length} acertaram · ❌ ${naoFecharam} tentaram e não fecharam</p>
+        ${acertaram.length ? `<p class="hint" style="max-width:none; color:#e7ddff;">Acertaram: ${acertaram.slice(0, 10).map(a => `${escapeHtml(a.student_name)} (+${a.score})`).join(' · ')}</p>` : ''}
+      `;
+    } else {
+      const counts = q.options.map((_, i) => forThisQ.filter(a => a.choice_index === i).length);
+      const maxCount = Math.max(1, ...counts);
+      const colors = ['var(--k-red)', 'var(--k-blue)', 'var(--k-yellow)', 'var(--k-green)'];
+
+      document.getElementById('revealPrompt').innerHTML = q.prompt;
+      document.getElementById('revealBars').innerHTML = q.options.map((opt, i) => `
+        <div class="bar-row">
+          <span class="shape">${SHAPES[i]}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(counts[i] / maxCount) * 100}%; background:${colors[i]};"></div></div>
+          <span>${escapeHtml(opt)} ${i === q.correctIndex ? '✔' : ''} (${counts[i]})</span>
+        </div>
+      `).join('');
+      document.getElementById('revealBig').textContent = q.options[q.correctIndex] ? `Resposta certa: ${q.options[q.correctIndex]}` : 'Revelação';
+    }
 
     document.getElementById('revealPersonal').style.display = isHost ? 'none' : 'block';
-    if (!isHost) {
+    if (!isHost && isCode) {
+      if (myAnswer && myAnswer.is_correct) {
+        document.getElementById('revealPersonalText').innerHTML =
+          `✅ Você acertou! <b>+${myAnswer.score} pontos</b>${myAnswer.attempts > 1 ? ` (na tentativa ${myAnswer.attempts})` : ''}`;
+        playCorrect();
+      } else if (myAnswer) {
+        document.getElementById('revealPersonalText').textContent = '❌ Você tentou, mas não fechou o problema desta vez.';
+        playWrong();
+      } else {
+        document.getElementById('revealPersonalText').textContent = '⏱️ Você não enviou nenhuma tentativa.';
+        playWrong();
+      }
+    } else if (!isHost) {
       if (myAnswer) {
         document.getElementById('revealPersonalText').innerHTML = myAnswer.is_correct
           ? `✅ Você acertou! <b>+${myAnswer.score} pontos</b>`
@@ -794,6 +1108,21 @@
   }
 
   document.getElementById('btnFetchQuestions').addEventListener('click', onFetchQuestions);
+  document.getElementById('tabModeQuiz').addEventListener('click', () => setSetupMode('quiz'));
+  document.getElementById('tabModeCode').addEventListener('click', () => setSetupMode('code'));
+  document.getElementById('btnCreateCodeSession').addEventListener('click', onCreateCodeSession);
+  document.getElementById('btnCodeRun').addEventListener('click', onCodeRun);
+  document.getElementById('qCodeInput').addEventListener('keydown', e => {
+    if (e.key === 'Tab') { // Tab dentro do editor indenta (em vez de pular pro próximo botão)
+      e.preventDefault();
+      const el = e.target, at = el.selectionStart;
+      el.value = el.value.slice(0, at) + '  ' + el.value.slice(el.selectionEnd);
+      el.selectionStart = el.selectionEnd = at + 2;
+    } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      onCodeRun();
+    }
+  });
   document.getElementById('btnCreateSession').addEventListener('click', onCreateSession);
   document.getElementById('btnJoin').addEventListener('click', onJoinClick);
   document.getElementById('btnStart').addEventListener('click', onStartClick);
