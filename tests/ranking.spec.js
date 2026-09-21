@@ -73,6 +73,32 @@ test.describe('Ranking do aluno na turma', () => {
     await expect(page.locator('#rankingBadge')).toHaveText('🏆 2º');
   });
 
+  // Relatório "Ranking da Turma" (Gestão → Relatórios): só sob demanda (botão),
+  // turma toda na ordem do ranking, com atividades concluídas × disponíveis.
+  test('professor gera o Ranking da Turma por botão, ordenado, com concluídas/disponíveis', async ({ page }) => {
+    await stubSupabaseFake(page, SEED);
+    await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.locator('.collapsible-card .collapsible-head', { hasText: 'Relatórios' }).click();
+
+    const resultado = page.locator('#rankingTurmaResultado');
+    // Não vem preenchido antes do clique.
+    await expect(resultado).toBeEmpty();
+
+    await page.click('#btnGerarRankingTurma');
+
+    const linhas = resultado.locator('tbody tr');
+    await expect(linhas).toHaveCount(17);
+    // edward (2 módulos concluídos) em 1º; o resto zerado, desempate por e-mail.
+    await expect(linhas.nth(0)).toContainText('1º');
+    await expect(linhas.nth(0)).toContainText('Edward Guzman');
+    await expect(linhas.nth(0)).toContainText('2/66');
+    await expect(linhas.nth(0)).toContainText('3%');
+    await expect(linhas.nth(1)).toContainText('2º');
+    await expect(linhas.nth(1)).toContainText('Breno Silva');
+    await expect(linhas.nth(1)).toContainText('0/66');
+  });
+
   test('professor não vê o badge de ranking', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
     await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');

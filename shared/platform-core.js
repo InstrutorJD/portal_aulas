@@ -361,6 +361,11 @@
                 <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos presentes hoje que ainda não concluíram nenhuma atividade hoje. Não considera quem já foi marcado como falta na chamada de hoje.</p>
                 <button class="btn btn-secondary" id="btnGerarAtividadeDia" style="margin-bottom:10px;">📋 Gerar Relatório do Dia</button>
                 <div id="atividadeDiaResultado"></div>
+
+                <h3 class="gestao-subhead">Ranking da Turma</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos na ordem do ranking (% geral de conclusão), com quantas atividades cada um concluiu das disponíveis.</p>
+                <button class="btn btn-secondary" id="btnGerarRankingTurma" style="margin-bottom:10px;">🏆 Gerar Ranking da Turma</button>
+                <div id="rankingTurmaResultado"></div>
               </div>
             </div>
           </div>
@@ -1729,6 +1734,21 @@
   // role='aluno'), então o find abaixo já devolve null sozinho pra ele.
   async function computeRanking(targetEmail) {
     const email = targetEmail || paramUser;
+    const scored = await computeTurmaRankingList();
+    if (!scored) return null;
+
+    const idx = scored.findIndex(s => s.email === email);
+    if (idx === -1) return null;
+
+    return { posicao: scored[idx].rank, total: scored.length, pct: scored[idx].pctRounded };
+  }
+
+  // A lista COMPLETA do ranking, já ordenada, com posição/% e a contagem de
+  // atividades concluídas × disponíveis de cada aluno (mesma conta do Perfil).
+  // computeRanking (só a posição de UM aluno, pra tela dele) e o relatório
+  // "Ranking da Turma" da Gestão (professor, lista toda) usam esta — assim as
+  // duas telas nunca discordam da ordem.
+  async function computeTurmaRankingList() {
     if (!sbClient) return null;
 
     const students = turmaStudents();
@@ -1741,8 +1761,19 @@
 
     const scored = students
       .map(u => {
-        const pct = overallProgressForStudent(byStudent[u.email] || [], u.email);
-        return pct === null ? null : { email: u.email, pct, pctRounded: Math.round(pct) };
+        const studentRows = byStudent[u.email] || [];
+        const pct = overallProgressForStudent(studentRows, u.email);
+        if (pct === null) return null;
+        // Só conta como "disponível/concluída" o que ainda existe no config
+        // (trilha visível pra esse aluno) — linha órfã de módulo removido não
+        // pode inflar o numerador acima do total.
+        const modules = allTrilhas()
+          .filter(t => isTrilhaVisibleToEmail(t, u.email))
+          .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+        const concluidas = modules.filter(({ trilhaKey, mod }) =>
+          studentRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
+        ).length;
+        return { email: u.email, nome: u.nome, pct, pctRounded: Math.round(pct), concluidas, disponiveis: modules.length };
       })
       .filter(Boolean)
       // pct BRUTO (não arredondado) decide a ordem — dois alunos só empatam de
@@ -1757,11 +1788,38 @@
     // ranking de competição (1, 2, 2, 4, ...) já foi usado aqui, mas juntava
     // alunos com desempenho diferente na mesma posição.
     scored.forEach((s, i) => { s.rank = i + 1; });
+    return scored;
+  }
 
-    const idx = scored.findIndex(s => s.email === email);
-    if (idx === -1) return null;
+  // Relatório "Ranking da Turma" (Gestão → Relatórios, só professor): a turma
+  // toda ordenada pela posição, com atividades concluídas/disponíveis. Sob
+  // demanda (botão), igual ao Relatório do Dia — não vem preenchido sozinho.
+  async function gerarRelatorioRanking() {
+    const container = document.getElementById('rankingTurmaResultado');
+    const btn = document.getElementById('btnGerarRankingTurma');
+    if (!sbClient) { container.innerHTML = `<p style="color:var(--ink-dim); font-size:12px;">Configure o Supabase (shared/supabase-config.js) para usar este relatório.</p>`; return; }
+    if (turmaStudents().length === 0) { container.innerHTML = `<p style="color:var(--ink-dim); font-size:12px;">Nenhum aluno cadastrado nesta turma.</p>`; return; }
 
-    return { posicao: scored[idx].rank, total: scored.length, pct: scored[idx].pctRounded };
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Gerando...';
+    let scored;
+    try {
+      scored = await computeTurmaRankingList();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+    if (!scored || scored.length === 0) { container.innerHTML = `<p style="color:var(--ink-dim); font-size:12px;">Nenhum aluno com trilhas disponíveis nesta turma.</p>`; return; }
+
+    container.innerHTML = `
+      <table class="audit-table">
+        <thead><tr><th>Posição</th><th>Aluno</th><th>Atividades concluídas</th><th>Progresso Geral</th></tr></thead>
+        <tbody>
+          ${scored.map(s => `<tr><td>${s.rank}º</td><td>${s.nome}</td><td>${s.concluidas}/${s.disponiveis}</td><td>${s.pctRounded}%</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
   }
 
   async function renderRankingBadge() {
@@ -2425,6 +2483,7 @@
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
+    document.getElementById('btnGerarRankingTurma').addEventListener('click', gerarRelatorioRanking);
   }
 
   // ---------- Tabs principais ----------
