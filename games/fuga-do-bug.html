@@ -29,26 +29,24 @@
     display:flex; align-items:center; justify-content:space-between; padding:0 12px;
     font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0; gap:10px;
   }
-  .topbar .title{ font-family:'VT323', monospace; font-size:16px; color:var(--green); letter-spacing:1px; }
-  .topbar .stats{ display:flex; gap:14px; align-items:center; }
-  .topbar .stats b{ color:var(--ink); }
-  #btnRanking{
+  .topbar .title{ font-family:'VT323', monospace; font-size:16px; color:var(--green); letter-spacing:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar .stats{ display:flex; gap:8px; align-items:center; }
+  .topbar-btn{
     background:var(--panel); border:1px solid var(--green-dim); color:var(--green);
     font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase;
     padding:4px 10px; cursor:pointer; border-radius:2px;
   }
-  #btnRanking:hover{ background:var(--green-dim); color:#04180a; }
+  .topbar-btn:hover{ background:var(--green-dim); color:#04180a; }
 
   .stage{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
 
   #gameCanvas{
     background:linear-gradient(180deg,#081006 0%, #050805 70%);
     display:block; max-width:100%; max-height:100%;
-    image-rendering:pixelated;
   }
 
   .hud{
-    position:absolute; top:10px; left:10px; display:flex; gap:10px; pointer-events:none;
+    position:absolute; top:10px; left:10px; display:flex; gap:8px; flex-wrap:wrap; pointer-events:none; max-width:calc(100% - 20px);
   }
   .hud .pill{
     background:rgba(10,15,10,0.8); border:1px solid var(--green-dim); border-radius:3px;
@@ -56,26 +54,28 @@
   }
   .hud .pill b{ color:var(--green); }
   .hud .pill.deaths b{ color:var(--blood-bright); }
+  .hud .pill.coins b{ color:var(--yellow); }
 
-  .tip-toast{
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-60%);
-    background:rgba(8,10,8,0.94); border:1px solid var(--blood); border-radius:4px;
-    padding:14px 20px; max-width:420px; text-align:center; pointer-events:none;
-    opacity:0; transition:opacity .15s ease;
+  .banner{
+    position:absolute; top:52px; left:50%; transform:translateX(-50%);
+    background:rgba(8,10,8,0.92); border:1px solid var(--green-dim); border-radius:4px;
+    padding:10px 22px; max-width:520px; text-align:center; pointer-events:none;
+    opacity:0; transition:opacity .35s ease;
   }
-  .tip-toast.show{ opacity:1; }
-  .tip-toast .k{ font-family:'VT323',monospace; font-size:22px; color:var(--blood-bright); display:block; margin-bottom:4px; }
-  .tip-toast .m{ font-size:12px; color:var(--ink); line-height:1.4; }
+  .banner.show{ opacity:1; }
+  .banner .k{ font-family:'VT323',monospace; font-size:24px; color:var(--green); display:block; letter-spacing:1px; }
+  .banner .n{ font-size:13px; color:var(--ink); display:block; margin:2px 0 4px; font-weight:800; }
+  .banner .m{ font-size:11.5px; color:var(--ink-dim); line-height:1.4; }
 
   .overlay{
-    position:absolute; inset:0; background:rgba(3,5,3,0.92);
-    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px;
-    text-align:center; padding:20px;
+    position:absolute; inset:0; background:rgba(3,5,3,0.93);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+    text-align:center; padding:16px; overflow-y:auto;
   }
   .overlay h1{ font-family:'VT323',monospace; font-size:38px; color:var(--green); margin:0; letter-spacing:1px; text-shadow:0 0 10px rgba(124,255,63,.4); }
   .overlay h1.dead{ color:var(--blood-bright); text-shadow:0 0 10px rgba(255,59,48,.5); }
-  .overlay p{ font-size:12px; color:var(--ink-dim); max-width:420px; line-height:1.6; margin:0; }
-  .overlay .commit{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--yellow); background:var(--panel2); border:1px solid var(--line); padding:8px 12px; border-radius:3px; max-width:420px; }
+  .overlay p{ font-size:12px; color:var(--ink-dim); max-width:460px; line-height:1.6; margin:0; }
+  .overlay .commit{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--yellow); background:var(--panel2); border:1px solid var(--line); padding:8px 12px; border-radius:3px; max-width:440px; }
   .btn{
     background:var(--green-dim); color:#04180a; border:none; font-family:'JetBrains Mono',monospace;
     font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:.5px;
@@ -83,6 +83,21 @@
   }
   .btn:hover{ background:var(--green); }
   .btn.ghost{ background:transparent; border:1px solid var(--green-dim); color:var(--green); }
+  .btn.ghost:hover{ background:var(--green-dim); color:#04180a; }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+  .level-grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; width:100%; max-width:520px; }
+  .lvl{
+    background:var(--panel); border:1px solid var(--line); color:var(--ink); border-radius:3px;
+    padding:6px 4px; cursor:pointer; font-family:'JetBrains Mono',monospace; text-align:center;
+    display:flex; flex-direction:column; gap:1px; min-width:0;
+  }
+  .lvl .num{ font-family:'VT323',monospace; font-size:22px; line-height:1; color:var(--green); }
+  .lvl .cmd{ font-size:8.5px; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lvl .stars{ font-size:9px; color:var(--yellow); letter-spacing:1px; }
+  .lvl:hover:not(:disabled){ border-color:var(--green); background:#132014; }
+  .lvl.done .num::after{ content:' ✓'; font-size:14px; }
+  .lvl:disabled{ opacity:.35; cursor:not-allowed; }
 
   .touch-controls{
     position:absolute; bottom:12px; left:0; right:0; display:none;
@@ -103,20 +118,23 @@
   <div class="topbar">
     <div class="title">🩹 FUGA DO BUG — trilha de commits instável</div>
     <div class="stats">
-      <span id="btnRanking">🏆 Placar</span>
+      <button class="topbar-btn" id="btnLevels">📋 Fases</button>
+      <button class="topbar-btn" id="btnRanking">🏆 Placar</button>
     </div>
   </div>
 
   <div class="stage">
-    <canvas id="gameCanvas" width="960" height="540"></canvas>
+    <canvas id="gameCanvas" width="960" height="544"></canvas>
 
     <div class="hud">
+      <div class="pill">🎯 Fase: <b id="hudLevel">1</b>/<span id="hudLevelTotal">10</span></div>
       <div class="pill deaths">💀 Mortes: <b id="hudDeaths">0</b></div>
       <div class="pill">📍 Checkpoint: <b id="hudCheckpoint">0</b>/<span id="hudCheckpointTotal">0</span></div>
+      <div class="pill coins">🪙 Commits: <b id="hudCoins">0</b>/<span id="hudCoinsTotal">0</span></div>
       <div class="pill">⏱️ <b id="hudTime">0.0s</b></div>
     </div>
 
-    <div class="tip-toast" id="tipToast"><span class="k" id="tipToastK">git commit -m "morri"</span><span class="m" id="tipToastM"></span></div>
+    <div class="banner" id="banner"><span class="k" id="bannerK"></span><span class="n" id="bannerN"></span><span class="m" id="bannerM"></span></div>
 
     <div class="touch-controls" id="touchControls">
       <div class="tc-group">
@@ -130,16 +148,26 @@
 
     <div class="overlay" id="startOverlay">
       <h1>FUGA DO BUG</h1>
-      <p>Você é o commit HEAD tentando sair da branch antes do rebase automático te apagar. O chão nem sempre é chão. Confie pouco, pule sempre, e não fique bravo — morrer aqui é o ponto do jogo.</p>
-      <p>Setas / A D para mover · Espaço ou ▲ para pular · Chegue na bandeira 🏁 no fim da trilha.</p>
+      <p>Você é o commit HEAD tentando sair da branch antes do rebase automático te apagar. São 10 fases, da mais tranquila à mais cruel. O chão nem sempre é chão — e morrer aqui é o ponto do jogo.</p>
+      <p>Setas / A D para mover · Espaço ou ▲ para pular (segure pra pular mais alto) · Chegue na bandeira 🏁 no fim da trilha.</p>
+      <div class="level-grid" id="levelGrid"></div>
       <button class="btn" id="btnStart">Iniciar</button>
     </div>
 
     <div class="overlay" id="deathOverlay" style="display:none;">
       <h1 class="dead">MORREU. DE NOVO.</h1>
       <div class="commit" id="deathTip"></div>
-      <p>Voltando pro último checkpoint. Respira.</p>
+      <p>Voltando pro último checkpoint. Respira. <span style="color:var(--ink);">(Enter ou Espaço)</span></p>
       <button class="btn" id="btnRespawn">Continuar</button>
+    </div>
+
+    <div class="overlay" id="levelOverlay" style="display:none;">
+      <h1 id="levelTitle">FASE CONCLUÍDA ✅</h1>
+      <p id="levelStats"></p>
+      <div class="btn-row">
+        <button class="btn ghost" id="btnReplay">Repetir fase</button>
+        <button class="btn" id="btnNext">Próxima fase ▶</button>
+      </div>
     </div>
 
     <div class="overlay" id="winOverlay" style="display:none;">
@@ -156,9 +184,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../shared/clipboard-guard.js"></script>
 <script src="../shared/game-leaderboard.js"></script>
+<script src="fuga-do-bug-engine.js"></script>
+<script src="fuga-do-bug-levels.js"></script>
 <script>
 (function(){
   'use strict';
+
+  const Engine = window.FugaEngine;
+  const LEVELS = window.FugaLevels;
+  const { TILE, ROWS, PW, PH } = Engine;
+  const GAME_KEY = 'fuga_do_bug_v2'; // v2: o jogo agora tem 10 fases — placar novo, não mistura com o da fase única antiga
+  const STEP_MS = 1000 / 60;
 
   // ---------- Sessão / query params (mesmo padrão de campo-minado.html) ----------
   const urlParams = new URLSearchParams(window.location.search);
@@ -166,11 +202,12 @@
   const displayName = urlParams.get('name') || username;
   const turma = urlParams.get('turma') || 'jogos';
 
+  const $ = id => document.getElementById(id);
+
   // ---------- Canvas ----------
-  const canvas = document.getElementById('gameCanvas');
+  const canvas = $('gameCanvas');
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
-  const GROUND_Y = H - 70;
 
   function resizeCanvas(){
     const stage = canvas.parentElement;
@@ -181,528 +218,509 @@
   window.addEventListener('resize', resizeCanvas);
 
   // ---------- Dicas de "commit de morte" (leve, sem culpar o aluno) ----------
-  const DEATH_TIPS = [
-    'Nem todo bloco que parece sólido está no ambiente de produção.',
-    'Dica real de debug: quando algo falha do nada, suspeite do que "sempre funcionou".',
-    'git blame não vai ajudar aqui. Só o timing.',
-    'Alguns bugs só aparecem depois que você já confiou no código.',
-    'Isso não foi falha sua — foi a trilha. Tenta nascer.',
-    'No mundo real, isso seria um teste automatizado faltando.',
-    'A dica que ninguém te dá: memoriza o padrão, não o reflexo.'
-  ];
-
-  // ---------- Nível: obstáculos por segmento ----------
-  // Tipos: 'solid' (plataforma real), 'fake' (parece igual, sem colisão),
-  // 'crumble' (sólida por ~0.35s, depois cai), 'spike' (morte no contato),
-  // 'saw' (lâmina que oscila em X, morte no contato), 'drop' (bloco que cai
-  // do teto quando o jogador cruza um gatilho em X).
-  const GROUND = { x:0, y:GROUND_Y, w:9999, h:200, type:'solid' };
-
-  const level = [];
-  const checkpoints = [ {x:40, y:GROUND_Y-70} ];
-
-  function addPlat(x,y,w,h,type){ level.push({x,y,w,h,type}); return level[level.length-1]; }
-  function addSpike(x,w){ level.push({x, y:GROUND_Y-18, w, h:18, type:'spike'}); }
-  function addSaw(x, range, y){ level.push({x, y, w:26, h:26, type:'saw', baseX:x, range, dir:1, speed:2.2}); }
-  function addDrop(x, triggerX, y, w, h){ level.push({x, y, w, h, type:'drop', triggerX, state:'idle', vy:0, restY:y}); }
-  function addCheckpoint(x,y){ checkpoints.push({x,y}); }
-  function addFlag(x,y){ level.push({x,y,w:14,h:60,type:'flag'}); }
-  function addCommit(x,y){ level.push({x,y,w:16,h:16,type:'commit', collected:false}); }
-
-  // Segmento 1: introdução — armadilha simples e óbvia
-  addSpike(360, 40);
-  addPlat(300, GROUND_Y, 60, 200, 'solid'); // não usado colisão de topo (ground já cobre), placeholder visual removido abaixo
-  level.pop();
-  addCommit(420, GROUND_Y-40);
-
-  // Segmento 2: buraco + plataforma falsa logo depois de um checkpoint
-  addPlat(560, GROUND_Y, 9999, 0, 'solid'); level.pop(); // sem-op, ground contínuo cuida do chão
-  // buraco de verdade: removemos o "ground" nessa faixa criando um hole
-  const HOLES = [ {x:640, w:90} ]; // faixas em que o "ground" infinito não existe
-  addPlat(560, GROUND_Y-90, 70, 16, 'solid');
-  addPlat(660, GROUND_Y-90, 70, 16, 'fake'); // parece plataforma segura, não é
-  addSpike(650, 100); // spikes no fundo do buraco
-  addCheckpoint(760, GROUND_Y-70);
-
-  // Segmento 3: serra oscilante sobre passagem estreita
-  addSaw(920, 110, GROUND_Y-90);
-  addPlat(860, GROUND_Y-140, 220, 16, 'solid');
-  addCommit(960, GROUND_Y-170);
-  addCheckpoint(1120, GROUND_Y-70);
-
-  // Segmento 4: bloco que cai do teto ao cruzar um gatilho
-  addDrop(1260, 1230, 40, 60, 26);
-  addSpike(1400, 50);
-  addPlat(1340, GROUND_Y, 60,0,'solid'); level.pop();
-  addCheckpoint(1480, GROUND_Y-70);
-
-  // Segmento 5: sequência de falsas plataformas sobre buraco duplo
-  HOLES.push({x:1560, w:260});
-  addPlat(1560, GROUND_Y-70, 60,16,'solid');
-  addPlat(1640, GROUND_Y-70, 60,16,'fake');
-  addPlat(1720, GROUND_Y-70, 60,16,'solid');
-  addSpike(1560, 260);
-  addCommit(1650, GROUND_Y-110);
-  addCheckpoint(1840, GROUND_Y-70);
-
-  // Segmento 6: plataforma que desmorona (crumble) sobre poço
-  HOLES.push({x:1920, w:220});
-  addPlat(1920, GROUND_Y-40, 70,16,'crumble');
-  addPlat(2010, GROUND_Y-90, 70,16,'crumble');
-  addPlat(2100, GROUND_Y-40, 70,16,'solid');
-  addSpike(1920, 220);
-  addCheckpoint(2200, GROUND_Y-70);
-
-  // Segmento 7: duas serras + drop combinados (fase mais difícil)
-  addSaw(2340, 90, GROUND_Y-60);
-  addSaw(2500, 90, GROUND_Y-140);
-  addPlat(2440, GROUND_Y-180, 140, 16, 'solid');
-  addDrop(2620, 2600, 40, 60, 26);
-  addCheckpoint(2760, GROUND_Y-70);
-
-  // Segmento 8: reta final — plataforma falsa bem na frente da bandeira
-  HOLES.push({x:2840, w:180});
-  addPlat(2840, GROUND_Y-60, 60,16,'fake');
-  addPlat(2920, GROUND_Y-60, 60,16,'solid');
-  addSpike(2840, 180);
-  addCommit(2900, GROUND_Y-100);
-  addFlag(3060, GROUND_Y-60);
-
-  const LEVEL_END_X = 3120;
-  document.getElementById('hudCheckpointTotal').textContent = checkpoints.length - 1;
-
-  // ---------- Jogador (boneco palito: círculo + linhas) ----------
-  const player = {
-    x: 40, y: GROUND_Y-70, w:18, h:34,
-    vx:0, vy:0, onGround:false, alive:true,
-    facing:1, animT:0, checkpointIndex:0
+  const DEATH_TIPS = {
+    spike: [
+      'Espinho é espinho: pulou tarde, o commit foi revertido.',
+      'Dica real de debug: leia a mensagem de erro inteira antes de tentar de novo.',
+      'Não foi falha sua — o merge conflict é que estava mal posicionado.',
+    ],
+    pit: [
+      'Nem todo bloco que parece sólido está no ambiente de produção.',
+      'Alguns bugs só aparecem depois que você já confiou no código.',
+      'No mundo real, isso seria um teste automatizado faltando.',
+    ],
+    saw: [
+      'Observe o padrão antes de agir — vale pra serra e vale pra depurar código.',
+      'Loop infinito com lâmina: memoriza o ritmo, não o reflexo.',
+    ],
+    drop: [
+      'Quando algo treme, é o aviso: corra ou pule, mas não fique parado.',
+      'O teto não é o vilão — o deploy de sexta-feira é.',
+    ],
+    popup: [
+      'Alguns bugs só se revelam quando você chega perto. Pule ao sentir o chão tremer.',
+      'Comportamento indefinido: o chão tinha um espinho escondido.',
+    ],
   };
-  const GRAVITY = 0.62;
-  const MOVE_SPEED = 4.4;
-  const JUMP_VEL = -12.3;
-  const FRICTION = 0.82;
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
+  // ---------- Progresso salvo (só neste navegador; o placar é que vai pro Supabase) ----------
+  const PROG_KEY = `fuga_do_bug_progress_${username}`;
+  function loadProgress(){
+    try {
+      const v = JSON.parse(localStorage.getItem(PROG_KEY) || 'null');
+      if (v && Number.isInteger(v.unlocked)) return { unlocked: Math.max(0, Math.min(LEVELS.length - 1, v.unlocked)), done: Array.isArray(v.done) ? v.done : [] };
+    } catch (e) {}
+    return { unlocked: 0, done: [] };
+  }
+  function saveProgress(){
+    try { localStorage.setItem(PROG_KEY, JSON.stringify(progress)); } catch (e) {}
+  }
+  let progress = loadProgress();
+
+  // ---------- Estado da partida ----------
+  let levelIdx = 0;
+  let sim = null;
+  let fakeSet = new Set();
+  let bgGlyphs = [];
   let camX = 0;
-  let keys = { left:false, right:false, jump:false };
-  let deaths = 0;
-  let startTime = 0;
-  let elapsed = 0;
-  let running = false;
-  let finished = false;
+  let mode = 'menu';       // 'menu' | 'playing' | 'dead' | 'between' | 'won'
+  let run = { total: 0, deaths: 0, time: 0, coins: 0, coinsTotal: 0, levels: 0 };
+  let deathShownAt = 0;
+  let lastLevelPoints = 0;   // pontos da última fase concluída (repetir a fase desfaz esse total)
+  const keys = { left:false, right:false, jump:false };
 
-  function isHole(x){
-    return HOLES.some(h => x >= h.x && x <= h.x + h.w);
+  function levelScore(s){
+    // limpar a fase vale 6000; tempo rápido e commits coletados somam, mortes descontam.
+    const seconds = s.t / 60;
+    const timeBonus = Math.max(0, Math.round(2000 - seconds * 20));
+    const raw = 6000 + timeBonus + s.coinCount * 200 - s.deaths * 150;
+    return Math.max(1000, raw);
   }
 
-  function resetPlayerToCheckpoint(){
-    const cp = checkpoints[player.checkpointIndex];
-    player.x = cp.x; player.y = cp.y; player.vx = 0; player.vy = 0; player.onGround = false; player.alive = true;
-    // reseta plataformas crumble
-    level.forEach(o => { if (o.type==='crumble'){ o.state='idle'; o.timer=0; o.fallen=false; o.dropY = undefined; } if(o.type==='drop'){ o.state='idle'; o.vy=0; o.y=o.restY; } });
-    camX = Math.max(0, cp.x - W*0.35);
+  function loadLevel(i){
+    levelIdx = i;
+    const def = LEVELS[i];
+    sim = Engine.createSim(def);
+    fakeSet = new Set(sim.L.fakes.map(f => f.c + ',' + f.r));
+    // glifos de fundo (parallax), sempre os mesmos pra mesma fase
+    bgGlyphs = [];
+    const words = ['git','{ }','if','0x','//','TODO','=>','&&','++','null'];
+    for (let k = 0; k < 40; k++) bgGlyphs.push({ x: (k * 263 + i * 97) % (sim.L.width * 0.5 + W), y: 40 + ((k * 151 + i * 53) % (H - 200)), t: words[(k + i) % words.length], s: 14 + (k % 4) * 6 });
+    camX = 0;
+    updateCam(true);
+    $('hudLevel').textContent = i + 1;
+    $('hudLevelTotal').textContent = LEVELS.length;
+    $('hudCheckpointTotal').textContent = sim.L.checks.length - 1;
+    $('hudCoinsTotal').textContent = sim.L.coins.length;
+    updateHud();
+    showBanner(def, i);
   }
 
-  function killPlayer(){
-    if (!player.alive) return;
-    player.alive = false;
-    deaths++;
-    document.getElementById('hudDeaths').textContent = deaths;
-    const tip = DEATH_TIPS[Math.floor(Math.random()*DEATH_TIPS.length)];
-    document.getElementById('deathTip').textContent = tip;
-    document.getElementById('deathOverlay').style.display = 'flex';
-    running = false;
+  let bannerTimer = null;
+  function showBanner(def, i){
+    $('bannerK').textContent = `FASE ${i + 1}/${LEVELS.length} · ${def.cmd}`;
+    $('bannerN').textContent = `${def.name}  ${'★'.repeat(def.stars)}`;
+    $('bannerM').textContent = def.blurb;
+    const b = $('banner');
+    b.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => b.classList.remove('show'), 3800);
+  }
+
+  function updateHud(){
+    $('hudDeaths').textContent = sim.deaths;
+    $('hudCheckpoint').textContent = sim.cp;
+    $('hudCoins').textContent = sim.coinCount;
+    $('hudTime').textContent = (sim.t / 60).toFixed(1) + 's';
+  }
+
+  function show(id, on){ $(id).style.display = on ? 'flex' : 'none'; }
+  function hideAllOverlays(){ ['startOverlay','deathOverlay','levelOverlay','winOverlay'].forEach(id => show(id, false)); }
+
+  // ---------- Fluxo de telas ----------
+  function startRun(i){
+    run = { total: 0, deaths: 0, time: 0, coins: 0, coinsTotal: 0, levels: 0 };
+    hideAllOverlays();
+    loadLevel(i);
+    mode = 'playing';
+  }
+
+  function onDeath(){
+    mode = 'dead';
+    deathShownAt = performance.now();
+    $('deathTip').textContent = pick(DEATH_TIPS[sim.cause] || DEATH_TIPS.pit);
+    updateHud();
+    show('deathOverlay', true);
+  }
+
+  function doRespawn(){
+    if (mode !== 'dead') return;
+    show('deathOverlay', false);
+    sim.respawn();
+    mode = 'playing';
   }
 
   function finishLevel(){
-    if (finished) return;
-    finished = true;
-    running = false;
-    const timeStr = (elapsed/1000).toFixed(1);
-    document.getElementById('winStats').textContent =
-      `Tempo: ${timeStr}s · Mortes: ${deaths} · Commits coletados: ${collected}/${totalCommits}`;
-    document.getElementById('winOverlay').style.display = 'flex';
-    // pontuação: menos mortes = melhor. Convertendo para um score onde maior é melhor.
-    const score = Math.max(0, 100000 - deaths*500 - Math.floor(elapsed));
+    if (!sim || mode === 'between' || mode === 'won') return;
+    const s = sim;
+    const points = levelScore(s);
+    lastLevelPoints = points;
+    run.total += points;
+    run.deaths += s.deaths;
+    run.time += s.t / 60;
+    run.coins += s.coinCount;
+    run.coinsTotal += s.L.coins.length;
+    run.levels++;
+
+    if (!progress.done.includes(levelIdx)) progress.done.push(levelIdx);
+    progress.unlocked = Math.max(progress.unlocked, Math.min(LEVELS.length - 1, levelIdx + 1));
+    saveProgress();
+    renderLevelGrid();
+
+    // O placar guarda só o MELHOR resultado (game-leaderboard.js) e o total só
+    // cresce a cada fase, então gravar a cada fase concluída nunca piora nada
+    // — e não perde o progresso de quem parar no meio.
     if (window.GameLeaderboard) {
-      window.GameLeaderboard.submitScore({ game: 'fuga_do_bug', turma, email: username, name: displayName, score });
+      window.GameLeaderboard.submitScore({ game: GAME_KEY, turma, email: username, name: displayName, score: run.total });
+    }
+
+    const stats = `Tempo: ${(s.t/60).toFixed(1)}s · Mortes: ${s.deaths} · Commits: ${s.coinCount}/${s.L.coins.length}`;
+    if (levelIdx >= LEVELS.length - 1) {
+      mode = 'won';
+      $('winStats').textContent =
+        `Fases: ${run.levels}/${LEVELS.length} · Tempo: ${run.time.toFixed(1)}s · Mortes: ${run.deaths} · Commits: ${run.coins}/${run.coinsTotal} · Pontuação: ${run.total} pts`;
+      show('winOverlay', true);
+    } else {
+      mode = 'between';
+      $('levelTitle').textContent = `FASE ${levelIdx + 1} CONCLUÍDA ✅`;
+      $('levelStats').textContent = `${stats} · +${points} pts (total: ${run.total})`;
+      show('levelOverlay', true);
     }
   }
 
+  function nextLevel(){
+    if (mode !== 'between') return;
+    show('levelOverlay', false);
+    loadLevel(levelIdx + 1);
+    mode = 'playing';
+  }
+  function replayLevel(){
+    if (mode !== 'between') return;
+    show('levelOverlay', false);
+    // repetir não soma de novo: tira os pontos dessa fase do total da rodada
+    run.total -= lastLevelPoints;
+    loadLevel(levelIdx);
+    mode = 'playing';
+  }
+
+  function openMenu(){
+    mode = 'menu';
+    hideAllOverlays();
+    renderLevelGrid();
+    show('startOverlay', true);
+  }
+
+  function renderLevelGrid(){
+    const grid = $('levelGrid');
+    grid.innerHTML = LEVELS.map((d, i) => {
+      const locked = i > progress.unlocked;
+      const done = progress.done.includes(i);
+      return `<button class="lvl${done ? ' done' : ''}" data-lvl="${i}" ${locked ? 'disabled' : ''} title="${d.name}"><span class="num">${i + 1}</span><span class="cmd">${d.cmd.replace(/</g,'&lt;')}</span><span class="stars">${'★'.repeat(d.stars)}</span></button>`;
+    }).join('');
+    $('btnStart').textContent = progress.unlocked > 0 ? `Continuar (fase ${progress.unlocked + 1})` : 'Iniciar';
+  }
+
+  $('levelGrid').addEventListener('click', e => {
+    const btn = e.target.closest('.lvl');
+    if (!btn || btn.disabled) return;
+    startRun(Number(btn.dataset.lvl));
+  });
+  $('btnStart').addEventListener('click', () => startRun(progress.unlocked));
+  $('btnRespawn').addEventListener('click', doRespawn);
+  $('btnNext').addEventListener('click', nextLevel);
+  $('btnReplay').addEventListener('click', replayLevel);
+  $('btnRestart').addEventListener('click', () => startRun(0));
+  $('btnLevels').addEventListener('click', openMenu);
+
   // ---------- Input ----------
+  const LEFT = ['ArrowLeft','a','A'], RIGHT = ['ArrowRight','d','D'], JUMP = [' ','ArrowUp','w','W'];
   window.addEventListener('keydown', e => {
-    if (['ArrowLeft','a','A'].includes(e.key)) keys.left = true;
-    if (['ArrowRight','d','D'].includes(e.key)) keys.right = true;
-    if ([' ','ArrowUp','w','W'].includes(e.key)) { keys.jump = true; e.preventDefault(); }
+    if (LEFT.includes(e.key)) { keys.left = true; e.preventDefault(); }
+    if (RIGHT.includes(e.key)) { keys.right = true; e.preventDefault(); }
+    if (JUMP.includes(e.key)) { keys.jump = true; e.preventDefault(); }
+    // teclado também avança as telas — recomeçar rápido é o que mantém o jogo divertido
+    const confirm = e.key === 'Enter' || e.key === ' ' || e.key === 'r' || e.key === 'R';
+    if (confirm && mode === 'dead' && performance.now() - deathShownAt > 250) doRespawn();
+    else if (e.key === 'Enter' && mode === 'between') nextLevel();
   });
   window.addEventListener('keyup', e => {
-    if (['ArrowLeft','a','A'].includes(e.key)) keys.left = false;
-    if (['ArrowRight','d','D'].includes(e.key)) keys.right = false;
-    if ([' ','ArrowUp','w','W'].includes(e.key)) keys.jump = false;
+    if (LEFT.includes(e.key)) keys.left = false;
+    if (RIGHT.includes(e.key)) keys.right = false;
+    if (JUMP.includes(e.key)) keys.jump = false;
   });
+  // perder o foco (trocar de aba/clicar fora do iframe) não pode deixar uma tecla "presa"
+  window.addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; });
 
   const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  if (isTouch) document.getElementById('touchControls').classList.add('active');
+  if (isTouch) $('touchControls').classList.add('active');
   function bindTouch(id, onDown, onUp){
-    const el = document.getElementById(id);
+    const el = $(id);
     el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); });
     el.addEventListener('touchend', e => { e.preventDefault(); onUp(); });
+    el.addEventListener('touchcancel', e => { e.preventDefault(); onUp(); });
   }
   bindTouch('tcLeft', ()=>keys.left=true, ()=>keys.left=false);
   bindTouch('tcRight', ()=>keys.right=true, ()=>keys.right=false);
   bindTouch('tcJump', ()=>keys.jump=true, ()=>keys.jump=false);
 
-  // ---------- Colisão ----------
-  function platformsAt(){ return level.filter(o => o.type==='solid' || o.type==='fake' || o.type==='crumble' || o.type==='drop'); }
-
-  function update(dt){
-    if (!running) return;
-
-    // movimento horizontal
-    if (keys.left){ player.vx -= 1.1; player.facing = -1; }
-    if (keys.right){ player.vx += 1.1; player.facing = 1; }
-    player.vx *= FRICTION;
-    player.vx = Math.max(-MOVE_SPEED, Math.min(MOVE_SPEED, player.vx));
-
-    // pulo
-    if (keys.jump && player.onGround){
-      player.vy = JUMP_VEL;
-      player.onGround = false;
-    }
-
-    player.vy += GRAVITY;
-    if (player.vy > 16) player.vy = 16;
-
-    let nx = player.x + player.vx;
-    let ny = player.y + player.vy;
-
-    // colisão vertical com plataformas (só topo, caindo)
-    player.onGround = false;
-    if (player.vy >= 0){
-      for (const o of platformsAt()){
-        if (o.type==='fake') continue; // sem colisão
-        if (o.type==='crumble' && o.fallen) continue;
-        if (o.type==='drop' && o.state==='fallen') continue;
-        const feetY = ny + player.h;
-        const wasAbove = (player.y + player.h) <= o.y + 1;
-        if (nx + player.w > o.x && nx < o.x + o.w && feetY >= o.y && feetY <= o.y + o.h + 14 && wasAbove){
-          ny = o.y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-          if (o.type==='crumble' && o.state!=='falling'){
-            o.state='falling'; o.timer=0;
-          }
-        }
-      }
-      // chão infinito, exceto em buracos (HOLES)
-      if (!player.onGround && !isHole(nx + player.w/2)){
-        const feetY = ny + player.h;
-        if (feetY >= GROUND_Y){
-          ny = GROUND_Y - player.h;
-          player.vy = 0;
-          player.onGround = true;
-        }
-      }
-    }
-
-    player.x = nx;
-    player.y = ny;
-
-    // crumble: some depois de 0.35s pisado
-    level.forEach(o => {
-      if (o.type==='crumble' && o.state==='falling'){
-        o.timer += dt;
-        if (o.timer > 350) o.fallen = true;
-      }
-    });
-
-    // saw: oscila
-    level.forEach(o => {
-      if (o.type==='saw'){
-        o.x += o.dir * o.speed;
-        if (o.x > o.baseX + o.range) o.dir = -1;
-        if (o.x < o.baseX) o.dir = 1;
-      }
-    });
-
-    // drop: gatilho por posição X do jogador
-    level.forEach(o => {
-      if (o.type==='drop'){
-        if (o.state==='idle' && player.x > o.triggerX) o.state='falling';
-        if (o.state==='falling'){
-          o.vy += 0.9; o.y += o.vy;
-          if (o.y >= GROUND_Y - o.h){ o.y = GROUND_Y - o.h; o.state='fallen'; }
-        }
-      }
-    });
-
-    // commits coletáveis
-    level.forEach(o => {
-      if (o.type==='commit' && !o.collected){
-        if (player.x < o.x+o.w && player.x+player.w > o.x && player.y < o.y+o.h && player.y+player.h > o.y){
-          o.collected = true; collected++;
-        }
-      }
-    });
-
-    // checkpoints
-    checkpoints.forEach((cp, i) => {
-      if (i > player.checkpointIndex && player.x >= cp.x - 10){
-        player.checkpointIndex = i;
-        document.getElementById('hudCheckpoint').textContent = i;
-      }
-    });
-
-    // morte: caiu no vazio
-    if (player.y > H + 100) killPlayer();
-
-    // morte: spikes / saw
-    for (const o of level){
-      if (o.type==='spike' || o.type==='saw'){
-        const ox = o.type==='saw' ? o.x - o.w/2 : o.x;
-        if (player.x < ox+o.w && player.x+player.w > ox && player.y < o.y+o.h && player.y+player.h > o.y){
-          killPlayer(); break;
-        }
-      }
-      if (o.type==='drop' && (o.state==='falling' || o.state==='fallen')){
-        if (player.x < o.x+o.w && player.x+player.w > o.x && player.y < o.y+o.h && player.y+player.h > o.y && o.state==='falling'){
-          killPlayer(); break;
-        }
-      }
-    }
-
-    // fim de fase
-    if (player.x > LEVEL_END_X) finishLevel();
-
-    // câmera
-    const targetCam = player.x - W*0.4;
-    camX += (targetCam - camX) * 0.12;
-    camX = Math.max(0, camX);
-
-    elapsed = performance.now() - startTime;
-    document.getElementById('hudTime').textContent = (elapsed/1000).toFixed(1)+'s';
+  // ---------- Câmera ----------
+  function updateCam(snap){
+    const target = Math.max(0, Math.min(sim.L.width - W, sim.p.x - W * 0.4));
+    camX = snap ? target : camX + (target - camX) * 0.12;
   }
 
-  let collected = 0;
-  const totalCommits = level.filter(o=>o.type==='commit').length;
+  // ---------- Atualização (passo fixo de 1/60s) ----------
+  function tick(){
+    sim.step(keys);
+    updateCam(false);
+    if (sim.dead) onDeath();
+    else if (sim.won) finishLevel();
+  }
 
   // ---------- Render ----------
-  function drawStickFigure(px, py){
-    const cx = px + player.w/2;
-    const headR = 9;
+  const solidVisual = (c, r) => {
+    if (c < 0 || c >= sim.L.cols || r < 0 || r >= ROWS) return false;
+    return sim.L.grid[r][c] === 1 || fakeSet.has(c + ',' + r);
+  };
+
+  function rgba(hex, a){
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+  }
+
+  function drawStickFigure(p, t){
+    const px = p.x, py = p.y;
+    const cx = px + PW/2;
+    const headR = 8;
     const bodyTop = py + headR*2;
-    const bodyBottom = py + player.h - 6;
-    ctx.strokeStyle = '#d9e6d2';
-    ctx.fillStyle = '#d9e6d2';
-    ctx.lineWidth = 2.4;
-    ctx.lineCap = 'round';
+    const hip = py + PH - 11;
+    ctx.strokeStyle = '#d9e6d2'; ctx.fillStyle = '#d9e6d2';
+    ctx.lineWidth = 2.4; ctx.lineCap = 'round';
 
-    // cabeça (círculo)
+    ctx.beginPath(); ctx.arc(cx, py+headR, headR, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, bodyTop); ctx.lineTo(cx, hip); ctx.stroke();
+
+    const swing = p.ground ? Math.sin(t*0.35) * 6 * Math.min(1, Math.abs(p.vx) / 4) : 0;
+    const air = p.ground ? 0 : (p.vy < 0 ? -3 : 3);
     ctx.beginPath();
-    ctx.arc(cx, py+headR, headR, 0, Math.PI*2);
+    ctx.moveTo(cx, hip); ctx.lineTo(cx - 6 - swing - air, py + PH);
+    ctx.moveTo(cx, hip); ctx.lineTo(cx + 6 + swing + air, py + PH);
     ctx.stroke();
 
-    // corpo
+    const arm = p.ground ? -swing : (p.vy < 0 ? -8 : 4);
     ctx.beginPath();
-    ctx.moveTo(cx, bodyTop);
-    ctx.lineTo(cx, bodyBottom-8);
+    ctx.moveTo(cx, bodyTop+5); ctx.lineTo(cx - 8 - arm*0.5, bodyTop+13);
+    ctx.moveTo(cx, bodyTop+5); ctx.lineTo(cx + 8 + arm*0.5, bodyTop+13);
     ctx.stroke();
 
-    // pernas (levemente animadas)
-    const legSwing = player.onGround ? Math.sin(player.animT*0.02)*6*Math.abs(player.vx)/MOVE_SPEED : 3;
-    ctx.beginPath();
-    ctx.moveTo(cx, bodyBottom-8);
-    ctx.lineTo(cx - 6 - legSwing, py+player.h);
-    ctx.moveTo(cx, bodyBottom-8);
-    ctx.lineTo(cx + 6 + legSwing, py+player.h);
-    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + p.facing*3, py+headR-1, 1.6, 0, Math.PI*2); ctx.fill();
+  }
 
-    // braços
-    const armSwing = player.onGround ? -legSwing : (player.vy<0 ? -8 : 4);
-    ctx.beginPath();
-    ctx.moveTo(cx, bodyTop+6);
-    ctx.lineTo(cx - 9 - armSwing*0.5, bodyTop+16);
-    ctx.moveTo(cx, bodyTop+6);
-    ctx.lineTo(cx + 9 + armSwing*0.5, bodyTop+16);
-    ctx.stroke();
-
-    // olhinho (direção)
-    ctx.beginPath();
-    ctx.arc(cx + player.facing*3, py+headR-1, 1.6, 0, Math.PI*2);
-    ctx.fill();
+  function drawSpikes(x, y){
+    ctx.fillStyle = '#ff3b30';
+    for (let i = 0; i < 2; i++){
+      ctx.beginPath();
+      ctx.moveTo(x + i*16, y + TILE);
+      ctx.lineTo(x + i*16 + 8, y + 10);
+      ctx.lineTo(x + i*16 + 16, y + TILE);
+      ctx.closePath(); ctx.fill();
+    }
   }
 
   function draw(){
-    ctx.clearRect(0,0,W,H);
+    const L = sim.L, p = sim.p, t = sim.t;
+    const accent = LEVELS[levelIdx].accent;
+    ctx.clearRect(0, 0, W, H);
 
-    // fundo com grid sutil tipo terminal
+    // fundo: grade tipo terminal + glifos flutuando (parallax)
     ctx.save();
-    ctx.translate(-camX*0.3, 0); // parallax leve
-    ctx.strokeStyle = 'rgba(124,255,63,0.05)';
-    for(let gx=0; gx<W*3; gx+=40){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+    ctx.strokeStyle = rgba(accent, 0.05);
+    ctx.lineWidth = 1;
+    const goff = -((camX * 0.3) % 40);
+    for (let gx = goff; gx < W; gx += 40){ ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
+    ctx.fillStyle = rgba(accent, 0.07);
+    bgGlyphs.forEach(g => {
+      const gx = g.x - camX * 0.5;
+      if (gx < -80 || gx > W + 40) return;
+      ctx.font = g.s + 'px "JetBrains Mono", monospace';
+      ctx.fillText(g.t, gx, g.y);
+    });
     ctx.restore();
 
     ctx.save();
-    ctx.translate(-camX, 0);
+    ctx.translate(-Math.round(camX), 0);
+    const c0 = Math.max(0, Math.floor(camX / TILE) - 1), c1 = Math.min(L.cols - 1, Math.ceil((camX + W) / TILE) + 1);
+    const vis = x => x > camX - 100 && x < camX + W + 100;
 
-    // chão (com buracos)
-    ctx.fillStyle = '#0d150c';
-    let gx = 0;
-    const segStart = Math.floor(camX/40)*40 - 40;
-    ctx.strokeStyle = '#1a2618';
-    let cursor = -200;
-    while (cursor < camX + W + 400){
-      let next = cursor + 20;
-      if (!isHole(cursor+10)){
-        ctx.fillRect(cursor, GROUND_Y, 20, H-GROUND_Y);
-      }
-      cursor = next;
-    }
-    ctx.fillStyle = 'rgba(124,255,63,0.06)';
-    if (!isHole) {} // no-op guard
-    cursor = -200;
-    while (cursor < camX + W + 400){
-      if (!isHole(cursor+10)) ctx.fillRect(cursor, GROUND_Y, 20, 3);
-      cursor += 20;
-    }
-
-    // plataformas
-    for (const o of level){
-      if (o.type==='solid' || o.type==='fake'){
-        ctx.fillStyle = '#132014';
-        ctx.strokeStyle = 'var(--green-dim)';
-        ctx.strokeStyle = '#4a9a2a';
-        ctx.fillRect(o.x,o.y,o.w,o.h);
-        ctx.strokeRect(o.x,o.y,o.w,o.h);
-      } else if (o.type==='crumble'){
-        if (o.fallen) continue;
-        const shake = o.state==='falling' ? (Math.random()*3-1.5) : 0;
-        ctx.fillStyle = o.state==='falling' ? '#c1121f33' : '#132014';
-        ctx.strokeStyle = '#d4c86a';
-        ctx.fillRect(o.x+shake,o.y,o.w,o.h);
-        ctx.strokeRect(o.x+shake,o.y,o.w,o.h);
-      } else if (o.type==='spike'){
-        ctx.fillStyle = '#ff3b30';
-        const n = Math.floor(o.w/16);
-        for (let i=0;i<n;i++){
-          ctx.beginPath();
-          ctx.moveTo(o.x+i*16, o.y+o.h);
-          ctx.lineTo(o.x+i*16+8, o.y);
-          ctx.lineTo(o.x+i*16+16, o.y+o.h);
-          ctx.closePath(); ctx.fill();
-        }
-      } else if (o.type==='saw'){
-        ctx.save();
-        ctx.translate(o.x, o.y+o.h/2);
-        ctx.rotate((performance.now()/60)%(Math.PI*2));
-        ctx.fillStyle = '#c9d1c9';
-        ctx.beginPath();
-        const spikes=8, rOut=o.w/2, rIn=rOut*0.55;
-        for(let i=0;i<spikes*2;i++){
-          const ang = (Math.PI/spikes)*i;
-          const r = i%2===0?rOut:rIn;
-          const x = Math.cos(ang)*r, y=Math.sin(ang)*r;
-          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-        }
-        ctx.closePath(); ctx.fill();
-        ctx.fillStyle='#050805';
-        ctx.beginPath(); ctx.arc(0,0,rIn*0.35,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-      } else if (o.type==='drop'){
-        ctx.fillStyle = o.state==='fallen' ? '#5a1013' : '#c1121f';
-        ctx.fillRect(o.x,o.y,o.w,o.h);
-        ctx.strokeStyle='#ff3b30'; ctx.strokeRect(o.x,o.y,o.w,o.h);
-      } else if (o.type==='flag'){
-        ctx.fillStyle = '#4a9a2a';
-        ctx.fillRect(o.x, o.y, 3, o.h);
-        ctx.fillStyle = '#7cff3f';
-        ctx.beginPath();
-        ctx.moveTo(o.x+3,o.y);
-        ctx.lineTo(o.x+30,o.y+9);
-        ctx.lineTo(o.x+3,o.y+18);
-        ctx.closePath(); ctx.fill();
-      } else if (o.type==='commit'){
-        if (o.collected) continue;
-        ctx.save();
-        ctx.translate(o.x+o.w/2, o.y+o.h/2 + Math.sin(performance.now()/300)*3);
-        ctx.fillStyle = '#d4c86a';
-        ctx.beginPath(); ctx.arc(0,0,7,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#0a0d0a';
-        ctx.font = '10px monospace';
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText('git', 0, 1);
-        ctx.restore();
+    // blocos (chão, plataformas fixas E falsas — as falsas são idênticas de propósito)
+    for (let r = 0; r < ROWS; r++) for (let c = c0; c <= c1; c++){
+      if (!solidVisual(c, r)) continue;
+      const x = c * TILE, y = r * TILE;
+      ctx.fillStyle = '#0f190e'; ctx.fillRect(x, y, TILE, TILE);
+      ctx.strokeStyle = '#182716'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+      if (!solidVisual(c, r - 1)){
+        ctx.fillStyle = rgba(accent, 0.55); ctx.fillRect(x, y, TILE, 4);
       }
     }
 
-    // checkpoints (bandeirinhas discretas)
-    checkpoints.forEach((cp,i) => {
-      ctx.fillStyle = i<=player.checkpointIndex ? '#7cff3f' : '#3a4a36';
-      ctx.fillRect(cp.x-1, cp.y-10, 2, 20);
-      ctx.beginPath(); ctx.arc(cp.x, cp.y-10, 3, 0, Math.PI*2); ctx.fill();
+    // plataformas esfareláveis
+    L.crumbles.forEach((c, i) => {
+      const st = sim.cr[i];
+      if (st.s === 2 || !vis(c.x)) return;
+      const shake = st.s === 1 ? (Math.random() * 3 - 1.5) : 0;
+      ctx.fillStyle = st.s === 1 ? '#3a2a10' : '#1a1a0c';
+      ctx.fillRect(c.x + shake, c.y, TILE, 13);
+      ctx.strokeStyle = '#d4c86a'; ctx.lineWidth = 1.5; ctx.strokeRect(c.x + shake + 0.5, c.y + 0.5, TILE - 1, 12);
+      ctx.beginPath(); ctx.moveTo(c.x + shake + 9, c.y + 1); ctx.lineTo(c.x + shake + 14, c.y + 12); ctx.moveTo(c.x + shake + 22, c.y + 1); ctx.lineTo(c.x + shake + 18, c.y + 12); ctx.stroke();
     });
 
-    if (player.alive) drawStickFigure(player.x, player.y);
-    player.animT += 16;
+    // plataformas móveis
+    L.movers.forEach(m => {
+      const x = Engine.moverX(m, t);
+      if (!vis(x)) return;
+      ctx.fillStyle = '#0c1c24'; ctx.fillRect(x, m.y, m.w, 13);
+      ctx.strokeStyle = '#4ac0ff'; ctx.lineWidth = 1.5; ctx.strokeRect(x + 0.5, m.y + 0.5, m.w - 1, 12);
+      ctx.fillStyle = '#4ac0ff';
+      for (let a = 10; a < m.w - 6; a += 22){ ctx.beginPath(); ctx.moveTo(x + a, m.y + 3); ctx.lineTo(x + a + 8, m.y + 6.5); ctx.lineTo(x + a, m.y + 10); ctx.fill(); }
+    });
+
+    // molas
+    L.springs.forEach((s, i) => {
+      if (!vis(s.x)) return;
+      const squash = sim.sp[i].k > 0 ? 8 : 0;
+      ctx.fillStyle = '#d4c86a';
+      ctx.fillRect(s.x + 3, s.y + squash, TILE - 6, 5);
+      ctx.strokeStyle = '#8a8a4a'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      const top = s.y + 5 + squash, bot = s.y + 16;
+      ctx.moveTo(s.x + 6, bot); ctx.lineTo(s.x + 26, (top + bot) / 2 + 1); ctx.lineTo(s.x + 6, (top + bot) / 2 - 1); ctx.lineTo(s.x + 26, top);
+      ctx.stroke();
+    });
+
+    // espinhos fixos
+    L.spikes.forEach(sp => { if (vis(sp.c * TILE)) drawSpikes(sp.c * TILE, sp.r * TILE); });
+
+    // espinhos escondidos no chão (uma trincazinha entrega pra quem presta atenção)
+    L.popups.forEach((u, i) => {
+      if (!vis(u.x)) return;
+      const st = sim.po[i];
+      if (st.s === 0){
+        ctx.strokeStyle = 'rgba(255,59,48,0.22)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(u.x + 6, u.y + TILE); ctx.lineTo(u.x + 12, u.y + TILE + 5); ctx.moveTo(u.x + 20, u.y + TILE); ctx.lineTo(u.x + 25, u.y + TILE + 4); ctx.stroke();
+      } else if (st.s === 1){
+        const rise = Math.min(1, st.k / 20) * 10 + Math.random() * 1.5;
+        ctx.fillStyle = '#ff6a5a';
+        ctx.beginPath(); ctx.moveTo(u.x + 6, u.y + TILE); ctx.lineTo(u.x + 16, u.y + TILE - rise); ctx.lineTo(u.x + 26, u.y + TILE); ctx.fill();
+      } else {
+        drawSpikes(u.x, u.y);
+      }
+    });
+
+    // blocos que despencam do teto (corda tracejada = aviso)
+    L.drops.forEach((d, i) => {
+      const st = sim.dr[i];
+      if (st.s === 3 || !vis(d.x)) return;
+      const shake = st.s === 1 ? (Math.random() * 3 - 1.5) : 0;
+      ctx.strokeStyle = 'rgba(193,18,31,0.4)'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(d.x + d.w / 2, 0); ctx.lineTo(d.x + d.w / 2, st.y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = st.s === 2 ? '#e0242f' : '#c1121f';
+      ctx.fillRect(d.x + shake, st.y, d.w, d.h);
+      ctx.strokeStyle = '#ff3b30'; ctx.lineWidth = 1.5; ctx.strokeRect(d.x + shake + 0.5, st.y + 0.5, d.w - 1, d.h - 1);
+      ctx.fillStyle = '#ff3b30';
+      for (let k = 0; k < d.wt * 2; k++){ ctx.beginPath(); ctx.moveTo(d.x + shake + k*16, st.y + d.h); ctx.lineTo(d.x + shake + k*16 + 8, st.y + d.h + 8); ctx.lineTo(d.x + shake + k*16 + 16, st.y + d.h); ctx.fill(); }
+    });
+
+    // serras
+    L.saws.forEach(s => {
+      const q = Engine.sawPos(s, t);
+      if (!vis(q.x)) return;
+      // trilho por onde a serra passa
+      ctx.strokeStyle = 'rgba(201,209,201,0.12)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (s.axis === 'y'){ ctx.moveTo(s.cx, s.cy - s.amp); ctx.lineTo(s.cx, s.cy + s.amp); } else { ctx.moveTo(s.cx - s.amp, s.cy); ctx.lineTo(s.cx + s.amp, s.cy); }
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(q.x, q.y);
+      ctx.rotate(t * 0.25);
+      ctx.fillStyle = '#c9d1c9';
+      ctx.beginPath();
+      const teeth = 8, rOut = s.r + 2, rIn = rOut * 0.6;
+      for (let i = 0; i < teeth * 2; i++){
+        const ang = (Math.PI / teeth) * i, r = i % 2 === 0 ? rOut : rIn;
+        i === 0 ? ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r) : ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#050805'; ctx.beginPath(); ctx.arc(0, 0, rIn * 0.35, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+
+    // commits coletáveis
+    L.coins.forEach((c, i) => {
+      if (sim.coins[i] || !vis(c.x)) return;
+      ctx.save();
+      ctx.translate(c.x + 8, c.y + 8 + Math.sin(t / 18 + c.c) * 3);
+      ctx.fillStyle = '#d4c86a'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#0a0d0a'; ctx.font = '9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('git', 0, 1);
+      ctx.restore();
+    });
+
+    // checkpoints
+    L.checks.forEach((c, i) => {
+      if (i === 0) return;
+      const x = c.c * TILE + TILE / 2, y = (c.r + 1) * TILE;
+      const on = i <= sim.cp;
+      ctx.strokeStyle = on ? '#7cff3f' : '#3a4a36'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 40); ctx.stroke();
+      ctx.fillStyle = on ? '#7cff3f' : '#3a4a36';
+      ctx.beginPath(); ctx.moveTo(x, y - 40); ctx.lineTo(x + 16, y - 33); ctx.lineTo(x, y - 26); ctx.fill();
+    });
+
+    // bandeira de chegada
+    const g = L.goal;
+    ctx.fillStyle = rgba('#7cff3f', 0.08 + 0.04 * Math.sin(t / 20)); ctx.fillRect(g.x - 12, g.y - 6, g.w + 24, g.h + 6);
+    ctx.fillStyle = '#4a9a2a'; ctx.fillRect(g.x + 14, g.y, 3, g.h);
+    ctx.fillStyle = '#7cff3f';
+    ctx.beginPath(); ctx.moveTo(g.x + 17, g.y + 2); ctx.lineTo(g.x + 44, g.y + 12); ctx.lineTo(g.x + 17, g.y + 22); ctx.fill();
+
+    if (!sim.dead) drawStickFigure(p, t);
 
     ctx.restore();
   }
 
-  // ---------- Loop ----------
-  let lastT = performance.now();
-  function loop(t){
-    const dt = t - lastT; lastT = t;
-    update(dt);
+  // ---------- Loop com passo fixo (mesma velocidade em 60Hz, 144Hz, ...) ----------
+  let lastT = performance.now(), acc = 0;
+  function frame(now){
+    acc += Math.min(now - lastT, 100);
+    lastT = now;
+    while (acc >= STEP_MS){
+      if (mode === 'playing') tick();
+      acc -= STEP_MS;
+    }
+    if (mode === 'playing') updateHud();
     draw();
-    requestAnimationFrame(loop);
+    requestAnimationFrame(frame);
   }
 
-  // ---------- Fluxo de telas ----------
-  document.getElementById('btnStart').addEventListener('click', () => {
-    document.getElementById('startOverlay').style.display = 'none';
-    startTime = performance.now();
-    player.checkpointIndex = 0;
-    resetPlayerToCheckpoint();
-    running = true;
-  });
-  document.getElementById('btnRespawn').addEventListener('click', () => {
-    document.getElementById('deathOverlay').style.display = 'none';
-    resetPlayerToCheckpoint();
-    running = true;
-  });
-  document.getElementById('btnRestart').addEventListener('click', () => {
-    document.getElementById('winOverlay').style.display = 'none';
-    deaths = 0; collected = 0; finished = false;
-    level.forEach(o => { if(o.type==='commit') o.collected=false; });
-    document.getElementById('hudDeaths').textContent = 0;
-    player.checkpointIndex = 0;
-    startTime = performance.now();
-    resetPlayerToCheckpoint();
-    running = true;
-  });
-
   // Painel compartilhado (shared/game-leaderboard.js) em vez de um modal
-  // próprio — mesmo componente usado por todos os outros jogos (visual
-  // consistente, atualiza sozinho em tempo real enquanto o painel tá
-  // aberto via GameLeaderboard.watch, e distingue erro de verdade de
-  // "ninguém pontuou ainda"). Ver games/digitacao.html pro mesmo padrão.
-  const btnRanking = document.getElementById('btnRanking');
+  // próprio — mesmo componente usado por todos os outros jogos.
+  const btnRanking = $('btnRanking');
   btnRanking.addEventListener('click', () => {
     window.GameLeaderboard.showPanel({
-      game: 'fuga_do_bug', turma, email: username,
+      game: GAME_KEY, turma, email: username,
       title: 'Placar — Fuga do Bug', formatScore: s => `${s} pts`
     });
   });
   if (!window.GameLeaderboard.enabled) btnRanking.style.display = 'none';
 
-  // tests/fuga-do-bug.spec.js chama window.finishLevel() direto — simular a
-  // travessia real dos 8 segmentos via teclado não dá pra automatizar de
-  // forma confiável (física + timing), mesmo padrão de window.endGame em
+  // Ganchos pros testes (tests/fuga-do-bug.spec.js): a travessia real de uma
+  // fase (pulos/timing) não dá pra automatizar via teclado simulado, então os
+  // testes concluem a fase direto — mesmo padrão de window.endGame em
   // games/digitacao.html.
   window.finishLevel = finishLevel;
+  window.__fuga = {
+    get sim(){ return sim; },
+    get mode(){ return mode; },
+    get levelIdx(){ return levelIdx; },
+    levels: LEVELS,
+    loadLevel(i){ hideAllOverlays(); loadLevel(i); mode = 'playing'; },
+  };
 
   resizeCanvas();
-  draw();
-  requestAnimationFrame(loop);
+  renderLevelGrid();
+  loadLevel(Math.min(progress.unlocked, LEVELS.length - 1));
+  requestAnimationFrame(frame);
 })();
 </script>
 

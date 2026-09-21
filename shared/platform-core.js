@@ -2567,7 +2567,7 @@
     },
     fugadobug: {
       title: 'Fuga do Bug — Plataforma de Armadilhas',
-      desc: 'Fuja da branch antes do rebase te apagar: plataformas falsas, serras, blocos que caem e chão que desmorona. Morrer faz parte — memorize o padrão e chegue na bandeira.',
+      desc: 'Fuja da branch antes do rebase te apagar: 10 fases, da mais tranquila à mais cruel, com plataformas falsas, serras, blocos que caem, molas e chão que desmorona. Morrer faz parte — memorize o padrão e chegue na bandeira.',
       icon: '🩹',
       src: '../../games/fuga-do-bug.html'
     }
