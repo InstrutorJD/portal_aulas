@@ -164,3 +164,104 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await expect(page.locator('#inatividadeBody')).not.toContainText('Alexandre Natal');
   });
 });
+
+// Sino de alertas (fora da aba Gestão, sempre visível pro professor): avisa
+// quando um aluno saiu 2x de uma atividade/prova bloqueada (ver
+// shared/exam-proctor.js) e deixa o professor decidir Liberar ou Manter
+// bloqueado — ver shared/platform-core.js, setupExamGuardAlerts().
+test.describe('Sino de alertas de saída bloqueada (só professor)', () => {
+  test('aluno não tem sino, e o professor sem alerta pendente não vê o selo', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ALUNO_URL);
+    await expect(page.locator('#btnExamGuardAlerts')).toHaveCount(0);
+
+    await stubSupabaseFake(page, {});
+    await page.goto(JOGOS_URL);
+    await expect(page.locator('#btnExamGuardAlerts')).toBeVisible();
+    await expect(page.locator('#examGuardBadge')).toBeHidden();
+  });
+
+  test('mostra o selo com a contagem e a lista com o aluno/atividade certos', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      profiles: jogosAlunoProfiles(),
+      exam_guard_events: [
+        { id: 'evt-1', student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', activity_location: 'prova_jogos', warnings: 2, resolved: false, created_at: new Date().toISOString() },
+      ],
+    });
+    await page.goto(JOGOS_URL);
+
+    await expect(page.locator('#examGuardBadge')).toBeVisible();
+    await expect(page.locator('#examGuardBadge')).toHaveText('1');
+
+    await page.click('#btnExamGuardAlerts');
+    await expect(page.locator('#examGuardOverlay')).toBeVisible();
+    const item = page.locator('.exam-guard-item');
+    await expect(item).toContainText('Breno Silva');
+    await expect(item).toContainText('Prova Jogos');
+  });
+
+  test('"Liberar" resolve o alerta e libera o bloqueio de verdade (student_activity_state)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      profiles: jogosAlunoProfiles(),
+      exam_guard_events: [
+        { id: 'evt-1', student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', activity_location: 'prova_jogos', warnings: 2, resolved: false, created_at: new Date().toISOString() },
+      ],
+    });
+    await page.goto(JOGOS_URL);
+    await page.click('#btnExamGuardAlerts');
+    await page.click('.exam-guard-item button:has-text("Liberar")');
+
+    await expect(page.locator('.exam-guard-item')).toHaveCount(0);
+    await expect(page.locator('#examGuardOverlay')).toContainText('Nenhum alerta pendente');
+    await expect(page.locator('#examGuardBadge')).toBeHidden();
+
+    const [alert] = await page.evaluate(() => window.__FAKE_DB__.exam_guard_events);
+    expect(alert).toMatchObject({ resolved: true, resolution: 'liberado', resolved_by: 'admin' });
+
+    const guardState = await page.evaluate(() =>
+      window.__FAKE_DB__.student_activity_state.find(r => r.student_email === 'breno.silva80' && r.progress_key === 'prova_jogos__guard')
+    );
+    expect(guardState.state).toMatchObject({ warnings: 0, blocked: false });
+  });
+
+  test('"Manter bloqueado" só marca o alerta como visto, sem mexer no bloqueio', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      profiles: jogosAlunoProfiles(),
+      exam_guard_events: [
+        { id: 'evt-1', student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', activity_location: 'prova_jogos', warnings: 2, resolved: false, created_at: new Date().toISOString() },
+      ],
+    });
+    await page.goto(JOGOS_URL);
+    await page.click('#btnExamGuardAlerts');
+    await page.click('.exam-guard-item button:has-text("Manter bloqueado")');
+
+    await expect(page.locator('.exam-guard-item')).toHaveCount(0);
+    const [alert] = await page.evaluate(() => window.__FAKE_DB__.exam_guard_events);
+    expect(alert).toMatchObject({ resolved: true, resolution: 'mantido' });
+
+    const guardState = await page.evaluate(() =>
+      (window.__FAKE_DB__.student_activity_state || []).find(r => r.progress_key === 'prova_jogos__guard')
+    );
+    expect(guardState).toBeUndefined(); // "mantido" não toca em student_activity_state
+  });
+
+  test('um novo bloqueio chegando em tempo real mostra um toast e atualiza o selo', async ({ page }) => {
+    await stubSupabaseFake(page, { profiles: jogosAlunoProfiles(), exam_guard_events: [] });
+    await page.goto(JOGOS_URL);
+    await expect(page.locator('#examGuardBadge')).toBeHidden();
+
+    await page.evaluate(() => {
+      window.__FAKE_DB__.exam_guard_events.push({
+        id: 'evt-2', student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos',
+        activity_location: 'prova_jogos', warnings: 2, resolved: false, created_at: new Date().toISOString(),
+      });
+      window.__fireFakeRealtime('exam_guard_events');
+    });
+
+    const toast = page.locator('.pf-toast');
+    await expect(toast).toBeVisible();
+    await expect(toast).toContainText('Aluno bloqueado');
+    await expect(toast).toContainText('Breno Silva');
+    await expect(page.locator('#examGuardBadge')).toHaveText('1');
+  });
+});

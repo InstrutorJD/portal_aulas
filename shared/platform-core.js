@@ -37,6 +37,8 @@
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
   let viewingStudentEmail = null; // não-nulo quando o PROFESSOR abriu o Perfil de um aluno (ver openStudentPerfil) — nunca setado pro aluno vendo o próprio
+  let examGuardEvents = []; // alertas pendentes (aluno saiu 2x de atividade/prova bloqueada) — só professor, ver setupExamGuardAlerts()
+  let examGuardRealtimeStarted = false;
 
   // ---------- Alerta estilizado (substitui window.alert nativo, que sai feio
   // e fora do tema) ----------
@@ -125,6 +127,9 @@
           ${currentUser.role === 'professor' ? `
             <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
             <button class="quick-action-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑 Token</button>
+            <button class="quick-action-btn exam-guard-bell" id="btnExamGuardAlerts" title="Alertas de aluno bloqueado por sair de atividade/prova">
+              🔔 Alertas<span class="exam-guard-badge" id="examGuardBadge" style="display:none;"></span>
+            </button>
           ` : ''}
         </div>
 
@@ -142,6 +147,19 @@
             <div style="display:flex; gap:10px; justify-content:flex-end;">
               <button class="btn" id="btnGerarProfessorToken">Gerar novo token</button>
               <button class="btn btn-secondary" id="btnFecharProfessorToken">Fechar</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="examGuardOverlay" class="pf-alert-overlay" style="display:none;">
+          <div class="pf-alert-box" style="border-color:var(--blood-bright); max-width:480px;">
+            <h3 style="margin:0 0 4px; font-size:14px;">🚨 Alertas de saída bloqueada</h3>
+            <p style="font-size:11px; color:var(--ink-dim); margin:0 0 14px;">
+              O aluno saiu de uma atividade/prova que não podia sair e ficou bloqueado (2ª troca de aba/janela). Decida: libera na hora ou mantém bloqueado até dar o token pessoalmente.
+            </p>
+            <div id="examGuardList"></div>
+            <div style="display:flex; justify-content:flex-end; margin-top:14px;">
+              <button class="btn btn-secondary" id="btnFecharExamGuard">Fechar</button>
             </div>
           </div>
         </div>
@@ -1222,6 +1240,109 @@
     const { data } = await sbClient.from('classroom_settings').select('clipboard_blocked').eq('id', cfg.id).maybeSingle();
     gestaoClipboardBlocked = !!(data && data.clipboard_blocked);
     renderClipboardButtonGestao();
+  }
+
+  // ---------- Sino de alertas: aluno saiu 2x de uma atividade/prova que
+  // não podia sair e ficou bloqueado (detecção em shared/exam-proctor.js,
+  // PortalExamGuard) — só professor. ----------
+  function humanizeActivityKey(key) {
+    return (key || '').split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  function renderExamGuardBadge() {
+    const badge = document.getElementById('examGuardBadge');
+    if (!badge) return;
+    const n = examGuardEvents.length;
+    badge.textContent = String(n);
+    badge.style.display = n > 0 ? 'flex' : 'none';
+  }
+
+  function renderExamGuardList() {
+    const box = document.getElementById('examGuardList');
+    if (!box) return;
+    if (examGuardEvents.length === 0) {
+      box.innerHTML = '<p class="exam-guard-empty">Nenhum alerta pendente. 🎉</p>';
+      return;
+    }
+    box.innerHTML = examGuardEvents.map(ev => `
+      <div class="exam-guard-item" data-event-id="${ev.id}">
+        <b>${ev.student_name || ev.student_email}</b>
+        <div class="exam-guard-meta">Saiu de "${humanizeActivityKey(ev.activity_location)}" e foi bloqueado há ${formatDurationSince(ev.created_at)}.</div>
+        <div class="exam-guard-actions">
+          <button class="btn" data-acao="liberado">Liberar</button>
+          <button class="btn btn-danger" data-acao="mantido">Manter bloqueado</button>
+        </div>
+      </div>
+    `).join('');
+
+    box.querySelectorAll('.exam-guard-item').forEach(item => {
+      const eventId = item.getAttribute('data-event-id');
+      item.querySelectorAll('button[data-acao]').forEach(btn => {
+        btn.addEventListener('click', () => resolverExamGuardEvento(eventId, btn.getAttribute('data-acao'), item));
+      });
+    });
+  }
+
+  // Só toca o toast pra alerta que chegou DEPOIS da primeira busca (aluno
+  // saiu agora, com o professor na tela) — sem essa guarda, todo boot com
+  // alerta(s) já pendente(s) de antes disparava um toast por alerta, só por
+  // causa da primeira consulta. Alertas antigos ainda aparecem, só que
+  // silenciosamente, no selo/lista.
+  let examGuardFirstFetchDone = false;
+
+  async function fetchExamGuardEvents() {
+    if (!sbClient) return;
+    const previousIds = new Set(examGuardEvents.map(ev => ev.id));
+    const { data } = await sbClient.from('exam_guard_events')
+      .select('*')
+      .eq('turma', cfg.id)
+      .eq('resolved', false)
+      .order('created_at', { ascending: false });
+    const rows = data || [];
+    if (examGuardFirstFetchDone) {
+      rows.filter(ev => !previousIds.has(ev.id)).forEach(ev => {
+        showToast('🚨 Aluno bloqueado', `${ev.student_name || ev.student_email} saiu de "${humanizeActivityKey(ev.activity_location)}" e foi bloqueado.`);
+      });
+    }
+    examGuardFirstFetchDone = true;
+    examGuardEvents = rows;
+    renderExamGuardBadge();
+    renderExamGuardList();
+  }
+
+  async function resolverExamGuardEvento(eventId, acao, itemEl) {
+    if (!sbClient) return;
+    itemEl.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    const { error } = await sbClient.rpc('resolver_exam_guard_event', { p_event_id: eventId, p_acao: acao });
+    if (error) {
+      showAlert('Não foi possível resolver o alerta: ' + error.message);
+      itemEl.querySelectorAll('button').forEach(b => { b.disabled = false; });
+      return;
+    }
+    examGuardEvents = examGuardEvents.filter(ev => ev.id !== eventId);
+    renderExamGuardBadge();
+    renderExamGuardList();
+  }
+
+  function setupExamGuardAlerts() {
+    document.getElementById('btnExamGuardAlerts').addEventListener('click', () => {
+      document.getElementById('examGuardOverlay').style.display = 'flex';
+    });
+    document.getElementById('btnFecharExamGuard').addEventListener('click', () => {
+      document.getElementById('examGuardOverlay').style.display = 'none';
+    });
+
+    fetchExamGuardEvents();
+
+    if (!sbClient || examGuardRealtimeStarted) return;
+    examGuardRealtimeStarted = true;
+    // Um evento por turma cobre tanto o INSERT do bloqueio quanto o UPDATE
+    // de resolução (ex.: o próprio aluno se liberou com o token físico, sem
+    // passar pelo sino) — os dois só re-buscam a lista; é fetchExamGuardEvents
+    // que decide se algum alerta é novo o bastante pra merecer um toast.
+    sbClient.channel('realtime_exam_guard_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_guard_events', filter: `turma=eq.${cfg.id}` }, () => fetchExamGuardEvents())
+      .subscribe();
   }
 
   function computeGestaoDisplayStatus(row) {
@@ -2814,6 +2935,7 @@
     });
     if (currentUser.role === 'professor') {
       setupGestaoButtons();
+      setupExamGuardAlerts();
     }
 
     document.querySelectorAll('#mainNavTabs .tab-btn').forEach(btn => {

@@ -45,6 +45,13 @@
           error,
         });
       },
+      insert(payload) {
+        const rows = (Array.isArray(payload) ? payload : [payload]).map(row =>
+          Object.assign({ id: 'fake-' + Math.random().toString(36).slice(2), created_at: new Date().toISOString() }, row)
+        );
+        table(name).push(...rows);
+        return Promise.resolve({ data: rows, error: null });
+      },
       upsert(payload, opts) {
         const rows = Array.isArray(payload) ? payload : [payload];
         const t = table(name);
@@ -60,12 +67,20 @@
         return Promise.resolve({ data: rows, error: null });
       },
       update(payload) {
-        return {
-          eq(col, val) {
-            table(name).forEach(r => { if (r[col] === val) Object.assign(r, payload); });
-            return Promise.resolve({ data: null, error: null });
+        // Encadeia quantos .eq() o chamador quiser (igual ao Supabase de
+        // verdade) e só aplica a mutação quando a query é de fato aguardada
+        // — sem isso, `.update(x).eq(a).eq(b)` quebrava no 2º .eq() (a
+        // versão antiga já devolvia uma Promise no 1º .eq(), que não tem
+        // método .eq()).
+        const updFilters = [];
+        const updApi = {
+          eq(col, val) { updFilters.push([col, val]); return updApi; },
+          then(resolve, reject) {
+            table(name).forEach(r => { if (matches(r, updFilters)) Object.assign(r, payload); });
+            return Promise.resolve({ data: null, error: null }).then(resolve, reject);
           },
         };
+        return updApi;
       },
       delete() {
         return {
@@ -271,6 +286,32 @@
           if (!row) return Promise.resolve({ data: [{ valido: false, nome: null }], error: null });
           const profile = table('profiles').find(p => p.id === row.created_by);
           return Promise.resolve({ data: [{ valido: true, nome: profile ? profile.nome : null }], error: null });
+        }
+        // Sino de alertas do professor (ver sql/supabase-setup-completo.sql,
+        // bloco 14, e shared/platform-core.js, resolverExamGuardEvento):
+        // 'liberado' também zera a linha __guard de student_activity_state,
+        // igual a RPC real faz — sem isso um teste que clica "Liberar" não
+        // consegue provar que o aluno de fato voltou a acessar a atividade.
+        if (name === 'resolver_exam_guard_event') {
+          const authUser = resolveFakeAuthUser();
+          const profile = authUser && table('profiles').find(p => p.id === authUser.id);
+          if (!profile || profile.role !== 'professor') {
+            return Promise.resolve({ data: null, error: { message: 'Só o professor pode resolver este alerta.' } });
+          }
+          const row = table('exam_guard_events').find(r => r.id === params.p_event_id);
+          if (!row) return Promise.resolve({ data: null, error: { message: 'Alerta não encontrado.' } });
+          row.resolved = true;
+          row.resolution = params.p_acao;
+          row.resolved_by = profile.email;
+          row.resolved_at = new Date().toISOString();
+          if (params.p_acao === 'liberado') {
+            const key = row.activity_location + '__guard';
+            const newState = { warnings: 0, blocked: false, updatedAt: new Date().toISOString() };
+            const existing = table('student_activity_state').find(r => r.student_email === row.student_email && r.progress_key === key);
+            if (existing) Object.assign(existing, { state: newState, updated_at: new Date().toISOString() });
+            else table('student_activity_state').push({ student_email: row.student_email, progress_key: key, state: newState, updated_at: new Date().toISOString() });
+          }
+          return Promise.resolve({ data: null, error: null });
         }
         return Promise.resolve({ data: null, error: null });
       },

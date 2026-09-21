@@ -81,8 +81,8 @@ window.PortalExamGuard = (function () {
   //   else { renderTelaInicial(() => { window.PortalExamGuard.arm(guard, {...}); iniciarQuiz(); }); }
   async function create(activityLocation) {
     const instance = {
-      activityLocation, username: null, sb: null,
-      warnings: 0, blocked: false, armed: false, disabled: false, _handler: null
+      activityLocation, username: null, sb: null, turma: null, studentName: null,
+      warnings: 0, blocked: false, armed: false, disabled: false, _handler: null, _remoteUnlockChannel: null
     };
 
     if (window.PortalSession) {
@@ -94,6 +94,8 @@ window.PortalExamGuard = (function () {
         const user = await window.PortalSession.getUser();
         if (user && user.role !== 'professor' && user.role !== 'admin' && user.email) {
           instance.username = user.email;
+          instance.studentName = user.nome || null;
+          instance.turma = user.turma || null;
           instance.sb = window.PortalSession.client();
         }
       } catch (e) { /* segue com instance.username null — vira disabled abaixo */ }
@@ -133,7 +135,32 @@ window.PortalExamGuard = (function () {
       } catch (e) { /* best-effort — localStorage já é a fonte confiável local */ }
     }
 
+    // Já chega bloqueado (reload, ou troca de dispositivo) — liga a escuta
+    // de liberação remota igual a um bloqueio que acabou de acontecer nesta
+    // mesma aba (ver watchForRemoteUnlock).
+    if (instance.blocked) watchForRemoteUnlock(instance);
+
     return instance;
+  }
+
+  // Assina exam_guard_events em tempo real pra recarregar a atividade
+  // sozinha assim que o PROFESSOR clicar "Liberar" no sino de alertas
+  // (ver setupExamGuardAlerts em shared/platform-core.js). Sem isso, um
+  // "Liberar" clicado remotamente só valeria depois que o aluno recarregar
+  // a página por conta própria — o professor ficaria achando que já
+  // liberou, mas o aluno continuaria preso na tela de bloqueio.
+  function watchForRemoteUnlock(instance) {
+    if (instance.disabled || !instance.sb || instance._remoteUnlockChannel) return;
+    instance._remoteUnlockChannel = instance.sb
+      .channel('realtime_exam_guard_owner_' + instance.username)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'exam_guard_events', filter: `student_email=eq.${instance.username}` }, (payload) => {
+        const row = payload.new;
+        if (row && row.activity_location === instance.activityLocation && row.resolved && row.resolution === 'liberado') {
+          writeLocal(instance.activityLocation, instance.username, { warnings: 0, blocked: false });
+          window.location.reload();
+        }
+      })
+      .subscribe();
   }
 
   // Liga o listener de troca de aba. onWarning(count) roda na 1ª saída;
@@ -162,6 +189,21 @@ window.PortalExamGuard = (function () {
         instance.armed = false;
         document.removeEventListener('visibilitychange', instance._handler, true);
         persist(instance);
+        // Avisa o professor (sino de alertas em shared/platform-core.js) —
+        // só no BLOQUEIO de verdade (2ª saída), não a cada advertência
+        // isolada: é o momento em que o aluno efetivamente saiu de uma
+        // atividade/prova que não podia sair.
+        if (instance.sb) {
+          instance.sb.from('exam_guard_events').insert({
+            student_email: instance.username,
+            student_name: instance.studentName,
+            turma: instance.turma,
+            activity_location: instance.activityLocation,
+            warnings: instance.warnings,
+            resolved: false
+          }).then(() => {}, () => {});
+        }
+        watchForRemoteUnlock(instance);
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(instance.activityLocation, 'Questionário BLOQUEADO — saiu do portal 2x', { blocked: true });
         }
@@ -193,6 +235,17 @@ window.PortalExamGuard = (function () {
     instance.warnings = 0;
     instance.blocked = false;
     persist(instance);
+    // Desbloqueio pelo token físico (professor presente, sem passar pelo
+    // sino) — fecha o alerta pendente também, senão ele fica pra sempre na
+    // lista do professor mesmo depois de o aluno já estar liberado.
+    if (instance.sb) {
+      instance.sb.from('exam_guard_events')
+        .update({ resolved: true, resolution: 'liberado', resolved_at: new Date().toISOString() })
+        .eq('student_email', instance.username)
+        .eq('activity_location', instance.activityLocation)
+        .eq('resolved', false)
+        .then(() => {}, () => {});
+    }
     return result;
   }
 

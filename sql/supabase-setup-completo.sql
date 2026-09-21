@@ -1525,13 +1525,135 @@ grant execute on function public.verificar_professor_token(text) to anon, authen
 -- ver git history.
 drop table if exists public.behavioral_observations cascade;
 
+
+-- ============================================================
+-- BLOCO 14 — Sino de alertas do professor: aluno saiu de uma atividade/
+-- prova que não podia sair e ficou bloqueado (a DETECÇÃO em si já existe
+-- desde antes deste bloco — ver shared/exam-proctor.js, PortalExamGuard,
+-- que conta 2 saídas de aba/janela e bloqueia a atividade). Este bloco só
+-- acrescenta o AVISO em tempo real pro professor e a decisão dele:
+-- Liberar (desbloqueia o aluno na hora, sem precisar do token físico) ou
+-- Manter bloqueado (só marca como visto — o aluno segue preso até o
+-- professor dar o token pessoalmente, do jeito que já funcionava antes).
+-- ============================================================
+
+create table if not exists public.exam_guard_events (
+  id uuid primary key default gen_random_uuid(),
+  student_email text not null,
+  student_name text,
+  turma text,
+  activity_location text not null,
+  warnings int not null default 0,
+  resolved boolean not null default false,
+  resolution text check (resolution in ('liberado', 'mantido')),
+  resolved_by text,
+  resolved_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+-- Acelera "alertas pendentes desta turma", que é a consulta que o sino do
+-- professor roda toda vez que abre e a cada evento em tempo real.
+create index if not exists idx_exam_guard_events_turma_resolved
+  on public.exam_guard_events (turma, resolved);
+
+alter table public.exam_guard_events enable row level security;
+
+drop policy if exists "exam_guard_events_select_self_or_professor" on public.exam_guard_events;
+create policy "exam_guard_events_select_self_or_professor"
+  on public.exam_guard_events for select
+  using (public.is_professor() or student_email = public.current_email());
+
+-- O aluno grava a PRÓPRIA linha no exato instante em que fica bloqueado
+-- (exam-proctor.js, arm()) — mesmo padrão de student_activity_state.
+drop policy if exists "exam_guard_events_insert_self" on public.exam_guard_events;
+create policy "exam_guard_events_insert_self"
+  on public.exam_guard_events for insert
+  with check (student_email = public.current_email());
+
+-- O aluno também pode marcar a PRÓPRIA linha como resolvida, mas só no
+-- único formato "liberado por mim mesmo" — acontece quando ele desbloqueia
+-- do jeito antigo, digitando o token físico do professor direto na tela da
+-- atividade (exam-proctor.js, unlock()), sem passar pelo sino. Sem isso, o
+-- alerta ficaria pendente pro professor pra sempre mesmo depois de o aluno
+-- já ter sido liberado na mão. O WITH CHECK trava o valor final da linha —
+-- o aluno não consegue usar isso pra inventar um "mantido" ou reabrir um
+-- alerta já resolvido por outra via.
+drop policy if exists "exam_guard_events_update_self_via_token" on public.exam_guard_events;
+create policy "exam_guard_events_update_self_via_token"
+  on public.exam_guard_events for update
+  using (student_email = public.current_email())
+  with check (student_email = public.current_email() and resolved = true and resolution = 'liberado');
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'exam_guard_events'
+  ) then
+    alter publication supabase_realtime add table public.exam_guard_events;
+  end if;
+end $$;
+
+-- Resolve o alerta a partir do clique do PROFESSOR no sino (nunca do
+-- aluno — daí SECURITY DEFINER + checagem de is_professor(), em vez de
+-- uma policy de update comum). 'liberado' não marca só o alerta: também
+-- zera a linha __guard do aluno em student_activity_state (a mesma que
+-- PortalExamGuard.create() lê pra decidir se a atividade abre bloqueada),
+-- senão o professor "liberaria" a notificação e o aluno continuaria preso
+-- na tela de bloqueio. 'mantido' só marca como visto, sem mexer no
+-- bloqueio de verdade.
+create or replace function public.resolver_exam_guard_event(p_event_id uuid, p_acao text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_student_email text;
+  v_activity_location text;
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode resolver este alerta.';
+  end if;
+  if p_acao not in ('liberado', 'mantido') then
+    raise exception 'Ação inválida.';
+  end if;
+
+  select ege.student_email, ege.activity_location into v_student_email, v_activity_location
+  from public.exam_guard_events ege
+  where ege.id = p_event_id;
+
+  if v_student_email is null then
+    raise exception 'Alerta não encontrado.';
+  end if;
+
+  update public.exam_guard_events
+  set resolved = true, resolution = p_acao, resolved_by = public.current_email(), resolved_at = now()
+  where id = p_event_id;
+
+  if p_acao = 'liberado' then
+    insert into public.student_activity_state (student_email, progress_key, state, updated_at)
+    values (
+      v_student_email,
+      v_activity_location || '__guard',
+      jsonb_build_object('warnings', 0, 'blocked', false, 'updatedAt', now()),
+      now()
+    )
+    on conflict (student_email, progress_key) do update
+      set state = excluded.state, updated_at = excluded.updated_at;
+  end if;
+end;
+$$;
+
+grant execute on function public.resolver_exam_guard_event(uuid, text) to authenticated;
+
 -- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, bimestre_dates, trilha_bimestre,
 -- game_scores, quizrush_sessions/quizrush_players/
--- quizrush_answers, student_activity_state e professor_tokens foram
--- criadas, se network_nodes ganhou as
+-- quizrush_answers, student_activity_state, professor_tokens e
+-- exam_guard_events foram criadas, se network_nodes ganhou as
 -- network_nodes/node_permissions/node_shields aparecem com RLS
 -- habilitado (ícone de cadeado no Table Editor). Se profiles estiver
 -- vazia, rode scripts/migrate-users-to-auth.mjs antes de testar login.

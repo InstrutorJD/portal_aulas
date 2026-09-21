@@ -80,6 +80,21 @@ body{
 }
 .quick-action-btn:hover{ color:var(--ink); border-style:solid; border-color:var(--ink-dim); }
 
+/* Sino de alertas (aluno bloqueado por sair de atividade/prova) — mesmo
+   botão de atalho acima, com um selo vermelho de contagem quando há
+   alerta pendente (ver setupExamGuardAlerts em platform-core.js). */
+.exam-guard-bell{ position:relative; border-color:var(--blood-bright); color:var(--blood-bright); }
+.exam-guard-bell:hover{ border-color:var(--blood-bright); color:#fff; }
+.exam-guard-badge{
+  position:absolute; top:-8px; right:-8px; background:var(--blood-bright); color:#fff;
+  font-size:10px; font-weight:800; min-width:16px; height:16px; padding:0 4px;
+  border-radius:8px; align-items:center; justify-content:center; line-height:1;
+}
+.exam-guard-item{ border:1px solid var(--line); background:var(--panel2); padding:10px 12px; margin-bottom:8px; }
+.exam-guard-item .exam-guard-meta{ font-size:11px; color:var(--ink-dim); margin:4px 0 10px; }
+.exam-guard-item .exam-guard-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.exam-guard-empty{ font-size:12px; color:var(--ink-dim); text-align:center; padding:16px; }
+
 /* Sub-navegação de trilha: 2+ trilhas viram um <select> só (mais conciso
    que uma fileira de botões, e usa o seletor nativo no celular); com 1
    trilha só, o JS esconde isso inteiro (ver renderTrilhas em platform-core.js) — não faz sentido escolher entre uma opção. */
