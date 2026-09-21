@@ -1843,7 +1843,14 @@
             number: i + 1,
             title: `[Prática] ${q.title}`,
             prompt: `${q.desc}${q.starterCode ? `\n\nCódigo mostrado ao aluno:\n${q.starterCode}` : ''}`,
-            answer: `Console esperado: ${q.expectedOutput}\n\n${q.bugExplanation ? 'Explicação: ' + q.bugExplanation.replace(/<[^>]+>/g, '') + '\n\n' : ''}Código correto (não é a única forma):\n${q.solution}`
+            answer: `Console esperado: ${q.expectedOutput}\n\n${q.bugExplanation ? 'Explicação: ' + q.bugExplanation.replace(/<[^>]+>/g, '') + '\n\n' : ''}Código correto (não é a única forma):\n${q.solution}`,
+            // Dados estruturados da questão prática: o .txt do gabarito não usa,
+            // mas o QuizRush (modo "Revisão das provas", shared/quizrush-engine.js)
+            // transforma isto num problema de código corrigido na hora.
+            practice: {
+              title: q.title, desc: q.desc, starterCode: q.starterCode || '',
+              expectedOutput: q.expectedOutput, solution: q.solution, bugExplanation: q.bugExplanation || ''
+            }
           };
         }
         return {

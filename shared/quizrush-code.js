@@ -57,6 +57,9 @@
           var names = givenVars.concat(['console', 'alert', code]);
           var fn = Function.apply(null, names);
           fn.apply(null, givenVars.map(function (n) { return t.values[n]; }).concat([fakeConsole, fakeAlert]));
+          // check.text: compara o que foi exibido como TEXTO (console.log(16) vale
+          // igual a console.log("16")) — é como a prova corrige.
+          if (check.text) logs = logs.map(function (l) { return String(l).trim(); });
           out = logs.length ? { value: logs } : { error: 'nada foi exibido — use console.log(...)' };
         } else if (check.type === 'function') {
           var factory = new Function(code + '\nreturn typeof ' + check.name + " === 'function' ? " + check.name + ' : undefined;');

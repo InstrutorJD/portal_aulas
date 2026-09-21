@@ -16,6 +16,9 @@
 // 4) Montar e gravar o "Quizz Prático" — partida de problemas de código em vez
 //    de múltipla escolha (banco em shared/quizrush-code-bank.js, correção em
 //    shared/quizrush-code.js).
+// 5) Montar a "Revisão das provas": uma partida com perguntas de múltipla
+//    escolha E problemas de código tirados do gabarito das provas (matéria
+//    'prova' do config da turma) — ver fetchExamItems()/buildExamReview().
 window.QuizRushEngine = (function () {
   const sb = window.PortalSession ? window.PortalSession.client() : null;
 
@@ -99,22 +102,24 @@ window.QuizRushEngine = (function () {
     };
   }
 
-  function fetchModuleQuestions({ turma, mod, email }) {
+  // Carrega o módulo e devolve os `items` crus do gabarito (ou [] se der
+  // timeout/erro). Base de fetchModuleQuestions (só múltipla escolha) e de
+  // fetchExamItems (múltipla escolha + questões práticas das provas).
+  function captureGabaritoItems({ turma, mod, email }) {
     return new Promise((resolve) => {
       const iframe = document.createElement('iframe');
       iframe.style.cssText = 'position:absolute; width:0; height:0; border:0; visibility:hidden;';
       // Sem "role=" na URL: o módulo carregado aqui dentro resolve o papel
       // sozinho via sessão do Supabase Auth (mesmo localStorage do mesmo
-      // domínio) — como só o professor chama fetchModuleQuestions, a
-      // sessão já é a dele.
+      // domínio) — como só o professor chama isto, a sessão já é a dele.
       iframe.src = `../turmas/${turma}/${mod.src}?user=${encodeURIComponent(email || '')}&turma=${encodeURIComponent(turma)}`;
 
       let settled = false;
-      const finish = (questions) => {
+      const finish = (items) => {
         if (settled) return;
         settled = true;
         iframe.remove();
-        resolve(questions);
+        resolve(items);
       };
 
       // Best-effort: um módulo mal-configurado não pode travar a tela do
@@ -132,15 +137,7 @@ window.QuizRushEngine = (function () {
             win.generateGabaritoForGestao();
           }
           clearTimeout(timeout);
-          const items = (captured && captured.items) || [];
-          // Só perguntas de múltipla escolha de verdade servem pro QuizRush
-          // (atividades práticas de código têm gabarito por caso de
-          // teste, sem `options`/`correctIndex` — ver formato em
-          // shared/gabarito-generator.js).
-          const questions = items
-            .filter(it => Array.isArray(it.options) && it.options.length >= 2 && typeof it.correctIndex === 'number')
-            .map(it => shuffleQuestionOptions({ prompt: it.prompt, options: it.options, correctIndex: it.correctIndex }));
-          finish(questions);
+          finish((captured && captured.items) || []);
         } catch (e) {
           clearTimeout(timeout);
           finish([]);
@@ -149,6 +146,17 @@ window.QuizRushEngine = (function () {
       iframe.onerror = () => { clearTimeout(timeout); finish([]); };
       document.body.appendChild(iframe);
     });
+  }
+
+  // Só perguntas de múltipla escolha de verdade servem pro QuizRush comum
+  // (atividades práticas de código têm gabarito por caso de teste, sem
+  // `options`/`correctIndex` — ver formato em shared/gabarito-generator.js).
+  const isChoiceItem = it => Array.isArray(it.options) && it.options.length >= 2 && typeof it.correctIndex === 'number';
+  const toChoiceQuestion = it => shuffleQuestionOptions({ prompt: it.prompt, options: it.options, correctIndex: it.correctIndex });
+
+  async function fetchModuleQuestions(args) {
+    const items = await captureGabaritoItems(args);
+    return items.filter(isChoiceItem).map(toChoiceQuestion);
   }
 
   // ---------- Sessão (Supabase) ----------
@@ -301,6 +309,90 @@ window.QuizRushEngine = (function () {
     return { isCorrect: !!isCorrect, score: score || 0 };
   }
 
+  // ---------- Revisão das provas ----------
+  // As provas (matéria 'prova' do config da turma) já expõem o banco inteiro no
+  // gabarito. A revisão sorteia dali perguntas de múltipla escolha e as
+  // questões PRÁTICAS (o aluno escreve/corrige código), que viram problemas do
+  // Quizz Prático — nada é cadastrado à parte.
+
+  // A matéria 'prova' também abriga trabalhos (ex.: projeto-app-empreendedor),
+  // que não têm banco de questões pra revisar — só as trilhas 'prova-*' entram.
+  function listExamModules(cfgTurma) {
+    return listGabaritoModules(cfgTurma).filter(c =>
+      (cfgTurma.materias || []).some(m => m.key === 'prova' && (m.trilhas || []).some(t => t.key === c.trilhaKey && /^prova-/.test(t.key)))
+    );
+  }
+
+  // Questão prática da prova → problema de código. O gabarito da prova só diz
+  // "o que deve aparecer no console", então a correção compara o que o código
+  // exibiu (como texto) com esse valor. Com código inicial = "corrija o bug";
+  // sem código inicial = "escreva do zero".
+  function examPracticeToQuestion(practice, examTitle) {
+    const fix = !!String(practice.starterCode || '').trim();
+    const explanation = String(practice.bugExplanation || '');
+    return {
+      type: 'code', lang: 'js', topic: 'Revisão — ' + examTitle, givenVars: [],
+      id: 'exam-' + String(practice.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      level: 2, mode: fix ? 'fix' : 'write', title: practice.title,
+      prompt: practice.desc + `<br><small>Resultado esperado no console: <code>${escapeHtml(practice.expectedOutput)}</code></small>`,
+      starter: fix ? practice.starterCode : '// escreva seu código aqui\n',
+      check: { type: 'console', text: true },
+      tests: [{ values: {}, expected: [String(practice.expectedOutput).trim()] }],
+      solution: practice.solution,
+      explanation,
+      hint: fix ? 'Compare o que o código mostra hoje com o resultado esperado — o erro está numa linha só.' : 'Use <code>console.log(...)</code> para mostrar o resultado.'
+    };
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // Carrega uma prova e separa o que ela tem de teoria e de prática.
+  async function fetchExamItems({ turma, mod, email, examTitle }) {
+    const items = await captureGabaritoItems({ turma, mod, email });
+    return {
+      theory: items.filter(isChoiceItem).map(toChoiceQuestion),
+      practical: items.filter(it => it.practice && it.practice.expectedOutput != null).map(it => examPracticeToQuestion(it.practice, examTitle || mod.title))
+    };
+  }
+
+  function shuffled(list, random) {
+    const out = list.slice();
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  // Monta a partida: `theoryCount` perguntas + `codeCount` problemas (o que
+  // faltar no banco simplesmente não entra). Teoria primeiro, código no fim —
+  // é o mais demorado, então fecha a partida. Enunciados repetidos entre duas
+  // provas (a Final reaproveita o banco da Diagnóstica) entram uma vez só.
+  // Cada problema de código leva o próprio tempo (durationMs); as perguntas
+  // de múltipla escolha usam o tempo da sessão.
+  function buildExamReview({ theory, practical, theoryCount, codeCount, codeSeconds }, rand) {
+    const random = rand || Math.random;
+    const seen = new Set();
+    const uniqueTheory = theory.filter(q => {
+      const key = String(q.prompt).replace(/\s+/g, ' ').trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    const seenCode = new Set();
+    const uniqueCode = practical.filter(q => {
+      if (seenCode.has(q.id)) return false;
+      seenCode.add(q.id);
+      return true;
+    });
+    const pickedTheory = shuffled(uniqueTheory, random).slice(0, Math.max(0, theoryCount));
+    const pickedCode = shuffled(uniqueCode, random).slice(0, Math.max(0, codeCount))
+      .map(q => Object.assign({}, q, { durationMs: (codeSeconds || 120) * 1000 }));
+    return pickedTheory.concat(pickedCode);
+  }
+
   function leaderboardFrom(answers) {
     const byStudent = {};
     answers.forEach(a => {
@@ -333,6 +425,7 @@ window.QuizRushEngine = (function () {
   return {
     enabled: !!sb,
     loadTurmaConfig, listGabaritoModules, fetchModuleQuestions,
+    listExamModules, fetchExamItems, buildExamReview, examPracticeToQuestion,
     getLatestSession, createSession, startSession, nextQuestion, getServerTimeMs, reveal, showPodium, endSession,
     joinSession, fetchPlayers, fetchAnswers, submitAnswer, scoreFor, leaderboardFrom,
     isCodeQuestion, isCodeSession, listCodeTopics, buildCodeQuestions, submitCodeAnswer,

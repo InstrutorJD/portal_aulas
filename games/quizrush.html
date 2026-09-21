@@ -166,6 +166,7 @@
     <div class="mode-tabs">
       <button class="mode-tab active" id="tabModeQuiz">📝 Quiz de múltipla escolha</button>
       <button class="mode-tab" id="tabModeCode">💻 Quizz Prático</button>
+      <button class="mode-tab" id="tabModeExam">📚 Revisão das provas</button>
     </div>
 
     <div id="setupQuizPanel" style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
@@ -200,7 +201,35 @@
         <button class="btn btn-primary" id="btnCreateCodeSession">🚀 Iniciar Quizz Prático</button>
       </div>
     </div>
+
+    <div id="setupExamPanel" style="display:none; flex-direction:column; align-items:center; gap:16px; width:100%;">
+      <p class="subtitle">Revisão pra antes da prova — perguntas e problemas de código sorteados das próprias provas</p>
+      <div class="card" style="display:flex; flex-direction:column; gap:14px; align-items:stretch;">
+        <div id="examList"></div>
+        <div id="examEmptyWarn" class="hint" style="display:none; color:var(--k-yellow);">⚠️ Nenhuma prova com gabarito foi encontrada nesta turma.</div>
+        <button class="btn" id="btnFetchExam">🔎 Carregar questões das provas</button>
+        <div id="examResult" style="display:none; flex-direction:column; gap:12px;">
+          <div id="examResultText" class="hint"></div>
+          <label class="field">Perguntas de múltipla escolha
+            <input type="number" id="inpExamTheory" min="0" max="30" value="8">
+          </label>
+          <label class="field">Problemas de código
+            <input type="number" id="inpExamCode" min="0" max="10" value="3">
+          </label>
+          <label class="field">Tempo por pergunta (segundos)
+            <input type="number" id="inpExamTheorySeconds" min="5" max="120" value="25">
+          </label>
+          <label class="field">Tempo por problema de código (segundos)
+            <input type="number" id="inpExamCodeSeconds" min="30" max="600" value="120">
+          </label>
+          <div id="examSetupHint" class="hint"></div>
+          <button class="btn btn-primary" id="btnCreateExamSession">🚀 Iniciar Revisão</button>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- (painel da Revisão das provas: dentro de #scrSetup, ver setupExamPanel) -->
 
   <!-- ---------- Aluno: nenhum quizrush ao vivo ---------- -->
   <div class="screen" id="scrNoSession">
@@ -437,11 +466,98 @@
 
   function setSetupMode(mode) {
     const isCode = mode === 'code';
-    document.getElementById('setupQuizPanel').style.display = isCode ? 'none' : 'flex';
+    const isExam = mode === 'exam';
+    document.getElementById('setupQuizPanel').style.display = (isCode || isExam) ? 'none' : 'flex';
     document.getElementById('setupCodePanel').style.display = isCode ? 'flex' : 'none';
-    document.getElementById('tabModeQuiz').classList.toggle('active', !isCode);
+    document.getElementById('setupExamPanel').style.display = isExam ? 'flex' : 'none';
+    document.getElementById('tabModeQuiz').classList.toggle('active', !isCode && !isExam);
     document.getElementById('tabModeCode').classList.toggle('active', isCode);
+    document.getElementById('tabModeExam').classList.toggle('active', isExam);
     if (isCode) renderCodeTopics();
+    if (isExam) renderExamPanel();
+  }
+
+  // ---------- Revisão das provas: montar a partida ----------
+
+  async function renderExamPanel() {
+    const box = document.getElementById('examList');
+    if (box.dataset.ready) return;
+    const cfgTurma = await window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null);
+    state.examModules = cfgTurma ? window.QuizRushEngine.listExamModules(cfgTurma) : [];
+    const empty = state.examModules.length === 0;
+    document.getElementById('examEmptyWarn').style.display = empty ? 'block' : 'none';
+    document.getElementById('btnFetchExam').style.display = empty ? 'none' : '';
+    box.innerHTML = state.examModules.map((c, i) =>
+      `<label class="topic-check"><input type="checkbox" class="chkExam" value="${i}" checked> <span>${escapeHtml(c.trilhaLabel)}</span></label>`
+    ).join('');
+    box.dataset.ready = '1';
+    box.addEventListener('change', () => { document.getElementById('examResult').style.display = 'none'; state.examPool = null; });
+  }
+
+  async function onFetchExam() {
+    const picked = [...document.querySelectorAll('.chkExam:checked')].map(el => state.examModules[parseInt(el.value, 10)]);
+    const resultBox = document.getElementById('examResult');
+    const resultText = document.getElementById('examResultText');
+    if (!picked.length) {
+      resultBox.style.display = 'flex';
+      resultText.textContent = '⚠️ Marque pelo menos uma prova.';
+      document.getElementById('btnCreateExamSession').disabled = true;
+      return;
+    }
+    const btn = document.getElementById('btnFetchExam');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Carregando...';
+    const parts = await Promise.all(picked.map(c =>
+      window.QuizRushEngine.fetchExamItems({ turma, mod: c.mod, email: username, examTitle: c.trilhaLabel })
+    ));
+    btn.disabled = false;
+    btn.textContent = original;
+
+    const theory = parts.flatMap(p => p.theory);
+    const practical = parts.flatMap(p => p.practical);
+    state.examPool = { theory, practical, titles: picked.map(c => c.trilhaLabel) };
+    resultBox.style.display = 'flex';
+    resultText.innerHTML = `✅ <b>${theory.length} perguntas</b> e <b>${practical.length} problemas de código</b> encontrados em ${picked.map(c => `"<b>${escapeHtml(c.trilhaLabel)}</b>"`).join(' + ')}.`;
+    updateExamHint();
+  }
+
+  function updateExamHint() {
+    const pool = state.examPool;
+    if (!pool) return;
+    const t = Math.max(0, parseInt(document.getElementById('inpExamTheory').value, 10) || 0);
+    const c = Math.max(0, parseInt(document.getElementById('inpExamCode').value, 10) || 0);
+    const total = Math.min(t, pool.theory.length) + Math.min(c, pool.practical.length);
+    const hint = document.getElementById('examSetupHint');
+    document.getElementById('btnCreateExamSession').disabled = total === 0;
+    hint.textContent = total === 0
+      ? '⚠️ Nada a sortear — aumente as quantidades (ou marque outra prova).'
+      : `A partida terá ${total} item(ns)` + ((t > pool.theory.length || c > pool.practical.length) ? ' (o banco tem menos do que o pedido). ' : '. ') + 'Perguntas primeiro, código no fim.';
+  }
+
+  async function onCreateExamSession() {
+    const pool = state.examPool;
+    if (!pool) return;
+    const num = (id, def, min, max) => Math.max(min, Math.min(max, parseInt(document.getElementById(id).value, 10) || def));
+    const questions = window.QuizRushEngine.buildExamReview({
+      theory: pool.theory, practical: pool.practical,
+      theoryCount: num('inpExamTheory', 8, 0, 30), codeCount: num('inpExamCode', 3, 0, 10),
+      codeSeconds: num('inpExamCodeSeconds', 120, 30, 600)
+    });
+    if (!questions.length) return;
+    const btn = document.getElementById('btnCreateExamSession');
+    btn.disabled = true;
+    btn.textContent = '⏳ Criando...';
+    const session = await window.QuizRushEngine.createSession({
+      turma, email: username, trilhaLabel: 'Revisão das provas', moduleTitle: pool.titles.join(' + '),
+      questions, durationMs: num('inpExamTheorySeconds', 25, 5, 120) * 1000
+    });
+    btn.disabled = false;
+    btn.textContent = '🚀 Iniciar Revisão';
+    if (!session) { alert('Não foi possível criar a Revisão agora. Tente de novo.'); return; }
+    setSession(session);
+    subscribeToSession();
+    renderForSession();
   }
 
   function renderCodeTopics() {
@@ -659,6 +775,13 @@
     return state.session.questions[state.session.current_index];
   }
 
+  // A Revisão das provas mistura perguntas rápidas com problemas de código: o
+  // problema pode trazer o próprio tempo (durationMs); sem ele vale o da sessão.
+  function questionDurationMs() {
+    const q = currentQuestion();
+    return (q && q.durationMs) || state.session.question_duration_ms;
+  }
+
   function renderQuestion() {
     showScreen('scrQuestion');
     state.myAnswerThisQuestion = null;
@@ -667,7 +790,7 @@
     const isCode = window.QuizRushEngine.isCodeQuestion(q);
     document.getElementById('scrQuestion').classList.toggle('code-mode', isCode);
     document.getElementById('qMeta').textContent = isCode
-      ? `Problema ${state.session.current_index + 1} de ${state.session.questions.length} · ${q.mode === 'fill' ? 'complete o código' : 'escreva o código'}`
+      ? `Problema ${state.session.current_index + 1} de ${state.session.questions.length} · ${q.mode === 'fill' ? 'complete o código' : q.mode === 'fix' ? 'corrija o código' : 'escreva o código'}`
       : `Pergunta ${state.session.current_index + 1} de ${state.session.questions.length}`;
 
     // Pergunta e alternativas por extenso pros dois lados — o aluno
@@ -715,7 +838,7 @@
   function startCountdown() {
     if (state.countdownTimer) clearInterval(state.countdownTimer);
     const startedAt = new Date(state.session.question_started_at).getTime();
-    const duration = state.session.question_duration_ms;
+    const duration = questionDurationMs();
     let autoRevealed = false;
     let lastTickedSecond = null;
 
@@ -774,12 +897,12 @@
     e.currentTarget.classList.add('chosen');
 
     const startedAt = new Date(state.session.question_started_at).getTime();
-    const elapsedMs = Math.max(0, Math.min(state.session.question_duration_ms, (Date.now() + state.clockOffsetMs) - startedAt));
+    const elapsedMs = Math.max(0, Math.min(questionDurationMs(), (Date.now() + state.clockOffsetMs) - startedAt));
     const q = currentQuestion();
     const result = await window.QuizRushEngine.submitAnswer({
       sessionId: state.session.id, email: username, name: displayName,
       questionIndex: state.session.current_index, choiceIndex, correctIndex: q.correctIndex,
-      elapsedMs, durationMs: state.session.question_duration_ms
+      elapsedMs, durationMs: questionDurationMs()
     });
     state.myAnswerThisQuestion = { choiceIndex, ...result };
 
@@ -867,7 +990,7 @@
     // O tempo conta até o CLIQUE — a correção (sobretudo o 1º SQL, que baixa o
     // motor) não pode tirar pontos de quem já enviou a tempo.
     const startedAt = new Date(state.session.question_started_at).getTime();
-    const duration = state.session.question_duration_ms;
+    const duration = questionDurationMs();
     const elapsedMs = Math.max(0, (Date.now() + state.clockOffsetMs) - startedAt);
     if (elapsedMs >= duration) return;
 
@@ -939,6 +1062,7 @@
       document.getElementById('revealPrompt').innerHTML = `<b>${escapeHtml(q.title)}</b><br>${q.prompt}`;
       document.getElementById('revealBars').innerHTML = `
         <pre class="code-static">${escapeHtml(q.solution)}</pre>
+        ${q.explanation ? `<p class="hint" style="max-width:none; color:#e7ddff;">💡 ${q.explanation}</p>` : ''}
         <p class="hint" style="max-width:none; color:#e7ddff;">✅ ${acertaram.length} acertaram · ❌ ${naoFecharam} tentaram e não fecharam</p>
         ${acertaram.length ? `<p class="hint" style="max-width:none; color:#e7ddff;">Acertaram: ${acertaram.slice(0, 10).map(a => `${escapeHtml(a.student_name)} (+${a.score})`).join(' · ')}</p>` : ''}
       `;
@@ -1110,6 +1234,11 @@
   document.getElementById('btnFetchQuestions').addEventListener('click', onFetchQuestions);
   document.getElementById('tabModeQuiz').addEventListener('click', () => setSetupMode('quiz'));
   document.getElementById('tabModeCode').addEventListener('click', () => setSetupMode('code'));
+  document.getElementById('tabModeExam').addEventListener('click', () => setSetupMode('exam'));
+  document.getElementById('btnFetchExam').addEventListener('click', onFetchExam);
+  document.getElementById('btnCreateExamSession').addEventListener('click', onCreateExamSession);
+  document.getElementById('inpExamTheory').addEventListener('input', updateExamHint);
+  document.getElementById('inpExamCode').addEventListener('input', updateExamHint);
   document.getElementById('btnCreateCodeSession').addEventListener('click', onCreateCodeSession);
   document.getElementById('btnCodeRun').addEventListener('click', onCodeRun);
   document.getElementById('qCodeInput').addEventListener('keydown', e => {
