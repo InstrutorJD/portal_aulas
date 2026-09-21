@@ -1217,6 +1217,14 @@ create table if not exists public.quizrush_answers (
 
 create index if not exists idx_quizrush_answers_session on public.quizrush_answers (session_id, question_index);
 
+-- Quizz Prático (problemas de código no lugar de múltipla escolha): além do
+-- acerto/pontuação de sempre, guarda quantas tentativas o aluno fez e o
+-- último código enviado (o professor consegue conferir depois). choice_index
+-- continua obrigatório — pra código vale 0 e é ignorado. Script avulso
+-- equivalente: sql/quizrush-quizz-pratico.sql.
+alter table public.quizrush_answers add column if not exists attempts int not null default 1;
+alter table public.quizrush_answers add column if not exists answer_text text;
+
 alter table public.quizrush_sessions enable row level security;
 alter table public.quizrush_players enable row level security;
 alter table public.quizrush_answers enable row level security;
