@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Prova Final: Turma Sistemas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#070c12; --panel:#0d1620; --panel2:#0a121a; --line:#1c2f40;
+    --green:#3aa0ff; --green-dim:#2b6ba3; --blood:#c1121f; --blood-bright:#ff5b4d;
+    --yellow:#e0c46a; --ink:#d6e2ec; --ink-dim:#6c8698;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050a10;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(58,160,255,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:680px; display:flex; flex-direction:column; gap:14px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+  }
+  .card p{ font-size:13px; line-height:1.7; margin:0 0 10px; }
+  .card p code{ color:var(--yellow); background:#000; padding:1px 5px; border-radius:2px; }
+  .card .materia-tag{
+    display:inline-block; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--green);
+    border:1px solid var(--green-dim); padding:3px 8px; border-radius:2px; margin-bottom:10px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--green); background:rgba(58,160,255,0.08); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,91,77,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+
+  .actions{ display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04162a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  .gate-card ul{ margin:10px 0 0; padding-left:20px; font-size:13px; line-height:1.8; }
+  .gate-card li{ margin-bottom:4px; }
+  .gate-card .warn-icon{ font-size:40px; margin-bottom:8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:320px; margin-top:16px; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  /* Questao pratica (editor de codigo) - mesmo esquema visual de
+     prog-depuracao-pratica.html, reaproveitado aqui dentro do fluxo
+     sequencial da prova. */
+  .code-box{
+    background:#000; border:1px solid var(--line); padding:12px; margin:0 0 10px;
+    overflow-x:auto; font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--yellow);
+    white-space:pre; line-height:1.6;
+  }
+  .answer-label{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+  .code-editor{ width:100%; height:170px; border:1px solid var(--line); border-radius:2px; overflow:hidden; margin-bottom:10px; }
+  .console{
+    background:#060806; border:1px solid var(--line); padding:8px 10px; font-size:11px;
+    min-height:60px; max-height:140px; overflow-y:auto; line-height:1.6; margin-bottom:10px;
+  }
+  .console .line.info{ color:var(--ink-dim); }
+  .console .line.log{ color:var(--ink); }
+  .console .line.warn{ color:var(--yellow); }
+  .console .line.fail{ color:var(--blood-bright); }
+
+  /* Overlay de advertencia - aparece POR CIMA da prova quando o aluno volta
+     pra aba depois de ter saido (ver shared/exam-proctor.js) */
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(3,6,10,0.9); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:420px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:13.5px; line-height:1.7; margin:0 0 14px; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'prova_final_sistemas';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/code-editor-widget.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>PROVA FINAL — TURMA SISTEMAS</div>
+    <div>QUESTÃO <span id="lblStepNum">1</span> DE <span id="lblStepTotal">25</span></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="gateWrap" style="display:none;"></div>
+    <div class="story-wrap" id="storyWrap" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+  const EXAM_SIZE = 25;
+  // Ao menos 5 das 25 questoes carregadas pro aluno sao PRATICAS (escreve
+  // codigo de verdade, nao multipla escolha) - ver pickExamIndices() mais
+  // abaixo, que sorteia separadamente do pool pratico e do pool teorico,
+  // em vez de confiar num sorteio unico que poderia (por azar) devolver
+  // poucas ou nenhuma questao pratica pra algum aluno.
+  const PRACTICE_COUNT = 5;
+  // Prova vale 100 pontos no total, divididos igualmente entre as 25
+  // questoes - 4 pontos cada, sempre um numero redondo (nunca precisa
+  // arredondar). O Relatorio de Notas (aba Gestao) le esse valor de dentro
+  // de state.nota, salvo junto do resto do progresso - ver finishExam().
+  // Diferente da Prova Diagnostica, esta trilha NAO e a trilhas[0] da
+  // materia 'prova' (ver turmas/sistemas/config.js), entao essa nota nao
+  // vira automaticamente a coluna "Prova" do Relatorio de Notas - o
+  // professor lanca manualmente (Nota 3/Nota 4), com base no que o aluno
+  // ve na tela de resultado.
+  const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
+
+  // ============================================================
+  // BANCO DE 80 QUESTOES - 72 teoricas (multipla escolha, reaproveitadas
+  // e adaptadas do banco da Prova Diagnostica - ver
+  // turmas/sistemas/atividades/prova-sistemas.html) + 8 praticas (o aluno
+  // ESCREVE codigo de verdade: criar variavel, somar dois numeros, e
+  // corrigir trechos de codigo com bug - mesmo motor de execucao sandbox
+  // de turmas/sistemas/atividades/prog-depuracao-pratica.html).
+  //
+  // Cada aluno recebe 25 dessas 80 (ver pickExamIndices): sempre 5
+  // praticas + 20 teoricas, sorteadas separadamente e depois embaralhadas
+  // juntas - garante o minimo de 5 questoes praticas em toda tentativa,
+  // em vez de deixar por conta do acaso. As alternativas das questoes
+  // teoricas sao reembaralhadas a cada exibicao (ver renderTeoricaQuestion),
+  // entao nem a pergunta nem a posicao da resposta certa seguem um padrao
+  // fixo de um aluno pro outro.
+  const QUESTION_POOL = [
+  {
+    "materia": "Banco de Dados — SQL",
+    "prompt": "Você precisa listar só os funcionários que ganham mais de R$3000, sem trazer os demais. Qual comando SQL faz exatamente isso?",
+    "options": [
+      "SELECT * FROM funcionarios WHERE salario > 3000;",
+      "SELECT * FROM funcionarios ORDER BY salario > 3000;",
+      "UPDATE funcionarios SET salario > 3000;",
+      "SELECT * FROM funcionarios GROUP BY salario > 3000;",
+      "DELETE FROM funcionarios WHERE salario > 3000;"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — SQL",
+    "prompt": "Um chamado pede a lista de funcionários ordenada pelo salário, do MAIOR pro menor. Qual trecho de SQL resolve isso?",
+    "options": [
+      "ORDER BY salario DESC",
+      "ORDER BY salario ASC",
+      "WHERE salario DESC",
+      "GROUP BY salario DESC",
+      "ORDER BY salario = DESC"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — SQL",
+    "prompt": "Um colega escreveu UPDATE departamentos SET nome = 'TI'; e rodou sem perceber um detalhe. O que provavelmente vai acontecer?",
+    "options": [
+      "O nome de TODAS as linhas da tabela vira \"TI\", porque faltou o WHERE",
+      "Nada muda, porque UPDATE sempre exige um WHERE pra funcionar",
+      "Só a primeira linha da tabela é alterada, por padrão",
+      "O comando dá erro de sintaxe antes mesmo de rodar",
+      "Apenas o departamento de TI é atualizado corretamente"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — SQL",
+    "prompt": "Você precisa de um relatório cruzando funcionários com o departamento de cada um, informação espalhada em duas tabelas. Qual comando resolve isso?",
+    "options": [
+      "SELECT * FROM funcionarios JOIN departamentos ON funcionarios.departamento_id = departamentos.id;",
+      "SELECT * FROM funcionarios WHERE departamentos.id = funcionarios.departamento_id;",
+      "SELECT * FROM funcionarios, departamentos ORDER BY funcionarios.nome, departamentos.nome;",
+      "UPDATE funcionarios SET departamento_id = departamentos.id WHERE funcionarios.id = 1;",
+      "SELECT * FROM funcionarios GROUP BY departamentos.nome ORDER BY funcionarios.nome;"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — PL/SQL",
+    "prompt": "Todo bloco anônimo de PL/SQL segue uma estrutura fixa. Qual opção mostra a ORDEM certa das partes desse bloco?",
+    "options": [
+      "DECLARE (variáveis, opcional) → BEGIN (comandos) → END;",
+      "BEGIN (variáveis) → DECLARE (comandos) → END;",
+      "END (variáveis) → BEGIN (comandos) → DECLARE;",
+      "DECLARE (comandos) → END (variáveis) → BEGIN;",
+      "BEGIN → END → DECLARE, sempre nessa ordem"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — PL/SQL",
+    "prompt": "Dentro de um bloco PL/SQL, qual operador é usado pra ATRIBUIR um valor a uma variável (diferente do = de comparação)?",
+    "options": [
+      ":=",
+      "==",
+      "=>",
+      "->",
+      "~="
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — PL/SQL",
+    "prompt": "Dentro de um bloco PL/SQL, qual é a estrutura correta pra testar uma condição e executar um trecho de código só se ela for verdadeira?",
+    "options": [
+      "IF condição THEN ... END IF;",
+      "IF condição { ... }",
+      "WHEN condição DO ... END WHEN;",
+      "condição ? ... : ...;",
+      "SWITCH condição CASE ... END SWITCH;"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — Documentação",
+    "prompt": "Você quer explicar, em várias linhas, o que uma consulta complexa com vários JOINs está tentando responder. Qual sintaxe de comentário SQL serve pra isso?",
+    "options": [
+      "/* comentário de várias linhas */",
+      "-- comentário de várias linhas",
+      "# comentário de várias linhas",
+      "// comentário de várias linhas",
+      "<!-- comentário de várias linhas -->"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — Documentação",
+    "prompt": "Você quer deixar uma anotação rápida, de uma linha só, explicando por que um filtro foi adicionado numa consulta SQL. Qual sintaxe é a certa pra um comentário de UMA linha?",
+    "options": [
+      "-- comentário de uma linha",
+      "/* comentário de uma linha */",
+      "# comentário de uma linha",
+      "// comentário de uma linha",
+      "<!-- comentário de uma linha -->"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — Conexão com Supabase",
+    "prompt": "No projeto TikTak, mesmo com a chave pública (anon) certa no código, o SELECT na tabela usuarios não trazia dado nenhum até uma policy de leitura ser criada. Por que isso acontecia?",
+    "options": [
+      "Sem RLS habilitado e sem nenhuma policy, o banco recusa o acesso pela Data API, mesmo com a chave certa",
+      "A chave pública (anon) nunca consegue fazer nenhum tipo de SELECT, em absolutamente nenhuma situação possível",
+      "A tabela usuarios só aceita conexões vindas diretamente do próprio painel administrativo do Supabase",
+      "Faltava reiniciar o servidor inteiro do Supabase depois de ter criado a tabela usuarios",
+      "O RLS do Supabase só afeta comandos INSERT e UPDATE, nunca chega a afetar comandos SELECT"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Banco de Dados — Conexão com Supabase",
+    "prompt": "No código do frontend (que roda no navegador de qualquer visitante do site), qual chave do Supabase deve ser usada, e por quê?",
+    "options": [
+      "A chave anon (pública), porque é segura pra expor no cliente — o controle real de acesso fica nas policies de RLS",
+      "A service_role key, porque tem mais permissões e por isso é sempre a mais segura de usar no navegador",
+      "Qualquer uma das duas, tanto faz, porque as duas têm exatamente o mesmo nível de acesso ao banco",
+      "Nenhuma chave é necessária — por padrão, o Supabase libera acesso irrestrito a qualquer visitante",
+      "A senha do próprio banco de dados, escrita diretamente dentro do código do frontend"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Ferramentas",
+    "prompt": "Um bug é difícil de achar só lendo o código. Em vez de espalhar console.log por toda parte, uma técnica mais precisa é usar:",
+    "options": [
+      "Um breakpoint, que pausa a execução numa linha específica pra inspecionar as variáveis naquele momento",
+      "Um peer review, que só acontece bem depois que o código inteiro já está pronto e finalizado",
+      "Um scaffold, que apenas gera a estrutura inicial de pastas de um projeto totalmente novo",
+      "Um dashboard, que apenas resume dados do sistema em gráficos e números pra visualização",
+      "Uma CLI, que só serve pra iniciar comandos de um projeto do zero, sem inspecionar nada"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Ferramentas",
+    "prompt": "Por que o CodePen consegue mostrar o resultado de um código JavaScript instantaneamente, sem nenhuma etapa de build antes?",
+    "options": [
+      "Porque JavaScript é uma linguagem interpretada, que roda direto sem precisar compilar antes",
+      "Porque JavaScript é uma linguagem compilada, que já vem pronta de fábrica sem nenhum processamento",
+      "Porque o CodePen faz toda a compilação em segundo plano, de forma escondida do usuário final",
+      "Porque todo código JavaScript sempre precisa obrigatoriamente de um framework externo pra rodar",
+      "Porque o navegador simplesmente ignora por completo a etapa de execução do código"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Ferramentas",
+    "prompt": "Qual das opções usa a convenção PascalCase, geralmente usada pra nomear classes ou componentes?",
+    "options": [
+      "NomeDoComponente",
+      "nomeDoComponente",
+      "nome_do_componente",
+      "nome-do-componente",
+      "NOMEDOCOMPONENTE"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Ferramentas",
+    "prompt": "Ao consumir uma API pública, em que formato a maioria das respostas modernas costuma vir organizada?",
+    "options": [
+      "JSON, com dados organizados em objetos { } e listas [ ]",
+      "PDF, com o conteúdo formatado pra impressão",
+      "MP3, com o dado convertido em áudio",
+      "Apenas texto puro, sem nenhuma estrutura",
+      "Um arquivo executável, pronto pra instalar"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Ferramentas",
+    "prompt": "Qual é a principal diferença entre uma BIBLIOTECA e um FRAMEWORK?",
+    "options": [
+      "A biblioteca você chama quando precisa; o framework define a estrutura geral e você constrói dentro dela",
+      "Biblioteca e framework são exatamente a mesma coisa, só recebem nomes diferentes por convenção",
+      "Framework só existe pra linguagens compiladas; biblioteca só existe pra linguagens interpretadas",
+      "Biblioteca sempre precisa de uma CLI própria pra funcionar; framework nunca precisa de nenhuma",
+      "Framework é sempre mais leve e mais rápido de rodar do que qualquer biblioteca existente"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Requisitos",
+    "prompt": "\"O sistema deve responder em menos de 2 segundos, mesmo com muitos usuários simultâneos.\" Que tipo de requisito é esse?",
+    "options": [
+      "Requisito não funcional, porque descreve uma qualidade do sistema, não uma ação específica",
+      "Requisito funcional, porque descreve uma ação bem concreta que o próprio sistema executa",
+      "Não é um requisito de verdade — é apenas uma sugestão totalmente opcional, sem importância",
+      "Requisito funcional, só porque a frase menciona um número específico (os 2 segundos)",
+      "Requisito não funcional, mas apenas depois que o sistema inteiro já está pronto e no ar"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Requisitos",
+    "prompt": "Um projeto tem como requisito não funcional 'carregar rápido, mesmo em celulares antigos'. Ao escolher entre duas bibliotecas que fazem a mesma coisa, qual critério faz mais sentido?",
+    "options": [
+      "Preferir a biblioteca mais leve e rápida, já que performance é o requisito em jogo",
+      "Escolher sempre a biblioteca mais popular, independente do tamanho dela",
+      "Escolher a biblioteca mais recente lançada no mercado, sem checar mais nada",
+      "Ignorar o requisito e escolher pela preferência pessoal de quem programa",
+      "Escolher a que tem mais funcionalidades extras, mesmo sem usar todas"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Requisitos",
+    "prompt": "\"O sistema deve permitir que o usuário redefina a senha recebendo um link por e-mail.\" Que tipo de requisito é esse?",
+    "options": [
+      "Requisito funcional, porque descreve uma ação concreta que o próprio sistema executa",
+      "Requisito não funcional, só porque a frase menciona o envio de um e-mail",
+      "Não é um requisito de verdade — é apenas uma sugestão totalmente opcional",
+      "Requisito não funcional, porque fala sobre redefinir uma senha",
+      "Requisito funcional, mas só depois que o sistema inteiro já estiver pronto e no ar"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Linguagem e Plataforma",
+    "prompt": "Uma equipe vai desenvolver um app NATIVO para iOS. Qual linguagem é a preferida nesse cenário?",
+    "options": [
+      "Swift",
+      "Kotlin",
+      "C#",
+      "Electron",
+      "PL/SQL"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Dev Sistemas 1 — Linguagem e Plataforma",
+    "prompt": "Uma equipe vai desenvolver um app NATIVO para Android. Qual linguagem é a preferida nesse cenário?",
+    "options": [
+      "Kotlin",
+      "Swift",
+      "Ruby",
+      "Assembly",
+      "PL/SQL"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Conexão e Endereçamento",
+    "prompt": "Uma casa inteira precisa de conexão sem fio cobrindo vários cômodos, enquanto um fone de ouvido só precisa se conectar ao celular que está no bolso. Quais tecnologias resolvem, respectivamente, cada caso?",
+    "options": [
+      "Wi-Fi para a casa inteira, Bluetooth para o fone de ouvido",
+      "Bluetooth para a casa inteira, Wi-Fi para o fone de ouvido",
+      "Fibra óptica para os dois casos, sem diferença",
+      "Par trançado para os dois casos, sem diferença",
+      "Wi-Fi para os dois casos, não existe diferença de alcance"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Conexão e Endereçamento",
+    "prompt": "Qual das opções abaixo é um endereço IPv4 dentro da faixa PRIVADA mais comum, usada dentro de casas e empresas?",
+    "options": [
+      "192.168.1.10",
+      "8.8.8.8",
+      "300.168.1.10",
+      "192.168.1",
+      "FE80::1"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Conexão e Endereçamento",
+    "prompt": "Em vez de escrever a máscara de sub-rede como 255.255.255.0, um técnico escreveu /24. O que essa notação representa?",
+    "options": [
+      "A notação CIDR — o número indica quantos dos 32 bits do endereço pertencem à parte de REDE",
+      "O número da porta específica usada naquele momento pela conexão de rede",
+      "A quantidade exata de dispositivos conectados naquele instante à mesma rede",
+      "A versão do protocolo IP que está sendo usada no momento (IPv4 ou IPv6)",
+      "O tempo, em segundos, que uma conexão pode permanecer ociosa antes de cair"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Resolução de Problemas",
+    "prompt": "Ao investigar por que um computador perdeu a conexão de rede, qual é a ORDEM correta de diagnóstico recomendada?",
+    "options": [
+      "Primeiro checar a camada física (cabo, luz de link), depois a camada lógica (IP, máscara, gateway)",
+      "Primeiro reinstalar o sistema operacional inteiro do computador, sempre, antes de mais nada",
+      "Primeiro checar a camada lógica, e só bem depois olhar se o cabo está mesmo conectado",
+      "A ordem de diagnóstico não importa nesse caso — qualquer sequência funciona igual",
+      "Primeiro trocar o roteador de casa, antes mesmo de checar qualquer outra coisa"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Resolução de Problemas",
+    "prompt": "Você já sabe que um destino não responde, mas precisa descobrir POR QUAIS roteadores o tráfego está passando até lá. Qual comando é o certo pra isso?",
+    "options": [
+      "tracert (Windows) ou traceroute (Linux/Mac)",
+      "ping, que só confirma se o destino responde ou não",
+      "ipconfig, que mostra a configuração local do próprio dispositivo",
+      "GROUP BY, um comando de banco de dados, não de rede",
+      "RDP, um protocolo de acesso remoto gráfico"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Resolução de Problemas",
+    "prompt": "Você quer confirmar rapidamente se um servidor está respondendo na rede, antes de investigar qualquer coisa mais profunda. Qual comando é o mais indicado pra esse primeiro teste?",
+    "options": [
+      "ping, que envia pacotes de teste e mostra se o destino respondeu e em quanto tempo",
+      "tracert (ou traceroute), que já lista todos os roteadores do caminho até o destino",
+      "ipconfig, que só mostra a configuração de rede do próprio dispositivo local",
+      "GROUP BY, um comando de banco de dados, não de rede",
+      "RDP, um protocolo de acesso remoto gráfico"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Serviços e Modelos",
+    "prompt": "Qual é a porta padrão do protocolo HTTPS, usado para navegação segura na web?",
+    "options": [
+      "443",
+      "80",
+      "25",
+      "22",
+      "21"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Serviços e Modelos",
+    "prompt": "Serviços como HTTP, FTP e SSH — que o usuário usa diretamente — ficam em qual camada dos modelos OSI/TCP-IP?",
+    "options": [
+      "A camada de Aplicação, a mais \"de cima\" dos dois modelos",
+      "A camada Física, a mais \"de baixo\" dos dois modelos",
+      "Só existem nas 7 camadas do OSI, nunca no TCP/IP",
+      "A camada de Transporte, no meio dos dois modelos",
+      "Nenhuma camada — esses serviços não pertencem a nenhum modelo"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Serviços e Modelos",
+    "prompt": "Qual serviço é responsável por traduzir um endereço como 'portal-aulas.com' pro endereço IP numérico do servidor correspondente?",
+    "options": [
+      "DNS (Domain Name System)",
+      "DHCP, que atribui endereços IP automaticamente aos dispositivos",
+      "HTTP, o protocolo usado pra transferir páginas web",
+      "FTP, o protocolo usado pra transferir arquivos",
+      "SSH, o protocolo usado pra acesso remoto seguro"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Armazenamento",
+    "prompt": "Um plano de internet anuncia 100 Mbps. Aproximadamente qual é a velocidade real de download de um arquivo, em MB/s (megabytes por segundo)?",
+    "options": [
+      "Cerca de 12,5 MB/s, porque 1 byte equivale a 8 bits",
+      "Exatamente 100 MB/s, porque Mbps e MB/s são a mesma coisa",
+      "Cerca de 800 MB/s, multiplicando por 8",
+      "Cerca de 1 MB/s, dividindo por 100",
+      "Não é possível calcular isso de jeito nenhum"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Redes — Armazenamento",
+    "prompt": "Por que um SSD costuma ser tão mais rápido do que um HD (HDD) tradicional pra ler e gravar arquivos?",
+    "options": [
+      "Porque o SSD grava os dados eletronicamente em chips de memória flash, sem partes mecânicas girando como o HD",
+      "Porque o SSD sempre tem mais capacidade total de armazenamento do que qualquer HD existente",
+      "Porque o HD usa Wi-Fi pra gravar dados, e o SSD usa um cabo de rede",
+      "Porque o SSD, na prática, é mais lento que o HD — ele só custa mais caro",
+      "Porque o HD grava os dados direto na nuvem, e o SSD grava só localmente"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Internet das Coisas — Conectividade",
+    "prompt": "Um sensor de umidade fica numa fazenda muito isolada, sem torre de celular nem roteador WiFi por perto, e precisa enviar uma leitura por hora. Qual tecnologia de conectividade resolve isso?",
+    "options": [
+      "Conectividade via satélite",
+      "Bluetooth",
+      "WiFi doméstico",
+      "Cabo de rede (Ethernet)",
+      "Rádio AM/FM"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Internet das Coisas — Conectividade",
+    "prompt": "O controle remoto do drone DJI Mini 4 Pro conversa com o drone nas mesmas faixas de frequência do WiFi (2,4 GHz e 5,8 GHz), mas não usa o protocolo WiFi comum. Por quê?",
+    "options": [
+      "Porque a DJI criou um protocolo de rádio próprio (O4/OcuSync), otimizado pra mais alcance e menos interferência",
+      "Porque essas faixas de frequência específicas são totalmente proibidas para qualquer uso de WiFi comum",
+      "Porque o protocolo WiFi comum não consegue transmitir absolutamente nenhum tipo de vídeo em tempo real",
+      "Porque o drone, na verdade, não usa nenhum tipo de onda de rádio pra se comunicar com o controle",
+      "Porque o WiFi doméstico só funciona dentro de ambientes fechados, nunca em espaços ao ar livre"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Internet das Coisas — Conectividade",
+    "prompt": "Uma pulseira inteligente mede a frequência cardíaca e envia os dados pro celular do usuário, sempre a poucos metros de distância, e a bateria precisa durar vários dias. Qual tecnologia é a mais indicada?",
+    "options": [
+      "Bluetooth (BLE)",
+      "WiFi",
+      "Conectividade via satélite",
+      "Rádio AM/FM",
+      "Cabo de rede (Ethernet)"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Introdução de Dev. de Projetos",
+    "prompt": "Qual é a ORDEM correta das fases de elaboração de um projeto de sistema?",
+    "options": [
+      "Levantamento de requisitos → Planejamento → Desenvolvimento → Testes → Entrega → Manutenção",
+      "Testes → Planejamento → Entrega → Levantamento de requisitos → Manutenção → Desenvolvimento",
+      "Manutenção → Entrega → Testes → Desenvolvimento → Planejamento → Levantamento de requisitos",
+      "Desenvolvimento → Testes → Levantamento de requisitos → Planejamento → Manutenção → Entrega",
+      "Planejamento → Desenvolvimento → Levantamento de requisitos → Entrega → Testes → Manutenção"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Introdução de Dev. de Projetos",
+    "prompt": "Numa documentação técnica escrita em linguagem NORMATIVA, qual frase está no formato esperado?",
+    "options": [
+      "\"O sistema deve permitir o cadastro de novos usuários.\"",
+      "\"Eu acho que seria legal a gente colocar um cadastro ali.\"",
+      "\"A gente decidiu fazer um cadastro, sei lá, meio doido.\"",
+      "\"Talvez dê pra pensar num cadastro, se der tempo.\"",
+      "\"Cara, o cadastro ficou show de bola.\""
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Introdução de Dev. de Projetos",
+    "prompt": "Durante o desenvolvimento, o cliente pede pra adicionar várias funcionalidades novas que não estavam combinadas no início, sem ajustar prazo nem orçamento. Esse fenômeno é chamado de:",
+    "options": [
+      "Scope creep (aumento descontrolado do escopo)",
+      "Requisito não funcional",
+      "Cardinalidade 1:N",
+      "Chave estrangeira",
+      "Manufatura aditiva"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Modelagem — Dados e Requisitos",
+    "prompt": "Num sistema de locadora de jogos, qual das opções abaixo é um exemplo de ENTIDADE (vira uma tabela no banco)?",
+    "options": [
+      "Jogo",
+      "Alugar um jogo",
+      "O título do jogo",
+      "A data de devolução",
+      "O preço da locação"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Modelagem — Dados e Requisitos",
+    "prompt": "Um Pedido tem VÁRIOS Itens, mas cada Item pertence a UM só Pedido. Qual é a cardinalidade desse relacionamento?",
+    "options": [
+      "1:N — um pra muitos",
+      "N:N — muitos pra muitos",
+      "1:1 — sempre um pra um",
+      "Não existe cardinalidade nesse caso",
+      "0:0 — nenhum relaciona com nenhum"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Modelagem — Dados e Requisitos",
+    "prompt": "Qual é a diferença entre chave PRIMÁRIA e chave ESTRANGEIRA?",
+    "options": [
+      "A primária identifica cada linha de forma única na própria tabela; a estrangeira referencia a chave primária de outra",
+      "As duas fazem exatamente a mesma coisa dentro do banco, só recebem nomes diferentes por convenção",
+      "A estrangeira identifica a própria tabela de forma única e exclusiva; a primária referencia outra tabela",
+      "Só a chave estrangeira pode se repetir dentro da tabela; a primária nunca pode existir duas vezes",
+      "Chave primária só costuma existir em bancos de dados considerados muito grandes e complexos de verdade"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Autoconhecimento",
+    "prompt": "Qual opção descreve corretamente a diferença entre TALENTO e HABILIDADE?",
+    "options": [
+      "Talento é algo que já vem naturalmente fácil; habilidade é um talento treinado com prática",
+      "Talento e habilidade são a mesma coisa, só mudam de nome dependendo de quem está explicando",
+      "Habilidade vem naturalmente fácil, sem esforço; talento só se constrói com anos de treino árduo",
+      "Talento só existe em atividades esportivas, nunca em áreas como música, arte ou tecnologia",
+      "Habilidade é sempre mais rara e mais valiosa do que qualquer tipo de talento natural"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Autoconhecimento",
+    "prompt": "Por que os motivadores PESSOAIS de alguém às vezes são diferentes dos motivadores PROFISSIONAIS?",
+    "options": [
+      "Porque o que dá energia na vida como um todo nem sempre é o mesmo que motiva no ambiente de trabalho",
+      "Porque uma pessoa só pode ter um único tipo de motivador durante toda a vida, sem nunca mudar",
+      "Porque motivadores profissionais sempre anulam por completo qualquer motivador pessoal que exista",
+      "Porque isso nunca acontece de verdade — os dois tipos de motivador são sempre idênticos",
+      "Porque motivadores pessoais só passam a existir depois que a pessoa se aposenta do trabalho"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Autoconhecimento",
+    "prompt": "Refletir sobre seus pontos fortes, pontos fracos, oportunidades e ameaças (uma ferramenta emprestada do mundo corporativo, aplicada à vida pessoal) é conhecida como:",
+    "options": [
+      "Análise SWOT (ou FOFA) pessoal",
+      "Cardinalidade pessoal",
+      "User story pessoal",
+      "Requisito funcional de vida",
+      "Chave primária de carreira"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Cidadania",
+    "prompt": "O direito de uma comunidade a um espaço público limpo, mantido pelo esforço de todos, é um exemplo de direito/dever:",
+    "options": [
+      "Coletivo, porque pertence ao grupo como um todo, não a uma pessoa isolada",
+      "Individual, porque cada pessoa cuida só da própria casa",
+      "Inexistente — esse tipo de direito/dever não existe",
+      "Individual, porque só o prefeito tem essa responsabilidade",
+      "Coletivo, mas só quando menos de 10 pessoas moram no local"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Cidadania",
+    "prompt": "Respeitar filas e evitar barulho excessivo à noite são exemplos de:",
+    "options": [
+      "Urbanidade — normas de boa convivência do dia a dia, mesmo sem serem leis escritas",
+      "Requisitos funcionais de um sistema de software em desenvolvimento",
+      "Cardinalidade de um relacionamento dentro de um modelo de banco de dados",
+      "Chaves estrangeiras usadas para conectar duas tabelas de um banco de dados",
+      "Tecnologias habilitadoras associadas ao conceito de Indústria 4.0"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Cidadania",
+    "prompt": "Participar de um conselho comunitário do bairro, opinando sobre prioridades de investimento público, é um exemplo de:",
+    "options": [
+      "Participação cidadã ativa na vida coletiva",
+      "Urbanidade individual, sem nenhuma relação com a coletividade",
+      "Um requisito funcional de sistema",
+      "Um direito exclusivamente individual, sem efeito coletivo",
+      "Algo que só o prefeito da cidade pode fazer"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Inteligência Emocional",
+    "prompt": "Perceber uma emoção forte (raiva, frustração) e escolher como reagir, em vez de simplesmente explodir no impulso, é a definição de:",
+    "options": [
+      "Autocontrole",
+      "Empatia",
+      "Networking",
+      "Cardinalidade",
+      "Urbanidade"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Inteligência Emocional",
+    "prompt": "Se colocar no lugar de alguém ANTES de agir, de forma que suas atitudes causem um impacto melhor nas outras pessoas, é a definição de:",
+    "options": [
+      "Empatia",
+      "Autocontrole",
+      "Adaptabilidade",
+      "Feedback",
+      "Networking"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Inteligência Emocional",
+    "prompt": "Depois de um fracasso (por exemplo, não passar numa seleção), conseguir se reerguer, aprender com o que aconteceu e tentar de novo é a definição de:",
+    "options": [
+      "Resiliência",
+      "Empatia",
+      "Autocontrole",
+      "Networking",
+      "Urbanidade"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Equipe",
+    "prompt": "Numa equipe organizando um evento, definir que cada pessoa assume uma função clara (um cuida da logística, outro da comunicação) ajuda a evitar principalmente:",
+    "options": [
+      "Duas pessoas fazendo a mesma coisa por engano, ou tarefas importantes sem ninguém responsável",
+      "Que a equipe consiga terminar o projeto rápido demais, antes do prazo combinado",
+      "Que o evento organizado pela equipe tenha um número muito grande de participantes",
+      "Que a equipe precise se comunicar com frequência durante todo o projeto",
+      "Que exista qualquer tipo de compromisso da equipe com metas e prazos definidos"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Equipe",
+    "prompt": "Numa equipe, silêncio prolongado sobre o andamento de uma tarefa (o que já foi feito, o que está travado) costuma ser sinal de que:",
+    "options": [
+      "Algo não está indo bem, e falta comunicação constante sobre o progresso",
+      "Está tudo perfeito, silêncio é sempre sinal de sucesso",
+      "A equipe não precisa mais se comunicar depois da primeira reunião",
+      "Os papéis da equipe nunca foram definidos — é a única causa possível",
+      "A equipe atingiu 100% das metas"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Projeto de Vida — Equipe",
+    "prompt": "Um colega de equipe recebe uma crítica sobre um erro no trabalho de forma calma, agradece, e ajusta o que precisa — em vez de ficar na defensiva. Essa atitude é um exemplo de saber:",
+    "options": [
+      "Receber feedback de forma madura",
+      "Ignorar o feedback por completo",
+      "Discutir com quem deu o feedback",
+      "Repassar a culpa pra outra pessoa da equipe",
+      "Sair da equipe imediatamente"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Revoluções Industriais",
+    "prompt": "A substituição da força humana e animal pela máquina a vapor nas fábricas de tecelagem, no final do século 18, marca qual Revolução Industrial?",
+    "options": [
+      "1ª Revolução Industrial",
+      "2ª Revolução Industrial",
+      "3ª Revolução Industrial",
+      "4ª Revolução Industrial (Indústria 4.0)",
+      "Nenhuma revolução industrial específica"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Revoluções Industriais",
+    "prompt": "A introdução de computadores, eletrônica e automação parcial nas linhas de produção, a partir da segunda metade do século 20, marca qual Revolução Industrial?",
+    "options": [
+      "3ª Revolução Industrial",
+      "1ª Revolução Industrial",
+      "2ª Revolução Industrial",
+      "4ª Revolução Industrial (Indústria 4.0)",
+      "Nenhuma revolução industrial específica"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Indústria 4.0",
+    "prompt": "O que caracteriza a Indústria 4.0, diferente das revoluções industriais anteriores?",
+    "options": [
+      "Máquinas conectadas entre si e à internet em tempo real, formando sistemas ciber-físicos que decidem com base em dados",
+      "O uso da eletricidade dentro das fábricas pela primeira vez ao longo da história da indústria moderna",
+      "A substituição total da força humana de trabalho pela máquina a vapor movida por carvão nas fábricas",
+      "O surgimento dos primeiros grandes sindicatos organizados de trabalhadores dentro das fábricas industriais",
+      "A linha de montagem com produção em massa surgindo pela primeira vez na história da indústria"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Indústria 4.0",
+    "prompt": "Sensores espalhados por uma fábrica coletam dados o tempo todo e enviam pra servidores remotos, que guardam e processam essas informações de qualquer lugar. Que combinação de tecnologias habilitadoras é essa?",
+    "options": [
+      "IoT (sensores) + Nuvem (processamento remoto)",
+      "Manufatura aditiva + Robótica colaborativa",
+      "Segurança digital + Integração de sistemas",
+      "Apenas manufatura aditiva, sozinha",
+      "Apenas robótica colaborativa, sozinha"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Indústria 4.0",
+    "prompt": "Um robô que trabalha lado a lado com humanos na linha de produção, dividindo tarefas repetitivas, sem precisar de gaiolas de segurança isolando ele, é chamado de:",
+    "options": [
+      "Cobot (robô colaborativo)",
+      "Sensor IoT",
+      "Servidor de nuvem",
+      "Impressora 3D",
+      "Access point"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Inovação",
+    "prompt": "Trocar de ferramenta só porque ela é \"mais nova\", sem resolver nenhum problema real, é um exemplo de:",
+    "options": [
+      "Mudança por mudança — não é inovação de verdade",
+      "Inovação real, por definição",
+      "Melhoria contínua aplicada corretamente",
+      "Raciocínio dedutivo bem aplicado",
+      "Decomposição de um problema complexo"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Inovação",
+    "prompt": "Observar vários casos parecidos e chegar numa regra geral a partir deles é o raciocínio:",
+    "options": [
+      "Indutivo",
+      "Dedutivo",
+      "Hipotético",
+      "Inferencial isolado",
+      "Não existe esse tipo de raciocínio"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Inovação",
+    "prompt": "Partir de uma regra geral já conhecida e aplicá-la a um caso específico pra chegar numa conclusão é o raciocínio:",
+    "options": [
+      "Dedutivo",
+      "Indutivo",
+      "Hipotético",
+      "Inferencial isolado",
+      "Não existe esse tipo de raciocínio"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Trabalho em Equipe",
+    "prompt": "Numa gestão de conflitos construtiva, em vez de dizer \"você errou\", a pergunta mais adequada é:",
+    "options": [
+      "\"O que podemos ajustar nesse processo pra isso não acontecer de novo?\"",
+      "\"Por que você é sempre desse jeito, sempre errando as mesmas coisas?\"",
+      "\"Quem exatamente vai levar a culpa oficial por esse erro que aconteceu?\"",
+      "\"Isso aqui nunca vai ter jeito de ser resolvido mesmo, então nem adianta.\"",
+      "\"Prefiro não falar mais sobre esse assunto com você nunca mais.\""
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Mundo do Trabalho — Trabalho em Equipe",
+    "prompt": "Durante uma reunião de equipe, ouvir o colega até o fim, sem interromper, e só depois responder ao que ele realmente disse (não ao que você presumiu que ele ia dizer) é um exemplo de:",
+    "options": [
+      "Escuta ativa",
+      "Autocontrole",
+      "Cardinalidade",
+      "Requisito não funcional",
+      "Manufatura aditiva"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — Depuração",
+    "prompt": "Um código roda inteiro, sem travar nada, mas devolve um resultado errado. Que tipo de erro é esse?",
+    "options": [
+      "Erro de lógica",
+      "Erro de sintaxe",
+      "Erro de execução",
+      "Erro de rede",
+      "Erro de compilação"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — Depuração",
+    "prompt": "Qual é a diferença entre = e == (ou ===) em JavaScript?",
+    "options": [
+      "= atribui um valor a uma variável; == ou === comparam dois valores entre si",
+      "Os dois fazem exatamente a mesma coisa dentro do JavaScript, sem nenhuma diferença real",
+      "= serve pra comparar dois valores; == serve pra atribuir um valor a uma variável",
+      "Só o == existe de verdade em JavaScript — o sinal = sozinho nunca chega a ser usado",
+      "O sinal = só funciona corretamente quando está dentro de um laço for"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — Depuração",
+    "prompt": "Dentro de um switch, o que acontece se você esquecer o break depois de um case?",
+    "options": [
+      "A execução continua rodando os próximos case também, um atrás do outro, sem parar",
+      "O programa inteiro para de rodar imediatamente, sem executar mais nenhuma linha",
+      "Nada muda no resultado final — o break nunca chega a fazer diferença nenhuma",
+      "Só o primeiro case escrito é executado, os outros são sempre ignorados por completo",
+      "O switch inteiro é ignorado do início ao fim sempre que falta o break"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — Depuração",
+    "prompt": "Por que chamar funcao(a, b) pode dar um resultado diferente de funcao(b, a)?",
+    "options": [
+      "Porque os parâmetros são preenchidos pela POSIÇÃO em que os argumentos são passados, não pelo nome",
+      "Porque o JavaScript sempre reordena os argumentos automaticamente em ordem alfabética",
+      "Porque isso nunca chega a fazer diferença nenhuma, em absolutamente nenhum caso possível",
+      "Porque as funções em JavaScript só conseguem aceitar um único parâmetro por vez",
+      "Porque a ordem dos parâmetros muda, na verdade, o próprio nome da função"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — Depuração",
+    "prompt": "Numa cadeia de if / else if / else if, o JavaScript testa as condições em qual ordem?",
+    "options": [
+      "Na ordem escrita, parando na PRIMEIRA condição que for encontrada verdadeira",
+      "Sempre testando da última condição escrita até chegar na primeira delas",
+      "Em uma ordem completamente aleatória, sorteada de novo a cada execução",
+      "Testando todas as condições ao mesmo tempo, em paralelo, sempre",
+      "Testando apenas a última condição escrita, ignorando todo o resto"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — ClipZone",
+    "prompt": "No app ClipZone, o botão \"Entrar\" só deve ficar liberado quando usuário E senha estiverem válidos ao mesmo tempo. Qual operador lógico resolve isso?",
+    "options": [
+      "&& (E lógico)",
+      "|| (OU lógico)",
+      "! (negação)",
+      "+ (soma)",
+      "% (resto da divisão)"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — ClipZone",
+    "prompt": "Ao curtir um post no ClipZone, a função curtir(post) não deve ALTERAR o post recebido — ela devolve um post novo, com curtidas+1. Por que essa prática (imutabilidade) é recomendada?",
+    "options": [
+      "Porque mudar o próprio objeto recebido pode causar efeitos colaterais em outras partes do código que ainda o usam",
+      "Porque o JavaScript, como linguagem, nunca permite alterar nenhum tipo de objeto de forma nenhuma",
+      "Porque é sempre mais rápido criar um objeto totalmente novo do que alterar um já existente",
+      "Porque apenas funções que não recebem nenhum parâmetro têm permissão de alterar objetos recebidos",
+      "Porque o teste automático do projeto sempre falha quando qualquer objeto recebido é alterado"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — ClipZone",
+    "prompt": "No ClipZone, a função formatarCurtidas abrevia números grandes (ex: 1500 vira '1.5K'). Por que esse tipo de abreviação é comum em apps de rede social de verdade?",
+    "options": [
+      "Porque mostrar o número exato completo (como 2350) polui a tela, e a versão abreviada é mais fácil de ler",
+      "Porque números grandes, quando aparecem na tela, trocam o idioma inteiro do aplicativo",
+      "Porque o JavaScript, como linguagem de programação, não consegue exibir números maiores que 999",
+      "Porque abreviar um número sempre deixa o valor mostrado mais preciso do que o original",
+      "Porque abreviar números grandes é uma exigência obrigatória do próprio protocolo HTTP"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "materia": "Prog. de Aplicativos — ClipZone",
+    "prompt": "No ClipZone, uma função foi escrita certinha por dentro, mas esqueceram do 'return' no final. O que acontece quando o teste chama essa função?",
+    "options": [
+      "Ela devolve undefined, mesmo que a lógica interna esteja certa, porque sem return não existe valor de saída",
+      "O teste ignora a ausência do return e considera a resposta certa mesmo assim",
+      "O JavaScript adiciona um return automaticamente ao final de toda função",
+      "A função trava a execução do programa inteiro até o navegador travar",
+      "O valor calculado aparece normalmente na tela, mesmo sem o return"
+    ],
+    "correctIndex": 0,
+    "type": "teorica"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código",
+    "title": "Criar uma variável",
+    "icon": "📦",
+    "desc": "Crie uma variável chamada <code>curso</code>, guarde o texto <code>\"Sistemas\"</code> nela e mostre essa variável no console com <code>console.log</code>.",
+    "starterCode": "",
+    "solution": "let curso = \"Sistemas\";\nconsole.log(curso);",
+    "expectedOutput": "Sistemas"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código",
+    "title": "Somar dois números",
+    "icon": "➕",
+    "desc": "Crie duas variáveis: <code>nota1</code> com o valor <b>7</b> e <code>nota2</code> com o valor <b>9</b>. Some as duas e mostre o RESULTADO da soma no console.",
+    "starterCode": "",
+    "solution": "let nota1 = 7;\nlet nota2 = 9;\nconsole.log(nota1 + nota2);",
+    "expectedOutput": "16"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código — Corrigir bug",
+    "title": "Aspas esquecidas",
+    "icon": "🐛",
+    "desc": "Esse código deveria mostrar <code>Estudando Sistemas</code> no console, mas tem um erro. Leia o código com atenção, digite a versão CORRIGIDA no editor abaixo e execute.",
+    "starterCode": "let curso = Sistemas;\nconsole.log(\"Estudando \" + curso);",
+    "bugExplanation": "Faltavam aspas em <code>Sistemas</code> — sem elas, o JavaScript tenta usar <code>Sistemas</code> como o NOME de uma variável (que não existe), em vez de tratar como texto.",
+    "solution": "let curso = \"Sistemas\";\nconsole.log(\"Estudando \" + curso);",
+    "expectedOutput": "Estudando Sistemas"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código — Corrigir bug",
+    "title": "Nome da variável com erro de digitação",
+    "icon": "🔤",
+    "desc": "Esse código deveria mostrar o salário mais um bônus de 100, mas tem um erro. Digite a versão CORRIGIDA no editor abaixo e execute.",
+    "starterCode": "let salario = 1500;\nconsole.log(salrio + 100);",
+    "bugExplanation": "A variável foi declarada como <code>salario</code>, mas usada como <code>salrio</code> (faltando uma letra) — nomes de variável precisam ser IDÊNTICOS, letra por letra, em todo o código.",
+    "solution": "let salario = 1500;\nconsole.log(salario + 100);",
+    "expectedOutput": "1600"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código — Corrigir bug",
+    "title": "Total do pedido errado",
+    "icon": "🧮",
+    "desc": "Essa função deveria calcular o total de um pedido (preço VEZES quantidade), mas o resultado está errado. Digite a versão CORRIGIDA no editor abaixo e execute.",
+    "starterCode": "function calcularTotal(preco, quantidade) {\n  return preco + quantidade;\n}\n\nconsole.log(calcularTotal(10, 3));",
+    "bugExplanation": "A função somava <code>preco + quantidade</code> em vez de multiplicar (<code>preco * quantidade</code>) — o total de um pedido é o preço vezes a quantidade, não a soma dos dois.",
+    "solution": "function calcularTotal(preco, quantidade) {\n  return preco * quantidade;\n}\n\nconsole.log(calcularTotal(10, 3));",
+    "expectedOutput": "30"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código — Corrigir bug",
+    "title": "Senha sempre aceita",
+    "icon": "🔑",
+    "desc": "Essa função deveria liberar acesso só quando a senha digitada for igual a <code>\"1234\"</code>, mas está SEMPRE liberando, mesmo com a senha errada. Digite a versão CORRIGIDA no editor abaixo e execute.",
+    "starterCode": "function verificarSenha(senha) {\n  if (senha = \"1234\") {\n    return \"acesso liberado\";\n  }\n  return \"senha incorreta\";\n}\n\nconsole.log(verificarSenha(\"0000\"));",
+    "bugExplanation": "O <code>if</code> usava <code>=</code> (atribuição) em vez de <code>===</code> (comparação) — isso troca o valor de <code>senha</code> por <code>\"1234\"</code>, e como o resultado é uma string não vazia, o <code>if</code> é sempre \"verdadeiro\".",
+    "solution": "function verificarSenha(senha) {\n  if (senha === \"1234\") {\n    return \"acesso liberado\";\n  }\n  return \"senha incorreta\";\n}\n\nconsole.log(verificarSenha(\"0000\"));",
+    "expectedOutput": "senha incorreta"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código — Corrigir bug",
+    "title": "Maiúscula ou minúscula?",
+    "icon": "🔡",
+    "desc": "Esse código deveria mostrar o nome do cliente guardado na variável, mas tem um erro. Digite a versão CORRIGIDA no editor abaixo e execute.",
+    "starterCode": "let Cliente = \"Marcos\";\nconsole.log(cliente);",
+    "bugExplanation": "A variável foi declarada com C maiúsculo (<code>Cliente</code>), mas usada com c minúsculo (<code>cliente</code>) — pra JavaScript, maiúsculas e minúsculas tornam o nome completamente diferente.",
+    "solution": "let Cliente = \"Marcos\";\nconsole.log(Cliente);",
+    "expectedOutput": "Marcos"
+  },
+  {
+    "type": "pratica",
+    "materia": "Prática de Código — Corrigir bug",
+    "title": "Função sem resposta",
+    "icon": "↩️",
+    "desc": "Essa função deveria devolver o DOBRO do número recebido, mas sempre resulta em <code>undefined</code> quando é chamada. Digite a versão CORRIGIDA no editor abaixo e execute.",
+    "starterCode": "function dobro(numero) {\n  numero * 2;\n}\n\nconsole.log(dobro(4));",
+    "bugExplanation": "Faltava a palavra <code>return</code> antes de <code>numero * 2</code> — sem ela, a função calcula o valor mas não o devolve pra quem chamou, e o resultado sempre vira <code>undefined</code>.",
+    "solution": "function dobro(numero) {\n  return numero * 2;\n}\n\nconsole.log(dobro(4));",
+    "expectedOutput": "8"
+  }
+];
+
+  // ============================================================
+  // SORTEIO
+  // ============================================================
+  function shuffleIndexes(length) {
+    const arr = Array.from({ length }, (_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function pickExamIndices() {
+    const practicaIdx = [];
+    const teoricaIdx = [];
+    QUESTION_POOL.forEach((q, i) => { (q.type === 'pratica' ? practicaIdx : teoricaIdx).push(i); });
+
+    const chosenPratica = shuffleIndexes(practicaIdx.length).slice(0, PRACTICE_COUNT).map(i => practicaIdx[i]);
+    const chosenTeorica = shuffleIndexes(teoricaIdx.length).slice(0, EXAM_SIZE - PRACTICE_COUNT).map(i => teoricaIdx[i]);
+
+    const combined = [...chosenPratica, ...chosenTeorica];
+    const order = shuffleIndexes(combined.length);
+    return order.map(i => combined[i]);
+  }
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `prova_final_sistemas_progress_${username}`;
+  const SELECTION_KEY = `prova_final_sistemas_selecao_${username}`;
+  const STATE_KEY = `prova_final_sistemas_estado_${username}`;
+
+  function loadProgress() {
+    try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function saveProgress(data) { localStorage.setItem(PROGRESS_KEY, JSON.stringify(data)); }
+
+  function loadSelection() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(SELECTION_KEY) || 'null');
+      if (Array.isArray(arr) && arr.length === EXAM_SIZE && arr.every(n => Number.isInteger(n) && n >= 0 && n < QUESTION_POOL.length)) return arr;
+    } catch (e) {}
+    return null;
+  }
+  function saveSelection(arr) { localStorage.setItem(SELECTION_KEY, JSON.stringify(arr)); }
+
+  function loadState() {
+    try {
+      const s = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+      if (s && typeof s.currentIndex === 'number' && typeof s.correctCount === 'number') return s;
+    } catch (e) {}
+    return null;
+  }
+  function saveState(s) { localStorage.setItem(STATE_KEY, JSON.stringify(s)); }
+
+  // IMPORTANTE: o sorteio das 25 questoes so acontece dentro de
+  // startExam() (clique em "Iniciar prova"), nunca so por carregar a
+  // pagina - senao toda visita (inclusive antes do aluno ver as regras)
+  // ja "comecaria" uma tentativa. `selection` existir e o sinal real de
+  // "essa tentativa ja foi iniciada" (ver boot()), independente do valor
+  // de currentIndex (que comeca em 0 e fica 0 ate a 1a resposta).
+  let selection = loadSelection();
+  let state = loadState();
+  const alreadyDone = loadProgress();
+
+  // Pergunta salva ja respondida -> resume na PROXIMA (mesmo esquema anti-
+  // "recarrega e tenta de novo" do shared/quiz-teoria-engine.js).
+  let currentIndex = state ? (state.answered ? state.currentIndex + 1 : state.currentIndex) : 0;
+  let correctCount = state ? state.correctCount : 0;
+
+  function startExam() {
+    selection = pickExamIndices();
+    saveSelection(selection);
+    state = { currentIndex: 0, correctCount: 0, answered: false };
+    saveState(state);
+    currentIndex = 0;
+    correctCount = 0;
+  }
+
+  // Botao exclusivo do professor (pre-visualizando com seu proprio usuario)
+  // pra testar o sorteio: apaga a selecao/estado/progresso salvos sob o
+  // login dele e sorteia 25 questoes novas na hora, sem afetar nenhum
+  // aluno (cada um tem sua propria SELECTION_KEY/STATE_KEY/PROGRESS_KEY).
+  function resetForProfessor() {
+    localStorage.removeItem(SELECTION_KEY);
+    localStorage.removeItem(STATE_KEY);
+    localStorage.removeItem(PROGRESS_KEY);
+    startExam();
+    disposeActiveEditor();
+    storyWrap.innerHTML = '';
+    renderQuestion();
+  }
+
+  const gateWrap = document.getElementById('gateWrap');
+  const storyWrap = document.getElementById('storyWrap');
+  const lblStepNum = document.getElementById('lblStepNum');
+  const lblStepTotal = document.getElementById('lblStepTotal');
+  const progressFill = document.getElementById('progressFill');
+  lblStepTotal.textContent = EXAM_SIZE;
+
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+  })();
+
+  function reportStep(label) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('prova_final_sistemas', label, { step: currentIndex + 1, total: EXAM_SIZE, correctCount });
+    }
+  }
+
+  function updateProgressBar() {
+    const pct = Math.round((currentIndex / EXAM_SIZE) * 100);
+    progressFill.style.width = Math.min(pct, 100) + '%';
+    lblStepNum.textContent = Math.min(currentIndex + 1, EXAM_SIZE);
+  }
+
+  // Instancia do Monaco da questao PRATICA atual (null fora delas) -
+  // descartada explicitamente antes de sair da questao, senao o editor
+  // continuaria vivo (listeners, worker) num container que ja saiu do DOM.
+  let activeCodeEditor = null;
+  function disposeActiveEditor() {
+    if (activeCodeEditor) {
+      try { activeCodeEditor.dispose(); } catch (e) {}
+      activeCodeEditor = null;
+    }
+  }
+
+  function normalize(text) {
+    return String(text ?? '').trim().toLowerCase();
+  }
+
+  function formatArg(arg) {
+    if (typeof arg === 'string') return arg;
+    if (arg instanceof Error) return arg.stack || arg.message;
+    try {
+      return JSON.stringify(arg, null, 2);
+    } catch (e) {
+      return String(arg);
+    }
+  }
+
+  // Roda o codigo do aluno num sandbox simples (mesmo esquema do PixelCode
+  // e de prog-depuracao-pratica.html: `new Function` recebendo um console
+  // falso) - nunca deixa uma excecao do codigo do aluno escapar pra fora,
+  // vira `error` com nome+mensagem.
+  function runStudentCode(code) {
+    const logs = [];
+    const fakeConsole = {
+      log: (...args) => logs.push({ type: 'log', text: args.map(formatArg).join(' ') }),
+      warn: (...args) => logs.push({ type: 'warn', text: args.map(formatArg).join(' ') }),
+      error: (...args) => logs.push({ type: 'error', text: args.map(formatArg).join(' ') }),
+      info: (...args) => logs.push({ type: 'info', text: args.map(formatArg).join(' ') }),
+    };
+    try {
+      const fn = new Function('console', code);
+      fn(fakeConsole);
+      return { logs, error: null };
+    } catch (err) {
+      const location = (err instanceof SyntaxError)
+        ? ''
+        : (err.stack || '').split('\n').find(l => l.includes('<anonymous>')) || '';
+      return { logs, error: `${err.name}: ${err.message}${location ? '\n  ' + location.trim() : ''}` };
+    }
+  }
+
+  function renderQuestion() {
+    disposeActiveEditor();
+    storyWrap.style.display = 'flex';
+    gateWrap.style.display = 'none';
+    updateProgressBar();
+
+    const q = QUESTION_POOL[selection[currentIndex]];
+    reportStep(`Prova Final — Questão ${currentIndex + 1}/${EXAM_SIZE}`);
+
+    if (q.type === 'pratica') {
+      renderPracticaQuestion(q);
+    } else {
+      renderTeoricaQuestion(q);
+    }
+  }
+
+  // Fecha a questao (respondida OU pulada) e mostra o botao de avancar -
+  // usado por questoes teoricas E praticas, ja que dali pra frente o fluxo
+  // e identico nos dois casos.
+  function proceedAfterAnswer(card, stepLabel) {
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.style.marginTop = '14px';
+    actions.innerHTML = `<button class="btn" id="btnNextAfterAnswer">${currentIndex + 1 >= EXAM_SIZE ? 'Ver resultado' : 'Próxima →'}</button>`;
+    card.appendChild(actions);
+
+    state = { currentIndex, correctCount, answered: true };
+    saveState(state);
+    reportStep(`Prova Final — Questão ${currentIndex + 1}/${EXAM_SIZE} (${stepLabel})`);
+
+    document.getElementById('btnNextAfterAnswer').addEventListener('click', () => {
+      currentIndex++;
+      if (currentIndex >= EXAM_SIZE) {
+        finishExam();
+      } else {
+        state = { currentIndex, correctCount, answered: false };
+        saveState(state);
+        storyWrap.innerHTML = '';
+        renderQuestion();
+      }
+    });
+  }
+
+  function professorAdvance() {
+    currentIndex++;
+    if (currentIndex >= EXAM_SIZE) {
+      finishExam(true);
+    } else {
+      state = { currentIndex, correctCount, answered: false };
+      saveState(state);
+      storyWrap.innerHTML = '';
+      renderQuestion();
+    }
+  }
+
+  // ============================================================
+  // Questao TEORICA (multipla escolha) - mesmo comportamento da Prova
+  // Diagnostica (prova-sistemas.html).
+  // ============================================================
+  function renderTeoricaQuestion(q) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<span class="materia-tag">${q.materia}</span><h2>❓ ${q.prompt}</h2>`;
+
+    const optionsWrap = document.createElement('div');
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    let answered = false;
+
+    const order = shuffleIndexes(q.options.length);
+    const correctPos = order.indexOf(q.correctIndex);
+
+    function selectAnswer(chosenIdx) {
+      const allOptionEls = optionsWrap.querySelectorAll('.option');
+      allOptionEls.forEach(el => el.classList.add('disabled'));
+      pularWrap.remove();
+
+      const isCorrect = chosenIdx === correctPos;
+      allOptionEls[chosenIdx].classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (isCorrect) correctCount++;
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+      feedback.textContent = isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.';
+      card.appendChild(feedback);
+
+      proceedAfterAnswer(card, 'respondida');
+    }
+
+    // Pular: o aluno abre mao da questao atual (nao conta como acerto) em
+    // troca de seguir em frente sem responder - mesma trava de "nao da pra
+    // responder de novo depois" da resposta normal (answered: true).
+    function skipQuestion() {
+      const allOptionEls = optionsWrap.querySelectorAll('.option');
+      allOptionEls.forEach(el => el.classList.add('disabled'));
+      pularWrap.remove();
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback incorrect';
+      feedback.textContent = '⏭️ Questão pulada — não conta como acerto.';
+      card.appendChild(feedback);
+
+      proceedAfterAnswer(card, 'pulada');
+    }
+
+    order.forEach((origIdx, pos) => {
+      const optText = q.options[origIdx];
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.innerHTML = `<span class="opt-letter">${letters[pos]}</span><span>${optText}</span>`;
+      opt.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        selectAnswer(pos);
+      });
+      optionsWrap.appendChild(opt);
+    });
+
+    card.appendChild(optionsWrap);
+
+    const pularWrap = document.createElement('div');
+    pularWrap.className = 'actions';
+    pularWrap.style.marginTop = '10px';
+    pularWrap.innerHTML = `<button class="btn btn-secondary" id="btnPularQuestao">⏭️ Pular questão (perde esta questão, sem chance de responder de novo)</button>`;
+    card.appendChild(pularWrap);
+
+    if (isProfessor) {
+      const profActions = document.createElement('div');
+      profActions.className = 'actions';
+      profActions.style.marginTop = '10px';
+      profActions.innerHTML = `
+        <button class="btn btn-secondary" id="btnResetProfessor">🔄 Reiniciar prova (professor)</button>
+        <button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>
+      `;
+      card.appendChild(profActions);
+    }
+
+    storyWrap.innerHTML = '';
+    storyWrap.appendChild(card);
+
+    document.getElementById('btnPularQuestao').addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      skipQuestion();
+    });
+
+    if (isProfessor) {
+      document.getElementById('btnResetProfessor').addEventListener('click', resetForProfessor);
+      document.getElementById('btnSkipProfessor').addEventListener('click', professorAdvance);
+    }
+  }
+
+  // ============================================================
+  // Questao PRATICA (o aluno escreve codigo de verdade) - mesmo motor de
+  // execucao sandbox de prog-depuracao-pratica.html, encaixado no fluxo
+  // sequencial da prova. Sem dica/explicacao exibida durante a prova (ao
+  // contrario da pratica de treino): e uma avaliacao de verdade, mesmo
+  // criterio de silencio sobre certo/errado que as questoes teoricas ja
+  // seguem ("Resposta registrada.", sem revelar a resposta certa).
+  // ============================================================
+  function renderPracticaQuestion(q) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<span class="materia-tag">${q.materia}</span><h2>${q.icon} ${q.title}</h2><p>${q.desc}</p>`;
+
+    if (q.starterCode) {
+      const codeBox = document.createElement('pre');
+      codeBox.className = 'code-box';
+      codeBox.textContent = q.starterCode;
+      card.appendChild(codeBox);
+    }
+
+    const label = document.createElement('div');
+    label.className = 'answer-label';
+    label.textContent = 'Digite seu código completo abaixo:';
+    card.appendChild(label);
+
+    const editorContainer = document.createElement('div');
+    editorContainer.className = 'code-editor';
+    card.appendChild(editorContainer);
+
+    const consoleBox = document.createElement('div');
+    consoleBox.className = 'console';
+    consoleBox.innerHTML = '<div class="line info">Carregando editor de código...</div>';
+    card.appendChild(consoleBox);
+
+    function clearConsoleBox() { consoleBox.innerHTML = ''; }
+    function logConsoleLine(msg, type) {
+      const line = document.createElement('div');
+      line.className = 'line ' + (type || 'info');
+      line.textContent = msg;
+      consoleBox.appendChild(line);
+      consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
+
+    const runRow = document.createElement('div');
+    runRow.className = 'actions';
+    runRow.style.marginTop = '0';
+    runRow.style.justifyContent = 'flex-start';
+    runRow.innerHTML = `
+      <button class="btn btn-secondary" id="btnExecutarPratica" disabled>▶ Executar</button>
+      <button class="btn" id="btnConfirmarPratica" disabled>Confirmar resposta</button>
+    `;
+    card.appendChild(runRow);
+
+    const pularWrap = document.createElement('div');
+    pularWrap.className = 'actions';
+    pularWrap.style.marginTop = '10px';
+    pularWrap.innerHTML = `<button class="btn btn-secondary" id="btnPularQuestao">⏭️ Pular questão (perde esta questão, sem chance de responder de novo)</button>`;
+    card.appendChild(pularWrap);
+
+    if (isProfessor) {
+      const profActions = document.createElement('div');
+      profActions.className = 'actions';
+      profActions.style.marginTop = '10px';
+      profActions.innerHTML = `
+        <button class="btn btn-secondary" id="btnResetProfessor">🔄 Reiniciar prova (professor)</button>
+        <button class="btn btn-secondary" id="btnSkipProfessor">⏭️ Pular (professor)</button>
+      `;
+      card.appendChild(profActions);
+    }
+
+    storyWrap.innerHTML = '';
+    storyWrap.appendChild(card);
+
+    const btnExecutar = document.getElementById('btnExecutarPratica');
+    const btnConfirmar = document.getElementById('btnConfirmarPratica');
+    let answered = false;
+
+    window.PortalCodeEditor.create(editorContainer, { value: '' }).then((editor) => {
+      activeCodeEditor = editor;
+      btnExecutar.disabled = false;
+      btnConfirmar.disabled = false;
+      clearConsoleBox();
+      logConsoleLine('Digite seu código e clique em Executar pra testar antes de confirmar.', 'info');
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => { if (!btnExecutar.disabled) btnExecutar.click(); });
+    });
+
+    btnExecutar.addEventListener('click', () => {
+      if (!activeCodeEditor) return;
+      const code = activeCodeEditor.getValue();
+      clearConsoleBox();
+      if (!code.trim()) {
+        logConsoleLine('Digite um código antes de executar.', 'fail');
+        return;
+      }
+      const { logs, error } = runStudentCode(code);
+      logs.forEach(l => logConsoleLine(l.text, l.type === 'error' ? 'fail' : l.type));
+      if (error) {
+        logConsoleLine(error, 'fail');
+      } else if (logs.length === 0) {
+        logConsoleLine('Seu código rodou sem erros, mas não exibiu nada — use console.log(...).', 'warn');
+      }
+    });
+
+    function finalizePratica(feedbackText, feedbackClass, stepLabel) {
+      if (activeCodeEditor) activeCodeEditor.updateOptions({ readOnly: true });
+      btnExecutar.disabled = true;
+      btnConfirmar.disabled = true;
+      pularWrap.remove();
+
+      const feedback = document.createElement('div');
+      feedback.className = 'feedback ' + feedbackClass;
+      feedback.textContent = feedbackText;
+      card.appendChild(feedback);
+
+      proceedAfterAnswer(card, stepLabel);
+    }
+
+    btnConfirmar.addEventListener('click', () => {
+      if (answered || !activeCodeEditor) return;
+      answered = true;
+
+      const code = activeCodeEditor.getValue();
+      const { logs } = runStudentCode(code);
+      const loggedTexts = logs.filter(l => l.type === 'log').map(l => normalize(l.text));
+      const isCorrect = loggedTexts.includes(normalize(q.expectedOutput));
+      if (isCorrect) correctCount++;
+
+      finalizePratica(isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.', isCorrect ? 'correct' : 'incorrect', 'respondida');
+    });
+
+    document.getElementById('btnPularQuestao').addEventListener('click', () => {
+      if (answered) return;
+      answered = true;
+      finalizePratica('⏭️ Questão pulada — não conta como acerto.', 'incorrect', 'pulada');
+    });
+
+    if (isProfessor) {
+      document.getElementById('btnResetProfessor').addEventListener('click', resetForProfessor);
+      document.getElementById('btnSkipProfessor').addEventListener('click', professorAdvance);
+    }
+  }
+
+  function finishExam(reviewOnly) {
+    disposeActiveEditor();
+    const nota = Math.round(correctCount * PONTOS_POR_QUESTAO);
+    if (!reviewOnly) {
+      saveProgress({ completed: true, correctCount, total: EXAM_SIZE, nota, finishedAt: new Date().toISOString() });
+      reportStep(`Prova Final — Concluída (${correctCount}/${EXAM_SIZE} — nota ${nota}/100)`);
+      window.PortalExamGuard && guard && window.PortalExamGuard.disarm(guard);
+    }
+
+    progressFill.style.width = '100%';
+    lblStepNum.textContent = EXAM_SIZE;
+
+    // Abaixo de 60 pontos nao e hora de comemorar (🏁/"!") - a tela vira
+    // um aviso neutro apontando pra reforcar o conteudo, nao um elogio.
+    const aprovado = nota >= 60;
+
+    storyWrap.innerHTML = `
+      <div class="card finish-screen">
+        <div class="trophy">${aprovado ? '🏁' : '📋'}</div>
+        <h2>Prova Final concluída${aprovado ? '!' : ''}</h2>
+        <p>Sua prova foi entregue e registrada — não é possível refazer esta tentativa.</p>
+        <div class="score">Nota: ${nota} de 100 pontos</div>
+        <p>Você acertou ${correctCount} de ${EXAM_SIZE} questões (teóricas e práticas) — cada uma vale ${PONTOS_POR_QUESTAO} pontos.</p>
+        ${aprovado
+          ? '<p>O professor já pode conferir seu resultado.</p>'
+          : '<p>Esse resultado aponta conteúdos que ainda precisam de reforço. Procure o professor pra saber onde focar.</p>'}
+        ${isProfessor ? '<div class="actions" style="justify-content:center; margin-top:10px;"><button class="btn btn-secondary" id="btnResetProfessor">🔄 Reiniciar prova (professor)</button></div>' : ''}
+      </div>
+    `;
+
+    if (isProfessor) {
+      document.getElementById('btnResetProfessor').addEventListener('click', resetForProfessor);
+    }
+  }
+
+  // ============================================================
+  // GATE (regras + trava anti-saida) e TELA DE BLOQUEIO - mesmo padrao de
+  // prova-sistemas.html / modelagem-dados-requisitos-questionario.html
+  // (shared/exam-proctor.js).
+  // ============================================================
+  let guard = null;
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Advertência ${count}/2</h2>
+        <p>Você saiu da aba/janela do portal durante a prova. Isso conta como uma advertência.<br>
+        Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor consegue liberar de novo.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi, continuar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen() {
+    disposeActiveEditor();
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFill.style.width = '0%';
+    gateWrap.innerHTML = `
+      <div class="card gate-card" style="text-align:center;">
+        <div class="warn-icon">🔒</div>
+        <h2>Prova bloqueada</h2>
+        <p>Você saiu da aba/janela do portal 2 vezes durante a prova. Por isso, esta atividade foi bloqueada.</p>
+        <p>Procure o professor. Ele pode liberar de novo com o mesmo token que usa pra "Dar visto" (Gestão → "Token — Dar Visto / Pular Etapa"), ou pelo sino de alertas 🔔.</p>
+        <div class="token-form" style="margin-left:auto; margin-right:auto; text-align:left;">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      // Retoma a MESMA tentativa de onde parou (selection/currentIndex já
+      // existem — só se chega a esta tela depois de startExam() ter
+      // rodado) — não manda pra tela de regras, que reiniciaria a prova do
+      // zero (startExam() sorteia de novo) e jogaria fora o que já foi
+      // respondido.
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      renderQuestion();
+    });
+  }
+
+  function renderStartScreen() {
+    disposeActiveEditor();
+    storyWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    progressFill.style.width = '0%';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <h2>📋 Prova Final — Turma Sistemas</h2>
+        <p>Esta é a prova final: cobre teoria de TODAS as matérias trabalhadas até agora e também PRÁTICA de programação de verdade — você vai escrever código, não só marcar alternativas.</p>
+        <ul>
+          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>25</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Dessas 25, pelo menos <b>5 são práticas</b>: criar variável, somar números e corrigir código com erro, direto no editor.</li>
+          <li>As questões teóricas têm <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
+          <li>Nas questões práticas, você pode clicar em <b>Executar</b> quantas vezes quiser pra testar seu código antes de confirmar.</li>
+          <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada.</li>
+          <li>Dá pra <b>pular uma questão</b> sem responder — mas ela conta como <b>errada</b>, sem chance de voltar depois.</li>
+          <li>A partir do momento que você clicar em "Iniciar", <b>não saia da aba/janela do portal</b> até terminar.</li>
+          <li>Se você sair (trocar de aba, minimizar, trocar de app), recebe uma <b>advertência</b>.</li>
+          <li>Na <b>2ª advertência</b>, a prova é <b>bloqueada</b> — só o professor libera de novo.</li>
+        </ul>
+        <div class="actions" style="margin-top:14px;">
+          <button class="btn" id="btnIniciar">▶ Iniciar prova</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      startExam();
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      renderQuestion();
+    });
+  }
+
+  // Gabarito: lista o BANCO INTEIRO de 80 questoes (nao so as 25 que um
+  // aluno especifico recebeu) - teoricas com alternativas/resposta certa,
+  // praticas com o codigo esperado e a explicacao do bug (quando houver).
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Prova Final — Turma Sistemas — Banco de 80 questões',
+      subtitle: 'Teórica + Prática (25 sorteadas de 80, sendo ao menos 5 práticas, por aluno) · Turma Sistemas',
+      items: QUESTION_POOL.map((q, i) => {
+        if (q.type === 'pratica') {
+          return {
+            number: i + 1,
+            title: `[Prática] ${q.title}`,
+            prompt: `${q.desc}${q.starterCode ? `\n\nCódigo mostrado ao aluno:\n${q.starterCode}` : ''}`,
+            answer: `Console esperado: ${q.expectedOutput}\n\n${q.bugExplanation ? 'Explicação: ' + q.bugExplanation.replace(/<[^>]+>/g, '') + '\n\n' : ''}Código correto (não é a única forma):\n${q.solution}`
+          };
+        }
+        return {
+          number: i + 1,
+          title: q.materia,
+          prompt: q.prompt,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          answer: q.options[q.correctIndex]
+        };
+      }),
+      fileName: 'prova-final-sistemas-gabarito.txt'
+    });
+  };
+
+  (async function boot() {
+    guard = await window.PortalExamGuard.create('prova_final_sistemas');
+
+    if (alreadyDone && alreadyDone.completed) {
+      correctCount = alreadyDone.correctCount;
+      finishExam(true);
+      return;
+    }
+
+    if (guard.disabled) {
+      // Sem sessao de aluno reconhecida (professor pre-visualizando, ou
+      // iframe oculto da Gestao) - abre a prova direto, sem tela de regras
+      // nem trava, sorteando uma selecao de preview se ainda nao existir.
+      if (!selection) startExam();
+      renderQuestion();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen();
+    } else if (selection) {
+      // `selection` existir e o sinal de que essa tentativa ja foi
+      // iniciada antes (ex.: recarregou a pagina no meio) - volta direto
+      // pra prova, sem passar pela tela de regras de novo.
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen()
+      });
+      if (currentIndex >= EXAM_SIZE) {
+        // Respondeu tudo e saiu antes de ver o resultado - fecha a
+        // tentativa de verdade agora, em vez de tentar renderizar uma
+        // 26a pergunta que nao existe.
+        finishExam();
+      } else {
+        renderQuestion();
+      }
+    } else {
+      renderStartScreen();
+    }
+  })();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

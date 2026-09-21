@@ -769,6 +769,35 @@ window.TURMA_CONFIG_SISTEMAS = {
           ]
         },
         {
+          // Atividade SEPARADA da Prova Diagnóstica acima — reaproveita boa
+          // parte do banco de questões dela, mas tem banco e trava próprios
+          // (não compartilha progresso nem seleção sorteada). Por ficar em
+          // trilhas[1] (não trilhas[0]) da matéria 'prova', a nota dela NÃO
+          // vira sozinha a coluna "Prova" do Relatório de Notas (ver
+          // provaTrilhaKey() em shared/platform-core.js) — o professor lança
+          // manualmente em Nota 3/Nota 4, com base no resultado que a tela
+          // final da prova mostra pro aluno.
+          key: 'prova-final',
+          label: 'Prova Final',
+          desc: 'Prova final teórica e prática cobrindo todas as matérias trabalhadas na turma — 25 questões sorteadas de um banco de 80 (72 teóricas + 8 práticas, sempre pelo menos 5 práticas por aluno), com trava anti-saída.',
+          capacidade: 'Avaliação final do conjunto de capacidades trabalhadas nas matérias do curso, incluindo a escrita de código de verdade (criar variável, somar valores, corrigir erros).',
+          modules: [
+            {
+              // Mesmo mecanismo de bloqueio "sair da aba = advertência, saiu
+              // de novo = bloqueio" (shared/exam-proctor.js) e mesmo token de
+              // desbloqueio (shared/professor-visto.js) da Prova Diagnóstica.
+              // A parte prática usa o mesmo motor de sandbox (`new Function`)
+              // de atividades/prog-depuracao-pratica.html, mas embutido no
+              // fluxo sequencial de perguntas (não numa sidebar de chamados).
+              key: 'prova-final', title: 'Prova Final — Turma Sistemas',
+              desc: '25 questões (sorteadas de um banco de 80) cobrindo teoria de todas as matérias já trabalhadas — e pelo menos 5 delas são práticas: criar variável, somar dois números e corrigir trechos de código com erro, direto no editor.',
+              icon: '📝', src: 'atividades/prova-final-sistemas.html',
+              progressKey: 'prova_final_sistemas_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
           // Trabalho em DUPLA, interdisciplinar: cada dupla cria a ideia de
           // um app "que dá dinheiro" e apresenta modelagem de sistemas,
           // modelagem de banco de dados, protótipo no Figma e estimativa de
