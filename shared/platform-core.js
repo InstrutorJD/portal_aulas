@@ -1553,7 +1553,7 @@
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
-      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
+      fetchTurmaProgressRows(),
       fetchNotaProvaByStudent(),
     ]);
     const byStudent = {};
@@ -1658,6 +1658,26 @@
     renderRelatorioNotas();
   }
 
+  // student_module_progress da turma INTEIRA. O PostgREST corta cada resposta
+  // em max_rows (1000 no Supabase) em silêncio, sem erro — e a turma já passa
+  // disso (alunos × ~66 módulos), então um `select('*').eq('turma', ...)` puro
+  // perdia linhas de alunos arbitrários e o ranking/relatórios os mostravam
+  // com % menor do que o real. Pagina em blocos de 1000 com ordem estável
+  // (sem order, o corte seguia a ordem física da tabela, que muda a cada upsert).
+  async function fetchTurmaProgressRows(columns) {
+    const PAGE = 1000;
+    const all = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await sbClient.from('student_module_progress')
+        .select(columns || '*').eq('turma', cfg.id)
+        .order('student_email').order('trilha_key').order('module_key')
+        .range(from, from + PAGE - 1);
+      if (error) return { data: all.length ? all : null, error };
+      all.push(...(data || []));
+      if (!data || data.length < PAGE) return { data: all, error: null };
+    }
+  }
+
   // % de desempenho de uma MATÉRIA pro aluno: média das frações de conclusão
   // de TODOS os módulos de TODAS as trilhas dela (crédito parcial, não só
   // 0%/100%). Lê direto de cfg.materias, então recalcula sozinho sempre que
@@ -1714,7 +1734,7 @@
     const students = turmaStudents();
     if (students.length === 0) return null;
 
-    const { data } = await sbClient.from('student_module_progress').select('*').eq('turma', cfg.id);
+    const { data } = await fetchTurmaProgressRows();
     const rows = data || [];
     const byStudent = {};
     rows.forEach(r => { (byStudent[r.student_email] = byStudent[r.student_email] || []).push(r); });
@@ -1979,7 +1999,7 @@
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
 
-    const { data: progressRows } = await sbClient.from('student_module_progress').select('*').eq('turma', cfg.id);
+    const { data: progressRows } = await fetchTurmaProgressRows();
     const progressByStudent = {};
     (progressRows || []).forEach(r => {
       progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
@@ -2010,7 +2030,7 @@
 
     const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id),
-      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id),
+      fetchTurmaProgressRows(),
       fetchNotaProvaByStudent(),
     ]);
 
@@ -2115,7 +2135,7 @@
 
     const [activityRes, progressRes] = await Promise.all([
       sbClient.from('student_activity').select('*').eq('turma', cfg.id),
-      sbClient.from('student_module_progress').select('*').eq('turma', cfg.id)
+      fetchTurmaProgressRows()
     ]);
 
     const activityByStudent = {};

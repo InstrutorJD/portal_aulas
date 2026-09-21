@@ -28,13 +28,16 @@
 
   function makeQuery(name) {
     const filters = [];
-    let orderBy = null;
+    const orderBys = [];
     let limitN = null;
+    let rangeFrom = null;
+    let rangeTo = null;
     const api = {
       select() { return api; },
       eq(col, val) { filters.push([col, val]); return api; },
-      order(col, opts) { orderBy = { col, ascending: !(opts && opts.ascending === false) }; return api; },
+      order(col, opts) { orderBys.push({ col, ascending: !(opts && opts.ascending === false) }); return api; },
       limit(n) { limitN = n; return api; },
+      range(from, to) { rangeFrom = from; rangeTo = to; return api; },
       maybeSingle() {
         const error = forcedError(name);
         return Promise.resolve({
@@ -77,15 +80,22 @@
         const error = forcedError(name);
         if (error) return Promise.resolve({ data: null, error }).then(resolve, reject);
         let rows = table(name).filter(r => matches(r, filters));
-        if (orderBy) {
+        if (orderBys.length) {
           rows = rows.slice().sort((a, b) => {
-            const av = a[orderBy.col], bv = b[orderBy.col];
-            if (av === bv) return 0;
-            const cmp = av > bv ? 1 : -1;
-            return orderBy.ascending ? cmp : -cmp;
+            for (const { col, ascending } of orderBys) {
+              const av = a[col], bv = b[col];
+              if (av === bv) continue;
+              return (av > bv ? 1 : -1) * (ascending ? 1 : -1);
+            }
+            return 0;
           });
         }
         if (limitN != null) rows = rows.slice(0, limitN);
+        if (rangeFrom != null) rows = rows.slice(rangeFrom, rangeTo + 1);
+        // Teto de linhas por resposta do PostgREST (max_rows, 1000 no Supabase
+        // por padrão) — um teste liga isso pra reproduzir leitura truncada.
+        const maxRows = window.__FAKE_MAX_ROWS__;
+        if (maxRows) rows = rows.slice(0, maxRows);
         return Promise.resolve({ data: rows, error: null }).then(resolve, reject);
       },
     };

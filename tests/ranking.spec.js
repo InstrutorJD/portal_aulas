@@ -56,6 +56,23 @@ test.describe('Ranking do aluno na turma', () => {
     expect(bodyText).not.toContain('edward.guzman');
   });
 
+  // O PostgREST corta cada resposta em 1000 linhas (max_rows) sem avisar. Com a
+  // turma inteira em student_module_progress passando disso, ler tudo numa
+  // query só perdia as linhas dos alunos que ficavam no fim da ordem — o
+  // ranking deles despencava mesmo tendo feito as atividades.
+  test('turma com mais de 1000 linhas de progresso: ranking lê tudo, não só a 1ª página', async ({ page }) => {
+    const padding = Array.from({ length: 1100 }, (_, i) => ({
+      student_email: 'aaa.padding', turma: 'jogos', trilha_key: 'padding', module_key: `m${i}`,
+      progress_current: 0, progress_total: 1, completed: false,
+    }));
+    await stubSupabaseFake(page, { ...SEED, student_module_progress: [...padding, ...SEED.student_module_progress] });
+    await page.addInitScript(() => { window.__FAKE_MAX_ROWS__ = 1000; });
+    await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
+
+    // edward (3%, linhas depois das 1000 primeiras) continua na frente de breno.
+    await expect(page.locator('#rankingBadge')).toHaveText('🏆 2º');
+  });
+
   test('professor não vê o badge de ranking', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
     await page.goto('/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos');
