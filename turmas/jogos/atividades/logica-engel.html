@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Lógica: Qual é o Próximo? (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:34px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    font-size:13px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .stage{ flex:1; min-height:0; padding:14px; overflow:hidden; display:flex; }
+  .layout{ display:flex; flex-direction:row; flex-wrap:nowrap; gap:16px; width:100%; height:100%; }
+
+  .sidebar{
+    width:74px; flex-shrink:0; height:100%; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); padding:8px;
+    display:flex; flex-direction:column; gap:8px; align-items:center;
+  }
+  .step-icon{
+    width:52px; height:52px; display:flex; align-items:center; justify-content:center;
+    font-size:24px; border:2px solid var(--line); background:var(--panel2); cursor:pointer;
+    border-radius:8px; position:relative; flex-shrink:0;
+  }
+  .step-icon.active{ border-color:var(--green); }
+  .step-icon.completed{ border-color:var(--green); background:rgba(124,255,63,0.15); }
+  .step-icon.wrong{ border-color:var(--blood-bright); background:rgba(255,59,48,0.12); }
+  .step-icon.locked{ opacity:0.35; cursor:not-allowed; }
+  .step-icon .badge{ position:absolute; top:-6px; right:-6px; font-size:15px; }
+
+  .main-panel{ flex:1; min-width:0; display:flex; flex-direction:column; gap:12px; height:100%; overflow-y:auto; align-items:center; }
+
+  .level-tag{
+    display:inline-block; font-size:12px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--yellow); border:1px dashed var(--yellow); border-radius:12px; padding:4px 12px;
+  }
+
+  .instruction{ font-size:13px; color:var(--ink-dim); text-align:center; max-width:600px; }
+
+  /* Fileira com os 3 itens conhecidos do padrão + a "incógnita" (❓) —
+     mesma "chip" pros dois casos, só a incógnita ganha borda tracejada
+     amarela pra se destacar como "isso aqui que falta descobrir". */
+  .pattern-row{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; width:100%; max-width:680px; }
+  .pattern-chip{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:12px 10px; text-align:center; min-width:96px;
+  }
+  .pattern-chip .emoji{ font-size:36px; line-height:1; }
+  .pattern-chip .word{ font-size:12px; color:var(--ink-dim); margin-top:6px; }
+  .pattern-chip.question{ border-style:dashed; border-color:var(--yellow); }
+  .pattern-chip.question .emoji{ color:var(--yellow); }
+  .pattern-arrow{ font-size:22px; color:var(--ink-dim); flex-shrink:0; }
+
+  .word-options{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; width:100%; max-width:600px; }
+  .word-btn{
+    flex:1 1 130px; max-width:180px; background:var(--panel2); border:2px solid var(--green-dim); border-radius:10px;
+    padding:14px 10px; cursor:pointer; font-family:inherit; color:var(--ink); text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .word-btn .opt-emoji{ font-size:32px; line-height:1; }
+  .word-btn .opt-word{ font-size:15px; font-weight:800; }
+  .word-btn:hover{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .word-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .word-btn.correct-pick{ border-color:var(--green); background:rgba(124,255,63,0.18); opacity:1; }
+  .word-btn.wrong-pick{ border-color:var(--blood-bright); background:rgba(255,59,48,0.18); opacity:1; }
+
+  .feedback{
+    min-height:26px; font-size:17px; font-weight:800; text-align:center;
+  }
+  .feedback.ok{ color:var(--green); }
+  .feedback.fail{ color:var(--blood-bright); }
+
+  .actions{ display:flex; gap:10px; align-items:center; flex-shrink:0; flex-wrap:wrap; justify-content:center; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:16px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:14px 26px; cursor:pointer; border-radius:8px;
+  }
+  button.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:2px solid var(--green-dim); }
+
+  .skip-form{
+    display:none; flex-direction:column; gap:8px; max-width:320px; margin:0 auto;
+    background:var(--panel2); border:1px dashed var(--yellow); padding:12px 14px; flex-shrink:0; width:100%;
+  }
+  .skip-form.show{ display:flex; }
+  .skip-form label{ display:flex; flex-direction:column; gap:4px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .skip-form input{
+    font-family:inherit; font-size:14px; padding:8px 9px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .skip-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .skip-msg{ font-size:12px; padding:6px 8px; border:1px dashed var(--line); display:none; }
+  .skip-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); display:block; }
+  .skip-msg.ok{ border-color:var(--green); color:var(--green); display:block; }
+
+  .trophy-box{ text-align:center; }
+  .trophy-box .big{ font-size:64px; margin-bottom:8px; }
+  .trophy-box h2{ font-family:'VT323', monospace; font-size:30px; color:var(--green); margin:0 0 8px; }
+  .trophy-box p{ font-size:17px; color:var(--ink); line-height:1.6; }
+
+  /* Tela de regras/início e tela de bloqueio (trava de tela — sair da aba
+     conta aviso, ver shared/exam-proctor.js) */
+  .gate-wrap{ width:100%; height:100%; display:none; align-items:center; justify-content:center; padding:14px; }
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
+  .card h2{ font-family:'VT323', monospace; font-size:24px; color:var(--yellow); margin:0 0 10px; letter-spacing:1px; }
+  .gate-card{ max-width:440px; width:100%; text-align:center; }
+  .gate-card .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .gate-card p{ font-size:15px; line-height:1.7; color:var(--ink); margin:0 0 8px; }
+  .token-form{ display:flex; flex-direction:column; gap:12px; max-width:280px; margin:16px auto 0; text-align:left; }
+  .token-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+  .token-form input{
+    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
+    border:1px solid var(--line); border-radius:2px;
+  }
+  .token-form input:focus{ outline:none; border-color:var(--green-dim); }
+  .token-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
+  .token-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .token-msg.ok{ border-color:var(--green); color:var(--green); }
+
+  .warn-overlay{
+    position:fixed; inset:0; background:rgba(5,10,16,0.88); z-index:999;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .warn-overlay .card{ max-width:380px; text-align:center; border-color:var(--blood-bright); }
+  .warn-overlay .warn-icon{ font-size:44px; margin-bottom:8px; }
+  .warn-overlay h2{ color:var(--blood-bright); }
+  .warn-overlay p{ font-size:15px; line-height:1.7; margin:0 0 14px; color:var(--ink); }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:8px; }
+    .layout{ flex-direction:column; height:auto; }
+    .sidebar{ width:100%; height:auto; flex-direction:row; flex-wrap:wrap; justify-content:center; }
+    .main-panel{ height:auto; overflow-y:visible; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'logica_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>🧠 LÓGICA — QUAL É O PRÓXIMO?</div>
+    <div>✅ <span id="lblProgress">0/0</span></div>
+  </div>
+
+  <div class="gate-wrap" id="gateWrap"></div>
+
+  <div class="stage" id="stageWrap" style="display:none;">
+    <div class="layout">
+      <div class="sidebar" id="stepList"></div>
+
+      <div class="main-panel">
+        <div class="level-tag" id="levelTag"></div>
+        <div class="instruction">Veja os 3 primeiros — todos seguem a MESMA regra. Escolha, entre as opções, qual continua a regra no lugar do ❓.</div>
+        <div class="pattern-row" id="patternRow"></div>
+        <div class="word-options" id="wordOptions"></div>
+        <div class="feedback" id="feedback"></div>
+
+        <div class="actions">
+          <button class="btn btn-secondary" id="btnNext" style="display:none;">➡️ Próxima</button>
+          <button class="btn btn-secondary" id="btnSkip">⏭️ Pular (professor)</button>
+        </div>
+
+        <div class="skip-form" id="skipForm">
+          <label>Token do professor
+            <input type="text" id="skipToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnConfirmSkip">Confirmar e pular</button>
+          <div class="skip-msg" id="skipMsg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `logica_engel_progress_${username}`;
+
+  // Jogo adaptado pro Engel: raciocínio lógico por correlação visual, sem
+  // digitar nada. Cada quebra-cabeça mostra 3 itens (emoji GRANDE + a
+  // PALAVRA, pra reforçar leitura junto do reconhecimento visual — pedido
+  // do professor) que seguem uma mesma regra escondida; entre 4 opções
+  // (também emoji + palavra), o aluno escolhe qual item continua a regra.
+  // 3 níveis de dificuldade, sempre pela COMPLEXIDADE da regra, nunca pela
+  // quantidade de cliques (1 clique só, igual o resto das atividades
+  // adaptadas do Engel — ver pickOption):
+  //   Nível 1 — mesmo grupo (ex.: frutas, animais, transportes).
+  //   Nível 2 — sequência que aumenta de 1 em 1 (1, 2, 3 → 4).
+  //   Nível 3 — regra DUPLA: mesmo grupo E mesma letra inicial (ex.: o
+  //     exemplo que deu origem a essa trilha — Basquete, Bicicleta, Barco
+  //     → Beisebol, porque são esportes E começam com B).
+  // SÓ 1 TENTATIVA por quebra-cabeça (ver pickOption): a primeira opção
+  // clicada já trava a resposta, certa ou errada, e segue pra próxima —
+  // sem chute repetido por eliminação, mesma regra do resto do portal.
+  const CHALLENGES = [
+    // Nível 1 — mesmo grupo (5 quebra-cabeças)
+    {
+      id: 1, level: 1,
+      items: [{ emoji: '🍎', word: 'Maçã' }, { emoji: '🍌', word: 'Banana' }, { emoji: '🍇', word: 'Uva' }],
+      correct: { emoji: '🍊', word: 'Laranja' },
+      options: [{ emoji: '🍊', word: 'Laranja' }, { emoji: '🐶', word: 'Cachorro' }, { emoji: '⚽', word: 'Bola' }, { emoji: '🚗', word: 'Carro' }]
+    },
+    {
+      id: 2, level: 1,
+      items: [{ emoji: '🐶', word: 'Cachorro' }, { emoji: '🐱', word: 'Gato' }, { emoji: '🐦', word: 'Passarinho' }],
+      correct: { emoji: '🐴', word: 'Cavalo' },
+      options: [{ emoji: '🐴', word: 'Cavalo' }, { emoji: '🍎', word: 'Maçã' }, { emoji: '📚', word: 'Livro' }, { emoji: '🚲', word: 'Bicicleta' }]
+    },
+    {
+      id: 3, level: 1,
+      items: [{ emoji: '🚗', word: 'Carro' }, { emoji: '🚲', word: 'Bicicleta' }, { emoji: '✈️', word: 'Avião' }],
+      correct: { emoji: '🚌', word: 'Ônibus' },
+      options: [{ emoji: '🚌', word: 'Ônibus' }, { emoji: '🍌', word: 'Banana' }, { emoji: '🐱', word: 'Gato' }, { emoji: '📖', word: 'Livro' }]
+    },
+    {
+      id: 4, level: 1,
+      items: [{ emoji: '🔴', word: 'Vermelho' }, { emoji: '🔵', word: 'Azul' }, { emoji: '🟡', word: 'Amarelo' }],
+      correct: { emoji: '🟢', word: 'Verde' },
+      options: [{ emoji: '🟢', word: 'Verde' }, { emoji: '🐶', word: 'Cachorro' }, { emoji: '🚗', word: 'Carro' }, { emoji: '🍇', word: 'Uva' }]
+    },
+    {
+      id: 5, level: 1,
+      items: [{ emoji: '👕', word: 'Camiseta' }, { emoji: '👖', word: 'Calça' }, { emoji: '🧦', word: 'Meia' }],
+      correct: { emoji: '👟', word: 'Tênis' },
+      options: [{ emoji: '👟', word: 'Tênis' }, { emoji: '🍎', word: 'Maçã' }, { emoji: '⚽', word: 'Bola' }, { emoji: '🐱', word: 'Gato' }]
+    },
+    // Nível 2 — sequência que aumenta de 1 em 1 (5 quebra-cabeças)
+    {
+      id: 6, level: 2,
+      items: [{ emoji: '⭐', word: '1 estrela' }, { emoji: '⭐⭐', word: '2 estrelas' }, { emoji: '⭐⭐⭐', word: '3 estrelas' }],
+      correct: { emoji: '⭐⭐⭐⭐', word: '4 estrelas' },
+      options: [{ emoji: '⭐⭐⭐⭐', word: '4 estrelas' }, { emoji: '⭐⭐', word: '2 estrelas' }, { emoji: '⭐⭐⭐⭐⭐', word: '5 estrelas' }, { emoji: '⭐', word: '1 estrela' }]
+    },
+    {
+      id: 7, level: 2,
+      items: [{ emoji: '🍎', word: '1 maçã' }, { emoji: '🍎🍎', word: '2 maçãs' }, { emoji: '🍎🍎🍎', word: '3 maçãs' }],
+      correct: { emoji: '🍎🍎🍎🍎', word: '4 maçãs' },
+      options: [{ emoji: '🍎🍎🍎🍎', word: '4 maçãs' }, { emoji: '🍎🍎', word: '2 maçãs' }, { emoji: '🍌', word: 'Banana' }, { emoji: '🍎🍎🍎🍎🍎', word: '5 maçãs' }]
+    },
+    {
+      id: 8, level: 2,
+      items: [{ emoji: '1️⃣', word: 'Um' }, { emoji: '2️⃣', word: 'Dois' }, { emoji: '3️⃣', word: 'Três' }],
+      correct: { emoji: '4️⃣', word: 'Quatro' },
+      options: [{ emoji: '4️⃣', word: 'Quatro' }, { emoji: '5️⃣', word: 'Cinco' }, { emoji: '1️⃣', word: 'Um' }, { emoji: '🔟', word: 'Dez' }]
+    },
+    {
+      id: 9, level: 2,
+      items: [{ emoji: '🐣', word: '1 pintinho' }, { emoji: '🐣🐣', word: '2 pintinhos' }, { emoji: '🐣🐣🐣', word: '3 pintinhos' }],
+      correct: { emoji: '🐣🐣🐣🐣', word: '4 pintinhos' },
+      options: [{ emoji: '🐣🐣🐣🐣', word: '4 pintinhos' }, { emoji: '🐣🐣', word: '2 pintinhos' }, { emoji: '🐔', word: 'Galinha' }, { emoji: '🐣🐣🐣🐣🐣', word: '5 pintinhos' }]
+    },
+    {
+      id: 10, level: 2,
+      items: [{ emoji: '⚽', word: '1 gol' }, { emoji: '⚽⚽', word: '2 gols' }, { emoji: '⚽⚽⚽', word: '3 gols' }],
+      correct: { emoji: '⚽⚽⚽⚽', word: '4 gols' },
+      options: [{ emoji: '⚽⚽⚽⚽', word: '4 gols' }, { emoji: '⚽⚽', word: '2 gols' }, { emoji: '🏀', word: 'Basquete' }, { emoji: '⚽⚽⚽⚽⚽', word: '5 gols' }]
+    },
+    // Nível 3 — regra dupla: mesmo grupo E mesma letra inicial (5 quebra-cabeças)
+    {
+      id: 11, level: 3,
+      items: [{ emoji: '🏀', word: 'Basquete' }, { emoji: '🚲', word: 'Bicicleta' }, { emoji: '🛶', word: 'Barco' }],
+      correct: { emoji: '⚾', word: 'Beisebol' },
+      options: [{ emoji: '⚾', word: 'Beisebol' }, { emoji: '🎮', word: 'Videogame' }, { emoji: '🎨', word: 'Pintura' }, { emoji: '📚', word: 'Livro' }]
+    },
+    {
+      id: 12, level: 3,
+      items: [{ emoji: '🐶', word: 'Cachorro' }, { emoji: '🐴', word: 'Cavalo' }, { emoji: '🐐', word: 'Cabra' }],
+      correct: { emoji: '🐰', word: 'Coelho' },
+      options: [{ emoji: '🐰', word: 'Coelho' }, { emoji: '🐦', word: 'Passarinho' }, { emoji: '🐟', word: 'Peixe' }, { emoji: '🐘', word: 'Elefante' }]
+    },
+    {
+      id: 13, level: 3,
+      items: [{ emoji: '🍈', word: 'Melão' }, { emoji: '🍓', word: 'Morango' }, { emoji: '🥭', word: 'Manga' }],
+      correct: { emoji: '🍉', word: 'Melancia' },
+      options: [{ emoji: '🍉', word: 'Melancia' }, { emoji: '🍌', word: 'Banana' }, { emoji: '🍇', word: 'Uva' }, { emoji: '🍊', word: 'Laranja' }]
+    },
+    {
+      id: 14, level: 3,
+      items: [{ emoji: '🐱', word: 'Gato' }, { emoji: '🐔', word: 'Galinha' }, { emoji: '🦒', word: 'Girafa' }],
+      correct: { emoji: '🦍', word: 'Gorila' },
+      options: [{ emoji: '🦍', word: 'Gorila' }, { emoji: '🐶', word: 'Cachorro' }, { emoji: '🐟', word: 'Peixe' }, { emoji: '🐰', word: 'Coelho' }]
+    },
+    {
+      id: 15, level: 3,
+      items: [{ emoji: '🚗', word: 'Carro' }, { emoji: '🏠', word: 'Casa' }, { emoji: '📓', word: 'Caderno' }],
+      correct: { emoji: '🪑', word: 'Cadeira' },
+      options: [{ emoji: '🪑', word: 'Cadeira' }, { emoji: '📚', word: 'Livro' }, { emoji: '🚲', word: 'Bicicleta' }, { emoji: '⚽', word: 'Bola' }]
+    }
+  ];
+
+  const LEVEL_LABEL = { 1: 'Nível 1 · Mesmo grupo', 2: 'Nível 2 · Sequência', 3: 'Nível 3 · Grupo + letra inicial' };
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Lógica — Qual é o Próximo? (Engel)',
+      subtitle: 'Jogo adaptado · Trilha individual · Turma Jogos Digitais',
+      items: CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: `${LEVEL_LABEL[c.level]} — Quebra-cabeça ${i + 1}`,
+        prompt: `${c.items.map(it => `${it.emoji} ${it.word}`).join('  •  ')}  →  ❓`,
+        answer: `${c.correct.emoji} ${c.correct.word}`
+      })),
+      fileName: 'logica-engel-gabarito.txt'
+    });
+  };
+
+  const stepListEl = document.getElementById('stepList');
+  const levelTagEl = document.getElementById('levelTag');
+  const patternRowEl = document.getElementById('patternRow');
+  const wordOptionsEl = document.getElementById('wordOptions');
+  const feedbackEl = document.getElementById('feedback');
+  const btnNext = document.getElementById('btnNext');
+  const lblProgress = document.getElementById('lblProgress');
+  const btnSkip = document.getElementById('btnSkip');
+  const skipForm = document.getElementById('skipForm');
+  const skipToken = document.getElementById('skipToken');
+  const btnConfirmSkip = document.getElementById('btnConfirmSkip');
+  const skipMsg = document.getElementById('skipMsg');
+
+  function hideSkipForm() {
+    skipForm.classList.remove('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    skipToken.value = '';
+    btnConfirmSkip.disabled = false;
+    btnConfirmSkip.textContent = 'Confirmar e pular';
+  }
+
+  function getCompleted() {
+    try { return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveCompleted(set) { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...set])); }
+
+  // Guarda o RESULTADO de cada quebra-cabeça já respondido (certo/errado/
+  // pulado) — separado de `completed` (que só controla destravar o próximo
+  // e o contador de progresso). Só usado pra colorir a barra lateral e
+  // mostrar o placar final; não precisa sincronizar com o Supabase.
+  const RESULTS_KEY = `logica_engel_results_${username}`;
+  function getResults() {
+    try { return JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+  function saveResults(obj) { localStorage.setItem(RESULTS_KEY, JSON.stringify(obj)); }
+
+  let completed = getCompleted();
+  let results = getResults();
+  let selectedId = CHALLENGES.find(c => !completed.has(c.id))?.id || CHALLENGES[0].id;
+
+  // Bypass pro professor: ver PENDENCIAS.md, "Desbloquear todas as etapas
+  // das atividades para o professor" — mesmo padrão dos outros jogos
+  // adaptados do Engel.
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+    if (isProfessor) renderSidebar();
+  })();
+
+  function isUnlocked(challenge) {
+    if (isProfessor) return true;
+    const idx = CHALLENGES.findIndex(c => c.id === challenge.id);
+    if (idx === 0) return true;
+    return completed.has(CHALLENGES[idx - 1].id);
+  }
+
+  function renderSidebar() {
+    stepListEl.innerHTML = '';
+    CHALLENGES.forEach(c => {
+      const unlocked = isUnlocked(c);
+      const isDone = completed.has(c.id);
+      const result = results[c.id];
+      const badge = result === 'correct' ? '✅' : result === 'wrong' ? '❌' : result === 'skipped' ? '⏭️' : '';
+      const item = document.createElement('div');
+      item.className = 'step-icon' + (c.id === selectedId ? ' active' : '') + (isDone ? ' completed' : '') + (result === 'wrong' ? ' wrong' : '') + (!unlocked ? ' locked' : '');
+      item.innerHTML = `${unlocked ? c.items[0].emoji.slice(0, 2) : '🔒'}${badge ? `<span class="badge">${badge}</span>` : ''}`;
+      if (unlocked) item.addEventListener('click', () => selectChallenge(c.id));
+      stepListEl.appendChild(item);
+    });
+    lblProgress.textContent = `${completed.size}/${CHALLENGES.length}`;
+  }
+
+  function renderPattern(challenge, filledOpt) {
+    const chips = challenge.items.map(it => `
+      <div class="pattern-chip">
+        <div class="emoji">${it.emoji}</div>
+        <div class="word">${it.word}</div>
+      </div>
+      <div class="pattern-arrow">→</div>
+    `).join('');
+    const questionChip = filledOpt
+      ? `<div class="pattern-chip"><div class="emoji">${filledOpt.emoji}</div><div class="word">${filledOpt.word}</div></div>`
+      : `<div class="pattern-chip question"><div class="emoji">❓</div><div class="word">?</div></div>`;
+    return chips + questionChip;
+  }
+
+  function selectChallenge(id) {
+    const challenge = CHALLENGES.find(c => c.id === id);
+    if (!challenge || !isUnlocked(challenge)) return;
+    selectedId = id;
+
+    levelTagEl.textContent = LEVEL_LABEL[challenge.level];
+    patternRowEl.innerHTML = renderPattern(challenge, null);
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'feedback';
+    btnNext.style.display = 'none';
+    hideSkipForm();
+
+    wordOptionsEl.innerHTML = '';
+    shuffle(challenge.options).forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'word-btn';
+      btn.innerHTML = `<div class="opt-emoji">${opt.emoji}</div><div class="opt-word">${opt.word}</div>`;
+      btn.addEventListener('click', () => pickOption(challenge, opt, btn));
+      wordOptionsEl.appendChild(btn);
+    });
+
+    renderSidebar();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('logica_engel', `Lógica (Engel) — Quebra-cabeça ${challenge.id}`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size });
+    }
+  }
+
+  // Só 1 tentativa por quebra-cabeça — sem chute repetido: a primeira
+  // opção clicada já trava a resposta (certa ou errada) e segue pro
+  // Próxima. Isso é o que faz o progresso ($completed$/PROGRESS_KEY) e o
+  // resultado ($results$/RESULTS_KEY) andarem juntos aqui: TODO
+  // quebra-cabeça respondido (certo ou errado) destrava o próximo — só não
+  // conta quando ele nem chegou a clicar em nada ainda.
+  function pickOption(challenge, opt, btnEl) {
+    const isCorrect = opt.word === challenge.correct.word;
+
+    wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+    btnEl.classList.add(isCorrect ? 'correct-pick' : 'wrong-pick');
+
+    if (isCorrect) {
+      patternRowEl.innerHTML = renderPattern(challenge, challenge.correct);
+      feedbackEl.textContent = '✅ Isso mesmo!';
+      feedbackEl.className = 'feedback ok';
+    } else {
+      // Não revela qual era a certa — mesma regra do resto do portal — só
+      // marca que essa já era a única chance e segue em frente.
+      feedbackEl.textContent = '❌ Não foi dessa vez';
+      feedbackEl.className = 'feedback fail';
+    }
+
+    completed.add(challenge.id);
+    results[challenge.id] = isCorrect ? 'correct' : 'wrong';
+    saveCompleted(completed);
+    saveResults(results);
+
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    if (isLast) {
+      renderSidebar();
+      setTimeout(renderTrophy, 900);
+    } else {
+      btnNext.style.display = 'inline-block';
+      renderSidebar();
+    }
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('logica_engel', `Lógica (Engel) — Quebra-cabeça ${challenge.id} (${isCorrect ? 'certa' : 'errada'})`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, correct: isCorrect });
+    }
+  }
+
+  function renderTrophy() {
+    const rightCount = CHALLENGES.filter(c => results[c.id] === 'correct').length;
+    const layout = document.querySelector('.main-panel');
+    layout.innerHTML = `
+      <div class="trophy-box">
+        <div class="big">🏆</div>
+        <h2>Terminou tudo!</h2>
+        <p>Você completou os 15 quebra-cabeças, do mais fácil até o mais difícil.</p>
+        <p>Você acertou ${rightCount} de ${CHALLENGES.length} sozinho.</p>
+      </div>
+    `;
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('logica_engel', 'Lógica (Engel) — Concluído', { total: CHALLENGES.length, completed: completed.size, correct: rightCount, finished: true });
+    }
+  }
+
+  // "Pular etapa": pro professor avançar o Engel quando vir que ele está
+  // travado num quebra-cabeça — exige a credencial do professor (mesma
+  // verificação do "Dar visto" em shared/professor-visto.js), pra não
+  // virar um botão que qualquer aluno usa pra pular sozinho.
+  function skipCurrentChallenge(nomeProfessor) {
+    const challenge = CHALLENGES.find(c => c.id === selectedId);
+    if (!challenge) return;
+
+    completed.add(challenge.id);
+    results[challenge.id] = 'skipped';
+    saveCompleted(completed);
+    saveResults(results);
+    patternRowEl.innerHTML = renderPattern(challenge, challenge.correct);
+    wordOptionsEl.querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+    feedbackEl.textContent = `⏭️ Pulado pelo professor (${nomeProfessor}).`;
+    feedbackEl.className = 'feedback ok';
+
+    const isLast = CHALLENGES[CHALLENGES.length - 1].id === challenge.id;
+    if (isLast) {
+      renderSidebar();
+      setTimeout(renderTrophy, 700);
+    } else {
+      btnNext.style.display = 'inline-block';
+      renderSidebar();
+    }
+    hideSkipForm();
+
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('logica_engel', `Lógica (Engel) — Quebra-cabeça ${challenge.id} (pulado pelo professor)`, { challengeId: challenge.id, total: CHALLENGES.length, completed: completed.size, skipped: true });
+    }
+  }
+
+  btnSkip.addEventListener('click', () => {
+    skipForm.classList.toggle('show');
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+  });
+  btnConfirmSkip.addEventListener('click', async () => {
+    const t = skipToken.value;
+    skipMsg.className = 'skip-msg';
+    skipMsg.style.display = 'none';
+    if (!t) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Informe o token do professor.';
+      return;
+    }
+    btnConfirmSkip.disabled = true;
+    btnConfirmSkip.textContent = 'Verificando...';
+    try {
+      const result = window.PortalProfessorVisto
+        ? await window.PortalProfessorVisto.verificarToken(t)
+        : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+      if (!result.ok) {
+        skipMsg.className = 'skip-msg erro';
+        skipMsg.textContent = result.erro;
+        btnConfirmSkip.disabled = false;
+        btnConfirmSkip.textContent = 'Confirmar e pular';
+        return;
+      }
+      skipCurrentChallenge(result.nome);
+    } catch (e) {
+      skipMsg.className = 'skip-msg erro';
+      skipMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
+      btnConfirmSkip.disabled = false;
+      btnConfirmSkip.textContent = 'Confirmar e pular';
+    }
+  });
+  btnNext.addEventListener('click', () => {
+    const idx = CHALLENGES.findIndex(c => c.id === selectedId);
+    const next = CHALLENGES[idx + 1];
+    if (next) selectChallenge(next.id);
+  });
+
+  // Trava de tela: sair da aba/janela durante o jogo conta 1 aviso; na 2ª
+  // vez, bloqueia até o professor liberar com o token — mesmo mecanismo
+  // (shared/exam-proctor.js) já usado nas outras atividades adaptadas do
+  // Engel (ver frases-engel.html). Só conta a partir de clicar em
+  // "Começar" — sem isso a MERA abertura do jogo já contaria como saída.
+  const gateWrap = document.getElementById('gateWrap');
+  const stageWrap = document.getElementById('stageWrap');
+
+  function allChallengesAttempted() {
+    return completed.size >= CHALLENGES.length;
+  }
+
+  function startGame() {
+    gateWrap.style.display = 'none';
+    stageWrap.style.display = 'flex';
+    renderSidebar();
+    if (allChallengesAttempted()) {
+      renderTrophy();
+    } else {
+      selectChallenge(selectedId);
+    }
+  }
+
+  function renderWarningOverlay(count, onDismiss) {
+    const overlay = document.createElement('div');
+    overlay.className = 'warn-overlay';
+    overlay.innerHTML = `
+      <div class="card">
+        <div class="warn-icon">⚠️</div>
+        <h2>Aviso ${count}/2</h2>
+        <p>Você saiu da tela do jogo. Na <b>2ª vez</b>, o jogo fica <b>bloqueado</b> até o professor liberar.</p>
+        <div class="actions" style="justify-content:center;">
+          <button class="btn" id="btnWarnOk">Entendi</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.getElementById('btnWarnOk').addEventListener('click', () => {
+      overlay.remove();
+      if (onDismiss) onDismiss();
+    });
+  }
+
+  function renderBlockedScreen(guard) {
+    stageWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🔒</div>
+        <h2>Jogo bloqueado</h2>
+        <p>Você saiu da tela 2 vezes. Peça ajuda ao professor.</p>
+        <p>Ele libera com o mesmo token de "Dar visto" (Gestão → Token).</p>
+        <div class="token-form">
+          <label>Token do professor
+            <input type="text" id="unlockToken" inputmode="numeric" maxlength="6" autocomplete="off">
+          </label>
+          <button class="btn" id="btnUnlock">Desbloquear</button>
+          <div class="token-msg" id="unlockMsg" style="display:none;"></div>
+        </div>
+      </div>
+    `;
+    const btnUnlock = document.getElementById('btnUnlock');
+    const unlockMsg = document.getElementById('unlockMsg');
+    btnUnlock.addEventListener('click', async () => {
+      const t = document.getElementById('unlockToken').value;
+      unlockMsg.style.display = 'none';
+      if (!t) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = 'Informe o token do professor.';
+        unlockMsg.style.display = 'block';
+        return;
+      }
+      btnUnlock.disabled = true;
+      btnUnlock.textContent = 'Verificando...';
+      const result = await window.PortalExamGuard.unlock(guard, t);
+      if (!result.ok) {
+        unlockMsg.className = 'token-msg erro';
+        unlockMsg.textContent = result.erro;
+        unlockMsg.style.display = 'block';
+        btnUnlock.disabled = false;
+        btnUnlock.textContent = 'Desbloquear';
+        return;
+      }
+      renderStartScreen(guard);
+    });
+  }
+
+  function renderStartScreen(guard) {
+    stageWrap.style.display = 'none';
+    gateWrap.style.display = 'flex';
+    gateWrap.innerHTML = `
+      <div class="card gate-card">
+        <div class="warn-icon">🧠</div>
+        <h2>Antes de começar</h2>
+        <p>São 15 quebra-cabeças. Veja os 3 primeiros itens, descubra a regra, e escolha o 4º entre as opções.</p>
+        <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar. Se você sair, conta um aviso — na 2ª vez o jogo bloqueia até o professor liberar.</p>
+        <div class="actions" style="justify-content:center; margin-top:10px;">
+          <button class="btn" id="btnIniciar">▶ Começar</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('btnIniciar').addEventListener('click', () => {
+      window.PortalExamGuard.arm(guard, {
+        onWarning: (count) => renderWarningOverlay(count, () => {}),
+        onBlocked: () => renderBlockedScreen(guard),
+        isCompleted: allChallengesAttempted
+      });
+      startGame();
+    });
+  }
+
+  (async function boot() {
+    const guard = await window.PortalExamGuard.create('logica_engel');
+
+    // Sem sessão de aluno reconhecida (professor, ou iframe oculto da
+    // Gestão gerando gabarito remotamente) ou jogo já 100% respondido —
+    // guarda desligada: abre direto, sem tela de regras nem risco de bloqueio.
+    if (guard.disabled || allChallengesAttempted()) {
+      startGame();
+      return;
+    }
+
+    if (guard.blocked) {
+      renderBlockedScreen(guard);
+    } else {
+      renderStartScreen(guard);
+    }
+  })();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

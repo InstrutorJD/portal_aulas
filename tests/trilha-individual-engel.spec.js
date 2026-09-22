@@ -255,3 +255,37 @@ test.describe('Trilha individual "C# Básico (Engel)"', () => {
     await expect(frame.locator('#btnNext')).toBeVisible();
   });
 });
+
+// Só a fiação (visibilidade da trilha dentro da matéria compartilhada) —
+// o jogo em si (15 quebra-cabeças, níveis, trava de tela) tem cobertura
+// própria em tests/logica-engel.spec.js, mesmo padrão de
+// tests/frases-engel.spec.js.
+test.describe('Trilha individual "Lógica (Engel)"', () => {
+  test('professor sempre vê a trilha, mesmo não estando na lista de visibleFor', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(PROFESSOR_URL);
+    await openFundamentos(page);
+    await expect(page.locator('#trilhaSelect option[value="logica-adaptado-engel"]')).toHaveCount(1);
+  });
+
+  test('engel.fraga vê a própria trilha e consegue abrir o módulo', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(ENGEL_URL);
+    await openFundamentos(page);
+    await expect(page.locator('#trilhaSelect option[value="logica-adaptado-engel"]')).toHaveCount(1);
+
+    await page.selectOption('#trilhaSelect', 'logica-adaptado-engel');
+    await expect(page.locator('#subTabContent_logica-adaptado-engel')).toBeVisible();
+    await page.click('#moduleSelector_logica-adaptado-engel .game-card');
+    await expect(page.locator('#moduleFrame_logica-adaptado-engel')).toHaveAttribute(
+      'src', /atividades\/logica-engel\.html\?user=engel\.fraga/
+    );
+  });
+
+  test('outro aluno (fora da lista) não vê a trilha', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(BRENO_URL);
+    await openFundamentos(page);
+    await expect(page.locator('#trilhaSelect option[value="logica-adaptado-engel"]')).toHaveCount(0);
+  });
+});

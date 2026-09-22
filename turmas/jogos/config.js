@@ -753,6 +753,30 @@ window.TURMA_CONFIG_JOGOS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // Trilha individual, adaptada — versão do Engel pra "Lógica e
+          // Algoritmos para Jogos 2D" (fund-logica, mesma matéria). Em vez
+          // de conceitos abstratos de programação (game loop, delta time),
+          // trabalha raciocínio lógico com jogos de correlação visual —
+          // "dados 3 itens que seguem um padrão, qual é o próximo?" — a
+          // pedido do professor. Mesmo motor/estilo das outras atividades
+          // adaptadas dele (emoji grande, clique único, sem trava de
+          // digitação, sempre com a PALAVRA junto do emoji nas opções pra
+          // reforçar leitura, não só reconhecimento visual).
+          key: 'logica-adaptado-engel',
+          label: 'Lógica (Engel)',
+          desc: 'Escolha um módulo para começar.',
+          visibleFor: ['engel.fraga'],
+          modules: [
+            {
+              key: 'jogo', title: 'Lógica — Qual é o Próximo? — Adaptado',
+              desc: '15 quebra-cabeças de correlação (3 itens em emoji + palavra, escolha entre 4 opções qual continua o padrão) — nível 1: mesmo grupo (frutas, animais...); nível 2: sequência que aumenta (1, 2, 3 → 4); nível 3: regra dupla, mesmo grupo E mesma letra inicial (ex.: Basquete, Bicicleta, Barco → Beisebol).',
+              icon: '🧠', src: 'atividades/logica-engel.html',
+              progressKey: 'logica_engel_progress_', progressTotal: 15,
+              hasGabarito: true
+            }
+          ]
         }
       ]
     },
