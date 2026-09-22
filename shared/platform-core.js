@@ -28,7 +28,8 @@
   const sbClient = window.PortalSession.client();
 
   let teacherUnlockOverride = false;
-  let turmaStudentsCache = []; // alunos da turma (profiles), só carregado/usado pro professor — ver turmaStudents()
+  let turmaStudentsCache = []; // alunos ATIVOS da turma (profiles, archived_at is null) — ver turmaStudents()
+  let turmaArchivedCache = []; // alunos arquivados da turma (só usado pela seção "Alunos" da Gestão)
   let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
   let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
   let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
@@ -67,6 +68,50 @@
     overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     document.addEventListener('keydown', onKey);
     overlay.querySelector('.pf-alert-ok').focus();
+  }
+
+  // ---------- Confirmação de arquivar aluno (digitar o nome pra destravar
+  // o botão) — arquivar bloqueia o login do aluno até reativar (ver
+  // arquivar_aluno() no Supabase), então um clique errado numa lista longa
+  // não pode bastar. onConfirm só roda depois do nome bater (comparação
+  // sem diferenciar maiúsculas/espaço nas pontas). ----------
+  function showArchiveConfirm(nome, onConfirm) {
+    document.getElementById('pfArchiveOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'pfArchiveOverlay';
+    overlay.className = 'pf-alert-overlay';
+    overlay.innerHTML = `
+      <div class="pf-alert-box" role="alertdialog" aria-modal="true" style="border-color:var(--blood-bright);">
+        <p class="pf-alert-msg">Arquivar <b>${nome}</b>? O login dele para de funcionar e ele some das listas e relatórios da turma. Notas, chamada e progresso já lançados continuam guardados — dá pra reativar depois.</p>
+        <p class="pf-alert-msg">Pra confirmar, digite o nome exatamente como aparece: <b>${nome}</b></p>
+        <input type="text" class="pf-archive-input" autocomplete="off" spellcheck="false">
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn btn-secondary pf-archive-cancel">Cancelar</button>
+          <button class="btn btn-danger pf-archive-ok" disabled>Arquivar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector('.pf-archive-input');
+    const okBtn = overlay.querySelector('.pf-archive-ok');
+    const bate = () => input.value.trim().toLowerCase() === nome.trim().toLowerCase();
+    input.addEventListener('input', () => { okBtn.disabled = !bate(); });
+
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    overlay.querySelector('.pf-archive-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+    okBtn.addEventListener('click', () => {
+      if (!bate()) return;
+      close();
+      onConfirm();
+    });
+    input.focus();
   }
 
   // ---------- Notificação leve (toast, não bloqueia a tela) — usada pra
@@ -235,6 +280,29 @@
           </div>
 
           <div id="tabContentGestao" class="tab-page" style="display:none;">
+            <div class="card collapsible-card">
+              <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
+                <h2>Alunos</h2>
+                <span class="collapsible-arrow">▶</span>
+              </div>
+              <div class="collapsible-body">
+                <h3 class="gestao-subhead">Alunos da turma</h3>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>E-mail</th><th></th></tr></thead>
+                  <tbody id="tblGestaoAlunosBody"></tbody>
+                </table>
+
+                <h3 class="gestao-subhead">Alunos arquivados</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">
+                  Login bloqueado e fora das listas/relatórios da turma. Notas, chamada e progresso já lançados continuam guardados — reative quando quiser.
+                </p>
+                <table class="audit-table">
+                  <thead><tr><th>Aluno</th><th>E-mail</th><th>Arquivado em</th><th></th></tr></thead>
+                  <tbody id="tblGestaoAlunosArquivadosBody"></tbody>
+                </table>
+              </div>
+            </div>
+
             <div class="card collapsible-card">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Bloqueios e Liberações</h2>
@@ -1013,12 +1081,108 @@
 
   async function fetchTurmaStudents() {
     if (!sbClient) { turmaStudentsCache = []; return; }
+    // archived_at is null: aluno arquivado (ver arquivar_aluno() no
+    // Supabase) some de TODA lista/relatório que lê turmaStudents() —
+    // Gestão, Chamada, Notas, Ranking, Relatório do Dia/Inatividade —
+    // filtrado num lugar só, aqui.
     const { data } = await sbClient
       .from('profiles')
       .select('email, nome, role, turma')
       .eq('turma', cfg.id)
-      .eq('role', 'aluno');
+      .eq('role', 'aluno')
+      .is('archived_at', null);
     turmaStudentsCache = (data || []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  // Só pra seção "Alunos" da Gestão (Reativar) — em todo o resto do
+  // portal um aluno arquivado precisa continuar invisível.
+  async function fetchTurmaArchivedStudents() {
+    if (!sbClient) { turmaArchivedCache = []; return; }
+    const { data } = await sbClient
+      .from('profiles')
+      .select('email, nome, role, turma, archived_at')
+      .eq('turma', cfg.id)
+      .eq('role', 'aluno')
+      .not('archived_at', 'is', null);
+    turmaArchivedCache = (data || []).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  // Arquivar/reativar rodam como RPC (SECURITY DEFINER no Supabase) —
+  // profiles não tem policy de update pro professor, então só a function
+  // consegue gravar archived_at (e, no arquivar, banir a conta/derrubar a
+  // sessão — ver sql/supabase-setup-completo.sql). Best-effort: se a
+  // migração (sql/arquivar-aluno.sql) ainda não rodou, a function nem
+  // existe no banco e o RPC volta com erro — a tela avisa em vez de falhar
+  // em silêncio.
+  async function arquivarAluno(email) {
+    if (!sbClient) return;
+    const { data, error } = await sbClient.rpc('arquivar_aluno', { p_email: email });
+    if (error) {
+      showAlert('Não foi possível arquivar este aluno agora (falha ao falar com o Supabase — rode sql/arquivar-aluno.sql se ainda não rodou). Veja o console (F12) para detalhes.');
+      console.error('[Gestão] arquivar_aluno:', error);
+      return;
+    }
+    if (data && data.success === false) { showAlert(data.message || 'Não foi possível arquivar este aluno.'); return; }
+    // Não só a seção "Alunos": Chamada, Notas e os relatórios já podem
+    // estar renderizados na tela (Gestão inteira carrega de uma vez ao
+    // abrir a aba) com o roster de ANTES de arquivar — sem refazer tudo
+    // aqui, o aluno recém-arquivado continuaria aparecendo neles até o
+    // professor sair e voltar pra aba Gestão. O await é obrigatório: várias
+    // dessas seções (ex.: loadChamada) leem turmaStudents() de forma
+    // SÍNCRONA logo no início da própria função — sem esperar o fetch
+    // terminar antes de renderGestaoTab(), elas correriam o risco real de
+    // ler o cache ainda desatualizado.
+    await fetchTurmaStudents();
+    renderGestaoTab();
+  }
+
+  async function reativarAluno(email) {
+    if (!sbClient) return;
+    const { data, error } = await sbClient.rpc('reativar_aluno', { p_email: email });
+    if (error) {
+      showAlert('Não foi possível reativar este aluno agora (falha ao falar com o Supabase — rode sql/arquivar-aluno.sql se ainda não rodou). Veja o console (F12) para detalhes.');
+      console.error('[Gestão] reativar_aluno:', error);
+      return;
+    }
+    if (data && data.success === false) { showAlert(data.message || 'Não foi possível reativar este aluno.'); return; }
+    await fetchTurmaStudents(); // mesmo motivo do arquivarAluno acima (evita a corrida com loadChamada e afins)
+    renderGestaoTab();
+  }
+
+  // Refaz os dois papéis (ativos/arquivados) toda vez que abre — pega
+  // arquivamentos feitos por outra sessão de professor desde a última vez.
+  async function renderGestaoAlunos() {
+    const activeBody = document.getElementById('tblGestaoAlunosBody');
+    if (!activeBody) return;
+    await Promise.all([fetchTurmaStudents(), fetchTurmaArchivedStudents()]);
+
+    activeBody.innerHTML = turmaStudents().map(u => `
+      <tr>
+        <td>${u.nome}</td>
+        <td>${u.email}</td>
+        <td><button class="btn btn-danger" data-arquivar-email="${u.email}" data-arquivar-nome="${u.nome}">Arquivar</button></td>
+      </tr>
+    `).join('') || noStudentsRow(3);
+    activeBody.querySelectorAll('[data-arquivar-email]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const email = btn.getAttribute('data-arquivar-email');
+        const nome = btn.getAttribute('data-arquivar-nome');
+        showArchiveConfirm(nome, () => arquivarAluno(email));
+      });
+    });
+
+    const archBody = document.getElementById('tblGestaoAlunosArquivadosBody');
+    archBody.innerHTML = turmaArchivedCache.map(u => `
+      <tr>
+        <td>${u.nome}</td>
+        <td>${u.email}</td>
+        <td>${new Date(u.archived_at).toLocaleDateString('pt-BR')}</td>
+        <td><button class="btn btn-secondary" data-reativar-email="${u.email}">Reativar</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="empty-state">Nenhum aluno arquivado.</td></tr>';
+    archBody.querySelectorAll('[data-reativar-email]').forEach(btn => {
+      btn.addEventListener('click', () => reativarAluno(btn.getAttribute('data-reativar-email')));
+    });
   }
 
   async function fetchGestaoOverrides() {
@@ -2527,6 +2691,7 @@
   }
 
   function renderGestaoTab() {
+    renderGestaoAlunos();
     renderGestaoGamesStatus();
     renderGestaoBimestres();
     renderGestaoTrilhaBimestre();

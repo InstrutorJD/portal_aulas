@@ -72,7 +72,7 @@
     </div>
 
     <button type="submit" class="btn-submit">Entrar</button>
-    <div class="error-msg" id="errMsg">Usuário ou senha incorretos!</div>
+    <div class="error-msg" id="errMsg"></div>
   </form>
 </div>
 
@@ -80,6 +80,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="shared/session.js"></script>
 <script>
+const DESATIVADO_MSG = 'Esta conta foi desativada. Fale com o professor.';
+const CREDENCIAIS_MSG = 'Usuário ou senha incorretos!';
+
+// Voltou pra cá porque a sessão foi derrubada no meio de uma navegação
+// (aba que já estava aberta quando o professor arquivou o aluno — ver
+// requireUser() em shared/session.js) — mensagem específica em vez do
+// genérico "usuário ou senha incorretos", que aqui seria enganoso.
+if (new URLSearchParams(window.location.search).get('arquivado') === '1') {
+  const err = document.getElementById('errMsg');
+  err.textContent = DESATIVADO_MSG;
+  err.style.display = 'block';
+}
+
 async function handleLogin(e) {
   e.preventDefault();
   const uVal = document.getElementById('txtUser').value.trim();
@@ -91,6 +104,11 @@ async function handleLogin(e) {
   const { error } = await window.PortalSession.signIn(uVal, pVal);
 
   if (error) {
+    // GoTrue devolve uma mensagem específica pra conta banida (ver
+    // arquivar_aluno() no Supabase) em vez do erro genérico de senha —
+    // ainda não confirmado em produção o texto exato, então o match é por
+    // "banned" (case-insensitive) e cai pro genérico se não bater.
+    err.textContent = /banned/i.test(error.message || '') ? DESATIVADO_MSG : CREDENCIAIS_MSG;
     err.style.display = 'block';
     btn.disabled = false;
     return false;
@@ -98,6 +116,7 @@ async function handleLogin(e) {
 
   const user = await window.PortalSession.getUser();
   if (!user) {
+    err.textContent = CREDENCIAIS_MSG;
     err.style.display = 'block';
     btn.disabled = false;
     return false;

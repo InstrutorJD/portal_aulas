@@ -124,7 +124,89 @@ create policy "profiles_select_self_or_professor_or_same_turma"
 
 -- Sem policy de insert/update/delete pra authenticated: só quem tem a
 -- service_role key (scripts/migrate-users-to-auth.mjs, rodado fora do
--- navegador) cria/atualiza linha em profiles.
+-- navegador) cria/atualiza linha em profiles diretamente — as duas
+-- functions SECURITY DEFINER abaixo (arquivar_aluno/reativar_aluno) são a
+-- única forma do PROFESSOR mudar uma linha de profiles pelo app.
+
+-- Arquivamento de aluno (Gestão → Alunos, shared/platform-core.js): soft-
+-- delete, não apaga nada. archived_at marcado tira o aluno de toda lista
+-- ativa do portal — turmaStudents()/fetchTurmaStudents() passa a filtrar
+-- "archived_at is null", e isso cascateia sozinho pra Gestão, Chamada,
+-- Notas, Ranking e os relatórios, já que todos leem dali. Notas, chamada,
+-- progresso e placares já lançados NÃO são apagados (continuam no banco,
+-- é histórico) — reativar_aluno devolve o aluno pra tudo de novo.
+alter table public.profiles add column if not exists archived_at timestamptz;
+
+-- SECURITY DEFINER de propósito, igual current_email()/is_professor()
+-- acima: profiles não tem policy de update pra 'authenticated' (comentário
+-- acima), então só uma function rodando como o dono (que ignora RLS)
+-- consegue gravar archived_at. Além de marcar o profile, bane a conta no
+-- Supabase Auth (auth.users.banned_until) e derruba qualquer sessão já
+-- aberta (auth.sessions) — sem isso, o aluno continuaria logado (ou
+-- conseguiria logar de novo) até o access token expirar sozinho, ~1h
+-- depois. Só arquiva conta com role='aluno' — nunca deixa arquivar um
+-- professor por engano.
+create or replace function public.arquivar_aluno(p_email text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_id uuid;
+  v_role text;
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode arquivar um aluno.';
+  end if;
+
+  select id, role into v_id, v_role from public.profiles where email = p_email;
+  if v_id is null then
+    return jsonb_build_object('success', false, 'message', 'Aluno não encontrado.');
+  end if;
+  if v_role <> 'aluno' then
+    return jsonb_build_object('success', false, 'message', 'Só é possível arquivar uma conta de aluno.');
+  end if;
+
+  update public.profiles set archived_at = now() where id = v_id;
+  update auth.users set banned_until = 'infinity' where id = v_id;
+  delete from auth.sessions where user_id = v_id;
+
+  return jsonb_build_object('success', true);
+end;
+$$;
+
+-- Reverte arquivar_aluno por completo: devolve o aluno pra Gestão,
+-- Chamada, Notas, Ranking etc. (archived_at volta a null) e destrava o
+-- login (banned_until volta a null). Não recria sessão nenhuma — o aluno
+-- só precisa logar de novo normalmente.
+create or replace function public.reativar_aluno(p_email text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_id uuid;
+begin
+  if not public.is_professor() then
+    raise exception 'Só o professor pode reativar um aluno.';
+  end if;
+
+  select id into v_id from public.profiles where email = p_email and role = 'aluno';
+  if v_id is null then
+    return jsonb_build_object('success', false, 'message', 'Aluno não encontrado.');
+  end if;
+
+  update public.profiles set archived_at = null where id = v_id;
+  update auth.users set banned_until = null where id = v_id;
+
+  return jsonb_build_object('success', true);
+end;
+$$;
+
+grant execute on function public.arquivar_aluno(text) to authenticated;
+grant execute on function public.reativar_aluno(text) to authenticated;
 
 
 -- ============================================================

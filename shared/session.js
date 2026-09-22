@@ -47,7 +47,7 @@ window.PortalSession = (function () {
 
       const { data: profile, error: profileError } = await sb
         .from('profiles')
-        .select('email, nome, role, turma')
+        .select('email, nome, role, turma, archived_at')
         .eq('id', authData.user.id)
         .maybeSingle();
 
@@ -65,8 +65,22 @@ window.PortalSession = (function () {
   // loginPath: caminho relativo até index.html a partir da página atual
   // (ex.: '../index.html', '../../../index.html') — cada chamador sabe
   // a própria profundidade, igual já era feito nos redirects manuais.
+  //
+  // Aluno arquivado (profiles.archived_at, ver arquivar_aluno() no
+  // Supabase) já não consegue mais LOGAR de novo — o RPC bane a conta
+  // (auth.users.banned_until) e derruba a sessão. Mas o access token de
+  // uma aba que já estava aberta continua válido até expirar sozinho
+  // (~1h) mesmo depois disso, já que verificação de JWT é stateless — este
+  // check aqui é a segunda linha de defesa: qualquer navegação (troca de
+  // aba/iframe/reload) dentro do portal já derruba essa sessão na hora,
+  // sem esperar o token vencer.
   async function requireUser(loginPath) {
     const user = await getUser();
+    if (user && user.archived_at) {
+      await signOut();
+      window.location.href = loginPath + (loginPath.includes('?') ? '&' : '?') + 'arquivado=1';
+      return null;
+    }
     if (!user) {
       window.location.href = loginPath;
       return null;

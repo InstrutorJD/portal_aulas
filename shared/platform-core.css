@@ -180,7 +180,7 @@ button.btn-secondary{ background:transparent; color:var(--green); border:1px sol
 .field-row{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }
 .status-msg{ font-size:11px; color:var(--ink-dim); }
 .media-cell{ color:var(--yellow); font-weight:700; }
-select, input[type="date"], input[type="number"]{
+select, input[type="date"], input[type="number"], input[type="text"]{
   background:var(--panel2); color:var(--ink); border:1px solid var(--line);
   padding:7px 10px; font-family:inherit; font-size:12px; border-radius:2px;
 }
@@ -206,6 +206,11 @@ input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--green); curs
 }
 .pf-alert-msg{ font-size:13px; color:var(--ink); line-height:1.5; margin:0 0 16px; white-space:pre-line; }
 .pf-alert-box .pf-alert-ok{ display:block; margin-left:auto; }
+
+/* Confirmação de arquivar aluno (JS: showArchiveConfirm em platform-core.js)
+   — mesma caixa do pf-alert-*, com um campo de texto que precisa bater com
+   o nome do aluno antes do botão de confirmar destravar. */
+.pf-archive-input{ width:100%; box-sizing:border-box; margin-bottom:14px; }
 
 /* Notificação leve (JS: showToast em platform-core.js) — avisa sobre uma
    atividade nova liberada sem travar a tela, ao contrário do pf-alert-*. */
