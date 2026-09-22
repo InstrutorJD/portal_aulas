@@ -1,15 +1,18 @@
 -- Personalização do portal (fonte, cor de destaque, tema claro/escuro,
--- emoji de avatar, fundo decorativo, cursor do mouse). Rode UMA vez no SQL
--- Editor do Supabase — é seguro rodar de novo (idempotente). É o mesmo
--- trecho que está logo depois do BLOCO 15 de sql/supabase-setup-completo.sql,
--- pra quem já tem o banco montado e não quer rodar o script completo de novo.
+-- emoji de avatar, fundo decorativo, cursor do mouse, música ambiente e
+-- som de clique). Rode UMA vez no SQL Editor do Supabase — é seguro rodar
+-- de novo (idempotente). É o mesmo trecho que está logo depois do BLOCO 15
+-- de sql/supabase-setup-completo.sql, pra quem já tem o banco montado e
+-- não quer rodar o script completo de novo.
 --
 -- O que isso cria:
 --   • user_preferences — uma linha por email (aluno OU professor) com as
---     preferências visuais escolhidas na modal "🎨 Personalizar" (botão de
---     perfil do portal). Self-service via RLS (cada um só lê/escreve a
---     própria linha por email = current_email()) — sem RPC, mesmo padrão
---     de student_activity_state (sincronização de progresso).
+--     preferências visuais/sonoras escolhidas na modal "🎨 Personalizar"
+--     (botão de perfil do portal). Self-service via RLS (cada um só
+--     lê/escreve a própria linha por email = current_email()) — sem RPC,
+--     mesmo padrão de student_activity_state (sincronização de progresso).
+--     Música ambiente e som de clique são sintetizados na hora por
+--     shared/portal-audio.js — não guardam/baixam nenhum arquivo de áudio.
 
 create table if not exists public.user_preferences (
   email text primary key,
@@ -20,8 +23,13 @@ create table if not exists public.user_preferences (
   avatar_emoji text not null default '👤',
   bg_pattern boolean not null default false,
   cursor_key text not null default 'default',
+  ambient_music boolean not null default false,
+  click_sound boolean not null default false,
   updated_at timestamptz not null default now()
 );
+
+alter table public.user_preferences add column if not exists ambient_music boolean not null default false;
+alter table public.user_preferences add column if not exists click_sound boolean not null default false;
 
 alter table public.user_preferences enable row level security;
 

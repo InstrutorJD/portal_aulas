@@ -1828,8 +1828,17 @@ create table if not exists public.user_preferences (
   avatar_emoji text not null default '👤',
   bg_pattern boolean not null default false,
   cursor_key text not null default 'default',
+  ambient_music boolean not null default false,
+  click_sound boolean not null default false,
   updated_at timestamptz not null default now()
 );
+
+-- ambient_music/click_sound (🎵 música ambiente sintetizada +🔊 som de
+-- clique conforme o cursor, ver shared/portal-audio.js) chegaram depois da
+-- criação original da tabela — alter aqui cobre quem já rodou este script
+-- antes, sem exigir apagar/recriar user_preferences.
+alter table public.user_preferences add column if not exists ambient_music boolean not null default false;
+alter table public.user_preferences add column if not exists click_sound boolean not null default false;
 
 alter table public.user_preferences enable row level security;
 

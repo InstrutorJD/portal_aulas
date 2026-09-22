@@ -50,7 +50,7 @@
   // Uma linha por usuário em user_preferences (Supabase), self-service via
   // RLS (ver sql/user-preferences.sql) — carregada uma vez em init() e
   // reaplicada a cada mudança de controle na modal (ver openPersonalizacao).
-  let prefs = { fontFamily: 'pixel', accentKey: 'padrao', theme: 'dark', avatarEmoji: '👤', bgPattern: false, cursorKey: 'default' };
+  let prefs = { fontFamily: 'pixel', accentKey: 'padrao', theme: 'dark', avatarEmoji: '👤', bgPattern: false, cursorKey: 'default', ambientMusic: false, clickSound: false };
 
   const FONT_PRESETS = {
     pixel:       { label: 'Pixel/Terminal', body: "'JetBrains Mono', monospace", display: "'VT323', monospace" },
@@ -3122,7 +3122,15 @@
     window.addEventListener('message', (event) => {
       if (event.origin !== window.location.origin) return;
       const data = event.data;
-      if (!data || !data.pfProgressSync || !data.activityLocation) return;
+      if (!data) return;
+      // Relé de som de clique (ver applyClickRelay) — quem decide se toca
+      // e com qual timbre é sempre o documento pai, nunca o iframe (é aqui
+      // que prefs.clickSound/prefs.cursorKey vivem de verdade).
+      if (data.pfClickSound) {
+        if (prefs.clickSound && window.PortalAudio) window.PortalAudio.playClick(prefs.cursorKey);
+        return;
+      }
+      if (!data.pfProgressSync || !data.activityLocation) return;
       allTrilhas().forEach(trilha => {
         (trilha.modules || []).forEach(mod => {
           if ((mod.progressKey || '').replace(/_progress_$/, '') !== data.activityLocation) return;
@@ -3160,9 +3168,29 @@
       applyAccentVars(root, prefs.accentKey);
       applyThemeVars(root, prefs.theme);
       applyCursorVars(doc, prefs.cursorKey);
+      applyClickRelay(doc);
     } catch (e) {
       // iframe ainda não carregou o document, ou é de outra origem — ignora
     }
+  }
+
+  // Clique DENTRO de um <iframe> de atividade não borbulha pro documento
+  // pai (são dois documentos separados) — sem isso, o som de clique
+  // (shared/portal-audio.js) só tocaria fora de qualquer atividade, que é
+  // onde o aluno passa a MENOR parte do tempo. Injeta um listener leve, uma
+  // vez só por iframe (guarda por id, igual o <style> do cursor), que só
+  // avisa o pai por postMessage — quem decide se toca o som (prefs.clickSound
+  // já pode ter mudado depois da injeção) e com qual timbre é sempre o pai.
+  function applyClickRelay(doc) {
+    if (doc.getElementById('pfClickRelay')) return;
+    const tag = doc.createElement('script');
+    tag.id = 'pfClickRelay';
+    tag.textContent = `
+      document.addEventListener('click', function () {
+        try { window.parent.postMessage({ pfClickSound: true }, window.location.origin); } catch (e) {}
+      }, true);
+    `;
+    doc.head.appendChild(tag);
   }
 
   function applyA11yToOpenIframes() {
@@ -3270,6 +3298,28 @@
     applyA11yToOpenIframes();
   }
 
+  // Som do portal (shared/portal-audio.js) — chamado uma vez em init().
+  // Dois cuidados por causa da política de autoplay do navegador (só deixa
+  // criar/tocar áudio depois de um gesto real do usuário):
+  //   1) Clique no documento PRINCIPAL toca o som na hora (o próprio clique
+  //      já É o gesto) — cobre toda a barra/abas/cards fora de um iframe.
+  //   2) Se a preferência de música ambiente já vinha LIGADA (carregada do
+  //      banco em fetchUserPreferences, antes de renderShell), só começa a
+  //      tocar de verdade no 1º clique/tecla da sessão — chamar
+  //      startAmbient() direto aqui em init() falharia silenciosamente
+  //      (nenhum gesto ainda aconteceu nesta página).
+  function setupPortalAudio() {
+    if (!window.PortalAudio) return;
+    document.addEventListener('click', () => {
+      if (prefs.clickSound) window.PortalAudio.playClick(prefs.cursorKey);
+    });
+    if (prefs.ambientMusic) {
+      const unlock = () => { window.PortalAudio.startAmbient(); };
+      document.addEventListener('click', unlock, { once: true });
+      document.addEventListener('keydown', unlock, { once: true });
+    }
+  }
+
   // Busca a linha salva do usuário (se existir) uma vez, em init() — antes
   // de renderShell(), pra já nascer com o emoji/tema certos sem "flash" do
   // default. Sem linha ainda (1ª vez do usuário): mantém os defaults de
@@ -3285,6 +3335,8 @@
         avatarEmoji: data.avatar_emoji || '👤',
         bgPattern: !!data.bg_pattern,
         cursorKey: data.cursor_key || 'default',
+        ambientMusic: !!data.ambient_music,
+        clickSound: !!data.click_sound,
       };
     }
   }
@@ -3311,6 +3363,8 @@
       avatar_emoji: prefs.avatarEmoji,
       bg_pattern: prefs.bgPattern,
       cursor_key: prefs.cursorKey,
+      ambient_music: prefs.ambientMusic,
+      click_sound: prefs.clickSound,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
     const statusEl = document.getElementById('personalizacaoStatus');
@@ -3379,6 +3433,18 @@
         <div class="pf-swatch-row" id="psCursorRow">${cursorButtons}</div>
       </div>
 
+      <div class="pf-perso-section">
+        <div class="pf-perso-label">Som</div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; margin-bottom:8px;">
+          <input type="checkbox" id="psAmbientMusic" ${prefs.ambientMusic ? 'checked' : ''}>
+          🎵 Música ambiente (baixinho, sintetizada — sem baixar nada)
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+          <input type="checkbox" id="psClickSound" ${prefs.clickSound ? 'checked' : ''}>
+          🔊 Som de clique (o timbre muda de acordo com o cursor escolhido acima)
+        </label>
+      </div>
+
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
         <span class="status-msg" id="personalizacaoStatus"></span>
         <button class="btn btn-secondary pf-perso-close">Fechar</button>
@@ -3443,6 +3509,24 @@
       if (bgCb) bgCb.addEventListener('change', () => {
         prefs.bgPattern = bgCb.checked;
         applyPrefsVisuals();
+        saveUserPreferences();
+      });
+      // Ligar aqui dentro é um clique de verdade — o gesto que o navegador
+      // exige pra deixar criar/tocar áudio (ver shared/portal-audio.js).
+      // Só startAmbient/stopAmbient ao vivo; NÃO é assim que o áudio começa
+      // a tocar de novo num carregamento de página com a preferência já
+      // ligada — isso é o listener de "1º clique/tecla da sessão" (ver
+      // setupAmbientAudioUnlock, chamado em init()).
+      const ambientCb = overlay.querySelector('#psAmbientMusic');
+      if (ambientCb) ambientCb.addEventListener('change', () => {
+        prefs.ambientMusic = ambientCb.checked;
+        if (window.PortalAudio) { ambientCb.checked ? window.PortalAudio.startAmbient() : window.PortalAudio.stopAmbient(); }
+        saveUserPreferences();
+      });
+      const clickCb = overlay.querySelector('#psClickSound');
+      if (clickCb) clickCb.addEventListener('change', () => {
+        prefs.clickSound = clickCb.checked;
+        if (clickCb.checked && window.PortalAudio) window.PortalAudio.playClick(prefs.cursorKey); // prévia + já destrava o áudio
         saveUserPreferences();
       });
     }
@@ -3634,6 +3718,7 @@
     setupRBAC();
     applyA11y();
     applyPrefsVisuals();
+    setupPortalAudio();
 
     window.ACTIVITY_STUDENT_NAME = currentUser.nome;
     window.ACTIVITY_STUDENT_EMAIL = currentUser.email;

@@ -119,3 +119,95 @@ test.describe('Personalização do portal (botão de perfil)', () => {
     await expect(page.locator('#perfilProgressoWrap')).toBeVisible();
   });
 });
+
+// Música ambiente e som de clique (shared/portal-audio.js) — sintetizados
+// na hora via Web Audio API, sem nenhum arquivo/CDN de áudio. Os testes
+// substituem window.PortalAudio.* por espiões (não dá pra "ouvir" som num
+// teste automatizado) pra confirmar SÓ a integração: o toggle certo chama
+// a função certa, no momento certo, e o relé de clique de dentro de um
+// <iframe> de atividade chega até o documento pai.
+test.describe('Personalização do portal — som', () => {
+  test.beforeEach(async ({ page }) => {
+    await stubSupabaseFake(page, {});
+  });
+
+  test('ligar "Música ambiente" chama PortalAudio.startAmbient() e salva a preferência', async ({ page }) => {
+    await page.goto(ALUNO_URL);
+    await page.evaluate(() => {
+      window.__ambientCalls = 0;
+      window.PortalAudio.startAmbient = () => { window.__ambientCalls++; };
+    });
+    await page.click('#btnPerfilTab');
+    await page.click('#btnAbrirPersonalizacao');
+    await page.check('#psAmbientMusic');
+
+    await expect.poll(() => page.evaluate(() => window.__ambientCalls)).toBe(1);
+    const saved = await page.evaluate(() => (window.__FAKE_DB__.user_preferences || [])[0]);
+    expect(saved).toMatchObject({ ambient_music: true });
+  });
+
+  test('desligar "Música ambiente" chama PortalAudio.stopAmbient()', async ({ page }) => {
+    await page.goto(ALUNO_URL);
+    await page.evaluate(() => {
+      window.__stopCalls = 0;
+      window.PortalAudio.stopAmbient = () => { window.__stopCalls++; };
+    });
+    await page.click('#btnPerfilTab');
+    await page.click('#btnAbrirPersonalizacao');
+    await page.check('#psAmbientMusic');
+    await page.uncheck('#psAmbientMusic');
+
+    await expect.poll(() => page.evaluate(() => window.__stopCalls)).toBe(1);
+  });
+
+  test('ligar "Som de clique" toca uma prévia com o cursor já escolhido, e passa a tocar em qualquer clique do portal', async ({ page }) => {
+    await page.goto(ALUNO_URL);
+    await page.evaluate(() => {
+      window.__clicks = [];
+      window.PortalAudio.playClick = (key) => { window.__clicks.push(key); };
+    });
+    await page.click('#btnPerfilTab');
+    await page.click('#btnAbrirPersonalizacao');
+    await page.click('[data-cursor-key="espada"]');
+    await page.check('#psClickSound'); // a própria marcação já toca uma prévia
+    await expect.poll(() => page.evaluate(() => window.__clicks.at(-1))).toBe('espada');
+
+    const beforeShellClick = await page.evaluate(() => window.__clicks.length);
+    await page.locator('.pf-perso-close').click();
+    await page.click('[data-tab="aulas"]');
+
+    await expect.poll(() => page.evaluate(() => window.__clicks.length)).toBeGreaterThan(beforeShellClick);
+  });
+
+  test('sem "Som de clique" ligado, clicar no portal não chama PortalAudio.playClick', async ({ page }) => {
+    await page.goto(ALUNO_URL);
+    await page.evaluate(() => {
+      window.__clicks = 0;
+      window.PortalAudio.playClick = () => { window.__clicks++; };
+    });
+    await page.click('[data-tab="aulas"]');
+    expect(await page.evaluate(() => window.__clicks)).toBe(0);
+  });
+
+  test('clique DENTRO de um iframe de atividade também dispara o som (relé por postMessage)', async ({ page }) => {
+    await page.goto(ALUNO_URL);
+    await page.evaluate(() => {
+      window.__clicks = 0;
+      window.PortalAudio.playClick = () => { window.__clicks++; };
+    });
+    await page.click('#btnPerfilTab');
+    await page.click('#btnAbrirPersonalizacao');
+    await page.check('#psClickSound');
+    await page.locator('.pf-perso-close').click();
+    const before = await page.evaluate(() => window.__clicks);
+
+    await page.click('[data-tab="aulas"]');
+    await page.click('.game-card:has-text("Banco de Dados")');
+    await page.click('#moduleSelector_sql .game-card:has-text("Teoria")');
+    const frame = page.frameLocator('#moduleFrame_sql');
+    await expect(frame.locator('#storyWrap')).toBeVisible();
+    await frame.locator('body').click();
+
+    await expect.poll(() => page.evaluate(() => window.__clicks)).toBeGreaterThan(before);
+  });
+});
