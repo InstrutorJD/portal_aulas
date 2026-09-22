@@ -173,6 +173,11 @@ test.describe('Notas — dentro do portal da turma', () => {
       trilha_bimestre: [
         { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
         { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+        // "Prova Final" (nota3Label/nota3ActivityLocation em turmas/jogos/
+        // config.js) também precisa estar atribuída a ESTE bimestre, senão
+        // nota3EhDesteBimestre fica false e a coluna trava em 0.00 — mesmo
+        // mecanismo já usado pela coluna "Prova" (prova-diagnostica) acima.
+        { turma: 'jogos', trilha_key: 'prova-final', bimestre: 1 },
       ],
       student_module_progress: [
         { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
@@ -181,6 +186,10 @@ test.describe('Notas — dentro do portal da turma', () => {
       ],
       student_activity_state: [
         { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 16, total: 20, nota: 80 } },
+        // Nota 3 ("Prova Final") agora é automática pra turma Jogos, igual
+        // já era pra Sistemas — vem de state.nota (0-100), não mais de um
+        // <input> digitável (ver nota3Auto em shared/platform-core.js).
+        { student_email: 'breno.silva80', progress_key: 'prova_final_jogos', state: { completed: true, correctCount: 15, total: 25, nota: 60 } },
       ],
     });
     await expandGestaoSection(page, 'Chamada e Notas');
@@ -192,8 +201,9 @@ test.describe('Notas — dentro do portal da turma', () => {
     const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
     // Nota da prova 80/100 * 10 pontos = 8,00 — prova-diagnostica está no 1º Bimestre, igual o selecionado.
     await expect(row.locator('.prova-cell')).toContainText('8.00');
+    // Nota da Prova Final 60/100 * 10 pontos = 6,00 — mesma escala da "Prova".
+    await expect(row.locator('.nota3-cell')).toContainText('6.00');
 
-    await row.locator('[data-campo="nota3"]').fill('6');
     await row.locator('[data-campo="nota4"]').fill('4');
 
     // Projeto de Vida: (80%*5=4,00 + 8 + 6 + 4) / 4 = 5.50.
@@ -204,11 +214,17 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(page.locator('#notasStatus')).toContainText('Notas salvas');
 
     // nota1 continua sendo salva por baixo dos panos (não aparece mais
-    // como coluna própria) só pra grades.media não regredir.
+    // como coluna própria) só pra grades.media não regredir. Com a trilha
+    // 'prova-final' agora também atribuída a este bimestre (acima),
+    // bimestrePortalPercentForStudent() passa a contar 3 módulos, não mais
+    // 2 (teoria+prática de vida-autoconhecimento + o módulo da Prova
+    // Final, que este aluno não concluiu) — só 'prova-diagnostica' é
+    // excluída dessa conta (provaTrilhaKey() em shared/platform-core.js).
+    // (1,0 + 0,6 + 0) / 3 = 53% arredondado -> nota1 = 2,65.
     const saved = await page.evaluate(() =>
       (window.__FAKE_DB__.grades || []).find(r => r.student_email === 'breno.silva80' && r.bimestre === 1)
     );
-    expect(saved).toMatchObject({ nota1: 4, nota2: 8, nota3: 6, nota4: 4, turma: 'jogos' });
+    expect(saved).toMatchObject({ nota1: 2.65, nota2: 8, nota3: 6, nota4: 4, turma: 'jogos' });
   });
 
   test('sem trilha da matéria atribuída ao bimestre, a nota da matéria mostra "sem trilha"; prova de outro bimestre (ou sem bimestre) não conta em "Prova"', async ({ page }) => {

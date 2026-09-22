@@ -14,6 +14,18 @@
 window.TURMA_CONFIG_JOGOS = {
   id: 'jogos',
   label: 'Jogos Digitais',
+  // Rótulo da coluna "Nota 3" em Lançar Notas (shared/platform-core.js) —
+  // mesmo mecanismo já usado pela turma Sistemas (ver turmas/sistemas/
+  // config.js): com os três campos abaixo, a coluna "Prova Final" passa a
+  // ser AUTOMÁTICA e travada pro professor (mesmo padrão da coluna
+  // "Prova"/Prova Diagnóstica), lida direto de student_activity_state
+  // (state.nota, 0-100, salvo por finishExam() em
+  // atividades/prova-final-jogos.html) e escalada pra 0-10, só contando no
+  // bimestre em que a trilha 'prova-final' estiver atribuída ("Liberação
+  // por Trilha") — ver loadNotas/renderPerfilTab em shared/platform-core.js.
+  nota3Label: 'Prova Final',
+  nota3TrilhaKey: 'prova-final',
+  nota3ActivityLocation: 'prova_final_jogos',
   materias: [
     {
       key: 'projeto-vida', label: 'Projeto de Vida',
@@ -965,6 +977,34 @@ window.TURMA_CONFIG_JOGOS = {
               desc: '20 questões (sorteadas de um banco de 80) cobrindo Projeto de Vida, Mundo do Trabalho, Introdução ao Desenvolvimento de Projetos, Codificação de Jogos, Fundamentos de Programação de Jogos e Testes de Jogos Digitais.',
               icon: '📋', src: 'atividades/prova-jogos.html',
               progressKey: 'prova_jogos_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Atividade SEPARADA da Prova Diagnóstica acima — mesmo padrão já
+          // usado pela turma Sistemas (ver turmas/sistemas/config.js):
+          // preenche automaticamente a coluna "Prova Final" (nota3Label/
+          // nota3TrilhaKey/nota3ActivityLocation no topo deste arquivo),
+          // travada pro professor, em vez da coluna "Prova" (nota2, que
+          // continua sendo só a Prova Diagnóstica, trilhas[0] desta matéria
+          // — ver provaTrilhaKey() em shared/platform-core.js).
+          key: 'prova-final',
+          label: 'Prova Final',
+          desc: 'Prova final teórica e prática cobrindo todas as matérias trabalhadas na turma — 25 questões sorteadas de um banco de 80 (72 teóricas + 8 práticas, sempre pelo menos 5 práticas por aluno), com trava anti-saída.',
+          capacidade: 'Avaliação final do conjunto de capacidades trabalhadas nas matérias do curso, incluindo a escrita de código de verdade (criar variável, somar valores, corrigir erros).',
+          modules: [
+            {
+              // Mesmo mecanismo de bloqueio "sair da aba = advertência, saiu
+              // de novo = bloqueio" (shared/exam-proctor.js) e mesmo token de
+              // desbloqueio (shared/professor-visto.js) da Prova Diagnóstica.
+              // A parte prática (JavaScript) usa o mesmo motor de sandbox
+              // (`new Function`) da Prova Final da turma Sistemas, embutido
+              // no fluxo sequencial de perguntas.
+              key: 'prova-final', title: 'Prova Final — Turma Jogos Digitais',
+              desc: '25 questões (sorteadas de um banco de 80) cobrindo teoria de todas as matérias já trabalhadas — e pelo menos 5 delas são práticas: criar variável, somar/subtrair números e corrigir trechos de código com erro, direto no editor.',
+              icon: '📝', src: 'atividades/prova-final-jogos.html',
+              progressKey: 'prova_final_jogos_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]

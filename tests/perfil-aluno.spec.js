@@ -9,15 +9,17 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 const ALUNO_URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
 const PROFESSOR_URL = '/turmas/jogos/plataforma.html?user=admin&ip=192.168.1.254&saldo=9999.00&role=professor&turma=jogos';
 
-// Turma Jogos tem 66 módulos ao todo (mesma base de cálculo usada em
-// ranking.spec.js). A matéria "Fundamentos de Programação" sozinha tem 19:
-// js/basico, js/intermediario, os 4 módulos da trilha csharp (teoria,
-// comparação, prática simples, desafios) e os 5 da trilha gdscript (os
-// mesmos 4 + 'cenarios', só dela), e mais 4 trilhas (teoria+prática cada)
-// de fundamentos gerais de jogos. (Os outros 3 módulos, das trilhas
-// 'cod-godot' (prática sem trava + teoria, em cadeia) e 'cod-phaser'
-// (só prática), ficam na matéria "Codificação de Jogos"; o módulo
-// "Prova — Turma Jogos Digitais" fica na matéria "Prova".)
+// Turma Jogos tem 67 módulos ao todo (mesma base de cálculo usada em
+// ranking.spec.js — 66 + o módulo novo "Prova Final — Turma Jogos
+// Digitais", matéria "Prova"). A matéria "Fundamentos de Programação"
+// sozinha tem 19: js/basico, js/intermediario, os 4 módulos da trilha
+// csharp (teoria, comparação, prática simples, desafios) e os 5 da trilha
+// gdscript (os mesmos 4 + 'cenarios', só dela), e mais 4 trilhas
+// (teoria+prática cada) de fundamentos gerais de jogos. (Os outros 3
+// módulos, das trilhas 'cod-godot' (prática sem trava + teoria, em cadeia)
+// e 'cod-phaser' (só prática), ficam na matéria "Codificação de Jogos"; os
+// módulos "Prova — Turma Jogos Digitais" e "Prova Final — Turma Jogos
+// Digitais" ficam na matéria "Prova".)
 const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
@@ -58,8 +60,8 @@ test.describe('Aba Perfil (só aluno)', () => {
 
   test('mostra progresso geral, por matéria/trilha, a posição no ranking e desbloqueia insígnias por % de conclusão', async ({ page }) => {
     await stubSupabaseFake(page, SEED);
-    // breno completa só js/basico (10/10) → 1 módulo concluído de 66 na turma
-    // toda (1/66 = 1,52% geral, arredonda pra 2%), mas 5% dentro da matéria
+    // breno completa só js/basico (10/10) → 1 módulo concluído de 67 na turma
+    // toda (1/67 = 1,49% geral, arredonda pra 1%), mas 5% dentro da matéria
     // Fundamentos (1 de 19 módulos: js básico+intermediário, os 4 módulos da
     // trilha csharp, os 5 módulos da trilha gdscript, e mais 4 trilhas
     // teoria+prática de fundamentos gerais de jogos).
@@ -70,8 +72,8 @@ test.describe('Aba Perfil (só aluno)', () => {
     await openPerfil(page);
 
     const resumo = page.locator('#perfilResumo');
-    await expect(resumo).toContainText('2%');
-    await expect(resumo).toContainText('1/66');
+    await expect(resumo).toContainText('1%');
+    await expect(resumo).toContainText('1/67');
     await expect(resumo).toContainText('2º'); // atrás só do edward, à frente do resto (0%)
     await expect(resumo).toContainText('Posição de 17');
 
@@ -117,6 +119,11 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
       trilha_bimestre: [
         { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
         { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+        // Nota 3 ("Prova Final") também é automática pra turma Jogos, igual
+        // já era pra Sistemas — precisa estar atribuída a este bimestre,
+        // senão nota3EhDesteBimestre fica false e a coluna trava em 0
+        // (mesmo mecanismo da coluna "Prova"/prova-diagnostica acima).
+        { turma: 'jogos', trilha_key: 'prova-final', bimestre: 1 },
       ],
       student_module_progress: [
         { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
@@ -125,15 +132,18 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
       ],
       student_activity_state: [
         { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 16, total: 20, nota: 80 } },
+        // Nota 3 (0-100, escalada pra 0-10) vem de state.nota, não mais de
+        // grades.nota3 — ver nota3Auto em shared/platform-core.js.
+        { student_email: 'breno.silva80', progress_key: 'prova_final_jogos', state: { completed: true, correctCount: 15, total: 25, nota: 60 } },
       ],
       grades: [
-        { student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', bimestre: 1, nota3: 6, nota4: 4 },
+        { student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', bimestre: 1, nota4: 4 },
       ],
     });
     await page.goto(ALUNO_URL);
     await openPerfil(page);
 
-    // Projeto de Vida: (80%*5=4,00 + Prova 8,00 + Nota3 6 + Nota4 4) / 4 = 5.50.
+    // Projeto de Vida: (80%*5=4,00 + Prova 8,00 + Nota3 6,00 + Nota4 4) / 4 = 5.50.
     const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
     await expect(card).toContainText('NOTA:');
     await expect(card).toContainText('5.50');
