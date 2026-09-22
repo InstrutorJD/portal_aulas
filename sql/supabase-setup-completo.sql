@@ -1435,6 +1435,84 @@ begin
   end if;
 end $$;
 
+-- "Roubar pontos" (opção que o professor liga ao criar a partida, ver
+-- allow_steal abaixo) e a penalidade de sair da tela (sempre ativa, não é
+-- opcional) — os dois mexem no placar além de quizrush_answers, então
+-- shared/quizrush-engine.js soma os três (leaderboardFrom) pra chegar no
+-- total de cada aluno. Script avulso equivalente:
+-- sql/quizrush-roubar-e-saida.sql.
+alter table public.quizrush_sessions add column if not exists allow_steal boolean not null default false;
+
+-- Um aluno que ACERTOU a pergunta escolhe: 'roubar' (tira `amount` pontos de
+-- target_email e soma nos próprios) ou 'bonus' (soma `amount` só nos
+-- próprios, sem mexer em mais ninguém). Uma linha por aluno por pergunta
+-- (chave primária) — o poder só pode ser usado uma vez por pergunta.
+-- `amount` é decidido pelo CLIENTE (shared/quizrush-code.js/quizrush.html),
+-- não por esta tabela — mesmo nível de confiança que quizrush_answers.score
+-- já tem hoje (comentário logo acima sobre o vazamento de correctIndex):
+-- um aluno mexendo no DevTools já conseguiria inflar o próprio score de
+-- QUALQUER jeito, isso não abre brecha nova.
+create table if not exists public.quizrush_powers (
+  session_id uuid not null references public.quizrush_sessions(id) on delete cascade,
+  question_index int not null,
+  student_email text not null,
+  student_name text not null,
+  action text not null check (action in ('roubar', 'bonus')),
+  target_email text,
+  target_name text,
+  amount int not null,
+  created_at timestamptz not null default now(),
+  primary key (session_id, student_email, question_index)
+);
+
+create index if not exists idx_quizrush_powers_session on public.quizrush_powers (session_id, question_index);
+
+alter table public.quizrush_powers enable row level security;
+drop policy if exists "quizrush_powers_select_all" on public.quizrush_powers;
+create policy "quizrush_powers_select_all" on public.quizrush_powers for select using (true);
+drop policy if exists "quizrush_powers_insert_self" on public.quizrush_powers;
+create policy "quizrush_powers_insert_self" on public.quizrush_powers for insert with check (student_email = public.current_email());
+
+-- Saiu da tela (visibilitychange) durante uma pergunta ao vivo: perde
+-- pontos na hora, mas continua logado/jogando normalmente — não é
+-- opcional, vale em TODA sessão do QuizRush (quiz de múltipla escolha e
+-- Quizz Prático). Uma linha por aluno por pergunta — sair várias vezes na
+-- MESMA pergunta só penaliza uma vez; saindo de novo numa pergunta
+-- DIFERENTE, penaliza de novo.
+create table if not exists public.quizrush_penalties (
+  session_id uuid not null references public.quizrush_sessions(id) on delete cascade,
+  question_index int not null,
+  student_email text not null,
+  student_name text not null,
+  amount int not null default 1000,
+  created_at timestamptz not null default now(),
+  primary key (session_id, student_email, question_index)
+);
+
+create index if not exists idx_quizrush_penalties_session on public.quizrush_penalties (session_id, question_index);
+
+alter table public.quizrush_penalties enable row level security;
+drop policy if exists "quizrush_penalties_select_all" on public.quizrush_penalties;
+create policy "quizrush_penalties_select_all" on public.quizrush_penalties for select using (true);
+drop policy if exists "quizrush_penalties_insert_self" on public.quizrush_penalties;
+create policy "quizrush_penalties_insert_self" on public.quizrush_penalties for insert with check (student_email = public.current_email());
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'quizrush_powers'
+  ) then
+    alter publication supabase_realtime add table public.quizrush_powers;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'quizrush_penalties'
+  ) then
+    alter publication supabase_realtime add table public.quizrush_penalties;
+  end if;
+end $$;
+
 -- ============================================================
 -- BLOCO 12 — Sincronização de progresso entre dispositivos
 -- (shared/progress-sync.js). Uma linha por (aluno, atividade), com o

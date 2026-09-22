@@ -46,6 +46,8 @@
     border:1px solid var(--line); border-radius:5px; padding:9px 10px; min-width:260px;
   }
   label.field{ display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.5px; }
+  label.field-check{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink); text-align:left; cursor:pointer; }
+  label.field-check input{ width:16px; height:16px; accent-color:var(--green); cursor:pointer; flex-shrink:0; }
 
   .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 22px; max-width:520px; width:100%; }
   .badge{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; }
@@ -111,6 +113,26 @@
   @keyframes fall{ to{ transform:translateY(115vh) rotate(540deg); opacity:.2; } }
 
   .empty-state{ color:var(--ink-dim); font-size:12px; }
+
+  /* ---------- "Roubar pontos" (opcional, tela de revelação) ---------- */
+  .power-box{ background:rgba(255,255,255,.05); border:1px solid #e21b3c; border-radius:10px; padding:14px 18px; width:100%; max-width:560px; display:flex; flex-direction:column; gap:10px; }
+  .power-title{ font-family:'VT323', monospace; font-size:20px; color:#fff; margin:0; }
+  .power-choice-row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .power-target-list{ display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto; }
+  .power-target-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(0,0,0,.25); border-radius:6px; padding:6px 10px; font-size:12px; color:#e7ddff; }
+  .power-target-row button{ font-family:'JetBrains Mono', monospace; font-weight:800; font-size:11px; padding:6px 10px; border-radius:4px; border:none; background:var(--k-red); color:#fff; cursor:pointer; }
+  .power-target-row button:disabled{ opacity:.35; cursor:not-allowed; }
+  .power-log{ font-size:11.5px; color:#c9b8ff; display:flex; flex-direction:column; gap:3px; }
+  .power-done{ font-size:13px; color:var(--green); font-weight:800; }
+
+  /* ---------- Aviso de sair da tela durante uma pergunta (privado, só quem saiu vê) ---------- */
+  .leave-banner{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-20px);
+    background:var(--blood); color:#fff; padding:12px 22px; border-radius:8px; font-size:13px; font-weight:700;
+    box-shadow:0 6px 20px rgba(0,0,0,.5); z-index:10000; opacity:0; transition:opacity .25s ease, transform .25s ease;
+    max-width:calc(100vw - 32px); text-align:center;
+  }
+  .leave-banner.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
   /* ---------- Quizz Prático (problemas de código) ---------- */
   .mode-tabs{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
@@ -182,6 +204,7 @@
         <label class="field">Tempo por pergunta (segundos)
           <input type="number" id="inpDuration" min="5" max="120" value="25">
         </label>
+        <label class="field-check"><input type="checkbox" id="chkAllowSteal">🦹 Permitir roubar pontos — quem acertar escolhe entre roubar de um colega ou ficar com um bônus pra si</label>
         <button class="btn btn-primary" id="btnCreateSession">🚀 Iniciar QuizRush</button>
       </div>
     </div>
@@ -197,6 +220,7 @@
         <label class="field">Tempo por problema (segundos)
           <input type="number" id="inpCodeDuration" min="30" max="600" value="120">
         </label>
+        <label class="field-check"><input type="checkbox" id="chkAllowStealCode">🦹 Permitir roubar pontos — quem acertar escolhe entre roubar de um colega ou ficar com um bônus pra si</label>
         <div id="codeSetupHint" class="hint"></div>
         <button class="btn btn-primary" id="btnCreateCodeSession">🚀 Iniciar Quizz Prático</button>
       </div>
@@ -298,6 +322,7 @@
     <div id="revealPersonal" style="display:none;">
       <p class="hint" id="revealPersonalText">--</p>
     </div>
+    <div id="revealPowerBox" class="power-box" style="display:none;"></div>
     <p class="subtitle">🏆 Ranking geral até agora</p>
     <ul class="rank-list" id="revealLeaderboard"></ul>
     <div class="btn-row" id="revealHostActions" style="display:none;">
@@ -350,11 +375,17 @@
     joined: false,
     myAnswerThisQuestion: null, // { choiceIndex, correct, score }
     code: null, // estado do problema de código atual (aluno): { attempts, solved, running, timeUp }
+    powers: [], // quizrush_powers da sessão inteira (ver leaderboardFrom)
+    penalties: [], // quizrush_penalties da sessão inteira (ver leaderboardFrom)
+    usingPower: false, // trava o botão enquanto o roubo/bônus está sendo gravado (evita clique duplo)
+    penalizedQuestions: new Set(), // chaves "sessionId:questionIndex" já penalizadas (evita reinserir à toa; a chave primária no banco é a garantia de verdade). Guarda o sessionId junto porque a mesma aba, sem reload, pode entrar numa partida NOVA (subscribeToNewSessions) — sem isso, question_index=0 da partida nova herdaria "já penalizado" da partida anterior.
     clockOffsetMs: 0, // Date.now() + clockOffsetMs ~= relógio do Supabase (ver init/getServerTimeMs)
     countdownTimer: null,
     unsubSession: null,
     unsubPlayers: null,
     unsubAnswers: null,
+    unsubPowers: null,
+    unsubPenalties: null,
     unsubNewSessions: null,
   };
 
@@ -614,7 +645,7 @@
     btn.textContent = '⏳ Criando...';
     const session = await window.QuizRushEngine.createSession({
       turma, email: username, trilhaLabel: 'Quizz Prático', moduleTitle: labels.join(' + '),
-      questions, durationMs: seconds * 1000
+      questions, durationMs: seconds * 1000, allowSteal: document.getElementById('chkAllowStealCode').checked
     });
     btn.disabled = false;
     btn.textContent = '🚀 Iniciar Quizz Prático';
@@ -633,7 +664,7 @@
     btn.textContent = '⏳ Criando...';
     const session = await window.QuizRushEngine.createSession({
       turma, email: username, trilhaLabel: candidate.trilhaLabel, moduleTitle: candidate.moduleTitle,
-      questions, durationMs: seconds * 1000
+      questions, durationMs: seconds * 1000, allowSteal: document.getElementById('chkAllowSteal').checked
     });
     btn.disabled = false;
     btn.textContent = '🚀 Iniciar QuizRush';
@@ -655,6 +686,7 @@
     if (state.unsubSession) state.unsubSession();
     if (state.unsubPlayers) state.unsubPlayers();
     if (state.unsubAnswers) state.unsubAnswers();
+    if (state.unsubPowers) state.unsubPowers();
     if (state.unsubNewSessions) { state.unsubNewSessions(); state.unsubNewSessions = null; }
 
     const id = state.session.id;
@@ -673,6 +705,13 @@
     state.unsubAnswers = window.QuizRushEngine.watchAnswers(id, async () => {
       state.answers = await window.QuizRushEngine.fetchAnswers(id);
       if (state.session.status === 'question') renderQuestionLiveCounts();
+    });
+    // "Roubar pontos" acontece na tela de revelação — quem já está nela
+    // (inclusive o professor projetando) vê o roubo/bônus dos colegas
+    // aparecer ao vivo, sem precisar de ação nenhuma pra atualizar.
+    state.unsubPowers = window.QuizRushEngine.watchPowers(id, async () => {
+      state.powers = await window.QuizRushEngine.fetchPowers(id);
+      if (state.session.status === 'reveal') renderReveal();
     });
   }
 
@@ -702,6 +741,8 @@
     }
     state.players = await window.QuizRushEngine.fetchPlayers(s.id);
     state.answers = await window.QuizRushEngine.fetchAnswers(s.id);
+    state.powers = await window.QuizRushEngine.fetchPowers(s.id);
+    state.penalties = await window.QuizRushEngine.fetchPenalties(s.id);
 
     if (!isHost) {
       state.joined = state.players.some(p => p.student_email === username);
@@ -1044,10 +1085,114 @@
   // Revelação
   // ============================================================
 
+  // ---------- "Roubar pontos" (opcional, allow_steal) ----------
+
+  // O placar (pra escolher alvo/valor do roubo) precisa ser calculado ANTES
+  // da própria ação de quem está escolhendo — senão um roubo já usado por
+  // outro colega na mesma pergunta não entraria na conta do "quanto ele tem
+  // agora" pra decidir o quanto dá pra roubar.
+  function currentLeaderboard() {
+    return window.QuizRushEngine.leaderboardFrom(state.answers, state.powers, state.penalties);
+  }
+
+  function myPowerThisQuestion() {
+    return state.powers.find(p => p.student_email === username && p.question_index === state.session.current_index);
+  }
+
+  async function onUsePower(action, target) {
+    if (state.usingPower || myPowerThisQuestion()) return;
+    state.usingPower = true;
+    renderPowerBox(); // re-renderiza já com os botões desabilitados (feedback imediato)
+
+    const amount = action === 'roubar'
+      ? Math.min(window.QuizRushEngine.STEAL_BONUS_AMOUNT, target.score)
+      : window.QuizRushEngine.STEAL_BONUS_AMOUNT;
+    const result = await window.QuizRushEngine.submitPower({
+      sessionId: state.session.id, questionIndex: state.session.current_index,
+      email: username, name: displayName, action,
+      targetEmail: action === 'roubar' ? target.email : null,
+      targetName: action === 'roubar' ? target.name : null,
+      amount
+    });
+    state.usingPower = false;
+    if (!result || !result.ok) {
+      // não conseguiu gravar (rede/RLS/já usado por outra aba) — deixa
+      // tentar de novo em vez de fingir que usou
+      renderPowerBox();
+      return;
+    }
+    beep(action === 'roubar' ? 220 : 740, 0.15, action === 'roubar' ? 'sawtooth' : 'sine');
+    state.powers = await window.QuizRushEngine.fetchPowers(state.session.id);
+    renderReveal(); // recalcula o placar inteiro com o poder já aplicado
+  }
+
+  // Mostra: (a) a escolha, se o aluno acertou, ainda não usou o poder nesta
+  // pergunta e a sessão permite; (b) o que ELE escolheu, se já usou; (c) o
+  // que os OUTROS colegas já escolheram nesta pergunta (o "efeito plateia"
+  // é o ponto principal da graça) — pra todo mundo, inclusive o professor.
+  function renderPowerBox() {
+    const box = document.getElementById('revealPowerBox');
+    if (!state.session.allow_steal) { box.style.display = 'none'; return; }
+
+    const q = currentQuestion();
+    const myAnswer = state.answers.find(a => a.question_index === state.session.current_index && a.student_email === username);
+    const iCanChoose = !isHost && myAnswer && myAnswer.is_correct;
+    const myPower = myPowerThisQuestion();
+    const othersPowers = state.powers.filter(p => p.question_index === state.session.current_index && p.student_email !== username);
+
+    const logLine = p => p.action === 'roubar'
+      ? `🦹 <b>${escapeHtml(p.student_name)}</b> roubou <b>${p.amount}</b> pontos de ${escapeHtml(p.target_name)}!`
+      : `✨ <b>${escapeHtml(p.student_name)}</b> ficou com um bônus de <b>${p.amount}</b> pontos.`;
+
+    let html = '<p class="power-title">🎲 Roubar Pontos</p>';
+
+    if (iCanChoose && !myPower) {
+      const board = currentLeaderboard();
+      const targets = board.filter(r => r.email !== username);
+      html += `
+        <p class="hint" style="margin:0;">Você acertou! Escolha um poder pra esta rodada:</p>
+        <div class="power-choice-row">
+          <button class="btn btn-primary" id="btnPowerBonus" ${state.usingPower ? 'disabled' : ''}>✨ Ficar com +${window.QuizRushEngine.STEAL_BONUS_AMOUNT} bônus</button>
+        </div>
+        <p class="hint" style="margin:4px 0 0;">Ou roube de um colega:</p>
+        <div class="power-target-list">
+          ${targets.map(r => `
+            <div class="power-target-row">
+              <span>${escapeHtml(r.name)} — ${r.score} pts</span>
+              <button data-steal-email="${escapeHtml(r.email)}" ${state.usingPower || r.score <= 0 ? 'disabled' : ''}>🦹 Roubar ${Math.min(window.QuizRushEngine.STEAL_BONUS_AMOUNT, r.score)}</button>
+            </div>
+          `).join('') || '<span class="hint" style="margin:0;">Ninguém pra roubar ainda.</span>'}
+        </div>
+      `;
+    } else if (myPower) {
+      html += `<p class="power-done">${myPower.action === 'roubar' ? `🦹 Você roubou ${myPower.amount} pontos de ${escapeHtml(myPower.target_name)}!` : `✨ Você ficou com +${myPower.amount} pontos de bônus!`}</p>`;
+    } else if (!isHost) {
+      html += `<p class="hint" style="margin:0;">${myAnswer ? 'Só quem acerta a pergunta ganha esse poder.' : 'Responda certo pra ganhar esse poder.'}</p>`;
+    }
+
+    if (othersPowers.length) {
+      html += `<div class="power-log">${othersPowers.map(logLine).join('<br>')}</div>`;
+    }
+
+    box.innerHTML = html;
+    box.style.display = 'flex';
+
+    const bonusBtn = document.getElementById('btnPowerBonus');
+    if (bonusBtn) bonusBtn.addEventListener('click', () => onUsePower('bonus', null));
+    box.querySelectorAll('[data-steal-email]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = currentLeaderboard().find(r => r.email === btn.getAttribute('data-steal-email'));
+        if (target) onUsePower('roubar', target);
+      });
+    });
+  }
+
   async function renderReveal() {
     showScreen('scrReveal');
     if (state.countdownTimer) clearInterval(state.countdownTimer);
     state.answers = await window.QuizRushEngine.fetchAnswers(state.session.id);
+    state.powers = await window.QuizRushEngine.fetchPowers(state.session.id);
+    state.penalties = await window.QuizRushEngine.fetchPenalties(state.session.id);
 
     const q = currentQuestion();
     const isCode = window.QuizRushEngine.isCodeQuestion(q);
@@ -1107,7 +1252,9 @@
       }
     }
 
-    const leaderboard = window.QuizRushEngine.leaderboardFrom(state.answers).slice(0, 5);
+    renderPowerBox();
+
+    const leaderboard = currentLeaderboard().slice(0, 5);
     document.getElementById('revealLeaderboard').innerHTML = leaderboard.map(r => `
       <li class="${r.email === username ? 'me' : ''}"><span>${escapeHtml(r.name)}</span><span>${r.score}</span></li>
     `).join('') || '<li class="empty-state">Sem respostas ainda</li>';
@@ -1143,7 +1290,9 @@
   async function renderPodium() {
     showScreen('scrPodium');
     state.answers = await window.QuizRushEngine.fetchAnswers(state.session.id);
-    const leaderboard = window.QuizRushEngine.leaderboardFrom(state.answers);
+    state.powers = await window.QuizRushEngine.fetchPowers(state.session.id);
+    state.penalties = await window.QuizRushEngine.fetchPenalties(state.session.id);
+    const leaderboard = currentLeaderboard();
 
     launchConfetti();
     playFanfare();
@@ -1196,6 +1345,55 @@
   }
 
   // ============================================================
+  // Sair da tela durante uma pergunta = perde pontos (sempre ativo, não é
+  // opcional — diferente de "roubar pontos")
+  // ============================================================
+
+  // Banner PRIVADO (só quem saiu vê) — mensagem visível, mas não expõe
+  // ninguém pra turma. Some sozinho depois de alguns segundos.
+  let leaveBannerTimer = null;
+  function showLeaveBanner(amount) {
+    let el = document.getElementById('leaveBanner');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'leaveBanner';
+      el.className = 'leave-banner';
+      document.body.appendChild(el);
+    }
+    el.textContent = `⚠️ Você saiu da tela e perdeu ${amount} pontos!`;
+    // reflow força a transição rodar de novo mesmo se o banner já estava visível
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    clearTimeout(leaveBannerTimer);
+    leaveBannerTimer = setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+  // 'visibilitychange'/document.hidden, NUNCA 'blur' — mesmo motivo
+  // documentado em shared/exam-proctor.js: o jogo roda dentro de um
+  // <iframe> da plataforma, e 'blur' dispararia até clicando em qualquer
+  // canto do PORTAL fora do iframe (ex.: abrir o menu de acessibilidade),
+  // o que seria falso positivo. Só conta durante uma pergunta AO VIVO
+  // ('question') — sair na revelação/pódio/lobby não tem resposta em jogo.
+  // Uma penalidade por pergunta (a chave primária em quizrush_penalties
+  // garante isso mesmo se o evento disparar mais de uma vez ou a página
+  // recarregar no meio).
+  async function onVisibilityChange() {
+    if (isHost || document.visibilityState !== 'hidden') return;
+    const s = state.session;
+    if (!s || s.status !== 'question') return;
+    const key = `${s.id}:${s.current_index}`;
+    if (state.penalizedQuestions.has(key)) return;
+    state.penalizedQuestions.add(key);
+
+    const result = await window.QuizRushEngine.submitPenalty({
+      sessionId: s.id, questionIndex: s.current_index, email: username, name: displayName,
+      amount: window.QuizRushEngine.LEAVE_PENALTY_AMOUNT
+    });
+    if (result && result.ok) showLeaveBanner(window.QuizRushEngine.LEAVE_PENALTY_AMOUNT);
+  }
+
+  // ============================================================
   // Boot
   // ============================================================
 
@@ -1215,6 +1413,7 @@
     turma = urlParams.get('turma') || user.turma || '';
     role = user.role;
     isHost = role === 'professor';
+    if (!isHost) document.addEventListener('visibilitychange', onVisibilityChange, true);
 
     state.clockOffsetMs = await window.QuizRushEngine.getServerTimeMs();
 

@@ -19,6 +19,10 @@
 // 5) Montar a "Revisão das provas": uma partida com perguntas de múltipla
 //    escolha E problemas de código tirados do gabarito das provas (matéria
 //    'prova' do config da turma) — ver fetchExamItems()/buildExamReview().
+// 6) "Roubar pontos" (opcional, allow_steal — quizrush_powers) e a
+//    penalidade de sair da tela durante uma pergunta (sempre ativa —
+//    quizrush_penalties). leaderboardFrom() soma as duas com
+//    quizrush_answers pra chegar no placar de cada aluno.
 window.QuizRushEngine = (function () {
   const sb = window.PortalSession ? window.PortalSession.client() : null;
 
@@ -169,15 +173,27 @@ window.QuizRushEngine = (function () {
     return (data && data[0]) || null;
   }
 
-  async function createSession({ turma, email, trilhaLabel, moduleTitle, questions, durationMs }) {
+  async function createSession({ turma, email, trilhaLabel, moduleTitle, questions, durationMs, allowSteal }) {
     const id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const row = {
       id, turma, created_by: email, trilha_label: trilhaLabel, module_title: moduleTitle,
       questions, status: 'lobby', current_index: 0, question_started_at: null,
-      question_duration_ms: durationMs || 25000, created_at: new Date().toISOString()
+      question_duration_ms: durationMs || 25000, allow_steal: !!allowSteal, created_at: new Date().toISOString()
     };
-    const { error } = await sb.from('quizrush_sessions').upsert(row, { onConflict: 'id' });
-    if (error) { console.error('[QuizRushEngine] falha ao criar sessão:', error); return null; }
+    let { error } = await sb.from('quizrush_sessions').upsert(row, { onConflict: 'id' });
+    if (error && !allowSteal) { console.error('[QuizRushEngine] falha ao criar sessão:', error); return null; }
+    if (error) {
+      // allow_steal é coluna nova (sql/quizrush-roubar-e-saida.sql) — se a
+      // migração ainda não rodou, tenta de novo sem ela em vez de deixar o
+      // professor sem conseguir criar NENHUMA partida por causa de uma
+      // opção que ele nem usou de propósito (a tela só oferece o checkbox,
+      // não é obrigatório marcar).
+      console.warn('[QuizRushEngine] criando sessão sem allow_steal (rode sql/quizrush-roubar-e-saida.sql para habilitar "roubar pontos"):', error);
+      const { allow_steal, ...rowSemSteal } = row;
+      ({ error } = await sb.from('quizrush_sessions').upsert(rowSemSteal, { onConflict: 'id' }));
+      if (error) { console.error('[QuizRushEngine] falha ao criar sessão:', error); return null; }
+      return rowSemSteal;
+    }
     return row;
   }
 
@@ -393,16 +409,91 @@ window.QuizRushEngine = (function () {
     return pickedTheory.concat(pickedCode);
   }
 
-  function leaderboardFrom(answers) {
+  // powers/penalties são opcionais (default []) só pra não quebrar quem já
+  // chamava leaderboardFrom(answers) sozinho antes desses dois recursos
+  // existirem.
+  function leaderboardFrom(answers, powers, penalties) {
     const byStudent = {};
+    const ensure = (email, name) => {
+      if (!byStudent[email]) byStudent[email] = { email, name, score: 0, correct: 0, answered: 0 };
+      return byStudent[email];
+    };
     answers.forEach(a => {
-      const key = a.student_email;
-      if (!byStudent[key]) byStudent[key] = { email: key, name: a.student_name, score: 0, correct: 0, answered: 0 };
-      byStudent[key].score += Number(a.score) || 0;
-      byStudent[key].answered += 1;
-      if (a.is_correct) byStudent[key].correct += 1;
+      const s = ensure(a.student_email, a.student_name);
+      s.score += Number(a.score) || 0;
+      s.answered += 1;
+      if (a.is_correct) s.correct += 1;
     });
+    (powers || []).forEach(p => {
+      const actor = ensure(p.student_email, p.student_name);
+      actor.score += Number(p.amount) || 0;
+      if (p.action === 'roubar' && p.target_email) {
+        const target = ensure(p.target_email, p.target_name);
+        target.score -= Number(p.amount) || 0;
+      }
+    });
+    (penalties || []).forEach(pen => {
+      const s = ensure(pen.student_email, pen.student_name);
+      s.score -= Number(pen.amount) || 0;
+    });
+    // Nunca mostra placar negativo — perder pontos (roubo sofrido ou saída
+    // de tela) reduz até zero, não menos.
+    Object.values(byStudent).forEach(s => { s.score = Math.max(0, s.score); });
     return Object.values(byStudent).sort((a, b) => b.score - a.score);
+  }
+
+  // ---------- "Roubar pontos" (opcional, allow_steal na sessão) ----------
+  // Só quem ACERTOU a pergunta pode usar (a tela é quem garante isso, ver
+  // renderReveal em games/quizrush.html) — a policy de insert só confere
+  // que quem está gravando é quem diz ser, não se ele acertou; mesmo nível
+  // de confiança que já existe em submitAnswer/submitCodeAnswer.
+  const STEAL_BONUS_AMOUNT = 300;
+
+  async function submitPower({ sessionId, questionIndex, email, name, action, targetEmail, targetName, amount }) {
+    if (!sb || !sessionId || !email) return null;
+    const { error } = await sb.from('quizrush_powers').insert({
+      session_id: sessionId, question_index: questionIndex, student_email: email, student_name: name || email,
+      action, target_email: targetEmail || null, target_name: targetName || null, amount
+    });
+    // Conflito de chave (já usou o poder nesta pergunta) é o caso comum de
+    // um clique duplo/re-render — não é erro de verdade pra quem chamou.
+    if (error) { console.warn('[QuizRushEngine] não usou o poder (talvez já tenha usado nesta pergunta):', error); return { ok: false }; }
+    return { ok: true };
+  }
+
+  async function fetchPowers(sessionId) {
+    if (!sb || !sessionId) return [];
+    const { data, error } = await sb.from('quizrush_powers').select('*').eq('session_id', sessionId);
+    if (error) { console.error('[QuizRushEngine] falha ao listar poderes usados:', error); return []; }
+    return data || [];
+  }
+
+  // ---------- Penalidade de sair da tela (sempre ativa) ----------
+  // Troca de aba/minimiza durante uma pergunta ao vivo (games/quizrush.html,
+  // via 'visibilitychange' — NÃO 'blur', mesmo motivo documentado em
+  // shared/exam-proctor.js: o jogo roda dentro de um <iframe> da
+  // plataforma, e 'blur' dispararia até clicando em qualquer canto do
+  // PORTAL fora do iframe). O aluno continua logado/jogando — só perde
+  // pontos e vê um aviso na própria tela.
+  const LEAVE_PENALTY_AMOUNT = 1000;
+
+  async function submitPenalty({ sessionId, questionIndex, email, name, amount }) {
+    if (!sb || !sessionId || !email) return null;
+    const { error } = await sb.from('quizrush_penalties').insert({
+      session_id: sessionId, question_index: questionIndex, student_email: email, student_name: name || email,
+      amount: amount || LEAVE_PENALTY_AMOUNT
+    });
+    // Conflito de chave = já penalizado nesta pergunta (reload no meio,
+    // segundo disparo do evento etc.) — não repete a punição nem o aviso.
+    if (error) return { ok: false, alreadyPenalized: true };
+    return { ok: true };
+  }
+
+  async function fetchPenalties(sessionId) {
+    if (!sb || !sessionId) return [];
+    const { data, error } = await sb.from('quizrush_penalties').select('*').eq('session_id', sessionId);
+    if (error) { console.error('[QuizRushEngine] falha ao listar penalidades:', error); return []; }
+    return data || [];
   }
 
   function watchTable(table, filterCol, filterVal, onChange) {
@@ -416,6 +507,8 @@ window.QuizRushEngine = (function () {
   const watchSession = (id, cb) => watchTable('quizrush_sessions', 'id', id, cb);
   const watchPlayers = (id, cb) => watchTable('quizrush_players', 'session_id', id, cb);
   const watchAnswers = (id, cb) => watchTable('quizrush_answers', 'session_id', id, cb);
+  const watchPowers = (id, cb) => watchTable('quizrush_powers', 'session_id', id, cb);
+  const watchPenalties = (id, cb) => watchTable('quizrush_penalties', 'session_id', id, cb);
 
   // Pra o aluno detectar uma sessão nova nascendo sem precisar recarregar
   // a página — assim que o professor clica em "Criar QuizRush", quem já
@@ -429,6 +522,8 @@ window.QuizRushEngine = (function () {
     getLatestSession, createSession, startSession, nextQuestion, getServerTimeMs, reveal, showPodium, endSession,
     joinSession, fetchPlayers, fetchAnswers, submitAnswer, scoreFor, leaderboardFrom,
     isCodeQuestion, isCodeSession, listCodeTopics, buildCodeQuestions, submitCodeAnswer,
+    STEAL_BONUS_AMOUNT, submitPower, fetchPowers, watchPowers,
+    LEAVE_PENALTY_AMOUNT, submitPenalty, fetchPenalties, watchPenalties,
     watchSession, watchPlayers, watchAnswers, watchNewSessions
   };
 })();

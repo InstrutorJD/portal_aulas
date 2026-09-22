@@ -26,6 +26,17 @@
     return filters.every(([col, val]) => row[col] === val);
   }
 
+  // .insert() (diferente de .upsert()) precisa FALHAR numa linha
+  // duplicada, não sobrescrever — é assim que shared/quizrush-engine.js
+  // detecta "esse aluno já usou o poder/já foi penalizado nesta pergunta"
+  // (ver submitPower/submitPenalty). Só as tabelas com essa checagem real
+  // precisam entrar aqui; toda outra tabela usa .upsert() no código de
+  // verdade, então nunca passa por aqui.
+  const PRIMARY_KEYS = {
+    quizrush_powers: ['session_id', 'student_email', 'question_index'],
+    quizrush_penalties: ['session_id', 'student_email', 'question_index'],
+  };
+
   // .is()/.not(col,'is',val): comparação "solta" (?? null) de propósito —
   // um seed de teste que nunca setou a coluna (ex.: profiles sem
   // archived_at) tem undefined em JS, mas seria NULL de verdade no
@@ -59,10 +70,24 @@
         });
       },
       insert(payload) {
+        // id/created_at default (a maioria das tabelas usados por .insert()
+        // não passa isso explícito, igual o Postgres preenche sozinho).
+        // PRIMARY_KEYS: diferente de .upsert(), .insert() precisa FALHAR
+        // numa linha duplicada em vez de sobrescrever — é assim que
+        // shared/quizrush-engine.js detecta "esse aluno já usou o poder/já
+        // foi penalizado nesta pergunta" (submitPower/submitPenalty). Só as
+        // tabelas com essa checagem real entram no mapa; toda outra tabela
+        // (ex.: exam_guard_events) não tem chave composta pra checar aqui.
         const rows = (Array.isArray(payload) ? payload : [payload]).map(row =>
           Object.assign({ id: 'fake-' + Math.random().toString(36).slice(2), created_at: new Date().toISOString() }, row)
         );
-        table(name).push(...rows);
+        const t = table(name);
+        const pk = PRIMARY_KEYS[name];
+        if (pk) {
+          const dup = rows.find(row => t.some(r => pk.every(c => r[c] === row[c])));
+          if (dup) return Promise.resolve({ data: null, error: { message: `duplicate key value violates unique constraint ("${name}" — fake client)` } });
+        }
+        t.push(...rows);
         return Promise.resolve({ data: rows, error: null });
       },
       upsert(payload, opts) {
