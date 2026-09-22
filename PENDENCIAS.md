@@ -1,251 +1,5 @@
 # Pendências
 
-## Jogo "Ponto de Virada" removido do portal
-
-**Status:** concluído — remoção a pedido do professor. O jogo compartilhado
-"Ponto de Virada — RPG de Decisões" (`games/ponto-de-virada.html`, 28
-decisões em 5 capítulos, disponível pra qualquer aluno na aba Jogos) saiu
-do registro de jogos (`buildGames()` em `shared/platform-core.js`) e o
-arquivo foi apagado. A aba Jogos volta a ter 5 jogos.
-
-**Não afeta** a trilha individual "Ponto de Virada (Engel)"
-(`atividades/ponto-de-virada-engel.html`, `visibleFor: ['engel.fraga']` em
-`turmas/jogos/config.js`) — é uma versão adaptada e independente (6 cenas,
-2 escolhas cada), que só reaproveitou a IDEIA do jogo original; não
-depende do arquivo removido pra funcionar, e continua no portal normalmente.
-
-**Não tratado:** linhas antigas em `game_scores` (Supabase) com
-`game = 'pontodevirada'` continuam no banco — órfãs, inofensivas (não
-aparecem em nenhum placar, já que o jogo saiu da lista), sem script de
-reset dedicado (diferente das remoções de trilha, que tinham
-`student_module_progress` afetando cálculo de %, isso aqui não afeta mais
-nada).
-
-## Trilha "Projeto de Vida & Mundo do Trabalho (Engel)"
-
-**Status:** concluído — trilha individual nova (`visibleFor: ['engel.fraga']`),
-dentro da matéria "Projeto de Vida" (`turmas/jogos/config.js`), unificando
-os temas das 5 trilhas de Projeto de Vida (Autoconhecimento, Cidadania,
-Inteligência Emocional, Colaboração em Equipe, Metas e Carreira) + as 4 de
-Mundo do Trabalho (Revoluções Industriais/Indústria 4.0, Inovação, Trabalho
-em Equipe, Comprometimento) numa trilha só, a pedido do professor.
-
-`atividades/vida-trabalho-engel.html` reaproveita o motor/estilo visual de
-`atividades/ponto-de-virada-engel.html` (emoji grande, pouco texto, sem
-correção automática — "sem certo ou errado") em vez do formato
-teoria-quiz/prática-de-pareceres usado pro resto da turma: 9 cenas (uma por
-trilha original), 2 escolhas por cena, cada reação já ensina o conceito da
-trilha original (ex.: "isso é INDÚSTRIA 4.0") não importa qual escolha o
-aluno faça. Continua o mesmo personagem das cenas (Lucas), agora crescendo
-da escola pro primeiro estágio — 2 cenas têm callback de tag pra uma escolha
-anterior (ex.: cena 1 "criativo" muda o texto da cena 7 de Inovação). Final
-varia conforme quantas tags de "crescimento" (calmo/equipe/planejado/
-flexível/comprometido) o aluno escolheu ao longo do caminho — os dois finais
-são positivos, sem "final ruim".
-
-Cobertura: `tests/vida-trabalho-engel.spec.js` (visibilidade pro Engel/
-professor, invisibilidade pra outros alunos, 2 playthroughs completos —
-sempre 1ª opção e sempre 2ª — conferindo o callback de tag e os dois
-finais). Precisou atualizar as contagens de `<option>` em
-`tests/trilha-organizacao.spec.js` (a matéria "Projeto de Vida" foi de 6
-pra 7 trilhas cadastradas).
-
-## Lista de Gabaritos agrupada por matéria (Gestão)
-
-**Status:** concluído — a pedido do professor. A lista de Gabarito na aba
-Gestão (`#gestaoGabaritoList`, `renderGestaoGabaritoList()` em
-`shared/platform-core.js`) era uma lista achatada de todo módulo com
-`hasGabarito:true` da turma — 63 linhas na turma Jogos, tomando a tela
-inteira. Agora agrupa por matéria (`allTrilhasComMateria()`, já existia,
-usado noutro lugar da Gestão), cada matéria num `.collapsible-card.nested`
-fechado por padrão, mostrando só o título + contagem até o professor abrir
-a que precisa.
-
-`.nested` é uma variante mais compacta de `.collapsible-card` (sem fundo/
-borda/margem própria, pra não virar "caixa dentro de caixa") — reaproveita
-o mesmo `toggleGestaoSection()`/`.expanded` de sempre. Isso escondeu um bug
-real de CSS: `.collapsible-card.expanded .collapsible-body{display:block}`
-é um seletor DESCENDENTE, então bate em QUALQUER `.collapsible-body`
-aninhado dentro do card "Gabarito" de fora assim que ELE abre — não só o
-filho direto —, com especificidade maior que o `display:none` genérico.
-Resultado: todo grupo de matéria nascia aberto sozinho assim que "Gabarito"
-era expandido, mesmo sem o professor clicar nele. Corrigido com uma regra
-`.collapsible-card.nested .collapsible-body{display:none}` de especificidade
-igual (desempate por ordem no arquivo) + `.collapsible-card.nested.expanded
-.collapsible-body{display:block}` de especificidade maior — mesmo problema
-existia pra seta (`.collapsible-arrow`), corrigido do mesmo jeito.
-
-Os testes que clicavam direto em `#gestaoGabaritoList > div` (a linha do
-módulo, filho direto da lista) quebraram — agora a linha fica 2 níveis mais
-funda, dentro do `.collapsible-body` do grupo. Novo helper
-`expandGabaritoRow(page, titleHint)` em `tests/helpers.js` acha o grupo
-certo pelo texto do módulo (sem precisar saber o nome da matéria), expande
-o cabeçalho dele, e devolve o locator da linha — usado em
-`tests/csharp-jogos.spec.js`, `tests/gdscript-jogos.spec.js`,
-`tests/professor-gestao-turma.spec.js`, `tests/turma-sistemas.spec.js` e
-`tests/js-fundamentos.spec.js`.
-
-## Mais desafios básicos + dicas menos reveladoras (C# e GDScript)
-
-**Status:** concluído — a pedido do professor, as "Práticas simples" (C# e
-GDScript) ganharam 4 desafios novos cada (de 5 pra 9): guardar texto, resto
-da divisão (`%`), valor oposto (`-x`) e combinar duas operações com
-parênteses (`(a + b) * c`) — `progressTotal` dos dois módulos foi atualizado
-de 5 pra 9 em `turmas/jogos/config.js`.
-
-Ao testar o operador `%`, achei um bug real: `isSafeExpr()` (nos dois
-motores, `shared/csharp-challenge-engine.js` e
-`shared/gdscript-challenge-engine.js`) não tinha `%` no alfabeto permitido —
-qualquer desafio usando resto da divisão falhava com "expressão não
-reconhecida", mesmo com código correto. Corrigido nos dois arquivos.
-
-Também revisei as dicas das 4 telas de prática (`csharp-pratica-simples`,
-`gdscript-pratica-simples`, `csharp-desafios-pratica`,
-`gdscript-desafios-pratica`) — várias praticamente entregavam a resposta
-pronta (ex.: a dica do desafio de if/else escrevia a solução completa,
-`resultado = "Maior";` / `resultado = "Menor";`, palavra por palavra). Agora
-apontam pro conceito/operador certo sem escrever a linha de código final.
-
-Enquanto testava a tela de teoria do GDScript, achei outro bug de conteúdo
-(não relacionado às dicas): uma das 8 histórias (a de hot-reload/documentação)
-nunca mencionava "GDScript" pelo nome — como a ordem das histórias é
-embaralhada a cada carga (`shared/quiz-teoria-engine.js`), um teste que
-checava "a 1ª história menciona a linguagem" falhava sempre que essa etapa
-caía em 1º. Corrigido no texto da história, não só no teste.
-
-## Trilha GDScript reconstruída (teoria + comparação de 3 colunas + 2 práticas)
-
-**Status:** concluído — trilha `gdscript` recriada do zero dentro de
-"Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), a pedido
-do professor, no mesmo formato/ordem da trilha `csharp` (simples → difícil),
-com 4 módulos:
-- **Teoria** (`atividades/gdscript-teoria.html`, `shared/quiz-teoria-engine.js`):
-  história do GDScript (criado pela própria equipe da Godot — Juan Linietsky
-  e Ariel Manzur), motivo de ter sido criado (integração nativa com nós/
-  cenas/sinais), pontos positivos/negativos e jogos famosos feitos com ele
-  (Brotato, Dome Keeper, Cassette Beasts).
-- **Comparação — JS/C# vs GDScript** (`atividades/gdscript-comparacao.html`):
-  igual a `csharp-comparacao.html`, só que com uma 3ª coluna — cada um dos 5
-  conceitos (variável, constante, função, if/else, laço) mostrado em
-  JavaScript, C# e GDScript lado a lado, um conceito por vez.
-- **Prática — GDScript Simples** (`atividades/gdscript-pratica-simples.html`):
-  só o essencial (criar variável, somar, subtrair, multiplicar, dividir),
-  com 5 desafios.
-- **Prática — Desafios de GDScript** (`atividades/gdscript-desafios-pratica.html`):
-  14 desafios no mesmo formato "vença cada duelo em ordem" — 10 de
-  variável/`print` + 4 de constante/função/if-else/for (mesmo balanceamento
-  da trilha C#, ver seção acima).
-
-Como GDScript também não roda de verdade no navegador,
-`shared/gdscript-challenge-engine.js` (motor novo, mesmo espírito do motor
-de C#) TRANSPILA um subconjunto restrito de GDScript pra JavaScript. A
-diferença chave: GDScript não usa `;` nem `{ }` — blocos são por
-INDENTAÇÃO, igual Python. O transpile rastreia uma pilha de níveis de
-indentação (mais indentado que a linha anterior = abre bloco; menos
-indentado = fecha `}` até bater com um nível já visto) — não é um parser
-recursivo completo, é reconhecimento linha a linha; quem garante que o
-aninhamento fica certo é o `new Function()` do JS que roda o resultado
-depois. Cuidado ao mexer nesse arquivo: a lógica de fechamento de bloco já
-teve um bug (o `else:` duplicava o `}` de fechamento do `if`, porque a
-lógica de dedent já emite o `}` antes da linha ser processada pelo
-`ELSE_RE`) — corrigido antes de publicar, coberto por
-`tests/gdscript-jogos.spec.js`.
-
-A trilha evita ensinar a divisão int/float do GDScript (que depende do tipo
-em tempo de execução, não de uma palavra de tipo como o C#) — os desafios de
-divisão só usam valores que fecham redondo, pra não arriscar ensinar uma
-regra que o motor não modela de verdade.
-
-`sql/supabase-reset-progresso-csharp-gdscript-jogos.sql` foi atualizado
-junto: antes apagava a trilha `gdscript` INTEIRA (sem filtro de
-`module_key`), porque na época ela não tinha conteúdo nenhum. Agora filtra
-por `module_key in ('basico', 'pratica')` nas duas trilhas — igual já fazia
-só pra `csharp` — pra não apagar o progresso de verdade da trilha atual.
-
-## Trilha C# reconstruída (teoria + comparação + 2 práticas)
-
-**Status:** concluído — trilha `csharp` recriada do zero dentro de
-"Fundamentos de Programação de Jogos" (`turmas/jogos/config.js`), a pedido
-do professor, com 4 módulos:
-- **Teoria** (`atividades/csharp-teoria.html`, `shared/quiz-teoria-engine.js`):
-  história do C# (Microsoft, Anders Hejlsberg, 2000, .NET), motivo de ter
-  sido criado, por que é popular em jogos (Unity), pontos positivos/
-  negativos e jogos famosos majoritariamente feitos em C# (Hollow Knight,
-  Cuphead, Among Us, Cities: Skylines, Subnautica, Rust, Pokémon GO).
-- **Comparação — JavaScript vs C#** (`atividades/csharp-comparacao.html`):
-  comparação de sintaxe (texto + código lado a lado) entre variável,
-  constante, função, if/else e laço, um conceito por vez (abas + Anterior/
-  Próximo). Módulo separado da prática de código abaixo — originalmente os
-  dois estavam empilhados numa página só (`csharp-comparacao-pratica.html`),
-  mas a tela ficou grande demais pra caber num Chromebook; virou 2 etapas
-  da trilha, mesmo padrão de teoria/prática separadas usado no resto do
-  portal.
-- **Prática — JavaScript vs C#** (`atividades/csharp-pratica-simples.html`,
-  renomeado de `csharp-comparacao-pratica.html`): só a parte de código de
-  verdade, restrita ao mais simples (criar variável, somar, subtrair,
-  multiplicar, dividir), com 5 desafios.
-- **Prática — Desafios de C#** (`atividades/csharp-desafios-pratica.html`):
-  14 desafios de código no mesmo formato "vença cada duelo em ordem" do JS
-  (`js-basico.html`) — 10 de variável/`Console.WriteLine` (bloco original) +
-  4 novos (um pra cada conceito que só era comparado em texto até então:
-  constante, função, if/else e for — ver próxima seção).
-
-Como não dá pra rodar C# de verdade no navegador, as 2 práticas usam
-`shared/csharp-challenge-engine.js` — um motor novo (variação de
-`shared/js-challenge-engine.js`) que TRANSPILA um subconjunto restrito de
-sintaxe C# pra JavaScript equivalente antes de rodar contra os casos de
-teste. Qualquer linha fora desse subconjunto reconhecido vira erro de
-sintaxe (não passa "por acidente" só por ser JS válido) — e se o tipo
-declarado for `int`, o resultado é truncado (`Math.trunc`) igual o C# de
-verdade faz na divisão inteira, diferente do JavaScript.
-
-## Desafios de constante/função/if-else/for na trilha C#
-
-**Status:** concluído — a Comparação JS vs C# (`csharp-comparacao.html`)
-sempre ensinou 5 conceitos (variável, constante, função, if/else, laço),
-mas até então só "variável" tinha desafio de código de verdade nas 2
-práticas; os outros 4 eram só comparados em texto, nunca escritos pelo
-aluno. `shared/csharp-challenge-engine.js` só reconhecia 2 formatos de
-linha (declaração de variável e `Console.WriteLine`) — qualquer `if`, `for`
-ou `static TIPO Nome(...)` caía direto no erro genérico "não reconheci o
-comando".
-
-**O que mudou:** `transpile()` ganhou mais formatos reconhecidos —
-declaração sem valor inicial (`TIPO nome;`), reatribuição (`nome = expr;`),
-cabeçalho de função (`static TIPO Nome(TIPO p1, TIPO p2) {`), `return`,
-`if (cond) {`, `} else {`, `for (int i = ini; i OP fim; i++) {` e `}`
-sozinho numa linha. Não é um parser recursivo — é reconhecimento linha a
-linha (cada linha bate com um padrão isolado); o aninhamento de blocos
-funciona sozinho porque as chaves emitidas são as mesmas do código do
-aluno, e quem interpreta de verdade a estrutura é o `new Function` do JS
-que roda o resultado. C# e JS já compartilham a sintaxe de if/else/for, então
-essas linhas passam quase direto — só o cabeçalho do `for` troca `int` por
-`let`, e a assinatura da função vira `function Nome(p1, p2) {`.
-
-4 desafios novos em `csharp-desafios-pratica.html` (ids 11-14): criar
-constante, criar função (com parâmetro e `return`), if/else, e um `for`
-imprimindo uma sequência no console. `progressTotal` do módulo foi de 10
-pra 14 — precisou atualizar `turmas/jogos/config.js` e os testes que
-semeavam esse progresso com um array genérico de 10 itens
-(`tests/turma-jogos.spec.js`, `tests/daily-activity-release.spec.js`,
-`tests/trilha-individual-engel.spec.js` — `csharp_desafios` saiu do grupo
-compartilhado `praticaDez` e ganhou array próprio de 14).
-
-Cobertura: `tests/csharp-jogos.spec.js` — desafio de função rejeita
-`function` (JS) e exige `static TIPO Nome`; desafio de for rejeita `let`
-(JS) e exige `int` no cabeçalho; desafio de if/else falha sem o `else`.
-
-**C# Básico (Engel):** trilha individual (`visibleFor: ['engel.fraga']`,
-mesmo padrão de `js-adaptado-engel`), `atividades/csharp-basico-adaptado-engel.html`.
-Mesmo assunto da trilha C# principal (criar "variável", somar, subtrair,
-multiplicar, dividir), só que com termos concretos: "caixa" no lugar de
-variável, "objeto dentro da caixa" no lugar de valor, e a palavra do tipo
-(`int`) descrita como "etiqueta da caixa". Reaproveita a UI de ícones
-grandes + palavras conhecidas (emoji) de `js-basico-adaptado-engel.html`, e
-valida o código digitado chamando `window.PortalCsharpChallenges.transpile`
-(exportado por `shared/csharp-challenge-engine.js`) — mesma validação de
-sintaxe C# restrita da trilha principal, sem duplicar o parser.
-
 ## Efeito visual + sonoro ao concluir uma atividade
 
 **Status:** pendente — ideia do professor, ainda não implementada.
@@ -254,7 +8,9 @@ sintaxe C# restrita da trilha principal, sem duplicar o parser.
 que bate o % mínimo, prática que resolve o último desafio), a tela de
 "concluído"/troféu é só estática — nenhum efeito visual (ex.: confete,
 fogos de artifício) nem sonoro (ex.: som de palmas) toca nesse momento, em
-nenhuma das telas de conclusão das duas turmas.
+nenhuma das telas de conclusão das duas turmas. (O QuizRush já tem confete
+próprio, `launchConfetti()` em `games/quizrush.html` — mas é isolado do
+jogo, não reaproveitado pelas telas de conclusão de atividade.)
 
 **Objetivo:** dar um retorno mais comemorativo/gratificante quando o aluno
 termina uma atividade — exemplo citado pelo professor: fogos de artifício
@@ -266,7 +22,9 @@ e/ou som de palmas.
   cobriria a maior parte do conteúdo com pouco esforço), ou também nas
   ~48 telas bespoke de prática/trabalho das duas turmas?
 - Efeito visual: biblioteca de confete/fogos (ex.: canvas-confetti) ou algo
-  mais simples em CSS puro, sem dependência nova?
+  mais simples em CSS puro, sem dependência nova? (o `launchConfetti()` do
+  QuizRush é uma implementação própria em CSS puro, sem lib — pode servir
+  de referência.)
 - Som: precisa de um arquivo de áudio (ex.: clipe de palmas) — de onde
   viria (licença livre) e como ficaria disponível offline (mesmo padrão
   dos assets já usados no portal, sem depender de CDN externo)?
@@ -337,11 +95,10 @@ trabalhada em cada **matéria** naquele dia.
 
 **Onde:** nada disso existe ainda — hoje não há nenhum ponto de acesso a
 documentação externa dentro do portal. Trilhas de linguagem já
-cadastradas: `js` (Jogos Digitais, `turmas/jogos/config.js` — as trilhas
-`csharp`/`gdscript` foram removidas pra reconstrução, ver "Trilhas C# e
-GDScript removidas para reconstrução" abaixo),
-`sql`/`sql-comentarios` (Sistemas, `turmas/sistemas/config.js`), além de
-HTML/CSS/JavaScript usados na prática de Conexão com Supabase
+cadastradas: `js`, `csharp`, `gdscript` (Jogos Digitais,
+`turmas/jogos/config.js`), `sql`/`sql-comentarios` (Sistemas,
+`turmas/sistemas/config.js`), além de HTML/CSS/JavaScript usados na
+prática de Conexão com Supabase
 (`turmas/sistemas/atividades/db-conexao-supabase-pratica.html`).
 
 **Objetivo:** dar acesso rápido à documentação oficial de cada linguagem
@@ -458,78 +215,6 @@ escolhido, não a lógica.
   graça com qualidade e consistência. A solução aqui deve continuar
   sendo determinística (regras de normalização/inspeção de escopo), não
   um modelo de linguagem.
-
-## Desbloquear todas as etapas das atividades para o professor
-
-**Status:** resolvido. Todos os arquivos com a trava por
-`isUnlocked`/progressão trancada — motores compartilhados e os ~48
-arquivos bespoke — já liberam tudo pro professor. Ver "Já resolvido"
-abaixo.
-
-**Onde:** o bloqueio por **módulo/trilha** (navegação entre matérias) já
-libera tudo pro professor — `isModuleLocked()` em
-`shared/platform-core.js` retorna `false` de cara quando
-`currentUser.role === 'professor'`, e o mesmo vale pra trava da aba de
-Jogos e pra visibilidade de trilha (`trilhaStatus`). O que faltava era o
-bloqueio **dentro** de cada atividade, entre uma etapa/desafio e o
-próximo: toda atividade de código (`CHALLENGES`/`STEPS` com progressão
-trancada) usa a mesma lógica —
-
-```js
-function isUnlocked(challenge) {
-  const idx = CHALLENGES.findIndex(c => c.id === challenge.id);
-  if (idx === 0) return true;
-  return completed.has(CHALLENGES[idx - 1].id);
-}
-```
-
-— sem nenhuma exceção pro professor, então mesmo logado como professor
-só dava pra abrir a 1ª etapa até "resolver" cada uma em sequência. Esse
-mesmo padrão estava duplicado (bespoke, sem função compartilhada) em
-~46 arquivos, mais dois casos com assinatura levemente diferente
-(`cobrinha-construcao.html` e `shared/js-challenge-engine.js`) — ver
-lista completa em "Já resolvido" abaixo.
-
-**Objetivo:** o professor conseguir abrir/navegar livremente por
-qualquer etapa de qualquer atividade prática, sem precisar "resolver"
-as anteriores em ordem — pra poder revisar, demonstrar ou testar
-qualquer parte do conteúdo. Não muda nada pro aluno.
-
-**Já resolvido:**
-- `shared/quiz-teoria-engine.js` (todas as ~20 telas "história + quiz",
-  incluindo `prog-depuracao-teoria.html`): a tela de pergunta ganhou um
-  botão "⏭️ Pular (professor)", visível só quando `isProfessor` (checado
-  uma vez, assíncrono, via `PortalSession.getUser()`) estiver ligado —
-  ele avança sem exigir clique numa opção. Como é assíncrono, a 1ª
-  pergunta pode renderizar antes do botão aparecer; da 2ª em diante já
-  aparece direto.
-- `turmas/sistemas/atividades/prog-depuracao-pratica.html`: mesmo padrão
-  aplicado em `isUnlocked(challenge)` — com `isProfessor` ligado, todo
-  chamado conta como desbloqueado; a sidebar é re-renderizada assim que
-  a checagem assíncrona resolve.
-- Os ~46 arquivos bespoke restantes com o padrão `isUnlocked(challenge)`
-  sobre `CHALLENGES` (todas as `*-pratica.html` das duas turmas,
-  `js-basico.html`, `js-intermediario.html`,
-  `js-basico-adaptado-engel.html`, `csharp-pratica.html`,
-  `gdscript-pratica.html`, `sql-basico.html`, `sql-join.html`,
-  `sql-agregacao.html`): corrigidos em lote (script único, tratando
-  arquivos CRLF e LF separadamente — a mistura de final de linha era
-  exatamente o que travou a tentativa anterior). Mesmo padrão dos dois
-  itens acima: comentário + `isProfessor` + IIFE assíncrona antes de
-  `isUnlocked`, `if (isProfessor) return true;` como 1ª linha dela.
-- `shared/js-challenge-engine.js` (motor compartilhado, usado por
-  `js-fundamentos-basico.html`/`-intermediario.html`): mesmo padrão,
-  corrigido uma vez só na engine — resolve os dois arquivos de uma vez.
-- `turmas/jogos/atividades/cobrinha-construcao.html`: caso especial —
-  além de `isUnlocked(index)` sobre `STEPS`, o passo final ("Visto do
-  professor") tem seu próprio `vistoUnlocked = STEPS.every(s =>
-  completed.has(s.id))`, sem passar por `isUnlocked`. Vira
-  `vistoUnlocked = isProfessor || STEPS.every(...)`, senão o professor
-  destravava os passos mas não o Visto.
-
-Cobertura: `tests/professor-unlock-challenges.spec.js` (novo) testa as 3
-variações (bespoke, motor compartilhado, caso especial do Cobrinha).
-Suíte completa passa (203/203).
 
 ## Token do professor em "Dar visto"/"Pular etapa" — proteção contra força bruta
 
