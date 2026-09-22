@@ -22,6 +22,17 @@ window.TURMA_CONFIG_SISTEMAS = {
   // coluna reservada pro Projeto Empreendedor (ver comentário na trilha
   // 'projeto-app-empreendedor' abaixo).
   nota3Label: 'Prova Final',
+  // Com os dois campos abaixo, a coluna "Prova Final" passa a ser
+  // AUTOMÁTICA e travada pro professor (mesmo padrão da coluna "Prova"/
+  // Prova Diagnóstica, nota2, em vez de um <input> digitável): lida direto
+  // de student_activity_state (state.nota, 0-100, salvo por finishExam()
+  // em prova-final-sistemas.html) e escalada pra 0-10 (85/100 -> 8.5), só
+  // contando no bimestre em que a trilha 'prova-final' estiver atribuída
+  // ("Liberação por Trilha") — ver loadNotas/renderPerfilTab em
+  // shared/platform-core.js. Sem esses campos (caso da turma Jogos), a
+  // coluna volta a ser o <input> manual de sempre.
+  nota3TrilhaKey: 'prova-final',
+  nota3ActivityLocation: 'prova_final_sistemas',
   materias: [
     {
       key: 'banco-dados',
@@ -781,10 +792,10 @@ window.TURMA_CONFIG_SISTEMAS = {
           // (não compartilha progresso nem seleção sorteada). Por ficar em
           // trilhas[1] (não trilhas[0]) da matéria 'prova', a nota dela NÃO
           // vira sozinha a coluna "Prova" do Relatório de Notas (ver
-          // provaTrilhaKey() em shared/platform-core.js) — o professor lança
-          // manualmente na coluna "Nota 3" (rotulada "Prova Final" só nesta
-          // turma, ver nota3Label acima), com base no resultado que a tela
-          // final da prova mostra pro aluno.
+          // provaTrilhaKey() em shared/platform-core.js) — em vez disso
+          // preenche automaticamente a coluna "Prova Final" (nota3Label/
+          // nota3TrilhaKey/nota3ActivityLocation acima), travada pro
+          // professor, igual a coluna "Prova" já faz pra Prova Diagnóstica.
           key: 'prova-final',
           label: 'Prova Final',
           desc: 'Prova final teórica e prática cobrindo todas as matérias trabalhadas na turma — 25 questões sorteadas de um banco de 80 (72 teóricas + 8 práticas, sempre pelo menos 5 práticas por aluno), com trava anti-saída.',

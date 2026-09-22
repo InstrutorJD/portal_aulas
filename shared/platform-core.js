@@ -145,6 +145,12 @@
   // ---------- Shell HTML ----------
   function renderShell() {
     const mount = document.getElementById('app');
+    // Texto de ajuda da seção "Lançar Notas" — varia conforme cfg.nota3ActivityLocation
+    // (só a turma Sistemas define isso hoje, pra Prova Final calcular sozinha
+    // a coluna "Nota 3"/rótulo customizado, igual a coluna "Prova" já faz).
+    const notasHelpText = cfg.nota3ActivityLocation
+      ? `"Prova" (até 10,0, nota da prova diagnóstica) e "${cfg.nota3Label || 'Nota 3'}" são calculadas sozinhas, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só Nota 4 é digitada. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.`
+      : `"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só ${cfg.nota3Label || 'Nota 3'} e Nota 4 são digitadas. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.`;
     mount.innerHTML = `
       <div class="a11y-bar">
         <div>
@@ -381,7 +387,7 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só ${cfg.nota3Label || 'Nota 3'} e Nota 4 são digitadas. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">${notasHelpText}</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -1840,11 +1846,14 @@
     const students = turmaStudents();
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
 
+    const nota3Auto = !!cfg.nota3ActivityLocation;
+
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
-    const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
+    const [gradesRes, progressRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
       fetchTurmaProgressRows(),
       fetchNotaProvaByStudent(),
+      nota3Auto ? fetchNota3AutoByStudent() : Promise.resolve({}),
     ]);
     const byStudent = {};
     (gradesRes.data || []).forEach(r => { byStudent[r.student_email] = r; });
@@ -1860,6 +1869,12 @@
     // selecionado.
     const provaKey = provaTrilhaKey();
     const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestre;
+
+    // Mesma regra pra "Nota 3" quando ela é automática (cfg.nota3TrilhaKey) —
+    // só conta a nota da Prova Final no bimestre em que aquela trilha foi
+    // atribuída.
+    const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
+    const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestre;
 
     tbody.innerHTML = students.map(u => {
       const pRows = progressByStudent[u.email] || [];
@@ -1877,7 +1892,20 @@
         : (notaProva === undefined ? ' <span style="color:var(--ink-dim); font-size:10px;">(não fez a prova)</span>' : '');
 
       const g = byStudent[u.email] || {};
-      const n3 = g.nota3 ?? '', n4 = g.nota4 ?? '';
+      const n4 = g.nota4 ?? '';
+
+      let n3, nota3TdHtml;
+      if (nota3Auto) {
+        const notaAuto = nota3AutoByStudent[u.email];
+        n3 = (nota3EhDesteBimestre && notaAuto !== undefined) ? Math.round((notaAuto / 10) * 100) / 100 : 0;
+        const semNota3 = !nota3EhDesteBimestre
+          ? ` <span style="color:var(--ink-dim); font-size:10px;">(${cfg.nota3Label || 'Nota 3'} não é deste bimestre)</span>`
+          : (notaAuto === undefined ? ` <span style="color:var(--ink-dim); font-size:10px;">(não fez a ${cfg.nota3Label || 'prova'})</span>` : '');
+        nota3TdHtml = `<td class="nota3-cell" data-nota3="${n3}">${n3.toFixed(2)}${semNota3}</td>`;
+      } else {
+        n3 = g.nota3 ?? '';
+        nota3TdHtml = `<td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>`;
+      }
 
       const materiaCellsHtml = materias.map(m => {
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
@@ -1890,7 +1918,7 @@
         <tr data-email="${u.email}" data-nota1="${n1}">
           <td>${u.nome}</td>
           <td class="prova-cell" data-nota2="${n2}">${n2.toFixed(2)}${semProva}</td>
-          <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>
+          ${nota3TdHtml}
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
           ${materiaCellsHtml}
         </tr>
@@ -1899,20 +1927,23 @@
 
     // Nota 3/4 mudam a nota de TODAS as matérias ao mesmo tempo (são
     // compartilhadas entre elas) — recalcula as células de matéria ao
-    // vivo, cada uma com o próprio % já guardado em data-materia-n1.
+    // vivo. Nota 3 pode ser uma célula travada (nota3Auto) em vez de
+    // <input>, por isso lê o valor atual pelo seletor certo em cada
+    // recálculo, em vez de assumir a ordem dos <input>.
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
       const n2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
-      const inputs = tr.querySelectorAll('.nota-input');
       const materiaCells = tr.querySelectorAll('.materia-grade-cell');
-      inputs.forEach(inp => {
-        inp.addEventListener('input', () => {
-          const vals = Array.from(inputs).map(i => i.value);
-          materiaCells.forEach(cell => {
-            const mn1 = parseFloat(cell.dataset.materiaN1);
-            cell.querySelector('.materia-grade-value').textContent = calcMedia(mn1, n2, vals[0], vals[1]).toFixed(2);
-          });
+      const recalc = () => {
+        const n3 = nota3Auto
+          ? parseFloat(tr.querySelector('.nota3-cell').dataset.nota3)
+          : parseFloat(tr.querySelector('.nota-input[data-campo="nota3"]').value);
+        const n4 = parseFloat(tr.querySelector('.nota-input[data-campo="nota4"]').value);
+        materiaCells.forEach(cell => {
+          const mn1 = parseFloat(cell.dataset.materiaN1);
+          cell.querySelector('.materia-grade-value').textContent = calcMedia(mn1, n2, n3, n4).toFixed(2);
         });
-      });
+      };
+      tr.querySelectorAll('.nota-input').forEach(inp => inp.addEventListener('input', recalc));
     });
 
     document.getElementById('notasStatus').textContent = '';
@@ -1922,6 +1953,7 @@
     if (!sbClient) return;
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const now = new Date().toISOString();
+    const nota3Auto = !!cfg.nota3ActivityLocation;
 
     const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
       const email = tr.getAttribute('data-email');
@@ -1933,11 +1965,12 @@
         const v = inp ? inp.value : '';
         return v === '' ? null : parseFloat(v);
       };
+      const nota3 = nota3Auto ? parseFloat(tr.querySelector('.nota3-cell').dataset.nota3) : get('nota3');
       return {
         student_email: email,
         student_name: u ? u.nome : email,
         turma: cfg.id, bimestre,
-        nota1, nota2, nota3: get('nota3'), nota4: get('nota4'),
+        nota1, nota2, nota3, nota4: get('nota4'),
         updated_at: now
       };
     });
@@ -2222,12 +2255,25 @@
     const bimestreAtual = currentBimestreNum();
     const notaPorMateria = {};
     if (bimestreAtual) {
-      const [gradeRes, notaProvaByStudent] = await Promise.all([
+      const nota3Auto = !!cfg.nota3ActivityLocation;
+      const [gradeRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
         sbClient.from('grades').select('nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
         fetchNotaProvaByStudent(),
+        nota3Auto ? fetchNota3AutoByStudent() : Promise.resolve({}),
       ]);
       const g = gradeRes.data || {};
-      const n3 = g.nota3 ?? 0, n4 = g.nota4 ?? 0;
+      const n4 = g.nota4 ?? 0;
+
+      let n3;
+      if (nota3Auto) {
+        const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
+        const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestreAtual;
+        const notaAuto = nota3AutoByStudent[targetEmail];
+        n3 = (nota3EhDesteBimestre && notaAuto !== undefined) ? Math.round((notaAuto / 10) * 100) / 100 : 0;
+      } else {
+        n3 = g.nota3 ?? 0;
+      }
+
       const provaKey = provaTrilhaKey();
       const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestreAtual;
       const notaProva = notaProvaByStudent[targetEmail];
@@ -2303,6 +2349,21 @@
   // "Prova", que escala pra 0-10 — ver loadNotas).
   async function fetchNotaProvaByStudent() {
     const { data } = await sbClient.from('student_activity_state').select('student_email, state').eq('progress_key', `prova_${cfg.id}`);
+    const map = {};
+    (data || []).forEach(r => {
+      if (r.state && typeof r.state.nota === 'number') map[r.student_email] = r.state.nota;
+    });
+    return map;
+  }
+
+  // Mesma ideia de fetchNotaProvaByStudent(), mas pra alimentar a coluna
+  // "Nota 3" automaticamente quando a turma define cfg.nota3ActivityLocation
+  // (só a turma Sistemas define isso hoje, pra Prova Final — ver
+  // turmas/sistemas/config.js). Sem esse campo, a coluna volta a ser o
+  // <input> manual de sempre (ver loadNotas/renderPerfilTab).
+  async function fetchNota3AutoByStudent() {
+    if (!cfg.nota3ActivityLocation) return {};
+    const { data } = await sbClient.from('student_activity_state').select('student_email, state').eq('progress_key', cfg.nota3ActivityLocation);
     const map = {};
     (data || []).forEach(r => {
       if (r.state && typeof r.state.nota === 'number') map[r.student_email] = r.state.nota;

@@ -174,10 +174,11 @@
   // de state.nota, salvo junto do resto do progresso - ver finishExam().
   // Diferente da Prova Diagnostica, esta trilha NAO e a trilhas[0] da
   // materia 'prova' (ver turmas/sistemas/config.js), entao essa nota nao
-  // vira automaticamente a coluna "Prova" do Relatorio de Notas - o
-  // professor lanca manualmente na coluna "Nota 3" (rotulada "Prova Final"
-  // so nesta turma, ver nota3Label em turmas/sistemas/config.js), com base
-  // no que o aluno ve na tela de resultado.
+  // vira automaticamente a coluna "Prova" do Relatorio de Notas - em vez
+  // disso preenche sozinha a coluna "Prova Final" (nota3), travada pro
+  // professor, igual a coluna "Prova" ja faz com a Prova Diagnostica (ver
+  // nota3Label/nota3TrilhaKey/nota3ActivityLocation em
+  // turmas/sistemas/config.js e loadNotas em shared/platform-core.js).
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
