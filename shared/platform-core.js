@@ -33,13 +33,88 @@
   let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
   let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
   let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
-  let a11y = { fontMode: 'pixel', fontScale: 1, libras: false };
+  // fontMode saiu daqui — a fonte agora é controlada por prefs.fontFamily
+  // (4 opções, ver FONT_PRESETS), persistida no banco junto com o resto da
+  // personalização. fontScale/libras continuam só locais (não têm por quê
+  // ir pro banco — atalho de acessibilidade rápido, não "identidade visual").
+  let a11y = { fontScale: 1, libras: false };
   let librasLoadFailed = false; // ver setupVLibras — script de terceiro (vlibras.gov.br) pode ser bloqueado pelo navegador
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
   let viewingStudentEmail = null; // não-nulo quando o PROFESSOR abriu o Perfil de um aluno (ver openStudentPerfil) — nunca setado pro aluno vendo o próprio
   let examGuardEvents = []; // alertas pendentes (aluno saiu 2x de atividade/prova bloqueada) — só professor, ver setupExamGuardAlerts()
   let examGuardRealtimeStarted = false;
+
+  // ---------- Personalização do portal (botão de perfil → 🎨 Personalizar)
+  // ----------
+  // Uma linha por usuário em user_preferences (Supabase), self-service via
+  // RLS (ver sql/user-preferences.sql) — carregada uma vez em init() e
+  // reaplicada a cada mudança de controle na modal (ver openPersonalizacao).
+  let prefs = { fontFamily: 'pixel', accentKey: 'padrao', theme: 'dark', avatarEmoji: '👤', bgPattern: false, cursorKey: 'default' };
+
+  const FONT_PRESETS = {
+    pixel:       { label: 'Pixel/Terminal', body: "'JetBrains Mono', monospace", display: "'VT323', monospace" },
+    traditional: { label: 'Clássica',       body: "system-ui, -apple-system, sans-serif", display: "system-ui, -apple-system, sans-serif" },
+    rounded:     { label: 'Arredondada',    body: "'Quicksand', sans-serif", display: "'Quicksand', sans-serif" },
+    serif:       { label: 'Livro',          body: "'Bitter', serif", display: "'Bitter', serif" },
+  };
+  const FONT_ORDER = ['pixel', 'traditional', 'rounded', 'serif']; // ordem que o botão 🔤 da a11y-bar cicla
+
+  // accent:null = "não sobrescreve nada", mantém a cor original da turma
+  // (--green/--green-dim definidos no <style> de cada plataforma.html).
+  const ACCENT_PRESETS = {
+    padrao:    { label: 'Padrão da turma', accent: null, accentDim: null },
+    azul:      { label: 'Azul Elétrico',    accent: '#2f6fed', accentDim: '#1f4fb0' },
+    roxo:      { label: 'Roxo Ametista',    accent: '#8b5cf6', accentDim: '#6d3fd1' },
+    esmeralda: { label: 'Verde Esmeralda',  accent: '#16a34a', accentDim: '#0f7a37' },
+    laranja:   { label: 'Laranja Terracota', accent: '#ea580c', accentDim: '#b8450a' },
+    rosa:      { label: 'Rosa Framboesa',   accent: '#db2777', accentDim: '#a81d5c' },
+    ciano:     { label: 'Ciano Petróleo',   accent: '#0891b2', accentDim: '#066a85' },
+  };
+
+  // Paleta clara única (não varia por turma) — só troca os tokens neutros
+  // (fundo/painel/linha/tinta); a cor de destaque continua vindo de
+  // ACCENT_PRESETS, escuro ou claro.
+  const LIGHT_THEME_VARS = {
+    '--bg': '#f5f6f4', '--panel': '#ffffff', '--panel2': '#eef0ec',
+    '--line': '#d8dcd3', '--ink': '#1c2418', '--ink-dim': '#5b6b53',
+  };
+
+  // Cursores customizados — SVGs pequenos embutidos como data URI (sem
+  // arquivo novo, sem CDN), aplicados via <style>*{cursor:...!important}
+  // injetado (cobre até elementos que já têm cursor:pointer no CSS deles).
+  const CURSOR_PRESETS = {
+    default: { label: 'Padrão', css: 'auto' },
+    seta: {
+      label: 'Seta Neon',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><polygon points='4,2 4,26 11,20 15,28 19,26 15,18 24,18' fill='%237cff3f' stroke='%23052e00' stroke-width='1.5'/></svg>") 4 2, auto`,
+    },
+    mira: {
+      label: 'Mira de Jogo',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='16' cy='16' r='10' fill='none' stroke='%23ff3b30' stroke-width='2.5'/><line x1='16' y1='0' x2='16' y2='9' stroke='%23ff3b30' stroke-width='2.5'/><line x1='16' y1='23' x2='16' y2='32' stroke='%23ff3b30' stroke-width='2.5'/><line x1='0' y1='16' x2='9' y2='16' stroke='%23ff3b30' stroke-width='2.5'/><line x1='23' y1='16' x2='32' y2='16' stroke='%23ff3b30' stroke-width='2.5'/></svg>") 16 16, crosshair`,
+    },
+    espada: {
+      label: 'Espada Pixel',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><rect x='14' y='2' width='4' height='18' fill='%23d4c86a'/><rect x='10' y='18' width='12' height='4' fill='%236f8368'/><rect x='13' y='22' width='6' height='8' fill='%234a9a2a'/></svg>") 2 2, auto`,
+    },
+    estrela: {
+      label: 'Estrela Mágica',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><polygon points='16,1 20,12 31,12 22,19 25,30 16,23 7,30 10,19 1,12 12,12' fill='%23d4c86a' stroke='%23a8860a' stroke-width='1'/></svg>") 4 4, auto`,
+    },
+    pata: {
+      label: 'Pata',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><ellipse cx='16' cy='22' rx='9' ry='7' fill='%237cff3f'/><ellipse cx='7' cy='10' rx='4' ry='5' fill='%237cff3f'/><ellipse cx='16' cy='6' rx='4' ry='5' fill='%237cff3f'/><ellipse cx='25' cy='10' rx='4' ry='5' fill='%237cff3f'/></svg>") 4 4, auto`,
+    },
+    caveira: {
+      label: 'Caveira',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><ellipse cx='16' cy='13' rx='11' ry='10' fill='%23d9e6d2'/><rect x='8' y='20' width='16' height='8' fill='%23d9e6d2'/><circle cx='11' cy='13' r='3' fill='%2304220a'/><circle cx='21' cy='13' r='3' fill='%2304220a'/><polygon points='16,16 14,20 18,20' fill='%2304220a'/></svg>") 4 4, auto`,
+    },
+  };
+  const CURSOR_ORDER = ['default', 'seta', 'mira', 'espada', 'estrela', 'pata', 'caveira'];
+
+  const AVATAR_EMOJIS = ['👤','🧑‍💻','🎮','🐱','🐶','🦊','🐼','🐸','🦄','🤖','👾','🎲','🏆','⭐','🔥','💎','🌟','🎯','🚀','🛸','👽','🧙','🥷','🎃','😎','🤠','🥸','🐧','🦖','🍀'];
+  const BG_PATTERN_EMOJIS = ['🎮','💻','🕹️','📚','✨','🚀','🎲','🧩','⭐','🔧'];
+  let bgEmojiLayoutCache = null; // posições/tamanhos sorteados uma vez por sessão — não recalcula a cada toggle, pra não "piscar"/mudar layout
 
   // ---------- Alerta estilizado (substitui window.alert nativo, que sai feio
   // e fora do tema) ----------
@@ -174,7 +249,7 @@
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
           <button class="quick-action-btn" id="btnOpenPixelCode" title="Abrir o PixelCode (editor de JavaScript) numa aba nova">💻 PixelCode</button>
-          ${currentUser.role === 'aluno' ? '<button class="tab-btn" data-tab="perfil">Perfil 👤</button>' : ''}
+          <button class="tab-btn profile-tab-btn" data-tab="perfil" id="btnPerfilTab" title="Meu perfil e personalização do portal"><span id="perfilTabEmoji">${prefs.avatarEmoji || '👤'}</span></button>
           ${currentUser.role === 'professor' ? `
             <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
             <button class="quick-action-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑 Token</button>
@@ -265,23 +340,28 @@
                   <h2 id="perfilTituloPrincipal" style="margin:0 0 4px;">Meu Progresso</h2>
                   <p id="perfilSubtitulo" style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Acompanhe sua jornada em ${cfg.label}.</p>
                 </div>
-                <button class="btn btn-secondary" id="btnVoltarPerfilAluno" style="display:none;" onclick="PortalCore.closeStudentPerfil()">← Voltar à Gestão</button>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <button class="btn btn-secondary" id="btnAbrirPersonalizacao" title="Personalizar fonte, cores, tema, avatar, fundo e cursor">🎨 Personalizar</button>
+                  <button class="btn btn-secondary" id="btnVoltarPerfilAluno" style="display:none;" onclick="PortalCore.closeStudentPerfil()">← Voltar à Gestão</button>
+                </div>
               </div>
               <div class="perfil-stats-row" id="perfilResumo"></div>
             </div>
 
-            <div class="card">
-              <h2 style="margin:0 0 4px;">Progresso por Matéria</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">O quanto você já concluiu em cada matéria e trilha.</p>
-              <div id="perfilMaterias"></div>
-            </div>
+            <div id="perfilProgressoWrap">
+              <div class="card">
+                <h2 style="margin:0 0 4px;">Progresso por Matéria</h2>
+                <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">O quanto você já concluiu em cada matéria e trilha.</p>
+                <div id="perfilMaterias"></div>
+              </div>
 
-            <div class="card">
-              <h2 style="margin:0 0 4px;">Insígnias</h2>
-              <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">
-                Cada insígnia é desbloqueada automaticamente conforme seu progresso geral avança — continue concluindo atividades para liberar as próximas.
-              </p>
-              <div class="badge-grid" id="perfilBadgesGrid"></div>
+              <div class="card">
+                <h2 style="margin:0 0 4px;">Insígnias</h2>
+                <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">
+                  Cada insígnia é desbloqueada automaticamente conforme seu progresso geral avança — continue concluindo atividades para liberar as próximas.
+                </p>
+                <div class="badge-grid" id="perfilBadgesGrid"></div>
+              </div>
             </div>
           </div>
 
@@ -2194,7 +2274,26 @@
     const tituloEl = document.getElementById('perfilTituloPrincipal');
     const subtituloEl = document.getElementById('perfilSubtitulo');
     const btnVoltar = document.getElementById('btnVoltarPerfilAluno');
+    const btnPersonalizar = document.getElementById('btnAbrirPersonalizacao');
+    const progressoWrap = document.getElementById('perfilProgressoWrap');
     if (btnVoltar) btnVoltar.style.display = viewingStudentEmail ? '' : 'none';
+    // Botão de personalização só faz sentido pro dono da conta olhando o
+    // PRÓPRIO perfil — não some quando o professor está inspecionando o
+    // Perfil de UM ALUNO pela Gestão (editaria as prefs do professor por
+    // engano dentro da tela do aluno).
+    if (btnPersonalizar) btnPersonalizar.style.display = viewingStudentEmail ? 'none' : '';
+
+    // Professor vendo o PRÓPRIO perfil (não veio da Gestão): não existe
+    // student_module_progress/ranking pra ele — só a personalização.
+    if (currentUser.role === 'professor' && !viewingStudentEmail) {
+      if (tituloEl) tituloEl.textContent = 'Meu Perfil';
+      if (subtituloEl) subtituloEl.textContent = 'Personalize sua experiência no portal.';
+      if (progressoWrap) progressoWrap.style.display = 'none';
+      summaryEl.innerHTML = '';
+      return;
+    }
+    if (progressoWrap) progressoWrap.style.display = '';
+
     if (tituloEl && subtituloEl) {
       if (viewingStudentEmail) {
         const aluno = turmaStudentByEmail(viewingStudentEmail);
@@ -3030,23 +3129,29 @@
 
   // ---------- Acessibilidade ----------
   // Módulos/jogos abrem em <iframe> com documento próprio — as variáveis de
-  // fonte do documento pai não "vazam" pra dentro sozinhas. Aplica as mesmas
-  // variáveis no <html> do iframe (mesma origem, então contentDocument é
-  // acessível) sempre que ele carrega e sempre que o professor/aluno troca
-  // a fonte com um módulo já aberto.
+  // fonte/cor/tema do documento pai não "vazam" pra dentro sozinhas. Aplica
+  // as mesmas variáveis no <html> do iframe (mesma origem, então
+  // contentDocument é acessível) sempre que ele carrega e sempre que o
+  // professor/aluno troca alguma preferência com um módulo já aberto. Essa
+  // função hoje cobre tanto os 2 controles de acessibilidade (fontScale,
+  // libras é tratado à parte) quanto a personalização de verdade (fonte,
+  // cor de destaque, tema, cursor) — um único ponto de propagação pro
+  // iframe em vez de dois, já que as ~58 telas de atividade consomem as
+  // MESMAS variáveis CSS (--user-font*, --green*, --bg/--panel/...) que o
+  // shell.
   function applyA11yToIframe(frame) {
     if (!frame || !frame.src || frame.src === 'about:blank') return;
     try {
-      const root = frame.contentDocument && frame.contentDocument.documentElement;
+      const doc = frame.contentDocument;
+      const root = doc && doc.documentElement;
       if (!root) return;
-      if (a11y.fontMode === 'traditional') {
-        root.style.setProperty('--user-font', 'system-ui, -apple-system, sans-serif');
-        root.style.setProperty('--user-font-display', 'system-ui, -apple-system, sans-serif');
-      } else {
-        root.style.setProperty('--user-font', "'JetBrains Mono', monospace");
-        root.style.setProperty('--user-font-display', "'VT323', monospace");
-      }
+      const fontPreset = FONT_PRESETS[prefs.fontFamily] || FONT_PRESETS.pixel;
+      root.style.setProperty('--user-font', fontPreset.body);
+      root.style.setProperty('--user-font-display', fontPreset.display);
       root.style.setProperty('--user-font-scale', a11y.fontScale);
+      applyAccentVars(root, prefs.accentKey);
+      applyThemeVars(root, prefs.theme);
+      applyCursorVars(doc, prefs.cursorKey);
     } catch (e) {
       // iframe ainda não carregou o document, ou é de outra origem — ignora
     }
@@ -3060,16 +3165,12 @@
   function applyA11y() {
     const root = document.documentElement;
     const btnFontStyle = document.getElementById('btnFontStyle');
-    if (a11y.fontMode === 'traditional') {
-      root.style.setProperty('--user-font', 'system-ui, -apple-system, sans-serif');
-      root.style.setProperty('--user-font-display', 'system-ui, -apple-system, sans-serif');
-      btnFontStyle.classList.add('on');
-      btnFontStyle.title = 'Fonte tradicional ativa — clique para usar a fonte pixelada';
-    } else {
-      root.style.setProperty('--user-font', "'JetBrains Mono', monospace");
-      root.style.setProperty('--user-font-display', "'VT323', monospace");
-      btnFontStyle.classList.remove('on');
-      btnFontStyle.title = 'Fonte pixelada ativa — clique para usar a fonte tradicional';
+    const fontPreset = FONT_PRESETS[prefs.fontFamily] || FONT_PRESETS.pixel;
+    root.style.setProperty('--user-font', fontPreset.body);
+    root.style.setProperty('--user-font-display', fontPreset.display);
+    if (btnFontStyle) {
+      btnFontStyle.classList.toggle('on', prefs.fontFamily !== 'pixel');
+      btnFontStyle.title = `Fonte: ${fontPreset.label} — clique para trocar (ou use 🎨 Personalizar no Perfil)`;
     }
     root.style.setProperty('--user-font-scale', a11y.fontScale);
     applyA11yToOpenIframes();
@@ -3077,6 +3178,274 @@
     const vw = document.querySelector('div[vw]');
     if (vw) vw.style.display = a11y.libras ? '' : 'none';
     document.getElementById('btnLibras').classList.toggle('on', a11y.libras);
+  }
+
+  // ---------- Personalização do portal (cor, tema, avatar, fundo, cursor) ----------
+  // (fonte fica em applyA11y()/applyA11yToIframe() acima, junto com
+  // fontScale — um controle só pra tudo que é "--user-font*")
+  function applyAccentVars(root, accentKey) {
+    const preset = ACCENT_PRESETS[accentKey] || ACCENT_PRESETS.padrao;
+    if (preset.accent) {
+      root.style.setProperty('--green', preset.accent);
+      root.style.setProperty('--green-dim', preset.accentDim);
+    } else {
+      root.style.removeProperty('--green');
+      root.style.removeProperty('--green-dim');
+    }
+  }
+
+  function applyThemeVars(root, theme) {
+    if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+      Object.entries(LIGHT_THEME_VARS).forEach(([k, v]) => root.style.setProperty(k, v));
+    } else {
+      root.removeAttribute('data-theme');
+      Object.keys(LIGHT_THEME_VARS).forEach(k => root.style.removeProperty(k));
+    }
+  }
+
+  function applyCursorVars(doc, cursorKey) {
+    const preset = CURSOR_PRESETS[cursorKey] || CURSOR_PRESETS.default;
+    let tag = doc.getElementById('pfCursorOverride');
+    if (cursorKey && cursorKey !== 'default') {
+      if (!tag) {
+        tag = doc.createElement('style');
+        tag.id = 'pfCursorOverride';
+        doc.head.appendChild(tag);
+      }
+      tag.textContent = `*{ cursor:${preset.css} !important; }`;
+    } else if (tag) {
+      tag.remove();
+    }
+  }
+
+  // Fundo decorativo de emojis, atrás de TUDO (z-index negativo) — só
+  // "aparece" nas bordas/áreas vazias da tela, porque .card/.panel têm
+  // fundo sólido por cima. Posições/tamanhos sorteados uma vez só (mesma
+  // sessão), pra não mudar layout/"piscar" a cada re-render.
+  function toggleBgEmojiLayer(on) {
+    let layer = document.getElementById('pfBgEmojiLayer');
+    if (!on) {
+      if (layer) layer.remove();
+      return;
+    }
+    if (layer) return;
+    if (!bgEmojiLayoutCache) {
+      bgEmojiLayoutCache = Array.from({ length: 18 }, (_, i) => ({
+        emoji: BG_PATTERN_EMOJIS[i % BG_PATTERN_EMOJIS.length],
+        top: Math.round(Math.random() * 100),
+        left: Math.round(Math.random() * 100),
+        size: 20 + Math.round(Math.random() * 44),
+        opacity: (0.04 + Math.random() * 0.08).toFixed(2),
+        rotate: Math.round(Math.random() * 40 - 20),
+      }));
+    }
+    layer = document.createElement('div');
+    layer.id = 'pfBgEmojiLayer';
+    layer.setAttribute('aria-hidden', 'true');
+    layer.innerHTML = bgEmojiLayoutCache.map(item => `<span style="position:absolute; top:${item.top}%; left:${item.left}%; font-size:${item.size}px; opacity:${item.opacity}; transform:rotate(${item.rotate}deg);">${item.emoji}</span>`).join('');
+    document.body.insertBefore(layer, document.body.firstChild);
+  }
+
+  // Aplica tudo que NÃO é fonte (isso já é feito por applyA11y): cor de
+  // destaque, tema, emoji do botão de perfil, fundo decorativo e cursor —
+  // no documento principal e, via applyA11yToOpenIframes(), em qualquer
+  // atividade já aberta.
+  function applyPrefsVisuals() {
+    const root = document.documentElement;
+    applyAccentVars(root, prefs.accentKey);
+    applyThemeVars(root, prefs.theme);
+    applyCursorVars(document, prefs.cursorKey);
+    const emojiSpan = document.getElementById('perfilTabEmoji');
+    if (emojiSpan) emojiSpan.textContent = prefs.avatarEmoji || '👤';
+    toggleBgEmojiLayer(prefs.bgPattern);
+    applyA11yToOpenIframes();
+  }
+
+  // Busca a linha salva do usuário (se existir) uma vez, em init() — antes
+  // de renderShell(), pra já nascer com o emoji/tema certos sem "flash" do
+  // default. Sem linha ainda (1ª vez do usuário): mantém os defaults de
+  // `prefs` (ver declaração no topo) — só é criada no banco no 1º save.
+  async function fetchUserPreferences() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('user_preferences').select('*').eq('email', paramUser).maybeSingle();
+    if (data) {
+      prefs = {
+        fontFamily: data.font_family || 'pixel',
+        accentKey: data.accent_key || 'padrao',
+        theme: data.theme || 'dark',
+        avatarEmoji: data.avatar_emoji || '👤',
+        bgPattern: !!data.bg_pattern,
+        cursorKey: data.cursor_key || 'default',
+      };
+    }
+  }
+
+  // Upsert direto (sem RPC) na própria linha — mesmo modelo self-service de
+  // student_activity_state (ver sql/user-preferences.sql). Chamada a cada
+  // controle trocado na modal de personalização, sem debounce: são cliques
+  // discretos, não algo contínuo tipo arrastar um slider.
+  async function saveUserPreferences() {
+    if (!sbClient) return;
+    // Duas buscas por getElementById (não um elemento cacheado numa const)
+    // de propósito: cada controle troca prefs.* e IMEDIATAMENTE re-renderiza
+    // o corpo da modal (rerender(), síncrono) antes desta função sequer
+    // terminar o 1º await — um elemento capturado antes do await ficaria
+    // "órfão" (fora do DOM) quando a Promise resolvesse, e o "Salvo ✓" nunca
+    // apareceria de verdade pro usuário.
+    const statusBefore = document.getElementById('personalizacaoStatus');
+    if (statusBefore) statusBefore.textContent = 'Salvando...';
+    const { error } = await sbClient.from('user_preferences').upsert({
+      email: paramUser,
+      font_family: prefs.fontFamily,
+      accent_key: prefs.accentKey,
+      theme: prefs.theme,
+      avatar_emoji: prefs.avatarEmoji,
+      bg_pattern: prefs.bgPattern,
+      cursor_key: prefs.cursorKey,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'email' });
+    const statusEl = document.getElementById('personalizacaoStatus');
+    if (statusEl) statusEl.textContent = error ? 'Não foi possível salvar — tente de novo.' : 'Salvo ✓';
+  }
+
+  // Modal de personalização — criada dinamicamente (mesmo padrão de
+  // showAlert/showArchiveConfirm: Escape + clique fora fecham, removida do
+  // DOM ao fechar), aberta pelo botão "🎨 Personalizar" da aba Perfil.
+  function renderPersonalizacaoBody() {
+    const fontButtons = Object.entries(FONT_PRESETS).map(([key, f]) => `
+      <button type="button" class="pf-swatch-btn ${prefs.fontFamily === key ? 'active' : ''}" data-font-key="${key}" style="font-family:${f.body};">
+        ${f.label}
+      </button>
+    `).join('');
+
+    const accentButtons = Object.entries(ACCENT_PRESETS).map(([key, a]) => `
+      <button type="button" class="pf-color-swatch ${prefs.accentKey === key ? 'active' : ''}" data-accent-key="${key}" title="${a.label}" style="background:${a.accent || 'var(--green)'};"></button>
+    `).join('');
+
+    const avatarButtons = AVATAR_EMOJIS.map(emoji => `
+      <button type="button" class="pf-emoji-btn ${prefs.avatarEmoji === emoji ? 'active' : ''}" data-avatar-emoji="${emoji}">${emoji}</button>
+    `).join('');
+
+    const cursorButtons = CURSOR_ORDER.map(key => {
+      const c = CURSOR_PRESETS[key];
+      return `<button type="button" class="pf-cursor-btn ${prefs.cursorKey === key ? 'active' : ''}" data-cursor-key="${key}" style="cursor:${c.css};">${c.label}</button>`;
+    }).join('');
+
+    return `
+      <h3 style="margin:0 0 4px; font-size:14px;">🎨 Personalizar Portal</h3>
+      <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Suas escolhas ficam salvas na sua conta — aparecem em qualquer computador que você usar pra entrar.</p>
+
+      <div class="pf-perso-section">
+        <div class="pf-perso-label">Fonte</div>
+        <div class="pf-swatch-row" id="psFontRow">${fontButtons}</div>
+      </div>
+
+      <div class="pf-perso-section">
+        <div class="pf-perso-label">Cor de destaque</div>
+        <div class="pf-swatch-row" id="psAccentRow">${accentButtons}</div>
+      </div>
+
+      <div class="pf-perso-section">
+        <div class="pf-perso-label">Tema</div>
+        <div class="pf-swatch-row" id="psThemeRow">
+          <button type="button" class="pf-swatch-btn ${prefs.theme === 'dark' ? 'active' : ''}" data-theme-key="dark">🌙 Escuro</button>
+          <button type="button" class="pf-swatch-btn ${prefs.theme === 'light' ? 'active' : ''}" data-theme-key="light">☀️ Claro</button>
+        </div>
+      </div>
+
+      <div class="pf-perso-section">
+        <div class="pf-perso-label">Emoji de perfil</div>
+        <div class="pf-swatch-row pf-emoji-grid" id="psAvatarRow">${avatarButtons}</div>
+      </div>
+
+      <div class="pf-perso-section">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px;">
+          <input type="checkbox" id="psBgPattern" ${prefs.bgPattern ? 'checked' : ''}>
+          ✨ Fundo com emojis flutuantes (discreto, aparece mais nas bordas da tela)
+        </label>
+      </div>
+
+      <div class="pf-perso-section">
+        <div class="pf-perso-label">Cursor do mouse</div>
+        <div class="pf-swatch-row" id="psCursorRow">${cursorButtons}</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+        <span class="status-msg" id="personalizacaoStatus"></span>
+        <button class="btn btn-secondary pf-perso-close">Fechar</button>
+      </div>
+    `;
+  }
+
+  function openPersonalizacao() {
+    document.getElementById('pfPersoOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'pfPersoOverlay';
+    overlay.className = 'pf-alert-overlay';
+    document.body.appendChild(overlay);
+
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+
+    // Cada controle: aplica na hora (applyA11y/applyPrefsVisuals), salva no
+    // banco (saveUserPreferences) e re-renderiza o corpo da modal (pra
+    // destacar a opção recém-escolhida) — um único caminho de wiring, tanto
+    // pra 1ª pintura quanto pras seguintes, já que innerHTML troca os nós e
+    // descarta os listeners antigos junto.
+    function wireControls() {
+      const closeBtn = overlay.querySelector('.pf-perso-close');
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      overlay.querySelectorAll('[data-font-key]').forEach(btn => btn.addEventListener('click', () => {
+        prefs.fontFamily = btn.getAttribute('data-font-key');
+        applyA11y();
+        saveUserPreferences();
+        rerender();
+      }));
+      overlay.querySelectorAll('[data-accent-key]').forEach(btn => btn.addEventListener('click', () => {
+        prefs.accentKey = btn.getAttribute('data-accent-key');
+        applyPrefsVisuals();
+        saveUserPreferences();
+        rerender();
+      }));
+      overlay.querySelectorAll('[data-theme-key]').forEach(btn => btn.addEventListener('click', () => {
+        prefs.theme = btn.getAttribute('data-theme-key');
+        applyPrefsVisuals();
+        saveUserPreferences();
+        rerender();
+      }));
+      overlay.querySelectorAll('[data-avatar-emoji]').forEach(btn => btn.addEventListener('click', () => {
+        prefs.avatarEmoji = btn.getAttribute('data-avatar-emoji');
+        applyPrefsVisuals();
+        saveUserPreferences();
+        rerender();
+      }));
+      overlay.querySelectorAll('[data-cursor-key]').forEach(btn => btn.addEventListener('click', () => {
+        prefs.cursorKey = btn.getAttribute('data-cursor-key');
+        applyPrefsVisuals();
+        saveUserPreferences();
+        rerender();
+      }));
+      const bgCb = overlay.querySelector('#psBgPattern');
+      if (bgCb) bgCb.addEventListener('change', () => {
+        prefs.bgPattern = bgCb.checked;
+        applyPrefsVisuals();
+        saveUserPreferences();
+      });
+    }
+
+    function rerender() {
+      overlay.querySelector('.pf-alert-box').innerHTML = renderPersonalizacaoBody();
+      wireControls();
+    }
+
+    overlay.innerHTML = `<div class="pf-alert-box pf-perso-box" style="border-color:var(--green-dim);" role="dialog" aria-modal="true">${renderPersonalizacaoBody()}</div>`;
+    wireControls();
   }
 
   function setupVLibras() {
@@ -3139,6 +3508,10 @@
     currentUser = await window.PortalSession.requireUser('../../index.html');
     if (!currentUser) return;
     paramUser = currentUser.email;
+    // Antes de renderShell(): já nasce com o emoji/fonte/tema certos no
+    // 1º HTML gerado, sem "flash" do default (ver botão de perfil, que
+    // embute prefs.avatarEmoji direto no template).
+    await fetchUserPreferences();
 
     renderShell();
     renderMaterias();
@@ -3166,8 +3539,11 @@
 
     document.querySelectorAll('#mainNavTabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const tabTarget = e.target.getAttribute('data-tab');
-        if (tabTarget === 'jogos' && e.target.classList.contains('disabled')) {
+        // e.currentTarget (não e.target): o botão de perfil tem um <span>
+        // de emoji dentro — clicar nele faz e.target ser o <span>, que não
+        // tem data-tab nenhum.
+        const tabTarget = e.currentTarget.getAttribute('data-tab');
+        if (tabTarget === 'jogos' && e.currentTarget.classList.contains('disabled')) {
           showAlert('A aba de jogos está bloqueada! Conclua 100% das suas tarefas do dia ou aguarde a liberação do professor.');
           return;
         }
@@ -3224,9 +3600,12 @@
     });
 
     document.getElementById('btnFontStyle').addEventListener('click', () => {
-      a11y.fontMode = a11y.fontMode === 'pixel' ? 'traditional' : 'pixel';
+      const idx = FONT_ORDER.indexOf(prefs.fontFamily);
+      prefs.fontFamily = FONT_ORDER[(idx + 1) % FONT_ORDER.length];
       applyA11y();
+      saveUserPreferences();
     });
+    document.getElementById('btnAbrirPersonalizacao')?.addEventListener('click', openPersonalizacao);
     document.getElementById('btnFontBigger').addEventListener('click', () => {
       a11y.fontScale = Math.min(1.6, Math.round((a11y.fontScale + 0.1) * 10) / 10);
       applyA11y();
@@ -3246,6 +3625,7 @@
 
     setupRBAC();
     applyA11y();
+    applyPrefsVisuals();
 
     window.ACTIVITY_STUDENT_NAME = currentUser.nome;
     window.ACTIVITY_STUDENT_EMAIL = currentUser.email;

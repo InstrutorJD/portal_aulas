@@ -31,10 +31,18 @@ async function openPerfil(page) {
 }
 
 test.describe('Aba Perfil (só aluno)', () => {
-  test('professor não vê a aba Perfil', async ({ page }) => {
+  // O professor também vê o botão de perfil (ícone de avatar, antigo botão
+  // de texto "Perfil 👤" que era só do aluno) — mas ele não tem
+  // student_module_progress próprio, então a tela dele só mostra a
+  // personalização do portal, sem os cards de progresso/insígnias (ver
+  // tests/personalizacao.spec.js pra cobertura completa dessa tela).
+  test('professor vê o botão de perfil, mas sem os cards de progresso do aluno', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(PROFESSOR_URL);
-    await expect(page.locator('#mainNavTabs .tab-btn[data-tab="perfil"]')).toHaveCount(0);
+    await expect(page.locator('#mainNavTabs .tab-btn[data-tab="perfil"]')).toHaveCount(1);
+    await page.click('#mainNavTabs .tab-btn[data-tab="perfil"]');
+    await expect(page.locator('#perfilTituloPrincipal')).toHaveText('Meu Perfil');
+    await expect(page.locator('#perfilProgressoWrap')).toBeHidden();
   });
 
   test('aluno sem nenhum progresso salvo vê 0%, e a vitrine de insígnias aparece toda travada', async ({ page }) => {
