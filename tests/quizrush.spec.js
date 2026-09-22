@@ -142,7 +142,15 @@ test.describe('QuizRush — condução da partida pelo professor', () => {
     };
     await stubSupabaseFake(page, {
       quizrush_sessions: [session],
-      quizrush_players: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' }],
+      // 2º aluno (edward.guzman) NUNCA responde nesta partida de propósito:
+      // se todo mundo já tivesse respondido, a pergunta revelaria sozinha
+      // (ver checkAllAnswered/hostAutoReveal) e este teste, que quer
+      // exercitar o fluxo MANUAL do host (clicar "Revelar agora"/"Próxima
+      // Pergunta"), nunca chegaria a ver a tela de pergunta.
+      quizrush_players: [
+        { session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva' },
+        { session_id: 'sess1', student_email: 'edward.guzman', student_name: 'Edward Guzman' },
+      ],
       quizrush_answers: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 1, is_correct: true, score: 900 }],
     });
     await page.goto(HOST_URL);
@@ -150,7 +158,7 @@ test.describe('QuizRush — condução da partida pelo professor', () => {
     // tela do professor (projetada) mostra a pergunta e as opções por extenso
     await expect(page.locator('#qPrompt')).toContainText('2 + 2');
     await expect(page.locator('#qTiles')).toContainText('4');
-    await expect(page.locator('#qHostStatus')).toContainText('1 de 1 responderam');
+    await expect(page.locator('#qHostStatus')).toContainText('1 de 2 responderam');
 
     await page.click('#btnRevealNow');
     await expect(page.locator('#scrReveal')).toBeVisible();

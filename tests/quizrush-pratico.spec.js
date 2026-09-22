@@ -310,7 +310,12 @@ test.describe('Quizz Prático — estado, tempo e visão do professor', () => {
     const q2 = bankQuestion('js-funcoes', 'js-fn-2');
     await stubSupabaseFake(page, {
       quizrush_sessions: [codeSession(q1, { questions: [q1, q2] })],
-      quizrush_players: codePlayers,
+      // edward.guzman NUNCA envia tentativa nesta partida de propósito: se
+      // todo mundo já tivesse "respondido", o problema revelaria sozinho
+      // (ver checkAllAnswered/hostAutoReveal em games/quizrush.html) e
+      // este teste, que quer exercitar o fluxo MANUAL do host (clicar
+      // "Revelar agora"/"Próxima Pergunta"), nunca veria a tela do problema.
+      quizrush_players: [...codePlayers, { session_id: 'codesess', student_email: 'edward.guzman', student_name: 'Edward Guzman' }],
       quizrush_answers: [{ session_id: 'codesess', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 0, is_correct: true, score: 900, attempts: 1 }],
     });
     await page.goto(HOST_URL);

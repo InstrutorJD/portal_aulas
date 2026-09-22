@@ -1,4 +1,4 @@
--- "Roubar pontos" (opção que o professor liga ao criar a partida do QuizRush)
+-- "Pegar pontos" (opção que o professor liga ao criar a partida do QuizRush)
 -- e a penalidade de sair da tela durante uma pergunta (sempre ativa, não é
 -- opcional). Rode UMA vez no SQL Editor do Supabase — é seguro rodar de novo
 -- (idempotente) e não mexe em nenhuma sessão/resposta já existente. É o
@@ -9,16 +9,17 @@
 -- O que isso cria:
 --   • quizrush_sessions.allow_steal — a opção marcada na tela de criação
 --     ("Criar um QuizRush" / "Iniciar Quizz Prático").
---   • quizrush_powers — um aluno que ACERTOU a pergunta escolhe 'roubar'
---     pontos de um colega ou ficar com um 'bonus' pra si. Uma linha por
---     aluno por pergunta (só dá pra usar o poder uma vez por pergunta).
+--   • quizrush_powers — um aluno que ACERTOU a pergunta escolhe pegar
+--     pontos de um colega (valor interno 'roubar', mostrado na tela como
+--     "pegar") ou ficar com um 'bonus' pra si. Uma linha por aluno por
+--     pergunta (só dá pra usar o poder uma vez por pergunta).
 --   • quizrush_penalties — quem troca de aba/minimiza durante uma pergunta
 --     ao vivo perde pontos na hora (continua logado, só perde pontuação).
 --     Também uma linha por aluno por pergunta.
 --
 -- shared/quizrush-engine.js (leaderboardFrom) soma as duas tabelas junto
 -- com quizrush_answers pra chegar no placar de cada aluno. Sem rodar este
--- script, os dois recursos ficam quietos/sem efeito (a opção "roubar
+-- script, os dois recursos ficam quietos/sem efeito (a opção "pegar
 -- pontos" nem aparece na tela de criação, e sair da tela não perde nada).
 
 alter table public.quizrush_sessions add column if not exists allow_steal boolean not null default false;

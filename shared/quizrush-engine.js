@@ -19,7 +19,7 @@
 // 5) Montar a "Revisão das provas": uma partida com perguntas de múltipla
 //    escolha E problemas de código tirados do gabarito das provas (matéria
 //    'prova' do config da turma) — ver fetchExamItems()/buildExamReview().
-// 6) "Roubar pontos" (opcional, allow_steal — quizrush_powers) e a
+// 6) "Pegar pontos" (opcional, allow_steal — quizrush_powers) e a
 //    penalidade de sair da tela durante uma pergunta (sempre ativa —
 //    quizrush_penalties). leaderboardFrom() soma as duas com
 //    quizrush_answers pra chegar no placar de cada aluno.
@@ -188,7 +188,7 @@ window.QuizRushEngine = (function () {
       // professor sem conseguir criar NENHUMA partida por causa de uma
       // opção que ele nem usou de propósito (a tela só oferece o checkbox,
       // não é obrigatório marcar).
-      console.warn('[QuizRushEngine] criando sessão sem allow_steal (rode sql/quizrush-roubar-e-saida.sql para habilitar "roubar pontos"):', error);
+      console.warn('[QuizRushEngine] criando sessão sem allow_steal (rode sql/quizrush-roubar-e-saida.sql para habilitar "pegar pontos"):', error);
       const { allow_steal, ...rowSemSteal } = row;
       ({ error } = await sb.from('quizrush_sessions').upsert(rowSemSteal, { onConflict: 'id' }));
       if (error) { console.error('[QuizRushEngine] falha ao criar sessão:', error); return null; }
@@ -436,13 +436,13 @@ window.QuizRushEngine = (function () {
       const s = ensure(pen.student_email, pen.student_name);
       s.score -= Number(pen.amount) || 0;
     });
-    // Nunca mostra placar negativo — perder pontos (roubo sofrido ou saída
+    // Nunca mostra placar negativo — perder pontos (ponto pego por outro ou saída
     // de tela) reduz até zero, não menos.
     Object.values(byStudent).forEach(s => { s.score = Math.max(0, s.score); });
     return Object.values(byStudent).sort((a, b) => b.score - a.score);
   }
 
-  // ---------- "Roubar pontos" (opcional, allow_steal na sessão) ----------
+  // ---------- "Pegar pontos" (opcional, allow_steal na sessão) ----------
   // Só quem ACERTOU a pergunta pode usar (a tela é quem garante isso, ver
   // renderReveal em games/quizrush.html) — a policy de insert só confere
   // que quem está gravando é quem diz ser, não se ele acertou; mesmo nível

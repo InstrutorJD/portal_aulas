@@ -1,9 +1,11 @@
 // @ts-check
 // Dois recursos do QuizRush (games/quizrush.html + shared/quizrush-engine.js):
 //
-// 1) "Roubar pontos" (opcional, checkbox na criação — quizrush_sessions.
+// 1) "Pegar pontos" (opcional, checkbox na criação — quizrush_sessions.
 //    allow_steal): só quem ACERTA a pergunta ganha, na revelação, a escolha
-//    entre roubar pontos de um colega ou ficar com um bônus pra si.
+//    entre pegar pontos de um colega ou ficar com um bônus pra si. O valor
+//    interno gravado em quizrush_powers.action continua 'roubar' (nunca
+//    aparece pro aluno) — só o texto na tela virou "pegar".
 // 2) Sair da tela durante uma pergunta ao vivo (sempre ativo, não é
 //    opcional): perde pontos na hora, mas continua logado/jogando — recebe
 //    um aviso PRIVADO (só ele vê) na própria tela.
@@ -32,7 +34,7 @@ const players2 = [
   { session_id: 'sess1', student_email: 'edward.guzman', student_name: 'Edward Guzman' },
 ];
 
-test.describe('Criar QuizRush — opção "roubar pontos"', () => {
+test.describe('Criar QuizRush — opção "pegar pontos"', () => {
   test('checkbox desmarcada por padrão nos dois modos, e vai pra quizrush_sessions.allow_steal', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(HOST_URL);
@@ -69,8 +71,8 @@ test.describe('Criar QuizRush — opção "roubar pontos"', () => {
   });
 });
 
-test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
-  test('quem ACERTA vê a escolha: bônus ou roubar de um colega', async ({ page }) => {
+test.describe('Pegar pontos — revelação (allow_steal ativado)', () => {
+  test('quem ACERTA vê a escolha: bônus ou pegar de um colega', async ({ page }) => {
     await stubSupabaseFake(page, {
       quizrush_sessions: [session({ status: 'reveal' })], quizrush_players: players2,
       quizrush_answers: [
@@ -83,7 +85,7 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
     await expect(box).toBeVisible();
     await expect(box).toContainText('Você acertou! Escolha um poder');
     await expect(box.locator('#btnPowerBonus')).toContainText('+300');
-    await expect(box.locator('[data-steal-email="edward.guzman"]')).toContainText('Roubar 300');
+    await expect(box.locator('[data-steal-email="edward.guzman"]')).toContainText('Pegar 300');
   });
 
   test('quem ERRA não vê a escolha (só a mensagem de que precisa acertar)', async ({ page }) => {
@@ -127,7 +129,7 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
     expect(powers[0]).toMatchObject({ student_email: 'breno.silva80', action: 'bonus', amount: 300, target_email: null });
   });
 
-  test('escolher "roubar" tira 300 do alvo e soma no próprio placar', async ({ page }) => {
+  test('escolher "pegar" tira 300 do alvo e soma no próprio placar', async ({ page }) => {
     await stubSupabaseFake(page, {
       quizrush_sessions: [session({ status: 'reveal' })], quizrush_players: players2,
       quizrush_answers: [
@@ -138,7 +140,7 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
     await page.goto(ALUNO_URL);
     await page.locator('[data-steal-email="edward.guzman"]').click();
 
-    await expect(page.locator('#revealPowerBox')).toContainText('Você roubou 300 pontos de Edward Guzman!');
+    await expect(page.locator('#revealPowerBox')).toContainText('Você pegou 300 pontos de Edward Guzman!');
     const rows = page.locator('#revealLeaderboard li');
     await expect(rows.filter({ hasText: 'Breno Silva' })).toContainText('800'); // 500 + 300
     await expect(rows.filter({ hasText: 'Edward Guzman' })).toContainText('400'); // 700 - 300
@@ -147,7 +149,7 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
     expect(powers[0]).toMatchObject({ action: 'roubar', target_email: 'edward.guzman', amount: 300 });
   });
 
-  test('roubar de alguém com menos de 300 pontos rouba só o que a pessoa tem (nunca fica negativo)', async ({ page }) => {
+  test('pegar de alguém com menos de 300 pontos pega só o que a pessoa tem (nunca fica negativo)', async ({ page }) => {
     await stubSupabaseFake(page, {
       quizrush_sessions: [session({ status: 'reveal' })], quizrush_players: players2,
       quizrush_answers: [
@@ -156,10 +158,10 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
       ],
     });
     await page.goto(ALUNO_URL);
-    await expect(page.locator('[data-steal-email="edward.guzman"]')).toContainText('Roubar 120');
+    await expect(page.locator('[data-steal-email="edward.guzman"]')).toContainText('Pegar 120');
     await page.locator('[data-steal-email="edward.guzman"]').click();
 
-    await expect(page.locator('#revealPowerBox')).toContainText('Você roubou 120 pontos de Edward Guzman!');
+    await expect(page.locator('#revealPowerBox')).toContainText('Você pegou 120 pontos de Edward Guzman!');
     const rows = page.locator('#revealLeaderboard li');
     await expect(rows.filter({ hasText: 'Edward Guzman' })).toContainText('0');
   });
@@ -175,7 +177,7 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
     await expect(page.locator('#btnPowerBonus')).toHaveCount(0);
   });
 
-  test('o log de roubo/bônus aparece pra todo mundo, inclusive o professor', async ({ page }) => {
+  test('o log de "pegou"/bônus aparece pra todo mundo, inclusive o professor', async ({ page }) => {
     await stubSupabaseFake(page, {
       quizrush_sessions: [session({ status: 'reveal' })], quizrush_players: players2,
       quizrush_answers: [{ session_id: 'sess1', student_email: 'edward.guzman', student_name: 'Edward Guzman', question_index: 0, choice_index: 1, is_correct: true, score: 900 }],
@@ -183,7 +185,7 @@ test.describe('Roubar pontos — revelação (allow_steal ativado)', () => {
     });
     await page.goto(HOST_URL);
     await expect(page.locator('#revealPowerBox')).toContainText('Edward Guzman');
-    await expect(page.locator('#revealPowerBox')).toContainText('roubou');
+    await expect(page.locator('#revealPowerBox')).toContainText('pegou');
     await expect(page.locator('#revealPowerBox')).toContainText('250');
     await expect(page.locator('#revealPowerBox')).toContainText('Breno Silva');
   });

@@ -1435,7 +1435,7 @@ begin
   end if;
 end $$;
 
--- "Roubar pontos" (opção que o professor liga ao criar a partida, ver
+-- "Pegar pontos" (opção que o professor liga ao criar a partida, ver
 -- allow_steal abaixo) e a penalidade de sair da tela (sempre ativa, não é
 -- opcional) — os dois mexem no placar além de quizrush_answers, então
 -- shared/quizrush-engine.js soma os três (leaderboardFrom) pra chegar no
@@ -1444,14 +1444,15 @@ end $$;
 alter table public.quizrush_sessions add column if not exists allow_steal boolean not null default false;
 
 -- Um aluno que ACERTOU a pergunta escolhe: 'roubar' (tira `amount` pontos de
--- target_email e soma nos próprios) ou 'bonus' (soma `amount` só nos
--- próprios, sem mexer em mais ninguém). Uma linha por aluno por pergunta
--- (chave primária) — o poder só pode ser usado uma vez por pergunta.
--- `amount` é decidido pelo CLIENTE (shared/quizrush-code.js/quizrush.html),
--- não por esta tabela — mesmo nível de confiança que quizrush_answers.score
--- já tem hoje (comentário logo acima sobre o vazamento de correctIndex):
--- um aluno mexendo no DevTools já conseguiria inflar o próprio score de
--- QUALQUER jeito, isso não abre brecha nova.
+-- target_email e soma nos próprios — mostrado na tela como "pegar", ver
+-- games/quizrush.html) ou 'bonus' (soma `amount` só nos próprios, sem mexer
+-- em mais ninguém). Uma linha por aluno por pergunta (chave primária) — o
+-- poder só pode ser usado uma vez por pergunta. `amount` é decidido pelo
+-- CLIENTE (shared/quizrush-code.js/quizrush.html), não por esta tabela —
+-- mesmo nível de confiança que quizrush_answers.score já tem hoje
+-- (comentário logo acima sobre o vazamento de correctIndex): um aluno
+-- mexendo no DevTools já conseguiria inflar o próprio score de QUALQUER
+-- jeito, isso não abre brecha nova.
 create table if not exists public.quizrush_powers (
   session_id uuid not null references public.quizrush_sessions(id) on delete cascade,
   question_index int not null,
