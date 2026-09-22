@@ -381,7 +381,7 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só Nota 3 e Nota 4 são digitadas. Cada MATÉRIA tem sua própria nota (média de Prova + Nota 3 + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só ${cfg.nota3Label || 'Nota 3'} e Nota 4 são digitadas. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -1830,9 +1830,9 @@
     const tbody = document.getElementById('notasBody');
     const theadRow = document.getElementById('notasHead');
     const materias = materiasParaNotas();
-    const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3, Nota 4 + 1 por matéria
+    const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3 (rótulo configurável via cfg.nota3Label), Nota 4 + 1 por matéria
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>Nota 3</th><th>Nota 4</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
+    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Nota 4</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
 
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
 

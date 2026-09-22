@@ -132,8 +132,9 @@
   // mesmo padrão de modelagem-dados-requisitos-trabalho.html e
   // projeto-financapp-kickoff-trabalho.html. A NOTA (até 10 pontos, valendo pra
   // todas as matérias) não é lançada aqui — o professor lança em "Lançar
-  // Notas", coluna Nota 3 ou Nota 4 (essas duas já contam pra todas as
-  // matérias ao mesmo tempo, ver shared/platform-core.js).
+  // Notas", coluna Nota 4 (Nota 3 é reservada pra Prova Final nesta turma,
+  // ver nota3Label em turmas/sistemas/config.js) — essas duas colunas já
+  // contam pra todas as matérias ao mesmo tempo, ver shared/platform-core.js.
   const STEPS = [
     {
       titulo: 'Apresentação',
@@ -528,7 +529,7 @@ Quando tudo estiver certo e a apresentação já tiver acontecido, avancem e pe�
         { number: 4, title: 'Protótipo no Figma', prompt: 'O protótipo existe e foi compartilhado?', answer: 'Link do Figma funcional, com pelo menos 3 telas (login/cadastro, tela principal, funcionalidade-chave), usando componentes básicos (botões, campos, cores, nome do app).' },
         { number: 5, title: 'Custo e receita', prompt: 'A estimativa financeira está presente e coerente?', answer: 'Tabela com Mês 1, 6 e 12 (custo estimado x receita estimada), com raciocínio explicado (não precisa ser exato) e menção ao ponto de equilíbrio aproximado.' },
         { number: 6, title: 'Formatação e apresentação', prompt: 'Os slides seguem os critérios e a dupla apresentou ao vivo?', answer: 'No máximo 2 fontes, tamanho consistente, título sempre no mesmo lugar, conteúdo alinhado; apresentação feita pra turma com participação dos dois integrantes da dupla.' },
-        { number: 7, title: 'Nota final', prompt: 'Como lançar a nota?', answer: 'Nota de 0 a 10, atribuída após a apresentação ao vivo. Lance em "Lançar Notas" (Nota 3 ou Nota 4) pra cada aluno da dupla — essas colunas já contam automaticamente pra TODAS as matérias do bimestre, não precisa repetir em cada matéria.' }
+        { number: 7, title: 'Nota final', prompt: 'Como lançar a nota?', answer: 'Nota de 0 a 10, atribuída após a apresentação ao vivo. Lance em "Lançar Notas" (Nota 4) pra cada aluno da dupla — essa coluna já conta automaticamente pra TODAS as matérias do bimestre, não precisa repetir em cada matéria.' }
       ],
       fileName: 'projeto-app-empreendedor-checklist.txt'
     });

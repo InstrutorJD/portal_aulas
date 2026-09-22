@@ -15,6 +15,13 @@
 window.TURMA_CONFIG_SISTEMAS = {
   id: 'sistemas',
   label: 'Sistemas',
+  // Rótulo da coluna "Nota 3" em Lançar Notas (shared/platform-core.js) —
+  // só a turma Sistemas usa essa coluna exclusivamente pra Prova Final,
+  // por isso o rótulo customizado; turma Jogos não define isso e continua
+  // vendo o "Nota 3" genérico. Por causa disso, Nota 4 (não Nota 3) é a
+  // coluna reservada pro Projeto Empreendedor (ver comentário na trilha
+  // 'projeto-app-empreendedor' abaixo).
+  nota3Label: 'Prova Final',
   materias: [
     {
       key: 'banco-dados',
@@ -775,7 +782,8 @@ window.TURMA_CONFIG_SISTEMAS = {
           // trilhas[1] (não trilhas[0]) da matéria 'prova', a nota dela NÃO
           // vira sozinha a coluna "Prova" do Relatório de Notas (ver
           // provaTrilhaKey() em shared/platform-core.js) — o professor lança
-          // manualmente em Nota 3/Nota 4, com base no resultado que a tela
+          // manualmente na coluna "Nota 3" (rotulada "Prova Final" só nesta
+          // turma, ver nota3Label acima), com base no resultado que a tela
           // final da prova mostra pro aluno.
           key: 'prova-final',
           label: 'Prova Final',
@@ -805,10 +813,12 @@ window.TURMA_CONFIG_SISTEMAS = {
           // automática (produto é a apresentação + link do Figma) — visto
           // do professor aqui, igual aos demais trabalhos. A NOTA (até 10
           // pontos) não é lançada aqui: o professor lança em "Lançar Notas",
-          // coluna Nota 3 ou Nota 4 — essas duas já contam pra TODAS as
-          // matérias do bimestre ao mesmo tempo (ver loadNotas em
-          // shared/platform-core.js), então uma única nota por aluno já
-          // "vale pra todas as matérias" sem precisar de mecanismo novo.
+          // coluna Nota 4 (Nota 3 é reservada pra Prova Final nesta turma,
+          // ver nota3Label no topo deste arquivo) — Nota 3 e Nota 4 já
+          // contam pra TODAS as matérias do bimestre ao mesmo tempo (ver
+          // loadNotas em shared/platform-core.js), então uma única nota por
+          // aluno já "vale pra todas as matérias" sem precisar de mecanismo
+          // novo.
           // Entra como trilhas[1] da matéria 'prova' (não trilhas[0]) de
           // propósito — provaTrilhaKey() em platform-core.js só olha pra
           // trilhas[0] pra achar a Prova Diagnóstica; manter essa ordem
