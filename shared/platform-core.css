@@ -81,11 +81,14 @@ html[data-theme="light"] body{
 .tab-btn.disabled{ opacity:0.3; cursor:not-allowed; border-color:var(--line) !important; color:var(--ink-dim) !important; background:transparent !important; }
 
 /* Botão de perfil — ícone redondo com o emoji de avatar escolhido em
-   🎨 Personalizar, no lugar do antigo botão de texto "Perfil 👤" (mesma
-   posição na barra, mesmo data-tab="perfil"/.tab-btn por baixo). */
+   🎨 Personalizar, no lugar do antigo botão de texto "Perfil 👤" (mesmo
+   data-tab="perfil"/.tab-btn por baixo). margin-left:auto no último
+   filho de um flex row empurra só ELE pro canto direito da barra,
+   deixando os outros botões agrupados à esquerda como já eram. */
 .profile-tab-btn{
   border-radius:50%; width:34px; height:34px; padding:0;
   display:flex; align-items:center; justify-content:center; font-size:17px; line-height:1;
+  margin-left:auto;
 }
 .profile-tab-btn span{ pointer-events:none; }
 

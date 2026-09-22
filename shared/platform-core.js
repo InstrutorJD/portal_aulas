@@ -249,7 +249,6 @@
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
           <button class="quick-action-btn" id="btnOpenPixelCode" title="Abrir o PixelCode (editor de JavaScript) numa aba nova">💻 PixelCode</button>
-          <button class="tab-btn profile-tab-btn" data-tab="perfil" id="btnPerfilTab" title="Meu perfil e personalização do portal"><span id="perfilTabEmoji">${prefs.avatarEmoji || '👤'}</span></button>
           ${currentUser.role === 'professor' ? `
             <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
             <button class="quick-action-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑 Token</button>
@@ -257,6 +256,7 @@
               🔔 Alertas<span class="exam-guard-badge" id="examGuardBadge" style="display:none;"></span>
             </button>
           ` : ''}
+          <button class="tab-btn profile-tab-btn" data-tab="perfil" id="btnPerfilTab" title="Meu perfil e personalização do portal"><span id="perfilTabEmoji">${prefs.avatarEmoji || '👤'}</span></button>
         </div>
 
         ${currentUser.role === 'professor' ? `
