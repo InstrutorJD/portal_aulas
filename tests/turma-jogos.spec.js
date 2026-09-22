@@ -139,7 +139,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
 
     await tabJogos.click();
     await expect(page.locator('#tabContentJogos')).toBeVisible();
-    await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(5);
+    await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(6);
   });
 });
 

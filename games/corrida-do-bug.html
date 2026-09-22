@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelForge Studios — Corrida do Bug</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
+  body{
+    padding:10px; background:var(--bg); color:var(--ink);
+    font-family:'JetBrains Mono', monospace; height:100vh;
+  }
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15); overflow:hidden; position:relative;
+  }
+
+  .screen{ flex:1; min-height:0; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; gap:14px; overflow:auto; text-align:center; }
+  .screen.show{ display:flex; }
+  h1.title{ font-family:'VT323', monospace; font-size:32px; color:var(--green); margin:0; letter-spacing:1px; text-shadow:0 0 8px rgba(124,255,63,.35); }
+  .subtitle{ font-size:11.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin:0; }
+  .hint{ font-size:12px; color:var(--ink-dim); max-width:440px; line-height:1.5; }
+
+  .btn{
+    font-family:'JetBrains Mono', monospace; font-weight:800; font-size:13px; letter-spacing:.5px;
+    padding:11px 20px; border-radius:6px; border:2px solid var(--green-dim); background:var(--panel2);
+    color:var(--green); cursor:pointer;
+  }
+  .btn:hover:not(:disabled){ box-shadow:0 4px 14px rgba(124,255,63,.25); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-primary{ background:var(--green); color:#04240a; border-color:var(--green); }
+  .btn-danger{ border-color:var(--blood-bright); color:var(--blood-bright); background:var(--panel2); }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+  select, input[type=number]{
+    font-family:'JetBrains Mono', monospace; font-size:13px; background:var(--panel2); color:var(--ink);
+    border:1px solid var(--line); border-radius:5px; padding:9px 10px; min-width:260px;
+  }
+  label.field{ display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.5px; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 22px; max-width:520px; width:100%; }
+  .badge{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; background:rgba(124,255,63,.15); color:var(--green); border:1px solid var(--green-dim); }
+
+  .player-list{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:520px; }
+  .player-chip{ background:var(--panel2); border:1px solid var(--green-dim); color:var(--ink); font-size:11.5px; padding:6px 12px; border-radius:20px; }
+
+  .lead-table{ width:100%; max-width:560px; border-collapse:collapse; font-size:12.5px; text-align:left; }
+  .lead-table th{ color:var(--ink-dim); font-size:10px; text-transform:uppercase; letter-spacing:.5px; padding:4px 8px; border-bottom:1px solid var(--line); }
+  .lead-table td{ padding:6px 8px; border-bottom:1px solid #16200f; }
+  .lead-table tr.me td{ color:var(--green); font-weight:800; }
+  .lead-table tr.finished td{ color:var(--yellow); }
+
+  /* ---------- Corrida (canvas, reaproveita o visual do Fuga do Bug) ---------- */
+  .stage{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  #raceCanvas{ background:linear-gradient(180deg,#081006 0%, #050805 70%); display:block; max-width:100%; max-height:100%; }
+  .hud{ position:absolute; top:10px; left:10px; display:flex; gap:8px; flex-wrap:wrap; pointer-events:none; max-width:calc(100% - 20px); }
+  .hud .pill{ background:rgba(10,15,10,0.8); border:1px solid var(--green-dim); border-radius:3px; padding:4px 10px; font-size:12px; color:var(--ink); }
+  .hud .pill b{ color:var(--green); }
+  .hud .pill.penalty b{ color:var(--blood-bright); }
+
+  .touch-controls{ position:absolute; bottom:12px; left:0; right:0; display:none; justify-content:space-between; padding:0 14px; pointer-events:none; }
+  .touch-controls.active{ display:flex; }
+  .tc-group{ display:flex; gap:10px; pointer-events:all; }
+  .tc-btn{ width:56px; height:56px; border-radius:50%; background:rgba(16,20,15,0.85); border:1px solid var(--green-dim); color:var(--green); font-size:22px; display:flex; align-items:center; justify-content:center; user-select:none; }
+  .tc-btn:active{ background:var(--green-dim); color:#04180a; }
+
+  /* ---------- Overlay de pergunta no checkpoint (pausa a corrida) ---------- */
+  .cp-overlay{
+    position:absolute; inset:0; background:rgba(3,5,3,0.93);
+    display:none; align-items:center; justify-content:center; padding:16px; overflow-y:auto;
+  }
+  .cp-overlay.show{ display:flex; }
+  .cp-box{ background:var(--panel); border:1px solid var(--green-dim); border-radius:8px; padding:20px 24px; max-width:520px; width:100%; text-align:center; }
+  .cp-box h2{ font-family:'VT323', monospace; font-size:22px; color:var(--yellow); margin:0 0 12px; }
+  .cp-prompt{ font-size:14px; color:var(--ink); line-height:1.5; margin:0 0 16px; }
+  .cp-options{ display:flex; flex-direction:column; gap:8px; }
+  .cp-option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid var(--line);
+    background:var(--panel2); cursor:pointer; font-size:13px; color:var(--ink); text-align:left; border-radius:4px;
+  }
+  .cp-option:hover:not(:disabled){ border-color:var(--green-dim); }
+  .cp-option .opt-letter{ width:20px; height:20px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--ink-dim); }
+  .cp-option.correct{ border-color:var(--green); background:rgba(124,255,63,0.1); }
+  .cp-option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .cp-option.wrong{ border-color:var(--blood-bright); background:rgba(255,59,48,0.1); }
+  .cp-option.wrong .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .cp-option:disabled{ cursor:default; }
+  .cp-feedback{ min-height:22px; font-size:13px; font-weight:800; margin-top:10px; }
+  .cp-feedback.ok{ color:var(--green); }
+  .cp-feedback.fail{ color:var(--blood-bright); }
+  .cp-feedback.penalty{ color:var(--yellow); }
+
+  @media (max-width: 700px) {
+    .lvl-grid{ grid-template-columns:repeat(4, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="env" id="env">
+
+  <div class="screen show" id="scrLoading">
+    <h1 class="title">🏁 Corrida do Bug</h1>
+    <p class="hint">Carregando...</p>
+  </div>
+
+  <div class="screen" id="scrDisabled">
+    <h1 class="title">🏁 Corrida do Bug</h1>
+    <div class="card"><p class="hint" style="margin:0;">Precisa do Supabase configurado (é uma corrida ao vivo, sincronizada entre professor e alunos). Rode <code>sql/supabase-setup-completo.sql</code> e configure <code>shared/supabase-config.js</code>.</p></div>
+  </div>
+
+  <!-- ---------- Professor: montar uma corrida nova ---------- -->
+  <div class="screen" id="scrSetup">
+    <h1 class="title">🏁 Criar uma Corrida do Bug</h1>
+    <p class="subtitle">Escolha a fase e a atividade que vai virar as perguntas dos checkpoints</p>
+    <div class="card" style="display:flex; flex-direction:column; gap:14px; align-items:stretch;">
+      <label class="field">Fase do Fuga do Bug
+        <select id="selLevel"></select>
+      </label>
+      <label class="field">Atividade (banco de perguntas)
+        <select id="selModule"></select>
+      </label>
+      <div id="setupEmptyWarn" class="hint" style="display:none; color:var(--yellow);">⚠️ Nenhuma atividade com quiz de múltipla escolha foi encontrada nesta turma ainda.</div>
+      <button class="btn" id="btnFetchQuestions">🔎 Buscar perguntas</button>
+      <div id="setupResult" style="display:none; flex-direction:column; gap:12px;">
+        <div id="setupResultText" class="hint"></div>
+        <button class="btn btn-primary" id="btnCreateSession">🚀 Iniciar Corrida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Aluno: nenhuma corrida ao vivo ---------- -->
+  <div class="screen" id="scrNoSession">
+    <h1 class="title">🏁 Corrida do Bug</h1>
+    <div class="card"><p class="hint" style="margin:0;">Nenhuma corrida ao vivo agora. Assim que o professor criar uma, esta tela muda sozinha — fique à vontade pra deixar aberta. 👀</p></div>
+  </div>
+
+  <!-- ---------- Aluno: entrar na sala ---------- -->
+  <div class="screen" id="scrJoin">
+    <h1 class="title">🏁 Corrida ao vivo!</h1>
+    <div class="card">
+      <p class="subtitle" style="margin:0 0 6px;" id="joinLevel">--</p>
+      <p style="font-size:16px; color:var(--ink); margin:0 0 16px;" id="joinModulo">--</p>
+      <button class="btn btn-primary" id="btnJoin" style="font-size:15px; padding:14px 26px;">🙋 Entrar na Corrida</button>
+    </div>
+  </div>
+
+  <!-- ---------- Lobby (host + aluno já dentro) ---------- -->
+  <div class="screen" id="scrLobby">
+    <h1 class="title">🏁 Sala Aberta</h1>
+    <p class="subtitle" id="lobbySubtitle">--</p>
+    <div class="badge" id="lobbyCount">0 jogadores</div>
+    <ul class="player-list" id="lobbyPlayers"></ul>
+    <div class="btn-row" id="lobbyHostActions" style="display:none;">
+      <button class="btn btn-primary" id="btnStartRace">▶️ Iniciar Corrida</button>
+      <button class="btn btn-danger" id="btnCancelLobby">🔚 Cancelar</button>
+    </div>
+    <p class="hint" id="lobbyStudentHint">Você entrou! Aguardando o professor iniciar a corrida...</p>
+  </div>
+
+  <!-- ---------- Professor: acompanha a corrida ao vivo (não joga) ---------- -->
+  <div class="screen" id="scrHostRace">
+    <h1 class="title">🏁 Corrida em andamento</h1>
+    <p class="subtitle" id="hostRaceSubtitle">--</p>
+    <table class="lead-table">
+      <thead><tr><th>Aluno</th><th>Checkpoint</th><th>Pontos</th><th>Status</th></tr></thead>
+      <tbody id="hostLeaderboard"></tbody>
+    </table>
+    <div class="btn-row"><button class="btn btn-danger" id="btnEndRace">🔚 Encerrar Corrida</button></div>
+  </div>
+
+  <!-- ---------- Aluno: correndo ---------- -->
+  <div class="screen" id="scrRace" style="padding:0;">
+    <div class="stage">
+      <canvas id="raceCanvas" width="960" height="544"></canvas>
+      <div class="hud">
+        <div class="pill">📍 Checkpoint: <b id="hudCheckpoint">0</b>/<span id="hudCheckpointTotal">0</span></div>
+        <div class="pill">⭐ Pontos: <b id="hudScore">0</b></div>
+        <div class="pill penalty" id="hudMissWarn" style="display:none;">⚠️ Errou 1x neste checkpoint</div>
+      </div>
+      <div class="touch-controls" id="touchControls">
+        <div class="tc-group"><div class="tc-btn" id="tcLeft">◀</div><div class="tc-btn" id="tcRight">▶</div></div>
+        <div class="tc-group"><div class="tc-btn" id="tcJump">⤒</div></div>
+      </div>
+      <div class="cp-overlay" id="cpOverlay">
+        <div class="cp-box">
+          <h2>🚦 Checkpoint! Responda pra continuar</h2>
+          <p class="cp-prompt" id="cpPrompt">--</p>
+          <div class="cp-options" id="cpOptions"></div>
+          <div class="cp-feedback" id="cpFeedback"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- Aluno: chegou na bandeira ---------- -->
+  <div class="screen" id="scrFinish">
+    <h1 class="title">🏁 Você chegou!</h1>
+    <p class="hint" id="finishStats">--</p>
+    <p class="hint">Acompanhe o resto da turma até o professor encerrar a corrida.</p>
+  </div>
+
+  <!-- ---------- Resultado final ---------- -->
+  <div class="screen" id="scrPodium">
+    <h1 class="title">🏆 Resultado Final</h1>
+    <table class="lead-table">
+      <thead><tr><th>#</th><th>Aluno</th><th>Checkpoint</th><th>Pontos</th></tr></thead>
+      <tbody id="podiumList"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/clipboard-guard.js"></script>
+<script src="../shared/game-leaderboard.js"></script>
+<script src="fuga-do-bug-engine.js"></script>
+<script src="fuga-do-bug-levels.js"></script>
+<script src="../shared/quizrush-engine.js"></script>
+<script src="../shared/corridadobug-engine.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const Engine = window.FugaEngine;
+  const LEVELS = window.FugaLevels;
+  const { TILE, ROWS, PW, PH } = Engine;
+  const GAME_KEY = 'corridadobug';
+  const STEP_MS = 1000 / 60;
+  const $ = id => document.getElementById(id);
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.toggle('show', el.id === id));
+  }
+
+  let username = 'anon', displayName = 'anon', turma = '', isHost = false;
+
+  const state = {
+    session: null,
+    candidateModules: [],
+    fetchedQuestions: null,
+    players: [],
+    progress: [],
+    joined: false,
+    unsubSession: null, unsubPlayers: null, unsubProgress: null, unsubNewSessions: null,
+  };
+
+  // ============================================================
+  // Professor — montar a corrida
+  // ============================================================
+
+  function renderLevelSelect() {
+    const select = $('selLevel');
+    select.innerHTML = LEVELS.map((d, i) =>
+      `<option value="${i}">Fase ${i + 1} — ${escapeHtml(d.name)} (${d.checks.length} checkpoint${d.checks.length === 1 ? '' : 's'})</option>`
+    ).join('');
+  }
+
+  async function renderSetupScreen() {
+    showScreen('scrSetup');
+    renderLevelSelect();
+    const cfgTurma = await window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null);
+    state.candidateModules = cfgTurma ? window.QuizRushEngine.listGabaritoModules(cfgTurma) : [];
+
+    const select = $('selModule');
+    const warn = $('setupEmptyWarn');
+    if (state.candidateModules.length === 0) {
+      select.innerHTML = '';
+      warn.style.display = 'block';
+      $('btnFetchQuestions').disabled = true;
+      return;
+    }
+    warn.style.display = 'none';
+    $('btnFetchQuestions').disabled = false;
+    const byTrilha = {};
+    state.candidateModules.forEach((c, i) => { (byTrilha[c.trilhaLabel] = byTrilha[c.trilhaLabel] || []).push({ ...c, idx: i }); });
+    select.innerHTML = Object.keys(byTrilha).map(trilhaLabel => `
+      <optgroup label="${escapeHtml(trilhaLabel)}">
+        ${byTrilha[trilhaLabel].map(c => `<option value="${c.idx}">${escapeHtml(c.moduleTitle)}</option>`).join('')}
+      </optgroup>
+    `).join('');
+    $('setupResult').style.display = 'none';
+  }
+
+  async function onFetchQuestions() {
+    const levelIndex = parseInt($('selLevel').value, 10);
+    const level = LEVELS[levelIndex];
+    const needed = level.checks.length;
+    const idx = parseInt($('selModule').value, 10);
+    const candidate = state.candidateModules[idx];
+    if (!candidate) return;
+
+    const btn = $('btnFetchQuestions');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Buscando...';
+    const questions = await window.QuizRushEngine.fetchModuleQuestions({ turma, mod: candidate.mod, email: username });
+    btn.disabled = false;
+    btn.textContent = original;
+
+    const resultBox = $('setupResult');
+    const resultText = $('setupResultText');
+    if (questions.length < needed) {
+      resultBox.style.display = 'flex';
+      resultText.innerHTML = `⚠️ Essa fase tem <b>${needed} checkpoint${needed === 1 ? '' : 's'}</b>, mas "${escapeHtml(candidate.moduleTitle)}" só tem <b>${questions.length}</b> pergunta(s) de múltipla escolha. Escolha outra atividade ou outra fase.`;
+      $('btnCreateSession').disabled = true;
+      state.fetchedQuestions = null;
+      return;
+    }
+    state.fetchedQuestions = { questions: questions.slice(0, needed), candidate, levelIndex };
+    resultBox.style.display = 'flex';
+    resultText.innerHTML = `✅ Pronto! <b>${needed} pergunta${needed === 1 ? '' : 's'}</b> escolhida(s) em "<b>${escapeHtml(candidate.moduleTitle)}</b>" pra fase <b>${levelIndex + 1}</b>.`;
+    $('btnCreateSession').disabled = false;
+  }
+
+  async function onCreateSession() {
+    if (!state.fetchedQuestions) return;
+    const { questions, candidate, levelIndex } = state.fetchedQuestions;
+    const btn = $('btnCreateSession');
+    btn.disabled = true;
+    btn.textContent = '⏳ Criando...';
+    const session = await window.CorridaDoBugEngine.createSession({
+      turma, email: username, levelIndex, trilhaLabel: candidate.trilhaLabel, moduleTitle: candidate.moduleTitle, questions
+    });
+    btn.disabled = false;
+    btn.textContent = '🚀 Iniciar Corrida';
+    if (!session) { alert('Não foi possível criar a corrida agora. Tente de novo.'); return; }
+    setSession(session);
+    subscribeToSession();
+    renderForSession();
+  }
+
+  // ============================================================
+  // Estado da sessão — comum a host e aluno
+  // ============================================================
+
+  function setSession(session) { state.session = session; }
+
+  function subscribeToSession() {
+    if (state.unsubSession) state.unsubSession();
+    if (state.unsubPlayers) state.unsubPlayers();
+    if (state.unsubProgress) state.unsubProgress();
+    if (state.unsubNewSessions) { state.unsubNewSessions(); state.unsubNewSessions = null; }
+
+    const id = state.session.id;
+    state.unsubSession = window.CorridaDoBugEngine.watchSession(id, async () => {
+      const fresh = await window.CorridaDoBugEngine.getLatestSession(turma);
+      if (fresh && fresh.id === id) {
+        const statusChanged = !state.session || state.session.status !== fresh.status;
+        setSession(fresh);
+        if (statusChanged) renderForSession();
+      }
+    });
+    state.unsubPlayers = window.CorridaDoBugEngine.watchPlayers(id, async () => {
+      state.players = await window.CorridaDoBugEngine.fetchPlayers(id);
+      if (state.session.status === 'lobby') renderLobby();
+    });
+    // Só o professor observa o progresso de todo mundo ao vivo — cada aluno
+    // só grava o PRÓPRIO (upsertProgress), não precisa ler o dos colegas.
+    if (isHost) {
+      state.unsubProgress = window.CorridaDoBugEngine.watchProgress(id, async () => {
+        state.progress = await window.CorridaDoBugEngine.fetchProgress(id);
+        if (state.session.status === 'racing') renderHostLeaderboard();
+        else if (state.session.status === 'ended') renderPodium();
+      });
+    }
+  }
+
+  function subscribeToNewSessions() {
+    if (state.unsubNewSessions) return;
+    state.unsubNewSessions = window.CorridaDoBugEngine.watchNewSessions(turma, async () => {
+      const fresh = await window.CorridaDoBugEngine.getLatestSession(turma);
+      if (fresh && fresh.status !== 'ended' && (!state.session || state.session.id !== fresh.id)) {
+        setSession(fresh);
+        subscribeToSession();
+        renderForSession();
+      }
+    });
+  }
+
+  async function renderForSession() {
+    const s = state.session;
+    if (!s || s.status === 'ended') {
+      if (isHost) {
+        if (s) { state.progress = await window.CorridaDoBugEngine.fetchProgress(s.id); renderPodium(); }
+        else renderSetupScreen();
+      } else if (s) {
+        state.progress = await window.CorridaDoBugEngine.fetchProgress(s.id);
+        renderPodium();
+      } else {
+        showScreen('scrNoSession');
+        subscribeToNewSessions();
+      }
+      return;
+    }
+    state.players = await window.CorridaDoBugEngine.fetchPlayers(s.id);
+
+    if (!isHost) {
+      state.joined = state.players.some(p => p.student_email === username);
+      if (!state.joined && s.status === 'lobby') { renderJoinScreen(); return; }
+      if (!state.joined) { await window.CorridaDoBugEngine.joinSession(s.id, username, displayName); state.joined = true; state.players = await window.CorridaDoBugEngine.fetchPlayers(s.id); }
+    }
+
+    if (s.status === 'lobby') renderLobby();
+    else if (s.status === 'racing') {
+      if (isHost) { state.progress = await window.CorridaDoBugEngine.fetchProgress(s.id); showScreen('scrHostRace'); renderHostLeaderboard(); }
+      else startRace();
+    }
+  }
+
+  // ============================================================
+  // Lobby
+  // ============================================================
+
+  function renderJoinScreen() {
+    showScreen('scrJoin');
+    $('joinLevel').textContent = `Fase ${state.session.level_index + 1} — ${LEVELS[state.session.level_index].name}`;
+    $('joinModulo').textContent = `${state.session.trilha_label || ''} — ${state.session.module_title || ''}`;
+  }
+
+  async function onJoinClick() {
+    await window.CorridaDoBugEngine.joinSession(state.session.id, username, displayName);
+    state.joined = true;
+    state.players = await window.CorridaDoBugEngine.fetchPlayers(state.session.id);
+    renderLobby();
+  }
+
+  function renderLobby() {
+    showScreen('scrLobby');
+    const level = LEVELS[state.session.level_index];
+    $('lobbySubtitle').textContent = `Fase ${state.session.level_index + 1} — ${level.name} · ${state.session.trilha_label || ''} — ${state.session.module_title || ''}`;
+    $('lobbyCount').textContent = `${state.players.length} jogador${state.players.length === 1 ? '' : 'es'}`;
+    $('lobbyPlayers').innerHTML = state.players.map(p => `<li class="player-chip">${escapeHtml(p.student_name)}</li>`).join('')
+      || '<li class="empty-state">Aguardando alunos entrarem pela aba Jogos...</li>';
+    $('lobbyHostActions').style.display = isHost ? 'flex' : 'none';
+    $('lobbyStudentHint').style.display = isHost ? 'none' : 'block';
+    if (isHost) $('btnStartRace').disabled = state.players.length === 0;
+  }
+
+  async function onStartRaceClick() {
+    const startedAt = await window.CorridaDoBugEngine.startRace(state.session.id);
+    if (!startedAt) { alert('Não foi possível iniciar a corrida (falha ao falar com o Supabase). Tente de novo.'); return; }
+    state.session.status = 'racing';
+    state.session.started_at = startedAt;
+    await renderForSession();
+  }
+  async function onCancelLobbyClick() {
+    if (!confirm('Cancelar esta corrida?')) return;
+    await window.CorridaDoBugEngine.endRace(state.session.id);
+    state.session.status = 'ended';
+    await renderForSession();
+  }
+  async function onEndRaceClick() {
+    if (!confirm('Encerrar a corrida pra todo mundo?')) return;
+    await window.CorridaDoBugEngine.endRace(state.session.id);
+    state.session.status = 'ended';
+    await renderForSession();
+  }
+
+  function renderHostLeaderboard() {
+    $('hostRaceSubtitle').textContent = `Fase ${state.session.level_index + 1} — ${LEVELS[state.session.level_index].name}`;
+    const sorted = window.CorridaDoBugEngine.sortProgress(state.progress);
+    const byEmail = {};
+    sorted.forEach(r => { byEmail[r.student_email] = r; });
+    const rows = state.players.map(p => byEmail[p.student_email] || { student_name: p.student_name, checkpoint: 0, score: 0, finished: false });
+    $('hostLeaderboard').innerHTML = window.CorridaDoBugEngine.sortProgress(rows).map(r => `
+      <tr class="${r.finished ? 'finished' : ''}">
+        <td>${escapeHtml(r.student_name)}</td>
+        <td>${r.checkpoint}/${LEVELS[state.session.level_index].checks.length}</td>
+        <td>${r.score}</td>
+        <td>${r.finished ? '🏁 Chegou' : '🏃 Correndo'}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="empty-state">Ninguém entrou ainda.</td></tr>';
+  }
+
+  function renderPodium() {
+    showScreen('scrPodium');
+    const sorted = window.CorridaDoBugEngine.sortProgress(state.progress);
+    $('podiumList').innerHTML = sorted.map((r, i) => `
+      <tr class="${r.student_email === username ? 'me' : ''}">
+        <td>${i + 1}º</td><td>${escapeHtml(r.student_name)}</td>
+        <td>${r.checkpoint}</td><td>${r.score}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="empty-state">Ninguém correu.</td></tr>';
+  }
+
+  // ============================================================
+  // Corrida (aluno) — reaproveita o motor/render do Fuga do Bug
+  // ============================================================
+
+  const canvas = $('raceCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  function resizeCanvas() {
+    const stage = canvas.parentElement;
+    const scale = Math.min(stage.clientWidth / W, stage.clientHeight / H, 1.4);
+    canvas.style.width = (W * scale) + 'px';
+    canvas.style.height = (H * scale) + 'px';
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  let sim = null, fakeSet = new Set(), camX = 0, raceMode = 'playing'; // 'playing' | 'question' | 'finished'
+  let lastCp = 0;
+  let missStreak = 0; // erros SEGUIDOS no checkpoint atual (zera ao acertar/avançar)
+  let myScore = 0;
+  let questionOpenedAt = 0;
+  let levelIndex = 0;
+  const keys = { left: false, right: false, jump: false };
+
+  function raceQuestions() { return state.session.questions; }
+
+  function startRace() {
+    levelIndex = state.session.level_index;
+    const def = LEVELS[levelIndex];
+    sim = Engine.createSim(def);
+    fakeSet = new Set(sim.L.fakes.map(f => f.c + ',' + f.r));
+    camX = 0;
+    raceMode = 'playing';
+    lastCp = 0;
+    missStreak = 0;
+    myScore = 0;
+    updateCam(true);
+    $('hudCheckpointTotal').textContent = def.checks.length;
+    updateHud();
+    showScreen('scrRace');
+    resizeCanvas();
+  }
+
+  function updateHud() {
+    $('hudCheckpoint').textContent = sim.cp;
+    $('hudScore').textContent = myScore;
+    $('hudMissWarn').style.display = missStreak >= 1 ? 'flex' : 'none';
+  }
+
+  function reportProgress(finished) {
+    window.CorridaDoBugEngine.upsertProgress({
+      sessionId: state.session.id, email: username, name: displayName,
+      checkpoint: sim.cp, misses: missStreak, score: Math.max(0, myScore), finished
+    });
+  }
+
+  function openCheckpointQuestion(cpIndex) {
+    raceMode = 'question';
+    questionOpenedAt = performance.now();
+    const q = raceQuestions()[cpIndex - 1];
+    $('cpPrompt').innerHTML = q.prompt;
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    $('cpOptions').innerHTML = q.options.map((opt, i) =>
+      `<button class="cp-option" data-choice="${i}"><span class="opt-letter">${letters[i] || '?'}</span><span>${opt}</span></button>`
+    ).join('');
+    $('cpFeedback').textContent = '';
+    $('cpFeedback').className = 'cp-feedback';
+    $('cpOverlay').classList.add('show');
+    $('cpOptions').querySelectorAll('.cp-option').forEach(btn => btn.addEventListener('click', () => onAnswerCheckpoint(cpIndex, q, Number(btn.dataset.choice), btn)));
+  }
+
+  function onAnswerCheckpoint(cpIndex, q, choiceIndex, btnEl) {
+    const isCorrect = choiceIndex === q.correctIndex;
+    $('cpOptions').querySelectorAll('.cp-option').forEach(b => b.disabled = true);
+    btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    if (isCorrect) {
+      missStreak = 0;
+      const elapsed = performance.now() - questionOpenedAt;
+      const bonus = window.CorridaDoBugEngine.scoreForCheckpoint(true, elapsed, window.CorridaDoBugEngine.CHECKPOINT_REF_MS);
+      myScore += bonus;
+      lastCp = cpIndex;
+      $('cpFeedback').textContent = `✅ Isso mesmo! +${bonus} pontos`;
+      $('cpFeedback').className = 'cp-feedback ok';
+    } else {
+      missStreak++;
+      if (missStreak >= 2) {
+        myScore = Math.max(0, myScore - window.CorridaDoBugEngine.MISS_PENALTY);
+        missStreak = 0;
+        $('cpFeedback').textContent = `❌ Errou de novo — voltou pro checkpoint anterior e perdeu ${window.CorridaDoBugEngine.MISS_PENALTY} pontos.`;
+        $('cpFeedback').className = 'cp-feedback penalty';
+      } else {
+        $('cpFeedback').textContent = '❌ Não foi dessa vez — voltou pro checkpoint anterior.';
+        $('cpFeedback').className = 'cp-feedback fail';
+      }
+      sim.cp = lastCp;
+      sim.respawn();
+    }
+
+    reportProgress(false);
+    updateHud();
+    setTimeout(() => {
+      $('cpOverlay').classList.remove('show');
+      raceMode = 'playing';
+    }, isCorrect ? 700 : 1100);
+  }
+
+  function finishRace() {
+    if (raceMode === 'finished') return;
+    raceMode = 'finished';
+    const seconds = sim.t / 60;
+    const speedBonus = Math.max(0, Math.round(1500 - seconds * 15) - sim.deaths * 100);
+    const finalScore = Math.max(0, myScore + speedBonus);
+    myScore = finalScore;
+    reportProgress(true);
+    if (window.GameLeaderboard) {
+      window.GameLeaderboard.submitScore({ game: GAME_KEY, turma, email: username, name: displayName, score: finalScore });
+    }
+    $('finishStats').textContent = `Tempo: ${seconds.toFixed(1)}s · Mortes: ${sim.deaths} · Pontuação final: ${finalScore} pts`;
+    showScreen('scrFinish');
+  }
+
+  // ---------- Input (mesmo esquema do Fuga do Bug solo) ----------
+  const LEFT = ['ArrowLeft', 'a', 'A'], RIGHT = ['ArrowRight', 'd', 'D'], JUMP = [' ', 'ArrowUp', 'w', 'W'];
+  window.addEventListener('keydown', e => {
+    if (LEFT.includes(e.key)) { keys.left = true; e.preventDefault(); }
+    if (RIGHT.includes(e.key)) { keys.right = true; e.preventDefault(); }
+    if (JUMP.includes(e.key)) { keys.jump = true; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e => {
+    if (LEFT.includes(e.key)) keys.left = false;
+    if (RIGHT.includes(e.key)) keys.right = false;
+    if (JUMP.includes(e.key)) keys.jump = false;
+  });
+  window.addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; });
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (isTouch) $('touchControls').classList.add('active');
+  function bindTouch(id, onDown, onUp) {
+    const el = $(id);
+    el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); });
+    el.addEventListener('touchend', e => { e.preventDefault(); onUp(); });
+    el.addEventListener('touchcancel', e => { e.preventDefault(); onUp(); });
+  }
+  bindTouch('tcLeft', () => keys.left = true, () => keys.left = false);
+  bindTouch('tcRight', () => keys.right = true, () => keys.right = false);
+  bindTouch('tcJump', () => keys.jump = true, () => keys.jump = false);
+
+  function updateCam(snap) {
+    const target = Math.max(0, Math.min(sim.L.width - W, sim.p.x - W * 0.4));
+    camX = snap ? target : camX + (target - camX) * 0.12;
+  }
+
+  function tick() {
+    sim.step(keys);
+    updateCam(false);
+    // Sem tela de morte aqui (diferente do Fuga do Bug solo): cair já é só
+    // um "erro de percurso" numa corrida — respawna na hora no ÚLTIMO
+    // checkpoint tocado (mesma função do motor, sim.respawn()), sem
+    // interromper o ritmo com um clique de "Continuar".
+    if (sim.dead) { sim.respawn(); return; }
+    if (sim.won) { finishRace(); return; }
+    // sim.cp só AVANÇA sozinho (overlap de hitbox, ver fuga-do-bug-engine.js)
+    // — comparar com lastCp detecta "chegou num checkpoint NOVO" pra pausar
+    // e mostrar a pergunta ANTES de considerar esse trecho "passado de vez".
+    if (sim.cp > lastCp) { openCheckpointQuestion(sim.cp); return; }
+  }
+
+  // ---------- Render (adaptado de games/fuga-do-bug.html — mesmo motor visual) ----------
+  const solidVisual = (c, r) => {
+    if (c < 0 || c >= sim.L.cols || r < 0 || r >= ROWS) return false;
+    return sim.L.grid[r][c] === 1 || fakeSet.has(c + ',' + r);
+  };
+  function rgba(hex, a) {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+  }
+  function drawStickFigure(p, t) {
+    const px = p.x, py = p.y, cx = px + PW / 2, headR = 8;
+    const bodyTop = py + headR * 2, hip = py + PH - 11;
+    ctx.strokeStyle = '#d9e6d2'; ctx.fillStyle = '#d9e6d2'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx, py + headR, headR, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, bodyTop); ctx.lineTo(cx, hip); ctx.stroke();
+    const swing = p.ground ? Math.sin(t * 0.35) * 6 * Math.min(1, Math.abs(p.vx) / 4) : 0;
+    const air = p.ground ? 0 : (p.vy < 0 ? -3 : 3);
+    ctx.beginPath();
+    ctx.moveTo(cx, hip); ctx.lineTo(cx - 6 - swing - air, py + PH);
+    ctx.moveTo(cx, hip); ctx.lineTo(cx + 6 + swing + air, py + PH);
+    ctx.stroke();
+    const arm = p.ground ? -swing : (p.vy < 0 ? -8 : 4);
+    ctx.beginPath();
+    ctx.moveTo(cx, bodyTop + 5); ctx.lineTo(cx - 8 - arm * 0.5, bodyTop + 13);
+    ctx.moveTo(cx, bodyTop + 5); ctx.lineTo(cx + 8 + arm * 0.5, bodyTop + 13);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + p.facing * 3, py + headR - 1, 1.6, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawSpikes(x, y) {
+    ctx.fillStyle = '#ff3b30';
+    for (let i = 0; i < 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(x + i * 16, y + TILE); ctx.lineTo(x + i * 16 + 8, y + 10); ctx.lineTo(x + i * 16 + 16, y + TILE);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  function draw() {
+    if (!sim) return;
+    const L = sim.L, p = sim.p, t = sim.t;
+    const accent = LEVELS[levelIndex].accent;
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(-Math.round(camX), 0);
+    const c0 = Math.max(0, Math.floor(camX / TILE) - 1), c1 = Math.min(L.cols - 1, Math.ceil((camX + W) / TILE) + 1);
+    const vis = x => x > camX - 100 && x < camX + W + 100;
+
+    for (let r = 0; r < ROWS; r++) for (let c = c0; c <= c1; c++) {
+      if (!solidVisual(c, r)) continue;
+      const x = c * TILE, y = r * TILE;
+      ctx.fillStyle = '#0f190e'; ctx.fillRect(x, y, TILE, TILE);
+      ctx.strokeStyle = '#182716'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+      if (!solidVisual(c, r - 1)) { ctx.fillStyle = rgba(accent, 0.55); ctx.fillRect(x, y, TILE, 4); }
+    }
+    L.crumbles.forEach((c, i) => {
+      const st = sim.cr[i];
+      if (st.s === 2 || !vis(c.x)) return;
+      const shake = st.s === 1 ? (Math.random() * 3 - 1.5) : 0;
+      ctx.fillStyle = st.s === 1 ? '#3a2a10' : '#1a1a0c';
+      ctx.fillRect(c.x + shake, c.y, TILE, 13);
+      ctx.strokeStyle = '#d4c86a'; ctx.lineWidth = 1.5; ctx.strokeRect(c.x + shake + 0.5, c.y + 0.5, TILE - 1, 12);
+    });
+    L.movers.forEach(m => {
+      const x = Engine.moverX(m, t);
+      if (!vis(x)) return;
+      ctx.fillStyle = '#0c1c24'; ctx.fillRect(x, m.y, m.w, 13);
+      ctx.strokeStyle = '#4ac0ff'; ctx.lineWidth = 1.5; ctx.strokeRect(x + 0.5, m.y + 0.5, m.w - 1, 12);
+    });
+    L.springs.forEach((s, i) => {
+      if (!vis(s.x)) return;
+      const squash = sim.sp[i].k > 0 ? 8 : 0;
+      ctx.fillStyle = '#d4c86a'; ctx.fillRect(s.x + 3, s.y + squash, TILE - 6, 5);
+    });
+    L.spikes.forEach(sp => { if (vis(sp.c * TILE)) drawSpikes(sp.c * TILE, sp.r * TILE); });
+    L.popups.forEach((u, i) => {
+      if (!vis(u.x)) return;
+      const st = sim.po[i];
+      if (st.s === 2) drawSpikes(u.x, u.y);
+    });
+    L.drops.forEach((d, i) => {
+      const st = sim.dr[i];
+      if (st.s === 3 || !vis(d.x)) return;
+      ctx.fillStyle = st.s === 2 ? '#e0242f' : '#c1121f';
+      ctx.fillRect(d.x, st.y, d.w, d.h);
+    });
+    L.saws.forEach(s => {
+      const q = Engine.sawPos(s, t);
+      if (!vis(q.x)) return;
+      ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(t * 0.25);
+      ctx.fillStyle = '#c9d1c9';
+      ctx.beginPath();
+      const teeth = 8, rOut = s.r + 2, rIn = rOut * 0.6;
+      for (let i = 0; i < teeth * 2; i++) {
+        const ang = (Math.PI / teeth) * i, r = i % 2 === 0 ? rOut : rIn;
+        i === 0 ? ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r) : ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+      }
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    });
+    L.coins.forEach((c, i) => {
+      if (sim.coins[i] || !vis(c.x)) return;
+      ctx.save(); ctx.translate(c.x + 8, c.y + 8 + Math.sin(t / 18 + c.c) * 3);
+      ctx.fillStyle = '#d4c86a'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    L.checks.forEach((c, i) => {
+      if (i === 0) return;
+      const x = c.c * TILE + TILE / 2, y = (c.r + 1) * TILE;
+      const on = i <= sim.cp;
+      ctx.strokeStyle = on ? '#7cff3f' : '#3a4a36'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 40); ctx.stroke();
+      ctx.fillStyle = on ? '#7cff3f' : '#3a4a36';
+      ctx.beginPath(); ctx.moveTo(x, y - 40); ctx.lineTo(x + 16, y - 33); ctx.lineTo(x, y - 26); ctx.fill();
+    });
+    const g = L.goal;
+    ctx.fillStyle = rgba('#7cff3f', 0.08 + 0.04 * Math.sin(t / 20)); ctx.fillRect(g.x - 12, g.y - 6, g.w + 24, g.h + 6);
+    ctx.fillStyle = '#4a9a2a'; ctx.fillRect(g.x + 14, g.y, 3, g.h);
+    ctx.fillStyle = '#7cff3f';
+    ctx.beginPath(); ctx.moveTo(g.x + 17, g.y + 2); ctx.lineTo(g.x + 44, g.y + 12); ctx.lineTo(g.x + 17, g.y + 22); ctx.fill();
+
+    if (!sim.dead) drawStickFigure(p, t);
+    ctx.restore();
+  }
+
+  let lastT = performance.now(), acc = 0;
+  function frame(now) {
+    acc += Math.min(now - lastT, 100);
+    lastT = now;
+    while (acc >= STEP_MS) {
+      if (raceMode === 'playing') tick();
+      acc -= STEP_MS;
+    }
+    if (raceMode === 'playing') updateHud();
+    if (sim) draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Ganchos pra teste (mesmo padrão de window.__fuga em
+  // games/fuga-do-bug.html) — a travessia real de uma fase (pulos/timing)
+  // já tem cobertura própria e intocada em tests/fuga-do-bug*.spec.js; os
+  // testes desta corrida focam na integração NOVA (checkpoint → pergunta →
+  // respawn/penalidade → placar ao vivo), não em reprovar a física.
+  window.__corrida = {
+    get sim() { return sim; },
+    get raceMode() { return raceMode; },
+    get score() { return myScore; },
+    get lastCp() { return lastCp; },
+    forceCheckpoint(n) { sim.cp = n; openCheckpointQuestion(n); },
+    forceWin() { sim.won = true; finishRace(); },
+  };
+
+  // ============================================================
+  // Bootstrap
+  // ============================================================
+
+  document.getElementById('btnFetchQuestions').addEventListener('click', onFetchQuestions);
+  document.getElementById('btnCreateSession').addEventListener('click', onCreateSession);
+  document.getElementById('btnJoin').addEventListener('click', onJoinClick);
+  document.getElementById('btnStartRace').addEventListener('click', onStartRaceClick);
+  document.getElementById('btnCancelLobby').addEventListener('click', onCancelLobbyClick);
+  document.getElementById('btnEndRace').addEventListener('click', onEndRaceClick);
+
+  async function init() {
+    if (!window.CorridaDoBugEngine || !window.CorridaDoBugEngine.enabled) { showScreen('scrDisabled'); return; }
+    const user = window.PortalSession ? await window.PortalSession.requireUser('../index.html') : null;
+    if (!user) return;
+    username = user.email;
+    displayName = user.nome || username;
+    const urlParams = new URLSearchParams(window.location.search);
+    turma = urlParams.get('turma') || user.turma || '';
+    isHost = user.role === 'professor';
+
+    const latest = await window.CorridaDoBugEngine.getLatestSession(turma);
+    if (latest && latest.status !== 'ended') {
+      setSession(latest);
+      subscribeToSession();
+      await renderForSession();
+    } else if (isHost) {
+      renderSetupScreen();
+    } else {
+      showScreen('scrNoSession');
+      subscribeToNewSessions();
+    }
+  }
+
+  requestAnimationFrame(frame);
+  init();
+
+  window.ACTIVITY_LOCATION = 'jogos_corrida_do_bug';
+  window.ACTIVITY_LABEL = 'Corrida do Bug';
+})();
+</script>
+<script src="../shared/activity-tracker.js"></script>
+<script src="../shared/vlibras-widget.js"></script>
+</body>
+</html>

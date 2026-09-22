@@ -1851,13 +1851,134 @@ create policy "user_preferences_update_self"
   with check (email = public.current_email());
 
 -- ============================================================
+-- BLOCO 16 — Corrida do Bug (games/corrida-do-bug.html): une o Fuga do
+-- Bug (plataforma) com o QuizRush (quiz ao vivo) — a turma entra junta
+-- numa corrida pela mesma fase; em cada CHECKPOINT (o Fuga do Bug já tem
+-- esse conceito pronto, ver sim.cp/L.checks em games/fuga-do-bug-engine.js)
+-- aparece uma pergunta tirada do banco de um módulo já existente (mesmo
+-- mecanismo de shared/quizrush-engine.js, reaproveitado por chamada de
+-- função, não duplicado). Acertou segue a corrida; errou volta pro
+-- checkpoint anterior (sim.respawn() já faz isso sozinho); errou 2x
+-- SEGUIDAS no mesmo checkpoint, perde pontos além de voltar.
+--
+-- Tabelas PRÓPRIAS (não reaproveita quizrush_*): aqui não é "todo mundo
+-- responde a MESMA pergunta ao mesmo tempo" — cada aluno corre no seu
+-- próprio ritmo e chega em cada checkpoint num momento diferente. Mesmo
+-- molde de sessions/players do QuizRush, mais uma tabela de progresso ao
+-- vivo (corridadobug_progress) no lugar de quizrush_answers.
+-- ============================================================
+
+create table if not exists public.corridadobug_sessions (
+  id uuid primary key default gen_random_uuid(),
+  turma text not null,
+  created_by text not null,
+  level_index int not null,
+  trilha_label text,
+  module_title text,
+  questions jsonb not null,
+  status text not null default 'lobby' check (status in ('lobby', 'racing', 'ended')),
+  started_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_corridadobug_sessions_turma on public.corridadobug_sessions (turma, created_at desc);
+
+create table if not exists public.corridadobug_players (
+  session_id uuid not null references public.corridadobug_sessions(id) on delete cascade,
+  student_email text not null,
+  student_name text not null,
+  joined_at timestamptz not null default now(),
+  primary key (session_id, student_email)
+);
+
+-- Progresso ao vivo — uma linha por (sessão, aluno), atualizada a cada
+-- checkpoint (não a cada frame: nenhum dado de física trafega pela rede,
+-- só o índice do checkpoint + pontuação, leve o bastante pro Realtime).
+create table if not exists public.corridadobug_progress (
+  session_id uuid not null references public.corridadobug_sessions(id) on delete cascade,
+  student_email text not null,
+  student_name text not null,
+  checkpoint int not null default 0,
+  misses int not null default 0,
+  score int not null default 0,
+  finished boolean not null default false,
+  finished_at timestamptz,
+  updated_at timestamptz not null default now(),
+  primary key (session_id, student_email)
+);
+
+alter table public.corridadobug_sessions enable row level security;
+alter table public.corridadobug_players enable row level security;
+alter table public.corridadobug_progress enable row level security;
+
+-- select aberto pras 3 (mesmo "vazamento" já aceito/documentado em
+-- quizrush_sessions/quizrush_players/quizrush_answers: o placar/sessão
+-- ao vivo precisa ser visível pra turma toda, não só pra quem é dono da
+-- linha) — insert/update travados por dono (professor cria/gerencia a
+-- sessão; cada aluno só grava o PRÓPRIO progresso).
+drop policy if exists "corridadobug_sessions_select_all" on public.corridadobug_sessions;
+create policy "corridadobug_sessions_select_all"
+  on public.corridadobug_sessions for select using (true);
+drop policy if exists "corridadobug_sessions_insert_professor" on public.corridadobug_sessions;
+create policy "corridadobug_sessions_insert_professor"
+  on public.corridadobug_sessions for insert with check (public.is_professor());
+drop policy if exists "corridadobug_sessions_update_professor" on public.corridadobug_sessions;
+create policy "corridadobug_sessions_update_professor"
+  on public.corridadobug_sessions for update
+  using (public.is_professor()) with check (public.is_professor());
+
+drop policy if exists "corridadobug_players_select_all" on public.corridadobug_players;
+create policy "corridadobug_players_select_all"
+  on public.corridadobug_players for select using (true);
+drop policy if exists "corridadobug_players_insert_self" on public.corridadobug_players;
+create policy "corridadobug_players_insert_self"
+  on public.corridadobug_players for insert
+  with check (student_email = public.current_email());
+
+drop policy if exists "corridadobug_progress_select_all" on public.corridadobug_progress;
+create policy "corridadobug_progress_select_all"
+  on public.corridadobug_progress for select using (true);
+drop policy if exists "corridadobug_progress_insert_self" on public.corridadobug_progress;
+create policy "corridadobug_progress_insert_self"
+  on public.corridadobug_progress for insert
+  with check (student_email = public.current_email());
+drop policy if exists "corridadobug_progress_update_self" on public.corridadobug_progress;
+create policy "corridadobug_progress_update_self"
+  on public.corridadobug_progress for update
+  using (student_email = public.current_email())
+  with check (student_email = public.current_email());
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'corridadobug_sessions'
+  ) then
+    alter publication supabase_realtime add table public.corridadobug_sessions;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'corridadobug_players'
+  ) then
+    alter publication supabase_realtime add table public.corridadobug_players;
+  end if;
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'corridadobug_progress'
+  ) then
+    alter publication supabase_realtime add table public.corridadobug_progress;
+  end if;
+end $$;
+
+-- ============================================================
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, bimestre_dates, trilha_bimestre,
 -- game_scores, quizrush_sessions/quizrush_players/
 -- quizrush_answers, student_activity_state, professor_tokens,
--- exam_guard_events e user_preferences foram criadas, se network_nodes
--- ganhou as network_nodes/node_permissions/node_shields aparecem com RLS
--- habilitado (ícone de cadeado no Table Editor). Se profiles estiver
--- vazia, rode scripts/migrate-users-to-auth.mjs antes de testar login.
+-- exam_guard_events, user_preferences e corridadobug_sessions/
+-- corridadobug_players/corridadobug_progress foram criadas, se
+-- network_nodes ganhou as network_nodes/node_permissions/node_shields
+-- aparecem com RLS habilitado (ícone de cadeado no Table Editor). Se
+-- profiles estiver vazia, rode scripts/migrate-users-to-auth.mjs antes de
+-- testar login.
 -- ============================================================

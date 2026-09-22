@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelForge Studios — Corrida do Bug (Engel)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
+  body{ padding:10px; background:var(--bg); color:var(--ink); font-family:'JetBrains Mono', monospace; height:100vh; }
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+  .topbar{
+    height:32px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+  .topbar .title{ font-family:'VT323', monospace; font-size:16px; color:var(--green); letter-spacing:1px; }
+
+  .stage{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  #raceCanvas{ background:linear-gradient(180deg,#081006 0%, #050805 70%); display:block; max-width:100%; max-height:100%; }
+  .hud{ position:absolute; top:10px; left:10px; display:flex; gap:8px; flex-wrap:wrap; pointer-events:none; }
+  .hud .pill{ background:rgba(10,15,10,0.8); border:1px solid var(--green-dim); border-radius:3px; padding:4px 10px; font-size:12px; color:var(--ink); }
+  .hud .pill b{ color:var(--green); }
+
+  .touch-controls{ position:absolute; bottom:12px; left:0; right:0; display:none; justify-content:space-between; padding:0 14px; pointer-events:none; }
+  .touch-controls.active{ display:flex; }
+  .tc-group{ display:flex; gap:10px; pointer-events:all; }
+  .tc-btn{ width:56px; height:56px; border-radius:50%; background:rgba(16,20,15,0.85); border:1px solid var(--green-dim); color:var(--green); font-size:22px; display:flex; align-items:center; justify-content:center; user-select:none; }
+  .tc-btn:active{ background:var(--green-dim); color:#04180a; }
+
+  .overlay{
+    position:absolute; inset:0; background:rgba(3,5,3,0.93);
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;
+    text-align:center; padding:16px; overflow-y:auto;
+  }
+  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; max-width:460px; width:100%; }
+  .card h2{ font-family:'VT323', monospace; font-size:24px; color:var(--yellow); margin:0 0 10px; letter-spacing:1px; }
+  .card p{ font-size:13px; line-height:1.7; color:var(--ink); margin:0 0 8px; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:15px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:12px 22px; cursor:pointer; border-radius:6px;
+  }
+
+  /* ---------- Checkpoint: mesmo visual de Formar Frases (frases-engel.html) ---------- */
+  .cp-overlay{ position:absolute; inset:0; background:rgba(3,5,3,0.93); display:none; align-items:center; justify-content:center; padding:16px; }
+  .cp-overlay.show{ display:flex; }
+  .cp-box{ background:var(--panel); border:1px solid var(--green-dim); border-radius:10px; padding:20px 24px; max-width:480px; width:100%; text-align:center; }
+  .clue-emoji{ font-size:52px; line-height:1; margin-bottom:6px; }
+  .sentence-box{
+    background:var(--panel2); border:1px solid var(--line); padding:14px 18px; margin-bottom:16px;
+    font-family:'VT323', monospace; font-size:28px; color:var(--ink); text-align:center; letter-spacing:0.5px;
+  }
+  .sentence-box .blank{ color:var(--yellow); border-bottom:3px dotted var(--yellow); padding:0 6px; }
+  .sentence-box .filled{ color:var(--green); border-bottom:3px solid var(--green); padding:0 6px; }
+  .word-options{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .word-btn{
+    flex:1 1 100px; max-width:150px; background:var(--panel2); border:2px solid var(--green-dim); border-radius:10px;
+    padding:12px 8px; cursor:pointer; font-family:inherit; color:var(--ink); font-size:16px; font-weight:800; text-align:center;
+  }
+  .word-btn:hover:not(:disabled){ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .word-btn:disabled{ opacity:.6; cursor:not-allowed; }
+  .word-btn.correct-pick{ border-color:var(--green); background:rgba(124,255,63,0.18); opacity:1; }
+  .word-btn.wrong-pick{ border-color:var(--blood-bright); background:rgba(255,59,48,0.18); opacity:1; }
+  .cp-feedback{ min-height:22px; font-size:14px; font-weight:800; margin-top:12px; }
+  .cp-feedback.ok{ color:var(--green); }
+  .cp-feedback.fail{ color:var(--blood-bright); }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'corrida_do_bug_engel';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../games/fuga-do-bug-engine.js"></script>
+<script src="../../../games/fuga-do-bug-levels.js"></script>
+</head>
+<body>
+<div class="env">
+  <div class="topbar">
+    <div class="title">🏁 CORRIDA DO BUG (ADAPTADO)</div>
+    <div>📍 Checkpoint: <b id="hudCp2">0</b>/<span id="hudCpTotal2">0</span></div>
+  </div>
+
+  <div class="stage">
+    <canvas id="raceCanvas" width="960" height="544"></canvas>
+
+    <div class="hud">
+      <div class="pill">📍 Checkpoint: <b id="hudCp">0</b>/<span id="hudCpTotal">0</span></div>
+    </div>
+
+    <div class="touch-controls" id="touchControls">
+      <div class="tc-group"><div class="tc-btn" id="tcLeft">◀</div><div class="tc-btn" id="tcRight">▶</div></div>
+      <div class="tc-group"><div class="tc-btn" id="tcJump">⤒</div></div>
+    </div>
+
+    <div class="overlay" id="startOverlay">
+      <div class="card">
+        <h2>🏁 Corrida do Bug</h2>
+        <p>Corra até a bandeira 🏁. Setas ou A/D pra mover, Espaço pra pular.</p>
+        <p>Em cada checkpoint, complete a frase certa (clicando) pra continuar. Errou? Volta pro checkpoint anterior.</p>
+        <button class="btn" id="btnStart">▶ Começar</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="finishOverlay" style="display:none;">
+      <div class="card">
+        <h2>🏆 Você chegou!</h2>
+        <p id="finishStats">--</p>
+        <button class="btn" id="btnPlayAgain">🔄 Jogar de novo</button>
+      </div>
+    </div>
+
+    <div class="cp-overlay" id="cpOverlay">
+      <div class="cp-box">
+        <div class="clue-emoji" id="clueEmoji"></div>
+        <div class="sentence-box" id="sentenceBox"></div>
+        <div class="word-options" id="wordOptions"></div>
+        <div class="cp-feedback" id="cpFeedback"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const Engine = window.FugaEngine;
+  const LEVELS = window.FugaLevels;
+  const { TILE, ROWS, PW, PH } = Engine;
+  const STEP_MS = 1000 / 60;
+  const $ = id => document.getElementById(id);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'anon';
+  const PROGRESS_KEY = `corrida_do_bug_engel_progress_${username}`;
+
+  // Mesmas 2 primeiras frases (nível 1, mais fácil) de
+  // turmas/jogos/atividades/frases-engel.html — reaproveitadas como as
+  // perguntas dos 2 checkpoints da fase 1 do Fuga do Bug, no lugar da
+  // pergunta de quiz da versão principal (Corrida do Bug, games/corrida-do-bug.html).
+  const CHECKPOINT_CHALLENGES = [
+    { words: ['Bom'], clue: '☀️', correct: 'Dia', options: ['Dia', 'Noite', 'Carro'] },
+    { words: ['Boa'], clue: '🌙', correct: 'Noite', options: ['Noite', 'Dia', 'Gato'] },
+  ];
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Corrida do Bug (Engel)',
+      subtitle: 'Jogo adaptado · Trilha individual · Turma Jogos Digitais',
+      items: CHECKPOINT_CHALLENGES.map((c, i) => ({
+        number: i + 1,
+        title: `Checkpoint ${i + 1}`,
+        prompt: `"${c.words.join(' ')} ___" ${c.clue}`,
+        answer: `${c.words.join(' ')} ${c.correct}`
+      })),
+      fileName: 'corrida-do-bug-engel-gabarito.txt'
+    });
+  };
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let isProfessor = false;
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser() : null;
+    isProfessor = !!(user && user.role === 'professor');
+  })();
+
+  // ---------- Motor/física — mesmo motor do Fuga do Bug, fase 1 só ----------
+  const canvas = $('raceCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  function resizeCanvas() {
+    const stage = canvas.parentElement;
+    const scale = Math.min(stage.clientWidth / W, stage.clientHeight / H, 1.4);
+    canvas.style.width = (W * scale) + 'px';
+    canvas.style.height = (H * scale) + 'px';
+  }
+  window.addEventListener('resize', resizeCanvas);
+
+  const LEVEL_INDEX = 0; // fase 1 — já tem 2 checkpoints prontos
+  let sim = null, fakeSet = new Set(), camX = 0, mode = 'menu'; // 'menu' | 'playing' | 'question' | 'finished'
+  let lastCp = 0;
+  const keys = { left: false, right: false, jump: false };
+
+  function loadLevel() {
+    const def = LEVELS[LEVEL_INDEX];
+    sim = Engine.createSim(def);
+    fakeSet = new Set(sim.L.fakes.map(f => f.c + ',' + f.r));
+    camX = 0;
+    lastCp = 0;
+    updateCam(true);
+    $('hudCpTotal').textContent = def.checks.length;
+    $('hudCpTotal2').textContent = def.checks.length;
+    updateHud();
+  }
+  function updateHud() {
+    $('hudCp').textContent = sim.cp;
+    $('hudCp2').textContent = sim.cp;
+  }
+  function show(id, on) { $(id).style.display = on ? 'flex' : 'none'; }
+
+  function startRun() {
+    show('startOverlay', false);
+    show('finishOverlay', false);
+    loadLevel();
+    mode = 'playing';
+  }
+
+  function openCheckpoint(cpIndex) {
+    mode = 'question';
+    const c = CHECKPOINT_CHALLENGES[cpIndex - 1];
+    if (!c) { mode = 'playing'; return; } // fase com mais checkpoints do que frases cadastradas — não trava o aluno
+    $('clueEmoji').textContent = c.clue;
+    $('sentenceBox').innerHTML = `${c.words.join(' ')} <span class="blank">___</span>`;
+    $('cpFeedback').textContent = '';
+    $('cpFeedback').className = 'cp-feedback';
+    $('wordOptions').innerHTML = '';
+    shuffle(c.options).forEach(word => {
+      const btn = document.createElement('button');
+      btn.className = 'word-btn';
+      btn.textContent = word;
+      btn.addEventListener('click', () => pickWord(cpIndex, c, word, btn));
+      $('wordOptions').appendChild(btn);
+    });
+    $('cpOverlay').classList.add('show');
+  }
+
+  function pickWord(cpIndex, c, word, btnEl) {
+    const isCorrect = word === c.correct;
+    $('wordOptions').querySelectorAll('.word-btn').forEach(b => b.disabled = true);
+    btnEl.classList.add(isCorrect ? 'correct-pick' : 'wrong-pick');
+
+    if (isCorrect) {
+      $('sentenceBox').innerHTML = `${c.words.join(' ')} <span class="filled">${c.correct}</span>`;
+      $('cpFeedback').textContent = '✅ Isso mesmo!';
+      $('cpFeedback').className = 'cp-feedback ok';
+      lastCp = cpIndex;
+    } else {
+      $('cpFeedback').textContent = '❌ Não foi dessa vez — vamos voltar um pouquinho.';
+      $('cpFeedback').className = 'cp-feedback fail';
+      sim.cp = lastCp;
+      sim.respawn();
+    }
+
+    setTimeout(() => {
+      $('cpOverlay').classList.remove('show');
+      mode = 'playing';
+    }, isCorrect ? 700 : 1100);
+  }
+
+  function finishRun() {
+    if (mode === 'finished') return;
+    mode = 'finished';
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({ completed: true }));
+    $('finishStats').textContent = `Tempo: ${(sim.t / 60).toFixed(1)}s — parabéns, você chegou na bandeira! 🎉`;
+    show('finishOverlay', true);
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity('corrida_do_bug_engel', 'Corrida do Bug (Engel) — Concluído', { finished: true });
+    }
+  }
+
+  function tick() {
+    sim.step(keys);
+    updateCam(false);
+    if (sim.dead) { sim.respawn(); return; }
+    if (sim.won) { finishRun(); return; }
+    if (sim.cp > lastCp) { openCheckpoint(sim.cp); return; }
+  }
+
+  const LEFT = ['ArrowLeft', 'a', 'A'], RIGHT = ['ArrowRight', 'd', 'D'], JUMP = [' ', 'ArrowUp', 'w', 'W'];
+  window.addEventListener('keydown', e => {
+    if (LEFT.includes(e.key)) { keys.left = true; e.preventDefault(); }
+    if (RIGHT.includes(e.key)) { keys.right = true; e.preventDefault(); }
+    if (JUMP.includes(e.key)) { keys.jump = true; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e => {
+    if (LEFT.includes(e.key)) keys.left = false;
+    if (RIGHT.includes(e.key)) keys.right = false;
+    if (JUMP.includes(e.key)) keys.jump = false;
+  });
+  window.addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; });
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (isTouch) $('touchControls').classList.add('active');
+  function bindTouch(id, onDown, onUp) {
+    const el = $(id);
+    el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); });
+    el.addEventListener('touchend', e => { e.preventDefault(); onUp(); });
+    el.addEventListener('touchcancel', e => { e.preventDefault(); onUp(); });
+  }
+  bindTouch('tcLeft', () => keys.left = true, () => keys.left = false);
+  bindTouch('tcRight', () => keys.right = true, () => keys.right = false);
+  bindTouch('tcJump', () => keys.jump = true, () => keys.jump = false);
+
+  function updateCam(snap) {
+    const target = Math.max(0, Math.min(sim.L.width - W, sim.p.x - W * 0.4));
+    camX = snap ? target : camX + (target - camX) * 0.12;
+  }
+
+  const solidVisual = (c, r) => {
+    if (c < 0 || c >= sim.L.cols || r < 0 || r >= ROWS) return false;
+    return sim.L.grid[r][c] === 1 || fakeSet.has(c + ',' + r);
+  };
+  function rgba(hex, a) {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+  }
+  function drawStickFigure(p, t) {
+    const px = p.x, py = p.y, cx = px + PW / 2, headR = 8;
+    const bodyTop = py + headR * 2, hip = py + PH - 11;
+    ctx.strokeStyle = '#d9e6d2'; ctx.fillStyle = '#d9e6d2'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx, py + headR, headR, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, bodyTop); ctx.lineTo(cx, hip); ctx.stroke();
+    const swing = p.ground ? Math.sin(t * 0.35) * 6 * Math.min(1, Math.abs(p.vx) / 4) : 0;
+    const air = p.ground ? 0 : (p.vy < 0 ? -3 : 3);
+    ctx.beginPath();
+    ctx.moveTo(cx, hip); ctx.lineTo(cx - 6 - swing - air, py + PH);
+    ctx.moveTo(cx, hip); ctx.lineTo(cx + 6 + swing + air, py + PH);
+    ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + p.facing * 3, py + headR - 1, 1.6, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawSpikes(x, y) {
+    ctx.fillStyle = '#ff3b30';
+    for (let i = 0; i < 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(x + i * 16, y + TILE); ctx.lineTo(x + i * 16 + 8, y + 10); ctx.lineTo(x + i * 16 + 16, y + TILE);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  function draw() {
+    if (!sim) return;
+    const L = sim.L, p = sim.p, t = sim.t;
+    const accent = LEVELS[LEVEL_INDEX].accent;
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    ctx.translate(-Math.round(camX), 0);
+    const c0 = Math.max(0, Math.floor(camX / TILE) - 1), c1 = Math.min(L.cols - 1, Math.ceil((camX + W) / TILE) + 1);
+    const vis = x => x > camX - 100 && x < camX + W + 100;
+
+    for (let r = 0; r < ROWS; r++) for (let c = c0; c <= c1; c++) {
+      if (!solidVisual(c, r)) continue;
+      const x = c * TILE, y = r * TILE;
+      ctx.fillStyle = '#0f190e'; ctx.fillRect(x, y, TILE, TILE);
+      ctx.strokeStyle = '#182716'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+      if (!solidVisual(c, r - 1)) { ctx.fillStyle = rgba(accent, 0.55); ctx.fillRect(x, y, TILE, 4); }
+    }
+    L.spikes.forEach(sp => { if (vis(sp.c * TILE)) drawSpikes(sp.c * TILE, sp.r * TILE); });
+    L.coins.forEach((c, i) => {
+      if (sim.coins[i] || !vis(c.x)) return;
+      ctx.save(); ctx.translate(c.x + 8, c.y + 8 + Math.sin(t / 18 + c.c) * 3);
+      ctx.fillStyle = '#d4c86a'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+    L.checks.forEach((c, i) => {
+      if (i === 0) return;
+      const x = c.c * TILE + TILE / 2, y = (c.r + 1) * TILE;
+      const on = i <= sim.cp;
+      ctx.strokeStyle = on ? '#7cff3f' : '#3a4a36'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 40); ctx.stroke();
+      ctx.fillStyle = on ? '#7cff3f' : '#3a4a36';
+      ctx.beginPath(); ctx.moveTo(x, y - 40); ctx.lineTo(x + 16, y - 33); ctx.lineTo(x, y - 26); ctx.fill();
+    });
+    const g = L.goal;
+    ctx.fillStyle = rgba('#7cff3f', 0.08 + 0.04 * Math.sin(t / 20)); ctx.fillRect(g.x - 12, g.y - 6, g.w + 24, g.h + 6);
+    ctx.fillStyle = '#4a9a2a'; ctx.fillRect(g.x + 14, g.y, 3, g.h);
+    ctx.fillStyle = '#7cff3f';
+    ctx.beginPath(); ctx.moveTo(g.x + 17, g.y + 2); ctx.lineTo(g.x + 44, g.y + 12); ctx.lineTo(g.x + 17, g.y + 22); ctx.fill();
+
+    if (!sim.dead) drawStickFigure(p, t);
+    ctx.restore();
+  }
+
+  let lastT = performance.now(), acc = 0;
+  function frame(now) {
+    acc += Math.min(now - lastT, 100);
+    lastT = now;
+    while (acc >= STEP_MS) {
+      if (mode === 'playing') tick();
+      acc -= STEP_MS;
+    }
+    if (sim) draw();
+    requestAnimationFrame(frame);
+  }
+
+  $('btnStart').addEventListener('click', startRun);
+  $('btnPlayAgain').addEventListener('click', startRun);
+
+  // Já concluiu antes — abre direto na tela de chegada (mesmo padrão das
+  // outras atividades adaptadas do Engel), sem obrigar a correr nada de novo.
+  function alreadyDone() {
+    try { return !!JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null')?.completed; } catch (e) { return false; }
+  }
+
+  window.__corridaEngel = {
+    get sim() { return sim; },
+    get mode() { return mode; },
+    get lastCp() { return lastCp; },
+    forceCheckpoint(n) { sim.cp = n; openCheckpoint(n); },
+    forceWin() { sim.won = true; finishRun(); },
+  };
+
+  resizeCanvas();
+  if (alreadyDone()) {
+    loadLevel();
+    show('startOverlay', false);
+    finishRunFromCache();
+  }
+  requestAnimationFrame(frame);
+
+  function finishRunFromCache() {
+    mode = 'finished';
+    $('finishStats').textContent = 'Você já concluiu essa corrida. 🎉';
+    show('finishOverlay', true);
+  }
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

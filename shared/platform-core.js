@@ -3016,6 +3016,14 @@
       desc: 'Fuja da branch antes do rebase te apagar: 10 fases, da mais tranquila à mais cruel, com plataformas falsas, serras, blocos que caem, molas e chão que desmorona. Morrer faz parte — memorize o padrão e chegue na bandeira.',
       icon: '🩹',
       src: '../../games/fuga-do-bug.html'
+    },
+    corridadobug: {
+      title: 'Corrida do Bug — QuizRush ao Vivo',
+      desc: currentUser.role === 'professor'
+        ? 'Hospede uma corrida ao vivo: a turma inteira joga a mesma fase do Fuga do Bug, mas cada checkpoint é uma pergunta (do gabarito de uma aula) — acertou segue a corrida, errou volta pro checkpoint anterior, errar 2x seguidas no mesmo checkpoint custa pontos.'
+        : 'Entre na corrida ao vivo criada pelo professor: mesma fase do Fuga do Bug pra todo mundo, mas cada checkpoint tem uma pergunta — acertar rápido rende mais pontos, errar 2x seguidas no mesmo checkpoint custa pontos.',
+      icon: '🏁',
+      src: '../../games/corrida-do-bug.html'
     }
     };
   }
