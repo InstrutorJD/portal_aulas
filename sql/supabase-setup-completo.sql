@@ -980,6 +980,20 @@ create policy "grades_update_professor"
   using (public.is_professor())
   with check (public.is_professor());
 
+-- Realtime: quando o professor clica em "Salvar" em Lançar Notas (Gestão),
+-- o aluno que estiver com a aba Perfil aberta na hora vê a "NOTA" de cada
+-- matéria atualizar sozinha, sem precisar recarregar (ver
+-- shared/platform-core.js: watchGrades/renderPerfilTab).
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'grades'
+  ) then
+    alter publication supabase_realtime add table public.grades;
+  end if;
+end $$;
+
 -- Progresso de trilha, sincronizado pelo shared/platform-core.js (roda
 -- no navegador do aluno) — permite o relatório de notas mostrar o
 -- desempenho por trilha em %, algo que antes só existia espalhado

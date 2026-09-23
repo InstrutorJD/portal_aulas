@@ -1110,6 +1110,20 @@
       .subscribe();
   }
 
+  // Quando o professor clica em "Salvar" em Lançar Notas (Gestão), o
+  // aluno que estiver com a aba Perfil aberta vê a "NOTA" de cada matéria
+  // atualizar na hora, sem precisar recarregar — renderPerfilTab() já lê
+  // nota3/nota4 de `grades` (ver comentário ali), só faltava reagir a uma
+  // mudança que chega depois da tela já estar aberta. Filtra pelo PRÓPRIO
+  // e-mail (mesma ideia de setupOverrideRealtime) — só interessa a MINHA
+  // linha de notas, não a da turma inteira.
+  function setupGradesRealtime() {
+    if (!sbClient) return;
+    sbClient.channel('realtime_grades_' + paramUser)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades', filter: `student_email=eq.${paramUser}` }, () => renderPerfilTab())
+      .subscribe();
+  }
+
   // Refaz os cards de módulo de qualquer trilha que já esteja renderizada
   // na tela — usado depois que o cadeado de uma trilha muda ou uma
   // liberação diária chega, pra refletir sem precisar recarregar a página.
@@ -3683,6 +3697,7 @@
       fetchTeacherOverride();
       setupOverrideRealtime();
       renderRankingBadge();
+      setupGradesRealtime();
     }
 
     if (currentUser.role === 'professor') {

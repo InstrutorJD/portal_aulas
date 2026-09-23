@@ -149,6 +149,44 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
     await expect(card).toContainText('5.50');
   });
 
+  test('quando o professor salva a Nota 4 em Lançar Notas, a NOTA da matéria atualiza sozinha na aba Perfil já aberta (Realtime)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-final', bimestre: 1 },
+      ],
+      student_module_progress: [
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'pratica', progress_current: 3, progress_total: 5 },
+      ],
+      student_activity_state: [
+        { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 16, total: 20, nota: 80 } },
+        { student_email: 'breno.silva80', progress_key: 'prova_final_jogos', state: { completed: true, correctCount: 15, total: 25, nota: 60 } },
+      ],
+      grades: [
+        { student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', bimestre: 1, nota4: 4 },
+      ],
+    });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    await expect(card).toContainText('5.50'); // com nota4 = 4, como no teste acima
+
+    // O professor (noutra sessão) salva a Nota 4 = 10 pra esse bimestre —
+    // simula o Realtime chegando SEM o aluno recarregar a página.
+    await page.evaluate(() => {
+      const row = window.__FAKE_DB__.grades.find(g => g.student_email === 'breno.silva80' && g.bimestre === 1);
+      row.nota4 = 10;
+      window.__fireFakeRealtime('grades');
+    });
+
+    // (80%*5=4,00 + Prova 8,00 + Nota3 6,00 + Nota4 10) / 4 = 7.00.
+    await expect(card).toContainText('7.00');
+  });
+
   test('sem calendário de bimestres cadastrado (fora do período letivo), mostra "NOTA: —"', async ({ page }) => {
     await stubSupabaseFake(page, { bimestre_dates: [] });
     await page.goto(ALUNO_URL);
