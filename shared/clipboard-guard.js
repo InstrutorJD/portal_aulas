@@ -13,6 +13,16 @@
 // contornar abrindo o DevTools, desativando JS, ou colando em outra janela.
 // Não existe forma de um site impedir isso de verdade fora de si mesmo.
 //
+// Arrastar e soltar texto também é bloqueado junto: com a tela dividida
+// (ChatGPT de um lado, portal do outro), dava pra selecionar a resposta na
+// outra janela e ARRASTAR até o campo da atividade — isso não passa pelo
+// evento 'paste', então escapava do bloqueio de colar.
+//
+// Provas/atividades avaliativas (as que usam shared/exam-proctor.js) ficam
+// SEMPRE bloqueadas, mesmo com "Copiar e Colar" liberado na Gestão —
+// PortalExamGuard.create() liga window.__PORTAL_EXAM_LOCK__ e dispara o
+// evento 'portal-exam-lock' (ver isBlocked/applyBlockedClass abaixo).
+//
 // Roda em toda página que o incluir (plataforma de cada turma + cada jogo/
 // atividade, já que iframes são documentos separados e não herdam listeners
 // do documento pai). Não afeta o professor.
@@ -27,8 +37,16 @@
   const sb = window.PortalSession.client();
   if (!sb) return;
 
-  let blocked = false;
+  let settingBlocked = false; // chave "Copiar e Colar" da Gestão
   let toastTimer = null;
+
+  function isBlocked() {
+    return settingBlocked || window.__PORTAL_EXAM_LOCK__ === true;
+  }
+
+  function applyBlockedClass() {
+    document.documentElement.classList.toggle('clipboard-guard-blocked', isBlocked());
+  }
 
   // Tags usadas SÓ pra conteúdo de leitura (texto de instrução/enunciado e
   // código de exemplo mostrado como referência) em todo o portal — nunca
@@ -58,12 +76,12 @@
   }
 
   function onMousedownReadOnly(e) {
-    if (!blocked || !isReadOnlyTarget(e.target)) return;
+    if (!isBlocked() || !isReadOnlyTarget(e.target)) return;
     e.preventDefault(); // corta a seleção por clique+arrasto antes de começar
   }
 
   function onClickReadOnly(e) {
-    if (!blocked || !isReadOnlyTarget(e.target)) return;
+    if (!isBlocked() || !isReadOnlyTarget(e.target)) return;
     e.preventDefault();
     showToast();
   }
@@ -73,7 +91,9 @@
     if (!toast) {
       toast = document.createElement('div');
       toast.id = '__clipboardGuardToast';
-      toast.textContent = 'Copiar/colar e selecionar tudo desabilitados pelo professor.';
+      toast.textContent = window.__PORTAL_EXAM_LOCK__ === true
+        ? 'Modo prova: copiar, colar, arrastar texto e selecionar tudo estão bloqueados.'
+        : 'Copiar/colar, arrastar texto e selecionar tudo desabilitados pelo professor.';
       toast.style.cssText = [
         'position:fixed', 'left:50%', 'bottom:18px', 'transform:translateX(-50%)',
         'background:#1a1a1a', 'color:#f5f5f5', 'font:600 12px system-ui,sans-serif',
@@ -89,7 +109,7 @@
   }
 
   function onKeydown(e) {
-    if (!blocked) return;
+    if (!isBlocked()) return;
     const key = (e.key || '').toLowerCase();
     if ((e.ctrlKey || e.metaKey) && (key === 'c' || key === 'v' || key === 'x' || key === 'a')) {
       e.preventDefault();
@@ -105,7 +125,7 @@
   }
 
   function onClipboardEvent(e) {
-    if (!blocked) return;
+    if (!isBlocked()) return;
     e.preventDefault();
     showToast();
   }
@@ -117,12 +137,26 @@
   // busca do Google numa aba nova, sem clipboard-guard nenhum rodando lá,
   // e dá pra copiar dali à vontade.
   function onContextMenu(e) {
-    if (!blocked) return;
+    if (!isBlocked()) return;
     e.preventDefault();
     showToast();
   }
 
+  // Arrastar texto de OUTRA janela (tela dividida) ou de dentro da própria
+  // página até um campo — 'dragover' precisa de preventDefault também, senão
+  // alguns navegadores já mostram o cursor de "soltar" e inserem o texto.
+  function onDragEvent(e) {
+    if (!isBlocked()) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
+    if (e.type === 'drop' || e.type === 'dragstart') showToast();
+  }
+
   document.addEventListener('keydown', onKeydown, true);
+  document.addEventListener('dragstart', onDragEvent, true);
+  document.addEventListener('dragover', onDragEvent, true);
+  document.addEventListener('drop', onDragEvent, true);
+  window.addEventListener('portal-exam-lock', applyBlockedClass);
   document.addEventListener('copy', onClipboardEvent, true);
   document.addEventListener('cut', onClipboardEvent, true);
   document.addEventListener('paste', onClipboardEvent, true);
@@ -137,8 +171,8 @@
       .select('clipboard_blocked')
       .eq('id', turma)
       .maybeSingle();
-    blocked = !!(data && data.clipboard_blocked);
-    document.documentElement.classList.toggle('clipboard-guard-blocked', blocked);
+    settingBlocked = !!(data && data.clipboard_blocked);
+    applyBlockedClass();
   }
 
   function setupRealtime() {
@@ -147,6 +181,7 @@
       .subscribe();
   }
 
+  applyBlockedClass();
   fetchState();
   setupRealtime();
 })();

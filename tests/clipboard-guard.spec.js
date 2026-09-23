@@ -47,6 +47,26 @@ test.describe('shared/clipboard-guard.js', () => {
     await expect(page.locator('#__clipboardGuardToast')).toBeVisible();
   });
 
+  // Tela dividida: arrastar a resposta de outra janela até o campo não
+  // passa pelo evento 'paste' — precisa ser bloqueado à parte.
+  test('bloqueia arrastar e soltar texto quando clipboard_blocked=true, e libera quando false', async ({ page }) => {
+    const dropPrevented = () => page.evaluate(() => {
+      const ev = new Event('drop', { bubbles: true, cancelable: true });
+      document.dispatchEvent(ev);
+      return ev.defaultPrevented;
+    });
+    const URL = '/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos';
+
+    await stubSupabaseFake(page, { classroom_settings: [{ id: 'jogos', clipboard_blocked: true }] });
+    await page.goto(URL);
+    await expect.poll(dropPrevented).toBe(true);
+
+    await stubSupabaseFake(page, { classroom_settings: [{ id: 'jogos', clipboard_blocked: false }] });
+    await page.goto(URL);
+    await page.waitForTimeout(100);
+    expect(await dropPrevented()).toBe(false);
+  });
+
   test('não bloqueia quando clipboard_blocked=false', async ({ page }) => {
     await stubSupabaseFake(page, {
       classroom_settings: [{ id: 'jogos', clipboard_blocked: false }],

@@ -21,6 +21,20 @@
 // navegador sai de foco de verdade (troca de aba, minimiza, troca de app) —
 // é a mesma leitura que shared/activity-tracker.js já usa pra status idle.
 //
+// Só que com a TELA DIVIDIDA (ChatGPT numa janela, portal na outra) o
+// portal continua visível e `document.hidden` nunca muda — por isso arm()
+// também confere o FOCO a cada meio segundo (ver isPortalFocused): se o foco
+// ficar fora do portal inteiro por FOCUS_GRACE_MS, conta advertência igual
+// a trocar de aba. A checagem é feita no documento do TOPO (a plataforma),
+// que continua "com foco" enquanto o aluno clica dentro do iframe da
+// atividade ou em qualquer canto do portal — o falso positivo do 'blur'
+// acima não acontece.
+//
+// Toda prova também liga o bloqueio de copiar/colar/arrastar
+// (shared/clipboard-guard.js) mesmo que a Gestão esteja com "Copiar e
+// Colar" liberado, e mostra uma faixa fixa com essas regras (ver
+// lockClipboardAndShowRules).
+//
 // Estado (advertências/bloqueio) mora numa linha própria da MESMA tabela que
 // shared/progress-sync.js usa (student_activity_state), com
 // progress_key = `${activityLocation}__guard` — separada da linha de
@@ -29,6 +43,36 @@
 // dentro se perderia a cada pergunta respondida). Sem tabela nova no
 // Supabase.
 window.PortalExamGuard = (function () {
+  const FOCUS_POLL_MS = 500;
+  const FOCUS_GRACE_MS = 1500;
+
+  function isPortalFocused() {
+    try {
+      return window.top.document.hasFocus();
+    } catch (e) {
+      return document.hasFocus(); // topo de outra origem — cai pro próprio documento
+    }
+  }
+
+  function lockClipboardAndShowRules() {
+    window.__PORTAL_EXAM_LOCK__ = true;
+    window.dispatchEvent(new Event('portal-exam-lock'));
+    if (document.getElementById('__examRulesBar')) return;
+    const bar = document.createElement('div');
+    bar.id = '__examRulesBar';
+    bar.setAttribute('role', 'note');
+    bar.innerHTML = '🔒 <b>Modo prova:</b> copiar, colar e arrastar texto estão bloqueados. '
+      + 'Trocar de aba, minimizar ou clicar em outra janela (inclusive com a tela dividida) conta <b>advertência</b> — na 2ª, a prova é <b>bloqueada</b>.';
+    bar.style.cssText = [
+      'position:sticky', 'top:0', 'z-index:2147483646', 'margin:0',
+      'background:#7f1d1d', 'color:#fff', 'font:600 12px/1.4 system-ui,sans-serif',
+      'padding:6px 12px', 'text-align:center', 'box-shadow:0 1px 6px rgba(0,0,0,.35)',
+    ].join(';');
+    const insert = () => document.body.insertBefore(bar, document.body.firstChild);
+    if (document.body) insert();
+    else document.addEventListener('DOMContentLoaded', insert, { once: true });
+  }
+
   function localKey(activityLocation, username) {
     return `${activityLocation}_guard_${username}`;
   }
@@ -82,7 +126,7 @@ window.PortalExamGuard = (function () {
   async function create(activityLocation) {
     const instance = {
       activityLocation, username: null, sb: null, turma: null, studentName: null,
-      warnings: 0, blocked: false, armed: false, disabled: false, _handler: null, _remoteUnlockChannel: null
+      warnings: 0, blocked: false, armed: false, disabled: false, _handler: null, _focusTimer: null, _away: false, _remoteUnlockChannel: null
     };
 
     if (window.PortalSession) {
@@ -108,6 +152,8 @@ window.PortalExamGuard = (function () {
       instance.disabled = true;
       return instance;
     }
+
+    lockClipboardAndShowRules();
 
     const local = readLocal(activityLocation, instance.username) || {};
     instance.warnings = local.warnings || 0;
@@ -179,15 +225,20 @@ window.PortalExamGuard = (function () {
     const hasFinished = typeof isCompleted === 'function'
       ? isCompleted
       : () => quizCompleted(instance.activityLocation, instance.username);
-    instance._handler = function () {
-      if (!document.hidden) return; // só conta ao SAIR, não ao voltar
+    // Conta UMA advertência por saída: trocar de aba costuma disparar as
+    // duas detecções (visibilitychange E perda de foco) — `_away` segura
+    // até o aluno voltar pro portal (visível e com foco).
+    instance._away = false;
+    const registerLeave = function () {
+      if (instance._away) return;
+      instance._away = true;
       if (hasFinished()) return;
 
       instance.warnings++;
       if (instance.warnings >= 2) {
         instance.blocked = true;
         instance.armed = false;
-        document.removeEventListener('visibilitychange', instance._handler, true);
+        stopListening(instance);
         persist(instance);
         // Avisa o professor (sino de alertas em shared/platform-core.js) —
         // só no BLOQUEIO de verdade (2ª saída), não a cada advertência
@@ -216,11 +267,31 @@ window.PortalExamGuard = (function () {
         if (onWarning) onWarning(instance.warnings);
       }
     };
+    instance._handler = function () {
+      if (document.hidden) registerLeave(); // só conta ao SAIR, não ao voltar
+      else if (isPortalFocused()) instance._away = false;
+    };
+    let unfocusedSince = null;
+    instance._focusTimer = setInterval(() => {
+      if (!document.hidden && isPortalFocused()) {
+        unfocusedSince = null;
+        instance._away = false;
+        return;
+      }
+      if (unfocusedSince === null) unfocusedSince = Date.now();
+      if (Date.now() - unfocusedSince >= FOCUS_GRACE_MS) registerLeave();
+    }, FOCUS_POLL_MS);
     document.addEventListener('visibilitychange', instance._handler, true);
   }
 
-  function disarm(instance) {
+  function stopListening(instance) {
     if (instance._handler) document.removeEventListener('visibilitychange', instance._handler, true);
+    if (instance._focusTimer) clearInterval(instance._focusTimer);
+    instance._focusTimer = null;
+  }
+
+  function disarm(instance) {
+    stopListening(instance);
     instance.armed = false;
   }
 

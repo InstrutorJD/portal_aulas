@@ -34,6 +34,10 @@ async function simulateTabHidden(page) {
   await page.evaluate(() => {
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
+    // Volta pra aba logo em seguida — shared/exam-proctor.js só conta uma
+    // nova saída depois que o aluno voltou pro portal.
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
   });
 }
 
@@ -161,6 +165,36 @@ test.describe('turmas/jogos/atividades/prova-jogos.html', () => {
     await page.fill('#unlockToken', TOKEN_VALIDO);
     await page.click('#btnUnlock');
     await expect(page.locator('.option')).toHaveCount(5);
+  });
+
+  // Tela dividida (ChatGPT numa janela, portal na outra): o portal continua
+  // visível, então só a perda de FOCO denuncia a saída — ver isPortalFocused
+  // em shared/exam-proctor.js.
+  test('clicar em outra janela (foco fora do portal, aba ainda visível) também conta advertência', async ({ page }) => {
+    await page.goto(PROVA_URL);
+    await page.click('#btnIniciar');
+    await expect(page.locator('.option')).toHaveCount(5);
+
+    await page.evaluate(() => { Document.prototype.hasFocus = () => false; });
+    await expect(page.locator('.warn-overlay')).toContainText('Advertência 1/2', { timeout: 4000 });
+  });
+
+  test('prova bloqueia colar e arrastar texto mesmo com "Copiar e Colar" liberado na Gestão, e mostra as regras', async ({ page }) => {
+    await stubSupabaseFake(page, { ...SEED, classroom_settings: [{ id: 'jogos', clipboard_blocked: false }] });
+    await page.goto(PROVA_URL);
+
+    await expect(page.locator('#__examRulesBar')).toContainText('copiar, colar e arrastar texto estão bloqueados');
+    await expect(page.locator('#__examRulesBar')).toContainText('tela dividida');
+    await expect(page.locator('#gateWrap')).toContainText('Copiar, colar e arrastar texto');
+
+    const prevented = await page.evaluate(() => {
+      const paste = new Event('paste', { bubbles: true, cancelable: true });
+      document.dispatchEvent(paste);
+      const drop = new Event('drop', { bubbles: true, cancelable: true });
+      document.dispatchEvent(drop);
+      return { paste: paste.defaultPrevented, drop: drop.defaultPrevented };
+    });
+    expect(prevented).toEqual({ paste: true, drop: true });
   });
 
   test('professor tem um botão "Reiniciar prova" pra testar o sorteio de novo', async ({ page }) => {

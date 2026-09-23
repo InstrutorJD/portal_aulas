@@ -28,6 +28,10 @@ async function simulateTabHidden(frame) {
   await frame.locator('body').evaluate(() => {
     Object.defineProperty(document, 'hidden', { value: true, configurable: true });
     document.dispatchEvent(new Event('visibilitychange'));
+    // Volta pra aba logo em seguida — shared/exam-proctor.js só conta uma
+    // nova saída depois que o aluno voltou pro portal.
+    Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
   });
 }
 
