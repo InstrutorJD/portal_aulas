@@ -141,7 +141,7 @@
 <div class="env">
   <div class="topbar">
     <div>🧩 PROVA FINAL</div>
-    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">27</span></div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">28</span></div>
   </div>
 
   <div class="gate-wrap" id="gateWrap"></div>
@@ -167,9 +167,10 @@
   // não têm certo ou errado, e o conteúdo técnico das trilhas que TÊM (JS
   // Básico, Roteiros de Teste, Formar Frases) já foi coberto na Prova
   // Diagnóstica (Engel) — não faria sentido repetir a mesma cobertura
-  // como "final" também. Quando um item toca um conceito técnico (só o
-  // bloco de variáveis, 22-26), ele aparece como METÁFORA VISUAL — a
-  // caixa 📦 guardando um valor —, nunca como código de verdade.
+  // como "final" também. Quando um item toca um conceito técnico (blocos
+  // de variáveis e constante, 22-27), ele aparece como METÁFORA VISUAL —
+  // a caixa 📦 (variável) e o cofre 🔒 (constante) guardando um valor —,
+  // nunca como código de verdade.
   //
   // O formato: cada "desafio" é um probleminha de lógica com 3 opções e
   // ele clica na certa. A maioria é completar uma sequência de 3 palavras
@@ -177,15 +178,18 @@
   // uma ordem lógica), mas também tem outros tipos de raciocínio, pra não
   // virar sempre a mesma mecânica: relacionar cores (associar objeto →
   // cor típica), posição de objetos (ordem/lugar numa fila ou numa
-  // relação espacial) e variáveis (a caixa 📦 guarda um valor, e o valor
-  // novo substitui o antigo) — pura lógica, sem precisar ler texto longo
-  // nem saber conteúdo de matéria nenhuma. Cada item tem só UMA leitura
-  // possível (as opções erradas foram escolhidas pra não caber em
-  // nenhuma outra regra plausível) — mexeu num item, confira isso de novo.
+  // relação espacial), variáveis (a caixa 📦 guarda um valor, e o valor
+  // novo substitui o antigo) e constante (o cofre 🔒 TRAVA o valor — ao
+  // contrário da variável, não muda mais) — pura lógica, sem precisar ler
+  // texto longo nem saber conteúdo de matéria nenhuma. Cada item tem só
+  // UMA leitura possível (as opções erradas foram escolhidas pra não
+  // caber em nenhuma outra regra plausível) — mexeu num item, confira
+  // isso de novo.
   //
   // Cada item pode ter um `sub` próprio (a pergunta abaixo do enunciado);
   // sem isso, cai no texto padrão de "continuar a sequência" — os tipos
-  // novos (cor, posição, variável) sempre definem o próprio `sub`.
+  // novos (cor, posição, variável, constante) sempre definem o próprio
+  // `sub`.
   //
   // A posição da resposta certa (A/B/C) varia de propósito de item pra
   // item — se ficasse sempre na mesma letra, "sempre clicar em A" vira um
@@ -200,7 +204,10 @@
   // espacial, incluindo uma relação em 2 passos); 22-26 introduzem a
   // ideia de variável aos poucos (guardar um valor → o valor novo apaga o
   // antigo → duas caixas independentes → vários valores em sequência →
-  // trocar o conteúdo de duas caixas, o mais difícil de todos).
+  // trocar o conteúdo de duas caixas); o item 27 (constante) é o mais
+  // difícil da prova inteira — é uma "pegadinha" que só sai certo pra
+  // quem entendeu a DIFERENÇA entre 📦 e 🔒, não pra quem decorou "o
+  // último valor que aparece" nos itens de variável.
   //
   // Mesmo motor leve das outras atividades adaptadas dele (3 alternativas,
   // sem sorteio, sem tempo) e mesma trava de integridade (shared/
@@ -350,7 +357,18 @@
       lead: '📦1 tem 🍎. 📦2 tem 🍌. Agora, tudo que estava em 📦1 vai pra 📦2, e tudo que estava em 📦2 vai pra 📦1.',
       sub: 'O que tem dentro de 📦1 depois da troca?',
       options: ['🍎', '🍌', 'Nada'], certa: 1,
-      regra: 'Os valores trocaram de lugar: o que era de 📦2 (🍌) agora está em 📦1.' }
+      regra: 'Os valores trocaram de lugar: o que era de 📦2 (🍌) agora está em 📦1.' },
+
+    // ---- Nível 6: constante (o cofre 🔒 TRAVA o valor pra sempre) ----
+    // Item mais difícil da prova de propósito: é uma "pegadinha" que só
+    // funciona pra quem prestou atenção na diferença entre 📦 (variável,
+    // o valor novo apaga o antigo — ver acima) e 🔒 (constante, o valor
+    // NÃO muda). Quem só decorou "o último valor que aparece" erra essa.
+    { bloco: 'Constantes (o valor nunca muda)', icon: '🔒',
+      lead: '🔒 recebe 🍎 e fica TRAVADO. Alguém tenta colocar 🍌 no lugar, mas 🔒 não deixa trocar.',
+      sub: 'O que tem dentro de 🔒 agora?',
+      options: ['🍎', '🍌', '🍎 e 🍌'], certa: 0,
+      regra: '🔒 é uma constante — depois que ela recebe um valor, ele fica TRAVADO pra sempre. Diferente da variável 📦 (o valor novo apaga o antigo), na constante o valor NÃO muda: continua 🍎.' }
   ];
   const TOTAL_STEPS = QUESTIONS.length;
 
@@ -623,7 +641,7 @@
       <div class="card gate-card">
         <div class="warn-icon">🧩</div>
         <h2>Antes de começar</h2>
-        <p>São ${QUESTIONS.length} desafios de lógica. A maioria é completar uma sequência de 3 palavras que seguem um padrão (mesma letra, mesmo grupo, rima ou ordem) — mas também tem desafios de cor, de posição e de variáveis (uma caixa 📦 que guarda um valor).</p>
+        <p>São ${QUESTIONS.length} desafios de lógica. A maioria é completar uma sequência de 3 palavras que seguem um padrão (mesma letra, mesmo grupo, rima ou ordem) — mas também tem desafios de cor, de posição, de variáveis (uma caixa 📦 que guarda um valor) e de constante (um cofre 🔒 que trava o valor pra sempre).</p>
         <p>Leia o enunciado e escolha, entre as 3 opções, a resposta certa.</p>
         <p>Se errar, sem problema: a resposta certa (e a regra) aparecem na hora, pra você aprender.</p>
         <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar — sair da tela conta um aviso, e a 2ª vez bloqueia até o professor liberar.</p>

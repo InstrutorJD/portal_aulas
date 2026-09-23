@@ -4,9 +4,10 @@
 // (prova-final-jogos.html: banco de 80, teoria+prática, cobre todas as
 // matérias), essa é PURAMENTE de raciocínio lógico — a maioria é completar
 // uma sequência de 3 palavras (mesma letra, categoria, rima ou ordem), mas
-// também tem desafios de relacionar cores, de posição de objetos e de
-// variáveis (a caixa 📦 guarda um valor, sem código nenhum — só metáfora
-// visual), 3 alternativas cada — mesmo motor/trava de integridade (shared/
+// também tem desafios de relacionar cores, de posição de objetos, de
+// variáveis (a caixa 📦 guarda um valor) e de constante (o cofre 🔒 trava
+// o valor pra sempre) — sem código nenhum, só metáfora visual —, 3
+// alternativas cada — mesmo motor/trava de integridade (shared/
 // exam-proctor.js) de prova-jogos-engel.html.
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
@@ -51,12 +52,12 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     await expect(page.locator('#stageWrap')).toBeHidden();
   });
 
-  test('depois de "Começar", mostra o 1º desafio, com os 26 desafios + resultado no total', async ({ page }) => {
+  test('depois de "Começar", mostra o 1º desafio, com os 27 desafios + resultado no total', async ({ page }) => {
     await openProva(page);
-    await expect(page.locator('.bloco-label')).toContainText('Desafio 1 de 26');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 1 de 27');
     const total = await page.evaluate(() => QUESTIONS.length);
-    expect(total).toBe(26);
-    await expect(page.locator('#lblStepTotal')).toHaveText('27');
+    expect(total).toBe(27);
+    await expect(page.locator('#lblStepTotal')).toHaveText('28');
   });
 
   test('cada desafio vem com exatamente 3 alternativas', async ({ page }) => {
@@ -88,13 +89,26 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     porLetra.forEach(count => expect(count).toBeLessThanOrEqual(Math.ceil(certas.length / 2)));
   });
 
-  test('inclui desafios de cor, de posição de objetos e de variáveis, além das sequências de palavras', async ({ page }) => {
+  test('inclui desafios de cor, de posição de objetos, de variáveis e de constante, além das sequências de palavras', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
     const blocos = await page.evaluate(() => QUESTIONS.map(q => q.bloco));
     expect(blocos.filter(b => b === 'Relacionar cores').length).toBeGreaterThanOrEqual(2);
     expect(blocos.filter(b => b.startsWith('Posição de objetos')).length).toBeGreaterThanOrEqual(2);
     expect(blocos.filter(b => b.startsWith('Variáveis')).length).toBeGreaterThanOrEqual(5);
+    expect(blocos.filter(b => b.startsWith('Constantes')).length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('o desafio de constante usa o cofre 🔒 e contrasta com a variável (valor NÃO é substituído)', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
+    const constante = await page.evaluate(() => QUESTIONS.find(q => q.bloco.startsWith('Constantes')));
+    expect(constante).toBeTruthy();
+    expect(constante.lead).toContain('🔒');
+    expect(constante.lead).not.toMatch(/[=;{}()]/);
+    // ao contrário do item de variável equivalente (o valor NOVO vence),
+    // na constante o valor ORIGINAL é que continua valendo.
+    expect(constante.options[constante.certa]).toBe('🍎');
   });
 
   test('desafios de variáveis usam a caixa 📦 como metáfora, sem código nenhum no enunciado', async ({ page }) => {
@@ -124,7 +138,7 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     await expect(page.locator('.option').nth(correctIdx)).toHaveClass(/correct/);
   });
 
-  test('responde os 26 desafios e conclui, mostrando o placar', async ({ page }) => {
+  test('responde os 27 desafios e conclui, mostrando o placar', async ({ page }) => {
     await openProva(page);
 
     const total = await page.evaluate(() => QUESTIONS.length);
@@ -135,10 +149,10 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     }
 
     await expect(page.locator('.score-box h2')).toContainText('Você terminou!');
-    await expect(page.locator('.score')).toContainText('26/26');
+    await expect(page.locator('.score')).toContainText('27/27');
 
     const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`prova_final_jogos_engel_progress_${u}`)), 'engel.fraga');
-    expect(progress).toMatchObject({ completed: true, correctCount: 26 });
+    expect(progress).toMatchObject({ completed: true, correctCount: 27 });
   });
 
   test('recarregar a página no meio da prova não reabre um desafio já respondido', async ({ page }) => {
@@ -147,13 +161,13 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     await page.locator('.option').nth(correctIdx0).click();
     await page.click('#btnNext');
 
-    await expect(page.locator('.bloco-label')).toContainText('Desafio 2 de 26');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 2 de 27');
 
     await page.reload();
-    await expect(page.locator('.bloco-label')).toContainText('Desafio 2 de 26');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 2 de 27');
   });
 
-  test('gabarito lista os 26 desafios com a regra e a resposta certa pra cada um', async ({ page }) => {
+  test('gabarito lista os 27 desafios com a regra e a resposta certa pra cada um', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
 
@@ -202,11 +216,11 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html — trava de tela'
     expect(unlockedState.warnings).toBe(0);
   });
 
-  test('depois de responder os 26 desafios, a prova abre direto no placar (sem tela de regras) e sair da aba não conta mais aviso', async ({ page }) => {
+  test('depois de responder os 27 desafios, a prova abre direto no placar (sem tela de regras) e sair da aba não conta mais aviso', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.addInitScript(u => {
-      const respostas = new Array(26).fill(true);
-      localStorage.setItem(`prova_final_jogos_engel_progress_${u}`, JSON.stringify({ respostas, completed: true, correctCount: 26 }));
+      const respostas = new Array(27).fill(true);
+      localStorage.setItem(`prova_final_jogos_engel_progress_${u}`, JSON.stringify({ respostas, completed: true, correctCount: 27 }));
     }, 'engel.fraga');
 
     await page.goto(PROVA_URL);
@@ -221,7 +235,7 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html — trava de tela'
       profiles: [{ id: 'fake-admin', email: 'admin', nome: 'Instrutor / Professor', role: 'professor', turma: 'all' }],
     });
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
-    await expect(page.locator('.bloco-label')).toContainText('Desafio 1 de 26');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 1 de 27');
     await expect(page.locator('#btnSkipProfessor')).toBeVisible();
   });
 });
