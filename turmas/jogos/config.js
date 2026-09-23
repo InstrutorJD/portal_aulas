@@ -1081,6 +1081,38 @@ window.TURMA_CONFIG_JOGOS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // Trilha individual, adaptada — visível só pro Engel (e sempre pro
+          // professor). "Prova Final" pra ele: as trilhas narrativas dele
+          // ("Ponto de Virada"/"A Jornada do Lucas") não têm certo ou
+          // errado, e o conteúdo técnico das trilhas que têm (JS Básico,
+          // Roteiros de Teste, Formar Frases) já foi coberto na Prova
+          // Diagnóstica (Engel) acima — então essa avaliação final é
+          // PURAMENTE de raciocínio lógico (sequências de palavras: mesma
+          // letra, categoria, rima ou ordem), sem repetir conteúdo técnico.
+          // Mesmo motor/trava leve da Prova Diagnóstica (Engel) — ver
+          // atividades/prova-final-engel.html. Diferente da Prova Final da
+          // turma toda, NÃO alimenta a coluna "Prova Final" (nota3)
+          // automaticamente — cfg.nota3ActivityLocation aponta só pro
+          // progress_key da prova padrão (prova_final_jogos); o professor
+          // lança a nota dele manualmente com base no gabarito, mesmo
+          // esquema que já vale pra "Prova" (nota2) da Prova Diagnóstica
+          // (Engel), que também não é automática.
+          key: 'prova-final-engel',
+          label: 'Prova Final (Engel)',
+          desc: 'Avaliação final adaptada, só de raciocínio lógico: sequências de 3 palavras (mesma letra, categoria, rima ou ordem) em que ele escolhe qual palavra vem a seguir — 10 sequências, 3 alternativas cada, com trava anti-saída de tela.',
+          visibleFor: ['engel.fraga'],
+          capacidade: 'Avaliação final adaptada do raciocínio lógico-indutivo (reconhecer o padrão de uma sequência e prever o próximo elemento), no lugar do conteúdo técnico já coberto nas outras trilhas dele.',
+          modules: [
+            {
+              key: 'prova', title: 'Prova Final (Engel)',
+              desc: '10 sequências de 3 palavras (3 alternativas cada, com trava anti-saída de tela) — descubra o padrão (letra, categoria, rima ou ordem) e escolha a próxima palavra.',
+              icon: '🧩', src: 'atividades/prova-final-engel.html',
+              progressKey: 'prova_final_jogos_engel_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
         }
       ]
     }
