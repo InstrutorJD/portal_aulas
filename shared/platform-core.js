@@ -220,12 +220,6 @@
   // ---------- Shell HTML ----------
   function renderShell() {
     const mount = document.getElementById('app');
-    // Texto de ajuda da seção "Lançar Notas" — varia conforme cfg.nota3ActivityLocation
-    // (só a turma Sistemas define isso hoje, pra Prova Final calcular sozinha
-    // a coluna "Nota 3"/rótulo customizado, igual a coluna "Prova" já faz).
-    const notasHelpText = cfg.nota3ActivityLocation
-      ? `"Prova" (até 10,0, nota da prova diagnóstica) e "${cfg.nota3Label || 'Nota 3'}" são calculadas sozinhas, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha"). Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + a % de conclusão só das trilhas DAQUELA matéria neste bimestre, escalada até 10,0) — não existe mais uma média única. "Recuperação" é digitada à mão e só entra na conta de uma matéria se ela ficou abaixo de 6,0 — aí a nota final vira a média entre a nota original e a Recuperação.`
-      : `"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só ${cfg.nota3Label || 'Nota 3'} é digitada. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + a % de conclusão só das trilhas DAQUELA matéria neste bimestre, escalada até 10,0) — não existe mais uma média única. "Recuperação" é digitada à mão e só entra na conta de uma matéria se ela ficou abaixo de 6,0 — aí a nota final vira a média entre a nota original e a Recuperação.`;
     mount.innerHTML = `
       <div class="a11y-bar">
         <div>
@@ -370,9 +364,6 @@
                 </table>
 
                 <h3 class="gestao-subhead">Alunos arquivados</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">
-                  Login bloqueado e fora das listas/relatórios da turma. Notas, chamada e progresso já lançados continuam guardados — reative quando quiser.
-                </p>
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>E-mail</th><th>Arquivado em</th><th></th></tr></thead>
                   <tbody id="tblGestaoAlunosArquivadosBody"></tbody>
@@ -386,14 +377,11 @@
                 <span class="collapsible-arrow">▶</span>
               </div>
               <div class="collapsible-body">
-                <p style="font-size:11px; color:var(--ink-dim); margin:0 0 12px;">
-                  Verde = liberado pro aluno, vermelho = bloqueado. Clique na chave pra alternar.
-                </p>
                 <div class="toggle-row-list">
                   <div class="toggle-row">
                     <div>
                       <div class="toggle-row-label">Copiar e Colar</div>
-                      <div class="toggle-row-desc" id="toggleClipboardDesc">É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.</div>
+                      <div class="toggle-row-desc" id="toggleClipboardDesc"></div>
                     </div>
                     <button class="toggle-switch" id="toggleClipboard" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                   </div>
@@ -414,9 +402,6 @@
                 </div>
 
                 <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Calendário letivo da turma — usado pela "Liberação por Trilha" abaixo. Deixe em branco pra não usar esse bimestre.
-                </p>
                 <table class="audit-table">
                   <thead><tr><th>Bimestre</th><th>Início</th><th>Fim</th></tr></thead>
                   <tbody id="tblGestaoBimestresBody"></tbody>
@@ -427,9 +412,6 @@
                 </div>
 
                 <h3 class="gestao-subhead">Liberação por Trilha</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Atribua cada trilha a um bimestre (cadastrado acima) — antes do início dele, a trilha nem aparece pro aluno; depois do fim, ela some da aba Aulas pra todo mundo, inclusive você. Escolha "Sem bimestre" pra deixar a trilha sempre visível/liberada. Trilhas da mesma matéria podem ficar em bimestres diferentes.
-                </p>
                 <table class="audit-table">
                   <thead><tr><th>Matéria</th><th>Trilha</th><th>Bimestre</th></tr></thead>
                   <tbody id="tblGestaoTrilhasBody"></tbody>
@@ -472,7 +454,6 @@
                 </div>
 
                 <h3 class="gestao-subhead">Lançar Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">${notasHelpText}</p>
                 <div class="field-row">
                   <div>
                     <label class="field-label" for="notasBimestre">Bimestre</label>
@@ -511,14 +492,14 @@
                   </div>
                   <button class="btn btn-secondary" id="btnGerarPdfPresenca">🖨️ Gerar PDF do Mês</button>
                 </div>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos com frequência abaixo de 75% neste mês:</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Frequência abaixo de 75% no mês:</p>
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>Faltas (mês)</th><th>% Presença (mês)</th></tr></thead>
                   <tbody id="presencaBody"></tbody>
                 </table>
 
                 <h3 class="gestao-subhead">Relatório de Notas</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos com pior desempenho (quase nenhuma atividade feita, ou a maioria das matérias abaixo de 50%):</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Pior desempenho:</p>
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>Progresso Geral</th><th>Matérias abaixo de 50%</th></tr></thead>
                   <tbody id="relatorioNotasBody"></tbody>
@@ -528,19 +509,17 @@
                 </div>
 
                 <h3 class="gestao-subhead">Atividade e Inatividade</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;" id="inatividadeResumo">Quem nunca acessou o portal ou acessou mas não avançou em nenhuma atividade — listados primeiro. Onde está e status ao vivo atualizam sozinhos.</p>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 4px;" id="inatividadeResumo"></p>
                 <table class="audit-table">
                   <thead><tr><th>Aluno</th><th>Situação</th><th>Onde está agora</th><th>Há quanto tempo</th><th>Última atualização</th></tr></thead>
                   <tbody id="inatividadeBody"></tbody>
                 </table>
 
                 <h3 class="gestao-subhead">Relatório de Atividade do Dia</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos presentes hoje que ainda não concluíram nenhuma atividade hoje. Não considera quem já foi marcado como falta na chamada de hoje.</p>
                 <button class="btn btn-secondary" id="btnGerarAtividadeDia" style="margin-bottom:10px;">📋 Gerar Relatório do Dia</button>
                 <div id="atividadeDiaResultado"></div>
 
                 <h3 class="gestao-subhead">Ranking da Turma</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Alunos na ordem do ranking (% geral de conclusão), com quantas atividades cada um concluiu das disponíveis.</p>
                 <button class="btn btn-secondary" id="btnGerarRankingTurma" style="margin-bottom:10px;">🏆 Gerar Ranking da Turma</button>
                 <div id="rankingTurmaResultado"></div>
               </div>
@@ -1616,7 +1595,7 @@
           ? 'Bloqueado para todos.'
           : liberados === students.length
             ? 'Liberado para todos.'
-            : `Parcial — ${liberados} de ${students.length} alunos liberados (clique pra liberar todos).`;
+            : `Parcial — ${liberados} de ${students.length} liberados.`;
       }
     }
 
@@ -1628,8 +1607,8 @@
     const notasDesc = document.getElementById('toggleNotasDesc');
     if (notasDesc) {
       notasDesc.textContent = !bimestreAtual
-        ? 'Nenhum bimestre em andamento agora (configure em "Bimestres — Início e Fim" abaixo).'
-        : `${BIMESTRE_LABELS[bimestreAtual]} — ${notasLiberadas ? 'aluno já vê a nota de cada matéria' : 'aluno ainda não vê a nota (aparece só o progresso)'}.`;
+        ? 'Nenhum bimestre em andamento.'
+        : `${BIMESTRE_LABELS[bimestreAtual]} — ${notasLiberadas ? 'aluno já vê a nota' : 'aluno ainda não vê a nota'}.`;
     }
   }
 
