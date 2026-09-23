@@ -150,7 +150,7 @@
 <div class="env">
   <div class="topbar">
     <div>PROVA FINAL — TURMA JOGOS DIGITAIS</div>
-    <div>QUESTÃO <span id="lblStepNum">1</span> DE <span id="lblStepTotal">25</span></div>
+    <div>QUESTÃO <span id="lblStepNum">1</span> DE <span id="lblStepTotal">30</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -161,17 +161,20 @@
 </div>
 
 <script>
-  const EXAM_SIZE = 25;
-  // Ao menos 5 das 25 questoes carregadas pro aluno sao PRATICAS (escreve
-  // codigo de verdade, nao multipla escolha) - ver pickExamIndices() mais
-  // abaixo, que sorteia separadamente do pool pratico e do pool teorico,
-  // em vez de confiar num sorteio unico que poderia (por azar) devolver
-  // poucas ou nenhuma questao pratica pra algum aluno.
-  const PRACTICE_COUNT = 5;
-  // Prova vale 100 pontos no total, divididos igualmente entre as 25
-  // questoes - 4 pontos cada, sempre um numero redondo (nunca precisa
-  // arredondar). O Relatorio de Notas (aba Gestao) le esse valor de dentro
-  // de state.nota, salvo junto do resto do progresso - ver finishExam().
+  const EXAM_SIZE = 30;
+  // Exatamente 10 das 30 questoes carregadas pro aluno sao PRATICAS
+  // (escreve codigo de verdade, nao multipla escolha) e as outras 20 sao
+  // TEORICAS - ver pickExamIndices() mais abaixo, que sorteia separado do
+  // pool pratico e do pool teorico (em vez de confiar num sorteio unico
+  // que poderia, por azar, devolver poucas ou nenhuma questao pratica pra
+  // algum aluno) e junta os dois num total FIXO, a pedido do professor.
+  const PRACTICE_COUNT = 10;
+  // Prova vale 100 pontos no total, divididos igualmente entre as 30
+  // questoes - ~3,33 pontos cada (nao e mais um numero redondo como era
+  // com 25 questoes/4 pontos, mas Math.round() em finishExam() ja cuida
+  // do arredondamento da nota final). O Relatorio de Notas (aba Gestao)
+  // le esse valor de dentro de state.nota, salvo junto do resto do
+  // progresso - ver finishExam().
   // Diferente da Prova Diagnostica, esta trilha NAO e a trilhas[0] da
   // materia 'prova' (ver turmas/jogos/config.js), entao essa nota nao
   // vira automaticamente a coluna "Prova" do Relatorio de Notas - em vez
@@ -194,10 +197,10 @@
   // codigo com bug - mesmo motor de execucao sandbox `new Function`
   // usado na Prova Final da turma Sistemas).
   //
-  // Cada aluno recebe 25 dessas 92 (ver pickExamIndices): sempre 5
+  // Cada aluno recebe 30 dessas 92 (ver pickExamIndices): sempre 10
   // praticas + 20 teoricas, sorteadas separadamente e depois embaralhadas
-  // juntas - garante o minimo de 5 questoes praticas em toda tentativa,
-  // em vez de deixar por conta do acaso. As alternativas das questoes
+  // juntas - garante essa composicao fixa em toda tentativa, em vez de
+  // deixar por conta do acaso. As alternativas das questoes
   // teoricas sao reembaralhadas a cada exibicao (ver renderTeoricaQuestion),
   // entao nem a pergunta nem a posicao da resposta certa seguem um padrao
   // fixo de um aluno pro outro.
@@ -1119,7 +1122,7 @@
   }
   function saveState(s) { localStorage.setItem(STATE_KEY, JSON.stringify(s)); }
 
-  // IMPORTANTE: o sorteio das 25 questoes so acontece dentro de
+  // IMPORTANTE: o sorteio das 30 questoes so acontece dentro de
   // startExam() (clique em "Iniciar prova"), nunca so por carregar a
   // pagina - senao toda visita (inclusive antes do aluno ver as regras)
   // ja "comecaria" uma tentativa. `selection` existir e o sinal real de
@@ -1145,7 +1148,7 @@
 
   // Botao exclusivo do professor (pre-visualizando com seu proprio usuario)
   // pra testar o sorteio: apaga a selecao/estado/progresso salvos sob o
-  // login dele e sorteia 25 questoes novas na hora, sem afetar nenhum
+  // login dele e sorteia 30 questoes novas na hora, sem afetar nenhum
   // aluno (cada um tem sua propria SELECTION_KEY/STATE_KEY/PROGRESS_KEY).
   function resetForProfessor() {
     localStorage.removeItem(SELECTION_KEY);
@@ -1548,7 +1551,7 @@
         <h2>Prova Final concluída${aprovado ? '!' : ''}</h2>
         <p>Sua prova foi entregue e registrada — não é possível refazer esta tentativa.</p>
         <div class="score">Nota: ${nota} de 100 pontos</div>
-        <p>Você acertou ${correctCount} de ${EXAM_SIZE} questões (teóricas e práticas) — cada uma vale ${PONTOS_POR_QUESTAO} pontos.</p>
+        <p>Você acertou ${correctCount} de ${EXAM_SIZE} questões (teóricas e práticas) — cada uma vale ${PONTOS_POR_QUESTAO.toFixed(1)} pontos.</p>
         ${aprovado
           ? '<p>O professor já pode conferir seu resultado.</p>'
           : '<p>Esse resultado aponta conteúdos que ainda precisam de reforço. Procure o professor pra saber onde focar.</p>'}
@@ -1654,8 +1657,8 @@
         <h2>📋 Prova Final — Turma Jogos Digitais</h2>
         <p>Esta é a prova final: cobre teoria de TODAS as matérias trabalhadas até agora e também PRÁTICA de programação de verdade — você vai escrever código, não só marcar alternativas.</p>
         <ul>
-          <li>Existe um banco de <b>92 questões</b> — você vai responder <b>25</b>, sorteadas aleatoriamente pro seu login.</li>
-          <li>Dessas 25, pelo menos <b>5 são práticas</b>: criar variável, somar números e corrigir código com erro, direto no editor.</li>
+          <li>Existe um banco de <b>92 questões</b> — você vai responder <b>30</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Dessas 30, <b>20 são teóricas</b> e <b>10 são práticas</b>: criar variável, fazer contas, comparar valores, mexer em listas e corrigir código com erro, direto no editor.</li>
           <li>As questões teóricas têm <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Nas questões práticas, você pode clicar em <b>Executar</b> quantas vezes quiser pra testar seu código antes de confirmar.</li>
           <li>Você tem <b>uma única tentativa oficial</b>. Ao final, sua pontuação fica registrada.</li>
@@ -1679,13 +1682,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 92 questoes (nao so as 25 que um
+  // Gabarito: lista o BANCO INTEIRO de 92 questoes (nao so as 30 que um
   // aluno especifico recebeu) - teoricas com alternativas/resposta certa,
   // praticas com o codigo esperado e a explicacao do bug (quando houver).
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Prova Final — Turma Jogos Digitais — Banco de 92 questões',
-      subtitle: 'Teórica + Prática (25 sorteadas de 92, sendo ao menos 5 práticas, por aluno) · Turma Jogos Digitais',
+      subtitle: 'Teórica + Prática (30 sorteadas de 92 por aluno, sendo 20 teóricas e 10 práticas) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => {
         if (q.type === 'pratica') {
           return {

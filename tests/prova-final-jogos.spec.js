@@ -3,8 +3,8 @@
 // atividade SEPARADA da Prova Diagnóstica (prova-jogos.spec.js) — banco
 // de 92 questões (72 teóricas de múltipla escolha + 20 práticas, onde o
 // aluno ESCREVE código de verdade num editor Monaco e o motor roda num
-// sandbox), sorteando 25 por aluno (sempre pelo menos 5 práticas, nunca por
-// acaso — ver pickExamIndices()). Mesma trava de integridade (shared/
+// sandbox), sorteando 30 por aluno (sempre 20 teóricas + 10 práticas, nunca
+// por acaso — ver pickExamIndices()). Mesma trava de integridade (shared/
 // exam-proctor.js) e mesmo token de desbloqueio (shared/professor-visto.js)
 // da Prova Diagnóstica. Mesmo mecanismo já usado pela turma Sistemas (ver
 // tests/prova-final-sistemas.spec.js).
@@ -60,26 +60,26 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await page.goto(PROVA_URL);
     await expect(page.locator('#gateWrap')).toContainText('Prova Final — Turma Jogos Digitais');
     await expect(page.locator('#gateWrap')).toContainText('92 questões');
-    await expect(page.locator('#gateWrap')).toContainText('25');
-    await expect(page.locator('#gateWrap')).toContainText('pelo menos');
-    await expect(page.locator('#gateWrap')).toContainText('5 são práticas');
+    await expect(page.locator('#gateWrap')).toContainText('30');
+    await expect(page.locator('#gateWrap')).toContainText('20 são teóricas');
+    await expect(page.locator('#gateWrap')).toContainText('10 são práticas');
     await expect(page.locator('#storyWrap')).toBeHidden();
     await expect(page.locator('#btnIniciar')).toBeVisible();
   });
 
-  test('toda tentativa sorteia pelo menos 5 questões práticas em 25', async ({ page }) => {
+  test('toda tentativa sorteia exatamente 10 questões práticas e 20 teóricas em 30', async ({ page }) => {
     test.setTimeout(90000);
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');
 
     let praticaCount = 0;
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 30; i++) {
       const isPratica = await page.locator('.code-editor').count() > 0;
       if (isPratica) praticaCount++;
       await answerCurrentQuestionSomehow(page);
     }
 
-    expect(praticaCount).toBeGreaterThanOrEqual(5);
+    expect(praticaCount).toBe(10);
     await expect(page.locator('.finish-screen .score')).toContainText('de 100 pontos');
   });
 
@@ -88,7 +88,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await page.click('#btnIniciar');
 
     // Avança até cair numa teórica, caso a 1ª sorteada seja prática.
-    for (let i = 0; i < 25 && (await page.locator('.option').count()) === 0; i++) {
+    for (let i = 0; i < 30 && (await page.locator('.option').count()) === 0; i++) {
       await answerCurrentQuestionSomehow(page);
     }
     await expect(page.locator('.option')).toHaveCount(5);
@@ -99,7 +99,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');
 
-    for (let i = 0; i < 25 && (await page.locator('.option').count()) === 0; i++) {
+    for (let i = 0; i < 30 && (await page.locator('.option').count()) === 0; i++) {
       await answerCurrentQuestionSomehow(page);
     }
     await expect(page.locator('.option')).toHaveCount(5);
@@ -113,8 +113,8 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');
 
-    // Avança até cair numa prática (garantido existir ao menos 1 em 25).
-    for (let i = 0; i < 25 && (await page.locator('.code-editor').count()) === 0; i++) {
+    // Avança até cair numa prática (garantido existir ao menos 1 em 30).
+    for (let i = 0; i < 30 && (await page.locator('.code-editor').count()) === 0; i++) {
       await answerCurrentQuestionSomehow(page);
     }
     await expect(page.locator('.code-editor')).toHaveCount(1);
@@ -141,7 +141,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');
 
-    for (let i = 0; i < 25 && (await page.locator('.code-editor').count()) === 0; i++) {
+    for (let i = 0; i < 30 && (await page.locator('.code-editor').count()) === 0; i++) {
       await answerCurrentQuestionSomehow(page);
     }
     await expect(page.locator('.code-editor')).toHaveCount(1);
@@ -151,29 +151,29 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await expect(page.locator('.feedback.incorrect')).toContainText('Você errou');
   });
 
-  test('responde as 25 questões e conclui, sem opção de tentar de novo', async ({ page }) => {
+  test('responde as 30 questões e conclui, sem opção de tentar de novo', async ({ page }) => {
     test.setTimeout(90000);
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');
 
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 30; i++) {
       await expect(page.locator('#lblStepNum')).toHaveText(String(i + 1));
       await answerCurrentQuestionSomehow(page);
     }
 
     await expect(page.locator('.finish-screen h2')).toContainText('Prova Final concluída');
-    await expect(page.locator('.finish-screen')).toContainText('de 25 questões');
+    await expect(page.locator('.finish-screen')).toContainText('de 30 questões');
     await expect(page.locator('.finish-screen .score')).toContainText('de 100 pontos');
     await expect(page.locator('button:has-text("tentar")')).toHaveCount(0);
     await expect(page.locator('button:has-text("Tentar")')).toHaveCount(0);
 
     const stored = await page.evaluate(u => JSON.parse(localStorage.getItem(`prova_final_jogos_progress_${u}`)), 'breno.silva80');
     expect(stored.completed).toBe(true);
-    expect(stored.total).toBe(25);
+    expect(stored.total).toBe(30);
     expect(typeof stored.correctCount).toBe('number');
-    // Prova vale 100 pontos, 4 por questão (100/25) — a nota é sempre um
-    // múltiplo de 4, nunca um percentual (ver finishExam()).
-    expect(stored.nota).toBe(stored.correctCount * 4);
+    // Prova vale 100 pontos, ~3,33 por questão (100/30, arredondado na nota
+    // final — ver finishExam() / PONTOS_POR_QUESTAO).
+    expect(stored.nota).toBe(Math.round(stored.correctCount * (100 / 30)));
     expect(stored.nota).toBeGreaterThanOrEqual(0);
     expect(stored.nota).toBeLessThanOrEqual(100);
     await expect(page.locator('.finish-screen .score')).toContainText(`Nota: ${stored.nota} de 100 pontos`);
@@ -205,7 +205,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
 
     // Responde a 1ª questão antes de sair, pra confirmar depois que o
     // desbloqueio não jogou fora esse progresso (não voltou pra tela de
-    // regras, que sortearia 25 questões novas do zero).
+    // regras, que sortearia 30 questões novas do zero).
     await answerCurrentQuestionSomehow(page);
     const selectionBefore = await page.evaluate(u => localStorage.getItem(`prova_final_jogos_selecao_${u}`), 'breno.silva80');
 
@@ -249,7 +249,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
 
     const selectionAfter = await page.evaluate(u => localStorage.getItem(`prova_final_jogos_selecao_${u}`), 'admin');
     expect(selectionAfter).not.toBeNull();
-    // Praticamente impossível o sorteio de 25 de 92 repetir por acaso —
+    // Praticamente impossível o sorteio de 30 de 92 repetir por acaso —
     // confirma que reiniciar de fato gerou uma seleção nova.
     expect(selectionAfter).not.toBe(selectionBefore);
   });
