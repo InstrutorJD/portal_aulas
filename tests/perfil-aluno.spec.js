@@ -148,6 +148,9 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
     const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
     await expect(card).toContainText('NOTA:');
     await expect(card).toContainText('7.33');
+    // >= 6,0 — selo verde "Aprovado" ao lado da nota.
+    await expect(card.locator('.perfil-nota-status')).toHaveText('Aprovado');
+    await expect(card.locator('.perfil-nota-status')).toHaveClass(/aprovado/);
   });
 
   test('Recuperação não afeta matéria que já está >= 6,0 — mudar ela não altera a NOTA na aba Perfil (Realtime só confirma que a tela reagiu, sem mudar o valor)', async ({ page }) => {
@@ -212,6 +215,9 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
     // Base: (0%*10=0,00 + Prova 3,00 + Nota3 3,00) / 3 = 2.00 — sem
     // Recuperação lançada ainda, a nota exibida é a própria base.
     await expect(card).toContainText('2.00');
+    // < 6,0 — selo amarelo "Recuperação" ao lado da nota.
+    await expect(card.locator('.perfil-nota-status')).toHaveText('Recuperação');
+    await expect(card.locator('.perfil-nota-status')).toHaveClass(/recuperacao/);
 
     // O professor lança a Recuperação = 10 pra esse bimestre — simula o
     // Realtime chegando SEM o aluno recarregar a página.
@@ -220,8 +226,9 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
       window.__fireFakeRealtime('grades');
     });
 
-    // Nota final = (2,00 + 10) / 2 = 6.00.
+    // Nota final = (2,00 + 10) / 2 = 6.00 — cruzou o corte, selo vira "Aprovado".
     await expect(card).toContainText('6.00');
+    await expect(card.locator('.perfil-nota-status')).toHaveText('Aprovado');
   });
 
   test('sem calendário de bimestres cadastrado (fora do período letivo), mostra "NOTA: —"', async ({ page }) => {
@@ -232,6 +239,30 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
     const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
     await expect(card).toContainText('NOTA: —');
     await expect(card).toContainText('fora do período letivo');
+
+    // Card de resumo também mostra que está fora do período letivo, sem
+    // bimestre nenhum pra indicar.
+    const resumo = page.locator('#perfilResumo');
+    await expect(resumo).toContainText('Fora do Período Letivo');
+  });
+
+  test('mostra o bimestre atual (hoje entre início e fim cadastrados) no card de resumo', async ({ page }) => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    await stubSupabaseFake(page, {
+      bimestre_dates: [
+        // 1º já passou, 2º é "hoje" — cobre o dia todo (00:00 a 23:59, mesma
+        // data em início e fim já basta pro filtro >= inicio && <= fim).
+        { turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2000-01-31' },
+        { turma: 'jogos', bimestre: 2, inicio: hoje, fim: hoje },
+      ],
+    });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const resumo = page.locator('#perfilResumo');
+    await expect(resumo).toContainText('2º');
+    await expect(resumo).toContainText('Bimestre Atual');
+    await expect(resumo).not.toContainText('Fora do Período Letivo');
   });
 
   test('a matéria "Prova" não mostra campo de NOTA (ela já É a nota Prova)', async ({ page }) => {

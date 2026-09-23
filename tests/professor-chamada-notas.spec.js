@@ -402,27 +402,37 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(cells.nth(2)).toContainText('/');
   });
 
-  test('Relatório Completo (botão) mostra médias, nota da prova, % por matéria, e destaca quem tem pior desempenho', async ({ page }) => {
+  test('Relatório Completo (botão) mostra a NOTA por matéria do bimestre selecionado em "Lançar Notas", nota da prova, média geral, e destaca quem tem pior desempenho', async ({ page }) => {
     await openGestao(page, SISTEMAS_URL, {
-      grades: [
-        { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', bimestre: 1, nota1: 10, nota2: 10, nota3: 10, nota4: 10, media: 10 },
-        { student_email: 'alexandre.natal', student_name: 'Alexandre Natal', turma: 'sistemas', bimestre: 2, nota1: 8, nota2: 8, nota3: 8, nota4: 8, media: 8 },
+      grades: [],
+      // Só as trilhas de "Banco de Dados" (e Prova/Prova Final) atribuídas
+      // ao 1º Bimestre — as outras matérias ficam sem trilha neste
+      // bimestre, então mostram "—" (não entram na Média Geral).
+      trilha_bimestre: [
+        { turma: 'sistemas', trilha_key: 'prova-diagnostica', bimestre: 1 },
+        { turma: 'sistemas', trilha_key: 'prova-final', bimestre: 1 },
+        { turma: 'sistemas', trilha_key: 'sql', bimestre: 1 },
+        { turma: 'sistemas', trilha_key: 'sql-comentarios', bimestre: 1 },
+        { turma: 'sistemas', trilha_key: 'db-conexao-supabase', bimestre: 1 },
+        { turma: 'sistemas', trilha_key: 'projeto-financapp-banco-dados', bimestre: 1 },
       ],
       student_module_progress: [
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 8, progress_total: 8, completed: true },
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'join', progress_current: 5, progress_total: 5, completed: true },
-        // "agregacao" (trilha sql) e "teoria" (trilha sql-comentarios) nunca
-        // abertos — sem linha, contam como 0% na média da MATÉRIA Banco de
-        // Dados (que soma os módulos das 2 trilhas dela).
+        // "agregacao" (trilha sql), "teoria" (sql-comentarios), "pratica"
+        // (db-conexao-supabase) e "trabalho" (projeto-financapp) nunca
+        // abertos — contam como 0% na média da MATÉRIA Banco de Dados.
       ],
       // "Nota da Prova" não vem de student_module_progress (que só sabe
       // "concluiu ou não" pro módulo progressMode:'flag' da prova) — vem
       // de student_activity_state, onde a prova salva `state.nota` (0-100)
       // ao concluir. progress_key segue `prova_<turma>` (ver finishExam()
-      // em turmas/sistemas/atividades/prova-sistemas.html).
+      // em turmas/sistemas/atividades/prova-sistemas.html). Nota 3 ("Prova
+      // Final") é automática pra Sistemas — vem de prova_final_sistemas.
       student_activity_state: [
         { student_email: 'alexandre.natal', progress_key: 'prova_sistemas', state: { completed: true, correctCount: 17, total: 20, nota: 85 } },
+        { student_email: 'alexandre.natal', progress_key: 'prova_final_sistemas', state: { completed: true, correctCount: 14, total: 20, nota: 70 } },
       ],
     });
     await expandGestaoSection(page, 'Relatórios');
@@ -435,22 +445,23 @@ test.describe('Notas — dentro do portal da turma', () => {
     ]);
 
     await expect(popup.locator('h1')).toContainText('Relatório de Notas');
+    await expect(popup.locator('p.sub')).toContainText('1º Bimestre'); // #notasBimestre começa em "1"
     // A coluna é por MATÉRIA, não por trilha; nunca os 4 campos de nota crus.
     await expect(popup.locator('table thead')).toContainText('Banco de Dados');
     await expect(popup.locator('table thead')).toContainText('Nota da Prova');
+    await expect(popup.locator('table thead')).toContainText('Média Geral');
     await expect(popup.locator('table')).not.toContainText('nota1');
 
     const row = popup.locator('table tbody tr', { hasText: 'Alexandre Natal' });
-    await expect(row).toContainText('10.00'); // média B1
-    await expect(row).toContainText('8.00');  // média B2
-    await expect(row).toContainText('9.00');  // média geral (10 e 8, sem B3/B4)
     await expect(row).toContainText('85/100'); // nota da prova, em pontos — nunca em %
-    // Banco de Dados tem 7 módulos ao todo (sql: teoria/basico/join/agregacao +
-    // sql-comentarios: teoria + db-conexao-supabase: pratica +
-    // projeto-financapp-banco-dados: trabalho).
-    // 3 concluídos, 4 nunca abertos => 3/7 ≈ 43%.
-    await expect(row).toContainText('43%');
-    // Pior desempenho (maioria das matérias abaixo de 50%) sai destacado.
+    // Banco de Dados: 3 de 7 módulos concluídos (sql: teoria/basico/join) =>
+    // 3/7 ≈ 43% => Atividades 4,30. Prova 85/10=8,50. Nota3 (Prova Final)
+    // 70/10=7,00. Nota = (4,30 + 8,50 + 7,00) / 3 = 6.60.
+    await expect(row).toContainText('6.60');
+    // Só essa matéria tem trilha neste bimestre — Média Geral = a própria nota dela.
+    await expect(row).toContainText('6.60');
+    // Pior desempenho (maioria das matérias abaixo de 50% de CONCLUSÃO —
+    // métrica separada da nota, não bimestrada) sai destacado.
     await expect(row).toHaveClass(/pior/);
     await expect(row).toContainText('⚠️');
 

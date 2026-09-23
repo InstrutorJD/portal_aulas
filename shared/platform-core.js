@@ -2521,6 +2521,16 @@
 
     renderPerfilBadges(overallPct, completedModules);
 
+    // Bimestre ATUAL (ver currentBimestreNum): hoje entre o início e o fim
+    // cadastrados em Gestão → "Bimestres — Início e Fim". Buscado aqui, antes
+    // de montar o resumo, pra já aparecer pro aluno mesmo que a turma ainda
+    // não tenha matéria/trilha cadastrada (ver o "return" mais abaixo). Só
+    // mostra o bimestre atual por enquanto — não dá pra escolher ver um
+    // bimestre anterior ainda (ver notaPorMateria logo abaixo, que reusa o
+    // mesmo bimestreAtual pra não buscar de novo).
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    const bimestreAtual = currentBimestreNum();
+
     summaryEl.innerHTML = `
       <div class="perfil-stat">
         <div class="perfil-stat-value">${overallPct}%</div>
@@ -2534,6 +2544,10 @@
         <div class="perfil-stat-value">${ranking ? `${ranking.posicao}º` : '—'}</div>
         <div class="perfil-stat-label">${ranking ? `Posição de ${ranking.total}` : 'Posição na Turma'}</div>
       </div>
+      <div class="perfil-stat">
+        <div class="perfil-stat-value">${bimestreAtual ? `${bimestreAtual}º` : '—'}</div>
+        <div class="perfil-stat-label">${bimestreAtual ? 'Bimestre Atual' : 'Fora do Período Letivo'}</div>
+      </div>
     `;
 
     const materias = (cfg.materias || []).filter(m => (m.trilhas || []).length > 0 && isMateriaVisibleToEmail(m, targetEmail));
@@ -2542,16 +2556,14 @@
       return;
     }
 
-    // Nota de cada matéria no bimestre ATUAL (ver currentBimestreNum) —
-    // mesma fórmula que o professor vê em Gestão → Lançar Notas: nota base
-    // = média de Prova + Nota 3 + (% de conclusão só das trilhas DAQUELA
-    // matéria neste bimestre, escalada até 10,0), dividido por 3; se a
-    // base ficar abaixo de 6,0 e o professor já lançou a Recuperação, a
-    // nota final vira a média entre a base e a Recuperação (ver
-    // aplicarRecuperacao). A matéria "Prova" fica de fora (ela É a nota
-    // "Prova", não faz sentido ter nota de si mesma).
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
-    const bimestreAtual = currentBimestreNum();
+    // Nota de cada matéria no bimestre ATUAL (bimestreAtual já buscado
+    // acima, pro card de resumo) — mesma fórmula que o professor vê em
+    // Gestão → Lançar Notas: nota base = média de Prova + Nota 3 + (% de
+    // conclusão só das trilhas DAQUELA matéria neste bimestre, escalada
+    // até 10,0), dividido por 3; se a base ficar abaixo de 6,0 e o
+    // professor já lançou a Recuperação, a nota final vira a média entre a
+    // base e a Recuperação (ver aplicarRecuperacao). A matéria "Prova" fica
+    // de fora (ela É a nota "Prova", não faz sentido ter nota de si mesma).
     const notaPorMateria = {};
     if (bimestreAtual) {
       const nota3Auto = !!cfg.nota3ActivityLocation;
@@ -2616,11 +2628,20 @@
         // mostrar o número calculado (com n1=0) faria toda matéria "Em
         // breve" do aluno exibir a mesma nota por coincidência de fórmula
         // (Prova/Nota3/Nota4 são as mesmas pra todas as matérias dele).
+        // >= 6,0 é o mesmo corte que decide se a Recuperação entra na
+        // conta (ver aplicarRecuperacao) — abaixo disso o selo mostra
+        // "Recuperação" mesmo se o professor já tiver lançado a nota de
+        // recuperação e ela não ter sido suficiente pra passar de 6,0.
+        const statusHtml = info && !info.semTrilha
+          ? (info.nota >= 6
+              ? ` <span class="perfil-nota-status aprovado">Aprovado</span>`
+              : ` <span class="perfil-nota-status recuperacao">Recuperação</span>`)
+          : '';
         notaHtml = !info
           ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`
           : info.semTrilha
             ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(sem trilha neste bimestre)</span></div>`
-            : `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b></div>`;
+            : `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b>${statusHtml}</div>`;
       }
 
       return `
@@ -2741,57 +2762,95 @@
   // o mesmo conteúdo que o antigo Relatório de Notas mostrava direto na
   // tela) e aciona a impressão, igual gerarPdfChamadaMes — os alunos com
   // pior desempenho (ver piorDesempenhoInfo) saem destacados em vermelho.
+  // A nota por MATÉRIA é a mesma fórmula/bimestre de "Lançar Notas" (lê o
+  // mesmo #notasBimestre selecionado ali) — antes essa coluna só mostrava
+  // % de conclusão (sem separar por bimestre); as 4 colunas "Média B1-B4"
+  // (a média antiga de 4 campos, sem distinção por matéria) saem de cena.
   async function gerarRelatorioNotasCompleto() {
     if (!sbClient) return;
     // Mesmo motivo de gerarPdfChamadaMes: abre a aba já aqui, síncrono
     // dentro do clique, senão o navegador bloqueia o popup.
     const printWin = window.open('', '_blank');
-    const materias = cfg.materias || [];
+    const materias = materiasParaNotas();
     const students = turmaStudents();
+    const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+    const nota3Auto = !!cfg.nota3ActivityLocation;
 
-    const [gradesRes, progressRes, notaProvaByStudent] = await Promise.all([
-      sbClient.from('grades').select('*').eq('turma', cfg.id),
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+
+    const [gradesRes, progressRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
+      sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
       fetchTurmaProgressRows(),
       fetchNotaProvaByStudent(),
+      nota3Auto ? fetchNota3AutoByStudent() : Promise.resolve({}),
     ]);
 
     const gradesByStudent = {};
-    (gradesRes.data || []).forEach(r => {
-      gradesByStudent[r.student_email] = gradesByStudent[r.student_email] || {};
-      gradesByStudent[r.student_email][r.bimestre] = r.media;
-    });
+    (gradesRes.data || []).forEach(r => { gradesByStudent[r.student_email] = r; });
     const progressByStudent = {};
     (progressRes.data || []).forEach(r => {
       progressByStudent[r.student_email] = progressByStudent[r.student_email] || [];
       progressByStudent[r.student_email].push(r);
     });
 
+    // Mesma regra de "Lançar Notas": Prova/Nota 3 só contam se a trilha
+    // delas foi atribuída a ESTE bimestre.
+    const provaKey = provaTrilhaKey();
+    const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestre;
+    const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
+    const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestre;
+
     const linhas = students.map(u => {
-      const bims = gradesByStudent[u.email] || {};
-      const bimCells = [1, 2, 3, 4].map(b => `<td>${bims[b] !== undefined && bims[b] !== null ? Number(bims[b]).toFixed(2) : '—'}</td>`).join('');
-      const lancadas = [1, 2, 3, 4].map(b => bims[b]).filter(v => v !== undefined && v !== null);
-      const mediaGeral = lancadas.length ? (lancadas.reduce((a, b) => a + Number(b), 0) / lancadas.length).toFixed(2) : '—';
+      const pRows = progressByStudent[u.email] || [];
+      const g = gradesByStudent[u.email] || {};
+      // Aluno com conteúdo adaptado (cfg.notasManuaisFor, ex. Engel) — ver
+      // notaManual em loadNotas: Prova/Nota 3 vêm direto de `grades`, não
+      // dos lookups automáticos abaixo.
+      const notaManual = (cfg.notasManuaisFor || []).includes(u.email);
+
       const notaProva = notaProvaByStudent[u.email];
       const notaProvaCell = `<td>${notaProva === undefined ? '—' : notaProva + '/100'}</td>`;
 
-      const pRows = progressByStudent[u.email] || [];
-      const materiaCells = materias.map(m => {
-        const pct = materiaPercentForStudent(m, pRows, u.email);
-        return `<td>${pct === null ? '—' : pct + '%'}</td>`;
-      }).join('');
+      let n2, n3;
+      if (notaManual) {
+        n2 = g.nota2 ?? 0;
+        n3 = g.nota3 ?? 0;
+      } else {
+        n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+        if (nota3Auto) {
+          const notaAuto = nota3AutoByStudent[u.email];
+          n3 = (nota3EhDesteBimestre && notaAuto !== undefined) ? Math.round((notaAuto / 10) * 100) / 100 : 0;
+        } else {
+          n3 = g.nota3 ?? 0;
+        }
+      }
+      const n4 = g.nota4 ?? '';
+
+      const notasMateria = materias.map(m => {
+        const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
+        if (pctMateria === null) return null;
+        const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
+        return aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
+      });
+      const materiaCells = notasMateria.map(nota => `<td>${nota === null ? '—' : nota.toFixed(2)}</td>`).join('');
+
+      const notasValidas = notasMateria.filter(nota => nota !== null);
+      const mediaGeral = notasValidas.length
+        ? (notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length).toFixed(2)
+        : '—';
 
       const info = piorDesempenhoInfo(materias, pRows, u.email);
       const linhaClasse = info.isPior ? ' class="pior"' : '';
       const aviso = info.isPior ? ' ⚠️' : '';
 
-      return `<tr${linhaClasse}><td class="aluno">${u.nome}${aviso}</td>${bimCells}<td class="media">${mediaGeral}</td>${notaProvaCell}${materiaCells}</tr>`;
+      return `<tr${linhaClasse}><td class="aluno">${u.nome}${aviso}</td>${notaProvaCell}${materiaCells}<td class="media">${mediaGeral}</td></tr>`;
     }).join('');
 
     const materiaHead = materias.map(m => `<th>${m.label}</th>`).join('');
 
     const html = `<!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8">
-<title>Relatório de Notas — ${cfg.label}</title>
+<title>Relatório de Notas — ${cfg.label} — ${BIMESTRE_LABELS[bimestre]}</title>
 <style>
   @page { size: A4 landscape; margin: 12mm; }
   body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; }
@@ -2807,9 +2866,9 @@
 </style></head>
 <body>
   <h1>Relatório de Notas — ${cfg.label}</h1>
-  <p class="sub">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+  <p class="sub">${BIMESTRE_LABELS[bimestre]} — Gerado em ${new Date().toLocaleString('pt-BR')}</p>
   <table>
-    <thead><tr><th class="aluno">Aluno</th><th>Média B1</th><th>Média B2</th><th>Média B3</th><th>Média B4</th><th>Média Geral</th><th>Nota da Prova</th>${materiaHead}</tr></thead>
+    <thead><tr><th class="aluno">Aluno</th><th>Nota da Prova</th>${materiaHead}<th>Média Geral</th></tr></thead>
     <tbody>${linhas}</tbody>
   </table>
   <p class="legenda">⚠️ = pior desempenho (quase nenhuma atividade feita, ou a maioria das matérias abaixo de 50%)</p>
