@@ -26,6 +26,17 @@ window.TURMA_CONFIG_JOGOS = {
   nota3Label: 'Prova Final',
   nota3TrilhaKey: 'prova-final',
   nota3ActivityLocation: 'prova_final_jogos',
+  // Aluno cujas provas são adaptadas (ver "Prova Diagnóstica (Engel)"/
+  // "Prova Final (Engel)" abaixo, dentro da matéria "prova") — elas gravam
+  // a nota num progress_key próprio (prova_jogos_engel/
+  // prova_final_jogos_engel), diferente do padrão da turma acima
+  // (prova_jogos/prova_final_jogos), então os lookups automáticos de
+  // "Prova"/"Nota 3" (shared/platform-core.js) nunca encontram a nota
+  // dele. Pra quem está nesta lista, as duas colunas viram <input> comum
+  // (igual "Recuperação" sempre foi) e o professor lança a nota direto,
+  // com base no gabarito da prova adaptada — a % de Atividades continua
+  // automática, calculada só a partir das trilhas adaptadas dele.
+  notasManuaisFor: ['engel.fraga'],
   materias: [
     {
       key: 'projeto-vida', label: 'Projeto de Vida',

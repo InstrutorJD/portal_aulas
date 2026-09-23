@@ -143,13 +143,14 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
     await page.goto(ALUNO_URL);
     await openPerfil(page);
 
-    // Projeto de Vida: (80%*5=4,00 + Prova 8,00 + Nota3 6,00 + Nota4 4) / 4 = 5.50.
+    // Projeto de Vida: (80%*10=8,00 + Prova 8,00 + Nota3 6,00) / 3 = 7.33. Nota4
+    // (4) não entra nessa conta — continua só digitável em Lançar Notas.
     const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
     await expect(card).toContainText('NOTA:');
-    await expect(card).toContainText('5.50');
+    await expect(card).toContainText('7.33');
   });
 
-  test('quando o professor salva a Nota 4 em Lançar Notas, a NOTA da matéria atualiza sozinha na aba Perfil já aberta (Realtime)', async ({ page }) => {
+  test('Recuperação não afeta matéria que já está >= 6,0 — mudar ela não altera a NOTA na aba Perfil (Realtime só confirma que a tela reagiu, sem mudar o valor)', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
       trilha_bimestre: [
@@ -173,7 +174,7 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
     await openPerfil(page);
 
     const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
-    await expect(card).toContainText('5.50'); // com nota4 = 4, como no teste acima
+    await expect(card).toContainText('7.33'); // com nota4 = 4, como no teste acima
 
     // O professor (noutra sessão) salva a Nota 4 = 10 pra esse bimestre —
     // simula o Realtime chegando SEM o aluno recarregar a página.
@@ -183,8 +184,44 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
       window.__fireFakeRealtime('grades');
     });
 
-    // (80%*5=4,00 + Prova 8,00 + Nota3 6,00 + Nota4 10) / 4 = 7.00.
-    await expect(card).toContainText('7.00');
+    // Base já é >= 6,0 — Recuperação não entra, o valor continua 7.33
+    // mesmo depois do Realtime disparar o recálculo.
+    await expect(card).toContainText('7.33');
+  });
+
+  test('Recuperação abaixo de 6,0 vira a média com a nota base, e atualiza ao vivo na aba Perfil (Realtime)', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-final', bimestre: 1 },
+      ],
+      // Nenhum módulo concluído — trilha 0% de conclusão.
+      student_module_progress: [],
+      student_activity_state: [
+        { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 6, total: 20, nota: 30 } },
+        { student_email: 'breno.silva80', progress_key: 'prova_final_jogos', state: { completed: true, correctCount: 6, total: 20, nota: 30 } },
+      ],
+      grades: [],
+    });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    // Base: (0%*10=0,00 + Prova 3,00 + Nota3 3,00) / 3 = 2.00 — sem
+    // Recuperação lançada ainda, a nota exibida é a própria base.
+    await expect(card).toContainText('2.00');
+
+    // O professor lança a Recuperação = 10 pra esse bimestre — simula o
+    // Realtime chegando SEM o aluno recarregar a página.
+    await page.evaluate(() => {
+      window.__FAKE_DB__.grades.push({ student_email: 'breno.silva80', student_name: 'Breno Silva', turma: 'jogos', bimestre: 1, nota4: 10 });
+      window.__fireFakeRealtime('grades');
+    });
+
+    // Nota final = (2,00 + 10) / 2 = 6.00.
+    await expect(card).toContainText('6.00');
   });
 
   test('sem calendário de bimestres cadastrado (fora do período letivo), mostra "NOTA: —"', async ({ page }) => {

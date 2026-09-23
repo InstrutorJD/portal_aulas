@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Suite de testes (Playwright) do Portal de Aulas — não faz parte do site publicado.",
   "scripts": {
+    "dev": "python3 -m http.server 4173",
     "test": "npm run test:paths && npm run test:e2e",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",

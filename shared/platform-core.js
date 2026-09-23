@@ -225,8 +225,8 @@
     // (só a turma Sistemas define isso hoje, pra Prova Final calcular sozinha
     // a coluna "Nota 3"/rótulo customizado, igual a coluna "Prova" já faz).
     const notasHelpText = cfg.nota3ActivityLocation
-      ? `"Prova" (até 10,0, nota da prova diagnóstica) e "${cfg.nota3Label || 'Nota 3'}" são calculadas sozinhas, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só Nota 4 é digitada. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.`
-      : `"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só ${cfg.nota3Label || 'Nota 3'} e Nota 4 são digitadas. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + Nota 4 + a % de conclusão só das trilhas DAQUELA matéria neste bimestre) — não existe mais uma média única.`;
+      ? `"Prova" (até 10,0, nota da prova diagnóstica) e "${cfg.nota3Label || 'Nota 3'}" são calculadas sozinhas, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha"). Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + a % de conclusão só das trilhas DAQUELA matéria neste bimestre, escalada até 10,0) — não existe mais uma média única. "Recuperação" é digitada à mão e só entra na conta de uma matéria se ela ficou abaixo de 6,0 — aí a nota final vira a média entre a nota original e a Recuperação.`
+      : `"Prova" (até 10,0, nota da prova diagnóstica) é calculada sozinha, sempre pela trilha atribuída a ESTE bimestre (ver "Liberação por Trilha") — só ${cfg.nota3Label || 'Nota 3'} é digitada. Cada MATÉRIA tem sua própria nota (média de Prova + ${cfg.nota3Label || 'Nota 3'} + a % de conclusão só das trilhas DAQUELA matéria neste bimestre, escalada até 10,0) — não existe mais uma média única. "Recuperação" é digitada à mão e só entra na conta de uma matéria se ela ficou abaixo de 6,0 — aí a nota final vira a média entre a nota original e a Recuperação.`;
     mount.innerHTML = `
       <div class="a11y-bar">
         <div>
@@ -589,6 +589,21 @@
   // nunca vai poder vê-la nem completá-la.
   function isTrilhaVisibleToEmail(trilha, email) {
     return !Array.isArray(trilha.visibleFor) || trilha.visibleFor.includes(email);
+  }
+
+  // Dentro de UMA matéria, quando esse aluno tem alguma trilha individual
+  // (visibleFor) — ex.: "Ponto de Virada (Engel)" dentro de "Projeto de
+  // Vida" —, ele deve ser cobrado só pelas trilhas ADAPTADAS pra ele, não
+  // pelas trilhas padrão da matéria (que ele nunca vai fazer, por serem
+  // conteúdo não-adaptado). Sem isso, o % de conclusão dele nessa matéria
+  // ficava diluído pra sempre pelas trilhas padrão (ex.: 2 trilhas
+  // adaptadas 100% completas + 5 trilhas padrão 0% = só 28% no total, em
+  // vez de 100%). Aluno sem nenhuma trilha individual nessa matéria
+  // continua vendo/contando as trilhas compartilhadas normalmente.
+  function trilhasParaAluno(trilhas, email) {
+    const individuais = trilhas.filter(t => Array.isArray(t.visibleFor) && t.visibleFor.includes(email));
+    if (individuais.length > 0) return individuais;
+    return trilhas.filter(t => isTrilhaVisibleToEmail(t, email));
   }
 
   // Mesma ideia, em nível de MATÉRIA (materia.visibleFor) — pra matéria
@@ -1946,13 +1961,36 @@
     setTimeout(() => printWin.print(), 250);
   }
 
-  function calcMedia(n1, n2, n3, n4) {
-    const vals = [n1, n2, n3, n4].map(v => (v === '' || v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
-    return Math.round(((vals[0] + vals[1] + vals[2] + vals[3]) / 4) * 100) / 100;
+  // Nota BASE da matéria = média de 3 termos, todos 0-10: Prova
+  // (diagnóstica), Nota 3 (2ª prova, auto ou digitada) e a % de conclusão
+  // das trilhas DAQUELA matéria neste bimestre (já escalada 0-10 por quem
+  // chama, ver os "* 10" nos pontos que montam mn1). A Recuperação
+  // (grades.nota4) não entra aqui — ela só se aplica DEPOIS, ver
+  // aplicarRecuperacao, e só quando a nota base fica abaixo de 6,0.
+  function calcMedia(n1, n2, n3) {
+    const vals = [n1, n2, n3].map(v => (v === '' || v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
+    return Math.round(((vals[0] + vals[1] + vals[2]) / 3) * 100) / 100;
+  }
+
+  // Recuperação (grades.nota4, rótulo "Recuperação" na tela): um valor só
+  // por aluno/bimestre, o mesmo pra todas as matérias — o professor lança
+  // manualmente depois de aplicar uma prova de recuperação. Só entra na
+  // conta de uma matéria específica se a nota BASE dela (calcMedia, sem a
+  // Recuperação) ficou abaixo de 6,0; nesse caso a nota final vira a MÉDIA
+  // entre a nota base e a Recuperação (nunca substitui de vez — o que o
+  // aluno já tinha feito antes de recuperar continua pesando). Matéria que
+  // já estava com nota base >= 6,0 nunca é afetada, mesmo que o professor
+  // tenha lançado uma Recuperação naquele bimestre (ela é pras outras).
+  function aplicarRecuperacao(notaBase, nota4) {
+    const n4 = (nota4 === '' || nota4 === null || nota4 === undefined || isNaN(nota4)) ? null : parseFloat(nota4);
+    if (n4 === null || notaBase >= 6) return notaBase;
+    return Math.round(((notaBase + n4) / 2) * 100) / 100;
   }
 
   // % de conclusão (teoria + prática, crédito parcial por módulo) de um
-  // conjunto de trilhas, contando só as atribuídas a ESTE bimestre
+  // conjunto de trilhas JÁ FILTRADO pra esse aluno (ver trilhasParaAluno —
+  // quem chama decide QUAIS trilhas entram, matéria por matéria; esta
+  // função só soma), contando só as atribuídas a ESTE bimestre
   // (trilha_bimestre, ver "Liberação por Trilha"). Base de
   // bimestrePortalPercentForStudent e bimestreMateriaPercentForStudent,
   // abaixo — a única diferença entre as duas é QUAIS trilhas entram.
@@ -1961,7 +1999,7 @@
   // esse bimestre ainda — nada pra calcular.
   function bimestreModulesPercent(trilhas, bimestreNum, progressRows, studentEmail) {
     const modules = trilhas
-      .filter(t => trilhaBimestreCache[t.key] === bimestreNum && isTrilhaVisibleToEmail(t, studentEmail))
+      .filter(t => trilhaBimestreCache[t.key] === bimestreNum)
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -1978,16 +2016,24 @@
   // internamente pra manter nota1 (grades.media, ver Relatório de Notas)
   // preenchido; não aparece mais como coluna própria em Lançar Notas,
   // que agora mostra uma nota por MATÉRIA (ver bimestreMateriaPercentForStudent).
+  // trilhasParaAluno roda POR MATÉRIA antes de achatar tudo — se achatasse
+  // primeiro (allTrilhas()) e só depois filtrasse, uma trilha individual
+  // numa matéria excluiria as trilhas compartilhadas de OUTRAS matérias
+  // também, o que não faz sentido (a regra "só conta o que é dele" vale
+  // dentro da matéria onde a adaptação existe, não pra turma inteira).
   function bimestrePortalPercentForStudent(bimestreNum, progressRows, studentEmail) {
     const provaKey = provaTrilhaKey();
-    return bimestreModulesPercent(allTrilhas().filter(t => t.key !== provaKey), bimestreNum, progressRows, studentEmail);
+    const trilhas = (cfg.materias || [])
+      .flatMap(m => trilhasParaAluno(m.trilhas || [], studentEmail))
+      .filter(t => t.key !== provaKey);
+    return bimestreModulesPercent(trilhas, bimestreNum, progressRows, studentEmail);
   }
 
   // % de conclusão só das trilhas de UMA matéria — é isso que faz a nota
   // de cada matéria em Lançar Notas ser diferente da nota das outras
-  // (mesma Prova/Nota 3/Nota 4, mas essa % muda conforme a matéria).
+  // (mesma Prova/Nota 3, mas essa % muda conforme a matéria).
   function bimestreMateriaPercentForStudent(materia, bimestreNum, progressRows, studentEmail) {
-    return bimestreModulesPercent(materia.trilhas || [], bimestreNum, progressRows, studentEmail);
+    return bimestreModulesPercent(trilhasParaAluno(materia.trilhas || [], studentEmail), bimestreNum, progressRows, studentEmail);
   }
 
   // Chave da trilha da prova diagnóstica ("Prova" na Gestão): a matéria
@@ -2029,9 +2075,9 @@
     const tbody = document.getElementById('notasBody');
     const theadRow = document.getElementById('notasHead');
     const materias = materiasParaNotas();
-    const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3 (rótulo configurável via cfg.nota3Label), Nota 4 + 1 por matéria
+    const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3 (rótulo configurável via cfg.nota3Label), Recuperação + 1 por matéria
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Nota 4</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
+    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
 
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
 
@@ -2078,17 +2124,35 @@
       const pctGeral = bimestrePortalPercentForStudent(bimestre, pRows, u.email);
       const n1 = pctGeral === null ? 0 : Math.round((pctGeral / 100) * 5 * 100) / 100;
 
-      const notaProva = notaProvaByStudent[u.email];
-      const n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
-      const semProva = !provaEhDesteBimestre
-        ? ' <span style="color:var(--ink-dim); font-size:10px;">(prova não é deste bimestre)</span>'
-        : (notaProva === undefined ? ' <span style="color:var(--ink-dim); font-size:10px;">(não fez a prova)</span>' : '');
-
       const g = byStudent[u.email] || {};
       const n4 = g.nota4 ?? '';
 
+      // Aluno com conteúdo adaptado (ex.: Engel — ver cfg.notasManuaisFor em
+      // turmas/jogos/config.js): as provas dele são outras atividades, que
+      // gravam a nota num progress_key diferente do padrão da turma
+      // (prova_jogos/prova_final_jogos) — os lookups automáticos de
+      // Prova/Nota 3 abaixo NUNCA encontram a nota dele, então ficam
+      // digitáveis à mão, igual Nota 4/Recuperação sempre foi.
+      const notaManual = (cfg.notasManuaisFor || []).includes(u.email);
+
+      let n2, provaTdHtml;
+      if (notaManual) {
+        n2 = g.nota2 ?? '';
+        provaTdHtml = `<td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota2" value="${n2}"></td>`;
+      } else {
+        const notaProva = notaProvaByStudent[u.email];
+        n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+        const semProva = !provaEhDesteBimestre
+          ? ' <span style="color:var(--ink-dim); font-size:10px;">(prova não é deste bimestre)</span>'
+          : (notaProva === undefined ? ' <span style="color:var(--ink-dim); font-size:10px;">(não fez a prova)</span>' : '');
+        provaTdHtml = `<td class="prova-cell" data-nota2="${n2}">${n2.toFixed(2)}${semProva}</td>`;
+      }
+
       let n3, nota3TdHtml;
-      if (nota3Auto) {
+      if (notaManual) {
+        n3 = g.nota3 ?? '';
+        nota3TdHtml = `<td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>`;
+      } else if (nota3Auto) {
         const notaAuto = nota3AutoByStudent[u.email];
         n3 = (nota3EhDesteBimestre && notaAuto !== undefined) ? Math.round((notaAuto / 10) * 100) / 100 : 0;
         const semNota3 = !nota3EhDesteBimestre
@@ -2102,15 +2166,23 @@
 
       const materiaCellsHtml = materias.map(m => {
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
-        const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 5 * 100) / 100;
-        const semTrilha = pctMateria === null ? ' <span style="color:var(--ink-dim); font-size:10px;">(sem trilha)</span>' : '';
-        return `<td class="materia-grade-cell" data-materia-n1="${mn1}"><span class="materia-grade-value">${calcMedia(mn1, n2, n3, n4).toFixed(2)}</span>${semTrilha}</td>`;
+        // Matéria sem trilha atribuída a ESTE bimestre não tem nota nenhuma
+        // pra calcular — mostrar "0" ali faria a média cair só em n2/n3
+        // (compartilhadas por TODAS as matérias do aluno), então toda
+        // matéria "Em breve" do mesmo aluno saía com o mesmo número por
+        // coincidência de fórmula, não porque o desempenho fosse igual.
+        if (pctMateria === null) {
+          return `<td class="materia-grade-cell" data-sem-trilha="1"><span class="materia-grade-value">—</span> <span style="color:var(--ink-dim); font-size:10px;">(sem trilha)</span></td>`;
+        }
+        const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
+        const notaFinal = aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
+        return `<td class="materia-grade-cell" data-materia-n1="${mn1}"><span class="materia-grade-value">${notaFinal.toFixed(2)}</span></td>`;
       }).join('');
 
       return `
         <tr data-email="${u.email}" data-nota1="${n1}">
           <td>${u.nome}</td>
-          <td class="prova-cell" data-nota2="${n2}">${n2.toFixed(2)}${semProva}</td>
+          ${provaTdHtml}
           ${nota3TdHtml}
           <td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota4" value="${n4}"></td>
           ${materiaCellsHtml}
@@ -2118,22 +2190,24 @@
       `;
     }).join('');
 
-    // Nota 3/4 mudam a nota de TODAS as matérias ao mesmo tempo (são
-    // compartilhadas entre elas) — recalcula as células de matéria ao
-    // vivo. Nota 3 pode ser uma célula travada (nota3Auto) em vez de
-    // <input>, por isso lê o valor atual pelo seletor certo em cada
-    // recálculo, em vez de assumir a ordem dos <input>.
+    // Nota 3 (ou Prova/Nota 3 inteiras, pra aluno com nota manual — ver
+    // notaManual acima) e Recuperação mudam a nota de TODAS as matérias ao
+    // mesmo tempo (são compartilhadas entre elas) — recalcula as células
+    // de matéria ao vivo. Prova/Nota 3 podem ser uma célula travada (auto)
+    // em vez de <input>, por isso lê o valor atual pelo seletor certo em
+    // cada recálculo, em vez de assumir a ordem dos <input>.
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
-      const n2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const materiaCells = tr.querySelectorAll('.materia-grade-cell');
       const recalc = () => {
-        const n3 = nota3Auto
-          ? parseFloat(tr.querySelector('.nota3-cell').dataset.nota3)
-          : parseFloat(tr.querySelector('.nota-input[data-campo="nota3"]').value);
-        const n4 = parseFloat(tr.querySelector('.nota-input[data-campo="nota4"]').value);
+        const n2Input = tr.querySelector('.nota-input[data-campo="nota2"]');
+        const n2 = n2Input ? n2Input.value : parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
+        const n3Input = tr.querySelector('.nota-input[data-campo="nota3"]');
+        const n3 = n3Input ? n3Input.value : parseFloat(tr.querySelector('.nota3-cell').dataset.nota3);
+        const n4 = tr.querySelector('.nota-input[data-campo="nota4"]').value;
         materiaCells.forEach(cell => {
+          if (cell.dataset.semTrilha) return;
           const mn1 = parseFloat(cell.dataset.materiaN1);
-          cell.querySelector('.materia-grade-value').textContent = calcMedia(mn1, n2, n3, n4).toFixed(2);
+          cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3), n4).toFixed(2);
         });
       };
       tr.querySelectorAll('.nota-input').forEach(inp => inp.addEventListener('input', recalc));
@@ -2146,19 +2220,25 @@
     if (!sbClient) return;
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const now = new Date().toISOString();
-    const nota3Auto = !!cfg.nota3ActivityLocation;
 
+    // Prova/Nota 3 podem ser <input> (manual — turma inteira pra Nota 3
+    // quando não é automática, ou só um aluno específico pra Prova/Nota 3
+    // juntas, ver notaManual/cfg.notasManuaisFor) ou uma célula travada
+    // (auto, valor calculado direto no dataset) — lê pelo que existir no
+    // DOM em vez de repetir a mesma condição de quando a linha foi montada.
     const rows = Array.from(document.querySelectorAll('#notasBody tr[data-email]')).map(tr => {
       const email = tr.getAttribute('data-email');
       const u = turmaStudentByEmail(email);
       const nota1 = parseFloat(tr.dataset.nota1);
-      const nota2 = parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const get = campo => {
         const inp = tr.querySelector(`.nota-input[data-campo="${campo}"]`);
         const v = inp ? inp.value : '';
         return v === '' ? null : parseFloat(v);
       };
-      const nota3 = nota3Auto ? parseFloat(tr.querySelector('.nota3-cell').dataset.nota3) : get('nota3');
+      const n2Input = tr.querySelector('.nota-input[data-campo="nota2"]');
+      const nota2 = n2Input ? get('nota2') : parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
+      const n3Input = tr.querySelector('.nota-input[data-campo="nota3"]');
+      const nota3 = n3Input ? get('nota3') : parseFloat(tr.querySelector('.nota3-cell').dataset.nota3);
       return {
         student_email: email,
         student_name: u ? u.nome : email,
@@ -2200,8 +2280,7 @@
   // o professor adiciona uma trilha/módulo novo — nenhuma tabela guarda o %,
   // só o progresso bruto por módulo (student_module_progress).
   function materiaPercentForStudent(materia, progressRows, studentEmail) {
-    const modules = (materia.trilhas || [])
-      .filter(t => isTrilhaVisibleToEmail(t, studentEmail))
+    const modules = trilhasParaAluno(materia.trilhas || [], studentEmail)
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -2217,9 +2296,11 @@
   // Mesma conta do materiaPercentForStudent acima, só que achatada pra TODAS
   // as trilhas da turma (não uma matéria por vez) — dá um % geral de
   // conclusão por aluno, usado só pra calcular o ranking (ver renderRankingBadge).
+  // trilhasParaAluno roda por matéria (ver comentário em
+  // bimestrePortalPercentForStudent) antes de achatar tudo.
   function overallProgressForStudent(progressRows, studentEmail) {
-    const modules = allTrilhas()
-      .filter(t => isTrilhaVisibleToEmail(t, studentEmail))
+    const modules = (cfg.materias || [])
+      .flatMap(m => trilhasParaAluno(m.trilhas || [], studentEmail))
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -2276,10 +2357,11 @@
         const pct = overallProgressForStudent(studentRows, u.email);
         if (pct === null) return null;
         // Só conta como "disponível/concluída" o que ainda existe no config
-        // (trilha visível pra esse aluno) — linha órfã de módulo removido não
-        // pode inflar o numerador acima do total.
-        const modules = allTrilhas()
-          .filter(t => isTrilhaVisibleToEmail(t, u.email))
+        // (trilha visível pra esse aluno, já filtrada por trilhasParaAluno —
+        // ver comentário em bimestrePortalPercentForStudent) — linha órfã de
+        // módulo removido não pode inflar o numerador acima do total.
+        const modules = (cfg.materias || [])
+          .flatMap(m => trilhasParaAluno(m.trilhas || [], u.email))
           .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
         const concluidas = modules.filter(({ trilhaKey, mod }) =>
           studentRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
@@ -2432,7 +2514,9 @@
     const rows = myRows || [];
 
     const overallPct = Math.round(overallProgressForStudent(rows, targetEmail) || 0);
-    const totalModules = allTrilhas().filter(t => isTrilhaVisibleToEmail(t, targetEmail)).flatMap(t => t.modules || []).length;
+    const totalModules = (cfg.materias || [])
+      .flatMap(m => trilhasParaAluno(m.trilhas || [], targetEmail))
+      .flatMap(t => t.modules || []).length;
     const completedModules = rows.filter(r => r.completed).length;
 
     renderPerfilBadges(overallPct, completedModules);
@@ -2459,25 +2543,34 @@
     }
 
     // Nota de cada matéria no bimestre ATUAL (ver currentBimestreNum) —
-    // mesma fórmula que o professor vê em Gestão → Lançar Notas: média de
-    // (% de conclusão só das trilhas DAQUELA matéria neste bimestre,
-    // escalada até 5,0) + Prova + Nota 3 + Nota 4. A matéria "Prova" fica
-    // de fora (ela É a nota "Prova", não faz sentido ter nota de si mesma).
+    // mesma fórmula que o professor vê em Gestão → Lançar Notas: nota base
+    // = média de Prova + Nota 3 + (% de conclusão só das trilhas DAQUELA
+    // matéria neste bimestre, escalada até 10,0), dividido por 3; se a
+    // base ficar abaixo de 6,0 e o professor já lançou a Recuperação, a
+    // nota final vira a média entre a base e a Recuperação (ver
+    // aplicarRecuperacao). A matéria "Prova" fica de fora (ela É a nota
+    // "Prova", não faz sentido ter nota de si mesma).
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     const bimestreAtual = currentBimestreNum();
     const notaPorMateria = {};
     if (bimestreAtual) {
       const nota3Auto = !!cfg.nota3ActivityLocation;
+      // Aluno com nota manual (ver notaManual em loadNotas) — Prova e
+      // Nota 3 são digitadas direto em `grades`, os lookups automáticos
+      // abaixo nunca encontram a nota dele.
+      const notaManual = (cfg.notasManuaisFor || []).includes(targetEmail);
       const [gradeRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
-        sbClient.from('grades').select('nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
-        fetchNotaProvaByStudent(),
-        nota3Auto ? fetchNota3AutoByStudent() : Promise.resolve({}),
+        sbClient.from('grades').select('nota2, nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
+        notaManual ? Promise.resolve({}) : fetchNotaProvaByStudent(),
+        (!notaManual && nota3Auto) ? fetchNota3AutoByStudent() : Promise.resolve({}),
       ]);
       const g = gradeRes.data || {};
-      const n4 = g.nota4 ?? 0;
+      const n4 = g.nota4 ?? '';
 
       let n3;
-      if (nota3Auto) {
+      if (notaManual) {
+        n3 = g.nota3 ?? 0;
+      } else if (nota3Auto) {
         const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
         const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestreAtual;
         const notaAuto = nota3AutoByStudent[targetEmail];
@@ -2486,22 +2579,28 @@
         n3 = g.nota3 ?? 0;
       }
 
-      const provaKey = provaTrilhaKey();
-      const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestreAtual;
-      const notaProva = notaProvaByStudent[targetEmail];
-      const n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+      let n2;
+      if (notaManual) {
+        n2 = g.nota2 ?? 0;
+      } else {
+        const provaKey = provaTrilhaKey();
+        const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestreAtual;
+        const notaProva = notaProvaByStudent[targetEmail];
+        n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+      }
 
       materias.filter(m => m.key !== 'prova').forEach(m => {
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestreAtual, rows, targetEmail);
-        const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 5 * 100) / 100;
-        notaPorMateria[m.key] = { nota: calcMedia(mn1, n2, n3, n4), semTrilha: pctMateria === null };
+        const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 10 * 100) / 100;
+        const nota = pctMateria === null ? calcMedia(mn1, n2, n3) : aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
+        notaPorMateria[m.key] = { nota, semTrilha: pctMateria === null };
       });
     }
 
     materiasEl.innerHTML = materias.map(m => {
       const pct = materiaPercentForStudent(m, rows, targetEmail);
       const pctDisplay = pct === null ? 0 : pct;
-      const trilhasHtml = (m.trilhas || []).filter(t => isTrilhaVisibleToEmail(t, targetEmail)).map(t => {
+      const trilhasHtml = trilhasParaAluno(m.trilhas || [], targetEmail).map(t => {
         const mods = t.modules || [];
         const doneCount = mods.filter(mod => {
           const r = rows.find(rr => rr.trilha_key === t.key && rr.module_key === mod.key);
@@ -2513,9 +2612,15 @@
       let notaHtml = '';
       if (m.key !== 'prova') {
         const info = notaPorMateria[m.key];
-        notaHtml = info
-          ? `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b>${info.semTrilha ? ' <span style="color:var(--ink-dim); font-size:11px;">(sem trilha neste bimestre)</span>' : ''}</div>`
-          : `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`;
+        // Matéria sem trilha atribuída a este bimestre não tem nota real —
+        // mostrar o número calculado (com n1=0) faria toda matéria "Em
+        // breve" do aluno exibir a mesma nota por coincidência de fórmula
+        // (Prova/Nota3/Nota4 são as mesmas pra todas as matérias dele).
+        notaHtml = !info
+          ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`
+          : info.semTrilha
+            ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(sem trilha neste bimestre)</span></div>`
+            : `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b></div>`;
       }
 
       return `

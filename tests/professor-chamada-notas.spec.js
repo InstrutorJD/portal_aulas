@@ -167,7 +167,7 @@ test.describe('Notas — dentro do portal da turma', () => {
   // matéria dona de "vida-autoconhecimento"/"vida-cidadania" (turma
   // Jogos) — sua coluna é sempre a primeira (materiasParaNotas segue a
   // ordem de cfg.materias, e "Prova" é excluída da lista).
-  test('cada matéria tem sua própria nota (% da matéria + Prova + Nota 3 + Nota 4), e recalcula ao vivo com Nota 3/4', async ({ page }) => {
+  test('cada matéria tem sua própria nota (% da matéria + Prova + Nota 3, dividido por 3), e recalcula ao vivo com Nota 3 — Recuperação não afeta matéria que já está >= 6,0', async ({ page }) => {
     await openGestao(page, JOGOS_URL, {
       grades: [],
       trilha_bimestre: [
@@ -206,9 +206,11 @@ test.describe('Notas — dentro do portal da turma', () => {
 
     await row.locator('[data-campo="nota4"]').fill('4');
 
-    // Projeto de Vida: (80%*5=4,00 + 8 + 6 + 4) / 4 = 5.50.
+    // Projeto de Vida: base = (80%*10=8,00 + 8 + 6) / 3 = 7.33 — já >= 6,0,
+    // então a Recuperação (4) não entra na conta (aplicarRecuperacao só
+    // atua em matéria abaixo de 6,0).
     const materiaCell = row.locator('.materia-grade-cell').first();
-    await expect(materiaCell).toContainText('5.50');
+    await expect(materiaCell).toContainText('7.33');
 
     await page.click('#btnSalvarNotas');
     await expect(page.locator('#notasStatus')).toContainText('Notas salvas');
@@ -225,6 +227,87 @@ test.describe('Notas — dentro do portal da turma', () => {
       (window.__FAKE_DB__.grades || []).find(r => r.student_email === 'breno.silva80' && r.bimestre === 1)
     );
     expect(saved).toMatchObject({ nota1: 2.65, nota2: 8, nota3: 6, nota4: 4, turma: 'jogos' });
+  });
+
+  test('Recuperação só entra na conta de uma matéria que ficou abaixo de 6,0 — a nota final vira a média entre a base e a Recuperação, ao vivo', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      grades: [],
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'prova-final', bimestre: 1 },
+      ],
+      // Nenhum módulo concluído — trilha 0% de conclusão.
+      student_module_progress: [],
+      student_activity_state: [
+        { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 6, total: 20, nota: 30 } },
+        { student_email: 'breno.silva80', progress_key: 'prova_final_jogos', state: { completed: true, correctCount: 6, total: 20, nota: 30 } },
+      ],
+    });
+    await expandGestaoSection(page, 'Chamada e Notas');
+
+    const row = page.locator('#notasBody tr[data-email="breno.silva80"]');
+    const materiaCell = row.locator('.materia-grade-cell').first(); // Projeto de Vida
+
+    // Base: (0%*10=0,00 + Prova 3,00 + Nota3 3,00) / 3 = 2.00 — abaixo de 6,0,
+    // sem Recuperação lançada ainda a nota final é a própria base.
+    await expect(materiaCell).toContainText('2.00');
+
+    // Lança a Recuperação (10) — sem clicar em Salvar, já recalcula ao vivo:
+    // nota final = (2,00 + 10) / 2 = 6.00.
+    await row.locator('[data-campo="nota4"]').fill('10');
+    await expect(materiaCell).toContainText('6.00');
+  });
+
+  test('aluno com conteúdo adaptado (cfg.notasManuaisFor, ex. Engel): Prova e Nota 3 viram <input> manual, e a % de Atividades conta só as trilhas adaptadas dele, não as padrão da matéria', async ({ page }) => {
+    await openGestao(page, JOGOS_URL, {
+      grades: [],
+      trilha_bimestre: [
+        // As trilhas PADRÃO de "Projeto de Vida" (que o Engel nunca faz)
+        // também atribuídas a este bimestre — se ainda entrassem na conta
+        // dele, a % de Atividades nunca chegaria em 100%.
+        { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'ponto-de-virada-engel', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'vida-trabalho-engel', bimestre: 1 },
+      ],
+      student_module_progress: [
+        // Engel completou as 2 trilhas adaptadas dele — nenhum módulo da
+        // trilha padrão (vida-autoconhecimento).
+        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'ponto-de-virada-engel', module_key: 'jogo', progress_current: 1, progress_total: 1, completed: true },
+        { student_email: 'engel.fraga', turma: 'jogos', trilha_key: 'vida-trabalho-engel', module_key: 'jogo', progress_current: 1, progress_total: 1, completed: true },
+      ],
+      student_activity_state: [],
+    });
+    await expandGestaoSection(page, 'Chamada e Notas');
+
+    const row = page.locator('#notasBody tr[data-email="engel.fraga"]');
+
+    // Prova e Nota 3 não são mais células travadas — viram <input> comum,
+    // igual Recuperação sempre foi.
+    await expect(row.locator('.prova-cell')).toHaveCount(0);
+    await expect(row.locator('.nota3-cell')).toHaveCount(0);
+    const provaInput = row.locator('[data-campo="nota2"]');
+    const nota3Input = row.locator('[data-campo="nota3"]');
+    await expect(provaInput).toBeVisible();
+    await expect(nota3Input).toBeVisible();
+
+    const materiaCell = row.locator('.materia-grade-cell').first(); // Projeto de Vida
+    // Sem Prova/Nota 3 lançadas ainda (vazias = 0): Atividades 10,00 (as 2
+    // trilhas adaptadas 100% completas, SEM diluir com a trilha padrão) +
+    // Prova 0 + Nota 3 0, dividido por 3 = 3.33.
+    await expect(materiaCell).toContainText('3.33');
+
+    await provaInput.fill('7');
+    await nota3Input.fill('5');
+    // (Atividades 10,00 + Prova 7 + Nota 3 5) / 3 = 7.33.
+    await expect(materiaCell).toContainText('7.33');
+
+    await page.click('#btnSalvarNotas');
+    await expect(page.locator('#notasStatus')).toContainText('Notas salvas');
+    const saved = await page.evaluate(() =>
+      (window.__FAKE_DB__.grades || []).find(r => r.student_email === 'engel.fraga' && r.bimestre === 1)
+    );
+    expect(saved).toMatchObject({ nota2: 7, nota3: 5, turma: 'jogos' });
   });
 
   test('sem trilha da matéria atribuída ao bimestre, a nota da matéria mostra "sem trilha"; prova de outro bimestre (ou sem bimestre) não conta em "Prova"', async ({ page }) => {
@@ -245,8 +328,14 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(row.locator('.prova-cell')).toContainText('0.00');
     await expect(row.locator('.prova-cell')).toContainText('prova não é deste bimestre');
 
+    // Sem trilha atribuída a este bimestre, a matéria não tem nota
+    // nenhuma pra calcular — mostrar "0.00" faria a nota da matéria virar
+    // só o resultado de Prova/Nota3/Nota4 (compartilhadas por TODAS as
+    // matérias do aluno), coincidindo com qualquer outra matéria na mesma
+    // situação sem ser um desempenho real. Ver shared/platform-core.js.
     const materiaCell = row.locator('.materia-grade-cell').first(); // Projeto de Vida
-    await expect(materiaCell).toContainText('0.00');
+    await expect(materiaCell).toContainText('—');
+    await expect(materiaCell).not.toContainText('0.00');
     await expect(materiaCell).toContainText('sem trilha');
   });
 
@@ -273,14 +362,14 @@ test.describe('Notas — dentro do portal da turma', () => {
     const materiaCell = row.locator('.materia-grade-cell').first(); // Projeto de Vida (dona das duas trilhas)
 
     await expect(row.locator('.prova-cell')).toContainText('10.00'); // 100/100 * 10
-    // 1º Bimestre: só vida-autoconhecimento conta (100%) — (5,00 + 10 + 0 + 0) / 4 = 3.75.
-    await expect(materiaCell).toContainText('3.75');
+    // 1º Bimestre: só vida-autoconhecimento conta (100%) — (10,00 + 10 + 0) / 3 = 6.67.
+    await expect(materiaCell).toContainText('6.67');
 
     await page.selectOption('#notasBimestre', '2');
     // Prova é do 1º Bimestre — não conta mais aqui.
     await expect(row.locator('.prova-cell')).toContainText('0.00');
     await expect(row.locator('.prova-cell')).toContainText('prova não é deste bimestre');
-    // 2º Bimestre: só vida-cidadania conta (0%) — (0 + 0 + 0 + 0) / 4 = 0.00.
+    // 2º Bimestre: só vida-cidadania conta (0%) — (0 + 0 + 0) / 3 = 0.00.
     await expect(materiaCell).toContainText('0.00');
   });
 
