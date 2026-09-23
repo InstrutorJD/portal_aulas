@@ -1210,7 +1210,7 @@
 
       const feedback = document.createElement('div');
       feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-      feedback.textContent = isCorrect ? '✅ Resposta registrada.' : '❌ Resposta registrada.';
+      feedback.textContent = isCorrect ? '✅ Você acertou!' : '❌ Você errou.';
       card.appendChild(feedback);
 
       proceedAfterAnswer(card, 'respondida');
@@ -1282,11 +1282,11 @@
   // ============================================================
   // Questao PRATICA (o aluno escreve codigo de verdade) - mesmo motor de
   // execucao sandbox de prog-depuracao-pratica.html, encaixado no fluxo
-  // sequencial da prova. Diferente da questao teorica (que so mostra a
+  // sequencial da prova. Diferente da questao teorica (que ainda mostra a
   // opcao ESCOLHIDA em verde/vermelho, sem revelar qual era a certa), aqui
   // nao ha "opcao" nenhuma pra colorir - so o texto do feedback pra
-  // avisar se acertou. Por isso o texto e explicito ("Você acertou!"/
-  // "Você errou.") em vez do "Resposta registrada." neutro, mas SEM
+  // avisar se acertou. As duas usam o mesmo texto explicito ("Você
+  // acertou!"/"Você errou.", ver selectAnswer() da teorica acima), mas SEM
   // revelar o valor certo esperado (nao é treino, é avaliação de verdade).
   // ============================================================
   function renderPracticaQuestion(q) {

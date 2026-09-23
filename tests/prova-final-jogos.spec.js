@@ -95,6 +95,20 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await expect(page.locator('.opt-letter').nth(4)).toHaveText('E');
   });
 
+  test('questão teórica: feedback diz explicitamente se acertou ou errou (não só "Resposta registrada")', async ({ page }) => {
+    await page.goto(PROVA_URL);
+    await page.click('#btnIniciar');
+
+    for (let i = 0; i < 25 && (await page.locator('.option').count()) === 0; i++) {
+      await answerCurrentQuestionSomehow(page);
+    }
+    await expect(page.locator('.option')).toHaveCount(5);
+
+    await page.locator('.option').first().click();
+    const acertou = (await page.locator('.feedback.correct').count()) > 0;
+    await expect(page.locator('.feedback')).toContainText(acertou ? 'Você acertou' : 'Você errou');
+  });
+
   test('questão prática: escrever o código certo e confirmar conta como acerto', async ({ page }) => {
     await page.goto(PROVA_URL);
     await page.click('#btnIniciar');
