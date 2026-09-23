@@ -141,7 +141,7 @@
 <div class="env">
   <div class="topbar">
     <div>🧩 PROVA FINAL</div>
-    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">22</span></div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">27</span></div>
   </div>
 
   <div class="gate-wrap" id="gateWrap"></div>
@@ -162,27 +162,30 @@
   // "Prova Final" adaptada pro Engel: diferente da Prova Final da turma
   // toda (prova-final-jogos.html, banco de 80 questões cobrindo TODAS as
   // matérias + parte prática de código), essa é PURAMENTE de raciocínio
-  // lógico-indutivo — nada de conteúdo técnico de Godot/JS. Motivo: as
-  // trilhas narrativas dele ("Ponto de Virada"/"A Jornada do Lucas") não
-  // têm certo ou errado, e o conteúdo técnico das trilhas que TÊM (JS
+  // lógico — sem código, sem sintaxe, sem ler tela cheia de texto. Motivo:
+  // as trilhas narrativas dele ("Ponto de Virada"/"A Jornada do Lucas")
+  // não têm certo ou errado, e o conteúdo técnico das trilhas que TÊM (JS
   // Básico, Roteiros de Teste, Formar Frases) já foi coberto na Prova
   // Diagnóstica (Engel) — não faria sentido repetir a mesma cobertura
-  // como "final" também.
+  // como "final" também. Quando um item toca um conceito técnico (só o
+  // bloco de variáveis, 22-26), ele aparece como METÁFORA VISUAL — a
+  // caixa 📦 guardando um valor —, nunca como código de verdade.
   //
   // O formato: cada "desafio" é um probleminha de lógica com 3 opções e
   // ele clica na certa. A maioria é completar uma sequência de 3 palavras
   // que seguem um padrão (mesma letra inicial, mesma categoria, rima, ou
   // uma ordem lógica), mas também tem outros tipos de raciocínio, pra não
   // virar sempre a mesma mecânica: relacionar cores (associar objeto →
-  // cor típica) e posição de objetos (ordem/lugar numa fila ou numa
-  // relação espacial) — pura lógica, sem precisar ler texto longo nem
-  // saber conteúdo de matéria nenhuma. Cada item tem só UMA leitura
+  // cor típica), posição de objetos (ordem/lugar numa fila ou numa
+  // relação espacial) e variáveis (a caixa 📦 guarda um valor, e o valor
+  // novo substitui o antigo) — pura lógica, sem precisar ler texto longo
+  // nem saber conteúdo de matéria nenhuma. Cada item tem só UMA leitura
   // possível (as opções erradas foram escolhidas pra não caber em
   // nenhuma outra regra plausível) — mexeu num item, confira isso de novo.
   //
   // Cada item pode ter um `sub` próprio (a pergunta abaixo do enunciado);
   // sem isso, cai no texto padrão de "continuar a sequência" — os tipos
-  // novos (cor, posição) sempre definem o próprio `sub`.
+  // novos (cor, posição, variável) sempre definem o próprio `sub`.
   //
   // A posição da resposta certa (A/B/C) varia de propósito de item pra
   // item — se ficasse sempre na mesma letra, "sempre clicar em A" vira um
@@ -194,7 +197,10 @@
   // um padrão "óbvio" só na superfície (mesma categoria) pra achar a
   // regra de verdade (ordem alfabética, categoria mais específica, dois
   // atributos ao mesmo tempo); 16-21 trocam de mecânica (cores, posição
-  // espacial, incluindo uma relação em 2 passos no último item).
+  // espacial, incluindo uma relação em 2 passos); 22-26 introduzem a
+  // ideia de variável aos poucos (guardar um valor → o valor novo apaga o
+  // antigo → duas caixas independentes → vários valores em sequência →
+  // trocar o conteúdo de duas caixas, o mais difícil de todos).
   //
   // Mesmo motor leve das outras atividades adaptadas dele (3 alternativas,
   // sem sorteio, sem tempo) e mesma trava de integridade (shared/
@@ -313,7 +319,38 @@
       lead: 'O Cachorro está à ESQUERDA do Gato. O Gato está à ESQUERDA do Passarinho.',
       sub: 'Quem está mais à DIREITA de todos?',
       options: ['Cachorro', 'Gato', 'Passarinho'], certa: 2,
-      regra: 'O Cachorro vem antes do Gato, e o Gato vem antes do Passarinho — juntando as duas informações, o Passarinho é o que fica mais à direita.' }
+      regra: 'O Cachorro vem antes do Gato, e o Gato vem antes do Passarinho — juntando as duas informações, o Passarinho é o que fica mais à direita.' },
+
+    // ---- Nível 5: variáveis (a caixa 📦 guarda um valor) ----
+    { bloco: 'Variáveis (guardar um valor)', icon: '📦',
+      lead: '📦 recebe 🍎.',
+      sub: 'O que tem dentro de 📦 agora?',
+      options: ['🍎', '🍌', '📦'], certa: 0,
+      regra: '📦 é uma variável — uma caixa que guarda um valor. Ela recebeu 🍎, então agora tem 🍎 dentro.' },
+
+    { bloco: 'Variáveis (o valor novo apaga o antigo)', icon: '📦',
+      lead: '📦 recebe 🍎. Depois, 📦 recebe 🍌.',
+      sub: 'O que tem dentro de 📦 agora?',
+      options: ['🍎', '🍎 e 🍌', '🍌'], certa: 2,
+      regra: 'Quando a variável recebe um valor novo, ela ESQUECE o antigo — só fica o último: 🍌.' },
+
+    { bloco: 'Variáveis (duas caixas, dois valores)', icon: '📦',
+      lead: '📦1 recebe 🍎. 📦2 recebe 🍌.',
+      sub: 'O que tem dentro de 📦1?',
+      options: ['🍎', '🍌', 'Nada'], certa: 0,
+      regra: 'Cada variável guarda o SEU próprio valor — 📦1 só recebeu 🍎, o 🍌 foi pra outra caixa (📦2).' },
+
+    { bloco: 'Variáveis (vários valores em sequência)', icon: '📦',
+      lead: '📦 recebe 🍎. Depois, 📦 recebe 🍌. Depois, 📦 recebe 🍇.',
+      sub: 'O que tem dentro de 📦 no final?',
+      options: ['🍎', '🍇', '🍌'], certa: 1,
+      regra: 'Só importa o ÚLTIMO valor que a variável recebeu — 🍇.' },
+
+    { bloco: 'Variáveis (trocar os valores)', icon: '🔄',
+      lead: '📦1 tem 🍎. 📦2 tem 🍌. Agora, tudo que estava em 📦1 vai pra 📦2, e tudo que estava em 📦2 vai pra 📦1.',
+      sub: 'O que tem dentro de 📦1 depois da troca?',
+      options: ['🍎', '🍌', 'Nada'], certa: 1,
+      regra: 'Os valores trocaram de lugar: o que era de 📦2 (🍌) agora está em 📦1.' }
   ];
   const TOTAL_STEPS = QUESTIONS.length;
 
@@ -586,7 +623,7 @@
       <div class="card gate-card">
         <div class="warn-icon">🧩</div>
         <h2>Antes de começar</h2>
-        <p>São ${QUESTIONS.length} desafios de lógica. A maioria é completar uma sequência de 3 palavras que seguem um padrão (mesma letra, mesmo grupo, rima ou ordem) — mas também tem desafios de cor e de posição.</p>
+        <p>São ${QUESTIONS.length} desafios de lógica. A maioria é completar uma sequência de 3 palavras que seguem um padrão (mesma letra, mesmo grupo, rima ou ordem) — mas também tem desafios de cor, de posição e de variáveis (uma caixa 📦 que guarda um valor).</p>
         <p>Leia o enunciado e escolha, entre as 3 opções, a resposta certa.</p>
         <p>Se errar, sem problema: a resposta certa (e a regra) aparecem na hora, pra você aprender.</p>
         <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar — sair da tela conta um aviso, e a 2ª vez bloqueia até o professor liberar.</p>
