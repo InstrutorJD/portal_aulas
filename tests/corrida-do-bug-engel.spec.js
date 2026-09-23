@@ -1,11 +1,12 @@
 // @ts-check
 // "Corrida do Bug (Engel)" — versão SOLO e adaptada da Corrida do Bug
-// (games/corrida-do-bug.html): mesmo motor do Fuga do Bug (fase 1, sem
-// tocar no motor original — tests/fuga-do-bug*.spec.js continuam a fonte
-// de verdade da física), mas cada checkpoint pede uma frase do "Formar
-// Frases" (mesmo conteúdo de frases-engel.html) em vez de pergunta de
-// quiz, e sem nada de rede/pontuação competitiva — só o progresso local de
-// sempre (mesmo padrão das outras atividades adaptadas do Engel).
+// (games/corrida-do-bug.html): mesmo motor do Fuga do Bug, correndo as 10
+// fases em sequência (sem tocar no motor original — tests/fuga-do-bug*.spec.js
+// continuam a fonte de verdade da física), mas cada checkpoint pede uma
+// frase do "Formar Frases" (mesmo conteúdo de frases-engel.html, repetido
+// em ciclo) em vez de pergunta de quiz, e sem nada de rede/pontuação
+// competitiva — só o progresso local de sempre (mesmo padrão das outras
+// atividades adaptadas do Engel).
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
@@ -87,6 +88,23 @@ test.describe('Jogo "Corrida do Bug (Engel)"', () => {
     await expect.poll(() => page.evaluate(() => window.__corridaEngel.lastCp)).toBe(0);
   });
 
+  test('concluir uma fase (sem ser a última) mostra a tela de "próxima fase", não a de chegada final', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto(URL);
+    await page.click('#btnStart');
+
+    await page.evaluate(() => window.__corridaEngel.forceWinLevel());
+    await expect(page.locator('#levelOverlay')).toBeVisible();
+    await expect(page.locator('#levelTitle')).toContainText('Fase 1');
+    await expect(page.locator('#finishOverlay')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => window.__corridaEngel.levelIndex)).toBe(0);
+
+    await page.click('#btnNextLevel');
+    await expect(page.locator('#levelOverlay')).toBeHidden();
+    await expect.poll(() => page.evaluate(() => window.__corridaEngel.levelIndex)).toBe(1);
+    await expect(page.locator('#hudLevel')).toHaveText('2');
+  });
+
   test('chegar na bandeira marca a atividade como concluída (sem placar competitivo)', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(URL);
@@ -101,7 +119,7 @@ test.describe('Jogo "Corrida do Bug (Engel)"', () => {
     expect(progress).toMatchObject({ completed: true });
   });
 
-  test('gabarito lista os 2 checkpoints com a resposta completa', async ({ page }) => {
+  test('gabarito lista os 31 checkpoints das 10 fases com a resposta completa', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/atividades/corrida-do-bug-engel.html?user=admin&role=professor&turma=jogos');
 
@@ -112,7 +130,9 @@ test.describe('Jogo "Corrida do Bug (Engel)"', () => {
     const fs = require('node:fs');
     const content = fs.readFileSync(filePath, 'utf-8');
     expect(content).toContain('GABARITO');
+    expect(content).toContain('Fase 1 — Checkpoint 1');
     expect(content).toContain('Bom Dia');
     expect(content).toContain('Boa Noite');
+    expect(content).toContain('Fase 10 — Checkpoint 4');
   });
 });

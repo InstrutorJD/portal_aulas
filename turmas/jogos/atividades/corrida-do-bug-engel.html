@@ -92,13 +92,14 @@
 <div class="env">
   <div class="topbar">
     <div class="title">🏁 CORRIDA DO BUG (ADAPTADO)</div>
-    <div>📍 Checkpoint: <b id="hudCp2">0</b>/<span id="hudCpTotal2">0</span></div>
+    <div>🚩 Fase: <b id="hudLevel2">1</b>/<span id="hudLevelTotal2">10</span> · 📍 Checkpoint: <b id="hudCp2">0</b>/<span id="hudCpTotal2">0</span></div>
   </div>
 
   <div class="stage">
     <canvas id="raceCanvas" width="960" height="544"></canvas>
 
     <div class="hud">
+      <div class="pill">🚩 Fase: <b id="hudLevel">1</b>/<span id="hudLevelTotal">10</span></div>
       <div class="pill">📍 Checkpoint: <b id="hudCp">0</b>/<span id="hudCpTotal">0</span></div>
     </div>
 
@@ -110,9 +111,17 @@
     <div class="overlay" id="startOverlay">
       <div class="card">
         <h2>🏁 Corrida do Bug</h2>
-        <p>Corra até a bandeira 🏁. Setas ou A/D pra mover, Espaço pra pular.</p>
+        <p>Corra até a bandeira 🏁 em cada uma das 10 fases. Setas ou A/D pra mover, Espaço pra pular.</p>
         <p>Em cada checkpoint, complete a frase certa (clicando) pra continuar. Errou? Volta pro checkpoint anterior.</p>
         <button class="btn" id="btnStart">▶ Começar</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="levelOverlay" style="display:none;">
+      <div class="card">
+        <h2 id="levelTitle">🚩 Fase concluída!</h2>
+        <p id="levelStats">--</p>
+        <button class="btn" id="btnNextLevel">▶ Próxima fase</button>
       </div>
     </div>
 
@@ -149,25 +158,63 @@
   const username = urlParams.get('user') || 'anon';
   const PROGRESS_KEY = `corrida_do_bug_engel_progress_${username}`;
 
-  // Mesmas 2 primeiras frases (nível 1, mais fácil) de
-  // turmas/jogos/atividades/frases-engel.html — reaproveitadas como as
-  // perguntas dos 2 checkpoints da fase 1 do Fuga do Bug, no lugar da
-  // pergunta de quiz da versão principal (Corrida do Bug, games/corrida-do-bug.html).
+  // As 15 frases de turmas/jogos/atividades/frases-engel.html —
+  // reaproveitadas como as perguntas dos checkpoints de TODAS as 10 fases
+  // do Fuga do Bug (31 checkpoints ao todo), no lugar da pergunta de quiz
+  // da versão principal (Corrida do Bug, games/corrida-do-bug.html). Como
+  // só existem 15 frases pros 31 checkpoints, elas se repetem em ciclo
+  // (challengeFor() abaixo) — cada fase nova ainda é física nova, só a
+  // pergunta do checkpoint que se repete.
   const CHECKPOINT_CHALLENGES = [
     { words: ['Bom'], clue: '☀️', correct: 'Dia', options: ['Dia', 'Noite', 'Carro'] },
     { words: ['Boa'], clue: '🌙', correct: 'Noite', options: ['Noite', 'Dia', 'Gato'] },
+    { words: ['Muito'], clue: '👍', correct: 'Bem', options: ['Bem', 'Mal', 'Grande'] },
+    { words: ['Meu'], clue: '🐶', correct: 'Cachorro', options: ['Cachorro', 'Gato', 'Livro'] },
+    { words: ['Minha'], clue: '🏠', correct: 'Casa', options: ['Casa', 'Escola', 'Carro'] },
+    { words: ['Eu', 'quero'], clue: '💧', correct: 'Água', options: ['Água', 'Suco', 'Bola'] },
+    { words: ['Eu', 'vejo'], clue: '🐱', correct: 'Gato', options: ['Gato', 'Cachorro', 'Carro'] },
+    { words: ['Ele', 'tem'], clue: '⚽', correct: 'Bola', options: ['Bola', 'Carro', 'Livro'] },
+    { words: ['Nós', 'somos'], clue: '👫', correct: 'Amigos', options: ['Amigos', 'Irmãos', 'Vizinhos'] },
+    { words: ['Hoje', 'está'], clue: '🥵', correct: 'Quente', options: ['Quente', 'Frio', 'Nublado'] },
+    { words: ['O', 'cachorro', 'está'], clue: '🐕😴', correct: 'Dormindo', options: ['Dormindo', 'Correndo', 'Comendo'] },
+    { words: ['A', 'menina', 'está'], clue: '👧🎨', correct: 'Desenhando', options: ['Desenhando', 'Cantando', 'Correndo'] },
+    { words: ['Eu', 'vou', 'comprar'], clue: '🍎', correct: 'Maçã', options: ['Maçã', 'Pão', 'Suco'] },
+    { words: ['Nós', 'vamos', 'jogar'], clue: '⚽', correct: 'Bola', options: ['Bola', 'Cartas', 'Dominó'] },
+    { words: ['Amanhã', 'vai', 'ter'], clue: '🎉🎂', correct: 'Festa', options: ['Festa', 'Aula', 'Chuva'] },
   ];
 
+  // Numeração contínua do checkpoint ao longo da corrida inteira (soma os
+  // checkpoints de todas as fases anteriores + o índice dentro da fase
+  // atual), pra saber qual das 15 frases usar em cada um dos 31 checkpoints.
+  function globalCheckpointNumber(lvlIdx, cpIndexInLevel) {
+    let n = cpIndexInLevel;
+    for (let i = 0; i < lvlIdx; i++) n += LEVELS[i].checks.length;
+    return n;
+  }
+  function challengeFor(lvlIdx, cpIndexInLevel) {
+    const g = globalCheckpointNumber(lvlIdx, cpIndexInLevel);
+    return CHECKPOINT_CHALLENGES[(g - 1) % CHECKPOINT_CHALLENGES.length];
+  }
+
   window.generateGabaritoForGestao = function () {
+    const items = [];
+    let n = 0;
+    LEVELS.forEach((def, li) => {
+      def.checks.forEach((_, ci) => {
+        n++;
+        const c = challengeFor(li, ci + 1);
+        items.push({
+          number: n,
+          title: `Fase ${li + 1} — Checkpoint ${ci + 1}`,
+          prompt: `"${c.words.join(' ')} ___" ${c.clue}`,
+          answer: `${c.words.join(' ')} ${c.correct}`
+        });
+      });
+    });
     return window.PortalGabarito.generate({
       title: 'Corrida do Bug (Engel)',
       subtitle: 'Jogo adaptado · Trilha individual · Turma Jogos Digitais',
-      items: CHECKPOINT_CHALLENGES.map((c, i) => ({
-        number: i + 1,
-        title: `Checkpoint ${i + 1}`,
-        prompt: `"${c.words.join(' ')} ___" ${c.clue}`,
-        answer: `${c.words.join(' ')} ${c.correct}`
-      })),
+      items,
       fileName: 'corrida-do-bug-engel-gabarito.txt'
     });
   };
@@ -199,13 +246,16 @@
   }
   window.addEventListener('resize', resizeCanvas);
 
-  const LEVEL_INDEX = 0; // fase 1 — já tem 2 checkpoints prontos
-  let sim = null, fakeSet = new Set(), camX = 0, mode = 'menu'; // 'menu' | 'playing' | 'question' | 'finished'
+  // Corre as 10 fases do Fuga do Bug em sequência, sem voltar ao menu entre
+  // elas (diferente de games/fuga-do-bug.html, que tem seleção de fase) —
+  // levelIndex avança a cada bandeira até a última, aí sim finishRun().
+  let levelIndex = 0;
+  let sim = null, fakeSet = new Set(), camX = 0, mode = 'menu'; // 'menu' | 'playing' | 'question' | 'between' | 'finished'
   let lastCp = 0;
   const keys = { left: false, right: false, jump: false };
 
   function loadLevel() {
-    const def = LEVELS[LEVEL_INDEX];
+    const def = LEVELS[levelIndex];
     sim = Engine.createSim(def);
     fakeSet = new Set(sim.L.fakes.map(f => f.c + ',' + f.r));
     camX = 0;
@@ -213,6 +263,10 @@
     updateCam(true);
     $('hudCpTotal').textContent = def.checks.length;
     $('hudCpTotal2').textContent = def.checks.length;
+    $('hudLevel').textContent = levelIndex + 1;
+    $('hudLevel2').textContent = levelIndex + 1;
+    $('hudLevelTotal').textContent = LEVELS.length;
+    $('hudLevelTotal2').textContent = LEVELS.length;
     updateHud();
   }
   function updateHud() {
@@ -224,13 +278,14 @@
   function startRun() {
     show('startOverlay', false);
     show('finishOverlay', false);
+    levelIndex = 0;
     loadLevel();
     mode = 'playing';
   }
 
   function openCheckpoint(cpIndex) {
     mode = 'question';
-    const c = CHECKPOINT_CHALLENGES[cpIndex - 1];
+    const c = challengeFor(levelIndex, cpIndex);
     if (!c) { mode = 'playing'; return; } // fase com mais checkpoints do que frases cadastradas — não trava o aluno
     $('clueEmoji').textContent = c.clue;
     $('sentenceBox').innerHTML = `${c.words.join(' ')} <span class="blank">___</span>`;
@@ -274,18 +329,35 @@
     if (mode === 'finished') return;
     mode = 'finished';
     localStorage.setItem(PROGRESS_KEY, JSON.stringify({ completed: true }));
-    $('finishStats').textContent = `Tempo: ${(sim.t / 60).toFixed(1)}s — parabéns, você chegou na bandeira! 🎉`;
+    $('finishStats').textContent = `Tempo: ${(sim.t / 60).toFixed(1)}s — parabéns, você chegou na bandeira da última fase! 🎉`;
     show('finishOverlay', true);
     if (typeof window.reportActivity === 'function') {
       window.reportActivity('corrida_do_bug_engel', 'Corrida do Bug (Engel) — Concluído', { finished: true });
     }
   }
 
+  function finishLevel() {
+    if (mode === 'finished' || mode === 'between') return;
+    if (levelIndex >= LEVELS.length - 1) { finishRun(); return; }
+    mode = 'between';
+    $('levelTitle').textContent = `🚩 Fase ${levelIndex + 1} concluída!`;
+    $('levelStats').textContent = `Tempo: ${(sim.t / 60).toFixed(1)}s — prepare-se pra fase ${levelIndex + 2}.`;
+    show('levelOverlay', true);
+  }
+
+  function nextLevel() {
+    if (mode !== 'between') return;
+    show('levelOverlay', false);
+    levelIndex++;
+    loadLevel();
+    mode = 'playing';
+  }
+
   function tick() {
     sim.step(keys);
     updateCam(false);
     if (sim.dead) { sim.respawn(); return; }
-    if (sim.won) { finishRun(); return; }
+    if (sim.won) { finishLevel(); return; }
     if (sim.cp > lastCp) { openCheckpoint(sim.cp); return; }
   }
 
@@ -351,7 +423,7 @@
   function draw() {
     if (!sim) return;
     const L = sim.L, p = sim.p, t = sim.t;
-    const accent = LEVELS[LEVEL_INDEX].accent;
+    const accent = LEVELS[levelIndex].accent;
     ctx.clearRect(0, 0, W, H);
     ctx.save();
     ctx.translate(-Math.round(camX), 0);
@@ -405,6 +477,7 @@
 
   $('btnStart').addEventListener('click', startRun);
   $('btnPlayAgain').addEventListener('click', startRun);
+  $('btnNextLevel').addEventListener('click', nextLevel);
 
   // Já concluiu antes — abre direto na tela de chegada (mesmo padrão das
   // outras atividades adaptadas do Engel), sem obrigar a correr nada de novo.
@@ -416,7 +489,9 @@
     get sim() { return sim; },
     get mode() { return mode; },
     get lastCp() { return lastCp; },
+    get levelIndex() { return levelIndex; },
     forceCheckpoint(n) { sim.cp = n; openCheckpoint(n); },
+    forceWinLevel() { sim.won = true; finishLevel(); },
     forceWin() { sim.won = true; finishRun(); },
   };
 

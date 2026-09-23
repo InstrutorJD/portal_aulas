@@ -978,11 +978,11 @@ window.TURMA_CONFIG_JOGOS = {
           // Versão adaptada, SOLO (sem sessão/multiplayer nenhum — nada de
           // Supabase além do progresso local de sempre), da "Corrida do
           // Bug" (games/corrida-do-bug.html): mesmo motor de plataforma do
-          // Fuga do Bug (fase 1, já com 2 checkpoints prontos), mas cada
-          // checkpoint pede pra completar uma frase (mesmo mecanismo/
-          // conteúdo de "Formar Frases" acima) em vez de responder um quiz
-          // — a pedido do professor, pra manter a versão dele mais simples
-          // que a da turma toda.
+          // Fuga do Bug, agora com as 10 fases em sequência (31 checkpoints
+          // ao todo), mas cada checkpoint pede pra completar uma frase
+          // (mesmo mecanismo/conteúdo de "Formar Frases" acima, repetido em
+          // ciclo) em vez de responder um quiz — a pedido do professor, pra
+          // manter a versão dele mais simples que a da turma toda.
           key: 'corrida-do-bug-engel',
           label: 'Corrida do Bug (Engel)',
           desc: 'Escolha um módulo para começar.',
@@ -990,7 +990,7 @@ window.TURMA_CONFIG_JOGOS = {
           modules: [
             {
               key: 'jogo', title: 'Corrida do Bug — Adaptado',
-              desc: 'Corra pela fase 1 do Fuga do Bug até a bandeira — em cada um dos 2 checkpoints, complete a frase certa (clicando, sem digitar) pra continuar. Errou? Volta pro checkpoint anterior.',
+              desc: 'Corra pelas 10 fases do Fuga do Bug até a bandeira final — em cada checkpoint, complete a frase certa (clicando, sem digitar) pra continuar. Errou? Volta pro checkpoint anterior.',
               icon: '🏁', src: 'atividades/corrida-do-bug-engel.html',
               progressKey: 'corrida_do_bug_engel_progress_', progressMode: 'flag',
               hasGabarito: true
