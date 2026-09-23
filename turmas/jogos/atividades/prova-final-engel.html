@@ -141,7 +141,7 @@
 <div class="env">
   <div class="topbar">
     <div>🧩 PROVA FINAL</div>
-    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">11</span></div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">16</span></div>
   </div>
 
   <div class="gate-wrap" id="gateWrap"></div>
@@ -177,35 +177,48 @@
   // erradas foram escolhidas pra não caber em nenhuma outra regra
   // plausível da sequência) — mexeu num item, confira isso de novo.
   //
+  // A posição da resposta certa (A/B/C) varia de propósito de item pra
+  // item — se ficasse sempre na mesma letra, "sempre clicar em A" vira um
+  // atalho que não tem nada a ver com o raciocínio que a prova quer medir.
+  //
+  // A ordem dos itens sobe de nível: 1-5 são de UM atributo só (letra,
+  // categoria, rima, contagem simples); 6-10 juntam um pouco mais de
+  // atenção (tamanho crescente, letra em contexto); 11-15 exigem ignorar
+  // um padrão "óbvio" só na superfície (mesma categoria) pra achar a
+  // regra de verdade (ordem alfabética, categoria mais específica,
+  // dois atributos ao mesmo tempo).
+  //
   // Mesmo motor leve das outras atividades adaptadas dele (3 alternativas,
   // sem sorteio, sem tempo) e mesma trava de integridade (shared/
   // exam-proctor.js) de prova-jogos-engel.html — é uma prova de verdade.
   const QUESTIONS = [
+    // ---- Nível 1: um atributo só ----
     { bloco: 'Mesma letra inicial', icon: '🔤',
       lead: 'Bicicleta, Borboleta, Bola, ___?',
-      options: ['Boneca', 'Mesa', 'Relógio'], certa: 0,
+      options: ['Mesa', 'Boneca', 'Relógio'], certa: 1,
       regra: 'Todas as palavras começam com a letra B.' },
 
     { bloco: 'Mesma categoria (frutas)', icon: '🍎',
       lead: 'Maçã, Banana, Laranja, ___?',
-      options: ['Uva', 'Cadeira', 'Sapato'], certa: 0,
+      options: ['Cadeira', 'Sapato', 'Uva'], certa: 2,
       regra: 'Todas as palavras são frutas.' },
 
     { bloco: 'Rima', icon: '🎵',
       lead: 'Limão, Coração, Balão, ___?',
-      options: ['Melão', 'Gato', 'Sapato'], certa: 0,
+      options: ['Gato', 'Melão', 'Sapato'], certa: 1,
       regra: 'Todas as palavras terminam com o mesmo som ("-ão").' },
 
     { bloco: 'Ordem (números)', icon: '🔢',
       lead: 'Um, Dois, Três, ___?',
-      options: ['Quatro', 'Cinco', 'Dez'], certa: 0,
+      options: ['Cinco', 'Dez', 'Quatro'], certa: 2,
       regra: 'É a sequência dos números, um depois do outro.' },
 
     { bloco: 'Ordem (dias da semana)', icon: '📅',
       lead: 'Segunda, Terça, Quarta, ___?',
-      options: ['Quinta', 'Domingo', 'Sábado'], certa: 0,
+      options: ['Domingo', 'Quinta', 'Sábado'], certa: 1,
       regra: 'É a ordem dos dias da semana, um depois do outro.' },
 
+    // ---- Nível 2: um pouco mais de atenção ----
     { bloco: 'Mesma categoria (animais de fazenda)', icon: '🐄',
       lead: 'Vaca, Cavalo, Galinha, ___?',
       options: ['Porco', 'Leão', 'Tubarão'], certa: 0,
@@ -213,12 +226,12 @@
 
     { bloco: 'Mesma letra inicial', icon: '🔡',
       lead: 'Cachorro, Carro, Caneta, ___?',
-      options: ['Casa', 'Bicicleta', 'Relógio'], certa: 0,
+      options: ['Bicicleta', 'Relógio', 'Casa'], certa: 2,
       regra: 'Todas as palavras começam com a letra C.' },
 
     { bloco: 'Mesma categoria (cores)', icon: '🎨',
       lead: 'Vermelho, Azul, Amarelo, ___?',
-      options: ['Verde', 'Cadeira', 'Sapato'], certa: 0,
+      options: ['Cadeira', 'Verde', 'Sapato'], certa: 1,
       regra: 'Todas as palavras são cores.' },
 
     { bloco: 'Ordem (tamanho crescente)', icon: '📏',
@@ -228,8 +241,34 @@
 
     { bloco: 'Mesma categoria (objetos redondos)', icon: '⚪',
       lead: 'Bola, Roda, Relógio, ___?',
-      options: ['Laranja', 'Livro', 'Janela'], certa: 0,
-      regra: 'Todas as palavras são objetos redondos.' }
+      options: ['Livro', 'Janela', 'Laranja'], certa: 2,
+      regra: 'Todas as palavras são objetos redondos.' },
+
+    // ---- Nível 3: a resposta óbvia da categoria não é a certa ----
+    { bloco: 'Ordem (contando de 2 em 2)', icon: '🧮',
+      lead: 'Dois, Quatro, Seis, ___?',
+      options: ['Sete', 'Dez', 'Oito'], certa: 2,
+      regra: 'Os números aumentam de 2 em 2 — "Sete" é só +1, e "Dez" pula longe demais.' },
+
+    { bloco: 'Ordem alfabética', icon: '🔠',
+      lead: 'Abelha, Borboleta, Cachorro, ___?',
+      options: ['Elefante', 'Dado', 'Foca'], certa: 1,
+      regra: 'A primeira letra de cada palavra segue o alfabeto (A, B, C...) — não é "mais um bicho", é a letra D que vem depois do C.' },
+
+    { bloco: 'Ordem (meses do ano)', icon: '🗓️',
+      lead: 'Janeiro, Fevereiro, Março, ___?',
+      options: ['Dezembro', 'Junho', 'Abril'], certa: 2,
+      regra: 'É a ordem dos meses do ano, um depois do outro.' },
+
+    { bloco: 'Categoria específica (instrumentos musicais)', icon: '🎷',
+      lead: 'Violão, Piano, Bateria, ___?',
+      options: ['Microfone', 'Flauta', 'Rádio'], certa: 1,
+      regra: 'Todas as palavras são instrumentos musicais que se TOCA — microfone e rádio têm a ver com música, mas não são instrumentos.' },
+
+    { bloco: 'Padrão combinado (diminutivo de animal)', icon: '🐾',
+      lead: 'Gatinho, Cachorrinho, Passarinho, ___?',
+      options: ['Peixe', 'Carrinho', 'Peixinho'], certa: 2,
+      regra: 'Cada palavra é o diminutivo ("-inho") do nome de um animal — "Peixe" não é diminutivo, e "Carrinho" não é um animal.' }
   ];
   const TOTAL_STEPS = QUESTIONS.length;
 

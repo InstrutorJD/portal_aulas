@@ -1101,13 +1101,13 @@ window.TURMA_CONFIG_JOGOS = {
           // (Engel), que também não é automática.
           key: 'prova-final-engel',
           label: 'Prova Final (Engel)',
-          desc: 'Avaliação final adaptada, só de raciocínio lógico: sequências de 3 palavras (mesma letra, categoria, rima ou ordem) em que ele escolhe qual palavra vem a seguir — 10 sequências, 3 alternativas cada, com trava anti-saída de tela.',
+          desc: 'Avaliação final adaptada, só de raciocínio lógico: sequências de 3 palavras (mesma letra, categoria, rima ou ordem) em que ele escolhe qual palavra vem a seguir — 15 sequências, nível subindo aos poucos, 3 alternativas cada, com trava anti-saída de tela.',
           visibleFor: ['engel.fraga'],
           capacidade: 'Avaliação final adaptada do raciocínio lógico-indutivo (reconhecer o padrão de uma sequência e prever o próximo elemento), no lugar do conteúdo técnico já coberto nas outras trilhas dele.',
           modules: [
             {
               key: 'prova', title: 'Prova Final (Engel)',
-              desc: '10 sequências de 3 palavras (3 alternativas cada, com trava anti-saída de tela) — descubra o padrão (letra, categoria, rima ou ordem) e escolha a próxima palavra.',
+              desc: '15 sequências de 3 palavras, dificuldade subindo aos poucos (3 alternativas cada, com trava anti-saída de tela) — descubra o padrão (letra, categoria, rima ou ordem) e escolha a próxima palavra.',
               icon: '🧩', src: 'atividades/prova-final-engel.html',
               progressKey: 'prova_final_jogos_engel_progress_', progressMode: 'flag',
               hasGabarito: true
