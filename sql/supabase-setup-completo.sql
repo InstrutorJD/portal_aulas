@@ -1177,6 +1177,54 @@ begin
   end if;
 end $$;
 
+-- Jogo/atividade ainda em desenvolvimento, escondido da lista do aluno até
+-- o professor marcar como pronto (Gestão → Bloqueios e Liberações →
+-- "Ocultar Jogos") — diferente de trilha_bimestre (esconde a TRILHA
+-- inteira por data), aqui é por MÓDULO individual e sem data nenhuma, só
+-- um interruptor manual. O professor sempre vê e consegue abrir o módulo
+-- normalmente (só o aluno perde o card), e o módulo oculto não entra na
+-- conta de "completou tudo" que libera a aba Jogos (ver
+-- shared/platform-core.js: isModuleHidden/buildModuleCardsHtml/
+-- allModulesComplete).
+create table if not exists public.hidden_modules (
+  turma text not null,
+  trilha_key text not null,
+  module_key text not null,
+  hidden boolean not null default false,
+  updated_at timestamptz not null default now(),
+  primary key (turma, trilha_key, module_key)
+);
+
+create index if not exists idx_hidden_modules_turma on public.hidden_modules (turma);
+
+alter table public.hidden_modules enable row level security;
+
+drop policy if exists "hidden_modules_select_all" on public.hidden_modules;
+create policy "hidden_modules_select_all"
+  on public.hidden_modules for select
+  using (true);
+
+drop policy if exists "hidden_modules_insert_professor" on public.hidden_modules;
+create policy "hidden_modules_insert_professor"
+  on public.hidden_modules for insert
+  with check (public.is_professor());
+
+drop policy if exists "hidden_modules_update_professor" on public.hidden_modules;
+create policy "hidden_modules_update_professor"
+  on public.hidden_modules for update
+  using (public.is_professor())
+  with check (public.is_professor());
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'hidden_modules'
+  ) then
+    alter publication supabase_realtime add table public.hidden_modules;
+  end if;
+end $$;
+
 -- ============================================================
 -- BLOCO 9 — Placar dos minigames (Digitação, Campo Minado) por turma.
 -- Cada aluno guarda o MELHOR resultado dele em cada jogo; o jogo
@@ -1982,7 +2030,7 @@ end $$;
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, bimestre_dates, trilha_bimestre,
--- game_scores, quizrush_sessions/quizrush_players/
+-- hidden_modules, game_scores, quizrush_sessions/quizrush_players/
 -- quizrush_answers, student_activity_state, professor_tokens,
 -- exam_guard_events, user_preferences e corridadobug_sessions/
 -- corridadobug_players/corridadobug_progress foram criadas, se

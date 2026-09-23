@@ -141,6 +141,25 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await expect(page.locator('#tabContentJogos')).toBeVisible();
     await expect(page.locator('#gameCardGrid .game-card')).toHaveCount(6);
   });
+
+  test('módulo OCULTO (Gestão → Ocultar Jogos) incompleto não trava a aba Jogos — o aluno nem consegue ver esse módulo pra completar', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      hidden_modules: [{ turma: 'jogos', trilha_key: 'projeto-cobrinha', module_key: 'construcao', hidden: true }],
+    });
+    // addInitScript roda na ordem em que é registrado: primeiro semeia TODOS
+    // os módulos completos, depois desfaz só o do Cobrinha (projeto-cobrinha/
+    // construcao) — esse é o único oculto nesta sessão, então NÃO deveria
+    // contar na conta de allModulesComplete().
+    await page.addInitScript(seedAllModulesComplete, 'breno.silva80');
+    await page.addInitScript(user => {
+      localStorage.removeItem(`cobrinha_construcao_progress_${user}`);
+    }, 'breno.silva80');
+
+    await page.goto(URL);
+    const tabJogos = page.locator('#tabBtnJogos');
+    await expect(tabJogos).not.toHaveClass(/disabled/);
+    await expect(tabJogos).toContainText('🎮');
+  });
 });
 
 test.describe('turmas/jogos/plataforma.html — revogação de acesso em tempo real', () => {

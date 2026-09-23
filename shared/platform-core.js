@@ -32,7 +32,8 @@
   let turmaArchivedCache = []; // alunos arquivados da turma (só usado pela seção "Alunos" da Gestão)
   let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
   let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
-  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
+  let hiddenModulesCache = {}; // "trilhaKey:modKey" -> true, jogo/atividade ainda em desenvolvimento que o professor escondeu dos alunos (Gestão → Bloqueios e Liberações → "Ocultar Jogos"), ver isModuleHidden()
+  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache/hiddenModulesCache muda ao vivo
   // fontMode saiu daqui — a fonte agora é controlada por prefs.fontFamily
   // (4 opções, ver FONT_PRESETS), persistida no banco junto com o resto da
   // personalização. fontScale/libras continuam só locais (não têm por quê
@@ -432,6 +433,19 @@
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
                   <button class="btn" id="btnSalvarTrilhaBimestre">Salvar</button>
                   <span class="status-msg" id="trilhaBimestreStatus"></span>
+                </div>
+
+                <h3 class="gestao-subhead">Ocultar Jogos</h3>
+                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
+                  Um jogo/atividade ainda em desenvolvimento some da lista do aluno (sem travar o resto da trilha) até você desmarcar aqui — você continua vendo e conseguindo abrir normalmente, só com um selo "🚧 Oculto dos alunos".
+                </p>
+                <table class="audit-table">
+                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Módulo</th><th>Oculto</th></tr></thead>
+                  <tbody id="tblGestaoOcultarJogosBody"></tbody>
+                </table>
+                <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
+                  <button class="btn" id="btnSalvarOcultarJogos">Salvar</button>
+                  <span class="status-msg" id="ocultarJogosStatus"></span>
                 </div>
               </div>
             </div>
@@ -1002,14 +1016,20 @@
   }
 
   function buildModuleCardsHtml(trilha) {
-    const modules = trilha.modules || [];
+    // Módulo oculto (hiddenModulesCache — jogo ainda em desenvolvimento)
+    // some da lista pro aluno igual um módulo nunca tivesse existido; o
+    // professor continua vendo (e conseguindo abrir), só com um selo
+    // avisando, pra dar pra testar antes de liberar de vez.
+    const isAluno = currentUser.role === 'aluno';
+    const modules = (trilha.modules || []).filter(m => !isAluno || !isModuleHidden(trilha.key, m.key));
     if (!modules.length) return `<div class="empty-state">Nenhum módulo cadastrado ainda em "${trilha.label}".</div>`;
 
     return modules.map(m => {
+      const hidden = isModuleHidden(trilha.key, m.key);
       const locked = isModuleLocked(trilha, m);
       const done = isModuleComplete(m);
-      const statusLabel = locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : '';
-      const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '');
+      const statusLabel = hidden ? '🚧 Oculto dos alunos' : locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : '';
+      const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '') + (hidden ? ' hidden-from-students' : '');
       const click = locked ? '' : `onclick="PortalCore.openModule('${trilha.key}','${m.key}')"`;
       return `
         <div class="${classes}" ${click}>
@@ -1023,9 +1043,13 @@
 
   // Só exige o que já está disponível — trilha 'futura' (bimestre seguinte,
   // ainda não começou) não pode travar o desbloqueio dos jogos por algo que
-  // o aluno nem tem como ter feito ainda.
+  // o aluno nem tem como ter feito ainda. Módulo oculto (isModuleHidden)
+  // também não entra na conta — o aluno nem consegue VER esse módulo pra
+  // completar, não faz sentido travar o resto da turma por ele.
   function allModulesComplete() {
-    const modules = allTrilhas().filter(t => trilhaStatus(t) !== 'futura').flatMap(t => t.modules || []);
+    const modules = allTrilhas()
+      .filter(t => trilhaStatus(t) !== 'futura')
+      .flatMap(t => (t.modules || []).filter(m => !isModuleHidden(t.key, m.key)));
     if (modules.length === 0) return false;
     return modules.every(isModuleComplete);
   }
@@ -1096,11 +1120,12 @@
     });
   }
 
-  // Refaz tudo que depende de bimestreDatesCache/trilhaBimestreCache pra
-  // refletir uma mudança ao vivo (o professor editou datas/atribuições em
-  // outra aba, ou o próprio salvamento local) — compartilhado por
-  // fetchBimestreDates() e fetchTrilhaBimestre() abaixo, já que os dois
-  // afetam a mesma coisa (quais trilhas aparecem, e com qual status).
+  // Refaz tudo que depende de bimestreDatesCache/trilhaBimestreCache/
+  // hiddenModulesCache pra refletir uma mudança ao vivo (o professor editou
+  // datas/atribuições/ocultações em outra aba, ou o próprio salvamento
+  // local) — compartilhado por fetchBimestreDates(), fetchTrilhaBimestre()
+  // e fetchHiddenModules() abaixo, já que os três afetam a mesma coisa
+  // (quais trilhas/módulos aparecem, e com qual status).
   function refreshTrilhaVisibilityUI() {
     refreshAllModuleCards();
     renderMaterias();
@@ -1146,6 +1171,30 @@
     if (!sbClient) return;
     sbClient.channel('realtime_trilha_bimestre_' + cfg.id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_bimestre', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaBimestre())
+      .subscribe();
+  }
+
+  // Jogo/atividade que o professor escondeu dos alunos enquanto ainda está
+  // em desenvolvimento (Gestão → Bloqueios e Liberações → "Ocultar Jogos",
+  // hidden_modules) — ver buildModuleCardsHtml/allModulesComplete. O
+  // professor sempre vê o módulo (com um selo avisando que está oculto),
+  // só o aluno perde o card inteiro da lista.
+  function isModuleHidden(trilhaKey, modKey) {
+    return !!hiddenModulesCache[`${trilhaKey}:${modKey}`];
+  }
+
+  async function fetchHiddenModules() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('hidden_modules').select('*').eq('turma', cfg.id);
+    hiddenModulesCache = {};
+    (data || []).forEach(r => { if (r.hidden) hiddenModulesCache[`${r.trilha_key}:${r.module_key}`] = true; });
+    refreshTrilhaVisibilityUI();
+  }
+
+  function setupHiddenModulesRealtime() {
+    if (!sbClient) return;
+    sbClient.channel('realtime_hidden_modules_' + cfg.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'hidden_modules', filter: `turma=eq.${cfg.id}` }, () => fetchHiddenModules())
       .subscribe();
   }
 
@@ -1454,6 +1503,56 @@
     const status = document.getElementById('trilhaBimestreStatus');
     if (status) status.textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
     renderGestaoTrilhaBimestre();
+  }
+
+  // Achata materias[].trilhas[].modules[] mantendo o rótulo da matéria e a
+  // trilha dona (igual allTrilhasComMateria, um nível a mais) — base da
+  // tabela "Ocultar Jogos".
+  function allModulesComMateriaETrilha() {
+    return allTrilhasComMateria().flatMap(({ materiaLabel, trilha }) =>
+      (trilha.modules || []).map(mod => ({ materiaLabel, trilha, mod }))
+    );
+  }
+
+  // Uma linha por MÓDULO (não por trilha) — cada jogo/atividade dentro de
+  // uma trilha pode estar pronto ou não independente dos outros.
+  async function renderGestaoOcultarJogos() {
+    await fetchHiddenModules();
+    const tbody = document.getElementById('tblGestaoOcultarJogosBody');
+    if (!tbody) return;
+    const linhas = allModulesComMateriaETrilha();
+    if (linhas.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum módulo cadastrado ainda nesta turma.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = linhas.map(({ materiaLabel, trilha, mod }) => `
+      <tr data-trilha="${trilha.key}" data-modulo="${mod.key}">
+        <td>${materiaLabel}</td>
+        <td>${trilha.label}</td>
+        <td>${mod.title}</td>
+        <td style="text-align:center;">
+          <input type="checkbox" class="ocultar-jogo-input" ${isModuleHidden(trilha.key, mod.key) ? 'checked' : ''}>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Salva TODAS as linhas de uma vez (igual salvarTrilhaBimestre).
+  async function salvarOcultarJogos() {
+    if (!sbClient) return;
+    const now = new Date().toISOString();
+    const rows = Array.from(document.querySelectorAll('#tblGestaoOcultarJogosBody tr[data-trilha]')).map(tr => {
+      const chk = tr.querySelector('.ocultar-jogo-input');
+      return {
+        turma: cfg.id, trilha_key: tr.getAttribute('data-trilha'), module_key: tr.getAttribute('data-modulo'),
+        hidden: !!(chk && chk.checked), updated_at: now
+      };
+    });
+    if (rows.length === 0) return;
+    await sbClient.from('hidden_modules').upsert(rows, { onConflict: 'turma,trilha_key,module_key' });
+    const status = document.getElementById('ocultarJogosStatus');
+    if (status) status.textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    renderGestaoOcultarJogos();
   }
 
   function renderClipboardButtonGestao() {
@@ -2855,6 +2954,7 @@
     renderGestaoGamesStatus();
     renderGestaoBimestres();
     renderGestaoTrilhaBimestre();
+    renderGestaoOcultarJogos();
     fetchClipboardStateGestao();
     loadChamada();
     renderRelatorioPresenca();
@@ -2928,6 +3028,7 @@
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
+    document.getElementById('btnSalvarOcultarJogos').addEventListener('click', salvarOcultarJogos);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
     document.getElementById('btnGerarRankingTurma').addEventListener('click', gerarRelatorioRanking);
   }
@@ -3575,6 +3676,8 @@
     setupBimestreDatesRealtime();
     fetchTrilhaBimestre();
     setupTrilhaBimestreRealtime();
+    fetchHiddenModules();
+    setupHiddenModulesRealtime();
 
     if (currentUser.role === 'aluno') {
       fetchTeacherOverride();

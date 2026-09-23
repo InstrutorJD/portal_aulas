@@ -179,6 +179,7 @@ html[data-theme="light"] body{
 .game-card.completed{ border-color:var(--green-dim); }
 .game-card.completed .card-status{ color:var(--green); }
 .game-card.locked{ opacity:0.4; cursor:not-allowed; }
+.game-card.hidden-from-students{ border-style:dashed; }
 .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
 
 button.btn{
