@@ -49,6 +49,23 @@ test.describe('Corrida do Bug — montagem pelo professor', () => {
     expect(sessions[0]).toMatchObject({ turma: 'jogos', status: 'lobby', created_by: 'admin', level_index: 0 });
     expect(sessions[0].questions.length).toBe(2);
   });
+
+  test('tela do professor (sem sim/corrida iniciada) não quebra o loop de animação', async ({ page }) => {
+    // Regressão: raceMode começava em 'playing' por padrão, e o loop de
+    // animação (frame()) roda pra QUALQUER página — inclusive a do
+    // professor, que nunca chama startRace()/cria o `sim`. Isso derrubava
+    // updateHud()/tick() com "Cannot read properties of null" na primeira
+    // vez que o rAF rodava.
+    const pageErrors = [];
+    page.on('pageerror', (err) => pageErrors.push(err.message));
+
+    await stubSupabaseFake(page, {});
+    await page.goto(HOST_URL);
+    await expect(page.locator('#scrSetup')).toBeVisible();
+    await page.waitForTimeout(100); // algumas voltas do requestAnimationFrame
+
+    expect(pageErrors).toEqual([]);
+  });
 });
 
 test.describe('Corrida do Bug — lobby', () => {

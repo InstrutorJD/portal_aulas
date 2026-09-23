@@ -510,7 +510,7 @@
   }
   window.addEventListener('resize', resizeCanvas);
 
-  let sim = null, fakeSet = new Set(), camX = 0, raceMode = 'playing'; // 'playing' | 'question' | 'finished'
+  let sim = null, fakeSet = new Set(), camX = 0, raceMode = 'idle'; // 'idle' (sem sim ainda — ex.: tela do professor) | 'playing' | 'question' | 'finished'
   let lastCp = 0;
   let missStreak = 0; // erros SEGUIDOS no checkpoint atual (zera ao acertar/avançar)
   let myScore = 0;
