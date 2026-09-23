@@ -81,6 +81,26 @@ test.describe('Corrida do Bug — lobby', () => {
     expect(sessions[0].status).toBe('racing');
     expect(sessions[0].started_at).not.toBeNull();
   });
+
+  test('placar do professor não quebra com 2+ alunos na sala que ainda não avançaram nenhum checkpoint', async ({ page }) => {
+    // Regressão: com só 1 aluno, Array.sort nunca chama o comparador e o bug
+    // (sortProgress comparando student_email undefined da linha de reserva de
+    // quem ainda não tem corridadobug_progress) passava despercebido.
+    await stubSupabaseFake(page, {
+      corridadobug_sessions: [baseSession],
+      corridadobug_players: [
+        { session_id: 'race1', student_email: 'breno.silva80', student_name: 'Breno Silva' },
+        { session_id: 'race1', student_email: 'ana.souza', student_name: 'Ana Souza' },
+      ],
+    });
+    await page.goto(HOST_URL);
+
+    await expect(page.locator('#scrLobby')).toBeVisible();
+    await page.click('#btnStartRace');
+    await expect(page.locator('#scrHostRace')).toBeVisible();
+    await expect(page.locator('#hostLeaderboard')).toContainText('Breno Silva');
+    await expect(page.locator('#hostLeaderboard')).toContainText('Ana Souza');
+  });
 });
 
 test.describe('Corrida do Bug — checkpoint (aluno)', () => {

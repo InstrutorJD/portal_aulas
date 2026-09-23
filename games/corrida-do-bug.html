@@ -473,7 +473,7 @@
     const sorted = window.CorridaDoBugEngine.sortProgress(state.progress);
     const byEmail = {};
     sorted.forEach(r => { byEmail[r.student_email] = r; });
-    const rows = state.players.map(p => byEmail[p.student_email] || { student_name: p.student_name, checkpoint: 0, score: 0, finished: false });
+    const rows = state.players.map(p => byEmail[p.student_email] || { student_email: p.student_email, student_name: p.student_name, checkpoint: 0, score: 0, finished: false });
     $('hostLeaderboard').innerHTML = window.CorridaDoBugEngine.sortProgress(rows).map(r => `
       <tr class="${r.finished ? 'finished' : ''}">
         <td>${escapeHtml(r.student_name)}</td>
