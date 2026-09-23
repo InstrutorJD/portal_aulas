@@ -184,16 +184,17 @@
   const PONTOS_POR_QUESTAO = 100 / EXAM_SIZE;
 
   // ============================================================
-  // BANCO DE 80 QUESTOES - 72 teoricas (multipla escolha, reaproveitadas
+  // BANCO DE 92 QUESTOES - 72 teoricas (multipla escolha, reaproveitadas
   // e adaptadas do banco da Prova Diagnostica - ver
   // turmas/jogos/atividades/prova-jogos.html, inclusive sem NENHUMA
   // questao de Motor Godot, a mesmo pedido explicito do professor que ja
-  // vale pra Prova Diagnostica) + 8 praticas (o aluno ESCREVE codigo de
-  // verdade em JavaScript: criar variavel, somar/subtrair numeros, e
-  // corrigir trechos de codigo com bug - mesmo motor de execucao sandbox
-  // `new Function` usado na Prova Final da turma Sistemas).
+  // vale pra Prova Diagnostica) + 20 praticas (o aluno ESCREVE codigo de
+  // verdade em JavaScript: criar variavel, aritmetica (+ - * / %),
+  // comparacao, template literal, array/for, e corrigir trechos de
+  // codigo com bug - mesmo motor de execucao sandbox `new Function`
+  // usado na Prova Final da turma Sistemas).
   //
-  // Cada aluno recebe 25 dessas 80 (ver pickExamIndices): sempre 5
+  // Cada aluno recebe 25 dessas 92 (ver pickExamIndices): sempre 5
   // praticas + 20 teoricas, sorteadas separadamente e depois embaralhadas
   // juntas - garante o minimo de 5 questoes praticas em toda tentativa,
   // em vez de deixar por conta do acaso. As alternativas das questoes
@@ -960,6 +961,108 @@
     bugExplanation: 'A função calculava <code>moedas * 2</code> mas nunca usava <code>return</code> pra devolver esse valor — sem <code>return</code>, toda função em JavaScript devolve <code>undefined</code> por padrão, mesmo tendo feito a conta certa por dentro.',
     solution: 'function calcularPontuacao(moedas) {\n  return moedas * 2;\n}\nconsole.log(calcularPontuacao(7));',
     expectedOutput: '14'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código',
+    title: 'Dividir moedas entre jogadores', icon: '➗',
+    desc: 'Crie duas variáveis, <code>moedasTotais</code> valendo <code>20</code> e <code>jogadores</code> valendo <code>4</code>. Divida as moedas igualmente entre os jogadores, guarde o resultado numa variável chamada <code>resultado</code>, e mostre <code>resultado</code> no console.',
+    starterCode: '',
+    solution: 'let moedasTotais = 20;\nlet jogadores = 4;\nlet resultado = moedasTotais / jogadores;\nconsole.log(resultado);',
+    expectedOutput: '5'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código',
+    title: 'Moedas que sobram na divisão', icon: '🔢',
+    desc: 'Crie duas variáveis, <code>moedas</code> valendo <code>17</code> e <code>jogadores</code> valendo <code>5</code>. Calcule quantas moedas SOBRAM depois de distribuir igualmente entre os jogadores (use o operador <code>%</code>, resto da divisão), guarde numa variável chamada <code>sobra</code>, e mostre <code>sobra</code> no console.',
+    starterCode: '',
+    solution: 'let moedas = 17;\nlet jogadores = 5;\nlet sobra = moedas % jogadores;\nconsole.log(sobra);',
+    expectedOutput: '2'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código',
+    title: 'Quem tem mais pontos', icon: '⚖️',
+    desc: 'Crie duas variáveis, <code>jogadorA</code> valendo <code>50</code> e <code>jogadorB</code> valendo <code>35</code>. Verifique se <code>jogadorA</code> tem MAIS pontos que <code>jogadorB</code> (use o operador <code>&gt;</code>), guarde o resultado (<code>true</code> ou <code>false</code>) numa variável chamada <code>venceu</code>, e mostre <code>venceu</code> no console.',
+    starterCode: '',
+    solution: 'let jogadorA = 50;\nlet jogadorB = 35;\nlet venceu = jogadorA > jogadorB;\nconsole.log(venceu);',
+    expectedOutput: 'true'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código',
+    title: 'Mensagem de nível com template literal', icon: '💬',
+    desc: 'Crie uma variável <code>nivel</code> valendo <code>5</code>. Usando um template literal (crase e <code>${nivel}</code>), mostre no console a frase <code>Nível 5 alcançado</code> — trocando o número pelo valor da variável.',
+    starterCode: '',
+    solution: 'let nivel = 5;\nconsole.log(`Nível ${nivel} alcançado`);',
+    expectedOutput: 'Nível 5 alcançado'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código',
+    title: 'Primeiro item do inventário', icon: '🎒',
+    desc: 'Crie uma lista (array) chamada <code>itens</code> com os valores <code>"Espada"</code>, <code>"Escudo"</code> e <code>"Poção"</code>, nessa ordem. Mostre no console o PRIMEIRO item da lista (índice 0).',
+    starterCode: '',
+    solution: 'let itens = ["Espada", "Escudo", "Poção"];\nconsole.log(itens[0]);',
+    expectedOutput: 'Espada'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código',
+    title: 'Somar a pontuação das fases', icon: '🔁',
+    desc: 'Crie uma lista (array) chamada <code>pontos</code> com os valores <code>10</code>, <code>20</code> e <code>5</code>. Usando um laço <code>for</code>, some todos os valores da lista numa variável chamada <code>total</code>, e mostre <code>total</code> no console.',
+    starterCode: '',
+    solution: 'let pontos = [10, 20, 5];\nlet total = 0;\nfor (let i = 0; i < pontos.length; i++) {\n  total = total + pontos[i];\n}\nconsole.log(total);',
+    expectedOutput: '35'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código — Corrigir bug',
+    title: 'Índice fora da lista', icon: '🐛',
+    desc: 'Esse código deveria mostrar o ÚLTIMO item da lista (<code>Poção</code>), mas mostra <code>undefined</code>. Leia com atenção, digite a versão CORRIGIDA no editor abaixo e execute.',
+    starterCode: 'let itens = ["Espada", "Escudo", "Poção"];\nconsole.log(itens[itens.length]);',
+    bugExplanation: '<code>itens.length</code> vale 3, mas os índices de uma lista de 3 itens vão só de 0 a 2 — <code>itens[3]</code> não existe. O último item fica em <code>itens[itens.length - 1]</code>.',
+    solution: 'let itens = ["Espada", "Escudo", "Poção"];\nconsole.log(itens[itens.length - 1]);',
+    expectedOutput: 'Poção'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código — Corrigir bug',
+    title: 'Nome da variável escrito errado', icon: '🐛',
+    desc: 'Esse código deveria mostrar <code>Vidas: 3</code> no console, mas dá erro. Leia a mensagem de erro, digite a versão CORRIGIDA no editor abaixo e execute.',
+    starterCode: 'let vidasRestantes = 3;\nconsole.log("Vidas: " + vidasRestante);',
+    bugExplanation: 'A variável foi criada como <code>vidasRestantes</code> (com S no final), mas usada depois como <code>vidasRestante</code> (sem o S) — nomes de variável precisam ser EXATAMENTE iguais, então o JavaScript não encontra <code>vidasRestante</code> e dá erro.',
+    solution: 'let vidasRestantes = 3;\nconsole.log("Vidas: " + vidasRestantes);',
+    expectedOutput: 'Vidas: 3'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código — Corrigir bug',
+    title: 'Conta feita na ordem errada', icon: '🐛',
+    desc: 'O dano total deveria ser (ataque + bônus) vezes o multiplicador, ou seja <code>30</code>, mas o código mostra <code>20</code>. Leia com atenção, digite a versão CORRIGIDA no editor abaixo e execute.',
+    starterCode: 'let ataque = 10;\nlet bonus = 5;\nlet multiplicador = 2;\nlet danoTotal = ataque + bonus * multiplicador;\nconsole.log(danoTotal);',
+    bugExplanation: 'Sem parênteses, o JavaScript calcula a multiplicação ANTES da soma (<code>bonus * multiplicador</code> primeiro), por isso o resultado sai errado. Envolver <code>(ataque + bonus)</code> em parênteses garante que a soma aconteça primeiro.',
+    solution: 'let ataque = 10;\nlet bonus = 5;\nlet multiplicador = 2;\nlet danoTotal = (ataque + bonus) * multiplicador;\nconsole.log(danoTotal);',
+    expectedOutput: '30'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código — Corrigir bug',
+    title: 'Função criada mas nunca chamada', icon: '🐛',
+    desc: 'Esse código deveria mostrar <code>Primeiro lugar: Ana</code> no console, mas nada aparece. Leia com atenção, digite a versão CORRIGIDA no editor abaixo e execute.',
+    starterCode: 'function mostrarRanking() {\n  console.log("Primeiro lugar: Ana");\n}',
+    bugExplanation: 'A função <code>mostrarRanking</code> foi CRIADA (definida), mas nunca foi CHAMADA — só criar uma função não executa o que está dentro dela, é preciso chamar <code>mostrarRanking()</code> depois.',
+    solution: 'function mostrarRanking() {\n  console.log("Primeiro lugar: Ana");\n}\nmostrarRanking();',
+    expectedOutput: 'Primeiro lugar: Ana'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código — Corrigir bug',
+    title: 'Comparando texto com número', icon: '🐛',
+    desc: '<code>resposta</code> guarda o texto <code>"10"</code> (como se o jogador tivesse digitado). O código deveria mostrar <code>Resposta certa</code>, já que o valor bate com 10, mas mostra <code>Resposta errada</code>. Leia com atenção, digite a versão CORRIGIDA no editor abaixo e execute.',
+    starterCode: 'let resposta = "10";\nif (resposta === 10) {\n  console.log("Resposta certa");\n} else {\n  console.log("Resposta errada");\n}',
+    bugExplanation: '<code>===</code> compara o VALOR e o TIPO ao mesmo tempo — <code>"10"</code> (texto) nunca é <code>===</code> a <code>10</code> (número), mesmo parecendo igual. Transformar <code>resposta</code> em número antes de comparar (<code>Number(resposta)</code>) resolve.',
+    solution: 'let resposta = "10";\nif (Number(resposta) === 10) {\n  console.log("Resposta certa");\n} else {\n  console.log("Resposta errada");\n}',
+    expectedOutput: 'Resposta certa'
+  },
+  {
+    type: 'pratica', materia: 'Prática de Código — Corrigir bug',
+    title: 'Operador de comparação errado', icon: '🐛',
+    desc: 'O jogador alcançou o nível máximo (10) — o código deveria mostrar <code>Nivel maximo</code> quando <code>nivel</code> for 10 OU MAIS, mas com <code>nivel</code> valendo exatamente 10 ele mostra <code>Continue subindo</code>. Leia com atenção, digite a versão CORRIGIDA no editor abaixo e execute.',
+    starterCode: 'let nivel = 10;\nif (nivel > 10) {\n  console.log("Nivel maximo");\n} else {\n  console.log("Continue subindo");\n}',
+    bugExplanation: '<code>&gt;</code> (maior que) não inclui o próprio 10 — com <code>nivel</code> valendo exatamente 10, a condição <code>nivel &gt; 10</code> é falsa. Trocar para <code>&gt;=</code> (maior ou igual) inclui o 10 também.',
+    solution: 'let nivel = 10;\nif (nivel >= 10) {\n  console.log("Nivel maximo");\n} else {\n  console.log("Continue subindo");\n}',
+    expectedOutput: 'Nivel maximo'
   }
   ];
 
@@ -1551,7 +1654,7 @@
         <h2>📋 Prova Final — Turma Jogos Digitais</h2>
         <p>Esta é a prova final: cobre teoria de TODAS as matérias trabalhadas até agora e também PRÁTICA de programação de verdade — você vai escrever código, não só marcar alternativas.</p>
         <ul>
-          <li>Existe um banco de <b>80 questões</b> — você vai responder <b>25</b>, sorteadas aleatoriamente pro seu login.</li>
+          <li>Existe um banco de <b>92 questões</b> — você vai responder <b>25</b>, sorteadas aleatoriamente pro seu login.</li>
           <li>Dessas 25, pelo menos <b>5 são práticas</b>: criar variável, somar números e corrigir código com erro, direto no editor.</li>
           <li>As questões teóricas têm <b>5 alternativas</b>, sempre embaralhadas — não decore posição, leia com atenção.</li>
           <li>Nas questões práticas, você pode clicar em <b>Executar</b> quantas vezes quiser pra testar seu código antes de confirmar.</li>
@@ -1576,13 +1679,13 @@
     });
   }
 
-  // Gabarito: lista o BANCO INTEIRO de 80 questoes (nao so as 25 que um
+  // Gabarito: lista o BANCO INTEIRO de 92 questoes (nao so as 25 que um
   // aluno especifico recebeu) - teoricas com alternativas/resposta certa,
   // praticas com o codigo esperado e a explicacao do bug (quando houver).
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
-      title: 'Prova Final — Turma Jogos Digitais — Banco de 80 questões',
-      subtitle: 'Teórica + Prática (25 sorteadas de 80, sendo ao menos 5 práticas, por aluno) · Turma Jogos Digitais',
+      title: 'Prova Final — Turma Jogos Digitais — Banco de 92 questões',
+      subtitle: 'Teórica + Prática (25 sorteadas de 92, sendo ao menos 5 práticas, por aluno) · Turma Jogos Digitais',
       items: QUESTION_POOL.map((q, i) => {
         if (q.type === 'pratica') {
           return {

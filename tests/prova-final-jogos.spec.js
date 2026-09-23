@@ -1,7 +1,7 @@
 // @ts-check
 // "Prova Final — Turma Jogos Digitais" (matéria Prova, trilha Prova Final):
 // atividade SEPARADA da Prova Diagnóstica (prova-jogos.spec.js) — banco
-// de 80 questões (72 teóricas de múltipla escolha + 8 práticas, onde o
+// de 92 questões (72 teóricas de múltipla escolha + 20 práticas, onde o
 // aluno ESCREVE código de verdade num editor Monaco e o motor roda num
 // sandbox), sorteando 25 por aluno (sempre pelo menos 5 práticas, nunca por
 // acaso — ver pickExamIndices()). Mesma trava de integridade (shared/
@@ -59,7 +59,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
   test('mostra a tela de regras antes de iniciar, mencionando teoria e prática', async ({ page }) => {
     await page.goto(PROVA_URL);
     await expect(page.locator('#gateWrap')).toContainText('Prova Final — Turma Jogos Digitais');
-    await expect(page.locator('#gateWrap')).toContainText('80 questões');
+    await expect(page.locator('#gateWrap')).toContainText('92 questões');
     await expect(page.locator('#gateWrap')).toContainText('25');
     await expect(page.locator('#gateWrap')).toContainText('pelo menos');
     await expect(page.locator('#gateWrap')).toContainText('5 são práticas');
@@ -249,12 +249,12 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
 
     const selectionAfter = await page.evaluate(u => localStorage.getItem(`prova_final_jogos_selecao_${u}`), 'admin');
     expect(selectionAfter).not.toBeNull();
-    // Praticamente impossível o sorteio de 25 de 80 repetir por acaso —
+    // Praticamente impossível o sorteio de 25 de 92 repetir por acaso —
     // confirma que reiniciar de fato gerou uma seleção nova.
     expect(selectionAfter).not.toBe(selectionBefore);
   });
 
-  test('gabarito lista o banco inteiro de 80 questões', async ({ page }) => {
+  test('gabarito lista o banco inteiro de 92 questões', async ({ page }) => {
     await page.goto('/turmas/jogos/atividades/prova-final-jogos.html?user=admin&role=professor&turma=jogos');
 
     const download = await gerarGabaritoFlutuante(page);
@@ -264,8 +264,8 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     const fs = require('node:fs');
     const content = fs.readFileSync(filePath, 'utf-8');
     expect(content).toContain('GABARITO');
-    expect(content).toContain('80)');
-    expect(content).not.toContain('81)');
+    expect(content).toContain('92)');
+    expect(content).not.toContain('93)');
     expect(content).toContain('[Prática]');
   });
 });

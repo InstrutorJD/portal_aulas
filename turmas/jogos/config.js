@@ -1038,7 +1038,7 @@ window.TURMA_CONFIG_JOGOS = {
           // — ver provaTrilhaKey() em shared/platform-core.js).
           key: 'prova-final',
           label: 'Prova Final',
-          desc: 'Prova final teórica e prática cobrindo todas as matérias trabalhadas na turma — 25 questões sorteadas de um banco de 80 (72 teóricas + 8 práticas, sempre pelo menos 5 práticas por aluno), com trava anti-saída.',
+          desc: 'Prova final teórica e prática cobrindo todas as matérias trabalhadas na turma — 25 questões sorteadas de um banco de 92 (72 teóricas + 20 práticas, sempre pelo menos 5 práticas por aluno), com trava anti-saída.',
           capacidade: 'Avaliação final do conjunto de capacidades trabalhadas nas matérias do curso, incluindo a escrita de código de verdade (criar variável, somar valores, corrigir erros).',
           modules: [
             {
@@ -1049,7 +1049,7 @@ window.TURMA_CONFIG_JOGOS = {
               // (`new Function`) da Prova Final da turma Sistemas, embutido
               // no fluxo sequencial de perguntas.
               key: 'prova-final', title: 'Prova Final — Turma Jogos Digitais',
-              desc: '25 questões (sorteadas de um banco de 80) cobrindo teoria de todas as matérias já trabalhadas — e pelo menos 5 delas são práticas: criar variável, somar/subtrair números e corrigir trechos de código com erro, direto no editor.',
+              desc: '25 questões (sorteadas de um banco de 92) cobrindo teoria de todas as matérias já trabalhadas — e pelo menos 5 delas são práticas: criar variável, fazer contas, comparar valores, mexer em listas e corrigir trechos de código com erro, direto no editor.',
               icon: '📝', src: 'atividades/prova-final-jogos.html',
               progressKey: 'prova_final_jogos_progress_', progressMode: 'flag',
               hasGabarito: true
