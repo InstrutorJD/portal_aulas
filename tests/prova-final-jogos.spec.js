@@ -118,7 +118,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await expect(page.locator('.console .line.fail')).toHaveCount(0);
 
     await page.click('#btnConfirmarPratica');
-    await expect(page.locator('.feedback.correct')).toContainText('Resposta registrada');
+    await expect(page.locator('.feedback.correct')).toContainText('Você acertou');
     await expect(page.locator('#btnExecutarPratica')).toBeDisabled();
     await expect(page.locator('#btnConfirmarPratica')).toBeDisabled();
   });
@@ -134,7 +134,7 @@ test.describe('turmas/jogos/atividades/prova-final-jogos.html', () => {
     await expect(page.locator('#btnConfirmarPratica')).toBeEnabled({ timeout: 15000 });
 
     await page.click('#btnConfirmarPratica');
-    await expect(page.locator('.feedback.incorrect')).toContainText('Resposta registrada');
+    await expect(page.locator('.feedback.incorrect')).toContainText('Você errou');
   });
 
   test('responde as 25 questões e conclui, sem opção de tentar de novo', async ({ page }) => {
