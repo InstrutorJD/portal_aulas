@@ -2,10 +2,11 @@
 // "Prova Final (Engel)" — trilha individual, visível só pro Engel (matéria
 // Prova, turma Jogos Digitais). Diferente da Prova Final da turma toda
 // (prova-final-jogos.html: banco de 80, teoria+prática, cobre todas as
-// matérias), essa é PURAMENTE de raciocínio lógico — sequências de 3
-// palavras (mesma letra, categoria, rima ou ordem) em que ele escolhe qual
-// palavra vem a seguir, 3 alternativas cada — mesmo motor/trava de
-// integridade (shared/exam-proctor.js) de prova-jogos-engel.html.
+// matérias), essa é PURAMENTE de raciocínio lógico — a maioria é completar
+// uma sequência de 3 palavras (mesma letra, categoria, rima ou ordem), mas
+// também tem desafios de relacionar cores e de posição de objetos, 3
+// alternativas cada — mesmo motor/trava de integridade (shared/
+// exam-proctor.js) de prova-jogos-engel.html.
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
@@ -49,21 +50,21 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     await expect(page.locator('#stageWrap')).toBeHidden();
   });
 
-  test('depois de "Começar", mostra a 1ª sequência, com as 15 sequências + resultado no total', async ({ page }) => {
+  test('depois de "Começar", mostra o 1º desafio, com os 21 desafios + resultado no total', async ({ page }) => {
     await openProva(page);
-    await expect(page.locator('.bloco-label')).toContainText('Sequência 1 de 15');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 1 de 21');
     const total = await page.evaluate(() => QUESTIONS.length);
-    expect(total).toBe(15);
-    await expect(page.locator('#lblStepTotal')).toHaveText('16');
+    expect(total).toBe(21);
+    await expect(page.locator('#lblStepTotal')).toHaveText('22');
   });
 
-  test('cada sequência vem com exatamente 3 alternativas', async ({ page }) => {
+  test('cada desafio vem com exatamente 3 alternativas', async ({ page }) => {
     await openProva(page);
     await expect(page.locator('.option')).toHaveCount(3);
     await expect(page.locator('.opt-letter').nth(2)).toHaveText('C');
   });
 
-  test('cada sequência tem uma única resposta certa entre as opções', async ({ page }) => {
+  test('cada desafio tem uma única resposta certa entre as opções', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
     const questions = await page.evaluate(() => QUESTIONS);
@@ -75,7 +76,7 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
   });
 
   test('a resposta certa não fica sempre na mesma letra (senão "sempre clicar em A" vira um atalho)', async ({ page }) => {
-    // Regressão: as 10 primeiras sequências nasceram todas com certa=0.
+    // Regressão: os 10 primeiros desafios nasceram todos com certa=0.
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
     const certas = await page.evaluate(() => QUESTIONS.map(q => q.certa));
@@ -84,6 +85,14 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     const porLetra = [0, 0, 0];
     certas.forEach(c => porLetra[c]++);
     porLetra.forEach(count => expect(count).toBeLessThanOrEqual(Math.ceil(certas.length / 2)));
+  });
+
+  test('inclui desafios de cor e de posição de objetos, além das sequências de palavras', async ({ page }) => {
+    await stubSupabaseFake(page, {});
+    await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
+    const blocos = await page.evaluate(() => QUESTIONS.map(q => q.bloco));
+    expect(blocos.filter(b => b === 'Relacionar cores').length).toBeGreaterThanOrEqual(2);
+    expect(blocos.filter(b => b.startsWith('Posição de objetos')).length).toBeGreaterThanOrEqual(2);
   });
 
   test('responder certo mostra feedback de acerto com a regra, e responder errado mostra a resposta certa', async ({ page }) => {
@@ -98,7 +107,7 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     await expect(page.locator('.option').nth(correctIdx)).toHaveClass(/correct/);
   });
 
-  test('responde as 15 sequências e conclui, mostrando o placar', async ({ page }) => {
+  test('responde os 21 desafios e conclui, mostrando o placar', async ({ page }) => {
     await openProva(page);
 
     const total = await page.evaluate(() => QUESTIONS.length);
@@ -109,25 +118,25 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html', () => {
     }
 
     await expect(page.locator('.score-box h2')).toContainText('Você terminou!');
-    await expect(page.locator('.score')).toContainText('15/15');
+    await expect(page.locator('.score')).toContainText('21/21');
 
     const progress = await page.evaluate(u => JSON.parse(localStorage.getItem(`prova_final_jogos_engel_progress_${u}`)), 'engel.fraga');
-    expect(progress).toMatchObject({ completed: true, correctCount: 15 });
+    expect(progress).toMatchObject({ completed: true, correctCount: 21 });
   });
 
-  test('recarregar a página no meio da prova não reabre uma sequência já respondida', async ({ page }) => {
+  test('recarregar a página no meio da prova não reabre um desafio já respondido', async ({ page }) => {
     await openProva(page);
     const correctIdx0 = await page.evaluate(() => QUESTIONS[0].certa);
     await page.locator('.option').nth(correctIdx0).click();
     await page.click('#btnNext');
 
-    await expect(page.locator('.bloco-label')).toContainText('Sequência 2 de 15');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 2 de 21');
 
     await page.reload();
-    await expect(page.locator('.bloco-label')).toContainText('Sequência 2 de 15');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 2 de 21');
   });
 
-  test('gabarito lista as 15 sequências com a regra e a resposta certa pra cada uma', async ({ page }) => {
+  test('gabarito lista os 21 desafios com a regra e a resposta certa pra cada um', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
 
@@ -176,11 +185,11 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html — trava de tela'
     expect(unlockedState.warnings).toBe(0);
   });
 
-  test('depois de responder as 15 sequências, a prova abre direto no placar (sem tela de regras) e sair da aba não conta mais aviso', async ({ page }) => {
+  test('depois de responder os 21 desafios, a prova abre direto no placar (sem tela de regras) e sair da aba não conta mais aviso', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.addInitScript(u => {
-      const respostas = new Array(15).fill(true);
-      localStorage.setItem(`prova_final_jogos_engel_progress_${u}`, JSON.stringify({ respostas, completed: true, correctCount: 15 }));
+      const respostas = new Array(21).fill(true);
+      localStorage.setItem(`prova_final_jogos_engel_progress_${u}`, JSON.stringify({ respostas, completed: true, correctCount: 21 }));
     }, 'engel.fraga');
 
     await page.goto(PROVA_URL);
@@ -195,7 +204,7 @@ test.describe('turmas/jogos/atividades/prova-final-engel.html — trava de tela'
       profiles: [{ id: 'fake-admin', email: 'admin', nome: 'Instrutor / Professor', role: 'professor', turma: 'all' }],
     });
     await page.goto('/turmas/jogos/atividades/prova-final-engel.html?user=admin&role=professor&turma=jogos');
-    await expect(page.locator('.bloco-label')).toContainText('Sequência 1 de 15');
+    await expect(page.locator('.bloco-label')).toContainText('Desafio 1 de 21');
     await expect(page.locator('#btnSkipProfessor')).toBeVisible();
   });
 });

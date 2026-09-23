@@ -141,7 +141,7 @@
 <div class="env">
   <div class="topbar">
     <div>🧩 PROVA FINAL</div>
-    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">16</span></div>
+    <div>✅ <span id="lblStepNum">1</span>/<span id="lblStepTotal">22</span></div>
   </div>
 
   <div class="gate-wrap" id="gateWrap"></div>
@@ -169,13 +169,20 @@
   // Diagnóstica (Engel) — não faria sentido repetir a mesma cobertura
   // como "final" também.
   //
-  // O formato: 3 palavras que seguem um padrão (mesma letra inicial,
-  // mesma categoria, rima, ou uma ordem lógica) e ele escolhe, entre 3
-  // opções, qual palavra continua a sequência do MESMO jeito — pura
-  // indução de padrão, sem precisar ler texto longo nem saber conteúdo
-  // de matéria nenhuma. Cada item tem só UMA leitura possível (as opções
-  // erradas foram escolhidas pra não caber em nenhuma outra regra
-  // plausível da sequência) — mexeu num item, confira isso de novo.
+  // O formato: cada "desafio" é um probleminha de lógica com 3 opções e
+  // ele clica na certa. A maioria é completar uma sequência de 3 palavras
+  // que seguem um padrão (mesma letra inicial, mesma categoria, rima, ou
+  // uma ordem lógica), mas também tem outros tipos de raciocínio, pra não
+  // virar sempre a mesma mecânica: relacionar cores (associar objeto →
+  // cor típica) e posição de objetos (ordem/lugar numa fila ou numa
+  // relação espacial) — pura lógica, sem precisar ler texto longo nem
+  // saber conteúdo de matéria nenhuma. Cada item tem só UMA leitura
+  // possível (as opções erradas foram escolhidas pra não caber em
+  // nenhuma outra regra plausível) — mexeu num item, confira isso de novo.
+  //
+  // Cada item pode ter um `sub` próprio (a pergunta abaixo do enunciado);
+  // sem isso, cai no texto padrão de "continuar a sequência" — os tipos
+  // novos (cor, posição) sempre definem o próprio `sub`.
   //
   // A posição da resposta certa (A/B/C) varia de propósito de item pra
   // item — se ficasse sempre na mesma letra, "sempre clicar em A" vira um
@@ -185,8 +192,9 @@
   // categoria, rima, contagem simples); 6-10 juntam um pouco mais de
   // atenção (tamanho crescente, letra em contexto); 11-15 exigem ignorar
   // um padrão "óbvio" só na superfície (mesma categoria) pra achar a
-  // regra de verdade (ordem alfabética, categoria mais específica,
-  // dois atributos ao mesmo tempo).
+  // regra de verdade (ordem alfabética, categoria mais específica, dois
+  // atributos ao mesmo tempo); 16-21 trocam de mecânica (cores, posição
+  // espacial, incluindo uma relação em 2 passos no último item).
   //
   // Mesmo motor leve das outras atividades adaptadas dele (3 alternativas,
   // sem sorteio, sem tempo) e mesma trava de integridade (shared/
@@ -268,7 +276,44 @@
     { bloco: 'Padrão combinado (diminutivo de animal)', icon: '🐾',
       lead: 'Gatinho, Cachorrinho, Passarinho, ___?',
       options: ['Peixe', 'Carrinho', 'Peixinho'], certa: 2,
-      regra: 'Cada palavra é o diminutivo ("-inho") do nome de um animal — "Peixe" não é diminutivo, e "Carrinho" não é um animal.' }
+      regra: 'Cada palavra é o diminutivo ("-inho") do nome de um animal — "Peixe" não é diminutivo, e "Carrinho" não é um animal.' },
+
+    // ---- Nível 4: outros tipos de raciocínio (cor e posição) ----
+    { bloco: 'Relacionar cores', icon: '🌈',
+      lead: 'O sol é amarelo. O céu é azul. A grama é ___?',
+      sub: 'Qual é a cor certa?',
+      options: ['Verde', 'Vermelha', 'Roxa'], certa: 0,
+      regra: 'Cada coisa tem sua cor mais comum na natureza — a grama é verde.' },
+
+    { bloco: 'Relacionar cores', icon: '🌈',
+      lead: 'Banana é amarela. Morango é vermelho. Céu é ___?',
+      sub: 'Qual é a cor certa?',
+      options: ['Roxo', 'Azul', 'Marrom'], certa: 1,
+      regra: 'Cada coisa tem sua cor mais comum — o céu é azul.' },
+
+    { bloco: 'Relacionar cores', icon: '🌈',
+      lead: 'Folha é verde. Nuvem é branca. Carvão é ___?',
+      sub: 'Qual é a cor certa?',
+      options: ['Rosa', 'Laranja', 'Preto'], certa: 2,
+      regra: 'Cada coisa tem sua cor mais comum — o carvão é preto.' },
+
+    { bloco: 'Posição de objetos', icon: '📍',
+      lead: 'Numa fila, da frente pra trás: 🚗 Carro, 🚲 Bicicleta, 🛵 Moto, 🚌 Ônibus.',
+      sub: 'Quem está bem na FRENTE da fila?',
+      options: ['Bicicleta', 'Carro', 'Ônibus'], certa: 1,
+      regra: 'A fila começa com o Carro — ele é o 1º da lista, ou seja, está na frente.' },
+
+    { bloco: 'Posição de objetos', icon: '📍',
+      lead: '🐶 Cachorro, 🐱 Gato, 🐦 Passarinho — nessa ordem, da esquerda pra direita.',
+      sub: 'Qual animal está bem no MEIO?',
+      options: ['Cachorro', 'Gato', 'Passarinho'], certa: 1,
+      regra: 'Na ordem dada, o do meio é o 2º da lista: o Gato.' },
+
+    { bloco: 'Posição de objetos (relação espacial)', icon: '📍',
+      lead: 'O Cachorro está à ESQUERDA do Gato. O Gato está à ESQUERDA do Passarinho.',
+      sub: 'Quem está mais à DIREITA de todos?',
+      options: ['Cachorro', 'Gato', 'Passarinho'], certa: 2,
+      regra: 'O Cachorro vem antes do Gato, e o Gato vem antes do Passarinho — juntando as duas informações, o Passarinho é o que fica mais à direita.' }
   ];
   const TOTAL_STEPS = QUESTIONS.length;
 
@@ -341,9 +386,9 @@
     card.className = 'card';
     card.innerHTML = `
       <div class="big-icon">${q.icon}</div>
-      <p class="bloco-label">Sequência ${qIdx + 1} de ${TOTAL_STEPS}</p>
+      <p class="bloco-label">Desafio ${qIdx + 1} de ${TOTAL_STEPS}</p>
       <p class="question-lead">${escapeHtml(q.lead)}</p>
-      <p class="question-sub">Qual das opções continua a sequência do mesmo jeito?</p>
+      <p class="question-sub">${escapeHtml(q.sub || 'Qual das opções continua a sequência do mesmo jeito?')}</p>
     `;
 
     const optionsWrap = document.createElement('div');
@@ -406,7 +451,7 @@
       nav.innerHTML = `<button class="btn" id="btnNext">Próximo ➡️</button>`;
       card.appendChild(nav);
 
-      reportStep(`Prova Final (Engel) — Sequência ${qIdx + 1}: respondida`);
+      reportStep(`Prova Final (Engel) — Desafio ${qIdx + 1}: respondido`);
 
       document.getElementById('btnNext').addEventListener('click', () => {
         currentIndex++;
@@ -425,7 +470,7 @@
       <div class="card score-box">
         <div class="big-icon">🏆</div>
         <h2>Você terminou!</h2>
-        <p class="lead">Você acertou ${progress.correctCount} de ${total} sequências.</p>
+        <p class="lead">Você acertou ${progress.correctCount} de ${total} desafios.</p>
         <div class="score">${progress.correctCount}/${total} 🎉</div>
       </div>
     `;
@@ -435,12 +480,12 @@
     if (currentIndex >= TOTAL_STEPS) { renderResultado(); return; }
     lblStepNum.textContent = currentIndex + 1;
     renderStepsRow();
-    reportStep(`Prova Final (Engel) — Sequência ${currentIndex + 1}`);
+    reportStep(`Prova Final (Engel) — Desafio ${currentIndex + 1}`);
     renderQuestion(currentIndex);
   }
 
-  // Gabarito pro professor: sequência → regra → resposta certa de cada
-  // uma das 10.
+  // Gabarito pro professor: enunciado → regra → resposta certa de cada
+  // desafio (número exato = QUESTIONS.length, ver acima).
   window.generateGabaritoForGestao = function () {
     return window.PortalGabarito.generate({
       title: 'Prova Final (Engel) — Gabarito',
@@ -541,8 +586,8 @@
       <div class="card gate-card">
         <div class="warn-icon">🧩</div>
         <h2>Antes de começar</h2>
-        <p>São ${QUESTIONS.length} sequências de 3 palavras. Em cada uma, as palavras seguem um padrão — podem começar com a mesma letra, ser do mesmo grupo, rimar, ou estar numa ordem.</p>
-        <p>Escolha, entre as 3 opções, qual palavra continua a sequência do mesmo jeito.</p>
+        <p>São ${QUESTIONS.length} desafios de lógica. A maioria é completar uma sequência de 3 palavras que seguem um padrão (mesma letra, mesmo grupo, rima ou ordem) — mas também tem desafios de cor e de posição.</p>
+        <p>Leia o enunciado e escolha, entre as 3 opções, a resposta certa.</p>
         <p>Se errar, sem problema: a resposta certa (e a regra) aparecem na hora, pra você aprender.</p>
         <p>Depois de clicar em <b>Começar</b>, fique nesta tela até terminar — sair da tela conta um aviso, e a 2ª vez bloqueia até o professor liberar.</p>
         <div class="step-nav" style="justify-content:center; margin-top:10px;">
