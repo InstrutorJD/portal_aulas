@@ -1046,11 +1046,14 @@
       const statusLabel = hidden ? '🚧 Oculto dos alunos' : locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : '';
       const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '') + (hidden ? ' hidden-from-students' : '');
       const click = locked ? '' : `onclick="PortalCore.openModule('${trilha.key}','${m.key}')"`;
+      // Descrição do módulo não aparece mais aqui (poluía a grade de
+      // seleção) — continua disponível assim que o módulo abre, em
+      // #moduleFrameDesc_<trilha> (ver openModule), então nenhuma
+      // informação se perde, só sai da tela de escolha.
       return `
         <div class="${classes}" ${click}>
           <div class="icon">${m.icon || '📘'}</div>
           <h3>${m.title}</h3>
-          <p>${m.desc || ''}</p>
           ${statusLabel ? `<div class="card-status">${statusLabel}</div>` : ''}
         </div>`;
     }).join('');
@@ -3310,13 +3313,14 @@
   function renderGameCards() {
     const GAMES = buildGames();
     const grid = document.getElementById('gameCardGrid');
+    // Descrição não aparece mais no card (poluía a grade) — continua
+    // disponível assim que o jogo abre, em #gameFrameDesc (ver openGame).
     grid.innerHTML = Object.keys(GAMES).map(key => {
       const g = GAMES[key];
       return `
         <div class="game-card" onclick="PortalCore.openGame('${key}')">
           <div class="icon">${g.icon}</div>
           <h3>${g.title.split(' — ')[0]}</h3>
-          <p>${g.desc}</p>
         </div>`;
     }).join('');
   }
