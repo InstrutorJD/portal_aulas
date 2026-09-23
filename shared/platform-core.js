@@ -3391,7 +3391,8 @@
 
     const cursorButtons = CURSOR_ORDER.map(key => {
       const c = CURSOR_PRESETS[key];
-      return `<button type="button" class="pf-cursor-btn ${prefs.cursorKey === key ? 'active' : ''}" data-cursor-key="${key}" style="cursor:${c.css};">${c.label}</button>`;
+      const cssAttr = c.css.replace(/"/g, '&quot;');
+      return `<button type="button" class="pf-cursor-btn ${prefs.cursorKey === key ? 'active' : ''}" data-cursor-key="${key}" style="cursor:${cssAttr};">${c.label}</button>`;
     }).join('');
 
     return `
