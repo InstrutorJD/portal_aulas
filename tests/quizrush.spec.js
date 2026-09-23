@@ -162,8 +162,13 @@ test.describe('QuizRush — condução da partida pelo professor', () => {
 
     await page.click('#btnRevealNow');
     await expect(page.locator('#scrReveal')).toBeVisible();
-    await expect(page.locator('#revealLeaderboard')).toContainText('Breno Silva');
-    await expect(page.locator('#revealLeaderboard')).toContainText('900');
+    // O ranking ao vivo foi removido de propósito (ver comentário de
+    // currentLeaderboard() em quizrush.html) pra ninguém planejar "pegar
+    // pontos" de quem está no topo — o placar em si continua correto por
+    // baixo dos panos, só não aparece na tela até o pódio.
+    await expect(page.locator('#revealLeaderboard')).toHaveCount(0);
+    const board = await page.evaluate(() => currentLeaderboard());
+    expect(board.find(r => r.email === 'breno.silva80')).toMatchObject({ score: 900 });
     await expect(page.locator('#btnNextOrPodium')).toContainText('Próxima Pergunta');
 
     await page.click('#btnNextOrPodium');

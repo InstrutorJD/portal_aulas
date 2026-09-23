@@ -415,7 +415,7 @@ window.QuizRushEngine = (function () {
   function leaderboardFrom(answers, powers, penalties) {
     const byStudent = {};
     const ensure = (email, name) => {
-      if (!byStudent[email]) byStudent[email] = { email, name, score: 0, correct: 0, answered: 0 };
+      if (!byStudent[email]) byStudent[email] = { email, name, score: 0, correct: 0, answered: 0, stolen: 0 };
       return byStudent[email];
     };
     answers.forEach(a => {
@@ -428,6 +428,10 @@ window.QuizRushEngine = (function () {
       const actor = ensure(p.student_email, p.student_name);
       actor.score += Number(p.amount) || 0;
       if (p.action === 'roubar' && p.target_email) {
+        // stolen = total que ESTE aluno pegou dos colegas na partida inteira
+        // (mostrado no pódio, ver games/quizrush.html renderPodium) — soma
+        // só quando ele é quem pegou, nunca quando é o alvo.
+        actor.stolen += Number(p.amount) || 0;
         const target = ensure(p.target_email, p.target_name);
         target.score -= Number(p.amount) || 0;
       }

@@ -323,8 +323,6 @@
       <p class="hint" id="revealPersonalText">--</p>
     </div>
     <div id="revealPowerBox" class="power-box" style="display:none;"></div>
-    <p class="subtitle">🏆 Ranking geral até agora</p>
-    <ul class="rank-list" id="revealLeaderboard"></ul>
     <p class="hint" id="revealCountdownLabel" style="margin:0; color:#e7ddff;"></p>
     <div class="btn-row" id="revealHostActions" style="display:none;">
       <button class="btn btn-primary" id="btnNextOrPodium">➡️ Próxima Pergunta</button>
@@ -1302,11 +1300,7 @@
     }
 
     renderPowerBox();
-
-    const leaderboard = currentLeaderboard().slice(0, 5);
-    document.getElementById('revealLeaderboard').innerHTML = leaderboard.map(r => `
-      <li class="${r.email === username ? 'me' : ''}"><span>${escapeHtml(r.name)}</span><span>${r.score}</span></li>
-    `).join('') || '<li class="empty-state">Sem respostas ainda</li>';
+    if (!isHost) checkForNewSteals(state.powers);
 
     document.getElementById('revealHostActions').style.display = isHost ? 'flex' : 'none';
     if (isHost) {
@@ -1398,14 +1392,17 @@
     }).join('');
 
     document.getElementById('podiumFullList').innerHTML = leaderboard.map((r, i) => `
-      <li class="${r.email === username ? 'me' : ''}"><span>${i + 1}º ${escapeHtml(r.name)}</span><span>${r.score} pts (${r.correct} acertos)</span></li>
+      <li class="${r.email === username ? 'me' : ''}"><span>${i + 1}º ${escapeHtml(r.name)}</span><span>${r.score} pts (${r.correct} acertos)${r.stolen ? ` · 🤏 ${r.stolen} pegos de colegas` : ''}</span></li>
     `).join('') || '<li class="empty-state">Ninguém pontuou</li>';
 
     document.getElementById('podiumPersonal').style.display = isHost ? 'none' : 'block';
     if (!isHost) {
       const myRank = leaderboard.findIndex(r => r.email === username);
-      const text = myRank === -1 ? 'Você não pontuou nesta partida.' :
+      let text = myRank === -1 ? 'Você não pontuou nesta partida.' :
         `Você ficou em <b>${myRank + 1}º lugar</b> com <b>${leaderboard[myRank].score} pontos</b>!`;
+      if (myRank !== -1 && leaderboard[myRank].stolen > 0) {
+        text += ` Você pegou <b>${leaderboard[myRank].stolen} pontos</b> de colegas nesta partida.`;
+      }
       document.getElementById('podiumPersonalText').innerHTML = text;
     }
 
@@ -1436,10 +1433,13 @@
   // opcional — diferente de "pegar pontos")
   // ============================================================
 
-  // Banner PRIVADO (só quem saiu vê) — mensagem visível, mas não expõe
-  // ninguém pra turma. Some sozinho depois de alguns segundos.
-  let leaveBannerTimer = null;
-  function showLeaveBanner(amount) {
+  // Banner PRIVADO (só o próprio aluno vê) — mensagem visível, mas não expõe
+  // ninguém pra turma. Some sozinho depois de alguns segundos. Reaproveitado
+  // por dois avisos: sair da tela (showLeaveBanner) e ter pontos pegos por
+  // um colega (showStolenBanner, ver checkForNewSteals abaixo) — mesmo
+  // elemento/estilo, só o texto muda.
+  let privateBannerTimer = null;
+  function showPrivateBanner(text) {
     let el = document.getElementById('leaveBanner');
     if (!el) {
       el = document.createElement('div');
@@ -1447,13 +1447,37 @@
       el.className = 'leave-banner';
       document.body.appendChild(el);
     }
-    el.textContent = `⚠️ Você saiu da tela e perdeu ${amount} pontos!`;
+    el.textContent = text;
     // reflow força a transição rodar de novo mesmo se o banner já estava visível
     el.classList.remove('show');
     void el.offsetWidth;
     el.classList.add('show');
-    clearTimeout(leaveBannerTimer);
-    leaveBannerTimer = setTimeout(() => el.classList.remove('show'), 5000);
+    clearTimeout(privateBannerTimer);
+    privateBannerTimer = setTimeout(() => el.classList.remove('show'), 5000);
+  }
+  function showLeaveBanner(amount) {
+    showPrivateBanner(`⚠️ Você saiu da tela e perdeu ${amount} pontos!`);
+  }
+
+  // "Você foi pego!" — avisa o ALVO de um "pegar pontos" (ver
+  // shared/quizrush-engine.js submitPower) assim que a ação chega via
+  // Realtime, sem precisar reparar sozinho que o próprio placar baixou.
+  // seenStealKeys começa null de propósito: a 1ª leitura de powers (ao
+  // entrar/recarregar a tela de revelação) só REGISTRA os roubos que já
+  // tinham acontecido, sem alertar de novo sobre coisa antiga — só os
+  // que chegam DEPOIS disso disparam o banner.
+  let seenStealKeys = null;
+  function checkForNewSteals(powers) {
+    const againstMe = (powers || []).filter(p => p.action === 'roubar' && p.target_email === username);
+    const currentKeys = new Set(againstMe.map(p => `${p.student_email}:${p.question_index}`));
+    if (seenStealKeys === null) { seenStealKeys = currentKeys; return; }
+    againstMe.forEach(p => {
+      const key = `${p.student_email}:${p.question_index}`;
+      if (seenStealKeys.has(key)) return;
+      seenStealKeys.add(key);
+      showPrivateBanner(`😱 ${p.student_name} pegou ${p.amount} pontos de você!`);
+      playWrong();
+    });
   }
 
   // 'visibilitychange'/document.hidden, NUNCA 'blur' — mesmo motivo

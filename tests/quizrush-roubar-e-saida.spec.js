@@ -5,7 +5,14 @@
 //    allow_steal): só quem ACERTA a pergunta ganha, na revelação, a escolha
 //    entre pegar pontos de um colega ou ficar com um bônus pra si. O valor
 //    interno gravado em quizrush_powers.action continua 'roubar' (nunca
-//    aparece pro aluno) — só o texto na tela virou "pegar".
+//    aparece pro aluno) — só o texto na tela virou "pegar". A VÍTIMA recebe
+//    um aviso privado (mesmo banner de sair da tela, ver checkForNewSteals
+//    em games/quizrush.html) assim que alguém pega pontos dela, e o pódio
+//    final mostra quanto cada aluno pegou de colegas no total (campo
+//    `stolen` de leaderboardFrom, shared/quizrush-engine.js). Não existe
+//    mais um ranking ao vivo na tela de revelação (era possível "planejar"
+//    pegar de quem estava no topo só de olhar) — o placar só aparece de
+//    novo no pódio, no fim da partida.
 // 2) Sair da tela durante uma pergunta ao vivo (sempre ativo, não é
 //    opcional): perde pontos na hora, mas continua logado/jogando — recebe
 //    um aviso PRIVADO (só ele vê) na própria tela.
@@ -122,7 +129,8 @@ test.describe('Pegar pontos — revelação (allow_steal ativado)', () => {
     await page.click('#btnPowerBonus');
 
     await expect(page.locator('#revealPowerBox')).toContainText('Você ficou com +300 pontos de bônus!');
-    await expect(page.locator('#revealLeaderboard')).toContainText('1200'); // 900 + 300
+    const board = await page.evaluate(() => currentLeaderboard());
+    expect(board.find(r => r.email === 'breno.silva80')).toMatchObject({ score: 1200 }); // 900 + 300
 
     const powers = await page.evaluate(() => window.__FAKE_DB__.quizrush_powers);
     expect(powers).toHaveLength(1);
@@ -141,9 +149,9 @@ test.describe('Pegar pontos — revelação (allow_steal ativado)', () => {
     await page.locator('[data-steal-email="edward.guzman"]').click();
 
     await expect(page.locator('#revealPowerBox')).toContainText('Você pegou 300 pontos de Edward Guzman!');
-    const rows = page.locator('#revealLeaderboard li');
-    await expect(rows.filter({ hasText: 'Breno Silva' })).toContainText('800'); // 500 + 300
-    await expect(rows.filter({ hasText: 'Edward Guzman' })).toContainText('400'); // 700 - 300
+    const board = await page.evaluate(() => currentLeaderboard());
+    expect(board.find(r => r.email === 'breno.silva80')).toMatchObject({ score: 800 }); // 500 + 300
+    expect(board.find(r => r.email === 'edward.guzman')).toMatchObject({ score: 400 }); // 700 - 300
 
     const powers = await page.evaluate(() => window.__FAKE_DB__.quizrush_powers);
     expect(powers[0]).toMatchObject({ action: 'roubar', target_email: 'edward.guzman', amount: 300 });
@@ -162,8 +170,8 @@ test.describe('Pegar pontos — revelação (allow_steal ativado)', () => {
     await page.locator('[data-steal-email="edward.guzman"]').click();
 
     await expect(page.locator('#revealPowerBox')).toContainText('Você pegou 120 pontos de Edward Guzman!');
-    const rows = page.locator('#revealLeaderboard li');
-    await expect(rows.filter({ hasText: 'Edward Guzman' })).toContainText('0');
+    const board = await page.evaluate(() => currentLeaderboard());
+    expect(board.find(r => r.email === 'edward.guzman')).toMatchObject({ score: 0 });
   });
 
   test('quem já usou o poder nesta pergunta não pode usar de novo', async ({ page }) => {
@@ -199,6 +207,63 @@ test.describe('Pegar pontos — revelação (allow_steal ativado)', () => {
     await page.goto(HOST_URL);
     await expect(page.locator('#podiumFullList')).toContainText('1200 pts');
   });
+
+  test('a vítima recebe um aviso privado assim que um colega pega pontos dela', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      quizrush_sessions: [session({ status: 'reveal' })], quizrush_players: players2,
+      quizrush_answers: [
+        { session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 0, is_correct: false, score: 0 },
+        { session_id: 'sess1', student_email: 'edward.guzman', student_name: 'Edward Guzman', question_index: 0, choice_index: 1, is_correct: true, score: 900 },
+      ],
+    });
+    await page.goto(ALUNO_URL); // breno.silva80 (a vítima) já está na tela de revelação
+    await expect(page.locator('#leaveBanner')).toHaveCount(0);
+
+    // Edward usa "pegar" contra o Breno, chegando via Realtime.
+    await page.evaluate(() => {
+      window.__FAKE_DB__.quizrush_powers.push({
+        session_id: 'sess1', question_index: 0, student_email: 'edward.guzman', student_name: 'Edward Guzman',
+        action: 'roubar', target_email: 'breno.silva80', target_name: 'Breno Silva', amount: 300,
+      });
+      window.__fireFakeRealtime('quizrush_powers');
+    });
+
+    await expect(page.locator('#leaveBanner')).toBeVisible();
+    await expect(page.locator('#leaveBanner')).toContainText('Edward Guzman');
+    await expect(page.locator('#leaveBanner')).toContainText('300');
+  });
+
+  test('quem entra numa revelação onde já foi roubado ANTES não recebe aviso retroativo', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      quizrush_sessions: [session({ status: 'reveal' })], quizrush_players: players2,
+      quizrush_answers: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 0, is_correct: false, score: 0 }],
+      quizrush_powers: [{ session_id: 'sess1', question_index: 0, student_email: 'edward.guzman', student_name: 'Edward Guzman', action: 'roubar', target_email: 'breno.silva80', target_name: 'Breno Silva', amount: 300 }],
+    });
+    await page.goto(ALUNO_URL);
+    await page.waitForTimeout(300);
+    await expect(page.locator('#leaveBanner')).toHaveCount(0);
+  });
+
+  test('pódio mostra quantos pontos cada aluno pegou de colegas na partida', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      quizrush_sessions: [session({ status: 'podium' })], quizrush_players: players2,
+      quizrush_answers: [
+        { session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 1, is_correct: true, score: 500 },
+        { session_id: 'sess1', student_email: 'edward.guzman', student_name: 'Edward Guzman', question_index: 0, choice_index: 1, is_correct: true, score: 700 },
+        { session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 1, choice_index: 1, is_correct: true, score: 600 },
+      ],
+      quizrush_powers: [
+        { session_id: 'sess1', question_index: 0, student_email: 'breno.silva80', student_name: 'Breno Silva', action: 'roubar', target_email: 'edward.guzman', target_name: 'Edward Guzman', amount: 300 },
+        { session_id: 'sess1', question_index: 1, student_email: 'breno.silva80', student_name: 'Breno Silva', action: 'roubar', target_email: 'edward.guzman', target_name: 'Edward Guzman', amount: 100 },
+      ],
+    });
+    // Visão da própria Breno Silva: soma os 2 roubos (300 + 100 = 400).
+    await page.goto(ALUNO_URL);
+    await expect(page.locator('#podiumFullList li').filter({ hasText: 'Breno Silva' })).toContainText('400 pegos de colegas');
+    await expect(page.locator('#podiumFullList li').filter({ hasText: 'Edward Guzman' })).not.toContainText('pegos de colegas');
+    await expect(page.locator('#podiumPersonalText')).toContainText('Você pegou');
+    await expect(page.locator('#podiumPersonalText')).toContainText('400 pontos');
+  });
 });
 
 test.describe('Sair da tela durante uma pergunta — perde pontos (sempre ativo)', () => {
@@ -221,7 +286,7 @@ test.describe('Sair da tela durante uma pergunta — perde pontos (sempre ativo)
     expect(penalties[0]).toMatchObject({ student_email: 'breno.silva80', question_index: 0, amount: 1000 });
   });
 
-  test('a penalidade é DESCONTADA do placar (visível a todos), mas o aviso só aparece pra quem saiu', async ({ page }) => {
+  test('a penalidade é DESCONTADA do placar por baixo dos panos, mas o aviso só aparece pra quem saiu', async ({ page }) => {
     await stubSupabaseFake(page, {
       quizrush_sessions: [session({ status: 'reveal', allow_steal: false })], quizrush_players: players2,
       quizrush_answers: [{ session_id: 'sess1', student_email: 'breno.silva80', student_name: 'Breno Silva', question_index: 0, choice_index: 1, is_correct: true, score: 900 }],
@@ -229,7 +294,8 @@ test.describe('Sair da tela durante uma pergunta — perde pontos (sempre ativo)
     });
     // Ninguém saiu de verdade nesta passagem — só confere que o placar reflete a penalidade já registrada.
     await page.goto(HOST_URL);
-    await expect(page.locator('#revealLeaderboard')).toContainText('0'); // 900 - 1000, nunca negativo
+    const board = await page.evaluate(() => currentLeaderboard());
+    expect(board.find(r => r.email === 'breno.silva80')).toMatchObject({ score: 0 }); // 900 - 1000, nunca negativo
     await expect(page.locator('#leaveBanner')).toHaveCount(0); // o professor nunca vê o aviso de ninguém
   });
 

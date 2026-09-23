@@ -274,7 +274,8 @@ test.describe('Quizz Prático — estado, tempo e visão do professor', () => {
     await expect(page.locator('#revealBars')).toContainText('1 acertaram');
     await expect(page.locator('#revealBars')).toContainText('1 tentaram e não fecharam');
     await expect(page.locator('#revealBars')).toContainText('Breno Silva (+900)');
-    await expect(page.locator('#revealLeaderboard')).toContainText('900');
+    const board = await page.evaluate(() => currentLeaderboard());
+    expect(board.find(r => r.email === 'breno.silva80')).toMatchObject({ score: 900 });
   });
 
   test('revelação (aluno): acertou, com a tentativa e a pontuação', async ({ page }) => {

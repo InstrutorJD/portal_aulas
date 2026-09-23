@@ -68,8 +68,8 @@ test.describe('Revela sozinho quando todo mundo já respondeu', () => {
     });
 
     await expect(page.locator('#scrReveal')).toBeVisible();
-    await expect(page.locator('#revealLeaderboard')).toContainText('Breno Silva');
-    await expect(page.locator('#revealLeaderboard')).toContainText('Edward Guzman');
+    const board = await page.evaluate(() => currentLeaderboard().map(r => r.name));
+    expect(board).toEqual(expect.arrayContaining(['Breno Silva', 'Edward Guzman']));
 
     const finalSession = await page.evaluate(() => window.__FAKE_DB__.quizrush_sessions.find(s => s.id === 'sess1'));
     expect(finalSession.status).toBe('reveal');
