@@ -1114,15 +1114,31 @@ drop table if exists public.trilha_overrides cascade;
 drop table if exists public.trilha_release_dates cascade;
 drop table if exists public.daily_module_releases cascade;
 drop table if exists public.materia_bimestre cascade;
+-- "Ocultar Jogos" (esconder um módulo/jogo específico enquanto ainda
+-- estava em desenvolvimento) não é mais necessário — removido junto com a
+-- tela de Bloqueios e Liberações antiga (ver shared/platform-core.js: não
+-- existe mais isModuleHidden/hiddenModulesCache). Sem dado de aluno
+-- nenhum aqui, só configuração do professor — seguro derrubar de vez.
+drop table if exists public.hidden_modules cascade;
 
 create table if not exists public.bimestre_dates (
   turma text not null,
   bimestre smallint not null check (bimestre between 1 and 4),
   inicio date,
   fim date,
+  -- "Mostrar Notas" (Gestão → Bloqueios e Liberações): o aluno só vê a
+  -- NOTA (e o selo Aprovado/Recuperação) de cada matéria depois que o
+  -- professor liga isso PRA ESTE bimestre especificamente — evita mostrar
+  -- nota baixa de um bimestre ainda em andamento, com lançamento
+  -- incompleto. default false: todo bimestre nasce bloqueado, então o
+  -- professor não precisa lembrar de bloquear de novo quando um bimestre
+  -- novo começa (ver toggleNotasLiberadas em shared/platform-core.js).
+  notas_liberadas boolean not null default false,
   updated_at timestamptz not null default now(),
   primary key (turma, bimestre)
 );
+
+alter table public.bimestre_dates add column if not exists notas_liberadas boolean not null default false;
 
 alter table public.bimestre_dates enable row level security;
 
@@ -1188,54 +1204,6 @@ begin
     where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'trilha_bimestre'
   ) then
     alter publication supabase_realtime add table public.trilha_bimestre;
-  end if;
-end $$;
-
--- Jogo/atividade ainda em desenvolvimento, escondido da lista do aluno até
--- o professor marcar como pronto (Gestão → Bloqueios e Liberações →
--- "Ocultar Jogos") — diferente de trilha_bimestre (esconde a TRILHA
--- inteira por data), aqui é por MÓDULO individual e sem data nenhuma, só
--- um interruptor manual. O professor sempre vê e consegue abrir o módulo
--- normalmente (só o aluno perde o card), e o módulo oculto não entra na
--- conta de "completou tudo" que libera a aba Jogos (ver
--- shared/platform-core.js: isModuleHidden/buildModuleCardsHtml/
--- allModulesComplete).
-create table if not exists public.hidden_modules (
-  turma text not null,
-  trilha_key text not null,
-  module_key text not null,
-  hidden boolean not null default false,
-  updated_at timestamptz not null default now(),
-  primary key (turma, trilha_key, module_key)
-);
-
-create index if not exists idx_hidden_modules_turma on public.hidden_modules (turma);
-
-alter table public.hidden_modules enable row level security;
-
-drop policy if exists "hidden_modules_select_all" on public.hidden_modules;
-create policy "hidden_modules_select_all"
-  on public.hidden_modules for select
-  using (true);
-
-drop policy if exists "hidden_modules_insert_professor" on public.hidden_modules;
-create policy "hidden_modules_insert_professor"
-  on public.hidden_modules for insert
-  with check (public.is_professor());
-
-drop policy if exists "hidden_modules_update_professor" on public.hidden_modules;
-create policy "hidden_modules_update_professor"
-  on public.hidden_modules for update
-  using (public.is_professor())
-  with check (public.is_professor());
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'hidden_modules'
-  ) then
-    alter publication supabase_realtime add table public.hidden_modules;
   end if;
 end $$;
 
@@ -2044,7 +2012,7 @@ end $$;
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, bimestre_dates, trilha_bimestre,
--- hidden_modules, game_scores, quizrush_sessions/quizrush_players/
+-- game_scores, quizrush_sessions/quizrush_players/
 -- quizrush_answers, student_activity_state, professor_tokens,
 -- exam_guard_events, user_preferences e corridadobug_sessions/
 -- corridadobug_players/corridadobug_progress foram criadas, se

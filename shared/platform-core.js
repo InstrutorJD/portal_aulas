@@ -30,10 +30,9 @@
   let teacherUnlockOverride = false;
   let turmaStudentsCache = []; // alunos ATIVOS da turma (profiles, archived_at is null) — ver turmaStudents()
   let turmaArchivedCache = []; // alunos arquivados da turma (só usado pela seção "Alunos" da Gestão)
-  let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
+  let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim, notas_liberadas} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
   let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
-  let hiddenModulesCache = {}; // "trilhaKey:modKey" -> true, jogo/atividade ainda em desenvolvimento que o professor escondeu dos alunos (Gestão → Bloqueios e Liberações → "Ocultar Jogos"), ver isModuleHidden()
-  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache/hiddenModulesCache muda ao vivo
+  let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
   // fontMode saiu daqui — a fonte agora é controlada por prefs.fontFamily
   // (4 opções, ver FONT_PRESETS), persistida no banco junto com o resto da
   // personalização. fontScale/libras continuam só locais (não têm por quê
@@ -250,31 +249,22 @@
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
           <button class="quick-action-btn" id="btnOpenPixelCode" title="Abrir o PixelCode (editor de JavaScript) numa aba nova">💻 PixelCode</button>
-          ${currentUser.role === 'professor' ? `
-            <button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>
-            <button class="quick-action-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑 Token</button>
-            <button class="quick-action-btn exam-guard-bell" id="btnExamGuardAlerts" title="Alertas de aluno bloqueado por sair de atividade/prova">
-              🔔 Alertas<span class="exam-guard-badge" id="examGuardBadge" style="display:none;"></span>
+          ${currentUser.role === 'professor' ? `<button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>` : ''}
+          <div class="nav-right-group">
+            ${currentUser.role === 'professor' ? `<button class="quick-token-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑</button>` : ''}
+            <button class="tab-btn profile-tab-btn" data-tab="perfil" id="btnPerfilTab" title="Meu perfil e personalização do portal">
+              <span id="perfilTabEmoji">${prefs.avatarEmoji || '👤'}</span>
+              ${currentUser.role === 'professor' ? `<span class="profile-notif-badge" id="examGuardBadge" style="display:none;"></span>` : ''}
             </button>
-          ` : ''}
-          <button class="tab-btn profile-tab-btn" data-tab="perfil" id="btnPerfilTab" title="Meu perfil e personalização do portal"><span id="perfilTabEmoji">${prefs.avatarEmoji || '👤'}</span></button>
+          </div>
         </div>
 
         ${currentUser.role === 'professor' ? `
         <div id="professorTokenOverlay" class="pf-alert-overlay" style="display:none;">
-          <div class="pf-alert-box" style="border-color:var(--green-dim); max-width:360px;">
-            <h3 style="margin:0 0 10px; font-size:14px;">Token — Dar Visto / Pular Etapa</h3>
-            <p style="font-size:11px; color:var(--ink-dim); margin:0 0 14px;">
-              Código temporário que substitui digitar sua senha real dentro de uma atividade — peça pro aluno digitar esse token nas telas "Dar visto"/"Pular (professor)". Válido por 10 minutos; gere um novo quando quiser invalidar o atual.
-            </p>
-            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px;">
-              <div id="professorTokenValue" style="font-family:'JetBrains Mono', monospace; font-size:32px; font-weight:800; letter-spacing:6px;">------</div>
-              <span class="status-msg" id="professorTokenStatus"></span>
-            </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-              <button class="btn" id="btnGerarProfessorToken">Gerar novo token</button>
-              <button class="btn btn-secondary" id="btnFecharProfessorToken">Fechar</button>
-            </div>
+          <div class="pf-alert-box" style="border-color:var(--green-dim); max-width:240px; text-align:center; position:relative; padding-top:28px;">
+            <button class="pf-toast-close" id="btnFecharProfessorToken" title="Fechar">✕</button>
+            <div id="professorTokenValue" style="font-family:'JetBrains Mono', monospace; font-size:36px; font-weight:800; letter-spacing:6px; margin-bottom:6px;">------</div>
+            <div class="status-msg" id="professorTokenStatus"></div>
           </div>
         </div>
 
@@ -396,17 +386,31 @@
                 <span class="collapsible-arrow">▶</span>
               </div>
               <div class="collapsible-body">
-                <h3 class="gestao-subhead">Restrições</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.
+                <p style="font-size:11px; color:var(--ink-dim); margin:0 0 12px;">
+                  Verde = liberado pro aluno, vermelho = bloqueado. Clique na chave pra alternar.
                 </p>
-                <button class="btn" id="btnToggleClipboard">Bloquear Copiar/Colar</button>
-
-                <h3 class="gestao-subhead">Liberação de Jogos</h3>
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <button class="btn" id="btnUnlockGamesTurma">Liberar Todos</button>
-                  <button class="btn btn-danger" id="btnLockGamesTurma">Bloquear Todos</button>
-                  <span class="status-msg" id="gamesUnlockStatus"></span>
+                <div class="toggle-row-list">
+                  <div class="toggle-row">
+                    <div>
+                      <div class="toggle-row-label">Copiar e Colar</div>
+                      <div class="toggle-row-desc" id="toggleClipboardDesc">É um desincentivo dentro do portal, não uma trava de verdade — um aluno pode contornar pelo DevTools do navegador.</div>
+                    </div>
+                    <button class="toggle-switch" id="toggleClipboard" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
+                  </div>
+                  <div class="toggle-row">
+                    <div>
+                      <div class="toggle-row-label">Jogos</div>
+                      <div class="toggle-row-desc" id="toggleJogosDesc"></div>
+                    </div>
+                    <button class="toggle-switch" id="toggleJogos" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
+                  </div>
+                  <div class="toggle-row">
+                    <div>
+                      <div class="toggle-row-label">Mostrar Notas</div>
+                      <div class="toggle-row-desc" id="toggleNotasDesc"></div>
+                    </div>
+                    <button class="toggle-switch" id="toggleNotas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
+                  </div>
                 </div>
 
                 <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
@@ -433,19 +437,6 @@
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
                   <button class="btn" id="btnSalvarTrilhaBimestre">Salvar</button>
                   <span class="status-msg" id="trilhaBimestreStatus"></span>
-                </div>
-
-                <h3 class="gestao-subhead">Ocultar Jogos</h3>
-                <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 12px;">
-                  Um jogo/atividade ainda em desenvolvimento some da lista do aluno (sem travar o resto da trilha) até você desmarcar aqui — você continua vendo e conseguindo abrir normalmente, só com um selo "🚧 Oculto dos alunos".
-                </p>
-                <table class="audit-table">
-                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Módulo</th><th>Oculto</th></tr></thead>
-                  <tbody id="tblGestaoOcultarJogosBody"></tbody>
-                </table>
-                <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
-                  <button class="btn" id="btnSalvarOcultarJogos">Salvar</button>
-                  <span class="status-msg" id="ocultarJogosStatus"></span>
                 </div>
               </div>
             </div>
@@ -640,11 +631,71 @@
     }).join('');
   }
 
+  // Efeito de zoom ao abrir/fechar uma tela (matéria/módulo/jogo — ver
+  // openMateria/closeMateria, openModule/closeModule, openGame/closeGame
+  // logo abaixo). Três variantes porque a estrutura de cada uma é
+  // diferente:
+  //  - zoomInScreen: mostra `el` com zoom-in — usado sempre que uma tela
+  //    ABRE, nas três (não precisa esperar nada, o el que estava visível
+  //    antes já sumiu na hora, igual sempre foi).
+  //  - zoomOutOverlay: fecha uma tela que é um OVERLAY por cima do resto
+  //    (position:fixed — ver .module-frame-modal), então a tela de baixo
+  //    já pode voltar a aparecer na hora; o zoom-out só acontece por cima
+  //    dela até sumir de vez.
+  //  - zoomOutThenShow: fecha uma tela que troca de LUGAR com outra, sem
+  //    ser overlay (matéria: grid <-> detalhe; jogo: grid <-> player) —
+  //    aqui as duas são elementos normais (sem position:fixed), então
+  //    mostrar a próxima achado da hora faria as duas aparecerem juntas,
+  //    empurrando o layout. Só troca depois do zoom-out terminar.
+  // offsetWidth força reflow depois de tirar a classe antiga — sem isso,
+  // abrir a MESMA tela duas vezes seguidas não reanima (o browser não
+  // percebe a classe como "nova" se ela nunca chegou a sair do elemento).
+  function zoomInScreen(el, display) {
+    el.classList.remove('screen-zoom-out');
+    el.style.display = display;
+    void el.offsetWidth;
+    el.classList.add('screen-zoom-in');
+    el.addEventListener('animationend', () => el.classList.remove('screen-zoom-in'), { once: true });
+  }
+
+  function zoomOutOverlay(el) {
+    el.classList.remove('screen-zoom-in');
+    el.classList.add('screen-zoom-out');
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      el.style.display = 'none';
+      el.classList.remove('screen-zoom-out');
+    };
+    el.addEventListener('animationend', finish, { once: true });
+    // Rede de segurança: se a animação nunca disparar de verdade (ex.:
+    // prefers-reduced-motion zera a duração pra 0s e alguns navegadores
+    // não emitem animationend pra isso), garante que a tela fecha do
+    // mesmo jeito depois do tempo esperado.
+    setTimeout(finish, 260);
+  }
+
+  function zoomOutThenShow(el, nextEl, nextDisplay) {
+    el.classList.remove('screen-zoom-in');
+    el.classList.add('screen-zoom-out');
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      el.style.display = 'none';
+      el.classList.remove('screen-zoom-out');
+      if (nextEl) zoomInScreen(nextEl, nextDisplay);
+    };
+    el.addEventListener('animationend', finish, { once: true });
+    setTimeout(finish, 260);
+  }
+
   function openMateria(key) {
     const materia = (cfg.materias || []).find(m => m.key === key);
     if (!materia) return;
     document.getElementById('materiaSelectorArea').style.display = 'none';
-    document.getElementById('materiaDetailArea').style.display = 'block';
+    zoomInScreen(document.getElementById('materiaDetailArea'), 'block');
     document.getElementById('materiaDetailTitle').textContent = materia.label;
     openMateriaKey = key;
     const trilhas = renderTrilhasFor(materia);
@@ -652,8 +703,7 @@
   }
 
   function closeMateria() {
-    document.getElementById('materiaDetailArea').style.display = 'none';
-    document.getElementById('materiaSelectorArea').style.display = 'block';
+    zoomOutThenShow(document.getElementById('materiaDetailArea'), document.getElementById('materiaSelectorArea'), 'block');
     openMateriaKey = null;
     if (typeof window.resumeActivityHeartbeat === 'function') {
       window.resumeActivityHeartbeat('aulas_materias', 'Aulas & Atividades — Escolhendo matéria');
@@ -1031,20 +1081,14 @@
   }
 
   function buildModuleCardsHtml(trilha) {
-    // Módulo oculto (hiddenModulesCache — jogo ainda em desenvolvimento)
-    // some da lista pro aluno igual um módulo nunca tivesse existido; o
-    // professor continua vendo (e conseguindo abrir), só com um selo
-    // avisando, pra dar pra testar antes de liberar de vez.
-    const isAluno = currentUser.role === 'aluno';
-    const modules = (trilha.modules || []).filter(m => !isAluno || !isModuleHidden(trilha.key, m.key));
+    const modules = trilha.modules || [];
     if (!modules.length) return `<div class="empty-state">Nenhum módulo cadastrado ainda em "${trilha.label}".</div>`;
 
     return modules.map(m => {
-      const hidden = isModuleHidden(trilha.key, m.key);
       const locked = isModuleLocked(trilha, m);
       const done = isModuleComplete(m);
-      const statusLabel = hidden ? '🚧 Oculto dos alunos' : locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : '';
-      const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '') + (hidden ? ' hidden-from-students' : '');
+      const statusLabel = locked ? '🔒 Bloqueado' : done ? '✅ Concluído' : '';
+      const classes = 'game-card' + (locked ? ' locked' : '') + (done ? ' completed' : '');
       const click = locked ? '' : `onclick="PortalCore.openModule('${trilha.key}','${m.key}')"`;
       // Descrição do módulo não aparece mais aqui (poluía a grade de
       // seleção) — continua disponível assim que o módulo abre, em
@@ -1061,13 +1105,11 @@
 
   // Só exige o que já está disponível — trilha 'futura' (bimestre seguinte,
   // ainda não começou) não pode travar o desbloqueio dos jogos por algo que
-  // o aluno nem tem como ter feito ainda. Módulo oculto (isModuleHidden)
-  // também não entra na conta — o aluno nem consegue VER esse módulo pra
-  // completar, não faz sentido travar o resto da turma por ele.
+  // o aluno nem tem como ter feito ainda.
   function allModulesComplete() {
     const modules = allTrilhas()
       .filter(t => trilhaStatus(t) !== 'futura')
-      .flatMap(t => (t.modules || []).filter(m => !isModuleHidden(t.key, m.key)));
+      .flatMap(t => t.modules || []);
     if (modules.length === 0) return false;
     return modules.every(isModuleComplete);
   }
@@ -1152,12 +1194,11 @@
     });
   }
 
-  // Refaz tudo que depende de bimestreDatesCache/trilhaBimestreCache/
-  // hiddenModulesCache pra refletir uma mudança ao vivo (o professor editou
-  // datas/atribuições/ocultações em outra aba, ou o próprio salvamento
-  // local) — compartilhado por fetchBimestreDates(), fetchTrilhaBimestre()
-  // e fetchHiddenModules() abaixo, já que os três afetam a mesma coisa
-  // (quais trilhas/módulos aparecem, e com qual status).
+  // Refaz tudo que depende de bimestreDatesCache/trilhaBimestreCache pra
+  // refletir uma mudança ao vivo (o professor editou datas/atribuições em
+  // outra aba, ou o próprio salvamento local) — compartilhado por
+  // fetchBimestreDates() e fetchTrilhaBimestre() abaixo, já que os dois
+  // afetam a mesma coisa (quais trilhas aparecem, e com qual status).
   function refreshTrilhaVisibilityUI() {
     refreshAllModuleCards();
     renderMaterias();
@@ -1180,14 +1221,24 @@
     if (!sbClient) return;
     const { data } = await sbClient.from('bimestre_dates').select('*').eq('turma', cfg.id);
     bimestreDatesCache = {};
-    (data || []).forEach(r => { bimestreDatesCache[r.bimestre] = { inicio: r.inicio, fim: r.fim }; });
+    (data || []).forEach(r => { bimestreDatesCache[r.bimestre] = { inicio: r.inicio, fim: r.fim, notas_liberadas: !!r.notas_liberadas }; });
     refreshTrilhaVisibilityUI();
   }
 
   function setupBimestreDatesRealtime() {
     if (!sbClient) return;
     sbClient.channel('realtime_bimestre_dates_' + cfg.id)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bimestre_dates', filter: `turma=eq.${cfg.id}` }, () => fetchBimestreDates())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bimestre_dates', filter: `turma=eq.${cfg.id}` }, () => {
+        fetchBimestreDates();
+        // "Mostrar Notas" (notas_liberadas) mora nessa mesma tabela — quando
+        // o professor liga/desliga em outra aba, o aluno com o Perfil já
+        // aberto precisa ver a NOTA aparecer/sumir sem recarregar (mesma
+        // ideia de setupGradesRealtime). Só chamado aqui, no handler do
+        // Realtime — nunca dentro de fetchBimestreDates() em si, senão a
+        // própria renderPerfilTab() (que já chama fetchBimestreDates() pra
+        // ler o bimestre atual) entraria num loop chamando a si mesma.
+        if (currentUser.role === 'aluno') renderPerfilTab();
+      })
       .subscribe();
   }
 
@@ -1203,30 +1254,6 @@
     if (!sbClient) return;
     sbClient.channel('realtime_trilha_bimestre_' + cfg.id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'trilha_bimestre', filter: `turma=eq.${cfg.id}` }, () => fetchTrilhaBimestre())
-      .subscribe();
-  }
-
-  // Jogo/atividade que o professor escondeu dos alunos enquanto ainda está
-  // em desenvolvimento (Gestão → Bloqueios e Liberações → "Ocultar Jogos",
-  // hidden_modules) — ver buildModuleCardsHtml/allModulesComplete. O
-  // professor sempre vê o módulo (com um selo avisando que está oculto),
-  // só o aluno perde o card inteiro da lista.
-  function isModuleHidden(trilhaKey, modKey) {
-    return !!hiddenModulesCache[`${trilhaKey}:${modKey}`];
-  }
-
-  async function fetchHiddenModules() {
-    if (!sbClient) return;
-    const { data } = await sbClient.from('hidden_modules').select('*').eq('turma', cfg.id);
-    hiddenModulesCache = {};
-    (data || []).forEach(r => { if (r.hidden) hiddenModulesCache[`${r.trilha_key}:${r.module_key}`] = true; });
-    refreshTrilhaVisibilityUI();
-  }
-
-  function setupHiddenModulesRealtime() {
-    if (!sbClient) return;
-    sbClient.channel('realtime_hidden_modules_' + cfg.id)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'hidden_modules', filter: `turma=eq.${cfg.id}` }, () => fetchHiddenModules())
       .subscribe();
   }
 
@@ -1352,35 +1379,16 @@
     });
   }
 
+  // Estado agregado da turma inteira (não mais por aluno — ver
+  // PENDENCIAS.md): student_overrides continua sendo uma linha por aluno
+  // por baixo dos panos — só a TELA parou de expor controle individual
+  // (ver renderGestaoToggles, que decide "liberado" só quando TODOS estão
+  // com games_unlocked true).
   async function fetchGestaoOverrides() {
     if (!sbClient) return;
     const { data } = await sbClient.from('student_overrides').select('*');
     gestaoOverridesCache = {};
     (data || []).forEach(r => { gestaoOverridesCache[r.student_email] = r.games_unlocked; });
-  }
-
-  // Status agregado da turma inteira (não mais por aluno — ver PENDENCIAS.md):
-  // "Liberado"/"Bloqueado" quando todo mundo está no mesmo estado, ou
-  // "Parcial" no caso raro de um aluno novo ainda não ter recebido a última
-  // liberação em lote (student_overrides continua sendo uma linha por
-  // aluno por baixo dos panos — só a TELA parou de expor controle individual).
-  async function renderGestaoGamesStatus() {
-    await fetchGestaoOverrides();
-    const el = document.getElementById('gamesUnlockStatus');
-    if (!el) return;
-    const students = turmaStudents();
-    if (students.length === 0) { el.textContent = ''; return; }
-    const liberados = students.filter(u => !!gestaoOverridesCache[u.email]).length;
-    if (liberados === 0) {
-      el.textContent = 'Bloqueado para todos.';
-      el.style.color = 'var(--blood-bright)';
-    } else if (liberados === students.length) {
-      el.textContent = 'Liberado para todos.';
-      el.style.color = 'var(--green)';
-    } else {
-      el.textContent = `Parcial — ${liberados} de ${students.length} alunos liberados.`;
-      el.style.color = 'var(--yellow)';
-    }
   }
 
   async function renderGestaoBimestres() {
@@ -1537,71 +1545,8 @@
     renderGestaoTrilhaBimestre();
   }
 
-  // Achata materias[].trilhas[].modules[] mantendo o rótulo da matéria e a
-  // trilha dona (igual allTrilhasComMateria, um nível a mais) — base da
-  // tabela "Ocultar Jogos".
-  function allModulesComMateriaETrilha() {
-    return allTrilhasComMateria().flatMap(({ materiaLabel, trilha }) =>
-      (trilha.modules || []).map(mod => ({ materiaLabel, trilha, mod }))
-    );
-  }
-
-  // Uma linha por MÓDULO (não por trilha) — cada jogo/atividade dentro de
-  // uma trilha pode estar pronto ou não independente dos outros.
-  async function renderGestaoOcultarJogos() {
-    await fetchHiddenModules();
-    const tbody = document.getElementById('tblGestaoOcultarJogosBody');
-    if (!tbody) return;
-    const linhas = allModulesComMateriaETrilha();
-    if (linhas.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhum módulo cadastrado ainda nesta turma.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = linhas.map(({ materiaLabel, trilha, mod }) => `
-      <tr data-trilha="${trilha.key}" data-modulo="${mod.key}">
-        <td>${materiaLabel}</td>
-        <td>${trilha.label}</td>
-        <td>${mod.title}</td>
-        <td style="text-align:center;">
-          <input type="checkbox" class="ocultar-jogo-input" ${isModuleHidden(trilha.key, mod.key) ? 'checked' : ''}>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Salva TODAS as linhas de uma vez (igual salvarTrilhaBimestre).
-  async function salvarOcultarJogos() {
-    if (!sbClient) return;
-    const now = new Date().toISOString();
-    const rows = Array.from(document.querySelectorAll('#tblGestaoOcultarJogosBody tr[data-trilha]')).map(tr => {
-      const chk = tr.querySelector('.ocultar-jogo-input');
-      return {
-        turma: cfg.id, trilha_key: tr.getAttribute('data-trilha'), module_key: tr.getAttribute('data-modulo'),
-        hidden: !!(chk && chk.checked), updated_at: now
-      };
-    });
-    if (rows.length === 0) return;
-    await sbClient.from('hidden_modules').upsert(rows, { onConflict: 'turma,trilha_key,module_key' });
-    const status = document.getElementById('ocultarJogosStatus');
-    if (status) status.textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
-    renderGestaoOcultarJogos();
-  }
-
-  function renderClipboardButtonGestao() {
-    const btn = document.getElementById('btnToggleClipboard');
-    if (btn) {
-      if (gestaoClipboardBlocked) {
-        btn.textContent = 'Copiar/Colar BLOQUEADO — Clique para liberar';
-        btn.classList.add('btn-danger');
-      } else {
-        btn.textContent = 'Bloquear Copiar/Colar';
-        btn.classList.remove('btn-danger');
-      }
-    }
-  }
-
-  // Handler único do toggle de Ctrl+C/V — usado tanto pelo botão de dentro
-  // da Gestão quanto pelo atalho da barra de navegação.
+  // Handler único do toggle de Ctrl+C/V — grava e atualiza o cache; quem
+  // chama decide quando re-renderizar (ver renderGestaoToggles).
   async function toggleClipboardBlock() {
     if (!sbClient) return;
     const newValue = !gestaoClipboardBlocked;
@@ -1613,14 +1558,79 @@
       return;
     }
     gestaoClipboardBlocked = newValue;
-    renderClipboardButtonGestao();
   }
 
   async function fetchClipboardStateGestao() {
     if (!sbClient) return;
     const { data } = await sbClient.from('classroom_settings').select('clipboard_blocked').eq('id', cfg.id).maybeSingle();
     gestaoClipboardBlocked = !!(data && data.clipboard_blocked);
-    renderClipboardButtonGestao();
+  }
+
+  // "Mostrar Notas" (Gestão → Bloqueios e Liberações): liga/desliga a
+  // visibilidade da NOTA (e do selo Aprovado/Recuperação) pro aluno, só no
+  // bimestre ATUAL (currentBimestreNum) — ver notasVisiveis em
+  // renderPerfilTab. Cada bimestre nasce bloqueado (default false em
+  // bimestre_dates.notas_liberadas), então o professor não precisa lembrar
+  // de bloquear de novo quando o bimestre seguinte começar. Sem bimestre
+  // atual configurado (fora do período letivo), não tem o que ligar — o
+  // botão fica desabilitado (ver renderGestaoToggles).
+  async function toggleNotasLiberadas() {
+    if (!sbClient) return;
+    const bimestreAtual = currentBimestreNum();
+    if (!bimestreAtual) return;
+    const atual = !!(bimestreDatesCache[bimestreAtual] || {}).notas_liberadas;
+    await sbClient.from('bimestre_dates').upsert({
+      turma: cfg.id, bimestre: bimestreAtual, notas_liberadas: !atual, updated_at: new Date().toISOString()
+    }, { onConflict: 'turma,bimestre' });
+    await fetchBimestreDates();
+  }
+
+  // Liga/desliga visual de uma "chave" (ver .toggle-switch no CSS).
+  function setToggleState(id, on) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+
+  // Os 3 "liga/desliga" simples da turma (Gestão → Bloqueios e
+  // Liberações) — Copiar e Colar, Jogos e Mostrar Notas. Cada um lê de uma
+  // fonte diferente por baixo (classroom_settings, student_overrides
+  // agregado, bimestre_dates do bimestre atual), mas a UI trata os três do
+  // mesmo jeito: uma chave verde (liberado) ou vermelha (bloqueado).
+  async function renderGestaoToggles() {
+    await Promise.all([fetchClipboardStateGestao(), fetchGestaoOverrides(), fetchBimestreDates()]);
+
+    setToggleState('toggleClipboard', !gestaoClipboardBlocked);
+
+    const students = turmaStudents();
+    const jogosLiberados = students.length > 0 && students.every(u => !!gestaoOverridesCache[u.email]);
+    setToggleState('toggleJogos', jogosLiberados);
+    const jogosDesc = document.getElementById('toggleJogosDesc');
+    if (jogosDesc) {
+      if (students.length === 0) {
+        jogosDesc.textContent = '';
+      } else {
+        const liberados = students.filter(u => !!gestaoOverridesCache[u.email]).length;
+        jogosDesc.textContent = liberados === 0
+          ? 'Bloqueado para todos.'
+          : liberados === students.length
+            ? 'Liberado para todos.'
+            : `Parcial — ${liberados} de ${students.length} alunos liberados (clique pra liberar todos).`;
+      }
+    }
+
+    const bimestreAtual = currentBimestreNum();
+    const notasLiberadas = bimestreAtual ? !!(bimestreDatesCache[bimestreAtual] || {}).notas_liberadas : false;
+    setToggleState('toggleNotas', notasLiberadas);
+    const toggleNotasBtn = document.getElementById('toggleNotas');
+    if (toggleNotasBtn) toggleNotasBtn.disabled = !bimestreAtual;
+    const notasDesc = document.getElementById('toggleNotasDesc');
+    if (notasDesc) {
+      notasDesc.textContent = !bimestreAtual
+        ? 'Nenhum bimestre em andamento agora (configure em "Bimestres — Início e Fim" abaixo).'
+        : `${BIMESTRE_LABELS[bimestreAtual]} — ${notasLiberadas ? 'aluno já vê a nota de cada matéria' : 'aluno ainda não vê a nota (aparece só o progresso)'}.`;
+    }
   }
 
   // ---------- Sino de alertas: aluno saiu 2x de uma atividade/prova que
@@ -1706,9 +1716,10 @@
   }
 
   function setupExamGuardAlerts() {
-    document.getElementById('btnExamGuardAlerts').addEventListener('click', () => {
-      document.getElementById('examGuardOverlay').style.display = 'flex';
-    });
+    // Sem botão próprio pra abrir — o selo de notificação vive no ícone de
+    // Perfil (.profile-notif-badge, ver renderExamGuardBadge), e é o
+    // listener de #mainNavTabs .tab-btn (mais abaixo) que abre este card
+    // em vez de navegar pra aba Perfil quando há alerta pendente.
     document.getElementById('btnFecharExamGuard').addEventListener('click', () => {
       document.getElementById('examGuardOverlay').style.display = 'none';
     });
@@ -2533,6 +2544,13 @@
     // mesmo bimestreAtual pra não buscar de novo).
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     const bimestreAtual = currentBimestreNum();
+    // "Mostrar Notas" (Gestão → Bloqueios e Liberações): o aluno só vê a
+    // NOTA/selo de cada matéria depois que o professor liga isso PRA ESTE
+    // bimestre especificamente (bimestre_dates.notas_liberadas) — evita
+    // mostrar nota baixa de um bimestre ainda em andamento, com
+    // lançamento incompleto. Professor nunca é afetado, nem vendo o
+    // próprio Perfil nem o de um aluno via Relatório de Inatividade.
+    const notasVisiveis = currentUser.role !== 'aluno' || !!(bimestreDatesCache[bimestreAtual] || {}).notas_liberadas;
 
     summaryEl.innerHTML = `
       <div class="perfil-stat">
@@ -2568,7 +2586,9 @@
     // base e a Recuperação (ver aplicarRecuperacao). A matéria "Prova" fica
     // de fora (ela É a nota "Prova", não faz sentido ter nota de si mesma).
     const notaPorMateria = {};
-    if (bimestreAtual) {
+    // notasVisiveis: sem isso, nem vale a pena buscar Prova/Nota3/grades —
+    // o aluno não vai ver o número mesmo (ver notaHtml mais abaixo).
+    if (bimestreAtual && notasVisiveis) {
       const nota3Auto = !!cfg.nota3ActivityLocation;
       // Aluno com nota manual (ver notaManual em loadNotas) — Prova e
       // Nota 3 são digitadas direto em `grades`, os lookups automáticos
@@ -2627,24 +2647,28 @@
       let notaHtml = '';
       if (m.key !== 'prova') {
         const info = notaPorMateria[m.key];
-        // Matéria sem trilha atribuída a este bimestre não tem nota real —
-        // mostrar o número calculado (com n1=0) faria toda matéria "Em
-        // breve" do aluno exibir a mesma nota por coincidência de fórmula
-        // (Prova/Nota3/Nota4 são as mesmas pra todas as matérias dele).
-        // >= 6,0 é o mesmo corte que decide se a Recuperação entra na
-        // conta (ver aplicarRecuperacao) — abaixo disso o selo mostra
-        // "Recuperação" mesmo se o professor já tiver lançado a nota de
-        // recuperação e ela não ter sido suficiente pra passar de 6,0.
-        const statusHtml = info && !info.semTrilha
-          ? (info.nota >= 6
-              ? ` <span class="perfil-nota-status aprovado">Aprovado</span>`
-              : ` <span class="perfil-nota-status recuperacao">Recuperação</span>`)
-          : '';
-        notaHtml = !info
-          ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`
-          : info.semTrilha
-            ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(sem trilha neste bimestre)</span></div>`
-            : `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b>${statusHtml}</div>`;
+        if (bimestreAtual && !notasVisiveis) {
+          notaHtml = `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(o professor ainda não liberou as notas deste bimestre)</span></div>`;
+        } else {
+          // Matéria sem trilha atribuída a este bimestre não tem nota real —
+          // mostrar o número calculado (com n1=0) faria toda matéria "Em
+          // breve" do aluno exibir a mesma nota por coincidência de fórmula
+          // (Prova/Nota3/Nota4 são as mesmas pra todas as matérias dele).
+          // >= 6,0 é o mesmo corte que decide se a Recuperação entra na
+          // conta (ver aplicarRecuperacao) — abaixo disso o selo mostra
+          // "Recuperação" mesmo se o professor já tiver lançado a nota de
+          // recuperação e ela não ter sido suficiente pra passar de 6,0.
+          const statusHtml = info && !info.semTrilha
+            ? (info.nota >= 6
+                ? ` <span class="perfil-nota-status aprovado">Aprovado</span>`
+                : ` <span class="perfil-nota-status recuperacao">Recuperação</span>`)
+            : '';
+          notaHtml = !info
+            ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`
+            : info.semTrilha
+              ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(sem trilha neste bimestre)</span></div>`
+              : `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b>${statusHtml}</div>`;
+        }
       }
 
       return `
@@ -3114,29 +3138,21 @@
 
   async function gerarProfessorToken() {
     if (!sbClient) return;
-    const btn = document.getElementById('btnGerarProfessorToken');
     const statusEl = document.getElementById('professorTokenStatus');
-    btn.disabled = true;
-    try {
-      const { data, error } = await sbClient.rpc('gerar_professor_token');
-      if (error) {
-        statusEl.textContent = 'Não foi possível gerar o token.';
-        return;
-      }
-      const row = Array.isArray(data) ? data[0] : data;
-      showProfessorToken(row ? row.token : null, row ? row.expires_at : null);
-    } finally {
-      btn.disabled = false;
+    const { data, error } = await sbClient.rpc('gerar_professor_token');
+    if (error) {
+      if (statusEl) statusEl.textContent = 'Não foi possível gerar o token.';
+      return;
     }
+    const row = Array.isArray(data) ? data[0] : data;
+    showProfessorToken(row ? row.token : null, row ? row.expires_at : null);
   }
 
   function renderGestaoTab() {
     renderGestaoAlunos();
-    renderGestaoGamesStatus();
+    renderGestaoToggles();
     renderGestaoBimestres();
     renderGestaoTrilhaBimestre();
-    renderGestaoOcultarJogos();
-    fetchClipboardStateGestao();
     loadChamada();
     renderRelatorioPresenca();
     loadNotas();
@@ -3160,8 +3176,8 @@
   }
 
   // Grava games_unlocked pra TODOS os alunos da turma de uma vez — usado
-  // pelos botões "Liberar Todos"/"Bloquear Todos" de dentro da Gestão. Não
-  // existe controle por aluno individual (ver renderGestaoGamesStatus).
+  // pela chave "Jogos" de dentro da Gestão. Não existe controle por aluno
+  // individual (ver renderGestaoToggles).
   async function setGamesUnlockedForTurma(unlocked) {
     if (!sbClient) return;
     const rows = turmaStudents().map(u => ({ student_email: u.email, games_unlocked: unlocked, updated_at: new Date().toISOString() }));
@@ -3169,20 +3185,29 @@
   }
 
   function setupGestaoButtons() {
-    document.getElementById('btnUnlockGamesTurma').addEventListener('click', async () => {
-      await setGamesUnlockedForTurma(true);
-      renderGestaoGamesStatus();
+    document.getElementById('toggleClipboard').addEventListener('click', async () => {
+      await toggleClipboardBlock();
+      renderGestaoToggles();
+    });
+    document.getElementById('toggleJogos').addEventListener('click', async () => {
+      const ligar = !document.getElementById('toggleJogos').classList.contains('on');
+      await setGamesUnlockedForTurma(ligar);
+      renderGestaoToggles();
+    });
+    document.getElementById('toggleNotas').addEventListener('click', async () => {
+      await toggleNotasLiberadas();
+      renderGestaoToggles();
     });
 
-    document.getElementById('btnLockGamesTurma').addEventListener('click', async () => {
-      await setGamesUnlockedForTurma(false);
-      renderGestaoGamesStatus();
-    });
-
-    document.getElementById('btnToggleClipboard').addEventListener('click', toggleClipboardBlock);
-    document.getElementById('btnGerarProfessorToken').addEventListener('click', gerarProfessorToken);
-    document.getElementById('btnQuickToken').addEventListener('click', () => {
+    // Chave 🔑 (ao lado do Perfil, só professor): abre o card mínimo
+    // (número + tempo restante) e gera um token novo sozinho se o atual já
+    // expirou (ou nunca existiu) — sem botão "Gerar" separado, ver
+    // showProfessorToken/gerarProfessorToken.
+    document.getElementById('btnQuickToken').addEventListener('click', async () => {
       document.getElementById('professorTokenOverlay').style.display = 'flex';
+      if (!professorTokenExpiresAtMs || professorTokenExpiresAtMs <= Date.now()) {
+        await gerarProfessorToken();
+      }
     });
     document.getElementById('btnFecharProfessorToken').addEventListener('click', () => {
       document.getElementById('professorTokenOverlay').style.display = 'none';
@@ -3209,7 +3234,6 @@
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
-    document.getElementById('btnSalvarOcultarJogos').addEventListener('click', salvarOcultarJogos);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
     document.getElementById('btnGerarRankingTurma').addEventListener('click', gerarRelatorioRanking);
   }
@@ -3331,7 +3355,7 @@
 
     currentGameKey = key;
     document.getElementById('gameSelector').style.display = 'none';
-    document.getElementById('gameFrameArea').style.display = 'flex';
+    zoomInScreen(document.getElementById('gameFrameArea'), 'flex');
     document.getElementById('gameFrameTitle').textContent = game.title;
     document.getElementById('gameFrameDesc').textContent = game.desc;
 
@@ -3344,8 +3368,7 @@
 
   function closeGame() {
     currentGameKey = null;
-    document.getElementById('gameFrameArea').style.display = 'none';
-    document.getElementById('gameSelector').style.display = 'block';
+    zoomOutThenShow(document.getElementById('gameFrameArea'), document.getElementById('gameSelector'), 'block');
     document.getElementById('gameFrame').src = 'about:blank';
     if (typeof window.resumeActivityHeartbeat === 'function') {
       window.resumeActivityHeartbeat('jogos_selecao', 'Jogos — Escolhendo um jogo');
@@ -3361,7 +3384,7 @@
     document.getElementById(`moduleSelector_${trilhaKey}`).style.display = 'none';
     // 'flex' (não 'block') — .module-frame-modal centraliza o box do modal
     // via flexbox (ver shared/platform-core.css).
-    document.getElementById(`moduleFrameArea_${trilhaKey}`).style.display = 'flex';
+    zoomInScreen(document.getElementById(`moduleFrameArea_${trilhaKey}`), 'flex');
     document.getElementById(`moduleFrameTitle_${trilhaKey}`).textContent = mod.title;
     document.getElementById(`moduleFrameDesc_${trilhaKey}`).textContent = mod.desc || '';
 
@@ -3375,7 +3398,7 @@
 
   function closeModule(trilhaKey) {
     const closedModKey = openModuleFrame[trilhaKey];
-    document.getElementById(`moduleFrameArea_${trilhaKey}`).style.display = 'none';
+    zoomOutOverlay(document.getElementById(`moduleFrameArea_${trilhaKey}`));
     document.getElementById(`moduleSelector_${trilhaKey}`).style.display = 'block';
     document.getElementById(`moduleFrame_${trilhaKey}`).src = 'about:blank';
     openModuleFrame[trilhaKey] = false;
@@ -3858,8 +3881,6 @@
     setupBimestreDatesRealtime();
     fetchTrilhaBimestre();
     setupTrilhaBimestreRealtime();
-    fetchHiddenModules();
-    setupHiddenModulesRealtime();
 
     if (currentUser.role === 'aluno') {
       fetchTeacherOverride();
@@ -3869,11 +3890,10 @@
     }
 
     if (currentUser.role === 'professor') {
-      // Estado inicial dos atalhos da barra de navegação — sem isso, os
-      // botões só mostrariam o texto certo depois da primeira vez que a
-      // aba Gestão fosse aberta (é lá que essas mesmas buscas já rodavam).
-      fetchClipboardStateGestao();
-      renderGestaoGamesStatus();
+      // Estado inicial das chaves de Bloqueios e Liberações — sem isso,
+      // elas só mostrariam o estado certo depois da primeira vez que a aba
+      // Gestão fosse aberta (é lá que essas mesmas buscas já rodavam).
+      renderGestaoToggles();
       renderProfessorTokenBox();
     }
 
@@ -3924,6 +3944,17 @@
         const tabTarget = e.currentTarget.getAttribute('data-tab');
         if (tabTarget === 'jogos' && e.currentTarget.classList.contains('disabled')) {
           showAlert('A aba de jogos está bloqueada! Conclua 100% das suas tarefas do dia ou aguarde a liberação do professor.');
+          return;
+        }
+        // Professor não tem aba Perfil: o ícone abre os alertas pendentes
+        // (contador em #examGuardBadge) ou, sem alerta, a personalização.
+        if (tabTarget === 'perfil' && currentUser.role === 'professor') {
+          if (examGuardEvents.length > 0) {
+            renderExamGuardList();
+            document.getElementById('examGuardOverlay').style.display = 'flex';
+          } else {
+            openPersonalizacao();
+          }
           return;
         }
         switchTab(tabTarget);

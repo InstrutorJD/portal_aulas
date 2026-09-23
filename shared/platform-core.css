@@ -19,6 +19,20 @@
   --radius-pill: 999px;
 }
 
+/* Efeito de zoom ao abrir/fechar uma tela (matéria, módulo, jogo — ver
+   zoomInScreen/zoomOutOverlay/zoomOutThenShow em platform-core.js). Classe
+   aplicada via JS no elemento que troca de display; some sozinha no fim
+   (zoom-in) ou o JS troca pra display:none no fim (zoom-out). Reduced
+   motion: usuário que pediu menos animação no SO não vê o zoom, só o corte
+   seco de sempre — acessibilidade, não só gosto. */
+@keyframes screenZoomIn{ from{ opacity:0; transform:scale(0.94); } to{ opacity:1; transform:scale(1); } }
+@keyframes screenZoomOut{ from{ opacity:1; transform:scale(1); } to{ opacity:0; transform:scale(0.94); } }
+.screen-zoom-in{ animation:screenZoomIn .2s ease both; }
+.screen-zoom-out{ animation:screenZoomOut .18s ease both; }
+@media (prefers-reduced-motion: reduce){
+  .screen-zoom-in, .screen-zoom-out{ animation:none; }
+}
+
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;}
 body{
@@ -90,17 +104,44 @@ html[data-theme="light"] body{
 .tab-btn.active{ background:var(--green); color:#04220a; border-color:var(--green); }
 .tab-btn.disabled{ opacity:0.3; cursor:not-allowed; border-color:var(--line) !important; color:var(--ink-dim) !important; background:transparent !important; }
 
+/* Grupo [🔑 Token, se professor][Perfil] empurrado pro canto direito da
+   barra — margin-left:auto no WRAPPER (não em cada botão), pra continuar
+   funcionando pro aluno também, que não tem o botão de Token. */
+.nav-right-group{ display:flex; align-items:center; gap:6px; margin-left:auto; }
+
 /* Botão de perfil — ícone redondo com o emoji de avatar escolhido em
    🎨 Personalizar, no lugar do antigo botão de texto "Perfil 👤" (mesmo
-   data-tab="perfil"/.tab-btn por baixo). margin-left:auto no último
-   filho de um flex row empurra só ELE pro canto direito da barra,
-   deixando os outros botões agrupados à esquerda como já eram. */
+   data-tab="perfil"/.tab-btn por baixo). position:relative ancora o selo
+   de notificação (.profile-notif-badge, ver mais abaixo). */
 .profile-tab-btn{
-  border-radius:50%; width:34px; height:34px; padding:0;
+  border-radius:50%; width:34px; height:34px; padding:0; position:relative;
   display:flex; align-items:center; justify-content:center; font-size:17px; line-height:1;
-  margin-left:auto;
 }
 .profile-tab-btn span{ pointer-events:none; }
+
+/* Selo de notificação no ícone de Perfil (sino de alertas antigo — aluno
+   bloqueado por sair de atividade/prova) — igual um app: número vermelho
+   no canto do ícone, sem botão/texto próprio. Clicar no Perfil com isso
+   visível abre o card de notificação em vez de navegar pra aba (ver o
+   listener de #mainNavTabs .tab-btn em platform-core.js). */
+.profile-notif-badge{
+  position:absolute; top:-4px; right:-4px; background:var(--blood-bright); color:#fff;
+  font-size:10px; font-weight:800; min-width:16px; height:16px; padding:0 4px;
+  border-radius:8px; align-items:center; justify-content:center; line-height:1;
+  pointer-events:none; box-shadow:0 0 0 2px var(--panel);
+}
+
+/* Chave do Token temporário (Dar Visto/Pular Etapa, só professor) — mesmo
+   estilo circular do botão de Perfil, ao lado dele. Ver btnQuickToken em
+   platform-core.js: abre um card mínimo (número + tempo restante), gera
+   um token novo sozinho se não tiver um válido ainda. */
+.quick-token-btn{
+  border-radius:50%; width:34px; height:34px; padding:0;
+  display:flex; align-items:center; justify-content:center; font-size:16px; line-height:1;
+  background:transparent; color:var(--ink-dim); border:1px solid var(--line); cursor:pointer;
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
+}
+.quick-token-btn:hover{ color:var(--ink); border-color:var(--ink-dim); background:linear-gradient(155deg, transparent 0%, rgba(255,255,255,0.08) 100%); }
 
 /* Botões de atalho (só professor) — mesma barra dos tabs, mas são AÇÕES
    (abrem uma seção específica, ou ligam/desligam algo na hora), não
@@ -112,17 +153,6 @@ html[data-theme="light"] body{
   transition:color .15s ease, border-color .15s ease, background .15s ease;
 }
 .quick-action-btn:hover{ color:var(--ink); border-style:solid; border-color:var(--ink-dim); background:linear-gradient(155deg, transparent 0%, rgba(255,255,255,0.05) 100%); }
-
-/* Sino de alertas (aluno bloqueado por sair de atividade/prova) — mesmo
-   botão de atalho acima, com um selo vermelho de contagem quando há
-   alerta pendente (ver setupExamGuardAlerts em platform-core.js). */
-.exam-guard-bell{ position:relative; border-color:var(--blood-bright); color:var(--blood-bright); }
-.exam-guard-bell:hover{ border-color:var(--blood-bright); color:#fff; }
-.exam-guard-badge{
-  position:absolute; top:-8px; right:-8px; background:var(--blood-bright); color:#fff;
-  font-size:10px; font-weight:800; min-width:16px; height:16px; padding:0 4px;
-  border-radius:8px; align-items:center; justify-content:center; line-height:1;
-}
 .exam-guard-item{ border:1px solid var(--line); background:var(--panel2); padding:10px 12px; margin-bottom:8px; border-radius:var(--radius-md); box-shadow:0 4px 14px rgba(0,0,0,0.4); }
 .exam-guard-item .exam-guard-meta{ font-size:11px; color:var(--ink-dim); margin:4px 0 10px; }
 .exam-guard-item .exam-guard-actions{ display:flex; gap:8px; flex-wrap:wrap; }
@@ -187,8 +217,7 @@ html[data-theme="light"] body{
    continua aparecendo assim que o módulo/jogo abre). Sombra na borda +
    leve "levantada" com gradiente ao passar o mouse, pra dar profundidade
    sem depender de cor de tema nenhuma (funciona em qualquer paleta que a
-   turma escolher). locked/hidden-from-students não reagem ao hover —
-   não são clicáveis. */
+   turma escolher). locked não reage ao hover — não é clicável. */
 .game-card{
   border:1px solid var(--line); background:var(--panel2); padding:10px 8px; text-align:center; cursor:pointer;
   border-radius:var(--radius-md); box-shadow:0 4px 14px rgba(0,0,0,0.4);
@@ -206,7 +235,6 @@ html[data-theme="light"] body{
 .game-card.completed{ border-color:var(--green-dim); }
 .game-card.completed .card-status{ color:var(--green); }
 .game-card.locked{ opacity:0.4; cursor:not-allowed; }
-.game-card.hidden-from-students{ border-style:dashed; }
 .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; }
 
 /* Brilho diagonal sutil (mesmo truque em todo botão/card clicável) — uma
@@ -243,6 +271,29 @@ button.btn-secondary:hover{
 .log-box{ background:#060806; border:1px solid var(--line); padding:10px; font-size:11px; height:140px; overflow-y:auto; font-family:'JetBrains Mono', monospace; border-radius:var(--radius-sm); }
 .log-entry{ margin-bottom:4px; color:var(--ink-dim); }
 .log-entry .time{ color:var(--yellow); }
+
+/* "Chave" verde/vermelha (Gestão → Bloqueios e Liberações) — uma linha por
+   tema (Copiar e Colar, Jogos, Mostrar Notas), cada uma com um switch
+   estilo iOS: vermelho = bloqueado, verde = liberado, bolinha desliza de
+   um lado pro outro. ver setToggleState/renderGestaoToggles em
+   platform-core.js. */
+.toggle-row-list{ display:flex; flex-direction:column; }
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 2px; border-bottom:1px solid var(--line); }
+.toggle-row:last-child{ border-bottom:none; }
+.toggle-row-label{ font-weight:800; font-size:13px; color:var(--yellow); }
+.toggle-row-desc{ font-size:11px; color:var(--ink-dim); margin-top:2px; }
+.toggle-switch{
+  position:relative; flex-shrink:0; width:48px; height:26px; padding:0; border:none;
+  border-radius:var(--radius-pill); background:var(--blood, #b3261e); cursor:pointer;
+  transition:background .2s ease, box-shadow .2s ease;
+}
+.toggle-switch .toggle-switch-knob{
+  position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%;
+  background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.4); transition:transform .2s ease;
+}
+.toggle-switch.on{ background:var(--green); }
+.toggle-switch.on .toggle-switch-knob{ transform:translateX(22px); }
+.toggle-switch:disabled{ opacity:0.35; cursor:not-allowed; }
 
 /* Chamada / Notas (aba Gestão, só professor) */
 .field-label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }

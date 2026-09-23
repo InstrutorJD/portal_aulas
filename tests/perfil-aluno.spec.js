@@ -35,15 +35,15 @@ async function openPerfil(page) {
 test.describe('Aba Perfil (só aluno)', () => {
   // O professor também vê o botão de perfil (ícone de avatar, antigo botão
   // de texto "Perfil 👤" que era só do aluno) — mas ele não tem
-  // student_module_progress próprio, então a tela dele só mostra a
-  // personalização do portal, sem os cards de progresso/insígnias (ver
-  // tests/personalizacao.spec.js pra cobertura completa dessa tela).
+  // student_module_progress próprio, então o botão de perfil dele abre
+  // direto a personalização (ou os alertas pendentes), sem os cards de
+  // progresso/insígnias (ver tests/personalizacao.spec.js).
   test('professor vê o botão de perfil, mas sem os cards de progresso do aluno', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(PROFESSOR_URL);
     await expect(page.locator('#mainNavTabs .tab-btn[data-tab="perfil"]')).toHaveCount(1);
     await page.click('#mainNavTabs .tab-btn[data-tab="perfil"]');
-    await expect(page.locator('#perfilTituloPrincipal')).toHaveText('Meu Perfil');
+    await expect(page.locator('.pf-perso-box')).toBeVisible();
     await expect(page.locator('#perfilProgressoWrap')).toBeHidden();
   });
 
@@ -114,8 +114,10 @@ test.describe('Aba Perfil (só aluno)', () => {
 test.describe('Aba Perfil — NOTA por matéria', () => {
   test('mostra a nota do bimestre atual por matéria, igual à fórmula de Lançar Notas (Gestão)', async ({ page }) => {
     await stubSupabaseFake(page, {
-      // Intervalo bem largo, sempre cobre "hoje" — não importa quando o teste roda.
-      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      // Intervalo bem largo, sempre cobre "hoje" — não importa quando o teste
+      // roda. notas_liberadas:true — sem isso a NOTA fica escondida (ver
+      // "Mostrar Notas" em tests/professor-gestao-turma.spec.js).
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31', notas_liberadas: true }],
       trilha_bimestre: [
         { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
         { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
@@ -155,7 +157,7 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
 
   test('Recuperação não afeta matéria que já está >= 6,0 — mudar ela não altera a NOTA na aba Perfil (Realtime só confirma que a tela reagiu, sem mudar o valor)', async ({ page }) => {
     await stubSupabaseFake(page, {
-      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31', notas_liberadas: true }],
       trilha_bimestre: [
         { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
         { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
@@ -194,7 +196,7 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
 
   test('Recuperação abaixo de 6,0 vira a média com a nota base, e atualiza ao vivo na aba Perfil (Realtime)', async ({ page }) => {
     await stubSupabaseFake(page, {
-      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31', notas_liberadas: true }],
       trilha_bimestre: [
         { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
         { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
@@ -267,12 +269,79 @@ test.describe('Aba Perfil — NOTA por matéria', () => {
 
   test('a matéria "Prova" não mostra campo de NOTA (ela já É a nota Prova)', async ({ page }) => {
     await stubSupabaseFake(page, {
-      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31' }],
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31', notas_liberadas: true }],
     });
     await page.goto(ALUNO_URL);
     await openPerfil(page);
 
     const card = page.locator('.perfil-materia-card', { hasText: 'Prova' });
     await expect(card).not.toContainText('NOTA:');
+  });
+});
+
+// "Mostrar Notas" (Gestão → Bloqueios e Liberações): o aluno só vê a
+// NOTA/selo de cada matéria depois que o professor libera isso pra ESTE
+// bimestre (bimestre_dates.notas_liberadas) — evita mostrar nota baixa de
+// um bimestre ainda em andamento, com lançamento incompleto.
+test.describe('Aba Perfil — "Mostrar Notas" (liberação por bimestre)', () => {
+  const SEED_100PCT = {
+    bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2000-01-01', fim: '2999-12-31', notas_liberadas: false }],
+    trilha_bimestre: [
+      { turma: 'jogos', trilha_key: 'vida-autoconhecimento', bimestre: 1 },
+      { turma: 'jogos', trilha_key: 'prova-diagnostica', bimestre: 1 },
+      { turma: 'jogos', trilha_key: 'prova-final', bimestre: 1 },
+    ],
+    student_module_progress: [
+      { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
+      { student_email: 'breno.silva80', turma: 'jogos', trilha_key: 'vida-autoconhecimento', module_key: 'pratica', progress_current: 5, progress_total: 5, completed: true },
+    ],
+    student_activity_state: [
+      { student_email: 'breno.silva80', progress_key: 'prova_jogos', state: { completed: true, correctCount: 20, total: 20, nota: 100 } },
+      { student_email: 'breno.silva80', progress_key: 'prova_final_jogos', state: { completed: true, correctCount: 20, total: 20, nota: 100 } },
+    ],
+  };
+
+  test('bimestre ainda não liberado: esconde a NOTA e o selo, mesmo com tudo 100%', async ({ page }) => {
+    await stubSupabaseFake(page, SEED_100PCT);
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    await expect(card).toContainText('NOTA: —');
+    await expect(card).toContainText('o professor ainda não liberou as notas');
+    await expect(card).not.toContainText('10.00'); // seria a nota real (100% + Prova 10 + Nota3 10)
+    await expect(card.locator('.perfil-nota-status')).toHaveCount(0);
+  });
+
+  test('bimestre liberado: mostra a NOTA normal, com selo', async ({ page }) => {
+    await stubSupabaseFake(page, {
+      ...SEED_100PCT,
+      bimestre_dates: [{ ...SEED_100PCT.bimestre_dates[0], notas_liberadas: true }],
+    });
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    await expect(card).toContainText('10.00');
+    await expect(card).not.toContainText('não liberou');
+    await expect(card.locator('.perfil-nota-status')).toHaveText('Aprovado');
+  });
+
+  test('professor libera em outra aba: o aluno com o Perfil já aberto vê a NOTA aparecer sem recarregar (Realtime)', async ({ page }) => {
+    await stubSupabaseFake(page, SEED_100PCT);
+    await page.goto(ALUNO_URL);
+    await openPerfil(page);
+
+    const card = page.locator('.perfil-materia-card', { hasText: 'Projeto de Vida' });
+    await expect(card).toContainText('NOTA: —');
+
+    await page.evaluate(() => {
+      const row = window.__FAKE_DB__.bimestre_dates.find(b => b.turma === 'jogos' && b.bimestre === 1);
+      row.notas_liberadas = true;
+      window.__fireFakeRealtime('bimestre_dates');
+    });
+
+    await expect(card).toContainText('10.00');
+    await expect(card.locator('.perfil-nota-status')).toHaveText('Aprovado');
   });
 });

@@ -103,12 +103,11 @@ test.describe('Personalização do portal (botão de perfil)', () => {
     expect(theme).toBe('light');
   });
 
-  test('professor: botão de perfil abre a tela só com a personalização, sem cards de progresso', async ({ page }) => {
+  test('professor sem alerta pendente: botão de perfil abre direto a personalização', async ({ page }) => {
     await page.goto(PROFESSOR_URL);
     await page.click('#btnPerfilTab');
-    await expect(page.locator('#perfilTituloPrincipal')).toHaveText('Meu Perfil');
-    await expect(page.locator('#perfilProgressoWrap')).toBeHidden();
-    await expect(page.locator('#btnAbrirPersonalizacao')).toBeVisible();
+    await expect(page.locator('.pf-perso-box')).toBeVisible();
+    await expect(page.locator('#tabContentPerfil')).toBeHidden();
   });
 
   test('professor vendo o Perfil de um aluno (via Gestão) não mostra o botão Personalizar', async ({ page }) => {

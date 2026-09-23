@@ -48,58 +48,101 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     expect(scrollTopAfter).toBeGreaterThan(0);
   });
 
-  // Liberação de jogos não é mais por aluno individual — só "Liberar Todos"/
-  // "Bloquear Todos" pra turma inteira (student_overrides continua uma linha
-  // por aluno por baixo dos panos, mas a Gestão só expõe o controle em lote).
-  test('Liberar Todos / Bloquear Todos grava o override em lote e atualiza o status agregado', async ({ page }) => {
+  // Liberação de jogos não é mais por aluno individual — só uma chave
+  // "Jogos" pra turma inteira (student_overrides continua uma linha por
+  // aluno por baixo dos panos, mas a Gestão só expõe o controle em lote).
+  // Ver renderGestaoToggles/setGamesUnlockedForTurma em platform-core.js.
+  test('a chave "Jogos" liga/desliga o override em lote e atualiza a legenda', async ({ page }) => {
     await stubSupabaseFake(page, { student_overrides: [], profiles: jogosAlunoProfiles() });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
-    await expect(page.locator('#gamesUnlockStatus')).toContainText('Bloqueado para todos');
+    const toggle = page.locator('#toggleJogos');
+    await expect(toggle).not.toHaveClass(/on/);
+    await expect(page.locator('#toggleJogosDesc')).toContainText('Bloqueado para todos');
 
-    await page.click('#btnUnlockGamesTurma');
-    await expect(page.locator('#gamesUnlockStatus')).toContainText('Liberado para todos');
+    await toggle.click();
+    await expect(toggle).toHaveClass(/on/);
+    await expect(page.locator('#toggleJogosDesc')).toContainText('Liberado para todos');
     let rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
     expect(rows.some(r => r.student_email === 'breno.silva80' && r.games_unlocked === true)).toBe(true);
     expect(rows.some(r => r.student_email === 'alexandre.natal')).toBe(false); // só alunos desta turma
 
-    await page.click('#btnLockGamesTurma');
-    await expect(page.locator('#gamesUnlockStatus')).toContainText('Bloqueado para todos');
+    await toggle.click();
+    await expect(toggle).not.toHaveClass(/on/);
+    await expect(page.locator('#toggleJogosDesc')).toContainText('Bloqueado para todos');
     rows = await page.evaluate(() => window.__FAKE_DB__.student_overrides || []);
     expect(rows.every(r => r.games_unlocked === false)).toBe(true);
   });
 
-  test('bloquear Ctrl+C/V grava configuração com id da turma, não "global"', async ({ page }) => {
+  test('a chave "Copiar e Colar" grava configuração com id da turma, não "global"', async ({ page }) => {
     await stubSupabaseFake(page, { classroom_settings: [] });
     await page.goto(JOGOS_URL);
     await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
     await page.waitForTimeout(200);
     await expandGestaoSection(page, 'Bloqueios e Liberações');
 
-    await expect(page.locator('#btnToggleClipboard')).toContainText('Bloquear Copiar/Colar');
-    await page.click('#btnToggleClipboard');
-    await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
+    const toggle = page.locator('#toggleClipboard');
+    await expect(toggle).toHaveClass(/on/); // liberado por padrão (clipboard_blocked ainda não existe = false)
+    await toggle.click();
+    await expect(toggle).not.toHaveClass(/on/); // bloqueado
 
     const rows = await page.evaluate(() => window.__FAKE_DB__.classroom_settings || []);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ id: 'jogos', clipboard_blocked: true });
   });
 
+  // "Mostrar Notas" (ver toggleNotasLiberadas/renderGestaoToggles em
+  // platform-core.js) só existe pro bimestre ATUAL (currentBimestreNum,
+  // por data) — grava em bimestre_dates.notas_liberadas, não mexe em nada
+  // de outro bimestre.
+  test('a chave "Mostrar Notas" liga/desliga notas_liberadas só do bimestre atual', async ({ page }) => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    await stubSupabaseFake(page, {
+      bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: hoje, fim: hoje, notas_liberadas: false }],
+    });
+    await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
+
+    const toggle = page.locator('#toggleNotas');
+    await expect(toggle).not.toHaveClass(/on/);
+    await expect(toggle).toBeEnabled();
+    await expect(page.locator('#toggleNotasDesc')).toContainText('1º Bimestre');
+    await expect(page.locator('#toggleNotasDesc')).toContainText('ainda não vê a nota');
+
+    await toggle.click();
+    await expect(toggle).toHaveClass(/on/);
+    await expect(page.locator('#toggleNotasDesc')).toContainText('já vê a nota');
+
+    const rows = await page.evaluate(() => window.__FAKE_DB__.bimestre_dates || []);
+    expect(rows.find(r => r.turma === 'jogos' && r.bimestre === 1)).toMatchObject({ notas_liberadas: true });
+  });
+
+  test('sem bimestre em andamento agora, a chave "Mostrar Notas" fica desabilitada', async ({ page }) => {
+    await stubSupabaseFake(page, { bimestre_dates: [] });
+    await page.goto(JOGOS_URL);
+    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
+    await page.waitForTimeout(200);
+    await expandGestaoSection(page, 'Bloqueios e Liberações');
+
+    await expect(page.locator('#toggleNotas')).toBeDisabled();
+    await expect(page.locator('#toggleNotasDesc')).toContainText('Nenhum bimestre em andamento');
+  });
+
   // Token temporário do professor pra "Dar visto"/"Pular etapa" dentro de
   // uma atividade (shared/professor-visto.js) — substitui digitar a senha
   // real numa tela que é fisicamente do aluno (ver PENDENCIAS.md). Fica
-  // atrás do atalho "🔑 Token" na barra de navegação, não dentro da Gestão.
-  test('gerar token do professor mostra um código de 6 dígitos com prazo, e reabrir o popover mantém o mesmo token', async ({ page }) => {
+  // atrás da chave 🔑 na barra de navegação, não dentro da Gestão.
+  test('clicar na chave sem token ativo gera um código de 6 dígitos com prazo, e reabrir mantém o mesmo token', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(JOGOS_URL);
 
     await page.click('#btnQuickToken');
     await expect(page.locator('#professorTokenOverlay')).toBeVisible();
-    await expect(page.locator('#professorTokenValue')).toHaveText('------');
-    await page.click('#btnGerarProfessorToken');
 
     await expect(page.locator('#professorTokenValue')).toHaveText(/^\d{6}$/);
     await expect(page.locator('#professorTokenStatus')).toContainText('Expira em');
@@ -122,22 +165,6 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
     await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
     await expect(page.locator('#btnQuickToken')).toHaveCount(0);
-  });
-
-  test('botão de Bloquear Copiar/Colar (dentro da Gestão) liga/desliga o bloqueio da turma', async ({ page }) => {
-    await stubSupabaseFake(page, { classroom_settings: [] });
-    await page.goto(JOGOS_URL);
-    await page.click('#mainNavTabs .tab-btn[data-tab="gestao"]');
-    await expandGestaoSection(page, 'Bloqueios e Liberações');
-
-    await expect(page.locator('#btnToggleClipboard')).toHaveText('Bloquear Copiar/Colar');
-
-    await page.click('#btnToggleClipboard');
-    await expect(page.locator('#btnToggleClipboard')).toContainText('BLOQUEADO');
-
-    const rows = await page.evaluate(() => window.__FAKE_DB__.classroom_settings || []);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ id: 'jogos', clipboard_blocked: true });
   });
 
   test('status ao vivo (onde está, há quanto tempo) só aparece pra quem tem progresso real, e só alunos desta turma', async ({ page }) => {
@@ -170,15 +197,17 @@ test.describe('Aba Gestão (só professor) dentro do portal da turma', () => {
 // shared/exam-proctor.js) e deixa o professor decidir Liberar ou Manter
 // bloqueado — ver shared/platform-core.js, setupExamGuardAlerts().
 test.describe('Sino de alertas de saída bloqueada (só professor)', () => {
-  test('aluno não tem sino, e o professor sem alerta pendente não vê o selo', async ({ page }) => {
+  test('aluno não tem selo, e o professor sem alerta pendente não vê o selo — o perfil abre a personalização', async ({ page }) => {
     await stubSupabaseFake(page, {});
     await page.goto(ALUNO_URL);
-    await expect(page.locator('#btnExamGuardAlerts')).toHaveCount(0);
+    await expect(page.locator('#examGuardBadge')).toHaveCount(0);
 
     await stubSupabaseFake(page, {});
     await page.goto(JOGOS_URL);
-    await expect(page.locator('#btnExamGuardAlerts')).toBeVisible();
     await expect(page.locator('#examGuardBadge')).toBeHidden();
+    await page.click('#btnPerfilTab');
+    await expect(page.locator('.pf-perso-box')).toBeVisible();
+    await expect(page.locator('#examGuardOverlay')).toBeHidden();
   });
 
   test('mostra o selo com a contagem e a lista com o aluno/atividade certos', async ({ page }) => {
@@ -193,7 +222,7 @@ test.describe('Sino de alertas de saída bloqueada (só professor)', () => {
     await expect(page.locator('#examGuardBadge')).toBeVisible();
     await expect(page.locator('#examGuardBadge')).toHaveText('1');
 
-    await page.click('#btnExamGuardAlerts');
+    await page.click('#btnPerfilTab');
     await expect(page.locator('#examGuardOverlay')).toBeVisible();
     const item = page.locator('.exam-guard-item');
     await expect(item).toContainText('Breno Silva');
@@ -208,7 +237,7 @@ test.describe('Sino de alertas de saída bloqueada (só professor)', () => {
       ],
     });
     await page.goto(JOGOS_URL);
-    await page.click('#btnExamGuardAlerts');
+    await page.click('#btnPerfilTab');
     await page.click('.exam-guard-item button:has-text("Liberar")');
 
     await expect(page.locator('.exam-guard-item')).toHaveCount(0);
@@ -232,7 +261,7 @@ test.describe('Sino de alertas de saída bloqueada (só professor)', () => {
       ],
     });
     await page.goto(JOGOS_URL);
-    await page.click('#btnExamGuardAlerts');
+    await page.click('#btnPerfilTab');
     await page.click('.exam-guard-item button:has-text("Manter bloqueado")');
 
     await expect(page.locator('.exam-guard-item')).toHaveCount(0);
