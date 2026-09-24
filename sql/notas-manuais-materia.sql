@@ -1,0 +1,12 @@
+-- Notas manuais por matéria (Gestão → Lançar Notas, botão verde/vermelho
+-- "Notas travadas / Editando notas"): o professor pode digitar à mão a nota
+-- de uma matéria de um aluno, e ela SUBSTITUI a nota calculada daquela
+-- matéria (atividades + Prova + Nota 3 + Recuperação) no Lançar Notas, no
+-- Perfil do aluno e no Relatório de Notas. Guardada em grades.notas_materia,
+-- um objeto { "<materia_key>": nota } por aluno/bimestre — matéria fora do
+-- objeto usa a nota calculada (ver notaManualMateria em
+-- shared/platform-core.js).
+--
+-- Rode UMA vez no SQL Editor do Supabase — é seguro rodar de novo
+-- (idempotente). É o mesmo trecho que está em sql/supabase-setup-completo.sql.
+alter table public.grades add column if not exists notas_materia jsonb not null default '{}'::jsonb;

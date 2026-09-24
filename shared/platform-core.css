@@ -304,6 +304,16 @@ button.btn-secondary:hover{
 .nota-baixa, .nota-baixa .materia-grade-value{ color:var(--blood-bright); font-weight:700; }
 input.nota-input.nota-baixa{ border-color:var(--blood-bright); }
 
+/* Botão verde/vermelho de Lançar Notas (setEdicaoNotasManuais): verde =
+   notas de matéria travadas; vermelho = cada célula de matéria vira um
+   campo pra digitar a nota manual, que substitui a calculada. */
+button.btn-notas-manuais.travado{ background-color:#2e9d4a; color:#fff; }
+button.btn-notas-manuais.editando{ background-color:#c62828; color:#fff; }
+#notasTabela .nota-manual-input{ display:none; width:72px; padding:4px 6px; }
+#notasTabela.notas-editando .nota-manual-input{ display:inline-block; border-color:#c62828; }
+#notasTabela.notas-editando .materia-grade-view{ display:none; }
+.nota-manual-tag{ font-size:10px; color:var(--yellow); font-weight:700; white-space:nowrap; }
+
 /* Chamada / Notas (aba Gestão, só professor) */
 .field-label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
 .field-row{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }

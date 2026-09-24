@@ -516,8 +516,12 @@
                   </div>
                   <button class="toggle-switch" id="toggleNotasBaixas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                 </div>
+                <div style="display:flex; align-items:center; gap:12px; margin:4px 0 12px; flex-wrap:wrap;">
+                  <button class="btn btn-notas-manuais travado" id="btnEditarNotasManuais" aria-pressed="false">🔒 Notas travadas</button>
+                  <span class="status-msg">Destrave para digitar a nota de uma matéria à mão — ela substitui a nota calculada. Campo vazio volta para a calculada.</span>
+                </div>
                 <div style="overflow-x:auto;">
-                  <table class="audit-table">
+                  <table class="audit-table" id="notasTabela">
                     <thead><tr id="notasHead"></tr></thead>
                     <tbody id="notasBody"></tbody>
                   </table>
@@ -2151,6 +2155,39 @@
     return Math.round(((notaBase + n4) / 2) * 100) / 100;
   }
 
+  // Nota de matéria digitada à mão pelo professor (Gestão → Lançar Notas,
+  // botão "Notas travadas/Editando notas"): fica em grades.notas_materia
+  // ({ [materiaKey]: nota }, sql/notas-manuais-materia.sql) e SUBSTITUI a
+  // nota final daquela matéria — sem fórmula, sem Recuperação por cima,
+  // mesmo em matéria sem trilha no bimestre. null = sem nota manual, vale
+  // a calculada. Usada por Lançar Notas, Perfil do aluno e Relatório.
+  function notaManualMateria(gradeRow, materiaKey) {
+    return parseNotaManual(gradeRow && gradeRow.notas_materia ? gradeRow.notas_materia[materiaKey] : null);
+  }
+  function parseNotaManual(v) {
+    const n = (v === '' || v === null || v === undefined) ? NaN : parseFloat(v);
+    return isNaN(n) ? null : n;
+  }
+
+  // Estado do botão verde/vermelho de Lançar Notas: verde (false) = notas
+  // de matéria travadas, só leitura; vermelho (true) = cada célula de
+  // matéria vira um campo pra digitar a nota manual. Só visual (os campos
+  // existem sempre no DOM, ocultos) — "Salvar" grava o que estiver neles
+  // nos dois estados. Volta a travar ao recarregar a tabela.
+  let edicaoNotasManuais = false;
+  function setEdicaoNotasManuais(on) {
+    edicaoNotasManuais = on;
+    const btn = document.getElementById('btnEditarNotasManuais');
+    const tabela = document.getElementById('notasTabela');
+    if (tabela) tabela.classList.toggle('notas-editando', on);
+    if (btn) {
+      btn.classList.toggle('travado', !on);
+      btn.classList.toggle('editando', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.textContent = on ? '✏️ Editando notas — clique para travar' : '🔒 Notas travadas';
+    }
+  }
+
   // % de conclusão (teoria + prática, crédito parcial por módulo) de um
   // conjunto de trilhas JÁ FILTRADO pra esse aluno (ver trilhasParaAluno —
   // quem chama decide QUAIS trilhas entram, matéria por matéria; esta
@@ -2257,7 +2294,8 @@
       if (el.classList.contains('nota-input')) {
         v = el.value.trim() === '' ? NaN : parseFloat(el.value);
       } else if (el.classList.contains('materia-grade-cell')) {
-        if (!el.dataset.semTrilha) v = parseFloat(el.querySelector('.materia-grade-value').textContent);
+        // "—" (sem trilha e sem nota manual) vira NaN sozinho.
+        v = parseFloat(el.querySelector('.materia-grade-value').textContent);
       } else if (!el.querySelector('span')) {
         v = parseFloat(el.dataset.nota2 ?? el.dataset.nota3);
       }
@@ -2365,19 +2403,24 @@
         nota3TdHtml = `<td><input type="number" step="0.1" min="0" max="10" class="nota-input" data-campo="nota3" value="${n3}"></td>`;
       }
 
+      // Só o esqueleto: o número (calculado ou manual) é preenchido pelo
+      // recalc logo abaixo, a mesma função que atualiza ao vivo. O campo
+      // .nota-manual-input fica oculto até o professor destravar a edição
+      // (ver setEdicaoNotasManuais).
       const materiaCellsHtml = materias.map(m => {
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
+        const manual = notaManualMateria(g, m.key);
+        const campoManual = `<input type="number" step="0.1" min="0" max="10" class="nota-manual-input" data-materia="${m.key}" value="${manual ?? ''}" title="Nota manual — deixe vazio para usar a nota calculada">`;
         // Matéria sem trilha atribuída a ESTE bimestre não tem nota nenhuma
         // pra calcular — mostrar "0" ali faria a média cair só em n2/n3
         // (compartilhadas por TODAS as matérias do aluno), então toda
         // matéria "Em breve" do mesmo aluno saía com o mesmo número por
         // coincidência de fórmula, não porque o desempenho fosse igual.
         if (pctMateria === null) {
-          return `<td class="materia-grade-cell" data-sem-trilha="1"><span class="materia-grade-value">—</span> <span style="color:var(--ink-dim); font-size:10px;">(sem trilha)</span></td>`;
+          return `<td class="materia-grade-cell" data-sem-trilha="1" data-materia="${m.key}"><span class="materia-grade-view"></span>${campoManual}</td>`;
         }
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
-        const notaFinal = aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
-        return `<td class="materia-grade-cell" data-materia-n1="${mn1}" data-materia="${m.key}"><span class="materia-grade-value">${notaFinal.toFixed(2)}</span></td>`;
+        return `<td class="materia-grade-cell" data-materia-n1="${mn1}" data-materia="${m.key}"><span class="materia-grade-view"></span>${campoManual}</td>`;
       }).join('');
 
       return `
@@ -2407,17 +2450,34 @@
         const n3 = n3Input ? n3Input.value : parseFloat(tr.querySelector('.nota3-cell').dataset.nota3);
         const n4 = tr.querySelector('.nota-input[data-campo="nota4"]').value;
         materiaCells.forEach(cell => {
-          if (cell.dataset.semTrilha) return;
-          const mn1 = parseFloat(cell.dataset.materiaN1);
-          const pesoInput = theadRow.querySelector(`.peso-materia-input[data-materia="${cell.dataset.materia}"]`);
-          const peso = parseFloat(pesoInput && pesoInput.value);
-          cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3, peso > 0 ? peso : 1), n4).toFixed(2);
+          let calculada = null;
+          if (!cell.dataset.semTrilha) {
+            const mn1 = parseFloat(cell.dataset.materiaN1);
+            const pesoInput = theadRow.querySelector(`.peso-materia-input[data-materia="${cell.dataset.materia}"]`);
+            const peso = parseFloat(pesoInput && pesoInput.value);
+            calculada = aplicarRecuperacao(calcMedia(mn1, n2, n3, peso > 0 ? peso : 1), n4);
+          }
+          // Nota manual (se digitada) substitui a calculada — ver notaManualMateria.
+          const manualInput = cell.querySelector('.nota-manual-input');
+          const manual = parseNotaManual(manualInput.value.trim());
+          manualInput.placeholder = calculada === null ? '—' : calculada.toFixed(2);
+          const view = cell.querySelector('.materia-grade-view');
+          if (manual !== null) {
+            const calcTxt = calculada === null ? 'sem trilha' : `calculada: ${calculada.toFixed(2)}`;
+            view.innerHTML = `<span class="materia-grade-value">${manual.toFixed(2)}</span> <span class="nota-manual-tag" title="Nota lançada manualmente pelo professor (${calcTxt})">✎ manual</span>`;
+          } else if (calculada === null) {
+            view.innerHTML = `<span class="materia-grade-value">—</span> <span style="color:var(--ink-dim); font-size:10px;">(sem trilha)</span>`;
+          } else {
+            view.innerHTML = `<span class="materia-grade-value">${calculada.toFixed(2)}</span>`;
+          }
         });
         pintarNotasBaixas();
       };
-      tr.querySelectorAll('.nota-input').forEach(inp => inp.addEventListener('input', recalc));
+      tr.querySelectorAll('.nota-input, .nota-manual-input').forEach(inp => inp.addEventListener('input', recalc));
       tr._recalcNotas = recalc;
+      recalc();
     });
+    setEdicaoNotasManuais(false);
     theadRow.querySelectorAll('.peso-materia-input').forEach(inp => inp.addEventListener('input', () => {
       tbody.querySelectorAll('tr[data-email]').forEach(tr => tr._recalcNotas && tr._recalcNotas());
     }));
@@ -2449,11 +2509,20 @@
       const nota2 = n2Input ? get('nota2') : parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
       const n3Input = tr.querySelector('.nota-input[data-campo="nota3"]');
       const nota3 = n3Input ? get('nota3') : parseFloat(tr.querySelector('.nota3-cell').dataset.nota3);
+      // Notas manuais por matéria (ver notaManualMateria) — só as
+      // preenchidas; campo apagado some do objeto e a matéria volta pra
+      // nota calculada. Limitada a 0–10.
+      const notas_materia = {};
+      tr.querySelectorAll('.nota-manual-input').forEach(inp => {
+        const v = parseNotaManual(inp.value.trim());
+        if (v !== null) notas_materia[inp.dataset.materia] = Math.min(10, Math.max(0, v));
+      });
       return {
         student_email: email,
         student_name: u ? u.nome : email,
         turma: cfg.id, bimestre,
         nota1, nota2, nota3, nota4: get('nota4'),
+        notas_materia,
         updated_at: now
       };
     });
@@ -2470,7 +2539,15 @@
     }
 
     if (rows.length === 0) return;
-    await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
+    const { error } = await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
+    // Banco sem a coluna notas_materia ainda (sql/notas-manuais-materia.sql
+    // não rodado): salva o resto normalmente e avisa que as manuais ficaram de fora.
+    if (error && /notas_materia/.test(error.message || '')) {
+      await sbClient.from('grades').upsert(rows.map(({ notas_materia, ...r }) => r), { onConflict: 'student_email,bimestre' });
+      document.getElementById('notasStatus').textContent = 'Notas salvas, MENOS as notas manuais de matéria — rode sql/notas-manuais-materia.sql no Supabase.';
+      renderRelatorioNotas();
+      return;
+    }
     document.getElementById('notasStatus').textContent = `Notas salvas às ${new Date().toLocaleTimeString('pt-BR')}.`;
     renderRelatorioNotas();
   }
@@ -2691,7 +2768,10 @@
     // abaixo nunca encontram a nota dele.
     const notaManual = (cfg.notasManuaisFor || []).includes(targetEmail);
     const [gradeRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
-      sbClient.from('grades').select('nota2, nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
+      // '*' e não uma lista de colunas: notas_materia só existe depois de
+      // rodar sql/notas-manuais-materia.sql, e pedir uma coluna que não
+      // existe derrubaria a consulta inteira.
+      sbClient.from('grades').select('*').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
       notaManual ? Promise.resolve({}) : fetchNotaProvaByStudent(),
       (!notaManual && nota3Auto) ? fetchNota3AutoByStudent() : Promise.resolve({}),
     ]);
@@ -2723,6 +2803,11 @@
     materias.filter(m => m.key !== 'prova').forEach(m => {
       const pctMateria = bimestreMateriaPercentForStudent(m, bimestreAtual, rows, targetEmail);
       const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 10 * 100) / 100;
+      const manual = notaManualMateria(g, m.key);
+      if (manual !== null) {
+        notaPorMateria[m.key] = { nota: manual, semTrilha: false };
+        return;
+      }
       const nota = pctMateria === null ? calcMedia(mn1, n2, n3, pesoMateria(m)) : aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
       notaPorMateria[m.key] = { nota, semTrilha: pctMateria === null };
     });
@@ -3070,6 +3155,8 @@
       const n4 = g.nota4 ?? '';
 
       const notasMateria = materias.map(m => {
+        const manual = notaManualMateria(g, m.key);
+        if (manual !== null) return manual;
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
         if (pctMateria === null) return null;
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
@@ -3452,6 +3539,7 @@
       try { localStorage.setItem(NOTAS_BAIXAS_KEY, destacarNotasBaixasOn() ? '0' : '1'); } catch (e) {}
       pintarNotasBaixas();
     });
+    document.getElementById('btnEditarNotasManuais').addEventListener('click', () => setEdicaoNotasManuais(!edicaoNotasManuais));
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);

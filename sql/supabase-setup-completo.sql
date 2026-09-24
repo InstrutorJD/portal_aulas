@@ -959,6 +959,11 @@ create table if not exists public.grades (
 
 create index if not exists idx_grades_turma_bimestre on public.grades (turma, bimestre);
 
+-- Notas manuais por matéria (Gestão → Lançar Notas, botão "Notas travadas
+-- / Editando notas"): { "<materia_key>": nota } — substitui a nota
+-- calculada daquela matéria. Ver sql/notas-manuais-materia.sql.
+alter table public.grades add column if not exists notas_materia jsonb not null default '{}'::jsonb;
+
 alter table public.grades enable row level security;
 
 drop policy if exists "grades_select_all" on public.grades;
