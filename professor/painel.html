@@ -15,10 +15,11 @@
     --yellow:#ff9466; --ink:#e8ecf1; --ink-dim:#8993a4;
   }
   .painel-intro{ text-align:center; }
-  .turma-card{ text-align:center; padding:32px 20px; cursor:pointer; }
-  .turma-card:hover{ border-color:var(--green); }
-  .turma-card .icon{ font-size:44px; margin-bottom:10px; }
-  .turma-card h3{ color:var(--ink); font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; letter-spacing:1px; margin:0; }
+  .turma-card, .ferramenta-card{ text-align:center; padding:32px 20px; cursor:pointer; }
+  .turma-card:hover, .ferramenta-card:hover{ border-color:var(--green); }
+  .turma-card .icon, .ferramenta-card .icon{ font-size:44px; margin-bottom:10px; }
+  .ferramenta-card{ border-style:dashed; }
+  .turma-card h3, .ferramenta-card h3{ color:var(--ink); font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; letter-spacing:1px; margin:0; }
   .card-grid.turma-grid{ grid-template-columns:repeat(auto-fit, 220px); justify-content:center; }
 </style>
 <link rel="stylesheet" href="../shared/platform-core.css">
@@ -57,6 +58,12 @@
         <div class="card turma-card" onclick="window.open('../turmas/sistemas/plataforma.html', '_blank')">
           <div class="icon">🖥️</div>
           <h3>Desenvolvimento de Sistemas</h3>
+        </div>
+        <!-- Não é uma turma: aulas em slides a partir de um .md, pra projetar
+             (professor/materiais.html, shared/slides-md.js). -->
+        <div class="card ferramenta-card" onclick="window.open('materiais.html', '_blank')">
+          <div class="icon">📽️</div>
+          <h3>Criar Material</h3>
         </div>
       </div>
     </div>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Criar Material</title>
+
+<!-- "Criar Material" (só professor, aberto pelo painel): aulas em slides a
+     partir de um arquivo Markdown, pra projetar na sala. Tudo estático —
+     sem Supabase além do login: os .md ficam em materiais/ (listados em
+     materiais/lista.js) ou são abertos direto do computador. Motor em
+     shared/slides-md.js, formato em materiais/guia-do-formato.md. -->
+<style>
+  :root{
+    --bg:#0b0d11; --panel:#141821; --panel2:#10131a; --line:#262b36;
+    --green:#4fd1c5; --green-dim:#2f8f86; --blood:#c1121f; --blood-bright:#ff5c5c;
+    --yellow:#ff9466; --ink:#e8ecf1; --ink-dim:#8993a4;
+  }
+  .mat-intro h2{ margin-bottom:4px; }
+  .mat-intro p{ font-size:12px; color:var(--ink-dim); margin:0 0 16px; }
+  .mat-drop{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:28px 16px; border:2px dashed var(--line); border-radius:12px; cursor:pointer; text-align:center; transition:border-color .2s, background .2s; }
+  .mat-drop:hover, .mat-drop.mat-drop-on{ border-color:var(--green); background:rgba(79,209,197,0.06); }
+  .mat-drop .icon{ font-size:36px; }
+  .mat-drop b{ color:var(--green); }
+  .mat-drop small{ color:var(--ink-dim); font-size:11px; }
+  .mat-erro{ color:var(--blood-bright); font-size:12px; margin-top:10px; min-height:1em; }
+  .mat-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px; }
+  .mat-card{ text-align:left; cursor:pointer; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); color:var(--ink); font:inherit; transition:transform .15s, border-color .15s; }
+  .mat-card:hover{ transform:translateY(-3px); border-color:var(--green); }
+  .mat-card .icon{ font-size:28px; }
+  .mat-card h3{ margin:8px 0 4px; font-size:15px; color:var(--ink); }
+  .mat-card p{ margin:0; font-size:11px; color:var(--ink-dim); line-height:1.5; }
+  .mat-vazio{ font-size:12px; color:var(--ink-dim); }
+  .mat-guia pre{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:11.5px; line-height:1.6; overflow-x:auto; white-space:pre; }
+  .mat-guia summary{ cursor:pointer; font-weight:800; color:var(--green); }
+  .mat-guia p{ font-size:12px; color:var(--ink-dim); }
+</style>
+<link rel="stylesheet" href="../shared/platform-core.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" id="smHljsTema" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="../shared/slides-md.css">
+
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="../shared/slides-md.js"></script>
+<script src="../materiais/lista.js"></script>
+</head>
+<body>
+
+<div class="a11y-bar">
+  <div class="label">Criar Material</div>
+  <div>
+    <a href="painel.html" class="label" style="color:var(--green); text-decoration:none; margin-right:10px;">⟵ Turmas</a>
+    <span id="sessionUser" class="label" style="color:var(--yellow)"></span>
+    <button id="btnLogout" class="btn-danger" style="padding:4px 8px; font-size:10px; margin-left:8px;">Sair</button>
+  </div>
+</div>
+
+<div class="app-container">
+  <div class="viewport-content">
+    <div class="card mat-intro">
+      <h2>📽️ Criar Material</h2>
+      <p>Aulas em slides a partir de um arquivo <b>.md</b> (Markdown) — pra projetar na sala e a turma acompanhar.</p>
+      <label class="mat-drop" id="matDrop">
+        <span class="icon">📂</span>
+        <span><b>Clique para escolher</b> ou arraste um arquivo <b>.md</b> aqui</span>
+        <small>Abre na hora, direto do seu computador — nada é enviado pra lugar nenhum.</small>
+        <input type="file" id="matArquivo" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+      </label>
+      <div class="mat-erro" id="matErro"></div>
+    </div>
+
+    <div class="card">
+      <h2>Aulas prontas</h2>
+      <div class="mat-grid" id="matLista"></div>
+    </div>
+
+    <div class="card mat-guia">
+      <details>
+        <summary>Como escrever o .md</summary>
+        <p>Cada <code>---</code> separa um slide. O guia completo, com exemplos, é a aula “Guia do formato” acima.</p>
+        <pre># Título da aula          → slide de abertura (grande, centralizado)
+Subtítulo
+
+---
+
+## Título do slide
+Texto comum, com **negrito**, *destaque*, `código` e ==marca-texto==.
+
+- lista normal
++ lista revelada em etapas (um item a cada avanço)
+
+- [ ] pergunta pra turma
+- [x] alternativa certa     → clique numa alternativa ou tecle R
+
+> destaque / dica
+
+```js
+console.log("código com cores e botão Copiar");
+```
+
+![legenda](imagem.png)
+
+| Coluna | Coluna |
+|--------|--------|
+| a      | b      |
+
+[cronômetro 15]           → cronômetro de 15 min pra parte prática
+
+[qrcode https://exemplo.com Acesse aqui]
+                          → QR Code (texto depois do link = legenda; clique ou Q amplia)</pre>
+        <p>Na apresentação: <b>→ / espaço</b> avança, <b>←</b> volta, <b>O</b> visão geral, <b>T</b> tema claro/escuro, <b>F</b> tela cheia, <b>R</b> revela a resposta, <b>Q</b> amplia o QR Code, <b>Esc</b> sai. Um passador de slides também funciona.</p>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div class="sm-presenter" id="smPresenter" hidden></div>
+
+<script>
+(async function () {
+  // Só professor — mesmo guarda do painel (professor/painel.html).
+  const currentUser = await window.PortalSession.requireUser('../index.html');
+  if (!currentUser) return;
+  if (currentUser.role !== 'professor') {
+    window.location.href = '../index.html';
+    return;
+  }
+  document.getElementById('sessionUser').textContent = currentUser.nome;
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await window.PortalSession.signOut();
+    window.location.href = '../index.html';
+  });
+
+  const erroEl = document.getElementById('matErro');
+  const presenterEl = document.getElementById('smPresenter');
+  const presenter = window.SlidesMD.createPresenter(presenterEl, {
+    onExit: () => {
+      document.title = 'PixelForge Studios — Criar Material';
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    },
+  });
+
+  // Tema do código acompanha o tema da apresentação (tecla T).
+  const hljsTema = document.getElementById('smHljsTema');
+  const trocarTemaCodigo = tema => {
+    hljsTema.href = `https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/${tema === 'light' ? 'github' : 'github-dark'}.min.css`;
+  };
+  document.addEventListener('sm-tema', e => trocarTemaCodigo(e.detail));
+  trocarTemaCodigo(presenterEl.dataset.theme);
+
+  function slideDoHash() {
+    const n = parseInt((location.hash || '').slice(1), 10);
+    return n > 0 ? n - 1 : 0;
+  }
+
+  function apresentar(md, baseUrl, nome, param, inicio) {
+    const deck = window.SlidesMD.parse(md, baseUrl);
+    if (deck.slides.length === 0) {
+      erroEl.textContent = `“${nome}” não tem nenhum slide — confira se o arquivo tem conteúdo.`;
+      return;
+    }
+    erroEl.textContent = '';
+    document.title = `${deck.titulo || nome} — Criar Material`;
+    try { history.replaceState(null, '', `${location.pathname}?m=${encodeURIComponent(param)}#${(inicio || 0) + 1}`); } catch (e) {}
+    presenter.abrir(deck, inicio || 0);
+  }
+
+  async function abrirDaLista(arquivo, inicio) {
+    const url = new URL(`../materiais/${arquivo}`, location.href).href;
+    try {
+      const resp = await fetch(url, { cache: 'no-cache' });
+      if (!resp.ok) throw new Error(resp.status);
+      apresentar(await resp.text(), url, arquivo, arquivo, inicio);
+    } catch (e) {
+      erroEl.textContent = `Não foi possível abrir materiais/${arquivo}.`;
+    }
+  }
+
+  // Arquivo do computador: fica guardado nesta aba (sessionStorage) só pra
+  // sobreviver a um F5 no meio da aula.
+  function abrirArquivo(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const md = String(reader.result || '');
+      try { sessionStorage.setItem('sm_upload', JSON.stringify({ nome: file.name, md })); } catch (e) {}
+      apresentar(md, null, file.name, '__arquivo', 0);
+    };
+    reader.onerror = () => { erroEl.textContent = 'Não foi possível ler o arquivo.'; };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  // Lista de aulas prontas (materiais/lista.js).
+  const lista = document.getElementById('matLista');
+  const materiais = window.MATERIAIS || [];
+  lista.innerHTML = materiais.length === 0
+    ? '<p class="mat-vazio">Nenhuma aula em materiais/lista.js ainda.</p>'
+    : materiais.map((m, i) => `
+        <button type="button" class="mat-card" data-i="${i}">
+          <div class="icon">${m.icone || '📘'}</div>
+          <h3></h3>
+          <p></p>
+        </button>`).join('');
+  lista.querySelectorAll('.mat-card').forEach(card => {
+    const m = materiais[parseInt(card.dataset.i, 10)];
+    card.querySelector('h3').textContent = m.titulo || m.arquivo;
+    card.querySelector('p').textContent = m.descricao || '';
+    card.addEventListener('click', () => abrirDaLista(m.arquivo, 0));
+  });
+
+  const input = document.getElementById('matArquivo');
+  input.addEventListener('change', () => { abrirArquivo(input.files[0]); input.value = ''; });
+  const drop = document.getElementById('matDrop');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('mat-drop-on'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('mat-drop-on'); }));
+  drop.addEventListener('drop', e => abrirArquivo(e.dataTransfer.files[0]));
+
+  // ?m=arquivo.md#5 reabre direto no slide 5 (F5 no meio da aula).
+  const param = new URLSearchParams(location.search).get('m');
+  if (param === '__arquivo') {
+    try {
+      const salvo = JSON.parse(sessionStorage.getItem('sm_upload') || 'null');
+      if (salvo) apresentar(salvo.md, null, salvo.nome, '__arquivo', slideDoHash());
+    } catch (e) {}
+  } else if (param) {
+    abrirDaLista(param, slideDoHash());
+  }
+})();
+</script>
+
+</body>
+</html>
