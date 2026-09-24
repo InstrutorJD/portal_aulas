@@ -21,8 +21,13 @@
   }
   .login-card {
     width: 100%; max-width: 420px; background: var(--panel);
-    border: 2px solid var(--green-dim); padding: 24px;
-    box-shadow: 0 0 20px rgba(143, 166, 201, 0.15);
+    border: 2px solid var(--green-dim); padding: 24px; border-radius: 16px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65), 0 0 28px rgba(143, 166, 201, 0.22);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .login-card:hover {
+    transform: translateY(-3px); border-color: var(--green);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 36px rgba(143, 166, 201, 0.32);
   }
   .login-card h1 {
     font-family: 'VT323', monospace; font-size: 32px; color: var(--green);
@@ -40,13 +45,28 @@
   .form-group input {
     width: 100%; background: var(--panel2); border: 1px solid var(--line);
     color: var(--ink); font-size: 13px; padding: 10px; outline: none;
-    font-family: inherit; transition: border-color 0.2s;
+    font-family: inherit; border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   }
-  .form-group input:focus { border-color: var(--green); }
+  .form-group input:hover { border-color: var(--green-dim); background: #10141a; }
+  .form-group input:focus {
+    border-color: var(--green); box-shadow: 0 0 0 3px rgba(143, 166, 201, 0.18);
+  }
   .btn-submit {
     width: 100%; background: var(--green); color: #0b0e12; border: none;
     font-weight: 800; font-size: 12px; text-transform: uppercase;
     padding: 12px; cursor: pointer; margin-top: 8px; font-family: inherit;
+    border-radius: 8px;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  }
+  .btn-submit:hover {
+    filter: brightness(1.12); transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(143, 166, 201, 0.35);
+  }
+  .btn-submit:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(143, 166, 201, 0.25); }
+  @media (prefers-reduced-motion: reduce) {
+    .login-card, .form-group input, .btn-submit { transition: none; }
+    .login-card:hover, .btn-submit:hover { transform: none; }
   }
   .error-msg {
     color: var(--blood-bright); font-size: 11px; margin-top: 12px;
