@@ -17,7 +17,7 @@
     margin: 0; padding: 0; height: 100vh;
     background: var(--bg); color: var(--ink);
     font-family: 'JetBrains Mono', monospace;
-    display: flex; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   .login-card {
     width: 100%; max-width: 420px; background: var(--panel);
@@ -64,10 +64,10 @@
     box-shadow: 0 8px 20px rgba(143, 166, 201, 0.35);
   }
   .btn-submit:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(143, 166, 201, 0.25); }
-  /* Letra "A" em rabisco no topo do card: neon branco simples, segue o
+  /* Letra "A" em rabisco acima do card de login: neon branco simples, segue o
      mouse de leve; com o mouse em cima ela para e o neon fica mais forte. */
   .login-mark {
-    display: flex; justify-content: center; margin: 0 0 10px;
+    display: flex; justify-content: center; margin: 0 0 18px;
     pointer-events: none;
   }
   .login-letter {
@@ -105,23 +105,31 @@
 </head>
 <body>
 
+<div class="login-mark">
+  <svg class="login-letter" id="loginLetter" viewBox="0 0 100 96" aria-hidden="true" focusable="false">
+    <!-- área transparente só para o mouse "pegar" a letra inteira -->
+    <rect x="0" y="0" width="100" height="96" fill="transparent"/>
+    <!-- "A" desconstruído: as pernas não se encontram no topo, cada uma
+         quebrada em pedaços desalinhados; a barra é um traço solto que
+         escapa para fora da letra. Dá para ler um A, mas não é um A. -->
+    <!-- perna esquerda, em dois pedaços com um vão e um desvio -->
+    <path class="risco risco-forte" d="M12 90 C 17 78, 22 67, 28 55"/>
+    <path class="risco risco-forte" d="M33 47 C 37 36, 41 26, 46 15"/>
+    <!-- perna direita: começa afastada e acima do topo, também partida -->
+    <path class="risco risco-forte" d="M57 4 C 61 16, 65 29, 70 42"/>
+    <path class="risco risco-forte" d="M75 57 C 79 68, 83 79, 89 92"/>
+    <!-- barra: traço solto, fora de esquadro, que passa da perna esquerda -->
+    <path class="risco risco-forte" d="M6 66 C 20 62, 34 60, 52 59"/>
+    <!-- sobras de rabisco: ponta da barra do outro lado, marca no topo e
+         um fiapo acompanhando a perna direita -->
+    <path class="risco risco-fino" d="M62 58 C 66 58, 70 58, 73 59"/>
+    <path class="risco risco-fino" d="M44 9 C 47 6, 50 5, 53 7"/>
+    <path class="risco risco-fino" d="M64 20 C 68 32, 72 44, 78 60"/>
+    <path class="risco risco-fino" d="M18 84 C 21 77, 23 72, 25 68"/>
+  </svg>
+</div>
+
 <div class="login-card">
-  <div class="login-mark">
-    <svg class="login-letter" id="loginLetter" viewBox="0 0 100 96" aria-hidden="true" focusable="false">
-      <!-- área transparente só para o mouse "pegar" a letra inteira -->
-      <rect x="0" y="0" width="100" height="96" fill="transparent"/>
-      <!-- traços principais (um pouco tortos, como feitos à mão) -->
-      <path class="risco risco-forte" d="M16 88 C 24 68, 33 44, 41 26 C 44 19, 47 13, 50 8"/>
-      <path class="risco risco-forte" d="M49 9 C 55 22, 61 37, 67 52 C 73 66, 79 78, 85 89"/>
-      <path class="risco risco-forte" d="M24 62 C 38 58, 54 57, 72 56 C 76 56, 79 57, 81 58"/>
-      <!-- segunda passada do rabisco, levemente deslocada -->
-      <path class="risco risco-fino" d="M20 91 C 27 71, 36 47, 44 29 C 47 21, 50 14, 53 9 C 51 7, 48 7, 46 10"/>
-      <path class="risco risco-fino" d="M52 11 C 57 25, 63 39, 69 54 C 74 67, 78 77, 82 86"/>
-      <path class="risco risco-fino" d="M21 66 C 36 61, 53 60, 69 60 C 74 60, 78 61, 84 63"/>
-      <!-- pontinha de caneta que escapou no fim da perna direita -->
-      <path class="risco risco-fino" d="M85 89 C 88 90, 90 88, 91 86"/>
-    </svg>
-  </div>
   <h1>Axis</h1>
   <div class="subtitle">Acesso ao portal</div>
 
