@@ -2021,15 +2021,27 @@
     setTimeout(() => printWin.print(), 250);
   }
 
-  // Nota BASE da matéria = média de 3 termos, todos 0-10: Prova
-  // (diagnóstica), Nota 3 (2ª prova, auto ou digitada) e a % de conclusão
-  // das trilhas DAQUELA matéria neste bimestre (já escalada 0-10 por quem
-  // chama, ver os "* 10" nos pontos que montam mn1). A Recuperação
-  // (grades.nota4) não entra aqui — ela só se aplica DEPOIS, ver
-  // aplicarRecuperacao, e só quando a nota base fica abaixo de 6,0.
-  function calcMedia(n1, n2, n3) {
+  // Nota BASE da matéria = média PONDERADA de 3 termos, todos 0-10: a %
+  // de conclusão das trilhas DAQUELA matéria neste bimestre (n1, já
+  // escalada 0-10 por quem chama, ver os "* 10" nos pontos que montam
+  // mn1), com o peso da matéria (ver pesoMateria), mais Prova
+  // (diagnóstica) e Nota 3 (2ª prova, auto ou digitada), peso 1 cada:
+  //   (peso × atividades + Prova + Nota 3) / (peso + 2)
+  // As duas provas são as mesmas pra todas as matérias do aluno — sem o
+  // peso, quem concluía tudo tirava a MESMA nota em todas as matérias.
+  // Peso 1 = a média simples de antes. A Recuperação (grades.nota4) não
+  // entra aqui — ela só se aplica DEPOIS, ver aplicarRecuperacao, e só
+  // quando a nota base fica abaixo de 6,0.
+  function calcMedia(n1, n2, n3, peso = 1) {
     const vals = [n1, n2, n3].map(v => (v === '' || v === null || v === undefined || isNaN(v)) ? 0 : parseFloat(v));
-    return Math.round(((vals[0] + vals[1] + vals[2]) / 3) * 100) / 100;
+    return Math.round(((peso * vals[0] + vals[1] + vals[2]) / (peso + 2)) * 100) / 100;
+  }
+
+  // Peso das ATIVIDADES de uma matéria na nota (campo `peso` de cada
+  // matéria em turmas/*/config.js). Sem `peso` (ou inválido) vale 1.
+  function pesoMateria(materia) {
+    const p = parseFloat(materia && materia.peso);
+    return p > 0 ? p : 1;
   }
 
   // Recuperação (grades.nota4, rótulo "Recuperação" na tela): um valor só
@@ -2137,7 +2149,7 @@
     const materias = materiasParaNotas();
     const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3 (rótulo configurável via cfg.nota3Label), Recuperação + 1 por matéria
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label}</th>`).join('')}`;
+    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label} <span style="color:var(--ink-dim); font-size:10px; font-weight:400;">(peso ${pesoMateria(m)})</span></th>`).join('')}`;
 
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
 
@@ -2235,8 +2247,8 @@
           return `<td class="materia-grade-cell" data-sem-trilha="1"><span class="materia-grade-value">—</span> <span style="color:var(--ink-dim); font-size:10px;">(sem trilha)</span></td>`;
         }
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
-        const notaFinal = aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
-        return `<td class="materia-grade-cell" data-materia-n1="${mn1}"><span class="materia-grade-value">${notaFinal.toFixed(2)}</span></td>`;
+        const notaFinal = aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
+        return `<td class="materia-grade-cell" data-materia-n1="${mn1}" data-materia-peso="${pesoMateria(m)}"><span class="materia-grade-value">${notaFinal.toFixed(2)}</span></td>`;
       }).join('');
 
       return `
@@ -2267,7 +2279,7 @@
         materiaCells.forEach(cell => {
           if (cell.dataset.semTrilha) return;
           const mn1 = parseFloat(cell.dataset.materiaN1);
-          cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3), n4).toFixed(2);
+          cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3, parseFloat(cell.dataset.materiaPeso) || 1), n4).toFixed(2);
         });
       };
       tr.querySelectorAll('.nota-input').forEach(inp => inp.addEventListener('input', recalc));
@@ -2562,7 +2574,7 @@
     materias.filter(m => m.key !== 'prova').forEach(m => {
       const pctMateria = bimestreMateriaPercentForStudent(m, bimestreAtual, rows, targetEmail);
       const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 10 * 100) / 100;
-      const nota = pctMateria === null ? calcMedia(mn1, n2, n3) : aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
+      const nota = pctMateria === null ? calcMedia(mn1, n2, n3, pesoMateria(m)) : aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
       notaPorMateria[m.key] = { nota, semTrilha: pctMateria === null };
     });
     return notaPorMateria;
@@ -2675,9 +2687,9 @@
 
     // Nota de cada matéria no bimestre ATUAL (bimestreAtual já buscado
     // acima, pro card de resumo) — mesma fórmula que o professor vê em
-    // Gestão → Lançar Notas: nota base = média de Prova + Nota 3 + (% de
-    // conclusão só das trilhas DAQUELA matéria neste bimestre, escalada
-    // até 10,0), dividido por 3; se a base ficar abaixo de 6,0 e o
+    // Gestão → Lançar Notas: nota base = (peso da matéria × % de conclusão
+    // só das trilhas DAQUELA matéria neste bimestre, escalada até 10,0 +
+    // Prova + Nota 3) / (peso + 2), ver calcMedia; se a base ficar abaixo de 6,0 e o
     // professor já lançou a Recuperação, a nota final vira a média entre a
     // base e a Recuperação (ver aplicarRecuperacao). A matéria "Prova" fica
     // de fora (ela É a nota "Prova", não faz sentido ter nota de si mesma).
@@ -2912,7 +2924,7 @@
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
         if (pctMateria === null) return null;
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
-        return aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
+        return aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
       });
       const materiaCells = notasMateria.map(nota => `<td>${nota === null ? '—' : nota.toFixed(2)}</td>`).join('');
 

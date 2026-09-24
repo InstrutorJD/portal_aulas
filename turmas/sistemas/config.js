@@ -33,10 +33,15 @@ window.TURMA_CONFIG_SISTEMAS = {
   // coluna volta a ser o <input> manual de sempre.
   nota3TrilhaKey: 'prova-final',
   nota3ActivityLocation: 'prova_final_sistemas',
+  // `peso` de cada matéria = quanto as ATIVIDADES dela valem na nota, contra
+  // Prova Diagnóstica e Prova Final (peso 1 cada, as mesmas pra todas as
+  // matérias): nota = (peso × atividades + Prova + Prova Final) / (peso + 2).
+  // Sem `peso`, vale 1. Ver calcMedia/pesoMateria em shared/platform-core.js.
   materias: [
     {
       key: 'banco-dados',
       label: 'Banco de Dados',
+      peso: 3,
       trilhas: [
         {
           key: 'sql',
@@ -137,6 +142,7 @@ window.TURMA_CONFIG_SISTEMAS = {
     {
       key: 'dev-sistemas-1',
       label: 'Desenvolvimento de Sistemas 1',
+      peso: 3,
       trilhas: [
         {
           key: 'devsis-apis-frameworks',
@@ -244,6 +250,7 @@ window.TURMA_CONFIG_SISTEMAS = {
     {
       key: 'redes-computadores',
       label: 'Redes de Computadores',
+      peso: 2,
       trilhas: [
         {
           key: 'redes-conexao',
@@ -352,6 +359,7 @@ window.TURMA_CONFIG_SISTEMAS = {
     {
       key: 'internet-das-coisas',
       label: 'Internet das Coisas',
+      peso: 2,
       trilhas: [
         {
           key: 'iot-conectividade-hardware',
@@ -380,6 +388,7 @@ window.TURMA_CONFIG_SISTEMAS = {
     {
       key: 'intro-dev-projetos',
       label: 'Introdução de Desenvolvimento de Projetos',
+      peso: 1,
       trilhas: [
         {
           // 1ª peça do projeto interdisciplinar "FinancApp" (app de
@@ -411,7 +420,7 @@ window.TURMA_CONFIG_SISTEMAS = {
       ]
     },
     {
-      key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1',
+      key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1', peso: 2,
       trilhas: [
         {
           key: 'modelagem-dados-requisitos',
@@ -483,7 +492,7 @@ window.TURMA_CONFIG_SISTEMAS = {
       // conteúdo técnico específico de nenhuma das duas turmas) — só copiadas
       // pra turmas/sistemas/atividades/, com o rótulo de turma corrigido
       // dentro de cada arquivo (Turma Jogos Digitais → Turma Sistemas).
-      key: 'projeto-vida', label: 'Projeto de Vida',
+      key: 'projeto-vida', label: 'Projeto de Vida', peso: 1,
       trilhas: [
         {
           key: 'vida-autoconhecimento',
@@ -577,7 +586,7 @@ window.TURMA_CONFIG_SISTEMAS = {
     },
     {
       // Idem: mesmo conteúdo da turma Jogos Digitais.
-      key: 'mundo-trabalho', label: 'Mundo do Trabalho',
+      key: 'mundo-trabalho', label: 'Mundo do Trabalho', peso: 1,
       trilhas: [
         {
           key: 'mundo-revolucao',
@@ -648,7 +657,7 @@ window.TURMA_CONFIG_SISTEMAS = {
       ]
     },
     {
-      key: 'prog-aplicativos', label: 'Programação de Aplicativos',
+      key: 'prog-aplicativos', label: 'Programação de Aplicativos', peso: 3,
       trilhas: [
         {
           key: 'prog-depuracao',

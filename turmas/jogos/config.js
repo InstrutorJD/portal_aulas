@@ -37,9 +37,13 @@ window.TURMA_CONFIG_JOGOS = {
   // com base no gabarito da prova adaptada — a % de Atividades continua
   // automática, calculada só a partir das trilhas adaptadas dele.
   notasManuaisFor: ['engel.fraga'],
+  // `peso` de cada matéria = quanto as ATIVIDADES dela valem na nota, contra
+  // Prova Diagnóstica e Prova Final (peso 1 cada, as mesmas pra todas as
+  // matérias): nota = (peso × atividades + Prova + Prova Final) / (peso + 2).
+  // Sem `peso`, vale 1. Ver calcMedia/pesoMateria em shared/platform-core.js.
   materias: [
     {
-      key: 'projeto-vida', label: 'Projeto de Vida',
+      key: 'projeto-vida', label: 'Projeto de Vida', peso: 1,
       trilhas: [
         {
           key: 'vida-autoconhecimento',
@@ -198,7 +202,7 @@ window.TURMA_CONFIG_JOGOS = {
       ]
     },
     {
-      key: 'mundo-trabalho', label: 'Mundo do Trabalho',
+      key: 'mundo-trabalho', label: 'Mundo do Trabalho', peso: 1,
       trilhas: [
         {
           key: 'mundo-revolucao',
@@ -291,7 +295,7 @@ window.TURMA_CONFIG_JOGOS = {
       ]
     },
     {
-      key: 'intro-dev-projetos', label: 'Introdução ao Desenvolvimento de Projetos',
+      key: 'intro-dev-projetos', label: 'Introdução ao Desenvolvimento de Projetos', peso: 1,
       trilhas: [
         {
           key: 'projetos-metodos',
@@ -340,7 +344,7 @@ window.TURMA_CONFIG_JOGOS = {
       ]
     },
     {
-      key: 'codificacao-jogos', label: 'Codificação de Jogos',
+      key: 'codificacao-jogos', label: 'Codificação de Jogos', peso: 3,
       trilhas: [
         {
           key: 'cod-ide',
@@ -543,6 +547,7 @@ window.TURMA_CONFIG_JOGOS = {
     {
       key: 'fundamentos-programacao',
       label: 'Fundamentos de Programação de Jogos',
+      peso: 3,
       trilhas: [
         {
           key: 'fund-ambiente',
@@ -792,7 +797,7 @@ window.TURMA_CONFIG_JOGOS = {
       ]
     },
     {
-      key: 'testes-jogos', label: 'Testes de Jogos Digitais',
+      key: 'testes-jogos', label: 'Testes de Jogos Digitais', peso: 2,
       trilhas: [
         {
           key: 'teste-fundamentos',
@@ -947,7 +952,7 @@ window.TURMA_CONFIG_JOGOS = {
       // deixaria o CARD "Em breve" vazando o nome/existência da adaptação
       // pra turma toda). O professor sempre vê, pra acompanhar/gerar
       // gabarito.
-      key: 'comunicacao-engel', label: 'Comunicação (Engel)', visibleFor: ['engel.fraga'],
+      key: 'comunicacao-engel', label: 'Comunicação (Engel)', visibleFor: ['engel.fraga'], peso: 3,
       trilhas: [
         {
           key: 'frases-engel',
