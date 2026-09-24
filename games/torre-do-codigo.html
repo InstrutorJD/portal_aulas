@@ -123,9 +123,9 @@
 <div class="env">
   <div class="topbar">
     <div>TORRE DO CÓDIGO — A ESCALADA</div>
-    <div class="keys"><b>← →</b> andar · <b>↑</b>/<b>Espaço</b> pular · <b>J</b> atacar · <b>K</b> escudo · <b>L</b> flecha · <b>E</b> terminal</div>
+    <div class="keys"><b>← →</b> andar · <b>E</b> terminal · <b>↑</b> pular, <b>J</b> atacar, <b>K</b> escudo e <b>L</b> flecha só depois de criar em código</div>
     <div class="stats">
-      <span>ANDAR <b id="lblAndar">1</b> DE <b id="lblAndarTotal">13</b></span>
+      <span>ANDAR <b id="lblAndar">1</b> DE <b id="lblAndarTotal">15</b></span>
       <span>PONTOS <b id="lblPontos">0</b></span>
       <span>RECORDE <b class="best" id="lblRecorde">0</b></span>
       <button class="btn-ranking" id="btnRanking">🏆 Ranking da Turma</button>
@@ -198,7 +198,9 @@
   // usa progress-sync.js nem student_module_progress). Só o melhor placar
   // vai pra game_scores (shared/game-leaderboard.js).
   const GAME_KEY = 'torre_do_codigo';
-  const STATE_KEY = `torre_codigo_estado_${username}`;
+  // v2: a ordem dos andares mudou (pular/atacar viraram andares próprios);
+  // uma tentativa salva na ordem antiga não serve mais. O recorde fica.
+  const STATE_KEY = `torre_codigo_v2_estado_${username}`;
   const BEST_KEY = `torre_codigo_recorde_${username}`;
 
   // ---------- Execução do código do aluno ----------
@@ -256,14 +258,14 @@
     return execCode(changed, names, given);
   }
 
-  // Um elemento só é bloqueado pelo escudo certo (andar 6 e chefão).
+  // Um elemento só é bloqueado pelo escudo certo (andar 8 e chefão).
   const ELEMENTOS = ['fogo', 'gelo', 'raio'];
   const ESCUDO_CERTO = { fogo: 'agua', gelo: 'fogo', raio: 'terra' };
   const ELEM_COR = { fogo: '#ff7a1a', gelo: '#7fe3ff', raio: '#ffe14a', agua: '#4aa8ff', terra: '#b98b4f', flecha: '#c9b38a' };
   const PET_TIPOS = { dragao: '🐉', lobo: '🐺', coruja: '🦉' };
   const semAcento = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-  // As torres da muralha (andar 10) e as vidas do radar (andar 11) são os
+  // As torres da muralha (andar 12) e as vidas do radar (andar 13) são os
   // inimigos DE VERDADE daqueles andares — o código do aluno roda com eles.
   const TORRES = ['T1', 'T2', 'T3', 'T4', 'T5'];
   const VIDAS_RADAR = [2, 12, 1, 3, 15, 2, 20];
@@ -277,7 +279,7 @@
   const STAGES = [
     {
       id: 'vida', tema: 'Variáveis (let)', title: '❤️ Corações (let)',
-      text: 'O térreo da torre está cheio de espinhos e o seu herói aguenta só 1 golpe. Crie a variável <code>vida</code> com um <b>número</b> de 3 a 5 — é quantos corações ele vai ter na subida.',
+      text: 'A subida começa aqui. Por enquanto o seu herói só sabe <b>andar</b> — pular, atacar e defender ele só vai conseguir quando você criar as funções dessas ações, mais pra cima. Lá em cima tem espinhos e inimigos, e hoje ele aguenta só 1 golpe. Crie a variável <code>vida</code> com um <b>número</b> de 3 a 5 — é quantos corações ele vai ter na subida.',
       concept: '<b>Variável</b> é uma caixinha com nome que guarda um valor. <code>let</code> cria a caixinha e o <code>=</code> guarda o valor dentro dela. <b>Número</b> vai sem aspas: <code>5</code>.',
       format: 'Formato: <code>let nome = valor;</code>',
       hint: 'let vida = 5;',
@@ -292,11 +294,11 @@
         return null;
       },
       apply(v) { abilities.vidaMax = v.vida; },
-      success: v => `❤️ O herói agora tem ${v.vida} corações! Pule os espinhos (↑) e suba a escada no fim do andar.`
+      success: v => `❤️ O herói agora tem ${v.vida} corações! Ande até a escada no fim do andar.`
     },
     {
       id: 'heroi', tema: 'Constantes e tipos', title: '⚔️ Nome e espada (const, texto e booleano)',
-      text: 'Slimes guardam este andar e o herói está de mãos vazias. Crie a <b>constante</b> <code>heroi</code> com o nome do seu herói (um <b>texto</b>) e a variável <code>temEspada</code> com o valor <code>true</code>.',
+      text: 'Esta é a sala de armas, e o herói está de mãos vazias. Crie a <b>constante</b> <code>heroi</code> com o nome do seu herói (um <b>texto</b>) e a variável <code>temEspada</code> com o valor <code>true</code>.',
       concept: '<code>const</code> cria uma caixinha que <b>nunca muda</b> de valor (o nome do herói não muda). Cada valor tem um <b>tipo</b>: <b>texto</b> (string) vai entre aspas — <code>"Luna"</code>; <b>booleano</b> é <code>true</code> ou <code>false</code>, sem aspas.',
       format: 'Formato: <code>const heroi = "...";</code> e <code>let temEspada = true;</code>',
       hint: 'const heroi = "Luna";\nlet temEspada = true;',
@@ -314,11 +316,11 @@
         return null;
       },
       apply(v) { abilities.nome = v.heroi.trim(); abilities.espada = true; },
-      success: v => `⚔️ ${v.heroi.trim()} pegou a espada! Aperte J para atacar.`
+      success: v => `⚔️ ${v.heroi.trim()} pegou a espada! Mas ela ainda não ataca: o golpe vem da função atacar(), dois andares acima.`
     },
     {
       id: 'golpe', tema: 'Operações e textos', title: '💥 Golpe e grito de guerra (operações)',
-      text: 'Os cavaleiros deste andar têm <b>12 de vida</b> e a espada só tira 1. A variável <code>forca</code> já vale 2. Crie <code>golpe</code> valendo <b>forca vezes 3</b> (use a variável, não o número pronto). Depois crie o <code>grito</code> de guerra juntando o texto <code>"Avante, "</code> com a constante <code>heroi</code> — a que você criou no andar anterior, e que já existe aqui.',
+      text: 'Mais acima tem cavaleiros com <b>12 de vida</b>, e a espada sozinha só tira 1. A variável <code>forca</code> já vale 2. Crie <code>golpe</code> valendo <b>forca vezes 3</b> (use a variável, não o número pronto). Depois crie o <code>grito</code> de guerra juntando o texto <code>"Avante, "</code> com a constante <code>heroi</code> — a que você criou no andar anterior, e que já existe aqui.',
       concept: 'Contas: <code>+</code> (mais), <code>-</code> (menos), <code>*</code> (vezes), <code>/</code> (dividido). Com textos, o <code>+</code> <b>junta</b>: <code>"Oi, " + nome</code> vira <code>"Oi, Luna"</code>.',
       format: 'Formato: <code>let golpe = forca * 3;</code> e <code>let grito = "Avante, " + heroi;</code>',
       hint: 'let forca = 2;\nlet golpe = forca * 3;\nlet grito = "Avante, " + heroi;',
@@ -344,7 +346,56 @@
         return null;
       },
       apply(v) { abilities.golpe = v.golpe; abilities.grito = v.grito; },
-      success: v => `💥 Cada golpe agora tira ${v.golpe}! E o herói grita: "${v.grito}"`
+      success: v => `💥 golpe = ${v.golpe} e o grito é "${v.grito}". Guarde o golpe: a função atacar() vai usar essa variável.`
+    },
+    {
+      id: 'pular', tema: 'Funções (criar e return)', title: '🦘 Criar função: pular()',
+      text: 'Este andar tem espinhos, e o herói ainda não sabe pular. Quem faz o herói AGIR são as <b>funções</b>. Crie a função <code>pular</code>, que devolve com <code>return</code> a força do pulo: um número de 8 a 14. Toda vez que você apertar <b>↑</b> ou <b>Espaço</b>, o jogo vai chamar <code>pular()</code> e usar o número que ela devolver.',
+      concept: '<b>Função</b> é um bloco de código com nome, que só roda quando alguém a <b>chama</b>. <code>function nome() { ... }</code> CRIA a função (a receita da ação); <code>return</code> é a resposta que ela devolve pra quem chamou — aqui, quem chama é o jogo.',
+      format: 'Formato: <code>function pular() { return ...; }</code>',
+      hint: 'function pular() {\n  return 11;\n}',
+      starter: '// Crie a função pular\n',
+      names: ['pular'],
+      check(v) {
+        if (!isFn(v.pular)) return 'A função pular não foi criada. Use: function pular() { ... }';
+        let r;
+        try { r = v.pular(); } catch (e) { return friendlyError(e); }
+        if (r === undefined) return 'pular() não devolveu nada. Falta o return com a força do pulo.';
+        if (typeof r !== 'number') return `pular() devolveu ${J(r)} — precisa ser um NÚMERO (sem aspas).`;
+        if (r < 8 || r > 14) return `pular() devolveu ${r}. A força do pulo precisa ser de 8 a 14.`;
+        return null;
+      },
+      apply(v) { abilities.pular = v.pular; },
+      success: v => `🦘 Pulo pronto! Cada ↑ chama pular() e o herói sobe com força ${v.pular()}. Pule os espinhos!`
+    },
+    {
+      id: 'atacar', tema: 'Funções que usam variáveis', title: '⚔️ Criar função: atacar()',
+      text: 'Slimes e cavaleiros guardam este andar, e a espada ainda não faz nada. Crie a função <code>atacar</code>, que devolve com <code>return</code> a sua variável <code>golpe</code> — ela já existe, você criou dois andares abaixo. Toda vez que você apertar <b>J</b>, o jogo chama <code>atacar()</code>, e o número devolvido é o dano do golpe.',
+      concept: 'Uma função pode usar variáveis que já existem. <code>return golpe;</code> (sem aspas) devolve o VALOR guardado na variável — se o golpe mudar, o ataque muda junto.',
+      format: 'Formato: <code>function atacar() { return golpe; }</code>',
+      hint: 'function atacar() {\n  return golpe;\n}',
+      starter: '// A variável golpe já existe. Crie a função atacar\n',
+      names: ['atacar'],
+      // golpe entra pronto no código do aluno, com o valor que ELE calculou
+      // no andar 3 — a atacar() dele fecha sobre ele e o jogo usa isso no J.
+      makeGiven(golpe) { return { given: { golpe: golpe !== undefined ? golpe : (abilities.golpe || 6) }, log: null }; },
+      check(v, code) {
+        if (!isFn(v.atacar)) return 'A função atacar não foi criada. Use: function atacar() { ... }';
+        let r;
+        try { r = v.atacar(); } catch (e) { return friendlyError(e); }
+        if (r === undefined) return 'atacar() não devolveu nada. Falta o return golpe;';
+        if (typeof r !== 'number') return `atacar() devolveu ${J(r)} — precisa devolver a variável golpe, sem aspas: return golpe;`;
+        // Roda de novo com outros golpes: número fixo (return 6;) não vale.
+        for (const g of [13, 7]) {
+          const x = execCode(code, ['atacar'], this.makeGiven(g).given);
+          let r2;
+          try { r2 = x.error ? undefined : x.vars.atacar(); } catch (e) { r2 = undefined; }
+          if (r2 !== g) return `atacar() precisa devolver a variável golpe, não um número fixo. Com golpe valendo ${g}, ela devolveu ${J(r2)}. Escreva: return golpe;`;
+        }
+        return null;
+      },
+      apply(v) { abilities.atacar = v.atacar; },
+      success: v => `⚔️ Golpe pronto! Cada J chama atacar() e tira ${v.atacar()} de vida.`
     },
     {
       id: 'pulo', tema: 'Decisões (if / else)', title: '👢 Botas de pulo duplo (if / else)',
@@ -395,42 +446,34 @@
       success: '🔦 luz = "tocha"! Agora dá pra enxergar os morcegos no escuro.'
     },
     {
-      id: 'escudo', tema: 'switch / case', title: '🛡️ Escudo elemental (switch)',
-      text: 'Magos deste andar atiram <b>fogo</b>, <b>gelo</b> e <b>raio</b>, e cada magia só é bloqueada pelo escudo certo. Use um <code>switch</code> no <code>elemento</code>: <code>"fogo"</code> → escudo <code>"agua"</code>; <code>"gelo"</code> → <code>"fogo"</code>; <code>"raio"</code> → <code>"terra"</code>; qualquer outro (<code>default</code>) → <code>"nenhum"</code>. Segurando <b>K</b>, o jogo roda o seu switch com a magia que está chegando.',
-      concept: '<code>switch</code> compara UM valor com vários <code>case</code>. Quando acha o igual, roda dali pra baixo até o <code>break</code> — sem o <code>break</code>, ele "vaza" pro próximo case! <code>default</code> é o caso "nenhum dos anteriores".',
-      format: 'Formato: <code>switch (elemento) { case "fogo": escudo = "agua"; break; ... default: escudo = "nenhum"; }</code>',
-      hint: 'let elemento = "fogo";\nlet escudo = "";\n\nswitch (elemento) {\n  case "fogo":\n    escudo = "agua";\n    break;\n  case "gelo":\n    escudo = "fogo";\n    break;\n  case "raio":\n    escudo = "terra";\n    break;\n  default:\n    escudo = "nenhum";\n}',
-      starter: 'let elemento = "fogo";\nlet escudo = "";\n\n// escreva o switch aqui\n',
-      names: ['escudo'],
+      id: 'escudo', tema: 'switch / case', title: '🛡️ Escudo elemental: escolherEscudo(elemento)',
+      text: 'Magos deste andar atiram <b>fogo</b>, <b>gelo</b> e <b>raio</b>, e o herói ainda não sabe se defender. Crie a função <code>escolherEscudo</code>, que <b>recebe</b> o <code>elemento</code> da magia e, com um <code>switch</code>, devolve o escudo certo: <code>"fogo"</code> → <code>"agua"</code>; <code>"gelo"</code> → <code>"fogo"</code>; <code>"raio"</code> → <code>"terra"</code>; qualquer outro (<code>default</code>) → <code>"nenhum"</code>. Segurando <b>K</b>, o jogo chama <code>escolherEscudo(magia)</code> com a magia que está chegando.',
+      concept: '<code>switch</code> compara UM valor com vários <code>case</code>. Quando acha o igual, roda dali pra baixo até o <code>break</code> — sem o <code>break</code>, ele "vaza" pro próximo case! <code>default</code> é o caso "nenhum dos anteriores". O <b>parâmetro</b> (<code>elemento</code>, entre os parênteses) é a informação que a função recebe de quem chamou.',
+      format: 'Formato: <code>function escolherEscudo(elemento) { let escudo = ""; switch (elemento) { case "fogo": escudo = "agua"; break; ... } return escudo; }</code>',
+      hint: 'function escolherEscudo(elemento) {\n  let escudo = "";\n  switch (elemento) {\n    case "fogo":\n      escudo = "agua";\n      break;\n    case "gelo":\n      escudo = "fogo";\n      break;\n    case "raio":\n      escudo = "terra";\n      break;\n    default:\n      escudo = "nenhum";\n  }\n  return escudo;\n}',
+      starter: '// Crie a função escolherEscudo(elemento) com um switch\n',
+      names: ['escolherEscudo'],
       check(v, code) {
-        if (!/\bswitch\s*\(/.test(code) || !/\bcase\b/.test(code)) return 'Use switch com case: switch (elemento) { case "fogo": ... }';
-        if (!/\bdefault\s*:/.test(code)) return 'Falta o default: — o caso de "nenhum dos anteriores" (escudo = "nenhum").';
-        const semBreak = (code.match(/\bbreak\b/g) || []).length < 3 ? ' Faltou o break no fim de cada case?' : '';
+        if (!isFn(v.escolherEscudo)) return 'A função escolherEscudo não foi criada. Use: function escolherEscudo(elemento) { ... }';
+        if (!/\bswitch\s*\(/.test(code) || !/\bcase\b/.test(code)) return 'Use switch com case dentro da função: switch (elemento) { case "fogo": ... }';
+        if (!/\bdefault\s*:/.test(code)) return 'Falta o default: — o caso de "nenhum dos anteriores" (escudo "nenhum").';
+        const semBreak = !/\breturn\s+["']/.test(code) && (code.match(/\bbreak\b/g) || []).length < 3 ? ' Faltou o break no fim de cada case?' : '';
         for (const el of ['fogo', 'gelo', 'raio', 'vento']) {
           const esperado = ESCUDO_CERTO[el] || 'nenhum';
-          const r = el === 'fogo' ? { vars: v } : rerun(code, /let\s+elemento\s*=\s*["']fogo["']/, `let elemento = "${el}"`, ['escudo']);
-          if (!r) return 'Mantenha a linha let elemento = "fogo"; no começo do código.';
-          if (r.error) return friendlyError(r.error);
-          if (r.vars.escudo !== esperado) return `Com elemento = "${el}", escudo ficou ${J(r.vars.escudo)} — devia ser "${esperado}".${semBreak}`;
+          let r;
+          try { r = v.escolherEscudo(el); } catch (e) { return friendlyError(e); }
+          if (r === undefined) return `escolherEscudo("${el}") não devolveu nada. Falta o return escudo; no fim da função.`;
+          if (r !== esperado) return `escolherEscudo("${el}") devolveu ${J(r)} — devia devolver "${esperado}".${semBreak}`;
         }
         return null;
       },
-      // O escudo usado na batalha é o que o switch DO ALUNO responde pra
-      // cada elemento (roda de novo o código dele com cada um).
-      apply(v, log, code) {
-        const mapa = {};
-        ELEMENTOS.forEach(el => {
-          const r = el === 'fogo' ? { vars: v } : rerun(code, /let\s+elemento\s*=\s*["']fogo["']/, `let elemento = "${el}"`, ['escudo']);
-          mapa[el] = r && !r.error ? r.vars.escudo : ESCUDO_CERTO[el];
-        });
-        abilities.escudo = mapa;
-      },
-      success: '🛡️ Escudo elemental pronto! Segure K: o seu switch escolhe o escudo certo pra cada magia.'
+      apply(v) { abilities.escudo = v.escolherEscudo; },
+      success: '🛡️ Escudo elemental pronto! Segure K: o jogo chama escolherEscudo(magia) e a sua resposta decide o escudo.'
     },
     {
       id: 'curar', tema: 'Funções, parâmetro e return', title: '🧪 Poções (função com parâmetro)',
       text: 'Este andar tem arqueiros e magos por todo lado, mas também tem <b>poções</b> 🧪. Crie a função <code>curar</code>, que <b>recebe</b> a <code>vida</code> atual do herói e <b>devolve</b> (com <code>return</code>) essa vida <b>+ 2</b>. Quando o herói encostar numa poção, o jogo chama <code>curar(vida)</code>.',
-      concept: '<b>Função</b> é um bloco de código com nome, que só roda quando alguém <b>chama</b>. O <b>parâmetro</b> (entre parênteses) é a informação que ela recebe; <code>return</code> é a resposta que ela devolve pra quem chamou.',
+      concept: 'O <b>parâmetro</b> (entre parênteses) é a informação que a função recebe — aqui, a vida do herói na hora em que ele pega a poção. Com ela, a função faz a conta e devolve o resultado com <code>return</code>.',
       format: 'Formato: <code>function curar(vida) { return ...; }</code>',
       hint: 'function curar(vida) {\n  return vida + 2;\n}',
       starter: '// Crie a função curar(vida)\n',
@@ -614,9 +657,11 @@
     vida: 'let vida = 5;',
     heroi: 'const heroi = "Herói";\nlet temEspada = true;',
     golpe: 'let forca = 2;\nlet golpe = forca * 3;\nlet grito = "Avante, " + heroi;',
+    pular: 'function pular() {\n  return 11;\n}',
+    atacar: 'function atacar() {\n  return golpe;\n}',
     pulo: 'let energia = 80;\nlet pulo = "";\nif (energia >= 50) {\n  pulo = "duplo";\n} else {\n  pulo = "simples";\n}',
     luz: 'let escuro = true;\nlet temTocha = true;\nlet luz = "";\nif (escuro && temTocha) {\n  luz = "tocha";\n} else if (escuro) {\n  luz = "breu";\n} else {\n  luz = "sol";\n}',
-    escudo: 'let elemento = "fogo";\nlet escudo = "";\nswitch (elemento) {\n  case "fogo":\n    escudo = "agua";\n    break;\n  case "gelo":\n    escudo = "fogo";\n    break;\n  case "raio":\n    escudo = "terra";\n    break;\n  default:\n    escudo = "nenhum";\n}',
+    escudo: 'function escolherEscudo(elemento) {\n  let escudo = "";\n  switch (elemento) {\n    case "fogo":\n      escudo = "agua";\n      break;\n    case "gelo":\n      escudo = "fogo";\n      break;\n    case "raio":\n      escudo = "terra";\n      break;\n    default:\n      escudo = "nenhum";\n  }\n  return escudo;\n}',
     curar: 'function curar(vida) {\n  return vida + 2;\n}',
     dano: 'function calcularDano(forca, critico) {\n  if (critico) {\n    return forca * 2;\n  } else {\n    return forca;\n  }\n}',
     flechas: 'let flechas = ["fogo", "gelo"];\nflechas.push("raio");\nlet quantidade = flechas.length;\nlet primeira = flechas[0];',
@@ -634,12 +679,17 @@
   const STAIRS_X = 1650;
   const TURRET_Y = 110;
 
-  // [tipo, x, opções]. O andar 10 (muralha) e o 11 (radar) são os que o
+  // [tipo, x, opções]. O andar 12 (muralha) e o 13 (radar) são os que o
   // código do aluno "mira": torres T1..T5 e as vidas de VIDAS_RADAR.
+  // Os 3 primeiros andares (variáveis) não têm inimigo nem obstáculo: o
+  // herói só anda. Espinhos só depois da pular(); inimigos só depois da
+  // atacar(); magos (que exigem o escudo) só depois da escolherEscudo().
   const FLOORS = [
-    { nome: 'Térreo — Os Espinhos', spikes: [[620, 680], [840, 920], [1080, 1140], [1320, 1400]], enemies: [] },
-    { nome: 'Pátio dos Slimes', enemies: [['slime', 650], ['slime', 820], ['slime', 1000], ['bat', 1200], ['slime', 1380]] },
-    { nome: 'Guarda dos Cavaleiros', enemies: [['slime', 600], ['knight', 800], ['slime', 1000], ['knight', 1250], ['bat', 1450]] },
+    { nome: 'Térreo — A Entrada', enemies: [] },
+    { nome: 'Sala de Armas', enemies: [] },
+    { nome: 'Sala de Treino', enemies: [] },
+    { nome: 'Os Espinhos', spikes: [[620, 680], [840, 920], [1080, 1140], [1320, 1400]], enemies: [] },
+    { nome: 'Pátio dos Slimes', enemies: [['slime', 650], ['slime', 820], ['knight', 1000], ['bat', 1200], ['slime', 1320], ['knight', 1450]] },
     { nome: 'Os Buracos', ground: [[0, 580], [780, 1120], [1340, FLOOR_W]], enemies: [['bat', 950], ['slime', 1000], ['bat', 1500], ['slime', 1560]] },
     { nome: 'A Caverna', dark: [440, FLOOR_W], enemies: [['bat', 650], ['slime', 800], ['bat', 950], ['slime', 1100], ['bat', 1250], ['archer', 1500]] },
     { nome: 'Salão dos Magos', enemies: [['mage', 720, { elem: 'fogo' }], ['slime', 900], ['mage', 1080, { elem: 'gelo' }], ['knight', 1250], ['mage', 1480, { elem: 'raio' }]] },
@@ -730,7 +780,7 @@
   const abilities = {};
   function resetAbilities() {
     Object.assign(abilities, {
-      vidaMax: 1, nome: '', espada: false, golpe: 1, grito: '', botas: false, tocha: false, escudo: null,
+      vidaMax: 1, nome: '', espada: false, golpe: 1, grito: '', pular: null, atacar: null, botas: false, tocha: false, escudo: null,
       curar: null, calcularDano: null, flechas: null, muralha: false, radar: null, pet: null, plano: null
     });
   }
@@ -1037,17 +1087,18 @@
   }
 
   // ---------- Dano no herói ----------
-  // Segurando K (depois do andar 6), magias de fogo/gelo/raio passam pelo
-  // switch do aluno: se o escudo que ele respondeu for o certo, bloqueia.
+  // Segurando K (depois do andar do escudo), magias de fogo/gelo/raio
+  // passam pela escolherEscudo do aluno: se o escudo que ela devolver for
+  // o certo, bloqueia.
   function hurtHero(amount, type, fromX) {
     if (hero.inv > 0 || hero.deadT > 0) return;
     let final = amount;
     const cx = hero.x + hero.w / 2;
     if (hero.defending && abilities.escudo && ELEMENTOS.includes(type)) {
-      const esc = abilities.escudo[type];
+      const esc = safeCall(abilities.escudo, type);
       if (esc === ESCUDO_CERTO[type]) {
         final = 0;
-        floatText(cx, hero.y - 20, `switch ("${type}") → escudo "${esc}"`, ELEM_COR[esc] || '#9ecbff');
+        floatText(cx, hero.y - 20, `escolherEscudo("${type}") → "${esc}"`, ELEM_COR[esc] || '#9ecbff');
         burst(cx + hero.facing * 16, hero.y + 18, ELEM_COR[esc] || '#9ecbff', 14);
       }
     }
@@ -1058,16 +1109,25 @@
     if (hero.hp <= 0.001) killHero();
   }
 
+  let lockedHintT = 0;
+  function lockedHint(text) {
+    if (lockedHintT > 0) return;
+    lockedHintT = 90;
+    floatText(hero.x + hero.w / 2, hero.y - 24, text, '#d4c86a');
+  }
+
   function killHero() {
     hero.hp = 0;
     hero.deadT = 70;
     burst(hero.x + hero.w / 2, hero.y + hero.h / 2, '#ff3b30', 30);
   }
 
-  // Dano da espada: golpe (andar 3) e, depois do andar 8, a calcularDano
-  // do aluno — a cada 3 golpes com critico = true.
+  // Dano da espada: o que a atacar() do aluno devolve (o golpe do andar 3)
+  // e, depois do andar do crítico, a calcularDano dele — a cada 3 golpes
+  // com critico = true.
   function heroDamage() {
-    let d = abilities.golpe || 1;
+    const a = safeCall(abilities.atacar);
+    let d = typeof a === 'number' && a >= 1 && a <= 200 ? a : (abilities.golpe || 1);
     if (abilities.calcularDano) {
       hitCount++;
       const critico = hitCount % 3 === 0;
@@ -1170,11 +1230,21 @@
     if (dir !== 0) hero.facing = dir;
     hero.vx += (dir * move - hero.vx) * (hero.onGround ? 0.5 : 0.25);
 
+    // Cada ação só existe depois que o aluno cria a função dela; antes,
+    // a tecla mostra qual função falta.
+    if (lockedHintT > 0) lockedHintT--;
     if (pressed.has('jump')) {
-      if (hero.onGround) { hero.vy = PHYS.JUMP; hero.onGround = false; hero.jumps = 1; }
-      else if (abilities.botas && hero.jumps < 2) { hero.vy = PHYS.DOUBLE_JUMP; hero.jumps = 2; burst(hero.x + hero.w / 2, hero.y + hero.h, '#d4c86a', 10); }
+      if (!abilities.pular) lockedHint('Sem pulo: falta criar a função pular()');
+      else if (hero.onGround) {
+        const r = safeCall(abilities.pular);
+        const forcaPulo = typeof r === 'number' ? Math.max(8, Math.min(14, r)) : -PHYS.JUMP;
+        hero.vy = -forcaPulo; hero.onGround = false; hero.jumps = 1;
+      } else if (abilities.botas && hero.jumps < 2) { hero.vy = PHYS.DOUBLE_JUMP; hero.jumps = 2; burst(hero.x + hero.w / 2, hero.y + hero.h, '#d4c86a', 10); }
     }
-    if (pressed.has('attack') && abilities.espada && hero.attackT === 0) {
+    if (pressed.has('attack') && !abilities.atacar) lockedHint('A espada não ataca sozinha: falta a função atacar()');
+    if (pressed.has('defend') && !abilities.escudo) lockedHint('Sem escudo: falta a função escolherEscudo(elemento)');
+    if (pressed.has('shoot') && !(abilities.flechas && abilities.flechas.length)) lockedHint('Sem arco: falta criar a lista flechas');
+    if (pressed.has('attack') && abilities.atacar && hero.attackT === 0) {
       hero.attackT = 20; hero.swing++;
       if (abilities.grito && hero.swing % 4 === 1) floatText(hero.x + hero.w / 2, hero.y - 48, abilities.grito.slice(0, 40), '#d4c86a');
     }
@@ -1195,7 +1265,7 @@
     hero.x += hero.vx;
     hero.y += hero.vy;
 
-    // Barreiras: terminal pendente, portão da muralha (andar 10) e o fim do andar.
+    // Barreiras: terminal pendente, portão da muralha (andar 12) e o fim do andar.
     if (!stageDone() && hero.x + hero.w > ALTAR_X + 34) { hero.x = ALTAR_X + 34 - hero.w; hero.vx = 0; }
     if (floor.portao && enemies.some(e => e.type === 'turret' && e.alive) && hero.x + hero.w > floor.portao) { hero.x = floor.portao - hero.w; hero.vx = 0; }
     const fim = floor.boss ? floor.boss[1] : FLOOR_W;
@@ -1217,7 +1287,7 @@
       hero.vy = -8; hero.onGround = false;
     }
 
-    // Poções: chamam a curar(vida) do aluno (andar 7 em diante).
+    // Poções: chamam a curar(vida) do aluno (andar 9 em diante).
     if (abilities.curar) {
       potions.forEach(p => {
         if (p.used || !overlap(hero, { x: p.x - 10, y: GROUND_Y - 26, w: 20, h: 26 })) return;
@@ -1346,7 +1416,7 @@
     });
   }
 
-  // O pet (andar 12) segue o herói e ataca o inimigo mais perto com o
+  // O pet (andar 14) segue o herói e ataca o inimigo mais perto com o
   // pet.ataque que o aluno definiu.
   function updatePet() {
     if (!abilities.pet) return;
@@ -1530,7 +1600,7 @@
   }
 
   function drawWorld() {
-    const pedra = floorIdx >= 3;
+    const pedra = floorIdx >= 5;
     ground.forEach(([a, b]) => {
       ctx.fillStyle = pedra ? '#2c2a30' : '#3b2a1a';
       ctx.fillRect(a, GROUND_Y, b - a, VIEW_H - GROUND_Y);
@@ -1546,7 +1616,7 @@
       }
     });
 
-    // Muralha (andar 10): pilares das torres + portão.
+    // Muralha (andar 12): pilares das torres + portão.
     if (floor.portao) {
       enemies.forEach(e => {
         if (e.type !== 'turret') return;
@@ -1614,7 +1684,7 @@
     }
   }
 
-  // Caverna (andar 5): sem a tocha, breu; com ela, luz em volta do herói.
+  // Caverna (andar 7): sem a tocha, breu; com ela, luz em volta do herói.
   function drawDarkness() {
     if (!floor.dark) return;
     const [a, b] = floor.dark;

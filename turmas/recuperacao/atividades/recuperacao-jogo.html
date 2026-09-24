@@ -28,6 +28,12 @@
   }
   .topbar .keys{ text-transform:none; }
   .topbar .keys b{ color:var(--yellow); }
+  .topbar-right{ display:flex; align-items:center; gap:12px; }
+  button.btn-restart{
+    font-family:inherit; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; cursor:pointer;
+    background:transparent; color:var(--ink-dim); border:1px solid var(--line); padding:3px 8px; border-radius:2px;
+  }
+  button.btn-restart:hover{ color:var(--blood-bright); border-color:var(--blood-bright); }
   .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
   .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
 
@@ -107,7 +113,10 @@
   <div class="topbar">
     <div>RECUPERAÇÃO — O HERÓI DO CÓDIGO</div>
     <div class="keys"><b>← →</b> andar · <b>E</b> terminal · <b>↑</b> pular, <b>J</b> atacar e <b>K</b> defender só depois de criar as funções</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">17</span></div>
+    <div class="topbar-right">
+      <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">17</span></div>
+      <button class="btn-restart" id="btnReiniciarTrilha" title="Apaga o progresso e o código desta trilha e começa do Capítulo 1">🔄 Reiniciar trilha</button>
+    </div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   <div class="stage" id="stage">
@@ -1128,6 +1137,34 @@
     respawn();
     hero.inv = 0;
   });
+
+  // Reiniciar a trilha: apaga o progresso (etapas feitas) e o código salvo
+  // de cada etapa, e recarrega do Capítulo 1. O progresso é gravado como []
+  // (não removido) pro shared/progress-sync.js espelhar o reset no
+  // Supabase; e o upsert é esperado aqui antes do reload — sem isso, o
+  // progress-sync acharia o estado antigo do servidor "mais avançado" ao
+  // recarregar e traria tudo de volta. Professor não grava progresso de
+  // aluno (mesma regra do progress-sync), então só limpa o local.
+  async function reiniciarTrilha() {
+    if (!window.confirm('Reiniciar a trilha "O Herói do Código"?\n\nTodo o progresso e o código que você escreveu serão apagados, e o jogo volta pro Capítulo 1.')) return;
+    closeTerminal();
+    localStorage.setItem(PROGRESS_KEY, '[]');
+    localStorage.removeItem(CODE_KEY);
+    try {
+      const session = window.PortalSession;
+      const user = session ? await session.getUser() : null;
+      const sb = session && session.client();
+      if (sb && user && user.email && user.role !== 'professor' && user.role !== 'admin') {
+        await sb.from('student_activity_state').upsert(
+          { student_email: user.email, progress_key: window.ACTIVITY_LOCATION, state: [], updated_at: new Date().toISOString() },
+          { onConflict: 'student_email,progress_key' }
+        );
+      }
+    } catch (e) { /* best-effort, igual ao progress-sync */ }
+    if (typeof window.reportActivity === 'function') window.reportActivity('recuperacao_jogo', 'O Herói do Código — reiniciou a trilha');
+    window.location.reload();
+  }
+  document.getElementById('btnReiniciarTrilha').addEventListener('click', reiniciarTrilha);
 
   // ---------- Desenho ----------
   const canvas = document.getElementById('gameCanvas');
