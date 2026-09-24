@@ -2,6 +2,8 @@
 
 ## Diretrizes de conteúdo educacional
 
+> **Trilhas novas seguem o padrão novo, com layout de slides — ver [`docs/padrao-trilhas.md`](docs/padrao-trilhas.md).** As seções marcadas com *(padrão antigo)* abaixo descrevem só as trilhas já construídas: continuam valendo pra entender e manter essas atividades, mas **não** devem ser usadas como modelo de trilha nova. As regras de qualidade de dicas e de perguntas continuam valendo para os dois padrões.
+
 ### Pasta `Atividades/` — atividades a serem criadas
 Atividades novas (ainda não construídas no portal) ficam descritas em arquivos dentro de `Atividades/`, separadas por turma:
 
@@ -36,7 +38,7 @@ Os quizzes das aulas teóricas (`turmas/*/atividades/*-teoria.html`, campo `ques
 - **Navegação**: `renderMaterias()` desenha o grid de cards de matéria (tela padrão da aba Aulas); `openMateria(key)`/`closeMateria()` (expostas em `window.PortalCore`) entram/saem do detalhe de uma matéria. Dentro do detalhe, `renderTrilhasFor(materia)` monta a mesma sub-navegação de trilha de sempre — um único `<select id="trilhaSelect">` quando a matéria tem 2+ trilhas (mais conciso que uma fileira de botões, usa o seletor nativo do celular), ou nada quando tem 1 só (não faz sentido escolher entre uma opção). Sidebar foi cogitada e descartada aqui: pra 2-4 itens, um painel deslizante (hambúrguer/overlay) seria complexidade desproporcional ao ganho.
 - **Fora da navegação** (progresso, gate de jogos, abrir/fechar módulo, relatório de notas, geração de slides), tudo lê `allTrilhas()` — uma função que achata `materias[].trilhas[]` numa lista só. Como as `key` de trilha são únicas na turma inteira, isso se comporta exatamente como o antigo `cfg.trilhas` de antes de existir o nível de matéria; só a camada de navegação precisou de lógica nova.
 
-### Trilha por capacidade (MSEP)
+### Trilha por capacidade (MSEP) *(padrão antigo nos formatos de teoria/prática — capacidade e `requires` valem pros dois)*
 A MSEP do SENAI organiza o currículo em torno de **capacidades** a serem desenvolvidas e verificadas. No portal, cada capacidade vira uma trilha (dentro de uma matéria — ver seção acima):
 
 - Declare a capacidade no campo `capacidade` da trilha. É um texto livre, exibido no topo da trilha para o aluno.

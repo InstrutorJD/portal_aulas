@@ -1,5 +1,20 @@
 # Como trabalhamos neste repositório
 
+## ⚠️ Trilha nova? Leia `docs/padrao-trilhas.md` ANTES de tudo
+
+Toda trilha criada daqui pra frente (Jogos e Sistemas) segue o **padrão
+novo, com layout de slides**, descrito em `docs/padrao-trilhas.md`:
+
+- Teoria = um arquivo **`.md`** (mesma sintaxe de `materiais/instrucoes-para-ia.md`)
+  + uma casca HTML mínima que carrega o motor compartilhado.
+- **Nunca** crie um `*-teoria.html` com `STEPS` nem copie uma atividade de
+  `turmas/*/atividades/` como modelo — isso é o padrão antigo, só das trilhas
+  já construídas (que **não** devem ser alteradas nem migradas).
+- Regras de nota, progresso, capacidade MSEP e qualidade das perguntas não
+  mudaram — estão no documento.
+- Se o documento ainda disser **"MOTOR EM CONSTRUÇÃO"**, não crie a trilha:
+  avise o usuário e pergunte como seguir.
+
 Mais de um agente pode trabalhar ao mesmo tempo, cada um na sua **git
 worktree** (`.claude/worktrees/<nome>`, branch `worktree-<nome>`).
 
