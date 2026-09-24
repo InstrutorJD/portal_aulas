@@ -1,5 +1,5 @@
--- Notas manuais por matéria (Gestão → Lançar Notas, botão verde/vermelho
--- "Notas travadas / Editando notas"): o professor pode digitar à mão a nota
+-- Notas manuais por matéria (Gestão → Lançar Notas, com a chave "Editar
+-- Notas Manuais" de Bloqueios e Liberações ligada): o professor pode digitar à mão a nota
 -- de uma matéria de um aluno, e ela SUBSTITUI a nota calculada daquela
 -- matéria (atividades + Prova + Nota 3 + Recuperação) no Lançar Notas, no
 -- Perfil do aluno e no Relatório de Notas. Guardada em grades.notas_materia,

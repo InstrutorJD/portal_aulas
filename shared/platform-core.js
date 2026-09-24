@@ -443,6 +443,13 @@
                     </div>
                     <button class="toggle-switch" id="toggleNotas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                   </div>
+                  <div class="toggle-row">
+                    <div>
+                      <div class="toggle-row-label">Editar Notas Manuais</div>
+                      <div class="toggle-row-desc" id="toggleNotasManuaisDesc">Travado — as notas de matéria em Lançar Notas não podem ser editadas.</div>
+                    </div>
+                    <button class="toggle-switch" id="toggleNotasManuais" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
+                  </div>
                 </div>
 
                 <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
@@ -515,10 +522,6 @@
                     <div class="toggle-row-desc">Pinta de vermelho as notas baixas desta tabela.</div>
                   </div>
                   <button class="toggle-switch" id="toggleNotasBaixas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
-                </div>
-                <div style="display:flex; align-items:center; gap:12px; margin:4px 0 12px; flex-wrap:wrap;">
-                  <button class="btn btn-notas-manuais travado" id="btnEditarNotasManuais" aria-pressed="false">🔒 Notas travadas</button>
-                  <span class="status-msg">Destrave para digitar a nota de uma matéria à mão — ela substitui a nota calculada. Campo vazio volta para a calculada.</span>
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="audit-table" id="notasTabela">
@@ -1894,13 +1897,13 @@
   }
 
   // ---------- Chamada / Notas (dentro da aba Gestão, já sabe a turma) ----------
+  // Data de hoje no fuso do computador do usuário (AAAA-MM-DD). Não usa
+  // toISOString(): ela é em UTC, e depois das 21h no horário de Brasília
+  // já devolveria o dia seguinte.
   function todayStr() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
-  // Data de hoje no fuso do computador do usuário (AAAA-MM-DD). Não usa
-  // toISOString(): ela é em UTC, e depois das 21h no horário de Brasília
-  // já devolveria o dia seguinte.
 
   function noSupabaseRow(colspan) {
     return `<tr><td colspan="${colspan}" style="color:var(--ink-dim); text-align:center; padding:14px;">Configure o Supabase (shared/supabase-config.js) para usar esta tela.</td></tr>`;
@@ -2166,7 +2169,7 @@
   }
 
   // Nota de matéria digitada à mão pelo professor (Gestão → Lançar Notas,
-  // botão "Notas travadas/Editando notas"): fica em grades.notas_materia
+  // com a chave "Editar Notas Manuais" ligada): fica em grades.notas_materia
   // ({ [materiaKey]: nota }, sql/notas-manuais-materia.sql) e SUBSTITUI a
   // nota final daquela matéria — sem fórmula, sem Recuperação por cima,
   // mesmo em matéria sem trilha no bimestre. null = sem nota manual, vale
@@ -2179,22 +2182,23 @@
     return isNaN(n) ? null : n;
   }
 
-  // Estado do botão verde/vermelho de Lançar Notas: verde (false) = notas
-  // de matéria travadas, só leitura; vermelho (true) = cada célula de
-  // matéria vira um campo pra digitar a nota manual. Só visual (os campos
-  // existem sempre no DOM, ocultos) — "Salvar" grava o que estiver neles
-  // nos dois estados. Volta a travar ao recarregar a tabela.
+  // Chave "Editar Notas Manuais" (Gestão → Bloqueios e Liberações):
+  // desligada = notas de matéria em Lançar Notas travadas, só leitura;
+  // ligada = cada célula de matéria vira um campo pra digitar a nota
+  // manual. Só visual (os campos existem sempre no DOM, ocultos) —
+  // "Salvar" grava o que estiver neles nos dois estados. Não vai pro
+  // Supabase: volta a travar ao recarregar a página, por segurança.
   let edicaoNotasManuais = false;
   function setEdicaoNotasManuais(on) {
     edicaoNotasManuais = on;
-    const btn = document.getElementById('btnEditarNotasManuais');
+    setToggleState('toggleNotasManuais', on);
     const tabela = document.getElementById('notasTabela');
     if (tabela) tabela.classList.toggle('notas-editando', on);
-    if (btn) {
-      btn.classList.toggle('travado', !on);
-      btn.classList.toggle('editando', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      btn.textContent = on ? '✏️ Editando notas — clique para travar' : '🔒 Notas travadas';
+    const desc = document.getElementById('toggleNotasManuaisDesc');
+    if (desc) {
+      desc.textContent = on
+        ? 'Liberado — em Lançar Notas, digite a nota de uma matéria à mão (substitui a calculada; campo vazio volta para a calculada).'
+        : 'Travado — as notas de matéria em Lançar Notas não podem ser editadas.';
     }
   }
 
@@ -2275,10 +2279,6 @@
     return null;
   }
 
-  // Matérias que ganham coluna própria em Lançar Notas — todas, menos
-  // "Prova" (ela já é a coluna "Prova" em si, não faz sentido também ter
-  // uma nota "matéria" pra ela mesma).
-  function materiasParaNotas() {
   // Lançar Notas já abre no bimestre de hoje (currentBimestreNum, pela data
   // do computador do professor). Fora de qualquer bimestre (férias entre um
   // e outro), cai no último que já começou. Sem calendário cadastrado, fica
@@ -2299,6 +2299,10 @@
     if (num) document.getElementById('notasBimestre').value = String(num);
   }
 
+  // Matérias que ganham coluna própria em Lançar Notas — todas, menos
+  // "Prova" (ela já é a coluna "Prova" em si, não faz sentido também ter
+  // uma nota "matéria" pra ela mesma).
+  function materiasParaNotas() {
     return (cfg.materias || []).filter(m => m.key !== 'prova');
   }
 
@@ -2352,12 +2356,12 @@
     await fetchMateriaPesos();
     renderHead();
 
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    preSelecionarBimestreNotas();
+
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const students = turmaStudents();
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
-
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
-    preSelecionarBimestreNotas();
 
     const nota3Auto = !!cfg.nota3ActivityLocation;
 
@@ -2513,7 +2517,6 @@
       tr._recalcNotas = recalc;
       recalc(false);
     });
-    setEdicaoNotasManuais(false);
     theadRow.querySelectorAll('.peso-materia-input').forEach(inp => inp.addEventListener('input', () => {
       tbody.querySelectorAll('tr[data-email]').forEach(tr => tr._recalcNotas && tr._recalcNotas());
     }));
@@ -3582,7 +3585,7 @@
       try { localStorage.setItem(NOTAS_BAIXAS_KEY, destacarNotasBaixasOn() ? '0' : '1'); } catch (e) {}
       pintarNotasBaixas();
     });
-    document.getElementById('btnEditarNotasManuais').addEventListener('click', () => setEdicaoNotasManuais(!edicaoNotasManuais));
+    document.getElementById('toggleNotasManuais').addEventListener('click', () => setEdicaoNotasManuais(!edicaoNotasManuais));
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);

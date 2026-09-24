@@ -320,11 +320,9 @@ button.btn-chamada-copiar.copiado{ background-color:#2e9d4a; }
 .falta-pill:has(input:checked){ border-color:#c62828; background:rgba(198,40,40,0.15); }
 .falta-pill:has(input:checked) .falta-pill-texto::after{ content:'Faltou'; color:#e53935; }
 
-/* Botão verde/vermelho de Lançar Notas (setEdicaoNotasManuais): verde =
-   notas de matéria travadas; vermelho = cada célula de matéria vira um
-   campo pra digitar a nota manual, que substitui a calculada. */
-button.btn-notas-manuais.travado{ background-color:#2e9d4a; color:#fff; }
-button.btn-notas-manuais.editando{ background-color:#c62828; color:#fff; }
+/* Chave "Editar Notas Manuais" (Bloqueios e Liberações, setEdicaoNotasManuais)
+   ligada: cada célula de matéria de Lançar Notas vira um campo pra digitar
+   a nota manual, que substitui a calculada. */
 #notasTabela .nota-manual-input{ display:none; width:72px; padding:4px 6px; }
 #notasTabela.notas-editando .nota-manual-input{ display:inline-block; border-color:#c62828; }
 #notasTabela.notas-editando .materia-grade-view{ display:none; }
