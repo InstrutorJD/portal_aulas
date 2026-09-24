@@ -131,7 +131,7 @@ test.describe('Jogo "O Herói do Código"', () => {
 
   test('o if do baú precisa decidir de verdade: abrir o baú fora do if é recusado', async ({ page }) => {
     await page.goto(JOGO_URL);
-    await openTerminalFor(page, 'botas');
+    await openTerminalFor(page, 'bau');
     await expect(page.locator('#missionTitle')).toContainText('Baú');
 
     await page.fill('#codeInput', 'let chave = true;\nlet bauAberto = false;\nif (chave) { }\nbauAberto = true;');
@@ -141,7 +141,7 @@ test.describe('Jogo "O Herói do Código"', () => {
     await page.fill('#codeInput', 'let chave = true;\nlet bauAberto = false;\nif (chave) {\n  bauAberto = true;\n}');
     await page.click('#btnRun');
     await expect(page.locator('#consoleOutput')).toContainText('Código aceito');
-    expect(await page.evaluate(() => window.__heroiDoCodigo.abilities.botas)).toBe(true);
+    expect(await page.evaluate(() => window.__heroiDoCodigo.abilities.puloDuplo)).toBe(true);
   });
 
   test('funções: defender(dano) precisa devolver a metade, e o jogo passa a usar a função do aluno', async ({ page }) => {
@@ -158,19 +158,19 @@ test.describe('Jogo "O Herói do Código"', () => {
     expect(await page.evaluate(() => window.__heroiDoCodigo.abilities.defender(8))).toBe(4);
   });
 
-  test('são 14 etapas em 4 capítulos, na ordem variáveis → decisões → funções → criando o mundo', async ({ page }) => {
+  test('são 17 etapas em 4 capítulos, na ordem variáveis → funções → decisões → criando o mundo', async ({ page }) => {
     await page.goto(JOGO_URL);
-    await expect(page.locator('#lblStepTotal')).toHaveText('14');
+    await expect(page.locator('#lblStepTotal')).toHaveText('17');
     const ids = await page.evaluate(() => window.__heroiDoCodigo.stages.map(s => `${s.cap}:${s.id}`));
     expect(ids).toEqual([
-      '1:espada', '1:vida', '1:nome', '1:forca',
-      '2:botas', '2:tocha',
-      '3:portal', '3:atacar', '3:defender', '3:bloquear', '3:tirarVida',
+      '1:espada', '1:escudo', '1:botas', '1:vida', '1:nome', '1:forca',
+      '2:portal', '2:pular', '2:atacar', '2:defender',
+      '3:bau', '3:tocha', '3:bloquear', '3:tirarVida',
       '4:criarInimigo', '4:onda',
       '5:chefao',
     ]);
     await openTerminalFor(page, 'tirarVida');
-    await expect(page.locator('#missionStep')).toContainText('Capítulo 3 — Funções · Etapa 11 de 14');
+    await expect(page.locator('#missionStep')).toContainText('Capítulo 3 — Decisões · Etapa 14 de 17');
   });
 
   test('if / else da tocha: o else precisa funcionar quando escuro é false', async ({ page }) => {

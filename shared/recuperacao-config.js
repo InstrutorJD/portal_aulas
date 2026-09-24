@@ -31,13 +31,13 @@ window.RECUPERACAO_MATERIA = {
     {
       key: 'recuperacao-jogo',
       label: 'O Herói do Código',
-      desc: 'Um jogo em 4 capítulos (Variáveis, Decisões, Funções e Criando o mundo) onde cada item e poder do herói é construído por você, em código: de let espada = true; até as funções que tiram a vida e criam os inimigos.',
+      desc: 'Um jogo em 4 capítulos (Variáveis, Funções, Decisões e Criando o mundo) onde o herói começa só andando e cada item e ação dele é construído por você, em código: de let espada = true; até as funções que fazem ele pular, atacar, defender e criar os inimigos.',
       modules: [
         {
           key: 'jogo', title: 'Jogo — O Herói do Código',
-          desc: 'Atravesse floresta, caverna, castelo e arena. Em cada um dos 13 terminais, o código que você escrever vira item, poder ou inimigo — até o chefão Rei Bug.',
+          desc: 'Atravesse floresta, caverna, castelo e arena. Em cada um dos 16 terminais, o código que você escrever vira item, ação ou inimigo — até o chefão Rei Bug.',
           icon: '⚔️', src: '../recuperacao/atividades/recuperacao-jogo.html',
-          progressKey: 'recuperacao_jogo_progress_', progressTotal: 14
+          progressKey: 'recuperacao_jogo_progress_', progressTotal: 17
         }
       ]
     }

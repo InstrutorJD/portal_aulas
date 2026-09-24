@@ -106,8 +106,8 @@
 <div class="env">
   <div class="topbar">
     <div>RECUPERAÇÃO — O HERÓI DO CÓDIGO</div>
-    <div class="keys"><b>← →</b> andar · <b>↑</b>/<b>Espaço</b> pular · <b>J</b> atacar · <b>K</b> defender · <b>E</b> terminal</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">14</span></div>
+    <div class="keys"><b>← →</b> andar · <b>E</b> terminal · <b>↑</b> pular, <b>J</b> atacar e <b>K</b> defender só depois de criar as funções</div>
+    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">17</span></div>
   </div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   <div class="stage" id="stage">
@@ -204,34 +204,65 @@
   }
 
   // ---------- Capítulos e etapas (ordem da jornada) ----------
-  // Cada capítulo é um trecho do mapa (floresta, caverna, castelo, arena) e
-  // um bloco de conceitos, na mesma ordem da trilha "Programação do Zero":
-  // variáveis → decisões → funções (chamar, criar, parâmetros, if/else
-  // dentro) → funções que criam coisas no jogo. Cada etapa de código tem um
-  // altar no mapa (altarX) com um terminal; o herói não passa do altar
-  // enquanto a etapa não for resolvida. A última ('chefao') é a luta final.
-  const CAPITULOS = { 1: 'Variáveis', 2: 'Decisões', 3: 'Funções', 4: 'Criando o mundo', 5: 'Chefão' };
+  // Cada capítulo é um trecho do mapa e um bloco de conceitos. O herói
+  // começa SÓ ANDANDO: no Capítulo 1 ele junta os itens e atributos
+  // (variáveis), mas nenhum deles faz nada sozinho; no Capítulo 2 as
+  // FUNÇÕES dão as ações (pular, atacar, defender) — sem a função, a tecla
+  // não faz nada; no Capítulo 3 vêm as decisões (if / else), fora e dentro
+  // das funções; no 4, funções que criam coisas no jogo. Cada etapa de
+  // código tem um altar no mapa (altarX) com um terminal; o herói não passa
+  // do altar enquanto a etapa não for resolvida — por isso não há inimigo
+  // antes de atacar(), nem espinho/buraco antes de pular(). A última
+  // ('chefao') é a luta final.
+  const CAPITULOS = { 1: 'Variáveis', 2: 'Funções', 3: 'Decisões', 4: 'Criando o mundo', 5: 'Chefão' };
+
+  // Itens do Capítulo 1: variável booleana que precisa valer true.
+  function checkItem(nome) {
+    return (v) => {
+      if (v[nome] === undefined) return `A variável ${nome} não foi criada. Use: let ${nome} = ...;`;
+      if (v[nome] === 'true') return 'Quase! "true" entre aspas vira TEXTO. Tire as aspas: true é booleano.';
+      if (v[nome] !== true) return `${nome} está valendo ${JSON.stringify(v[nome])} — precisa ser true (verdadeiro).`;
+      return null;
+    };
+  }
 
   const STAGES = [
     {
       id: 'espada', cap: 1, altarX: 300, title: '🗡️ Item: Espada',
-      text: 'Um slime bloqueia o caminho e o seu herói está de mãos vazias. Crie uma variável chamada <code>espada</code> com o valor <code>true</code> (verdadeiro) — é assim que você diz pro jogo que o herói TEM uma espada.',
+      text: 'A jornada começa aqui. O seu herói está de mãos vazias e, por enquanto, só sabe <b>andar</b>. Crie uma variável chamada <code>espada</code> com o valor <code>true</code> (verdadeiro) — é assim que você diz pro jogo que o herói TEM uma espada.',
       concept: '<b>Variável</b> é uma caixinha com nome que guarda um valor. <code>true</code>/<code>false</code> (sem aspas) é o tipo <b>booleano</b>: sim ou não.',
       format: 'Formato: <code>let nome = valor;</code>',
       hint: 'let espada = true;',
       starter: '// Escreva seu código aqui\n',
       names: ['espada'],
-      check(v) {
-        if (v.espada === undefined) return 'A variável espada não foi criada. Use: let espada = ...;';
-        if (v.espada === 'true') return 'Quase! "true" entre aspas vira TEXTO. Tire as aspas: true é booleano.';
-        if (v.espada !== true) return `espada está valendo ${JSON.stringify(v.espada)} — precisa ser true (verdadeiro).`;
-        return null;
-      },
-      success: '🗡️ Uma espada apareceu na mão do herói! Aperte J para atacar.'
+      check: checkItem('espada'),
+      success: '🗡️ A espada apareceu na mão do herói! Mas ela ainda não ataca: o golpe vem da função atacar(), que você vai criar no Capítulo 2.'
     },
     {
-      id: 'vida', cap: 1, altarX: 1100, title: '❤️ Poder: Vida',
-      text: 'Adiante tem uma trilha de espinhos, e o herói só aguenta 1 golpe. Crie a variável <code>vida</code> com um <b>número</b> de 3 a 5 — é quantos corações ele vai ter.',
+      id: 'escudo', cap: 1, altarX: 800, title: '🛡️ Item: Escudo',
+      text: 'Todo herói precisa de um escudo. Crie a variável <code>escudo</code> com o valor <code>true</code>. Ele vai aparecer nas costas do herói, mas ainda não protege nada — quem defende é a função <code>defender</code>, lá no Capítulo 2.',
+      concept: 'Cada item é uma variável própria, com um nome que diz o que ela guarda. <code>let</code> cria a variável; o <code>=</code> guarda o valor dentro dela.',
+      format: 'Formato: <code>let escudo = valor;</code>',
+      hint: 'let escudo = true;',
+      starter: '// Escreva seu código aqui\n',
+      names: ['escudo'],
+      check: checkItem('escudo'),
+      success: '🛡️ Escudo nas costas! Ele só vai proteger quando você criar a função defender(dano).'
+    },
+    {
+      id: 'botas', cap: 1, altarX: 1300, title: '👢 Item: Botas',
+      text: 'Pra pular, o herói precisa de botas. Crie a variável <code>botas</code> com o valor <code>true</code>. Mesmo calçado, ele continua só andando: o pulo vem da função <code>pular()</code>, no Capítulo 2.',
+      concept: 'Um <b>booleano</b> só tem dois valores: <code>true</code> (sim) ou <code>false</code> (não). É o tipo certo pra dizer se o herói TEM ou NÃO TEM um item.',
+      format: 'Formato: <code>let botas = valor;</code>',
+      hint: 'let botas = true;',
+      starter: '// Escreva seu código aqui\n',
+      names: ['botas'],
+      check: checkItem('botas'),
+      success: '👢 Botas calçadas! O pulo vem da função pular(), no Capítulo 2.'
+    },
+    {
+      id: 'vida', cap: 1, altarX: 1800, title: '❤️ Poder: Vida',
+      text: 'Lá na frente tem espinhos e inimigos, e hoje o herói só aguenta 1 golpe. Crie a variável <code>vida</code> com um <b>número</b> de 3 a 5 — é quantos corações ele vai ter.',
       concept: '<b>Números</b> vão sem aspas: <code>10</code>, <code>3</code>, <code>2.5</code>. Com aspas (<code>"3"</code>) seria texto, e o jogo não consegue fazer conta com texto.',
       format: 'Formato: <code>let vida = número;</code>',
       hint: 'let vida = 3;',
@@ -247,7 +278,7 @@
       success: v => `❤️ O herói agora tem ${v.vida} corações!`
     },
     {
-      id: 'nome', cap: 1, altarX: 1950, title: '📛 Portão Mágico',
+      id: 'nome', cap: 1, altarX: 2300, title: '📛 Portão Mágico',
       text: 'Este portão só abre pra quem diz o próprio nome. Crie a variável <code>nome</code> com o nome do seu herói, como <b>texto</b>.',
       concept: '<b>Texto</b> (chamado de <i>string</i>) sempre vai entre aspas: <code>"Luna"</code>. Sem aspas, o computador acha que é o nome de outra variável.',
       format: 'Formato: <code>let nome = "...";</code>',
@@ -264,8 +295,8 @@
       success: v => `📛 "Bem-vindo(a), ${v.nome.trim()}!" — o portão se abriu.`
     },
     {
-      id: 'forca', cap: 1, altarX: 2650, title: '💪 Poder: Força',
-      text: 'Cavaleiros de armadura têm 6 de vida, e a sua espada só tira 1. A primeira linha já cria <code>forca</code> valendo 1. Na linha de baixo, <b>aumente</b> a força usando a própria variável — ela precisa terminar com pelo menos 6 (e no máximo 20).',
+      id: 'forca', cap: 1, altarX: 2800, title: '💪 Poder: Força',
+      text: 'Mais adiante tem cavaleiros de armadura com 6 de vida. Quando o herói puder atacar, cada golpe vai tirar o valor da <code>forca</code> — e hoje ela vale só 1. A primeira linha já cria <code>forca</code> valendo 1. Na linha de baixo, <b>aumente</b> a força usando a própria variável — ela precisa terminar com pelo menos 6 (e no máximo 20).',
       concept: 'O valor de uma variável pode <b>mudar</b>. Pra mudar, não use <code>let</code> de novo: <code>moedas = moedas + 3;</code> pega o valor atual, soma 3 e guarda de volta.',
       format: 'Formato: <code>forca = forca + ...;</code> ou <code>forca = forca * ...;</code>',
       hint: 'let forca = 1;\nforca = forca + 5;',
@@ -278,53 +309,11 @@
         if (v.forca > 20) return `forca = ${v.forca} é demais! Deixe entre 6 e 20.`;
         return null;
       },
-      success: v => `💪 Força ${v.forca}! Cada golpe de espada agora tira ${v.forca}.`
+      success: v => `💪 Força ${v.forca}! Guarde esse número: a função atacar() vai usar essa variável.`
     },
     {
-      id: 'botas', cap: 2, altarX: 3450, title: '👢 Baú das Botas (if)',
-      text: 'Logo à frente tem um buraco largo demais pra um pulo só. As <b>botas de pulo duplo</b> estão num baú que só abre <b>SE</b> você tiver a chave. Escreva um <code>if</code>: se <code>chave</code> for <code>true</code>, <code>bauAberto</code> recebe <code>true</code>.',
-      concept: '<code>if (condição) { ... }</code> quer dizer "SE a condição for verdadeira, faça o que está entre as chaves". Se for falsa, o bloco é pulado.',
-      format: 'Formato: <code>if (chave) { bauAberto = true; }</code>',
-      hint: 'let chave = true;\nlet bauAberto = false;\n\nif (chave) {\n  bauAberto = true;\n}',
-      starter: 'let chave = true;\nlet bauAberto = false;\n\n// escreva o if aqui\n',
-      names: ['bauAberto'],
-      check(v, code) {
-        if (!/if\s*\(/.test(code)) return 'Use um if pra decidir: if (chave) { ... }';
-        if (v.bauAberto !== true) return 'O baú continua fechado: dentro do if, faça bauAberto = true;';
-        // Roda de novo SEM a chave: se o baú abrir mesmo assim, o if não
-        // está decidindo nada (ex.: bauAberto = true fora dele).
-        const semChave = code.replace(/let\s+chave\s*=\s*true/, 'let chave = false');
-        if (semChave === code) return 'Mantenha a linha let chave = true; no começo do código.';
-        const r = execCode(semChave, ['bauAberto']);
-        if (!r.error && r.vars.bauAberto === true) return 'O baú abriu até SEM a chave! O bauAberto = true precisa ficar dentro do if, entre as chaves { }.';
-        return null;
-      },
-      success: '👢 Botas de pulo duplo! No ar, aperte pular de novo.'
-    },
-    {
-      id: 'tocha', cap: 2, altarX: 4250, title: '🔦 Tocha (if / else)',
-      text: 'A caverna à frente é escura como breu. Escreva um <code>if / else</code>: SE <code>escuro</code> for <code>true</code>, <code>tocha</code> recebe <code>"acesa"</code>; SENÃO, <code>tocha</code> recebe <code>"apagada"</code>.',
-      concept: '<code>else</code> quer dizer "senão": é o caminho quando a condição do <code>if</code> é falsa. Sempre um dos dois blocos roda — nunca os dois, nunca nenhum.',
-      format: 'Formato: <code>if (escuro) { ... } else { ... }</code>',
-      hint: 'let escuro = true;\nlet tocha = "";\n\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "apagada";\n}',
-      starter: 'let escuro = true;\nlet tocha = "";\n\n// escreva o if / else aqui\n',
-      names: ['tocha'],
-      check(v, code) {
-        if (!/if\s*\(/.test(code) || !/\belse\b/.test(code)) return 'Use if E else: if (escuro) { ... } else { ... }';
-        if (v.tocha !== 'acesa') return `Com escuro = true, tocha ficou ${JSON.stringify(v.tocha)} — devia ser "acesa".`;
-        // Roda de novo com escuro = false: o else precisa entrar em ação.
-        const claro = code.replace(/let\s+escuro\s*=\s*true/, 'let escuro = false');
-        if (claro === code) return 'Mantenha a linha let escuro = true; no começo do código.';
-        const r = execCode(claro, ['tocha']);
-        if (r.error) return friendlyError(r.error);
-        if (r.vars.tocha !== 'apagada') return `Quando escuro é false, tocha devia ficar "apagada", mas ficou ${JSON.stringify(r.vars.tocha)}. Confira o bloco do else.`;
-        return null;
-      },
-      success: '🔦 Tocha acesa! Agora dá pra enxergar dentro da caverna.'
-    },
-    {
-      id: 'portal', cap: 3, altarX: 5050, title: '🌀 Chamar uma função',
-      text: 'Na saída da caverna, o mago do castelo deixou uma função PRONTA chamada <code>abrirPortal</code>. Você não precisa criar nada: só <b>chamar</b> a função — o nome dela seguido de parênteses.',
+      id: 'portal', cap: 2, altarX: 3300, title: '🌀 Chamar uma função',
+      text: 'O herói tem itens, mas ainda não FAZ nada com eles. Quem faz as coisas acontecerem são as <b>funções</b>. Pra começar, o mago deixou uma função PRONTA chamada <code>abrirPortal</code>. Você não precisa criar nada: só <b>chamar</b> a função — o nome dela seguido de parênteses.',
       concept: '<b>Função</b> é um bloco de código com nome. Criar a função é escrever a receita; <b>chamar</b> é mandar executar: <code>nome()</code>. Sem os parênteses, a função só é citada, não roda.',
       format: 'Formato: <code>nomeDaFuncao();</code>',
       hint: 'abrirPortal();',
@@ -346,27 +335,60 @@
       success: '🌀 O portal se abriu! A função que o mago escreveu rodou porque você chamou.'
     },
     {
-      id: 'atacar', cap: 3, altarX: 5850, title: '⚔️ Criar função: atacar()',
-      text: 'Agora é a sua vez de CRIAR uma função. Orcs com 10 de vida vêm aí. Crie a função <code>atacar</code>, que devolve com <code>return</code> o dano do golpe — um número de 1 a 20. Toda vez que você apertar <b>J</b>, o jogo vai chamar <code>atacar()</code> e usar o número que ela devolver.',
-      concept: '<code>function nome() { ... }</code> cria a função. <code>return</code> é a resposta que ela devolve pra quem chamou.',
-      format: 'Formato: <code>function atacar() { return ...; }</code>',
-      hint: 'function atacar() {\n  return 10;\n}',
-      starter: '// Crie a função atacar\n',
-      names: ['atacar'],
+      id: 'pular', cap: 2, altarX: 3800, title: '🦘 Criar função: pular()',
+      text: 'Espinhos e um buraco vêm aí, e o herói ainda não sabe pular — as botas sozinhas não fazem nada. Agora é a sua vez de CRIAR uma função. Crie a função <code>pular</code>, que devolve com <code>return</code> a força do pulo: um número de 8 a 14. Toda vez que você apertar <b>↑</b> ou <b>Espaço</b>, o jogo vai chamar <code>pular()</code> e usar o número que ela devolver.',
+      concept: '<code>function nome() { ... }</code> CRIA a função: a receita de uma ação. <code>return</code> é a resposta que ela devolve pra quem chamou — aqui, quem chama é o jogo.',
+      format: 'Formato: <code>function pular() { return ...; }</code>',
+      hint: 'function pular() {\n  return 11;\n}',
+      starter: '// Crie a função pular\n',
+      names: ['pular'],
       check(v) {
+        if (!isFn(v.pular)) return 'A função pular não foi criada. Use: function pular() { ... }';
+        let r;
+        try { r = v.pular(); } catch (e) { return friendlyError(e); }
+        if (r === undefined) return 'pular() não devolveu nada. Falta o return com a força do pulo.';
+        if (typeof r !== 'number') return `pular() devolveu ${JSON.stringify(r)} — precisa ser um NÚMERO (sem aspas).`;
+        if (r < 8 || r > 14) return `pular() devolveu ${r}. A força do pulo precisa ser de 8 a 14.`;
+        return null;
+      },
+      success: v => `🦘 Pulo pronto! Cada ↑ chama pular() e o herói sobe com força ${v.pular()}.`
+    },
+    {
+      id: 'atacar', cap: 2, altarX: 4600, title: '⚔️ Criar função: atacar()',
+      text: 'Slimes e cavaleiros vêm aí, e a espada ainda não faz nada. Crie a função <code>atacar</code>, que devolve com <code>return</code> a sua variável <code>forca</code> — ela já existe, você criou no Capítulo 1. Toda vez que você apertar <b>J</b>, o jogo chama <code>atacar()</code>, e o número devolvido é o dano do golpe.',
+      concept: 'Uma função pode usar variáveis que já existem. <code>return forca;</code> (sem aspas) devolve o VALOR guardado na variável — se a força mudar, o golpe muda junto.',
+      format: 'Formato: <code>function atacar() { return forca; }</code>',
+      hint: 'function atacar() {\n  return forca;\n}',
+      starter: '// A variável forca já existe. Crie a função atacar\n',
+      names: ['atacar'],
+      // forca entra pronta no código do aluno, com o valor que ELE criou no
+      // Capítulo 1 — a atacar() dele fecha sobre ela e o jogo usa isso no J.
+      makeGiven() { return { given: { forca: abilities.forca }, log: null }; },
+      explainError(code) {
+        if (/\b(let|const|var)\s+forca\b/.test(code)) return 'A variável forca já existe (você criou no Capítulo 1) — não crie de novo com let, só use: return forca;';
+        return null;
+      },
+      check(v, code) {
         if (!isFn(v.atacar)) return 'A função atacar não foi criada. Use: function atacar() { ... }';
         let r;
         try { r = v.atacar(); } catch (e) { return friendlyError(e); }
-        if (r === undefined) return 'atacar() não devolveu nada. Falta o return com o dano.';
-        if (typeof r !== 'number') return `atacar() devolveu ${JSON.stringify(r)} — precisa ser um NÚMERO (sem aspas).`;
-        if (r < 1 || r > 20) return `atacar() devolveu ${r}. O dano precisa ser de 1 a 20.`;
+        if (r === undefined) return 'atacar() não devolveu nada. Falta o return forca;';
+        if (typeof r !== 'number') return `atacar() devolveu ${JSON.stringify(r)} — precisa devolver a variável forca, sem aspas: return forca;`;
+        // Roda de novo com outras forças: número fixo (return 10;) não vale,
+        // tem que devolver a VARIÁVEL.
+        for (const f of [13, 7]) {
+          const x = execCode(code, ['atacar'], { forca: f });
+          let r2;
+          try { r2 = x.error ? undefined : x.vars.atacar(); } catch (e) { r2 = undefined; }
+          if (r2 !== f) return `atacar() precisa devolver a variável forca, não um número fixo. Com forca valendo ${f}, ela devolveu ${JSON.stringify(r2)}. Escreva: return forca;`;
+        }
         return null;
       },
       success: v => `⚔️ Golpe pronto! Cada J chama atacar() e tira ${v.atacar()} de vida.`
     },
     {
-      id: 'defender', cap: 3, altarX: 6650, title: '🛡️ Função com parâmetro: defender(dano)',
-      text: 'Arqueiros atiram flechas que tiram 2 corações. Crie a função <code>defender</code>, que <b>recebe</b> o <code>dano</code> e devolve <b>metade</b> dele. Segurando <b>K</b>, o jogo chama <code>defender(dano)</code> antes de machucar o herói.',
+      id: 'defender', cap: 2, altarX: 5600, title: '🛡️ Função com parâmetro: defender(dano)',
+      text: 'Arqueiros atiram flechas que tiram 2 corações, e o escudo nas costas ainda não protege nada. Crie a função <code>defender</code>, que <b>recebe</b> o <code>dano</code> e devolve <b>metade</b> dele. Segurando <b>K</b>, o herói levanta o escudo e o jogo chama <code>defender(dano)</code> antes de machucar o herói.',
       concept: '<b>Parâmetro</b> é a informação que a função recebe entre os parênteses. <code>defender(10)</code> faz o <code>dano</code> valer 10 lá dentro; <code>defender(4)</code>, 4.',
       format: 'Formato: <code>function defender(dano) { return ...; }</code>',
       hint: 'function defender(dano) {\n  return dano / 2;\n}',
@@ -381,10 +403,52 @@
         }
         return null;
       },
-      success: '🛡️ Escudo equipado! Segure K pra reduzir o dano pela metade.'
+      success: '🛡️ Escudo pronto! Segure K pra levantar o escudo e reduzir o dano pela metade.'
     },
     {
-      id: 'bloquear', cap: 3, altarX: 7500, title: '🔥 if dentro de função: bloquear(ataque)',
+      id: 'bau', cap: 3, altarX: 6650, title: '👢 Baú do Pulo Duplo (if)',
+      text: 'Logo à frente tem um buraco largo demais pra um pulo só. O <b>pulo duplo</b> das botas está num baú que só abre <b>SE</b> você tiver a chave. Escreva um <code>if</code>: se <code>chave</code> for <code>true</code>, <code>bauAberto</code> recebe <code>true</code>.',
+      concept: '<code>if (condição) { ... }</code> quer dizer "SE a condição for verdadeira, faça o que está entre as chaves". Se for falsa, o bloco é pulado.',
+      format: 'Formato: <code>if (chave) { bauAberto = true; }</code>',
+      hint: 'let chave = true;\nlet bauAberto = false;\n\nif (chave) {\n  bauAberto = true;\n}',
+      starter: 'let chave = true;\nlet bauAberto = false;\n\n// escreva o if aqui\n',
+      names: ['bauAberto'],
+      check(v, code) {
+        if (!/if\s*\(/.test(code)) return 'Use um if pra decidir: if (chave) { ... }';
+        if (v.bauAberto !== true) return 'O baú continua fechado: dentro do if, faça bauAberto = true;';
+        // Roda de novo SEM a chave: se o baú abrir mesmo assim, o if não
+        // está decidindo nada (ex.: bauAberto = true fora dele).
+        const semChave = code.replace(/let\s+chave\s*=\s*true/, 'let chave = false');
+        if (semChave === code) return 'Mantenha a linha let chave = true; no começo do código.';
+        const r = execCode(semChave, ['bauAberto']);
+        if (!r.error && r.vars.bauAberto === true) return 'O baú abriu até SEM a chave! O bauAberto = true precisa ficar dentro do if, entre as chaves { }.';
+        return null;
+      },
+      success: '👢 Pulo duplo liberado! No ar, aperte pular de novo.'
+    },
+    {
+      id: 'tocha', cap: 3, altarX: 7300, title: '🔦 Tocha (if / else)',
+      text: 'A caverna à frente é escura como breu. Escreva um <code>if / else</code>: SE <code>escuro</code> for <code>true</code>, <code>tocha</code> recebe <code>"acesa"</code>; SENÃO, <code>tocha</code> recebe <code>"apagada"</code>.',
+      concept: '<code>else</code> quer dizer "senão": é o caminho quando a condição do <code>if</code> é falsa. Sempre um dos dois blocos roda — nunca os dois, nunca nenhum.',
+      format: 'Formato: <code>if (escuro) { ... } else { ... }</code>',
+      hint: 'let escuro = true;\nlet tocha = "";\n\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "apagada";\n}',
+      starter: 'let escuro = true;\nlet tocha = "";\n\n// escreva o if / else aqui\n',
+      names: ['tocha'],
+      check(v, code) {
+        if (!/if\s*\(/.test(code) || !/\belse\b/.test(code)) return 'Use if E else: if (escuro) { ... } else { ... }';
+        if (v.tocha !== 'acesa') return `Com escuro = true, tocha ficou ${JSON.stringify(v.tocha)} — devia ser "acesa".`;
+        // Roda de novo com escuro = false: o else precisa entrar em ação.
+        const claro = code.replace(/let\s+escuro\s*=\s*true/, 'let escuro = false');
+        if (claro === code) return 'Mantenha a linha let escuro = true; no começo do código.';
+        const r = execCode(claro, ['tocha']);
+        if (r.error) return friendlyError(r.error);
+        if (r.vars.tocha !== 'apagada') return `Quando escuro é false, tocha devia ficar "apagada", mas ficou ${JSON.stringify(r.vars.tocha)}. Confira o bloco do else.`;
+        return null;
+      },
+      success: '🔦 Tocha acesa! Agora dá pra enxergar dentro da caverna.'
+    },
+    {
+      id: 'bloquear', cap: 3, altarX: 8250, title: '🔥 if dentro de função: bloquear(ataque)',
       text: 'Magos lançam bolas de fogo. Crie a função <code>bloquear</code>, que recebe o tipo do <code>ataque</code> e devolve <code>true</code> <b>se</b> ele for <code>"fogo"</code>, e <code>false</code> em qualquer outro caso. Segurando <b>K</b>, ataque bloqueado não tira nada.',
       concept: 'Dentro de uma função também dá pra usar <code>if</code>. Pra <b>comparar</b> use <code>===</code> (um <code>=</code> sozinho guarda valor, não compara).',
       format: 'Formato: <code>function bloquear(ataque) { if (...) { return true; } return false; }</code>',
@@ -404,7 +468,7 @@
       success: '🔥 Bloqueio de fogo pronto! Segure K contra as bolas de fogo.'
     },
     {
-      id: 'tirarVida', cap: 3, altarX: 8450, title: '💥 if / else na função: tirarVida(vidaInimigo, dano)',
+      id: 'tirarVida', cap: 3, altarX: 9300, title: '💥 if / else na função: tirarVida(vidaInimigo, dano)',
       text: 'Até aqui era o JOGO que tirava a vida dos inimigos. A partir de agora é a SUA função. <code>tirarVida</code> recebe a vida atual do inimigo e o dano do golpe, e devolve a vida que sobra. Só que vida não pode ficar negativa: <b>SE</b> o dano for maior ou igual à vida, devolva <code>0</code>; <b>SENÃO</b>, devolva a vida menos o dano.',
       concept: 'Uma função pode receber <b>vários parâmetros</b>, separados por vírgula. E dentro dela o <code>if / else</code> escolhe qual <code>return</code> vai acontecer. Compare com <code>&gt;=</code> ("maior ou igual").',
       format: 'Formato: <code>function tirarVida(vidaInimigo, dano) { if (...) { return ...; } else { return ...; } }</code>',
@@ -425,7 +489,7 @@
       success: '💥 Pronto! Cada golpe agora chama a sua tirarVida(...) — o resultado aparece em cima do inimigo.'
     },
     {
-      id: 'criarInimigo', cap: 4, altarX: 9200, title: '🧪 Função que cria: criarInimigo(tipo, vida)',
+      id: 'criarInimigo', cap: 4, altarX: 10100, title: '🧪 Função que cria: criarInimigo(tipo, vida)',
       text: 'A arena de treino monta inimigos com uma função que VOCÊ escreve. <code>criarInimigo</code> recebe o <code>tipo</code> e a <code>vida</code>, e devolve um <b>objeto</b> com esses dois dados. Assim que o código for aceito, a arena chama <code>criarInimigo("slime", 3)</code> e <code>criarInimigo("cavaleiro", 5)</code>.',
       concept: 'Um <b>objeto</b> junta várias informações numa coisa só, cada uma com nome: <code>{ tipo: "slime", vida: 3 }</code>. É assim que os jogos guardam os dados de cada inimigo.',
       format: 'Formato: <code>function criarInimigo(tipo, vida) { return { tipo: tipo, vida: vida }; }</code>',
@@ -445,7 +509,7 @@
       success: '🧪 Sua função criou os inimigos da arena! Derrote-os.'
     },
     {
-      id: 'onda', cap: 4, altarX: 10000, title: '👾 Usando a sua função: monte a onda',
+      id: 'onda', cap: 4, altarX: 10900, title: '👾 Usando a sua função: monte a onda',
       text: 'Agora é você quem USA a sua função! Chame <code>criarInimigo</code> de <b>2 a 5 vezes</b> pra montar a onda de treino antes do chefão. Tipos: <code>"slime"</code>, <code>"morcego"</code>, <code>"cavaleiro"</code> ou <code>"orc"</code>; vida de 1 a 10. Cada chamada vira um inimigo de verdade.',
       concept: 'Função boa é função <b>reutilizada</b>: a mesma <code>criarInimigo</code>, chamada com argumentos diferentes, cria inimigos diferentes — sem reescrever nada.',
       format: 'Formato: <code>criarInimigo("slime", 2);</code> — uma chamada por linha',
@@ -477,14 +541,17 @@
 
   const DEFAULT_CODE = {
     espada: 'let espada = true;',
+    escudo: 'let escudo = true;',
+    botas: 'let botas = true;',
     vida: 'let vida = 3;',
     nome: 'let nome = "Herói";',
     forca: 'let forca = 1;\nforca = forca + 5;',
-    botas: 'let chave = true;\nlet bauAberto = false;\nif (chave) {\n  bauAberto = true;\n}',
-    tocha: 'let escuro = true;\nlet tocha = "";\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "apagada";\n}',
     portal: 'abrirPortal();',
-    atacar: 'function atacar() {\n  return 10;\n}',
+    pular: 'function pular() {\n  return 11;\n}',
+    atacar: 'function atacar() {\n  return forca;\n}',
     defender: 'function defender(dano) {\n  return dano / 2;\n}',
+    bau: 'let chave = true;\nlet bauAberto = false;\nif (chave) {\n  bauAberto = true;\n}',
+    tocha: 'let escuro = true;\nlet tocha = "";\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "apagada";\n}',
     bloquear: 'function bloquear(ataque) {\n  if (ataque === "fogo") {\n    return true;\n  }\n  return false;\n}',
     tirarVida: 'function tirarVida(vidaInimigo, dano) {\n  if (dano >= vidaInimigo) {\n    return 0;\n  } else {\n    return vidaInimigo - dano;\n  }\n}',
     criarInimigo: 'function criarInimigo(tipo, vida) {\n  return { tipo: tipo, vida: vida };\n}',
@@ -523,9 +590,12 @@
   }
 
   // ---------- Habilidades do herói (derivadas do código do aluno) ----------
+  // Itens (espada, escudo, botas) só mudam o visual; quem libera as teclas
+  // são as funções: pular (↑), atacar (J) e defender (K).
   const abilities = {
-    espada: false, vidaMax: 1, nome: '', forca: 1, botas: false, tocha: false, portal: false,
-    atacar: null, defender: null, bloquear: null, tirarVida: null, criarInimigo: null, onda: []
+    espada: false, escudo: false, botas: false, vidaMax: 1, nome: '', forca: 1, portal: false,
+    pular: null, atacar: null, defender: null, puloDuplo: false, tocha: false,
+    bloquear: null, tirarVida: null, criarInimigo: null, onda: []
   };
 
   // Roda o código de UMA etapa (com as funções prontas que ela injeta) e
@@ -540,14 +610,17 @@
   function applyStage(stage, vars, log) {
     switch (stage.id) {
       case 'espada': abilities.espada = true; break;
+      case 'escudo': abilities.escudo = true; break;
+      case 'botas': abilities.botas = true; break;
       case 'vida': abilities.vidaMax = vars.vida; break;
       case 'nome': abilities.nome = vars.nome.trim(); break;
       case 'forca': abilities.forca = vars.forca; break;
-      case 'botas': abilities.botas = true; break;
-      case 'tocha': abilities.tocha = true; break;
       case 'portal': abilities.portal = true; break;
+      case 'pular': abilities.pular = vars.pular; break;
       case 'atacar': abilities.atacar = vars.atacar; break;
       case 'defender': abilities.defender = vars.defender; break;
+      case 'bau': abilities.puloDuplo = true; break;
+      case 'tocha': abilities.tocha = true; break;
       case 'bloquear': abilities.bloquear = vars.bloquear; break;
       case 'tirarVida': abilities.tirarVida = vars.tirarVida; break;
       case 'criarInimigo': abilities.criarInimigo = vars.criarInimigo; break;
@@ -583,34 +656,34 @@
   // ---------- Mundo ----------
   const VIEW_H = 480;
   const GROUND_Y = 400;
-  const WORLD_END = 11800;
-  const GROUND = [[0, 1240], [1330, 3620], [3840, WORLD_END]];
-  const SPIKES = [[1400, 1460], [1540, 1600], [1680, 1740]];
-  const GATE_X = 2060;
-  const CAVE = [4300, 5000];
-  const PORTAL_X = 5150;
-  const CASTLE_FROM = 5100;
-  const TRAINING = [9280, 9900];
-  const WAVE = [10080, 10800];
-  const BOSS_ARENA = [10900, 11650];
+  // Capítulo 1 (até o altar 'forca') é chão liso e sem inimigos: o herói
+  // só anda. Espinhos e o 1º buraco só depois do altar 'pular'; inimigos
+  // só depois do 'atacar'; o buraco largo só depois do 'bau' (pulo duplo).
+  const WORLD_END = 12700;
+  const GROUND = [[0, 4260], [4340, 6780], [7000, WORLD_END]];
+  const SPIKES = [[3950, 4010], [4090, 4150]];
+  const GATE_X = 2410;
+  const CAVE = [7350, 8100];
+  const PORTAL_X = 3400;
+  const CASTLE_FROM = 8200;
+  const TRAINING = [10180, 10800];
+  const WAVE = [10980, 11700];
+  const BOSS_ARENA = [11800, 12550];
 
   const PHYS = { GRAVITY: 0.55, MAX_FALL: 13, MOVE: 4.2, JUMP: -11, DOUBLE_JUMP: -10 };
 
   // Inimigos fixos do mapa. Os da arena de treino e da onda são criados
   // pelas funções do aluno (ver spawnForStage) e entram no fim desta lista.
+  // Atiradores (arqueiro/mago) ficam a mais de 400px do altar anterior, pra
+  // não acertarem o herói enquanto ele escreve o código no terminal.
   const enemyDefs = [
-    ['slime', 620], ['slime', 800], ['slime', 960],
-    ['slime', 1800],
-    ['bat', 2250], ['bat', 2450], ['slime', 2520],
-    ['knight', 2950], ['knight', 3250],
-    ['slime', 3980], ['bat', 4080],
-    ['bat', 4500], ['slime', 4680], ['bat', 4850],
-    ['slime', 5350], ['knight', 5600],
-    ['orc', 6150], ['orc', 6420],
-    ['archer', 7100], ['slime', 7180], ['archer', 7340],
-    ['mage', 7960], ['archer', 8100], ['mage', 8240],
-    ['knight', 8750], ['orc', 8980],
-    ['boss', 11300]
+    ['slime', 4800], ['slime', 4950], ['bat', 5100], ['knight', 5300],
+    ['archer', 6060], ['slime', 6150], ['archer', 6250], ['orc', 6420],
+    ['knight', 7120],
+    ['bat', 7550], ['slime', 7730], ['bat', 7920],
+    ['mage', 8710], ['archer', 8850], ['mage', 9000],
+    ['knight', 9550], ['orc', 9780],
+    ['boss', 12200]
   ].map(([type, x]) => ({ type, x }));
 
   const ENEMY_TYPES = {
@@ -734,7 +807,11 @@
     const code = codeOverride !== undefined ? codeOverride : codeInput.value;
     if (!code.replace(/\/\/.*$/gm, '').trim()) { printConsole('<span class="err">O terminal está vazio — escreva o código primeiro.</span>'); return; }
     const r = runStageCode(stage, code);
-    if (r.error) { printConsole(`<span class="err">✗ ${escapeHtml(friendlyError(r.error))}</span>`); return; }
+    if (r.error) {
+      const msg = (stage.explainError && stage.explainError(code)) || friendlyError(r.error);
+      printConsole(`<span class="err">✗ ${escapeHtml(msg)}</span>`);
+      return;
+    }
     if (r.problem) { printConsole(`<span class="err">✗ ${escapeHtml(r.problem)}</span>`); return; }
 
     applyStage(stage, r.vars, r.log);
@@ -834,12 +911,21 @@
     burst(hero.x + hero.w / 2, hero.y + hero.h / 2, '#ff3b30', 30);
   }
 
+  // Só é chamada depois que a atacar() existe (sem ela, J não golpeia).
+  // Resultado inválido: usa a forca que o aluno criou.
   function heroDamage() {
-    if (abilities.atacar) {
-      const r = safeCall(abilities.atacar);
-      if (typeof r === 'number' && r >= 1) return Math.min(20, r);
-    }
+    const r = safeCall(abilities.atacar);
+    if (typeof r === 'number' && r >= 1) return Math.min(20, r);
     return abilities.forca;
+  }
+
+  // Tecla de uma ação cuja função ainda não foi criada: avisa (sem repetir
+  // a cada quadro) em vez de simplesmente não fazer nada.
+  let lockedHintT = 0;
+  function lockedHint(text) {
+    if (lockedHintT > 0) return;
+    lockedHintT = 90;
+    floatText(hero.x + hero.w / 2, hero.y - 24, text, '#d4c86a');
   }
 
   // Depois da etapa tirarVida, quem calcula a vida que sobra é a função do
@@ -882,11 +968,18 @@
     if (dir !== 0) hero.facing = dir;
     hero.vx += (dir * move - hero.vx) * (hero.onGround ? 0.5 : 0.25);
 
+    if (lockedHintT > 0) lockedHintT--;
     if (pressed.has('jump')) {
-      if (hero.onGround) { hero.vy = PHYS.JUMP; hero.onGround = false; hero.jumps = 1; }
-      else if (abilities.botas && hero.jumps < 2) { hero.vy = PHYS.DOUBLE_JUMP; hero.jumps = 2; burst(hero.x + hero.w / 2, hero.y + hero.h, '#d4c86a', 10); }
+      if (!abilities.pular) lockedHint('Sem pulo: falta criar a função pular()');
+      else if (hero.onGround) {
+        const r = safeCall(abilities.pular);
+        const forcaPulo = typeof r === 'number' ? Math.max(8, Math.min(14, r)) : -PHYS.JUMP;
+        hero.vy = -forcaPulo; hero.onGround = false; hero.jumps = 1;
+      } else if (abilities.puloDuplo && hero.jumps < 2) { hero.vy = PHYS.DOUBLE_JUMP; hero.jumps = 2; burst(hero.x + hero.w / 2, hero.y + hero.h, '#d4c86a', 10); }
     }
-    if (pressed.has('attack') && abilities.espada && hero.attackT === 0) { hero.attackT = 20; hero.swing++; }
+    if (pressed.has('attack') && !abilities.atacar) lockedHint('A espada não ataca sozinha: falta a função atacar()');
+    if (pressed.has('defend') && !abilities.defender) lockedHint('O escudo não defende sozinho: falta a função defender(dano)');
+    if (pressed.has('attack') && abilities.atacar && hero.attackT === 0) { hero.attackT = 20; hero.swing++; }
     if (hero.attackT > 0) hero.attackT--;
     if (hero.inv > 0) hero.inv--;
 
@@ -1122,8 +1215,8 @@
     } else {
       label(`Bem-vindo(a), ${abilities.nome || 'herói'}!`, GATE_X + 31, GROUND_Y - 142, '#d4c86a', 13);
     }
-    // Baú das botas
-    const bauX = stageById('botas').altarX + 70;
+    // Baú do pulo duplo
+    const bauX = stageById('bau').altarX + 70;
     ctx.fillStyle = '#8b6a2f';
     ctx.fillRect(bauX, GROUND_Y - 24, 34, 24);
     ctx.fillStyle = '#d4c86a';
@@ -1162,7 +1255,7 @@
     label('TRONO DO REI BUG', (BOSS_ARENA[0] + BOSS_ARENA[1]) / 2, 90, 'rgba(255,59,48,0.7)', 16);
 
     // Início de cada capítulo
-    [[1, 150], [2, 3350], [3, 5000], [4, 9150]].forEach(([cap, x]) => {
+    [[1, 150], [2, 3180], [3, 6540], [4, 10000]].forEach(([cap, x]) => {
       label(`Capítulo ${cap} — ${CAPITULOS[cap]}`, x, 130, 'rgba(217,230,210,0.45)', 14);
     });
 
@@ -1249,6 +1342,12 @@
       ctx.beginPath();
       ctx.ellipse(x + w / 2 + facing * 16, y + 22, 8, 16, 0, 0, Math.PI * 2);
       ctx.fill();
+    } else if (abilities.escudo) {
+      // Escudo guardado nas costas: só vai pra frente com a defender().
+      ctx.fillStyle = '#5b7fb8';
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2 - facing * 12, y + 24, 6, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
     }
     if (abilities.nome) label(abilities.nome, x + w / 2, y - 12, '#d4c86a', 11);
   }
@@ -1298,8 +1397,9 @@
   }
 
   const HUD_ITENS = [
-    ['espada', '🗡️'], ['vida', '❤️'], ['nome', '📛'], ['forca', '💪'], ['botas', '👢'], ['tocha', '🔦'], ['portal', '🌀'],
-    ['atacar', '⚔️'], ['defender', '🛡️'], ['bloquear', '🔥'], ['tirarVida', '💥'], ['criarInimigo', '🧪'], ['onda', '👾']
+    ['espada', '🗡️'], ['escudo', '🛡️'], ['botas', '👢'], ['vida', '❤️'], ['nome', '📛'], ['forca', '💪'],
+    ['portal', '🌀'], ['pular', '🦘'], ['atacar', '⚔️'], ['defender', '🔰'],
+    ['bau', '🎁'], ['tocha', '🔦'], ['bloquear', '🔥'], ['tirarVida', '💥'], ['criarInimigo', '🧪'], ['onda', '👾']
   ];
 
   function drawHud() {
@@ -1359,6 +1459,9 @@
   }
 
   // ---------- Início ----------
+  // Quem venceu a versão antiga (14 etapas) ainda não tem as etapas novas
+  // (escudo, pular, bau): volta a jogar pra fazê-las, sem a tela de vitória.
+  if (done.has('chefao') && CODE_STAGES.some(s => !done.has(s.id))) { done.delete('chefao'); saveDone(); }
   rebuildAbilities();
   enemies = enemyDefs.map(makeEnemy);
   ['criarInimigo', 'onda'].forEach(id => { if (done.has(id)) spawnForStage(id); });
