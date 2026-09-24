@@ -304,6 +304,22 @@ button.btn-secondary:hover{
 .nota-baixa, .nota-baixa .materia-grade-value{ color:var(--blood-bright); font-weight:700; }
 input.nota-input.nota-baixa{ border-color:var(--blood-bright); }
 
+/* Chamada (Gestão): botões de ação, resumo e a pílula "Faltou" — o
+   checkbox continua um <input> de verdade (acessível, clicável), só
+   ganha um rótulo que muda de "Presente" (verde) pra "Faltou" (vermelho). */
+.chamada-acoes{ display:flex; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+button.btn-chamada{ display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-size:12px; border-radius:var(--radius-pill, 999px); }
+button.btn-chamada-finalizar{ background-color:#2e9d4a; color:#fff; padding:12px 24px; font-size:13px; }
+button.btn-chamada-copiar{ background-color:#2f6fd6; color:#fff; }
+button.btn-chamada-copiar.copiado{ background-color:#2e9d4a; }
+.chamada-resumo-box{ margin-top:16px; padding:14px; border:1px solid var(--line); border-left:4px solid #2e9d4a; border-radius:var(--radius-sm); background:var(--panel2); }
+.chamada-resumo-texto{ width:100%; resize:vertical; font-family:inherit; font-size:12px; line-height:1.6; background:var(--panel); color:var(--ink); border:1px solid var(--line); padding:10px; border-radius:var(--radius-sm); }
+.falta-pill{ display:inline-flex; align-items:center; gap:6px; padding:4px 12px 4px 8px; border-radius:999px; border:1px solid #2e9d4a; background:rgba(46,157,74,0.12); cursor:pointer; user-select:none; transition:background .15s ease, border-color .15s ease; }
+.falta-pill input[type="checkbox"]{ accent-color:#c62828; margin:0; }
+.falta-pill-texto::after{ content:'Presente'; font-size:11px; font-weight:700; color:#2e9d4a; }
+.falta-pill:has(input:checked){ border-color:#c62828; background:rgba(198,40,40,0.15); }
+.falta-pill:has(input:checked) .falta-pill-texto::after{ content:'Faltou'; color:#e53935; }
+
 /* Botão verde/vermelho de Lançar Notas (setEdicaoNotasManuais): verde =
    notas de matéria travadas; vermelho = cada célula de matéria vira um
    campo pra digitar a nota manual, que substitui a calculada. */

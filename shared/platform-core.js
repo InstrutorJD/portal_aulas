@@ -481,18 +481,18 @@
                   </div>
                 </div>
                 <table class="audit-table">
-                  <thead><tr><th>Aluno</th><th style="width:110px; text-align:center;">Faltou</th></tr></thead>
+                  <thead><tr><th>Aluno</th><th style="width:130px; text-align:center;">Faltou</th></tr></thead>
                   <tbody id="chamadaBody"></tbody>
                 </table>
-                <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                  <button class="btn" id="btnFinalizarChamada">Finalizar</button>
+                <div class="chamada-acoes">
+                  <button class="btn btn-chamada btn-chamada-finalizar" id="btnFinalizarChamada">✅ Finalizar chamada</button>
                   <span class="status-msg" id="chamadaStatus"></span>
                 </div>
-                <div id="chamadaResumoBox" style="display:none; margin-top:14px;">
-                  <label class="field-label" for="chamadaResumoTexto">Resumo (copiar e colar)</label>
-                  <textarea id="chamadaResumoTexto" readonly rows="2" style="width:100%; resize:vertical; font-family:inherit; font-size:11px; background:var(--panel2); color:var(--ink); border:1px solid var(--line); padding:8px;"></textarea>
-                  <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
-                    <button class="btn btn-secondary" id="btnCopiarResumoChamada">Copiar</button>
+                <div id="chamadaResumoBox" class="chamada-resumo-box" style="display:none;">
+                  <label class="field-label" for="chamadaResumoTexto">📝 Resumo (copiar e colar)</label>
+                  <textarea id="chamadaResumoTexto" class="chamada-resumo-texto" readonly rows="4"></textarea>
+                  <div class="chamada-acoes">
+                    <button class="btn btn-chamada btn-chamada-copiar" id="btnCopiarResumoChamada">📋 Copiar resumo</button>
                     <span class="status-msg" id="chamadaResumoStatus"></span>
                   </div>
                 </div>
@@ -1925,7 +1925,7 @@
       return `
         <tr>
           <td>${u.nome}</td>
-          <td style="text-align:center;"><input type="checkbox" data-email="${u.email}" ${faltou ? 'checked' : ''}></td>
+          <td style="text-align:center;"><label class="falta-pill" title="Marque se o aluno faltou"><input type="checkbox" data-email="${u.email}" ${faltou ? 'checked' : ''}><span class="falta-pill-texto"></span></label></td>
         </tr>
       `;
     }).join('');
@@ -1961,7 +1961,7 @@
   // Abreviação usada no texto de resumo da chamada, pra copiar/colar num
   // grupo/relatório fora do portal sem precisar digitar o nome da turma toda.
   function turmaAbrev() {
-    return cfg.id === 'sistemas' ? 'DS' : 'JD';
+    return cfg.id === 'sistemas' ? '2º DS' : '2º JD';
   }
 
   function formatDataBr(isoDate) {
@@ -1972,7 +1972,13 @@
   function exibirResumoChamada(data, rows) {
     const ausentes = rows.filter(r => !r.presente).map(r => r.student_name);
     const presentesCount = rows.length - ausentes.length;
-    const texto = `Turma: ${turmaAbrev()} | Data: ${formatDataBr(data)} | Alunos presentes: ${presentesCount} | Ausentes: ${ausentes.length ? ausentes.join(', ') : 'Nenhum'}`;
+    // Uma informação por linha (cola certinho no WhatsApp/e-mail).
+    const texto = [
+      `Turma: ${turmaAbrev()}`,
+      `Data: ${formatDataBr(data)}`,
+      `Alunos presentes: ${presentesCount}`,
+      `Ausentes: ${ausentes.length ? ausentes.join(', ') : 'Nenhum'}`,
+    ].join('\n');
 
     document.getElementById('chamadaResumoTexto').value = texto;
     document.getElementById('chamadaResumoBox').style.display = 'block';
@@ -3531,6 +3537,10 @@
       try {
         await navigator.clipboard.writeText(texto);
         statusEl.textContent = 'Copiado!';
+        const btn = document.getElementById('btnCopiarResumoChamada');
+        btn.classList.add('copiado');
+        btn.textContent = '✔ Copiado';
+        setTimeout(() => { btn.classList.remove('copiado'); btn.textContent = '📋 Copiar resumo'; }, 1600);
       } catch (e) {
         statusEl.textContent = 'Não foi possível copiar automaticamente — selecione e copie manualmente.';
       }

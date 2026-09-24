@@ -66,10 +66,13 @@ test.describe('Chamada — dentro do portal da turma', () => {
 
     await expect(page.locator('#chamadaResumoBox')).toBeVisible();
     const resumo = await page.locator('#chamadaResumoTexto').inputValue();
-    expect(resumo).toContain('Turma: JD');
-    expect(resumo).toContain(`Data: ${today.split('-').reverse().join('/')}`);
-    expect(resumo).toMatch(/Alunos presentes: \d+/);
-    expect(resumo).toContain('Ausentes: Breno Silva');
+    // Uma informação por linha, com a série na frente da sigla.
+    expect(resumo.split('\n')).toEqual([
+      'Turma: 2º JD',
+      `Data: ${today.split('-').reverse().join('/')}`,
+      expect.stringMatching(/^Alunos presentes: \d+$/),
+      'Ausentes: Breno Silva',
+    ]);
 
     await page.click('#btnCopiarResumoChamada');
     await expect(page.locator('#chamadaResumoStatus')).toHaveText('Copiado!');
