@@ -64,7 +64,36 @@
     box-shadow: 0 8px 20px rgba(143, 166, 201, 0.35);
   }
   .btn-submit:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(143, 166, 201, 0.25); }
+  /* Letra "A" em rabisco no topo do card: neon branco simples, segue o
+     mouse de leve; com o mouse em cima ela para e o neon fica mais forte. */
+  .login-mark {
+    display: flex; justify-content: center; margin: 0 0 10px;
+    pointer-events: none;
+  }
+  .login-letter {
+    width: 88px; height: 84px; display: block; overflow: visible;
+    pointer-events: auto; cursor: default;
+    will-change: transform, filter;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85))
+            drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+    transition: filter 0.3s ease;
+  }
+  .login-letter .risco {
+    fill: none; stroke: #f4f6fb; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .login-letter .risco-fino { stroke-width: 1.6; opacity: 0.55; }
+  .login-letter .risco-forte { stroke-width: 3.6; }
+  .login-letter.acesa {
+    filter: drop-shadow(0 0 2px #fff)
+            drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))
+            drop-shadow(0 0 14px rgba(255, 255, 255, 0.75))
+            drop-shadow(0 0 28px rgba(255, 255, 255, 0.5));
+  }
+  @media (max-width: 420px) {
+    .login-letter { width: 72px; height: 69px; }
+  }
   @media (prefers-reduced-motion: reduce) {
+    .login-letter { transition: none; transform: none !important; }
     .login-card, .form-group input, .btn-submit { transition: none; }
     .login-card:hover, .btn-submit:hover { transform: none; }
   }
@@ -77,6 +106,22 @@
 <body>
 
 <div class="login-card">
+  <div class="login-mark">
+    <svg class="login-letter" id="loginLetter" viewBox="0 0 100 96" aria-hidden="true" focusable="false">
+      <!-- área transparente só para o mouse "pegar" a letra inteira -->
+      <rect x="0" y="0" width="100" height="96" fill="transparent"/>
+      <!-- traços principais (um pouco tortos, como feitos à mão) -->
+      <path class="risco risco-forte" d="M16 88 C 24 68, 33 44, 41 26 C 44 19, 47 13, 50 8"/>
+      <path class="risco risco-forte" d="M49 9 C 55 22, 61 37, 67 52 C 73 66, 79 78, 85 89"/>
+      <path class="risco risco-forte" d="M24 62 C 38 58, 54 57, 72 56 C 76 56, 79 57, 81 58"/>
+      <!-- segunda passada do rabisco, levemente deslocada -->
+      <path class="risco risco-fino" d="M20 91 C 27 71, 36 47, 44 29 C 47 21, 50 14, 53 9 C 51 7, 48 7, 46 10"/>
+      <path class="risco risco-fino" d="M52 11 C 57 25, 63 39, 69 54 C 74 67, 78 77, 82 86"/>
+      <path class="risco risco-fino" d="M21 66 C 36 61, 53 60, 69 60 C 74 60, 78 61, 84 63"/>
+      <!-- pontinha de caneta que escapou no fim da perna direita -->
+      <path class="risco risco-fino" d="M85 89 C 88 90, 90 88, 91 86"/>
+    </svg>
+  </div>
   <h1>Axis</h1>
   <div class="subtitle">Acesso ao portal</div>
 
@@ -100,6 +145,60 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="shared/session.js"></script>
 <script>
+// Letra "A" do topo: acompanha o mouse inclinando alguns graus (suavizado
+// com requestAnimationFrame). Com o mouse em cima dela, volta ao centro,
+// fica parada e acende o neon forte (classe .acesa).
+(function () {
+  const letra = document.getElementById('loginLetter');
+  if (!letra) return;
+  const semMovimento = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let alvoX = 0, alvoY = 0, atualX = 0, atualY = 0;
+  let parada = false, animando = false;
+
+  letra.addEventListener('pointerenter', () => {
+    parada = true; alvoX = 0; alvoY = 0;
+    letra.classList.add('acesa');
+    animar();
+  });
+  letra.addEventListener('pointerleave', () => {
+    parada = false;
+    letra.classList.remove('acesa');
+  });
+  if (semMovimento) return;
+
+  document.addEventListener('pointermove', (ev) => {
+    if (parada) return;
+    const r = letra.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    // -1..1 em relação ao tamanho da janela
+    alvoX = Math.max(-1, Math.min(1, (ev.clientX - cx) / (window.innerWidth / 2)));
+    alvoY = Math.max(-1, Math.min(1, (ev.clientY - cy) / (window.innerHeight / 2)));
+    animar();
+  });
+  document.documentElement.addEventListener('pointerleave', () => {
+    alvoX = 0; alvoY = 0; animar();
+  });
+
+  function animar() {
+    if (animando || semMovimento) return;
+    animando = true;
+    requestAnimationFrame(passo);
+  }
+  function passo() {
+    atualX += (alvoX - atualX) * 0.12;
+    atualY += (alvoY - atualY) * 0.12;
+    letra.style.transform =
+      `perspective(400px) translate(${(atualX * 5).toFixed(2)}px, ${(atualY * 4).toFixed(2)}px) ` +
+      `rotateY(${(atualX * 16).toFixed(2)}deg) rotateX(${(-atualY * 12).toFixed(2)}deg)`;
+    if (Math.abs(alvoX - atualX) > 0.001 || Math.abs(alvoY - atualY) > 0.001) {
+      requestAnimationFrame(passo);
+    } else {
+      animando = false;
+    }
+  }
+})();
+
 const DESATIVADO_MSG = 'Esta conta foi desativada. Fale com o professor.';
 const CREDENCIAIS_MSG = 'Usuário ou senha incorretos!';
 
