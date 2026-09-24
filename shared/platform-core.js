@@ -1239,8 +1239,16 @@
     return modules.every(isModuleComplete);
   }
 
+  // Entre um bimestre e outro (calendário cadastrado, mas hoje fora de
+  // qualquer bimestre — férias, recesso): não há trilha nenhuma pra
+  // concluir, então os jogos ficam abertos pra todo mundo.
+  function entreBimestres() {
+    const temCalendario = BIMESTRE_NUMS.some(n => (bimestreDatesCache[n] || {}).inicio);
+    return temCalendario && currentBimestreNum() === null;
+  }
+
   function checkGamesUnlock() {
-    const isUnlocked = allModulesComplete() || teacherUnlockOverride || currentUser.role === 'professor';
+    const isUnlocked = allModulesComplete() || entreBimestres() || teacherUnlockOverride || currentUser.role === 'professor';
     const btnJogos = document.getElementById('tabBtnJogos');
 
     if (isUnlocked) {
