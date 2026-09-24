@@ -80,6 +80,12 @@
 .sm-title p{ font-size:32px; color:var(--sm-dim); }
 .sm-title h2::after{ left:50%; transform:translateX(-50%); }
 
+/* Etiqueta "Aula 03 · qua., 30/09/2026 · turma" do slide de abertura
+   (cabeçalho do .md, ver lerMeta). */
+.sm-meta-chip{ align-self:center; font-family:'JetBrains Mono', Consolas, monospace; font-size:20px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  padding:8px 20px; border-radius:999px; color:var(--sm-accent); border:1px solid color-mix(in srgb, var(--sm-accent) 45%, transparent);
+  background:color-mix(in srgb, var(--sm-accent) 10%, transparent); box-shadow:0 0 24px color-mix(in srgb, var(--sm-accent) 25%, transparent); }
+
 /* Slide com código/imagem/tabela: texto um pouco menor pra caber. */
 .sm-midia p, .sm-midia ul, .sm-midia ol, .sm-midia blockquote{ font-size:26px; }
 
@@ -145,6 +151,16 @@
 .sm-timer-btns{ display:flex; gap:12px; }
 .sm-timer-btns button{ font:inherit; font-size:20px; font-weight:700; cursor:pointer; padding:10px 22px; border-radius:999px; border:2px solid var(--sm-accent); background:transparent; color:var(--sm-accent); }
 .sm-timer-btns button:first-child{ background:var(--sm-accent); color:var(--sm-bg); }
+
+/* ---------- "Finalizar aula" (último slide) ---------- */
+.sm-finalizar{ position:absolute; left:0; right:0; bottom:72px; margin:0 auto; width:fit-content; z-index:2;
+  font:inherit; font-size:24px; font-weight:800; cursor:pointer; padding:16px 34px; border-radius:999px; border:none;
+  color:#06231c; background:linear-gradient(100deg, #2fbf71, var(--sm-accent)); box-shadow:0 12px 34px rgba(47,191,113,.35);
+  animation:smSobe .7s .6s cubic-bezier(.2,.8,.2,1) both, smChama 2.4s 1.4s ease-in-out infinite; transition:transform .2s; }
+.sm-finalizar:not(.sm-finalizada):hover{ filter:brightness(1.1); }
+@keyframes smChama{ 50%{ box-shadow:0 12px 44px rgba(47,191,113,.65); } }
+.sm-finalizar.sm-finalizada{ cursor:default; animation:none; opacity:1; background:transparent; color:#2fbf71; border:2px solid #2fbf71; box-shadow:none; }
+.sm-estatico .sm-finalizar{ display:none; }
 
 /* ---------- Barra de progresso e controles ---------- */
 .sm-progress{ position:absolute; left:0; right:0; top:0; height:5px; background:var(--sm-line); }

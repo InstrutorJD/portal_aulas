@@ -1,3 +1,9 @@
+---
+titulo: Guia do formato
+descricao: Tudo que dá pra fazer num slide, com exemplos — comece por aqui.
+icone: 🧭
+---
+
 # Guia do formato
 Como escrever uma aula em Markdown para o **Criar Material**
 
@@ -102,6 +108,31 @@ Crie uma página com um título, um parágrafo e um link.
 Quer que a turma abra um link no celular? Uma linha com `[qrcode link]`:
 
 [qrcode https://developer.mozilla.org/pt-BR/ Documentação da MDN]
+
+---
+
+## Identificação da aula
+O arquivo começa com um cabeçalho entre `---`:
+
+```
+---
+aula: 3
+data: 2026-09-30
+titulo: Introdução a Redes
+turma: 2º DS
+---
+```
+
+- Vira o card da aula, com número e data
+- E a etiqueta no slide de abertura
+
+---
+
+## Aula concluída
++ No último slide aparece o botão **✅ Finalizar aula**
++ Só com esse clique a aula fica **Concluída** na lista
++ Data passou sem finalizar? O card mostra **Pendente**
++ Marcou sem querer? Clique em *desmarcar* no card
 
 ---
 

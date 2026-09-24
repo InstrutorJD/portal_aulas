@@ -8,36 +8,71 @@
 <!-- "Criar Material" (só professor, aberto pelo painel): aulas em slides a
      partir de um arquivo Markdown, pra projetar na sala. Tudo estático —
      sem Supabase além do login: os .md ficam em materiais/ (listados em
-     materiais/lista.js) ou são abertos direto do computador. Motor em
-     shared/slides-md.js, formato em materiais/guia-do-formato.md. -->
+     materiais/lista.js) ou são abertos direto do computador. Cada aula vira
+     um card com número e data (cabeçalho do .md, ver SlidesMD.lerMeta) e só
+     fica "Concluída" quando o professor clica em "Finalizar aula" no último
+     slide (guardado neste navegador — localStorage 'sm_aulas_concluidas').
+     Motor em shared/slides-md.js; formato em materiais/instrucoes-para-ia.md. -->
 <style>
   :root{
     --bg:#0b0d11; --panel:#141821; --panel2:#10131a; --line:#262b36;
     --green:#4fd1c5; --green-dim:#2f8f86; --blood:#c1121f; --blood-bright:#ff5c5c;
     --yellow:#ff9466; --ink:#e8ecf1; --ink-dim:#8993a4;
+    --ok:#2fbf71; --warn:#f5b942;
   }
   .mat-intro h2{ margin-bottom:4px; }
   .mat-intro p{ font-size:12px; color:var(--ink-dim); margin:0 0 16px; }
-  .mat-drop{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:28px 16px; border:2px dashed var(--line); border-radius:12px; cursor:pointer; text-align:center; transition:border-color .2s, background .2s; }
+  .mat-drop{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px 16px; border:2px dashed var(--line); border-radius:12px; cursor:pointer; text-align:center; transition:border-color .2s, background .2s; }
   .mat-drop:hover, .mat-drop.mat-drop-on{ border-color:var(--green); background:rgba(79,209,197,0.06); }
-  .mat-drop .icon{ font-size:36px; }
+  .mat-drop .icon{ font-size:32px; }
   .mat-drop b{ color:var(--green); }
   .mat-drop small{ color:var(--ink-dim); font-size:11px; }
   .mat-erro{ color:var(--blood-bright); font-size:12px; margin-top:10px; min-height:1em; }
-  .mat-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px; }
-  .mat-card{ text-align:left; cursor:pointer; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); color:var(--ink); font:inherit; transition:transform .15s, border-color .15s; }
-  .mat-card:hover{ transform:translateY(-3px); border-color:var(--green); }
-  .mat-card .icon{ font-size:28px; }
-  .mat-card h3{ margin:8px 0 4px; font-size:15px; color:var(--ink); }
+
+  /* ---------- Cards das aulas ---------- */
+  .mat-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .mat-resumo{ font-size:11px; color:var(--ink-dim); }
+  .mat-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; margin-top:12px; }
+  .mat-card{ position:relative; display:flex; flex-direction:column; gap:8px; text-align:left; cursor:pointer; padding:16px 16px 14px; border:1px solid var(--line); border-radius:14px;
+    background:var(--panel2); color:var(--ink); font:inherit; transition:transform .15s, border-color .15s, box-shadow .15s; overflow:hidden; }
+  .mat-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--line); }
+  .mat-card:hover{ transform:translateY(-3px); border-color:var(--green); box-shadow:0 10px 26px rgba(0,0,0,.35); }
+  .mat-card-topo{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .mat-num{ font-family:'JetBrains Mono', monospace; font-size:24px; font-weight:800; line-height:1; color:var(--green); }
+  .mat-num small{ font-size:11px; font-weight:700; letter-spacing:1px; color:var(--ink-dim); margin-right:4px; }
+  .mat-data{ font-size:11px; color:var(--ink-dim); }
+  .mat-card h3{ margin:0; font-size:15px; line-height:1.3; color:var(--ink); }
   .mat-card p{ margin:0; font-size:11px; color:var(--ink-dim); line-height:1.5; }
+  .mat-card-pe{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding-top:6px; font-size:10.5px; color:var(--ink-dim); }
+  .mat-selo{ font-size:10px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:3px 9px; border-radius:999px; border:1px solid var(--line); color:var(--ink-dim); white-space:nowrap; }
+  .mat-card.st-concluida::before{ background:var(--ok); }
+  .mat-card.st-concluida .mat-selo{ color:var(--ok); border-color:var(--ok); background:rgba(47,191,113,.1); }
+  .mat-card.st-concluida{ opacity:.78; }
+  .mat-card.st-concluida:hover{ opacity:1; }
+  .mat-card.st-hoje::before{ background:var(--green); box-shadow:0 0 14px var(--green); }
+  .mat-card.st-hoje{ border-color:var(--green-dim); box-shadow:0 0 0 1px var(--green-dim), 0 0 24px rgba(79,209,197,.15); }
+  .mat-card.st-hoje .mat-selo{ color:#06231c; background:var(--green); border-color:var(--green); }
+  .mat-card.st-proxima::before{ background:#7c9cff; }
+  .mat-card.st-proxima .mat-selo{ color:#7c9cff; border-color:#7c9cff; }
+  .mat-card.st-pendente::before{ background:var(--warn); }
+  .mat-card.st-pendente .mat-selo{ color:var(--warn); border-color:var(--warn); }
+  .mat-desfazer{ font:inherit; font-size:10px; cursor:pointer; background:transparent; border:none; color:var(--ink-dim); text-decoration:underline; padding:0; }
+  .mat-desfazer:hover{ color:var(--blood-bright); }
   .mat-vazio{ font-size:12px; color:var(--ink-dim); }
-  .mat-guia pre{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:11.5px; line-height:1.6; overflow-x:auto; white-space:pre; }
-  .mat-guia summary{ cursor:pointer; font-weight:800; color:var(--green); }
-  .mat-guia p{ font-size:12px; color:var(--ink-dim); }
+  .mat-ref-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:14px; }
+
+  /* ---------- Instruções pra IA ---------- */
+  .mat-ia ol{ font-size:12px; color:var(--ink); line-height:1.8; margin:6px 0 14px; padding-left:20px; }
+  .mat-ia ol code, .mat-ia p code{ color:var(--green); }
+  .mat-ia-botoes{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .mat-ia details{ margin-top:12px; }
+  .mat-ia summary{ cursor:pointer; font-weight:800; font-size:12px; color:var(--green); }
+  .mat-ia pre{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:11px; line-height:1.55; max-height:420px; overflow:auto; white-space:pre-wrap; }
+  .mat-ia p{ font-size:12px; color:var(--ink-dim); }
 </style>
 <link rel="stylesheet" href="../shared/platform-core.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700;800&display=swap">
 <link rel="stylesheet" id="smHljsTema" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
 <link rel="stylesheet" href="../shared/slides-md.css">
 
@@ -62,59 +97,49 @@
 
 <div class="app-container">
   <div class="viewport-content">
+    <div class="card">
+      <div class="mat-head">
+        <h2>📚 Minhas aulas</h2>
+        <span class="mat-resumo" id="matResumo"></span>
+      </div>
+      <div class="mat-grid" id="matLista"><p class="mat-vazio">Carregando aulas...</p></div>
+    </div>
+
     <div class="card mat-intro">
-      <h2>📽️ Criar Material</h2>
-      <p>Aulas em slides a partir de um arquivo <b>.md</b> (Markdown) — pra projetar na sala e a turma acompanhar.</p>
+      <h2>📂 Abrir um arquivo .md</h2>
+      <p>Para testar uma aula antes de colocá-la na lista — abre na hora, direto do seu computador.</p>
       <label class="mat-drop" id="matDrop">
         <span class="icon">📂</span>
         <span><b>Clique para escolher</b> ou arraste um arquivo <b>.md</b> aqui</span>
-        <small>Abre na hora, direto do seu computador — nada é enviado pra lugar nenhum.</small>
+        <small>Nada é enviado pra lugar nenhum.</small>
         <input type="file" id="matArquivo" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
       </label>
       <div class="mat-erro" id="matErro"></div>
     </div>
 
-    <div class="card">
-      <h2>Aulas prontas</h2>
-      <div class="mat-grid" id="matLista"></div>
+    <div class="card mat-ia">
+      <h2>🤖 Como pedir uma aula para a IA</h2>
+      <ol>
+        <li>Clique em <b>Copiar instruções</b> (ou baixe o arquivo) e cole/anexe na conversa com a IA.</li>
+        <li>Peça a aula, por exemplo: <i>“Gere a <b>aula 4</b>, dia <b>07/10/2026</b>, turma 2º DS, sobre <b>laços de repetição em JavaScript</b>, com 20 min de prática.”</i></li>
+        <li>Salve a resposta como um arquivo <code>.md</code> e teste aqui em cima, em <b>Abrir um arquivo .md</b>.</li>
+        <li>Para a aula entrar em <b>Minhas aulas</b>: coloque o arquivo em <code>materiais/</code> e o nome dele em <code>materiais/lista.js</code> (ou me peça pra fazer isso).</li>
+      </ol>
+      <div class="mat-ia-botoes">
+        <button type="button" class="btn" id="btnCopiarIA">📋 Copiar instruções</button>
+        <button type="button" class="btn btn-secondary" id="btnBaixarIA">⬇ Baixar .md</button>
+        <span class="status-msg" id="iaStatus"></span>
+      </div>
+      <details>
+        <summary>Ver as instruções completas</summary>
+        <pre id="iaTexto">Carregando...</pre>
+      </details>
+      <p>Na apresentação: <b>→ / espaço</b> avança, <b>←</b> volta, <b>O</b> visão geral, <b>T</b> tema claro/escuro, <b>F</b> tela cheia, <b>R</b> revela a resposta, <b>Q</b> amplia o QR Code, <b>Esc</b> sai. No último slide, <b>✅ Finalizar aula</b> marca a aula como concluída.</p>
     </div>
 
-    <div class="card mat-guia">
-      <details>
-        <summary>Como escrever o .md</summary>
-        <p>Cada <code>---</code> separa um slide. O guia completo, com exemplos, é a aula “Guia do formato” acima.</p>
-        <pre># Título da aula          → slide de abertura (grande, centralizado)
-Subtítulo
-
----
-
-## Título do slide
-Texto comum, com **negrito**, *destaque*, `código` e ==marca-texto==.
-
-- lista normal
-+ lista revelada em etapas (um item a cada avanço)
-
-- [ ] pergunta pra turma
-- [x] alternativa certa     → clique numa alternativa ou tecle R
-
-> destaque / dica
-
-```js
-console.log("código com cores e botão Copiar");
-```
-
-![legenda](imagem.png)
-
-| Coluna | Coluna |
-|--------|--------|
-| a      | b      |
-
-[cronômetro 15]           → cronômetro de 15 min pra parte prática
-
-[qrcode https://exemplo.com Acesse aqui]
-                          → QR Code (texto depois do link = legenda; clique ou Q amplia)</pre>
-        <p>Na apresentação: <b>→ / espaço</b> avança, <b>←</b> volta, <b>O</b> visão geral, <b>T</b> tema claro/escuro, <b>F</b> tela cheia, <b>R</b> revela a resposta, <b>Q</b> amplia o QR Code, <b>Esc</b> sai. Um passador de slides também funciona.</p>
-      </details>
+    <div class="card">
+      <h2>🧭 Referência</h2>
+      <div class="mat-ref-grid" id="matRef"></div>
     </div>
   </div>
 </div>
@@ -136,9 +161,10 @@ console.log("código com cores e botão Copiar");
     window.location.href = '../index.html';
   });
 
+  const SM = window.SlidesMD;
   const erroEl = document.getElementById('matErro');
   const presenterEl = document.getElementById('smPresenter');
-  const presenter = window.SlidesMD.createPresenter(presenterEl, {
+  const presenter = SM.createPresenter(presenterEl, {
     onExit: () => {
       document.title = 'PixelForge Studios — Criar Material';
       try { history.replaceState(null, '', location.pathname); } catch (e) {}
@@ -153,29 +179,57 @@ console.log("código com cores e botão Copiar");
   document.addEventListener('sm-tema', e => trocarTemaCodigo(e.detail));
   trocarTemaCodigo(presenterEl.dataset.theme);
 
+  // ---------- Aulas concluídas (só com o clique em "Finalizar aula") ----------
+  // Guardado neste navegador: { "arquivo.md": "2026-09-30T14:02:00.000Z" }.
+  const CHAVE_CONCLUIDAS = 'sm_aulas_concluidas';
+  function lerConcluidas() {
+    try { return JSON.parse(localStorage.getItem(CHAVE_CONCLUIDAS) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function marcarConcluida(arquivo, sim) {
+    const c = lerConcluidas();
+    if (sim) c[arquivo] = new Date().toISOString(); else delete c[arquivo];
+    try { localStorage.setItem(CHAVE_CONCLUIDAS, JSON.stringify(c)); } catch (e) {}
+  }
+
+  function hojeIso() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   function slideDoHash() {
     const n = parseInt((location.hash || '').slice(1), 10);
     return n > 0 ? n - 1 : 0;
   }
 
-  function apresentar(md, baseUrl, nome, param, inicio) {
-    const deck = window.SlidesMD.parse(md, baseUrl);
+  // arquivo: nome em materiais/ (aula da lista, pode ser finalizada) ou
+  // null (aberta do computador — sem "Finalizar", não tem card).
+  function apresentar(md, baseUrl, nome, param, inicio, arquivo) {
+    const deck = SM.parse(md, baseUrl);
     if (deck.slides.length === 0) {
       erroEl.textContent = `“${nome}” não tem nenhum slide — confira se o arquivo tem conteúdo.`;
       return;
     }
     erroEl.textContent = '';
-    document.title = `${deck.titulo || nome} — Criar Material`;
+    document.title = `${deck.rotulo ? deck.rotulo.split(' · ')[0] + ' — ' : ''}${deck.titulo || nome}`;
     try { history.replaceState(null, '', `${location.pathname}?m=${encodeURIComponent(param)}#${(inicio || 0) + 1}`); } catch (e) {}
-    presenter.abrir(deck, inicio || 0);
+    const ehAula = arquivo && deck.meta.aula !== undefined && deck.meta.aula !== '';
+    presenter.abrir(deck, inicio || 0, ehAula ? {
+      finalizada: !!lerConcluidas()[arquivo],
+      onFinalizar: () => { marcarConcluida(arquivo, true); renderCards(); },
+    } : {});
+  }
+
+  async function buscarMd(arquivo) {
+    const url = new URL(`../materiais/${arquivo}`, location.href).href;
+    const resp = await fetch(url, { cache: 'no-cache' });
+    if (!resp.ok) throw new Error(resp.status);
+    return { md: await resp.text(), url };
   }
 
   async function abrirDaLista(arquivo, inicio) {
-    const url = new URL(`../materiais/${arquivo}`, location.href).href;
     try {
-      const resp = await fetch(url, { cache: 'no-cache' });
-      if (!resp.ok) throw new Error(resp.status);
-      apresentar(await resp.text(), url, arquivo, arquivo, inicio);
+      const { md, url } = await buscarMd(arquivo);
+      apresentar(md, url, arquivo, arquivo, inicio, arquivo);
     } catch (e) {
       erroEl.textContent = `Não foi possível abrir materiais/${arquivo}.`;
     }
@@ -189,30 +243,139 @@ console.log("código com cores e botão Copiar");
     reader.onload = () => {
       const md = String(reader.result || '');
       try { sessionStorage.setItem('sm_upload', JSON.stringify({ nome: file.name, md })); } catch (e) {}
-      apresentar(md, null, file.name, '__arquivo', 0);
+      apresentar(md, null, file.name, '__arquivo', 0, null);
     };
     reader.onerror = () => { erroEl.textContent = 'Não foi possível ler o arquivo.'; };
     reader.readAsText(file, 'utf-8');
   }
 
-  // Lista de aulas prontas (materiais/lista.js).
-  const lista = document.getElementById('matLista');
-  const materiais = window.MATERIAIS || [];
-  lista.innerHTML = materiais.length === 0
-    ? '<p class="mat-vazio">Nenhuma aula em materiais/lista.js ainda.</p>'
-    : materiais.map((m, i) => `
-        <button type="button" class="mat-card" data-i="${i}">
-          <div class="icon">${m.icone || '📘'}</div>
-          <h3></h3>
-          <p></p>
-        </button>`).join('');
-  lista.querySelectorAll('.mat-card').forEach(card => {
-    const m = materiais[parseInt(card.dataset.i, 10)];
-    card.querySelector('h3').textContent = m.titulo || m.arquivo;
-    card.querySelector('p').textContent = m.descricao || '';
-    card.addEventListener('click', () => abrirDaLista(m.arquivo, 0));
+  // ---------- Cards ----------
+  // materiais/lista.js: nomes de arquivo (ou objetos { arquivo, titulo,
+  // descricao, icone } — formato antigo). Número, data, título etc. vêm do
+  // cabeçalho de cada .md; o que estiver no objeto só completa o que faltar.
+  const entradas = (window.MATERIAIS || []).map(e => (typeof e === 'string' ? { arquivo: e } : e));
+  let itens = [];
+
+  async function carregarItens() {
+    itens = await Promise.all(entradas.map(async e => {
+      try {
+        const { md } = await buscarMd(e.arquivo);
+        const { meta } = SM.lerMeta(md);
+        const deck = SM.parse(md, null);
+        return { ...e, meta, titulo: meta.titulo || deck.titulo || e.titulo || e.arquivo, descricao: meta.descricao || e.descricao || '',
+          icone: meta.icone || e.icone, slides: deck.slides.length, ok: true };
+      } catch (err) {
+        return { ...e, meta: {}, titulo: e.titulo || e.arquivo, descricao: 'Arquivo não encontrado em materiais/.', slides: 0, ok: false };
+      }
+    }));
+  }
+
+  // Situação de uma aula: concluída (só pelo botão) > hoje > próxima (a
+  // primeira depois de hoje) > agendada > pendente (data já passou e ninguém
+  // finalizou) > sem data.
+  function situacao(it, concluidas, proximaData) {
+    if (concluidas[it.arquivo]) return { cls: 'st-concluida', txt: '✔ Concluída' };
+    const d = it.meta.data;
+    if (!d) return { cls: '', txt: 'Sem data' };
+    const hoje = hojeIso();
+    if (d === hoje) return { cls: 'st-hoje', txt: '● Hoje' };
+    if (d < hoje) return { cls: 'st-pendente', txt: 'Pendente' };
+    if (d === proximaData) return { cls: 'st-proxima', txt: 'Próxima' };
+    return { cls: '', txt: 'Agendada' };
+  }
+
+  function montarCard(it, st, concluidoEm) {
+    const card = document.createElement('div');
+    card.className = `mat-card ${st.cls}`;
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    const temNum = it.meta.aula !== undefined && it.meta.aula !== '';
+    const num = temNum ? (typeof it.meta.aula === 'number' ? String(it.meta.aula).padStart(2, '0') : it.meta.aula) : '';
+    card.innerHTML = `
+      <div class="mat-card-topo">
+        <span class="mat-num">${temNum ? `<small>AULA</small> ${num}` : (it.icone || '📘')}</span>
+        <span class="mat-selo"></span>
+      </div>
+      <span class="mat-data"></span>
+      <h3></h3>
+      <p></p>
+      <div class="mat-card-pe"><span class="mat-qtd"></span><span class="mat-acao"></span></div>`;
+    card.querySelector('.mat-selo').textContent = st.txt;
+    card.querySelector('.mat-data').textContent = [it.meta.data ? SM.formatarData(it.meta.data) : '', it.meta.turma || ''].filter(Boolean).join(' · ');
+    card.querySelector('h3').textContent = it.titulo;
+    card.querySelector('p').textContent = it.descricao;
+    card.querySelector('.mat-qtd').textContent = it.ok ? `${it.slides} slides` : '';
+    if (concluidoEm) {
+      const quando = new Date(concluidoEm);
+      const desfazer = document.createElement('button');
+      desfazer.type = 'button';
+      desfazer.className = 'mat-desfazer';
+      desfazer.textContent = 'desmarcar';
+      desfazer.title = `Finalizada em ${quando.toLocaleDateString('pt-BR')} às ${quando.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} — clique para voltar a "não concluída"`;
+      desfazer.addEventListener('click', ev => { ev.stopPropagation(); marcarConcluida(it.arquivo, false); renderCards(); });
+      card.querySelector('.mat-acao').appendChild(desfazer);
+    }
+    const abrir = () => { if (it.ok) abrirDaLista(it.arquivo, 0); };
+    card.addEventListener('click', abrir);
+    card.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); } });
+    return card;
+  }
+
+  function renderCards() {
+    const concluidas = lerConcluidas();
+    const aulas = itens.filter(it => it.meta.aula !== undefined && it.meta.aula !== '')
+      .sort((a, b) => (Number(a.meta.aula) || 0) - (Number(b.meta.aula) || 0) || String(a.meta.data || '').localeCompare(String(b.meta.data || '')));
+    const refs = itens.filter(it => !(it.meta.aula !== undefined && it.meta.aula !== ''));
+    const hoje = hojeIso();
+    const futuras = aulas.map(a => a.meta.data).filter(d => d && d > hoje && !aulas.some(x => x.meta.data === d && concluidas[x.arquivo])).sort();
+    const proximaData = futuras[0] || null;
+
+    const lista = document.getElementById('matLista');
+    lista.innerHTML = '';
+    if (aulas.length === 0) {
+      lista.innerHTML = '<p class="mat-vazio">Nenhuma aula ainda. Gere uma com a IA (veja abaixo), coloque o .md em materiais/ e o nome em materiais/lista.js.</p>';
+    } else {
+      aulas.forEach(it => lista.appendChild(montarCard(it, situacao(it, concluidas, proximaData), concluidas[it.arquivo])));
+    }
+    const feitas = aulas.filter(a => concluidas[a.arquivo]).length;
+    document.getElementById('matResumo').textContent = aulas.length ? `${feitas} de ${aulas.length} concluída${aulas.length === 1 ? '' : 's'}` : '';
+
+    const ref = document.getElementById('matRef');
+    ref.innerHTML = '';
+    refs.forEach(it => ref.appendChild(montarCard(it, { cls: '', txt: 'Guia' }, null)));
+  }
+
+  await carregarItens();
+  renderCards();
+
+  // ---------- Instruções pra IA ----------
+  let textoIA = '';
+  try {
+    const resp = await fetch('../materiais/instrucoes-para-ia.md', { cache: 'no-cache' });
+    textoIA = resp.ok ? await resp.text() : '';
+  } catch (e) {}
+  document.getElementById('iaTexto').textContent = textoIA || 'Não foi possível carregar materiais/instrucoes-para-ia.md.';
+  document.getElementById('btnCopiarIA').addEventListener('click', async () => {
+    const st = document.getElementById('iaStatus');
+    try {
+      await navigator.clipboard.writeText(textoIA);
+      st.textContent = 'Copiado! Cole na conversa com a IA.';
+    } catch (e) {
+      st.textContent = 'Não foi possível copiar — abra "Ver as instruções completas" e copie de lá.';
+    }
   });
 
+  document.getElementById('btnBaixarIA').addEventListener('click', () => {
+    if (!textoIA) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([textoIA], { type: 'text/markdown;charset=utf-8' }));
+    a.download = 'instrucoes-para-ia.md';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  });
+
+  // ---------- Arquivo do computador ----------
   const input = document.getElementById('matArquivo');
   input.addEventListener('change', () => { abrirArquivo(input.files[0]); input.value = ''; });
   const drop = document.getElementById('matDrop');
@@ -225,7 +388,7 @@ console.log("código com cores e botão Copiar");
   if (param === '__arquivo') {
     try {
       const salvo = JSON.parse(sessionStorage.getItem('sm_upload') || 'null');
-      if (salvo) apresentar(salvo.md, null, salvo.nome, '__arquivo', slideDoHash());
+      if (salvo) apresentar(salvo.md, null, salvo.nome, '__arquivo', slideDoHash(), null);
     } catch (e) {}
   } else if (param) {
     abrirDaLista(param, slideDoHash());

@@ -3,6 +3,8 @@
 // navegador, sem servidor, sem Supabase. Formato do .md (guia completo em
 // materiais/guia-do-formato.md, que é ele mesmo uma apresentação):
 //
+//   (topo) --- aula: 3 / data: 2026-09-30 / titulo: ... ---  identificação
+//          da aula (ver lerMeta) — vira os cards e a etiqueta da abertura
 //   ---                  separa um slide do outro
 //   # Título             slide de abertura/seção (grande, centralizado)
 //   ## Título            título de um slide comum
@@ -177,16 +179,84 @@ window.SlidesMD = (function () {
     }).join('');
   }
 
+  // ---------- Identificação da aula (cabeçalho no topo do .md) ----------
+  //   ---
+  //   aula: 3
+  //   data: 2026-09-30        (ou 30/09/2026)
+  //   titulo: Introdução a Redes
+  //   turma: 2º DS
+  //   descricao: IP, máscara e gateway
+  //   ---
+  // Só vale se for a PRIMEIRA coisa do arquivo e todas as linhas forem
+  // "chave: valor" — senão é só um "---" de separar slide, como sempre.
+  // Chaves sem acento/maiúscula ("Título" = "titulo").
+  function normChave(k) {
+    return k.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  // "30/09/2026" ou "2026-09-30" → "2026-09-30"; outra coisa → ''.
+  function normData(v) {
+    let m = String(v || '').trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    m = String(v || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    return '';
+  }
+
+  function lerMeta(md) {
+    const texto = String(md || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+    const m = texto.match(/^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/);
+    const vazio = { meta: {}, corpo: texto };
+    if (!m) return vazio;
+    const linhas = m[1].split('\n').filter(l => l.trim());
+    if (!linhas.length || !linhas.every(l => /^[^:#\-+>|`\s][^:]*:/.test(l))) return vazio;
+    const meta = {};
+    linhas.forEach(l => {
+      const i = l.indexOf(':');
+      meta[normChave(l.slice(0, i))] = l.slice(i + 1).trim().replace(/^(["'])(.*)\1$/, '$2');
+    });
+    if (meta.aula !== undefined) {
+      const n = parseInt(meta.aula, 10);
+      meta.aula = isNaN(n) ? meta.aula : n;
+    }
+    if (meta.data) meta.data = normData(meta.data);
+    return { meta, corpo: texto.slice(m[0].length) };
+  }
+
+  const DIAS = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'];
+  // "2026-09-30" → "qua., 30/09/2026" (curta: "30/09").
+  function formatarData(iso, curta) {
+    if (!iso) return '';
+    const [a, mes, d] = iso.split('-');
+    if (curta) return `${d}/${mes}`;
+    const dia = new Date(Number(a), Number(mes) - 1, Number(d)).getDay();
+    return `${DIAS[dia]}, ${d}/${mes}/${a}`;
+  }
+
+  // "Aula 03 · qua., 30/09/2026 · 2º DS" — etiqueta do slide de abertura e
+  // do título da aba.
+  function rotuloMeta(meta) {
+    const partes = [];
+    if (meta.aula !== undefined && meta.aula !== '') partes.push(`Aula ${typeof meta.aula === 'number' ? String(meta.aula).padStart(2, '0') : meta.aula}`);
+    if (meta.data) partes.push(formatarData(meta.data));
+    if (meta.turma) partes.push(meta.turma);
+    return partes.join(' · ');
+  }
+
   function parse(md, baseUrl) {
-    const slides = splitSlides(md).map(lines => {
+    const { meta, corpo } = lerMeta(md);
+    const rotulo = rotuloMeta(meta);
+    const slides = splitSlides(corpo).map((lines, i) => {
       const blocks = parseBlocks(lines, baseUrl);
       const primeiro = blocks[0];
       const kind = primeiro && primeiro.t === 'h' && primeiro.level === 1 ? 'title' : 'content';
       const temMidia = blocks.some(b => ['code', 'img', 'table', 'qr'].includes(b.t));
-      return { kind, html: renderBlocks(blocks), temMidia };
+      // A abertura ganha a etiqueta "Aula 03 · data" acima do título.
+      const chip = i === 0 && kind === 'title' && rotulo ? `<div class="sm-anim sm-meta-chip" style="--d:0">${esc(rotulo)}</div>` : '';
+      return { kind, html: chip + renderBlocks(blocks), temMidia };
     });
-    const h1 = md.match(/^#\s+(.+)$/m);
-    return { titulo: h1 ? h1[1].trim() : '', slides };
+    const h1 = corpo.match(/^#\s+(.+)$/m);
+    return { titulo: meta.titulo || (h1 ? h1[1].trim() : ''), meta, rotulo, slides };
   }
 
   // ---------- Apresentação ----------
@@ -272,9 +342,30 @@ window.SlidesMD = (function () {
         antigo.classList.add(dir < 0 ? 'sm-out-prev' : 'sm-out-next');
         setTimeout(() => antigo.remove(), 650);
       }
+      if (finalizar && i === deck.slides.length - 1) atual.appendChild(botaoFinalizar());
       root.querySelector('.sm-count').textContent = `${i + 1} / ${deck.slides.length}`;
       root.querySelector('.sm-progress > div').style.width = `${((i + 1) / deck.slides.length) * 100}%`;
       try { history.replaceState(null, '', `#${i + 1}`); } catch (e) {}
+    }
+
+    // "Finalizar aula" no último slide (só quando quem abriu passou
+    // onFinalizar — ver abrir): é o ÚNICO jeito de a aula virar
+    // "Concluída" na lista; chegar no fim sem clicar não conta.
+    let finalizar = null;
+    function botaoFinalizar() {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sm-finalizar' + (finalizar.feita ? ' sm-finalizada' : '');
+      btn.textContent = finalizar.feita ? '✔ Aula concluída' : '✅ Finalizar aula';
+      return btn;
+    }
+    function clicarFinalizar(btn) {
+      if (!finalizar || finalizar.feita) return;
+      finalizar.feita = true;
+      btn.classList.add('sm-finalizada');
+      btn.textContent = '✔ Aula concluída';
+      confete(btn);
+      finalizar.onFinalizar();
     }
 
     // Avançar primeiro esgota o que o slide ainda tem pra mostrar: próximo
@@ -466,6 +557,8 @@ window.SlidesMD = (function () {
         }).catch(() => {});
         return;
       }
+      const fin = e.target.closest('.sm-finalizar');
+      if (fin) { clicarFinalizar(fin); return; }
       const tb = e.target.closest('[data-timer]');
       if (tb) { acaoTimer(tb.closest('.sm-timer'), tb.dataset.timer); return; }
       const qr = e.target.closest('.sm-qr');
@@ -489,8 +582,11 @@ window.SlidesMD = (function () {
       hudTimer = setTimeout(() => root.classList.remove('sm-hud-on'), 2500);
     });
 
-    function abrir(novoDeck, inicio = 0) {
+    // opcoes.onFinalizar: mostra "Finalizar aula" no último slide e é
+    // chamado no clique; opcoes.finalizada: a aula já estava concluída.
+    function abrir(novoDeck, inicio = 0, opcoes = {}) {
       deck = novoDeck;
+      finalizar = opcoes.onFinalizar ? { feita: !!opcoes.finalizada, onFinalizar: opcoes.onFinalizar } : null;
       stage.innerHTML = '';
       atual = null;
       root.hidden = false;
@@ -505,5 +601,5 @@ window.SlidesMD = (function () {
     return { abrir, sair };
   }
 
-  return { parse, createPresenter };
+  return { parse, lerMeta, formatarData, rotuloMeta, createPresenter };
 })();
