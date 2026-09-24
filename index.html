@@ -64,14 +64,14 @@
     box-shadow: 0 8px 20px rgba(143, 166, 201, 0.35);
   }
   .btn-submit:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(143, 166, 201, 0.25); }
-  /* Letra "A" em rabisco acima do card de login: neon branco simples, segue o
+  /* Palavra "Axis" em rabisco acima do card de login: neon branco simples, segue o
      mouse de leve; com o mouse em cima ela para e o neon fica mais forte. */
   .login-mark {
     display: flex; justify-content: center; margin: 0 0 18px;
     pointer-events: none;
   }
   .login-letter {
-    width: 88px; height: 84px; display: block; overflow: visible;
+    width: 211px; height: 84px; display: block; overflow: visible;
     pointer-events: auto; cursor: default;
     will-change: transform, filter;
     filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85))
@@ -90,7 +90,7 @@
             drop-shadow(0 0 28px rgba(255, 255, 255, 0.5));
   }
   @media (max-width: 420px) {
-    .login-letter { width: 72px; height: 69px; }
+    .login-letter { width: 173px; height: 69px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .login-letter { transition: none; transform: none !important; }
@@ -106,9 +106,9 @@
 <body>
 
 <div class="login-mark">
-  <svg class="login-letter" id="loginLetter" viewBox="0 0 100 96" aria-hidden="true" focusable="false">
-    <!-- área transparente só para o mouse "pegar" a letra inteira -->
-    <rect x="0" y="0" width="100" height="96" fill="transparent"/>
+  <svg class="login-letter" id="loginLetter" viewBox="0 0 240 96" aria-hidden="true" focusable="false">
+    <!-- área transparente só para o mouse "pegar" a palavra inteira -->
+    <rect x="0" y="0" width="240" height="96" fill="transparent"/>
     <!-- "A" desconstruído: as pernas não se encontram no topo, cada uma
          quebrada em pedaços desalinhados; a barra é um traço solto que
          escapa para fora da letra. Dá para ler um A, mas não é um A. -->
@@ -126,6 +126,33 @@
     <path class="risco risco-fino" d="M44 9 C 47 6, 50 5, 53 7"/>
     <path class="risco risco-fino" d="M64 20 C 68 32, 72 44, 78 60"/>
     <path class="risco risco-fino" d="M18 84 C 21 77, 23 72, 25 68"/>
+
+    <!-- "x" desconstruído: uma diagonal inteira; a outra partida bem no
+         cruzamento, com os dois pedaços desalinhados -->
+    <path class="risco risco-forte" d="M103 43 C 114 55, 126 67, 151 92"/>
+    <path class="risco risco-forte" d="M150 42 C 144 49, 138 56, 131 63"/>
+    <path class="risco risco-forte" d="M123 72 C 117 79, 111 86, 105 93"/>
+    <!-- sobras: fiapo acompanhando a diagonal e marca na ponta de cima -->
+    <path class="risco risco-fino" d="M110 47 C 120 57, 130 67, 141 79"/>
+    <path class="risco risco-fino" d="M146 38 C 149 36, 152 37, 155 40"/>
+
+    <!-- "i" desconstruído: haste quebrada em dois e o pingo virou um traço
+         solto, deslocado para o lado -->
+    <path class="risco risco-forte" d="M169 46 C 170 56, 170 64, 169 72"/>
+    <path class="risco risco-forte" d="M171 79 C 172 84, 172 88, 174 93"/>
+    <path class="risco risco-forte" d="M172 24 C 175 21, 179 20, 183 21"/>
+    <!-- sobras: fiapo ao lado da haste e resto do pingo -->
+    <path class="risco risco-fino" d="M176 50 C 177 59, 177 67, 176 74"/>
+    <path class="risco risco-fino" d="M163 30 C 165 29, 167 29, 169 30"/>
+
+    <!-- "s" desconstruído: a curva de cima e a de baixo não se encontram
+         no meio; a de baixo começa afastada e passa do fim da letra -->
+    <path class="risco risco-forte" d="M230 49 C 222 40, 201 40, 197 52 C 195 60, 204 64, 212 66"/>
+    <path class="risco risco-forte" d="M219 71 C 229 74, 235 81, 231 88 C 226 96, 205 97, 191 87"/>
+    <!-- sobras: rabicho no topo, segunda passada no meio e ponta que escapa -->
+    <path class="risco risco-fino" d="M232 44 C 234 47, 234 50, 232 53"/>
+    <path class="risco risco-fino" d="M201 58 C 207 64, 217 67, 227 74"/>
+    <path class="risco risco-fino" d="M195 91 C 192 93, 189 93, 186 91"/>
   </svg>
 </div>
 
@@ -153,7 +180,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="shared/session.js"></script>
 <script>
-// Letra "A" do topo: acompanha o mouse inclinando alguns graus (suavizado
+// Palavra "Axis" do topo: acompanha o mouse inclinando alguns graus (suavizado
 // com requestAnimationFrame). Com o mouse em cima dela, volta ao centro,
 // fica parada e acende o neon forte (classe .acesa).
 (function () {
