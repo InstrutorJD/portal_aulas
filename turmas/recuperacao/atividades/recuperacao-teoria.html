@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studios — Recuperação: Programação do Zero</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+
+  .topbar{
+    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
+  }
+
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
+  .story-wrap{ width:100%; max-width:620px; display:flex; flex-direction:column; gap:14px; }
+
+  .eri-row{ display:flex; align-items:flex-start; gap:12px; }
+  .eri-avatar{
+    font-size:44px; line-height:1; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(124,255,63,0.5));
+  }
+  .speech-bubble{
+    background:var(--panel); border:1px solid var(--green-dim); padding:16px 18px;
+    font-size:14px; line-height:1.7; position:relative;
+  }
+  .speech-bubble .eri-name{
+    display:block; font-family:var(--user-font-display, 'VT323', monospace); font-size:18px; color:var(--green);
+    letter-spacing:1px; margin-bottom:6px;
+  }
+  .speech-bubble code{ color:var(--yellow); }
+
+  .card{ background:var(--panel); border:1px solid var(--line); padding:16px 18px; }
+  .card h2{
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:20px; color:var(--yellow); margin:0 0 12px; letter-spacing:1px;
+  }
+
+  .option{
+    display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); background:var(--panel2); cursor:pointer; font-size:13px;
+  }
+  .option:hover{ border-color:var(--green-dim); }
+  .option .opt-letter{
+    width:22px; height:22px; flex-shrink:0; border:1px solid var(--ink-dim); border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--ink-dim);
+  }
+  .option.correct{ border-color:var(--green); background:rgba(124,255,63,0.08); }
+  .option.correct .opt-letter{ border-color:var(--green); color:var(--green); }
+  .option.incorrect{ border-color:var(--blood-bright); background:rgba(255,59,48,0.08); }
+  .option.incorrect .opt-letter{ border-color:var(--blood-bright); color:var(--blood-bright); }
+  .option.disabled{ cursor:default; }
+
+  .feedback{
+    margin-top:12px; padding:12px 14px; font-size:12.5px; line-height:1.6; border:1px dashed var(--line);
+  }
+  .feedback.correct{ border-color:var(--green); color:var(--ink); }
+  .feedback.incorrect{ border-color:var(--blood-bright); color:var(--ink); }
+  .feedback b{ color:var(--yellow); }
+
+  .actions{ display:flex; justify-content:flex-end; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .finish-screen{ text-align:center; }
+  .finish-screen .trophy{ font-size:56px; margin-bottom:10px; }
+  .finish-screen h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:26px; color:var(--green); margin:0 0 10px; }
+  .finish-screen p{ font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 6px; }
+  .finish-screen .score{ font-size:20px; color:var(--yellow); font-weight:800; margin:14px 0; }
+
+  .btn-topbar{
+    font-family:inherit; font-size:10px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase;
+    background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:5px 10px;
+    cursor:pointer; border-radius:2px;
+  }
+  .btn-topbar:hover{ background:rgba(124,255,63,0.1); }
+  .btn-topbar:disabled{ opacity:0.5; cursor:wait; }
+
+  @media (max-width: 700px) {
+    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
+    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
+    .stage{ overflow:visible; padding:10px; }
+    .speech-bubble{ padding:12px 14px; }
+    .card{ padding:12px 14px; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'recuperacao_teoria';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/quiz-teoria-engine.js"></script>
+</head>
+<body>
+
+<div class="env">
+  <div class="topbar">
+    <div>RECUPERAÇÃO — PROGRAMAÇÃO DO ZERO (TEORIA)</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">5</span></span>
+    </div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="stage">
+    <div class="story-wrap" id="storyWrap"></div>
+  </div>
+</div>
+
+<script>
+  // Recuperação — "Programação do Zero": do que é um programa até funções
+  // com parâmetro e return, bem devagar e com exemplos do dia a dia. É a
+  // base teórica do jogo "O Herói do Código" (recuperacao-jogo.html), que
+  // cobra exatamente estes conceitos, na mesma ordem.
+  const STEPS = [
+    {
+      story: 'Oi! Eu sou a <b>Bia</b>, e vou te acompanhar na Recuperação. Vamos começar do começo: um <b>programa</b> é só uma <b>lista de instruções</b> que o computador segue, uma por uma, de cima pra baixo — igual a uma receita de bolo. O computador não "adivinha" nada: ele faz exatamente o que está escrito, na ordem em que está escrito.',
+      question: {
+        prompt: 'O que é um programa de computador?',
+        options: [
+          'Uma lista de instruções que o computador segue na ordem em que foram escritas',
+          'Um aparelho que o computador usa pra adivinhar o que a pessoa quer fazer',
+          'Um arquivo de imagem que só serve pra deixar a tela mais bonita',
+          'Uma peça física que precisa ser encaixada dentro do computador'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Programa = instruções em ordem. O computador executa uma linha, depois a próxima, depois a próxima.'
+      }
+    },
+    {
+      story: 'Pra um programa lembrar das coisas, ele usa <b>variáveis</b>. Pense numa variável como uma <b>caixinha com etiqueta</b>: a etiqueta é o <b>nome</b> e dentro dela fica um <b>valor</b>. Em JavaScript a gente cria uma caixinha assim: <code>let pontos = 10;</code> — "crie uma caixinha chamada <code>pontos</code> e guarde 10 dentro dela".',
+      question: {
+        prompt: 'Pra que serve uma variável?',
+        options: [
+          'Pra guardar um valor com um nome, e poder usar ou mudar esse valor depois',
+          'Pra desligar o computador quando o programa termina de rodar',
+          'Pra deixar o código mais colorido e fácil de ler na tela',
+          'Pra apagar tudo o que o programa já fez até aquele momento'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! A variável guarda um valor com um nome. Toda vez que o programa precisar daquele valor, é só chamar pelo nome.'
+      }
+    },
+    {
+      story: 'Vamos olhar a linha <code>let pontos = 10;</code> por partes: <code>let</code> avisa "vou criar uma variável"; <code>pontos</code> é o nome; o sinal <code>=</code> quer dizer <b>"guarde isto"</b> (não é o "igual" da matemática!); <code>10</code> é o valor; e o <code>;</code> fecha a instrução, como o ponto final de uma frase.',
+      question: {
+        prompt: 'Na linha let vida = 3; o que o sinal = está fazendo?',
+        options: [
+          'Guardando o valor 3 dentro da variável chamada vida',
+          'Perguntando se a variável vida é igual a 3 ou não',
+          'Somando 3 ao valor que já estava na variável vida',
+          'Apagando a variável vida e deixando ela vazia'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Em programação, = é "atribuir": guardar o valor da direita na variável da esquerda.'
+      }
+    },
+    {
+      story: 'Uma variável pode guardar tipos diferentes de valor. Os três mais usados: <b>número</b> (<code>let idade = 16;</code>), <b>texto</b>, que sempre vai entre aspas (<code>let nome = "Ana";</code>) e <b>verdadeiro/falso</b>, chamado de <b>booleano</b> (<code>let temChave = true;</code> ou <code>false</code>). O booleano é ótimo pra responder perguntas de sim ou não.',
+      question: {
+        prompt: 'Qual destas linhas guarda um TEXTO numa variável?',
+        options: [
+          'let cidade = "Recife";',
+          'let cidade = 42;',
+          'let cidade = true;',
+          'let cidade = 10 + 5;'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Texto (string) sempre vai entre aspas. Sem aspas, o computador acha que é um número, um booleano ou o nome de outra variável.'
+      }
+    },
+    {
+      story: 'Quando a resposta é "sim ou não", usamos <b>booleano</b>: <code>true</code> (verdadeiro) ou <code>false</code> (falso), sem aspas. Por exemplo, num jogo: <code>let espada = true;</code> quer dizer "o herói TEM uma espada". Se fosse <code>false</code>, ele não teria.',
+      question: {
+        prompt: 'Num jogo, qual linha diz que o personagem TEM um escudo?',
+        options: [
+          'let escudo = true;',
+          'let escudo = false;',
+          'let escudo = "não";',
+          'let escudo = 0;'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! true = sim, tem. false = não tem. E repare: true e false vão sem aspas.'
+      }
+    },
+    {
+      story: 'O valor de uma variável pode <b>mudar</b> — por isso o nome "variável". Pra mudar, é só guardar um valor novo, sem o <code>let</code> (ele só aparece na hora de criar): <code>let moedas = 5;</code> e depois <code>moedas = moedas + 3;</code>. Lê-se: "pegue o valor atual de moedas, some 3 e guarde de volta em moedas". Agora <code>moedas</code> vale 8.',
+      question: {
+        prompt: 'Depois de rodar let forca = 2; e em seguida forca = forca * 3; quanto vale forca?',
+        options: [
+          '6',
+          '2',
+          '3',
+          '5'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! forca começou com 2; depois foi multiplicada por 3 (2 × 3 = 6) e o resultado foi guardado de volta nela.'
+      }
+    },
+    {
+      story: 'Com números dá pra fazer contas: <code>+</code> soma, <code>-</code> subtrai, <code>*</code> multiplica e <code>/</code> divide. Exemplo: <code>let dano = 10 / 2;</code> guarda 5. As contas podem usar outras variáveis também: <code>let total = preco * quantidade;</code>.',
+      question: {
+        prompt: 'Qual símbolo faz MULTIPLICAÇÃO em JavaScript?',
+        options: [
+          '*',
+          'x',
+          '/',
+          '%'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Em programação a multiplicação é o asterisco *. O x seria entendido como o nome de uma variável.'
+      }
+    },
+    {
+      story: 'Às vezes o programa precisa <b>decidir</b>: fazer algo só SE uma condição for verdadeira. Pra isso existe o <code>if</code> ("se"): <code>if (temChave) { portaAberta = true; }</code>. Lê-se: "SE temChave for verdadeiro, ENTÃO abra a porta". O que fica entre <code>{ }</code> só roda quando a condição entre <code>( )</code> é verdadeira.',
+      question: {
+        prompt: 'No código if (vida < 3) { vida = vida + 2; }, quando a linha vida = vida + 2 roda?',
+        options: [
+          'Só quando vida for menor que 3',
+          'Sempre, não importa quanto vale vida',
+          'Nunca, porque o if bloqueia o código',
+          'Só quando vida for exatamente 2'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O bloco entre { } só executa se a condição (vida < 3) for verdadeira.'
+      }
+    },
+    {
+      story: 'E quando existem <b>dois caminhos</b>? Aí entra o <code>else</code> ("senão"): <code>if (chovendo) { levar = "guarda-chuva"; } else { levar = "boné"; }</code>. SE a condição for verdadeira, roda o primeiro bloco; SENÃO, roda o bloco do <code>else</code>. Sempre um dos dois roda — nunca os dois, nunca nenhum.',
+      question: {
+        prompt: 'Em if (nota >= 6) { resultado = "aprovado"; } else { resultado = "recuperação"; }, o que acontece quando nota vale 4?',
+        options: [
+          'resultado recebe "recuperação", porque a condição é falsa e o bloco do else roda',
+          'resultado recebe "aprovado", porque o primeiro bloco sempre roda antes do else',
+          'Os dois blocos rodam, e resultado fica com os dois textos juntos',
+          'Nenhum bloco roda, e resultado fica vazio'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! 4 >= 6 é falso, então o programa pula o bloco do if e executa o do else.'
+      }
+    },
+    {
+      story: 'Pra comparar valores dentro do <code>if</code>, usamos: <code>&lt;</code> (menor), <code>&gt;</code> (maior), <code>===</code> (é igual) e <code>!==</code> (é diferente). Cuidado com a pegadinha: <code>=</code> <b>guarda</b> um valor, <code>===</code> <b>compara</b>. Exemplo: <code>if (ataque === "fogo") { ... }</code> — "se o ataque for de fogo...".',
+      question: {
+        prompt: 'Qual é a forma certa de PERGUNTAR se a variável cor é igual a "azul"?',
+        options: [
+          'if (cor === "azul")',
+          'if (cor = "azul")',
+          'if (cor + "azul")',
+          'if ("azul" let cor)'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! === compara. Um = sozinho guardaria "azul" em cor, em vez de perguntar.'
+      }
+    },
+    {
+      story: 'Agora, as <b>funções</b>. Uma função é um <b>bloco de código com nome</b> que você escreve uma vez e pode <b>usar quantas vezes quiser</b>. Pense num botão de controle de videogame: você aperta "atacar" e o personagem faz todo o movimento — você não precisa explicar o movimento de novo a cada golpe. Criando: <code>function pular() { ... }</code>. Usando ("chamando"): <code>pular();</code>',
+      question: {
+        prompt: 'Pra que serve uma função?',
+        options: [
+          'Pra dar nome a um bloco de código e reutilizar ele sempre que precisar, sem reescrever',
+          'Pra guardar um único valor, igual uma variável, só que com outro nome',
+          'Pra fazer o programa rodar de baixo pra cima em vez de cima pra baixo',
+          'Pra impedir que o computador execute qualquer outra linha do programa'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! Função = código com nome, reutilizável. Escreve uma vez, chama quantas vezes quiser.'
+      }
+    },
+    {
+      story: 'Criar uma função é só escrever a "receita" — ela <b>não roda sozinha</b>. Pra executar, você <b>chama</b> a função: escreve o nome dela seguido de parênteses, <code>pular();</code>. Sem os parênteses (<code>pular</code>) você só está citando o nome, e nada acontece. E dá pra chamar a mesma função quantas vezes quiser!',
+      question: {
+        prompt: 'Existe uma função chamada abrirPorta. Qual linha faz ela RODAR?',
+        options: [
+          'abrirPorta();',
+          'abrirPorta;',
+          'function abrirPorta',
+          'let abrirPorta = true;'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Nome + parênteses = chamar a função. É assim que você manda ela executar.'
+      }
+    },
+    {
+      story: 'Uma função pode <b>devolver um resultado</b> com <code>return</code>. Exemplo: <code>function atacar() { return 10; }</code>. Quando o jogo chama <code>atacar()</code>, recebe o número 10 de volta — o dano do golpe. O <code>return</code> é a "resposta" da função pra quem chamou.',
+      question: {
+        prompt: 'O que a palavra return faz dentro de uma função?',
+        options: [
+          'Devolve um valor como resultado da função pra quem chamou ela',
+          'Volta pro início do programa e começa tudo de novo',
+          'Cria uma variável nova com o nome da função',
+          'Faz a função repetir pra sempre, sem parar'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! return entrega o resultado. atacar() "vira" o valor que o return devolveu.'
+      }
+    },
+    {
+      story: 'Por fim, os <b>parâmetros</b>: informações que a função recebe pra trabalhar. <code>function defender(dano) { return dano / 2; }</code> — <code>dano</code> é o parâmetro. Chamando <code>defender(10)</code>, a função recebe 10 e devolve 5. Chamando <code>defender(4)</code>, devolve 2. É a mesma função, dando respostas diferentes pra entradas diferentes!',
+      question: {
+        prompt: 'Com function dobro(n) { return n * 2; }, quanto vale dobro(7)?',
+        options: [
+          '14',
+          '7',
+          '9',
+          '2'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O 7 entra no lugar de n, e a função devolve 7 × 2 = 14. É a mesma função, dando respostas diferentes pra entradas diferentes.'
+      }
+    },
+    {
+      story: 'Uma função pode receber <b>vários parâmetros</b>, separados por vírgula, e usar <code>if / else</code> lá dentro pra escolher o que devolver. Veja: <code>function tirarVida(vidaInimigo, dano) { if (dano >= vidaInimigo) { return 0; } else { return vidaInimigo - dano; } }</code> — a vida nunca fica negativa.',
+      question: {
+        prompt: 'Com essa função tirarVida, quanto vale tirarVida(3, 5)?',
+        options: [
+          '0',
+          '-2',
+          '2',
+          '8'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O dano (5) é maior ou igual à vida (3), então a condição do if é verdadeira e a função devolve 0.'
+      }
+    },
+    {
+      story: 'Por último, os <b>objetos</b>: eles juntam várias informações numa coisa só, cada uma com um nome. <code>{ tipo: "slime", vida: 3 }</code> é um objeto com duas informações. Uma função pode <b>criar e devolver</b> objetos: <code>function criarInimigo(tipo, vida) { return { tipo: tipo, vida: vida }; }</code> — é assim que um jogo cria cada inimigo com os seus próprios dados.',
+      question: {
+        prompt: 'O que criarInimigo("orc", 8) devolve, usando a função acima?',
+        options: [
+          '{ tipo: "orc", vida: 8 }',
+          '"orc8"',
+          '8',
+          '{ tipo: "slime", vida: 3 }'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Os argumentos "orc" e 8 entram no lugar de tipo e vida, e a função devolve um objeto com esses dados. Você já sabe o essencial de programação!'
+      }
+    }
+  ];
+
+  window.PortalQuizTeoria.run({
+    activityLocation: "recuperacao_teoria",
+    steps: STEPS,
+    reportLabel: "Recuperação — Programação do Zero",
+    mentor: { rowClass: "eri", avatar: "🦉", name: "Bia, sua parceira de Recuperação" },
+    finishPassed: {
+      title: "Programação do Zero concluída!",
+      introHtml: "<p>Você já sabe o que é uma variável, os tipos de valor (número, texto e verdadeiro/falso), como mudar um valor, decidir com if / else, chamar e criar funções com parâmetros e return, e montar objetos.</p>",
+      closingHtml: "<p>Agora é hora de usar isso de verdade: volte e abra a trilha <b>O Herói do Código</b> — cada item do herói vai ser construído por você, em código.</p>",
+      restartLabel: "🔁 Rever a teoria"
+    }
+  });
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+
+</body>
+</html>

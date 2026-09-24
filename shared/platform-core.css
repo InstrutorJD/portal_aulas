@@ -235,6 +235,8 @@ html[data-theme="light"] body{
 .game-card.completed{ border-color:var(--green-dim); }
 .game-card.completed .card-status{ color:var(--green); }
 .game-card.locked{ opacity:0.4; cursor:not-allowed; }
+.game-card.recuperacao-card{ border-color:var(--yellow); }
+.game-card.recuperacao-card h3{ color:var(--yellow); }
 .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; }
 
 /* Brilho diagonal sutil (mesmo truque em todo botão/card clicável) — uma

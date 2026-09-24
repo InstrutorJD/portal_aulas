@@ -41,6 +41,7 @@
   let librasLoadFailed = false; // ver setupVLibras — script de terceiro (vlibras.gov.br) pode ser bloqueado pelo navegador
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
+  let alunoEmRecuperacao = false; // aluno com alguma matéria abaixo de 6,0 no bimestre atual — mostra o card "Recuperação" (ver refreshRecuperacaoStatus)
   let viewingStudentEmail = null; // não-nulo quando o PROFESSOR abriu o Perfil de um aluno (ver openStudentPerfil) — nunca setado pro aluno vendo o próprio
   let examGuardEvents = []; // alertas pendentes (aluno saiu 2x de atividade/prova bloqueada) — só professor, ver setupExamGuardAlerts()
   let examGuardRealtimeStarted = false;
@@ -544,6 +545,26 @@
     return (cfg.materias || []).flatMap(m => m.trilhas || []);
   }
 
+  // Matéria "Recuperação" (shared/recuperacao-config.js) — compartilhada
+  // pelas turmas e mantida FORA de cfg.materias de propósito: tudo que
+  // percorre cfg.materias/allTrilhas() (notas, ranking, Liberação por
+  // Trilha, desbloqueio dos jogos) continua ignorando ela. Só a navegação
+  // (abrir matéria/módulo, cards, progresso local) usa navTrilhas().
+  const recuperacaoMateria = window.RECUPERACAO_MATERIA || null;
+
+  function isRecuperacaoTrilha(trilha) {
+    return !!(recuperacaoMateria && (recuperacaoMateria.trilhas || []).includes(trilha));
+  }
+
+  function navTrilhas() {
+    return allTrilhas().concat(recuperacaoMateria ? (recuperacaoMateria.trilhas || []) : []);
+  }
+
+  function findMateria(key) {
+    if (recuperacaoMateria && key === recuperacaoMateria.key) return recuperacaoMateria;
+    return (cfg.materias || []).find(m => m.key === key) || null;
+  }
+
   // Igual allTrilhas, mas preservando o rótulo da matéria dona — usada pra
   // exibição agrupada ("Liberação por Trilha" em Gestão).
   function allTrilhasComMateria() {
@@ -607,7 +628,42 @@
           <h3>${m.label}</h3>
           ${vazia ? '<div class="card-status">Em breve</div>' : ''}
         </div>`;
-    }).join('');
+    }).join('') + recuperacaoCardHtml();
+  }
+
+  // Card "Recuperação" no fim do grid de matérias: pro aluno, só quando ele
+  // tem 1+ matéria em recuperação (alunoEmRecuperacao); o professor sempre
+  // vê, pra revisar o conteúdo.
+  function recuperacaoCardHtml() {
+    if (!recuperacaoMateria) return '';
+    if (currentUser.role === 'aluno' && !alunoEmRecuperacao) return '';
+    return `
+        <div class="game-card recuperacao-card" id="materiaCardRecuperacao" onclick="PortalCore.openMateria('${recuperacaoMateria.key}')">
+          <div class="icon">🛟</div>
+          <h3>${recuperacaoMateria.label}</h3>
+          ${currentUser.role === 'aluno' ? '' : '<div class="card-status">Só pra quem está em recuperação</div>'}
+        </div>`;
+  }
+
+  // Mesmo corte do selo "Recuperação" do Perfil (nota < 6,0 numa matéria
+  // com trilha no bimestre atual) e só depois que o professor liga "Mostrar
+  // Notas" pra esse bimestre — antes disso a nota ainda está sendo lançada
+  // e quase todo mundo apareceria "em recuperação" no meio do bimestre.
+  async function refreshRecuperacaoStatus() {
+    if (!recuperacaoMateria || !sbClient || currentUser.role !== 'aluno') return;
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    const bimestreAtual = currentBimestreNum();
+    let emRecuperacao = false;
+    if (bimestreAtual && (bimestreDatesCache[bimestreAtual] || {}).notas_liberadas) {
+      const { data } = await sbClient.from('student_module_progress').select('*').eq('turma', cfg.id).eq('student_email', paramUser);
+      const materias = (cfg.materias || []).filter(m => (m.trilhas || []).length > 0 && isMateriaVisibleToEmail(m, paramUser));
+      const notas = await calcNotasPorMateria(paramUser, bimestreAtual, data || [], materias);
+      emRecuperacao = Object.values(notas).some(info => !info.semTrilha && info.nota < 6);
+    }
+    if (emRecuperacao !== alunoEmRecuperacao) {
+      alunoEmRecuperacao = emRecuperacao;
+      renderMaterias();
+    }
   }
 
   // Efeito de zoom ao abrir/fechar uma tela (matéria/módulo/jogo — ver
@@ -671,7 +727,7 @@
   }
 
   function openMateria(key) {
-    const materia = (cfg.materias || []).find(m => m.key === key);
+    const materia = findMateria(key);
     if (!materia) return;
     document.getElementById('materiaSelectorArea').style.display = 'none';
     zoomInScreen(document.getElementById('materiaDetailArea'), 'block');
@@ -773,7 +829,7 @@
       p.style.display = (p.id === `subTabContent_${key}`) ? 'block' : 'none';
     });
 
-    const trilha = allTrilhas().find(t => t.key === key);
+    const trilha = navTrilhas().find(t => t.key === key);
     if (trilha && !openModuleFrame[key] && typeof window.reportActivity === 'function') {
       window.reportActivity(`aulas_${key}`, `${trilha.label} — Escolhendo módulo`);
     }
@@ -781,7 +837,7 @@
 
   // ---------- Progresso / desbloqueio de jogos ----------
   function findModule(trilhaKey, modKey) {
-    const trilha = allTrilhas().find(t => t.key === trilhaKey);
+    const trilha = navTrilhas().find(t => t.key === trilhaKey);
     return trilha ? (trilha.modules || []).find(m => m.key === modKey) : null;
   }
 
@@ -951,6 +1007,11 @@
   // o local É a ação que acabou de acontecer) sincroniza direto, como antes.
   async function syncModuleProgress(trilha, mod, remoteMap) {
     if (!sbClient || currentUser.role !== 'aluno' || !paramUser) return;
+    // Recuperação fica fora de student_module_progress (que alimenta
+    // ranking/relatórios/% por matéria) — o estado dela já sobe pra
+    // student_activity_state via shared/progress-sync.js, o que basta pra
+    // não perder progresso trocando de computador.
+    if (isRecuperacaoTrilha(trilha)) return;
     const { current, total, completed } = getModuleProgress(mod);
     if (remoteMap && isLocalBehindRemote({ current, completed }, remoteMap[`${trilha.key}::${mod.key}`])) return;
     try {
@@ -1015,7 +1076,7 @@
   // que o aluno abria aquele módulo específico e clicava "Voltar" de novo.
   async function hydrateLocalProgressFromRemote() {
     if (!sbClient || currentUser.role !== 'aluno' || !paramUser) return;
-    const modules = allTrilhas().flatMap(t => t.modules || []);
+    const modules = navTrilhas().flatMap(t => t.modules || []);
     if (!modules.length) return;
     try {
       const { data } = await sbClient.from('student_activity_state').select('progress_key, state').eq('student_email', paramUser);
@@ -1159,7 +1220,10 @@
   function setupGradesRealtime() {
     if (!sbClient) return;
     sbClient.channel('realtime_grades_' + paramUser)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades', filter: `student_email=eq.${paramUser}` }, () => renderPerfilTab())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grades', filter: `student_email=eq.${paramUser}` }, () => {
+        renderPerfilTab();
+        refreshRecuperacaoStatus();
+      })
       .subscribe();
   }
 
@@ -1167,7 +1231,7 @@
   // na tela — usado depois que o cadeado de uma trilha muda ou uma
   // liberação diária chega, pra refletir sem precisar recarregar a página.
   function refreshAllModuleCards() {
-    allTrilhas().forEach(trilha => {
+    navTrilhas().forEach(trilha => {
       const grid = document.querySelector(`#moduleSelector_${trilha.key} .card-grid`);
       if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
     });
@@ -1187,7 +1251,7 @@
     // isso, o card de módulos ficaria com o status desatualizado até a
     // próxima vez que a matéria fosse reaberta.
     if (openMateriaKey) {
-      const materia = (cfg.materias || []).find(m => m.key === openMateriaKey);
+      const materia = findMateria(openMateriaKey);
       if (materia) {
         const selecionadaAntes = document.getElementById('trilhaSelect')?.value;
         const trilhas = renderTrilhasFor(materia);
@@ -1216,7 +1280,10 @@
         // Realtime — nunca dentro de fetchBimestreDates() em si, senão a
         // própria renderPerfilTab() (que já chama fetchBimestreDates() pra
         // ler o bimestre atual) entraria num loop chamando a si mesma.
-        if (currentUser.role === 'aluno') renderPerfilTab();
+        if (currentUser.role === 'aluno') {
+          renderPerfilTab();
+          refreshRecuperacaoStatus();
+        }
       })
       .subscribe();
   }
@@ -2451,6 +2518,56 @@
     }).join('');
   }
 
+  // Nota de cada matéria (menos "Prova") de UM aluno no bimestre passado —
+  // mesma fórmula que o professor vê em Gestão → Lançar Notas. Usada pelo
+  // Perfil (nota + selo Aprovado/Recuperação) e pelo card "Recuperação" da
+  // aba Aulas (ver isAlunoEmRecuperacao). { [materiaKey]: { nota, semTrilha } }
+  async function calcNotasPorMateria(targetEmail, bimestreAtual, rows, materias) {
+    const notaPorMateria = {};
+    const nota3Auto = !!cfg.nota3ActivityLocation;
+    // Aluno com nota manual (ver notaManual em loadNotas) — Prova e
+    // Nota 3 são digitadas direto em `grades`, os lookups automáticos
+    // abaixo nunca encontram a nota dele.
+    const notaManual = (cfg.notasManuaisFor || []).includes(targetEmail);
+    const [gradeRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
+      sbClient.from('grades').select('nota2, nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
+      notaManual ? Promise.resolve({}) : fetchNotaProvaByStudent(),
+      (!notaManual && nota3Auto) ? fetchNota3AutoByStudent() : Promise.resolve({}),
+    ]);
+    const g = gradeRes.data || {};
+    const n4 = g.nota4 ?? '';
+
+    let n3;
+    if (notaManual) {
+      n3 = g.nota3 ?? 0;
+    } else if (nota3Auto) {
+      const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
+      const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestreAtual;
+      const notaAuto = nota3AutoByStudent[targetEmail];
+      n3 = (nota3EhDesteBimestre && notaAuto !== undefined) ? Math.round((notaAuto / 10) * 100) / 100 : 0;
+    } else {
+      n3 = g.nota3 ?? 0;
+    }
+
+    let n2;
+    if (notaManual) {
+      n2 = g.nota2 ?? 0;
+    } else {
+      const provaKey = provaTrilhaKey();
+      const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestreAtual;
+      const notaProva = notaProvaByStudent[targetEmail];
+      n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
+    }
+
+    materias.filter(m => m.key !== 'prova').forEach(m => {
+      const pctMateria = bimestreMateriaPercentForStudent(m, bimestreAtual, rows, targetEmail);
+      const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 10 * 100) / 100;
+      const nota = pctMateria === null ? calcMedia(mn1, n2, n3) : aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
+      notaPorMateria[m.key] = { nota, semTrilha: pctMateria === null };
+    });
+    return notaPorMateria;
+  }
+
   async function renderPerfilTab() {
     const summaryEl = document.getElementById('perfilResumo');
     const materiasEl = document.getElementById('perfilMaterias');
@@ -2564,52 +2681,11 @@
     // professor já lançou a Recuperação, a nota final vira a média entre a
     // base e a Recuperação (ver aplicarRecuperacao). A matéria "Prova" fica
     // de fora (ela É a nota "Prova", não faz sentido ter nota de si mesma).
-    const notaPorMateria = {};
     // notasVisiveis: sem isso, nem vale a pena buscar Prova/Nota3/grades —
     // o aluno não vai ver o número mesmo (ver notaHtml mais abaixo).
-    if (bimestreAtual && notasVisiveis) {
-      const nota3Auto = !!cfg.nota3ActivityLocation;
-      // Aluno com nota manual (ver notaManual em loadNotas) — Prova e
-      // Nota 3 são digitadas direto em `grades`, os lookups automáticos
-      // abaixo nunca encontram a nota dele.
-      const notaManual = (cfg.notasManuaisFor || []).includes(targetEmail);
-      const [gradeRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
-        sbClient.from('grades').select('nota2, nota3, nota4').eq('turma', cfg.id).eq('student_email', targetEmail).eq('bimestre', bimestreAtual).maybeSingle(),
-        notaManual ? Promise.resolve({}) : fetchNotaProvaByStudent(),
-        (!notaManual && nota3Auto) ? fetchNota3AutoByStudent() : Promise.resolve({}),
-      ]);
-      const g = gradeRes.data || {};
-      const n4 = g.nota4 ?? '';
-
-      let n3;
-      if (notaManual) {
-        n3 = g.nota3 ?? 0;
-      } else if (nota3Auto) {
-        const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
-        const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestreAtual;
-        const notaAuto = nota3AutoByStudent[targetEmail];
-        n3 = (nota3EhDesteBimestre && notaAuto !== undefined) ? Math.round((notaAuto / 10) * 100) / 100 : 0;
-      } else {
-        n3 = g.nota3 ?? 0;
-      }
-
-      let n2;
-      if (notaManual) {
-        n2 = g.nota2 ?? 0;
-      } else {
-        const provaKey = provaTrilhaKey();
-        const provaEhDesteBimestre = provaKey && trilhaBimestreCache[provaKey] === bimestreAtual;
-        const notaProva = notaProvaByStudent[targetEmail];
-        n2 = (provaEhDesteBimestre && notaProva !== undefined) ? Math.round((notaProva / 10) * 100) / 100 : 0;
-      }
-
-      materias.filter(m => m.key !== 'prova').forEach(m => {
-        const pctMateria = bimestreMateriaPercentForStudent(m, bimestreAtual, rows, targetEmail);
-        const mn1 = pctMateria === null ? 0 : Math.round((pctMateria / 100) * 10 * 100) / 100;
-        const nota = pctMateria === null ? calcMedia(mn1, n2, n3) : aplicarRecuperacao(calcMedia(mn1, n2, n3), n4);
-        notaPorMateria[m.key] = { nota, semTrilha: pctMateria === null };
-      });
-    }
+    const notaPorMateria = (bimestreAtual && notasVisiveis)
+      ? await calcNotasPorMateria(targetEmail, bimestreAtual, rows, materias)
+      : {};
 
     materiasEl.innerHTML = materias.map(m => {
       const pct = materiaPercentForStudent(m, rows, targetEmail);
@@ -3256,7 +3332,7 @@
       } else {
         const select = document.getElementById('trilhaSelect');
         const activeSub = select ? select.value : document.querySelector('#aulasSubTabPages .subtab-page')?.id.replace('subTabContent_', '');
-        const trilha = allTrilhas().find(t => t.key === activeSub);
+        const trilha = navTrilhas().find(t => t.key === activeSub);
         if (trilha && !openModuleFrame[activeSub] && typeof window.resumeActivityHeartbeat === 'function') {
           window.resumeActivityHeartbeat(`aulas_${activeSub}`, `${trilha.label} — Escolhendo módulo`);
         }
@@ -3356,7 +3432,7 @@
 
   // ---------- Módulos de trilha (Aulas & Atividades) ----------
   function openModule(trilhaKey, modKey) {
-    const trilha = allTrilhas().find(t => t.key === trilhaKey);
+    const trilha = navTrilhas().find(t => t.key === trilhaKey);
     const mod = findModule(trilhaKey, modKey);
     if (!mod || (trilha && isModuleLocked(trilha, mod))) return;
 
@@ -3383,7 +3459,7 @@
     openModuleFrame[trilhaKey] = false;
     checkGamesUnlock();
 
-    const trilha = allTrilhas().find(t => t.key === trilhaKey);
+    const trilha = navTrilhas().find(t => t.key === trilhaKey);
     if (trilha) {
       const grid = document.querySelector(`#moduleSelector_${trilhaKey} .card-grid`);
       if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
@@ -3416,7 +3492,7 @@
         return;
       }
       if (!data.pfProgressSync || !data.activityLocation) return;
-      allTrilhas().forEach(trilha => {
+      navTrilhas().forEach(trilha => {
         (trilha.modules || []).forEach(mod => {
           if ((mod.progressKey || '').replace(/_progress_$/, '') !== data.activityLocation) return;
           const grid = document.querySelector(`#moduleSelector_${trilha.key} .card-grid`);
@@ -3910,6 +3986,7 @@
     syncAllModulesProgressSafely().then(() => {
       if (currentUser.role === 'aluno') renderRankingBadge();
     });
+    refreshRecuperacaoStatus();
     if (currentUser.role === 'professor') {
       setupGestaoButtons();
       setupExamGuardAlerts();
