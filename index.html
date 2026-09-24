@@ -29,14 +29,6 @@
     transform: translateY(-3px); border-color: var(--green);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 36px rgba(143, 166, 201, 0.32);
   }
-  .login-card h1 {
-    font-family: 'VT323', monospace; font-size: 32px; color: var(--green);
-    margin: 0 0 4px; text-align: center; letter-spacing: 2px;
-  }
-  .login-card .subtitle {
-    font-size: 11px; color: var(--ink-dim); text-transform: uppercase;
-    text-align: center; margin-bottom: 24px; letter-spacing: 1px;
-  }
   .form-group { margin-bottom: 16px; }
   .form-group label {
     display: block; font-size: 11px; color: var(--yellow);
@@ -106,7 +98,7 @@
 <body>
 
 <div class="login-mark">
-  <svg class="login-letter" id="loginLetter" viewBox="0 0 240 96" aria-hidden="true" focusable="false">
+  <svg class="login-letter" id="loginLetter" viewBox="0 0 240 96" role="img" aria-label="Axis" focusable="false">
     <!-- área transparente só para o mouse "pegar" a palavra inteira -->
     <rect x="0" y="0" width="240" height="96" fill="transparent"/>
     <!-- "A" desconstruído: as pernas não se encontram no topo, cada uma
@@ -157,9 +149,6 @@
 </div>
 
 <div class="login-card">
-  <h1>Axis</h1>
-  <div class="subtitle">Acesso ao portal</div>
-
   <form id="loginForm" onsubmit="return handleLogin(event)">
     <div class="form-group">
       <label for="txtUser">Usuário</label>
