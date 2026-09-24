@@ -2294,8 +2294,10 @@
       if (el.classList.contains('nota-input')) {
         v = el.value.trim() === '' ? NaN : parseFloat(el.value);
       } else if (el.classList.contains('materia-grade-cell')) {
-        // "—" (sem trilha e sem nota manual) vira NaN sozinho.
-        v = parseFloat(el.querySelector('.materia-grade-value').textContent);
+        // "—" (sem trilha e sem nota manual) vira NaN sozinho; célula ainda
+        // não preenchida pelo recalc de loadNotas não tem o valor.
+        const valorEl = el.querySelector('.materia-grade-value');
+        if (valorEl) v = parseFloat(valorEl.textContent);
       } else if (!el.querySelector('span')) {
         v = parseFloat(el.dataset.nota2 ?? el.dataset.nota3);
       }
@@ -2443,7 +2445,9 @@
     // cada recálculo, em vez de assumir a ordem dos <input>.
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
       const materiaCells = tr.querySelectorAll('.materia-grade-cell');
-      const recalc = () => {
+      // pintar=false no preenchimento inicial: pintarNotasBaixas roda uma
+      // vez só no fim, com a tabela inteira já preenchida.
+      const recalc = (pintar = true) => {
         const n2Input = tr.querySelector('.nota-input[data-campo="nota2"]');
         const n2 = n2Input ? n2Input.value : parseFloat(tr.querySelector('.prova-cell').dataset.nota2);
         const n3Input = tr.querySelector('.nota-input[data-campo="nota3"]');
@@ -2471,11 +2475,11 @@
             view.innerHTML = `<span class="materia-grade-value">${calculada.toFixed(2)}</span>`;
           }
         });
-        pintarNotasBaixas();
+        if (pintar) pintarNotasBaixas();
       };
-      tr.querySelectorAll('.nota-input, .nota-manual-input').forEach(inp => inp.addEventListener('input', recalc));
+      tr.querySelectorAll('.nota-input, .nota-manual-input').forEach(inp => inp.addEventListener('input', () => recalc()));
       tr._recalcNotas = recalc;
-      recalc();
+      recalc(false);
     });
     setEdicaoNotasManuais(false);
     theadRow.querySelectorAll('.peso-materia-input').forEach(inp => inp.addEventListener('input', () => {
