@@ -1,9 +1,10 @@
 # Padrão de trilhas novas — layout de slides
 
-> ⚠️ **STATUS: MOTOR EM CONSTRUÇÃO.** O portal ainda NÃO sabe executar aulas
-> neste formato — o motor (`shared/aula-md.js`) e o visual base das práticas
-> (`shared/aula-base.css`) ainda vão ser construídos, usando como piloto a
-> trilha em andamento de cada turma. Enquanto este aviso existir: se pedirem
+> ⚠️ **STATUS: MOTOR EM CONSTRUÇÃO.** O portal ainda NÃO sabe executar a
+> TEORIA neste formato — o motor (`shared/aula-md.js`) ainda vai ser
+> construído. O **visual base das práticas já existe** (`shared/aula-base.css`
+> + `shared/aula-base.js`, seção 8), com piloto em
+> `turmas/jogos/atividades/cod-phaser-pratica.html`. Enquanto este aviso existir: se pedirem
 > uma trilha nova, **avise o usuário que o motor ainda não está pronto e
 > pergunte como seguir — não caia no padrão antigo**. Este aviso sai quando
 > o motor estiver pronto e testado.
@@ -238,12 +239,51 @@ Igual ao de hoje (ver `README.md`, "Hierarquia Matéria → Trilha → Módulo")
 - A **lógica** segue os motores de hoje (ex.: `shared/js-challenge-engine.js`,
   `CHALLENGES` com `tests`, dicas que dão o norte e não a resposta — ver
   README, "Dicas (hints) nas atividades").
-- O **visual** vem de `shared/aula-base.css` (a construir): barra do topo,
-  barra de progresso, cartões, botões, feedback de acerto/erro e transições —
-  o mesmo estilo da teoria. A página da prática não traz CSS de layout
-  próprio, só o que for específico daquele exercício.
+- O **visual** vem de `shared/aula-base.css` + `shared/aula-base.js`. A página
+  da prática NÃO traz CSS de layout próprio — no máximo a cor de destaque da
+  trilha e o que for específico daquele exercício.
+- **Modelo de referência:** `turmas/jogos/atividades/cod-phaser-pratica.html`
+  (roteiro em etapas com visto do professor).
 
----
+### 8.1 Como usar
+
+```html
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>:root{ --green:#c9a6ff; --green-dim:#7a58b3; --yellow:#e0b84a; }</style> <!-- opcional: cor da trilha -->
+...
+<script src="../../../shared/aula-base.js"></script>
+```
+
+Estrutura da página (os `id` são livres; as classes, não):
+
+```html
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Matéria — Nome da prática</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">5</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap">
+      <article class="ab-cartao">
+        <div class="ab-cartao-etapa">Etapa 1 de 5</div>
+        <h2>Título da etapa</h2>
+        <div class="ab-conteudo"> ...texto, listas, <pre>, tabelas... </div>
+      </article>
+      <div class="ab-nav"> <button class="btn btn-secondary">← Voltar</button> <span class="ab-nav-dica">use ← → do teclado</span> <button class="btn">Próximo →</button> </div>
+    </div>
+  </main>
+</div>
+```
+
+- Depois de desenhar uma etapa: `AulaBase.decorar(stepWrap, { chaveChecklist: '<activityLocation>_check_' + user + '_' + etapa })`
+  (código com Copiar — some sozinho quando o professor bloqueia "Copiar e
+  Colar" — e checklist `li.md-check` clicável que lembra o que foi marcado)
+  e `AulaBase.transicao(cartao, direcao)` (1 = avançou, -1 = voltou).
+- Uma vez: `AulaBase.teclado({ proximo, anterior })` para ← → navegarem.
+- Formulário/mensagens: `.ab-form` (label + input + botão) e `.ab-msg` (`.erro`/`.ok`).
+- Cores só por variável (`--green`, `--ink`, `--panel`... e `--ab-acento` para
+  texto/botão): assim a Personalização do aluno e o tema claro funcionam.
 
 ## 9. Desempenho (a internet da escola é fraca)
 
