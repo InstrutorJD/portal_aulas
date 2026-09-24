@@ -56,30 +56,43 @@
     box-shadow: 0 8px 20px rgba(143, 166, 201, 0.35);
   }
   .btn-submit:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(143, 166, 201, 0.25); }
-  /* Palavra "Axis" em rabisco acima do card de login: neon branco simples, segue o
-     mouse de leve; com o mouse em cima ela para e o neon fica mais forte. */
+  /* Palavra "Axis" em rabisco na parte de cima do card de login: neon ciano,
+     segue o mouse de leve; com o mouse em cima ela para, o traço vira um
+     gradiente ciano → violeta → rosa girando (camada .camada-grad, uma cópia
+     da mesma palavra por cima) e o brilho passa de ciano pra magenta. */
   .login-mark {
-    display: flex; justify-content: center; margin: 0 0 18px;
+    display: flex; justify-content: center;
+    margin: -4px 0 20px; padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
     pointer-events: none;
   }
   .login-letter {
+    --axis-stroke: #5ee7ff;
     width: 211px; height: 84px; display: block; overflow: visible;
     pointer-events: auto; cursor: default;
     will-change: transform, filter;
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.85))
-            drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
-    transition: filter 0.3s ease;
+    filter: drop-shadow(0 0 2px rgba(94, 231, 255, 0.9))
+            drop-shadow(0 0 7px rgba(94, 231, 255, 0.55))
+            drop-shadow(0 0 16px rgba(94, 231, 255, 0.3));
+    transition: filter 0.45s ease;
   }
+  /* A cor vem de uma variável, assim a mesma palavra serve pra camada
+     ciano e pra cópia em gradiente (.camada-grad, criada pelo script). */
   .login-letter .risco {
-    fill: none; stroke: #f4f6fb; stroke-linecap: round; stroke-linejoin: round;
+    fill: none; stroke: var(--axis-stroke); stroke-linecap: round; stroke-linejoin: round;
   }
   .login-letter .risco-fino { stroke-width: 1.6; opacity: 0.55; }
   .login-letter .risco-forte { stroke-width: 3.6; }
+  .login-letter .camada-grad {
+    --axis-stroke: url(#axisGrad);
+    opacity: 0; transition: opacity 0.45s ease;
+  }
+  .login-letter.acesa .camada-grad { opacity: 1; }
   .login-letter.acesa {
-    filter: drop-shadow(0 0 2px #fff)
-            drop-shadow(0 0 6px rgba(255, 255, 255, 0.95))
-            drop-shadow(0 0 14px rgba(255, 255, 255, 0.75))
-            drop-shadow(0 0 28px rgba(255, 255, 255, 0.5));
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9))
+            drop-shadow(0 0 7px rgba(255, 79, 216, 0.85))
+            drop-shadow(0 0 16px rgba(167, 139, 250, 0.7))
+            drop-shadow(0 0 30px rgba(255, 79, 216, 0.45));
   }
   @media (max-width: 420px) {
     .login-letter { width: 173px; height: 69px; }
@@ -104,10 +117,21 @@
 </head>
 <body>
 
+<div class="login-card">
 <div class="login-mark">
   <svg class="login-letter" id="loginLetter" viewBox="0 0 240 96" role="img" aria-label="Axis" focusable="false">
+    <defs>
+      <!-- gradiente da camada de hover: gira devagar enquanto o mouse está em cima -->
+      <linearGradient id="axisGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="240" y2="96">
+        <stop offset="0" stop-color="#5ee7ff"/>
+        <stop offset="0.5" stop-color="#a78bfa"/>
+        <stop offset="1" stop-color="#ff4fd8"/>
+        <animateTransform attributeName="gradientTransform" type="rotate" from="0 120 48" to="360 120 48" dur="6s" repeatCount="indefinite"/>
+      </linearGradient>
+    </defs>
     <!-- área transparente só para o mouse "pegar" a palavra inteira -->
     <rect x="0" y="0" width="240" height="96" fill="transparent"/>
+    <g id="axisRiscos">
     <!-- "A" desconstruído: as pernas não se encontram no topo, cada uma
          quebrada em pedaços desalinhados; a barra é um traço solto que
          escapa para fora da letra. Dá para ler um A, mas não é um A. -->
@@ -152,10 +176,12 @@
     <path class="risco risco-fino" d="M232 44 C 234 47, 234 50, 232 53"/>
     <path class="risco risco-fino" d="M201 58 C 207 64, 217 67, 227 74"/>
     <path class="risco risco-fino" d="M195 91 C 192 93, 189 93, 186 91"/>
+    </g>
+    <!-- a camada em gradiente (.camada-grad) é uma cópia deste grupo feita
+         pelo script abaixo — um <use> não pegaria o CSS dos .risco -->
   </svg>
 </div>
 
-<div class="login-card">
   <form id="loginForm" onsubmit="return handleLogin(event)">
     <div class="form-group">
       <label for="txtUser">Usuário</label>
@@ -189,6 +215,14 @@ document.getElementById('anoCopy').textContent = new Date().getFullYear();
 (function () {
   const letra = document.getElementById('loginLetter');
   if (!letra) return;
+  // Cópia da palavra por cima, em gradiente — aparece com o mouse em cima (.acesa).
+  const riscos = letra.querySelector('#axisRiscos');
+  if (riscos) {
+    const grad = riscos.cloneNode(true);
+    grad.removeAttribute('id');
+    grad.setAttribute('class', 'camada-grad');
+    letra.appendChild(grad);
+  }
   const semMovimento = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let alvoX = 0, alvoY = 0, atualX = 0, atualY = 0;
