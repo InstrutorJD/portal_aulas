@@ -1895,8 +1895,12 @@
 
   // ---------- Chamada / Notas (dentro da aba Gestão, já sabe a turma) ----------
   function todayStr() {
-    return new Date().toISOString().slice(0, 10);
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
+  // Data de hoje no fuso do computador do usuário (AAAA-MM-DD). Não usa
+  // toISOString(): ela é em UTC, e depois das 21h no horário de Brasília
+  // já devolveria o dia seguinte.
 
   function noSupabaseRow(colspan) {
     return `<tr><td colspan="${colspan}" style="color:var(--ink-dim); text-align:center; padding:14px;">Configure o Supabase (shared/supabase-config.js) para usar esta tela.</td></tr>`;
@@ -2275,6 +2279,26 @@
   // "Prova" (ela já é a coluna "Prova" em si, não faz sentido também ter
   // uma nota "matéria" pra ela mesma).
   function materiasParaNotas() {
+  // Lançar Notas já abre no bimestre de hoje (currentBimestreNum, pela data
+  // do computador do professor). Fora de qualquer bimestre (férias entre um
+  // e outro), cai no último que já começou. Sem calendário cadastrado, fica
+  // como está (1º). Só até o professor trocar o <select> na mão — depois
+  // disso a escolha dele vale, mesmo que a Gestão seja aberta de novo.
+  let notasBimestreEscolhidoManual = false;
+  function preSelecionarBimestreNotas() {
+    if (notasBimestreEscolhidoManual) return;
+    const hoje = todayStr();
+    let num = currentBimestreNum();
+    if (!num) {
+      const jaComecaram = BIMESTRE_NUMS.filter(n => {
+        const b = bimestreDatesCache[n];
+        return b && b.inicio && b.inicio <= hoje;
+      });
+      num = jaComecaram.length ? jaComecaram[jaComecaram.length - 1] : null;
+    }
+    if (num) document.getElementById('notasBimestre').value = String(num);
+  }
+
     return (cfg.materias || []).filter(m => m.key !== 'prova');
   }
 
@@ -2332,9 +2356,11 @@
     const students = turmaStudents();
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
 
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    preSelecionarBimestreNotas();
+
     const nota3Auto = !!cfg.nota3ActivityLocation;
 
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     const [gradesRes, progressRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
       fetchTurmaProgressRows(),
@@ -3547,7 +3573,10 @@
     });
     document.getElementById('btnGerarPdfPresenca').addEventListener('click', gerarPdfChamadaMes);
     document.getElementById('btnGerarRelatorioNotas').addEventListener('click', gerarRelatorioNotasCompleto);
-    document.getElementById('notasBimestre').addEventListener('change', loadNotas);
+    document.getElementById('notasBimestre').addEventListener('change', () => {
+      notasBimestreEscolhidoManual = true;
+      loadNotas();
+    });
     setToggleState('toggleNotasBaixas', destacarNotasBaixasOn());
     document.getElementById('toggleNotasBaixas').addEventListener('click', () => {
       try { localStorage.setItem(NOTAS_BAIXAS_KEY, destacarNotasBaixasOn() ? '0' : '1'); } catch (e) {}
