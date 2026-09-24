@@ -18,7 +18,35 @@ window.GameLeaderboard = (function () {
 
   const sb = client();
 
-  // Só grava se for um recorde novo do aluno pra esse jogo (nunca piora o score salvo).
+  // O placar ZERA a cada bimestre: só vale o que foi jogado a partir do
+  // início do bimestre atual (bimestre_dates da turma — o mais recente que
+  // já começou, então entre um bimestre e outro continua valendo o placar
+  // do último). Sem calendário cadastrado, vale tudo, como antes. Nada é
+  // apagado: recorde de um bimestre passado só deixa de aparecer e de
+  // contar como "recorde a bater". Instante em ISO (meia-noite local do
+  // dia de início), ou null. Uma busca por turma, reaproveitada.
+  const inicioPeriodoCache = {};
+  function inicioPeriodo(turma) {
+    if (!inicioPeriodoCache[turma]) {
+      inicioPeriodoCache[turma] = (async () => {
+        try {
+          const { data, error } = await sb.from('bimestre_dates').select('inicio').eq('turma', turma);
+          if (error) return null;
+          const d = new Date();
+          const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const inicios = (data || []).map(r => r.inicio).filter(i => i && i <= hoje).sort();
+          return inicios.length ? new Date(inicios[inicios.length - 1] + 'T00:00:00').toISOString() : null;
+        } catch (e) {
+          return null;
+        }
+      })();
+    }
+    return inicioPeriodoCache[turma];
+  }
+
+  // Só grava se for um recorde novo do aluno pra esse jogo NESTE bimestre
+  // (nunca piora o score salvo do bimestre; score de bimestre passado não
+  // conta — é substituído pelo primeiro resultado do bimestre novo).
   // Best-effort de propósito (nunca deve travar o jogo por causa do placar),
   // mas os erros vão pro console — sem isso, uma tabela game_scores ausente
   // ou uma policy de RLS faltando falha 100% das vezes em silêncio, e o
@@ -26,10 +54,14 @@ window.GameLeaderboard = (function () {
   async function submitScore({ game, turma, email, name, score }) {
     if (!sb || !email || !turma || !game) return;
     try {
-      const { data, error: selectError } = await sb.from('game_scores').select('score')
-        .eq('student_email', email).eq('game', game).eq('turma', turma).maybeSingle();
+      const [{ data, error: selectError }, inicio] = await Promise.all([
+        sb.from('game_scores').select('score, updated_at')
+          .eq('student_email', email).eq('game', game).eq('turma', turma).maybeSingle(),
+        inicioPeriodo(turma),
+      ]);
       if (selectError) { console.error('[GameLeaderboard] falha ao ler o placar atual:', selectError); return; }
-      if (data && Number(data.score) >= score) return;
+      const doBimestreAtual = data && (!inicio || !data.updated_at || data.updated_at >= inicio);
+      if (doBimestreAtual && Number(data.score) >= score) return;
       const { error: upsertError } = await sb.from('game_scores').upsert({
         student_email: email, student_name: name || email, turma, game, score,
         updated_at: new Date().toISOString()
@@ -43,9 +75,10 @@ window.GameLeaderboard = (function () {
   async function fetchTop({ game, turma, limit }) {
     if (!sb || !turma || !game) return { rows: [], error: null };
     try {
-      const { data, error } = await sb.from('game_scores').select('*')
-        .eq('game', game).eq('turma', turma)
-        .order('score', { ascending: false }).limit(limit || 10);
+      const inicio = await inicioPeriodo(turma);
+      let query = sb.from('game_scores').select('*').eq('game', game).eq('turma', turma);
+      if (inicio) query = query.gte('updated_at', inicio); // só o bimestre atual (ver inicioPeriodo)
+      const { data, error } = await query.order('score', { ascending: false }).limit(limit || 10);
       if (error) { console.error('[GameLeaderboard] falha ao carregar o placar:', error); return { rows: [], error }; }
       return { rows: data || [], error: null };
     } catch (e) {

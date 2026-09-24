@@ -454,7 +454,7 @@
 
                 <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
                 <table class="audit-table">
-                  <thead><tr><th>Bimestre</th><th>Início</th><th>Fim</th></tr></thead>
+                  <thead><tr><th>Bimestre</th><th>Início</th><th>Fim</th><th>Notas</th></tr></thead>
                   <tbody id="tblGestaoBimestresBody"></tbody>
                 </table>
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 16px;">
@@ -955,6 +955,33 @@
     return !!(fim && fim < todayStr());
   }
 
+  // Trilha do bimestre ATUAL: a janela dela (trilhaWindow) contém hoje.
+  // Trilha sem bimestre atribuído (ou bimestre sem datas) conta sempre,
+  // mesma filosofia de "sem período = sempre visível". É a base do
+  // "recomeça do zero a cada bimestre": % de matéria e Progresso Geral do
+  // Perfil, insígnias, ranking da turma e desbloqueio dos jogos só olham
+  // estas trilhas — as de bimestres passados (ou futuros) não entram.
+  // Entre um bimestre e outro, nenhuma trilha com bimestre fica "atual".
+  function trilhaNoPeriodoAtual(trilha) {
+    const { inicio, fim } = trilhaWindow(trilha);
+    const hoje = todayStr();
+    return !(inicio && inicio > hoje) && !(fim && fim < hoje);
+  }
+
+  // trilhasParaAluno (individuais × padrão) só entre as trilhas do bimestre
+  // atual — filtra o período ANTES, pra uma trilha individual de um
+  // bimestre passado não esconder as trilhas padrão do bimestre de agora.
+  function trilhasAtuaisParaAluno(trilhas, email) {
+    return trilhasParaAluno(trilhas.filter(trilhaNoPeriodoAtual), email);
+  }
+
+  // Busca inicial do calendário (bimestre_dates + trilha_bimestre, ver
+  // setupRBAC). Quem calcula algo "do bimestre atual" logo no carregamento
+  // (ranking, Perfil, relatórios) espera por ela — sem isso, com o cache
+  // ainda vazio, toda trilha pareceria "sem bimestre" e as de bimestres
+  // passados entrariam na conta.
+  let calendarioCarregado = Promise.resolve();
+
   // Classifica uma trilha pra organizar a tela do aluno conforme o currículo
   // cresce (bimestre a bimestre) sem precisar de um "bimestre ativo"
   // configurado à parte — só usa a janela da matéria dona (trilhaWindow)
@@ -1200,12 +1227,13 @@
     }).join('');
   }
 
-  // Só exige o que já está disponível — trilha 'futura' (bimestre seguinte,
+  // Só exige o que é do bimestre ATUAL — trilha 'futura' (bimestre seguinte,
   // ainda não começou) não pode travar o desbloqueio dos jogos por algo que
-  // o aluno nem tem como ter feito ainda.
+  // o aluno nem tem como ter feito ainda, e trilha de bimestre já
+  // encerrado (sumiu da aba Aulas) também não: a cada bimestre, recomeça.
   function allModulesComplete() {
     const modules = allTrilhas()
-      .filter(t => trilhaStatus(t) !== 'futura')
+      .filter(t => trilhaNoPeriodoAtual(t) && trilhaStatus(t) !== 'futura')
       .flatMap(t => t.modules || []);
     if (modules.length === 0) return false;
     return modules.every(isModuleComplete);
@@ -1321,7 +1349,7 @@
     if (!sbClient) return;
     const { data } = await sbClient.from('bimestre_dates').select('*').eq('turma', cfg.id);
     bimestreDatesCache = {};
-    (data || []).forEach(r => { bimestreDatesCache[r.bimestre] = { inicio: r.inicio, fim: r.fim, notas_liberadas: !!r.notas_liberadas }; });
+    (data || []).forEach(r => { bimestreDatesCache[r.bimestre] = { inicio: r.inicio, fim: r.fim, notas_liberadas: !!r.notas_liberadas, fechado: !!r.fechado }; });
     refreshTrilhaVisibilityUI();
   }
 
@@ -1500,14 +1528,122 @@
     if (!tbody) return;
     tbody.innerHTML = BIMESTRE_NUMS.map(num => {
       const saved = bimestreDatesCache[num] || {};
+      const acaoNotas = saved.fechado
+        ? `<span class="bimestre-fechado-tag">🔒 Fechado</span> <button type="button" class="btn btn-secondary btn-bimestre-notas" data-bimestre-acao="reabrir" data-num="${num}">Reabrir</button>`
+        : `<button type="button" class="btn btn-danger btn-bimestre-notas" data-bimestre-acao="fechar" data-num="${num}">🔒 Fechar bimestre</button>`;
       return `
         <tr data-bimestre="${num}">
           <td>${BIMESTRE_LABELS[num]}</td>
           <td><input type="date" class="bimestre-data-input" data-campo="inicio" value="${saved.inicio || ''}"></td>
           <td><input type="date" class="bimestre-data-input" data-campo="fim" value="${saved.fim || ''}"></td>
+          <td>${acaoNotas}</td>
         </tr>
       `;
     }).join('');
+  }
+
+  // ---------- Fechar bimestre (Gestão → Bloqueios e Liberações, coluna
+  // "Notas" da tabela de bimestres) ----------
+  // A nota de cada matéria não é guardada em lugar nenhum — é recalculada
+  // toda vez a partir das trilhas do config.js e do progresso dos alunos.
+  // Fechar CONGELA o resultado: calcula tudo como Lançar Notas mostra
+  // (calcNotasBimestreTurma), grava em grades (nota1–nota4 +
+  // notas_congeladas, uma nota final por matéria) e marca
+  // bimestre_dates.fechado. Daí em diante Lançar Notas, Perfil e Relatório
+  // leem o congelado (bimestreFechado) — o professor pode apagar trilhas,
+  // atividades e progresso daquele bimestre sem mudar nenhuma nota.
+  // Reabrir só desmarca: volta a recalcular (se o conteúdo já foi apagado,
+  // as notas recalculadas mudam — por isso o aviso na confirmação).
+  function bimestreFechado(num) {
+    return !!(num && (bimestreDatesCache[num] || {}).fechado);
+  }
+
+  function showConfirm(mensagemHtml, okLabel, onConfirm) {
+    document.getElementById('pfConfirmOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'pfConfirmOverlay';
+    overlay.className = 'pf-alert-overlay';
+    overlay.innerHTML = `
+      <div class="pf-alert-box" role="alertdialog" aria-modal="true">
+        <p class="pf-alert-msg">${mensagemHtml}</p>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn btn-secondary pf-confirm-cancel">Cancelar</button>
+          <button class="btn pf-confirm-ok">${okLabel}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    function close() {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    overlay.querySelector('.pf-confirm-cancel').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('.pf-confirm-ok').addEventListener('click', () => { close(); onConfirm(); });
+    overlay.querySelector('.pf-confirm-ok').focus();
+  }
+
+  async function fecharBimestre(num) {
+    if (!sbClient) return;
+    const status = document.getElementById('bimestreDatasStatus');
+    if (status) status.textContent = `Fechando o ${BIMESTRE_LABELS[num]}...`;
+    const { porAluno } = await calcNotasBimestreTurma(num);
+    const now = new Date().toISOString();
+    const numOuNull = v => (v === '' || v === null || v === undefined || isNaN(v)) ? null : parseFloat(v);
+    const rows = turmaStudents().map(u => {
+      const a = porAluno[u.email];
+      return {
+        student_email: u.email, student_name: u.nome, turma: cfg.id, bimestre: num,
+        nota1: a.nota1, nota2: numOuNull(a.nota2), nota3: numOuNull(a.nota3), nota4: numOuNull(a.nota4),
+        notas_congeladas: a.notasMateria,
+        updated_at: now,
+      };
+    });
+    if (rows.length) {
+      const { error } = await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
+      if (error) {
+        if (status) status.textContent = /notas_congeladas/.test(error.message || '')
+          ? 'Não foi possível fechar: rode sql/fechar-bimestre.sql no Supabase.'
+          : 'Não foi possível fechar o bimestre (erro ao gravar as notas).';
+        return;
+      }
+    }
+    const { error: errFechar } = await sbClient.from('bimestre_dates').upsert(
+      { turma: cfg.id, bimestre: num, fechado: true, updated_at: now }, { onConflict: 'turma,bimestre' });
+    if (errFechar) {
+      if (status) status.textContent = 'Não foi possível fechar: rode sql/fechar-bimestre.sql no Supabase.';
+      return;
+    }
+    if (status) status.textContent = `${BIMESTRE_LABELS[num]} fechado — notas congeladas às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    await renderGestaoBimestres();
+    loadNotas();
+  }
+
+  async function reabrirBimestre(num) {
+    if (!sbClient) return;
+    await sbClient.from('bimestre_dates').upsert(
+      { turma: cfg.id, bimestre: num, fechado: false, updated_at: new Date().toISOString() }, { onConflict: 'turma,bimestre' });
+    const status = document.getElementById('bimestreDatasStatus');
+    if (status) status.textContent = `${BIMESTRE_LABELS[num]} reaberto — as notas voltam a ser calculadas.`;
+    await renderGestaoBimestres();
+    loadNotas();
+  }
+
+  function onAcaoBimestreNotas(e) {
+    const btn = e.target.closest('[data-bimestre-acao]');
+    if (!btn) return;
+    const num = parseInt(btn.dataset.num, 10);
+    if (btn.dataset.bimestreAcao === 'fechar') {
+      showConfirm(
+        `Fechar o <b>${BIMESTRE_LABELS[num]}</b>? As notas de todos os alunos em todas as matérias ficam <b>congeladas</b> como estão agora em Lançar Notas. Depois disso você pode apagar as trilhas e o progresso desse bimestre sem mudar nenhuma nota.`,
+        '🔒 Fechar bimestre', () => fecharBimestre(num));
+    } else {
+      showConfirm(
+        `Reabrir o <b>${BIMESTRE_LABELS[num]}</b>? As notas voltam a ser <b>recalculadas</b> a partir das trilhas e do progresso. Se você já apagou o conteúdo desse bimestre, as notas vão mudar.`,
+        'Reabrir', () => reabrirBimestre(num));
+    }
   }
 
   // Mesmo padrão de salvarTrilhaBimestre: as 4 linhas (sempre fixas, 1º a
@@ -2363,6 +2499,34 @@
     const students = turmaStudents();
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(totalCols); return; }
 
+    // Bimestre fechado (ver fecharBimestre): só leitura, direto do que foi
+    // congelado — nada é recalculado nem pode ser salvo por cima.
+    const fechado = bimestreFechado(bimestre);
+    document.getElementById('btnSalvarNotas').disabled = fechado;
+    theadRow.querySelectorAll('.peso-materia-input').forEach(inp => { inp.disabled = fechado; });
+    if (fechado) {
+      const { data } = await sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre);
+      const byEmail = {};
+      (data || []).forEach(r => { byEmail[r.student_email] = r; });
+      const fmt = v => { const n = parseNotaManual(v); return n === null ? '—' : n.toFixed(2); };
+      tbody.innerHTML = students.map(u => {
+        const g = byEmail[u.email] || {};
+        const congeladas = g.notas_congeladas || {};
+        return `
+          <tr>
+            <td>${u.nome}</td>
+            <td>${fmt(g.nota2)}</td>
+            <td>${fmt(g.nota3)}</td>
+            <td>${fmt(g.nota4)}</td>
+            ${materias.map(m => `<td class="materia-grade-cell" data-materia="${m.key}"><span class="materia-grade-value">${fmt(congeladas[m.key])}</span></td>`).join('')}
+          </tr>
+        `;
+      }).join('');
+      pintarNotasBaixas();
+      document.getElementById('notasStatus').textContent = `🔒 ${BIMESTRE_LABELS[bimestre]} fechado — notas congeladas. Para alterar, reabra em Bloqueios e Liberações.`;
+      return;
+    }
+
     const nota3Auto = !!cfg.nota3ActivityLocation;
 
     const [gradesRes, progressRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
@@ -2528,6 +2692,7 @@
   async function salvarNotas() {
     if (!sbClient) return;
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+    if (bimestreFechado(bimestre)) return; // congelado — ver fecharBimestre
     const now = new Date().toISOString();
 
     // Prova/Nota 3 podem ser <input> (manual — turma inteira pra Nota 3
@@ -2612,12 +2777,13 @@
   }
 
   // % de desempenho de uma MATÉRIA pro aluno: média das frações de conclusão
-  // de TODOS os módulos de TODAS as trilhas dela (crédito parcial, não só
-  // 0%/100%). Lê direto de cfg.materias, então recalcula sozinho sempre que
+  // de TODOS os módulos das trilhas dela DO BIMESTRE ATUAL (crédito parcial,
+  // não só 0%/100% — ver trilhaNoPeriodoAtual: recomeça do zero a cada
+  // bimestre). Lê direto de cfg.materias, então recalcula sozinho sempre que
   // o professor adiciona uma trilha/módulo novo — nenhuma tabela guarda o %,
   // só o progresso bruto por módulo (student_module_progress).
   function materiaPercentForStudent(materia, progressRows, studentEmail) {
-    const modules = trilhasParaAluno(materia.trilhas || [], studentEmail)
+    const modules = trilhasAtuaisParaAluno(materia.trilhas || [], studentEmail)
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -2634,10 +2800,11 @@
   // as trilhas da turma (não uma matéria por vez) — dá um % geral de
   // conclusão por aluno, usado só pra calcular o ranking (ver renderRankingBadge).
   // trilhasParaAluno roda por matéria (ver comentário em
-  // bimestrePortalPercentForStudent) antes de achatar tudo.
+  // bimestrePortalPercentForStudent) antes de achatar tudo. Só as trilhas
+  // do bimestre atual (trilhasAtuaisParaAluno): o ranking zera a cada bimestre.
   function overallProgressForStudent(progressRows, studentEmail) {
     const modules = (cfg.materias || [])
-      .flatMap(m => trilhasParaAluno(m.trilhas || [], studentEmail))
+      .flatMap(m => trilhasAtuaisParaAluno(m.trilhas || [], studentEmail))
       .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
@@ -2683,6 +2850,7 @@
     const students = turmaStudents();
     if (students.length === 0) return null;
 
+    await calendarioCarregado;
     const { data } = await fetchTurmaProgressRows();
     const rows = data || [];
     const byStudent = {};
@@ -2698,7 +2866,7 @@
         // ver comentário em bimestrePortalPercentForStudent) — linha órfã de
         // módulo removido não pode inflar o numerador acima do total.
         const modules = (cfg.materias || [])
-          .flatMap(m => trilhasParaAluno(m.trilhas || [], u.email))
+          .flatMap(m => trilhasAtuaisParaAluno(m.trilhas || [], u.email))
           .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
         const concluidas = modules.filter(({ trilhaKey, mod }) =>
           studentRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
@@ -2817,6 +2985,16 @@
     const g = gradeRes.data || {};
     const n4 = g.nota4 ?? '';
 
+    // Bimestre fechado: a nota de cada matéria é a congelada (ver fecharBimestre).
+    if (bimestreFechado(bimestreAtual)) {
+      const congeladas = g.notas_congeladas || {};
+      materias.filter(m => m.key !== 'prova').forEach(m => {
+        const nota = parseNotaManual(congeladas[m.key]);
+        notaPorMateria[m.key] = nota === null ? { nota: 0, semTrilha: true } : { nota, semTrilha: false };
+      });
+      return notaPorMateria;
+    }
+
     let n3;
     if (notaManual) {
       n3 = g.nota3 ?? 0;
@@ -2902,6 +3080,9 @@
       return;
     }
 
+    // Calendário antes de tudo: % geral, insígnias, ranking e a lista de
+    // trilhas abaixo são só do bimestre atual (trilhaNoPeriodoAtual).
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre(), fetchMateriaPesos()]);
     const [{ data: myRows }, ranking] = await Promise.all([
       sbClient.from('student_module_progress').select('*').eq('turma', cfg.id).eq('student_email', targetEmail),
       computeRanking(targetEmail)
@@ -2909,10 +3090,15 @@
     const rows = myRows || [];
 
     const overallPct = Math.round(overallProgressForStudent(rows, targetEmail) || 0);
-    const totalModules = (cfg.materias || [])
-      .flatMap(m => trilhasParaAluno(m.trilhas || [], targetEmail))
-      .flatMap(t => t.modules || []).length;
-    const completedModules = rows.filter(r => r.completed).length;
+    const modulosAtuais = (cfg.materias || [])
+      .flatMap(m => trilhasAtuaisParaAluno(m.trilhas || [], targetEmail))
+      .flatMap(t => (t.modules || []).map(mod => ({ trilhaKey: t.key, mod })));
+    const totalModules = modulosAtuais.length;
+    // Só conta módulo concluído de trilha do bimestre atual — progresso de
+    // bimestres passados não vale mais pra insígnia/resumo.
+    const completedModules = modulosAtuais.filter(({ trilhaKey, mod }) =>
+      rows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
+    ).length;
 
     renderPerfilBadges(overallPct, completedModules);
 
@@ -2922,8 +3108,8 @@
     // não tenha matéria/trilha cadastrada (ver o "return" mais abaixo). Só
     // mostra o bimestre atual por enquanto — não dá pra escolher ver um
     // bimestre anterior ainda (ver notaPorMateria logo abaixo, que reusa o
-    // mesmo bimestreAtual pra não buscar de novo).
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre(), fetchMateriaPesos()]);
+    // mesmo bimestreAtual pra não buscar de novo). O calendário já foi
+    // buscado lá em cima, antes do % geral.
     const bimestreAtual = currentBimestreNum();
     // "Mostrar Notas" (Gestão → Bloqueios e Liberações): o aluno só vê a
     // NOTA/selo de cada matéria depois que o professor liga isso PRA ESTE
@@ -2975,14 +3161,19 @@
     materiasEl.innerHTML = materias.map(m => {
       const pct = materiaPercentForStudent(m, rows, targetEmail);
       const pctDisplay = pct === null ? 0 : pct;
-      const trilhasHtml = trilhasParaAluno(m.trilhas || [], targetEmail).map(t => {
-        const mods = t.modules || [];
-        const doneCount = mods.filter(mod => {
-          const r = rows.find(rr => rr.trilha_key === t.key && rr.module_key === mod.key);
-          return !!(r && r.completed);
-        }).length;
-        return `<div class="perfil-trilha-row"><span>${t.label}</span><span>${doneCount}/${mods.length}</span></div>`;
-      }).join('');
+      // Só as trilhas do bimestre atual — as de bimestres passados não
+      // aparecem mais pro aluno (nem aqui, nem na aba Aulas).
+      const trilhasAtuais = trilhasAtuaisParaAluno(m.trilhas || [], targetEmail);
+      const trilhasHtml = trilhasAtuais.length === 0
+        ? `<div class="perfil-trilha-row" style="color:var(--ink-dim);"><span>Nenhuma trilha neste bimestre.</span></div>`
+        : trilhasAtuais.map(t => {
+          const mods = t.modules || [];
+          const doneCount = mods.filter(mod => {
+            const r = rows.find(rr => rr.trilha_key === t.key && rr.module_key === mod.key);
+            return !!(r && r.completed);
+          }).length;
+          return `<div class="perfil-trilha-row"><span>${t.label}</span><span>${doneCount}/${mods.length}</span></div>`;
+        }).join('');
 
       let notaHtml = '';
       if (m.key !== 'prova') {
@@ -3108,6 +3299,7 @@
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(3); return; }
     if (students.length === 0) { tbody.innerHTML = noStudentsRow(3); return; }
 
+    await calendarioCarregado; // % por matéria = só o bimestre atual (materiaPercentForStudent)
     const { data: progressRows } = await fetchTurmaProgressRows();
     const progressByStudent = {};
     (progressRows || []).forEach(r => {
@@ -3133,23 +3325,25 @@
   // mesmo #notasBimestre selecionado ali) — antes essa coluna só mostrava
   // % de conclusão (sem separar por bimestre); as 4 colunas "Média B1-B4"
   // (a média antiga de 4 campos, sem distinção por matéria) saem de cena.
-  async function gerarRelatorioNotasCompleto() {
-    if (!sbClient) return;
-    // Mesmo motivo de gerarPdfChamadaMes: abre a aba já aqui, síncrono
-    // dentro do clique, senão o navegador bloqueia o popup.
-    const printWin = window.open('', '_blank');
+  // Notas de UM bimestre pra turma inteira, aluno por aluno — mesma conta
+  // de Lançar Notas (nota1 geral, Prova/Nota 3 automáticas ou digitadas,
+  // Recuperação, nota final por matéria com peso e nota manual). Base do
+  // Relatório Completo e do "Fechar bimestre" (que grava exatamente isto).
+  // Bimestre já fechado devolve o que foi congelado em grades, sem
+  // recalcular nada — as trilhas/progresso dele podem nem existir mais.
+  // porAluno[email] = { g, pRows, nota1, nota2, nota3, nota4, notaProva
+  // (0–100, só exibição), notasMateria: { [materiaKey]: nota | null } }.
+  async function calcNotasBimestreTurma(bimestre) {
     const materias = materiasParaNotas();
-    const students = turmaStudents();
-    const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const nota3Auto = !!cfg.nota3ActivityLocation;
-
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre(), fetchMateriaPesos()]);
+    const fechado = bimestreFechado(bimestre);
 
     const [gradesRes, progressRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),
-      fetchTurmaProgressRows(),
-      fetchNotaProvaByStudent(),
-      nota3Auto ? fetchNota3AutoByStudent() : Promise.resolve({}),
+      fechado ? Promise.resolve({ data: [] }) : fetchTurmaProgressRows(),
+      fechado ? Promise.resolve({}) : fetchNotaProvaByStudent(),
+      (!fechado && nota3Auto) ? fetchNota3AutoByStudent() : Promise.resolve({}),
     ]);
 
     const gradesByStudent = {};
@@ -3167,16 +3361,31 @@
     const nota3TrilhaKey = cfg.nota3TrilhaKey || null;
     const nota3EhDesteBimestre = nota3TrilhaKey && trilhaBimestreCache[nota3TrilhaKey] === bimestre;
 
-    const linhas = students.map(u => {
+    const porAluno = {};
+    turmaStudents().forEach(u => {
       const pRows = progressByStudent[u.email] || [];
       const g = gradesByStudent[u.email] || {};
+
+      if (fechado) {
+        const congeladas = g.notas_congeladas || {};
+        porAluno[u.email] = {
+          g, pRows,
+          nota1: g.nota1 ?? 0, nota2: g.nota2 ?? null, nota3: g.nota3 ?? null, nota4: g.nota4 ?? null,
+          notaProva: (g.nota2 === null || g.nota2 === undefined) ? undefined : Math.round(g.nota2 * 10),
+          notasMateria: Object.fromEntries(materias.map(m => [m.key, parseNotaManual(congeladas[m.key])])),
+        };
+        return;
+      }
+
+      // nota1 (não aparece como coluna): % geral do bimestre até 5,0 — ver loadNotas.
+      const pctGeral = bimestrePortalPercentForStudent(bimestre, pRows, u.email);
+      const nota1 = pctGeral === null ? 0 : Math.round((pctGeral / 100) * 5 * 100) / 100;
+
       // Aluno com conteúdo adaptado (cfg.notasManuaisFor, ex. Engel) — ver
       // notaManual em loadNotas: Prova/Nota 3 vêm direto de `grades`, não
       // dos lookups automáticos abaixo.
       const notaManual = (cfg.notasManuaisFor || []).includes(u.email);
-
       const notaProva = notaProvaByStudent[u.email];
-      const notaProvaCell = `<td>${notaProva === undefined ? '—' : notaProva + '/100'}</td>`;
 
       let n2, n3;
       if (notaManual) {
@@ -3193,14 +3402,37 @@
       }
       const n4 = g.nota4 ?? '';
 
-      const notasMateria = materias.map(m => {
+      const notasMateria = {};
+      materias.forEach(m => {
         const manual = notaManualMateria(g, m.key);
-        if (manual !== null) return manual;
+        if (manual !== null) { notasMateria[m.key] = manual; return; }
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
-        if (pctMateria === null) return null;
+        if (pctMateria === null) { notasMateria[m.key] = null; return; }
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
-        return aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
+        notasMateria[m.key] = aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
       });
+
+      porAluno[u.email] = { g, pRows, nota1, nota2: n2, nota3: n3, nota4: n4, notaProva, notasMateria };
+    });
+
+    return { materias, fechado, porAluno };
+  }
+
+  async function gerarRelatorioNotasCompleto() {
+    if (!sbClient) return;
+    // Mesmo motivo de gerarPdfChamadaMes: abre a aba já aqui, síncrono
+    // dentro do clique, senão o navegador bloqueia o popup.
+    const printWin = window.open('', '_blank');
+    const students = turmaStudents();
+    const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
+
+    const { materias, fechado, porAluno } = await calcNotasBimestreTurma(bimestre);
+
+    const linhas = students.map(u => {
+      const a = porAluno[u.email];
+      const notaProvaCell = `<td>${a.notaProva === undefined ? '—' : a.notaProva + '/100'}</td>`;
+
+      const notasMateria = materias.map(m => a.notasMateria[m.key]);
       const materiaCells = notasMateria.map(nota => `<td>${nota === null ? '—' : nota.toFixed(2)}</td>`).join('');
 
       const notasValidas = notasMateria.filter(nota => nota !== null);
@@ -3208,7 +3440,9 @@
         ? (notasValidas.reduce((a, b) => a + b, 0) / notasValidas.length).toFixed(2)
         : '—';
 
-      const info = piorDesempenhoInfo(materias, pRows, u.email);
+      // Destaque de pior desempenho olha o progresso do bimestre ATUAL — não
+      // faz sentido num bimestre já fechado (o conteúdo pode nem existir mais).
+      const info = fechado ? { isPior: false } : piorDesempenhoInfo(materias, a.pRows, u.email);
       const linhaClasse = info.isPior ? ' class="pior"' : '';
       const aviso = info.isPior ? ' ⚠️' : '';
 
@@ -3588,6 +3822,7 @@
     document.getElementById('toggleNotasManuais').addEventListener('click', () => setEdicaoNotasManuais(!edicaoNotasManuais));
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
+    document.getElementById('tblGestaoBimestresBody').addEventListener('click', onAcaoBimestreNotas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
     document.getElementById('btnGerarRankingTurma').addEventListener('click', gerarRelatorioRanking);
@@ -4471,9 +4706,8 @@
     // trilha com bimestre encerrado some pra ele igual (ver
     // isTrilhaBimestreEncerrado/visibleTrilhas), não só depois de abrir a
     // aba Gestão (que já buscava essas mesmas datas por conta própria).
-    fetchBimestreDates();
+    calendarioCarregado = Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     setupBimestreDatesRealtime();
-    fetchTrilhaBimestre();
     setupTrilhaBimestreRealtime();
 
     if (currentUser.role === 'aluno') {

@@ -51,6 +51,7 @@
     const orderBys = [];
     const isFilters = []; // .is(col, val) — comparação solta, ver matchesLoose()
     const notFilters = []; // .not(col, 'is', val) — negação da mesma comparação solta
+    const gteFilters = []; // .gte(col, val) — NULL/ausente nunca passa, igual ao Postgres
     let limitN = null;
     let rangeFrom = null;
     let rangeTo = null;
@@ -59,6 +60,7 @@
       eq(col, val) { filters.push([col, val]); return api; },
       is(col, val) { isFilters.push([col, val]); return api; },
       not(col, _op, val) { notFilters.push([col, val]); return api; },
+      gte(col, val) { gteFilters.push([col, val]); return api; },
       order(col, opts) { orderBys.push({ col, ascending: !(opts && opts.ascending === false) }); return api; },
       limit(n) { limitN = n; return api; },
       range(from, to) { rangeFrom = from; rangeTo = to; return api; },
@@ -135,7 +137,8 @@
         let rows = table(name).filter(r =>
           matches(r, filters) &&
           isFilters.every(([col, val]) => matchesLoose(r, col, val)) &&
-          notFilters.every(([col, val]) => !matchesLoose(r, col, val))
+          notFilters.every(([col, val]) => !matchesLoose(r, col, val)) &&
+          gteFilters.every(([col, val]) => r[col] != null && r[col] >= val)
         );
         if (orderBys.length) {
           rows = rows.slice().sort((a, b) => {

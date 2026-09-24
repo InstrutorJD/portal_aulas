@@ -54,14 +54,42 @@ window.QuizRushEngine = (function () {
     });
   }
 
+  // Trilhas que NÃO são do bimestre atual (mesma regra de
+  // trilhaNoPeriodoAtual em shared/platform-core.js): atribuídas em
+  // "Liberação por Trilha" a um bimestre cuja janela não contém hoje —
+  // já encerrado, ainda não começou, ou entre um bimestre e outro. Trilha
+  // sem bimestre atribuído (ou bimestre sem datas) nunca entra aqui. O
+  // QuizRush e a Corrida do Bug só oferecem módulos das trilhas atuais.
+  async function trilhasForaDoPeriodo(turma) {
+    const fora = new Set();
+    if (!sb || !turma) return fora;
+    try {
+      const [datasRes, atribRes] = await Promise.all([
+        sb.from('bimestre_dates').select('*').eq('turma', turma),
+        sb.from('trilha_bimestre').select('*').eq('turma', turma),
+      ]);
+      const d = new Date();
+      const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const datas = {};
+      (datasRes.data || []).forEach(r => { datas[r.bimestre] = r; });
+      (atribRes.data || []).forEach(r => {
+        const b = datas[r.bimestre];
+        if (b && ((b.inicio && b.inicio > hoje) || (b.fim && b.fim < hoje))) fora.add(r.trilha_key);
+      });
+    } catch (e) { /* sem calendário legível: oferece tudo, como antes */ }
+    return fora;
+  }
+
   // Achata materias[].trilhas[].modules[] (mesma hierarquia usada no
   // resto do portal — ver README, "Hierarquia Matéria → Trilha →
   // Módulo") numa lista só, mantendo só os módulos com gabarito (só eles
   // expõem window.generateGabaritoForGestao, ver fetchModuleQuestions).
-  function listGabaritoModules(cfgTurma) {
+  // foraDoPeriodo (opcional, ver trilhasForaDoPeriodo): trilhas a pular.
+  function listGabaritoModules(cfgTurma, foraDoPeriodo) {
     const out = [];
     (cfgTurma.materias || []).forEach(materia => {
       (materia.trilhas || []).forEach(trilha => {
+        if (foraDoPeriodo && foraDoPeriodo.has(trilha.key)) return;
         (trilha.modules || []).forEach(mod => {
           if (mod.hasGabarito) {
             out.push({
@@ -333,8 +361,8 @@ window.QuizRushEngine = (function () {
 
   // A matéria 'prova' também abriga trabalhos (ex.: projeto-app-empreendedor),
   // que não têm banco de questões pra revisar — só as trilhas 'prova-*' entram.
-  function listExamModules(cfgTurma) {
-    return listGabaritoModules(cfgTurma).filter(c =>
+  function listExamModules(cfgTurma, foraDoPeriodo) {
+    return listGabaritoModules(cfgTurma, foraDoPeriodo).filter(c =>
       (cfgTurma.materias || []).some(m => m.key === 'prova' && (m.trilhas || []).some(t => t.key === c.trilhaKey && /^prova-/.test(t.key)))
     );
   }
@@ -521,7 +549,7 @@ window.QuizRushEngine = (function () {
 
   return {
     enabled: !!sb,
-    loadTurmaConfig, listGabaritoModules, fetchModuleQuestions,
+    loadTurmaConfig, trilhasForaDoPeriodo, listGabaritoModules, fetchModuleQuestions,
     listExamModules, fetchExamItems, buildExamReview, examPracticeToQuestion,
     getLatestSession, createSession, startSession, nextQuestion, getServerTimeMs, reveal, showPodium, endSession,
     joinSession, fetchPlayers, fetchAnswers, submitAnswer, scoreFor, leaderboardFrom,

@@ -320,6 +320,10 @@ button.btn-chamada-copiar.copiado{ background-color:#2e9d4a; }
 .falta-pill:has(input:checked){ border-color:#c62828; background:rgba(198,40,40,0.15); }
 .falta-pill:has(input:checked) .falta-pill-texto::after{ content:'Faltou'; color:#e53935; }
 
+/* Coluna "Notas" da tabela de bimestres (Fechar/Reabrir bimestre). */
+button.btn-bimestre-notas{ padding:6px 12px; font-size:10.5px; }
+.bimestre-fechado-tag{ font-size:11px; font-weight:800; color:var(--yellow); white-space:nowrap; }
+
 /* Chave "Editar Notas Manuais" (Bloqueios e Liberações, setEdicaoNotasManuais)
    ligada: cada célula de matéria de Lançar Notas vira um campo pra digitar
    a nota manual, que substitui a calculada. */

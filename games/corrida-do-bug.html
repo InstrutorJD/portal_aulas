@@ -270,8 +270,11 @@
   async function renderSetupScreen() {
     showScreen('scrSetup');
     renderLevelSelect();
-    const cfgTurma = await window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null);
-    state.candidateModules = cfgTurma ? window.QuizRushEngine.listGabaritoModules(cfgTurma) : [];
+    const [cfgTurma, foraDoPeriodo] = await Promise.all([
+      window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null),
+      window.QuizRushEngine.trilhasForaDoPeriodo(turma), // só trilhas do bimestre atual
+    ]);
+    state.candidateModules = cfgTurma ? window.QuizRushEngine.listGabaritoModules(cfgTurma, foraDoPeriodo) : [];
 
     const select = $('selModule');
     const warn = $('setupEmptyWarn');

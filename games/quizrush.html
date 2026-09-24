@@ -448,8 +448,11 @@
 
   async function renderSetupScreen() {
     showScreen('scrSetup');
-    const cfgTurma = await window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null);
-    state.candidateModules = cfgTurma ? window.QuizRushEngine.listGabaritoModules(cfgTurma) : [];
+    const [cfgTurma, foraDoPeriodo] = await Promise.all([
+      window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null),
+      window.QuizRushEngine.trilhasForaDoPeriodo(turma), // só trilhas do bimestre atual
+    ]);
+    state.candidateModules = cfgTurma ? window.QuizRushEngine.listGabaritoModules(cfgTurma, foraDoPeriodo) : [];
 
     const select = document.getElementById('selModule');
     const warn = document.getElementById('setupEmptyWarn');
@@ -523,8 +526,11 @@
   async function renderExamPanel() {
     const box = document.getElementById('examList');
     if (box.dataset.ready) return;
-    const cfgTurma = await window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null);
-    state.examModules = cfgTurma ? window.QuizRushEngine.listExamModules(cfgTurma) : [];
+    const [cfgTurma, foraDoPeriodo] = await Promise.all([
+      window.QuizRushEngine.loadTurmaConfig(turma).catch(() => null),
+      window.QuizRushEngine.trilhasForaDoPeriodo(turma), // só provas do bimestre atual
+    ]);
+    state.examModules = cfgTurma ? window.QuizRushEngine.listExamModules(cfgTurma, foraDoPeriodo) : [];
     const empty = state.examModules.length === 0;
     document.getElementById('examEmptyWarn').style.display = empty ? 'block' : 'none';
     document.getElementById('btnFetchExam').style.display = empty ? 'none' : '';

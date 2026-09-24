@@ -964,6 +964,11 @@ create index if not exists idx_grades_turma_bimestre on public.grades (turma, bi
 -- calculada daquela matéria. Ver sql/notas-manuais-materia.sql.
 alter table public.grades add column if not exists notas_materia jsonb not null default '{}'::jsonb;
 
+-- Notas congeladas ao "Fechar bimestre": { "<materia_key>": nota | null },
+-- a nota FINAL de cada matéria no momento em que o professor fechou.
+-- Ver sql/fechar-bimestre.sql.
+alter table public.grades add column if not exists notas_congeladas jsonb;
+
 alter table public.grades enable row level security;
 
 drop policy if exists "grades_select_all" on public.grades;
@@ -1144,6 +1149,12 @@ create table if not exists public.bimestre_dates (
 );
 
 alter table public.bimestre_dates add column if not exists notas_liberadas boolean not null default false;
+
+-- "Fechar bimestre" (Gestão → Bloqueios e Liberações, coluna "Notas" da
+-- tabela de bimestres): true = as notas desse bimestre estão congeladas em
+-- grades.notas_congeladas e não são mais recalculadas. Ver
+-- sql/fechar-bimestre.sql.
+alter table public.bimestre_dates add column if not exists fechado boolean not null default false;
 
 alter table public.bimestre_dates enable row level security;
 
