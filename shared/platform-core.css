@@ -14,8 +14,8 @@
      aqui pra manter consistente em toda a casca do portal; NÃO se aplica
      às telas de atividade/jogo, que têm CSS próprio (ver comentário no
      topo do arquivo). */
-  --radius-sm: 6px;
-  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
   --radius-pill: 999px;
 }
 
