@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torre do Código — A Escalada do Programador</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
+
+  :root{
+    --bg:#0a0d0a; --panel:#10140f; --panel2:#0d110c; --line:#223022;
+    --green:#7cff3f; --green-dim:#4a9a2a; --blood:#c1121f; --blood-bright:#ff3b30;
+    --yellow:#d4c86a; --ink:#d9e6d2; --ink-dim:#6f8368;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; padding:10px; background:var(--bg); color:var(--ink);
+    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
+  }
+  .env{
+    width:100%; height:100%; border:2px solid var(--green-dim); background:#050805;
+    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(124,255,63,0.15);
+  }
+  .topbar{
+    min-height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; gap:12px; padding:4px 12px;
+    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0; flex-wrap:wrap;
+  }
+  .topbar .keys{ text-transform:none; }
+  .topbar .keys b{ color:var(--yellow); }
+  .topbar .stats{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .topbar .stats b{ color:var(--yellow); }
+  .topbar .stats b.best{ color:var(--green); }
+  .btn-ranking{
+    font-family:inherit; font-weight:800; font-size:10.5px; letter-spacing:1px; text-transform:uppercase;
+    background:transparent; color:var(--yellow); border:1px solid var(--yellow); padding:4px 10px; cursor:pointer; border-radius:2px;
+  }
+  .btn-ranking:hover{ background:rgba(212,200,106,0.12); }
+  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
+  .progress-fill{ height:100%; background:var(--green); width:0%; transition:width 0.4s ease; }
+
+  .stage{ flex:1; min-height:0; position:relative; overflow:hidden; }
+  #gameCanvas{ display:block; width:100%; height:100%; }
+
+  /* Terminal — o mesmo do "O Herói do Código": missão à esquerda, editor
+     + console à direita, por cima do jogo pausado. */
+  .terminal-overlay{
+    position:absolute; inset:0; background:rgba(2,6,2,0.82); display:none;
+    align-items:center; justify-content:center; padding:14px; z-index:5;
+  }
+  .terminal-overlay.open{ display:flex; }
+  .terminal-box{
+    width:100%; max-width:1000px; max-height:100%; overflow:auto; background:var(--panel);
+    border:1px solid var(--green-dim); box-shadow:0 0 30px rgba(124,255,63,0.2);
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);
+  }
+  .mission{ padding:16px 18px; border-right:1px solid var(--line); font-size:13px; line-height:1.65; }
+  .mission-step{ font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--green); margin-bottom:4px; }
+  .mission h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:24px; color:var(--yellow); margin:0 0 8px; letter-spacing:1px; }
+  .mission .concept{ border:1px dashed var(--green-dim); padding:10px 12px; margin:12px 0; background:var(--panel2); }
+  .mission .concept b{ color:var(--green); }
+  .mission code{ color:var(--yellow); }
+  .mission .format{ font-size:12px; color:var(--ink-dim); }
+  .mission .pontos{ font-size:11px; color:var(--ink-dim); margin-top:8px; border-top:1px solid var(--line); padding-top:8px; }
+  .mission .pontos b{ color:var(--yellow); }
+  .hint-box{ display:none; margin-top:10px; padding:10px 12px; border:1px solid var(--yellow); color:var(--yellow); font-size:12.5px; white-space:pre-wrap; }
+  .editor-side{ padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .editor-label{ font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-dim); }
+  #codeInput{
+    width:100%; min-height:190px; resize:vertical; background:#020402; color:var(--green);
+    border:1px solid var(--line); padding:10px 12px; font-family:'JetBrains Mono', monospace; font-size:14px; line-height:1.55;
+    tab-size:2; outline:none;
+  }
+  #codeInput:focus{ border-color:var(--green-dim); }
+  .console{
+    min-height:70px; background:#020402; border:1px solid var(--line); padding:8px 12px;
+    font-size:12.5px; line-height:1.55; white-space:pre-wrap;
+  }
+  .console .ok{ color:var(--green); }
+  .console .err{ color:var(--blood-bright); }
+  .console .info{ color:var(--ink-dim); }
+  .editor-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  button.btn{
+    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
+    background:var(--green); color:#04220a; border:none; padding:10px 18px; cursor:pointer; border-radius:2px;
+  }
+  button.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  button.btn-secondary{ background:transparent; color:var(--green); border:1px solid var(--green-dim); }
+
+  .floor-banner{
+    position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); z-index:4;
+    background:rgba(2,6,2,0.88); border:1px solid var(--green); padding:14px 26px; text-align:center;
+    font-family:var(--user-font-display, 'VT323', monospace); font-size:30px; color:var(--green); letter-spacing:1px;
+    opacity:0; pointer-events:none; transition:opacity .3s ease;
+  }
+  .floor-banner small{ display:block; font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--yellow); margin-top:4px; }
+  .floor-banner.show{ opacity:1; }
+
+  .finish-overlay{
+    position:absolute; inset:0; background:rgba(2,6,2,0.9); display:none; align-items:center; justify-content:center; padding:14px; z-index:6;
+  }
+  .finish-overlay.open{ display:flex; }
+  .finish-box{ max-width:680px; width:100%; max-height:100%; overflow:auto; background:var(--panel); border:1px solid var(--green); padding:20px 22px; text-align:center; }
+  .finish-box .trophy{ font-size:56px; }
+  .finish-box h2{ font-family:var(--user-font-display, 'VT323', monospace); font-size:28px; color:var(--green); margin:6px 0 10px; }
+  .finish-box p{ font-size:13px; color:var(--ink-dim); line-height:1.6; }
+  .finish-box .score-line{ font-size:14px; color:var(--yellow); font-weight:800; }
+  .finish-box pre{ text-align:left; background:#020402; border:1px solid var(--line); padding:10px 12px; color:var(--green); font-size:12px; white-space:pre-wrap; max-height:260px; overflow:auto; }
+  .finish-actions{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+
+  @media (max-width: 760px) {
+    .terminal-box{ grid-template-columns:1fr; }
+    .mission{ border-right:none; border-bottom:1px solid var(--line); }
+  }
+</style>
+<script src="../shared/supabase-config.js"></script>
+<script src="../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/clipboard-guard.js"></script>
+<script src="../shared/game-leaderboard.js"></script>
+</head>
+<body>
+<div class="env">
+  <div class="topbar">
+    <div>TORRE DO CÓDIGO — A ESCALADA</div>
+    <div class="keys"><b>← →</b> andar · <b>↑</b>/<b>Espaço</b> pular · <b>J</b> atacar · <b>K</b> escudo · <b>L</b> flecha · <b>E</b> terminal</div>
+    <div class="stats">
+      <span>ANDAR <b id="lblAndar">1</b> DE <b id="lblAndarTotal">13</b></span>
+      <span>PONTOS <b id="lblPontos">0</b></span>
+      <span>RECORDE <b class="best" id="lblRecorde">0</b></span>
+      <button class="btn-ranking" id="btnRanking">🏆 Ranking da Turma</button>
+    </div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="stage" id="stage">
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="floor-banner" id="floorBanner"></div>
+
+    <div class="terminal-overlay" id="terminal">
+      <div class="terminal-box" role="dialog" aria-modal="true" aria-labelledby="missionTitle">
+        <div class="mission">
+          <div class="mission-step" id="missionStep"></div>
+          <h2 id="missionTitle">--</h2>
+          <div id="missionText"></div>
+          <div class="concept" id="missionConcept"></div>
+          <div class="format" id="missionFormat"></div>
+          <div class="pontos" id="missionPontos"></div>
+          <div class="hint-box" id="hintBox"></div>
+        </div>
+        <div class="editor-side">
+          <label class="editor-label" for="codeInput">Terminal — escreva seu código</label>
+          <textarea id="codeInput" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+          <div class="editor-actions">
+            <button class="btn" id="btnRun" title="Ctrl+Enter">▶ Rodar código</button>
+            <button class="btn btn-secondary" id="btnHint" title="Mostrar a dica tira 25 pontos do bônus deste andar">💡 Dica</button>
+            <button class="btn btn-secondary" id="btnSkipProfessor" style="display:none;">⏭ Pular (professor)</button>
+            <button class="btn btn-secondary" id="btnCloseTerminal">← Voltar ao mapa</button>
+          </div>
+          <div class="editor-label">Resultado</div>
+          <div class="console" id="consoleOutput"><span class="info">Escreva o código e clique em "Rodar código".</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="finish-overlay" id="finish">
+      <div class="finish-box">
+        <div class="trophy">🏆</div>
+        <h2>Você chegou ao topo da Torre!</h2>
+        <p class="score-line" id="finishScore"></p>
+        <p id="finishStats"></p>
+        <p>Cada poder que o seu herói usou na subida foi você que escreveu, em código — do primeiro <code>let</code> até a função que derrotou o Rei Bug:</p>
+        <pre id="finishCode"></pre>
+        <p>Variáveis, tipos, contas, <code>if</code>/<code>else</code>, <code>switch</code>, funções, listas, laços e objetos: é com essas peças que qualquer programa (e qualquer jogo) é montado por dentro.</p>
+        <div class="finish-actions">
+          <button class="btn" id="btnFinishRanking">🏆 Ver ranking da turma</button>
+          <button class="btn btn-secondary" id="btnReplay">🔁 Subir de novo (nova tentativa)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Sessão / query params (mesmo padrão de fuga-do-bug.html) ----------
+  // O portal abre o jogo com ?user=&name=&turma= (ver openGame em
+  // shared/platform-core.js). A turma vem da URL — o professor usa o mesmo
+  // login nas duas turmas, e o placar tem que ser o da turma do portal aberto.
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('user') || 'convidado';
+  const displayName = urlParams.get('name') || username;
+  const turma = urlParams.get('turma') || '';
+
+  // Jogo só de ranking: NÃO entra em nota nem em progresso de matéria (não
+  // usa progress-sync.js nem student_module_progress). Só o melhor placar
+  // vai pra game_scores (shared/game-leaderboard.js).
+  const GAME_KEY = 'torre_do_codigo';
+  const STATE_KEY = `torre_codigo_estado_${username}`;
+  const BEST_KEY = `torre_codigo_recorde_${username}`;
+
+  // ---------- Execução do código do aluno ----------
+  // Mesmo jeito do "O Herói do Código" (turmas/recuperacao/atividades/
+  // recuperacao-jogo.html): new Function com o código + um return que
+  // captura as variáveis/funções pedidas. `given` injeta valores e funções
+  // prontas (ex.: a lista alvos e a função disparar) no escopo do aluno.
+  // Novidade aqui: como a torre ensina laços, todo for/while ganha um
+  // contador de voltas — um loop infinito vira erro em vez de travar a aba.
+  const LOOP_LIMIT = 100000;
+  function guardLoops(code) {
+    return code.replace(/\b(for|while)\s*\([^{]*?\)\s*\{/g, m => `${m} if (++__voltas > ${LOOP_LIMIT}) throw new Error('__LOOP__');`);
+  }
+
+  function execCode(code, names, given) {
+    const g = given || {};
+    const gk = Object.keys(g);
+    const capture = names.map(n => `${n}: (typeof ${n} !== 'undefined' ? ${n} : undefined)`).join(', ');
+    try {
+      const body = `let __voltas = 0;\n${guardLoops(code)}\n;return { ${capture} };`;
+      return { vars: new Function(...gk, body)(...gk.map(k => g[k])) };
+    } catch (err) {
+      return { error: err };
+    }
+  }
+
+  function friendlyError(err) {
+    const msg = String((err && err.message) || err);
+    if (msg === '__LOOP__') return 'O seu laço não para nunca (loop infinito)! Confira a condição de parada do for/while.';
+    const notDefined = msg.match(/^(\S+) is not defined/);
+    if (notDefined) {
+      return `O computador não conhece "${notDefined[1]}". Se for um texto, ele precisa ficar entre aspas ("assim"). Se for uma variável ou função, ela foi criada? Confira também maiúsculas/minúsculas.`;
+    }
+    const redeclared = msg.match(/Identifier '(\S+)' has already been declared/);
+    if (redeclared) return `"${redeclared[1]}" já existe — não crie de novo com let/const. Pra mudar o valor, escreva só ${redeclared[1]} = ...;`;
+    if (/Assignment to constant variable/.test(msg)) return 'Você tentou mudar o valor de uma const. const é fixa: se o valor precisa mudar, crie com let.';
+    const notFn = msg.match(/^(\S+) is not a function/);
+    if (notFn) return `"${notFn[1]}" não é uma função — confira o nome (maiúsculas/minúsculas) e os parênteses.`;
+    if (err instanceof SyntaxError) {
+      return `Erro de digitação no código (sintaxe): confira aspas, parênteses ( ), colchetes [ ], chaves { } e vírgulas. Detalhe: ${msg}`;
+    }
+    return `Erro ao rodar: ${msg}`;
+  }
+
+  const isFn = v => typeof v === 'function';
+  const J = v => JSON.stringify(v);
+  const sameList = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((x, i) => x === b[i]);
+
+  // Troca uma linha do código (ex.: let energia = 80 → 20) e roda de novo:
+  // é assim que se confere se o if/switch/laço DECIDE de verdade, e não
+  // escreveu a resposta à mão. null = o aluno apagou a linha original.
+  function rerun(code, pattern, replacement, names, given) {
+    const changed = code.replace(pattern, replacement);
+    if (changed === code) return null;
+    return execCode(changed, names, given);
+  }
+
+  // Um elemento só é bloqueado pelo escudo certo (andar 6 e chefão).
+  const ELEMENTOS = ['fogo', 'gelo', 'raio'];
+  const ESCUDO_CERTO = { fogo: 'agua', gelo: 'fogo', raio: 'terra' };
+  const ELEM_COR = { fogo: '#ff7a1a', gelo: '#7fe3ff', raio: '#ffe14a', agua: '#4aa8ff', terra: '#b98b4f', flecha: '#c9b38a' };
+  const PET_TIPOS = { dragao: '🐉', lobo: '🐺', coruja: '🦉' };
+  const semAcento = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+  // As torres da muralha (andar 10) e as vidas do radar (andar 11) são os
+  // inimigos DE VERDADE daqueles andares — o código do aluno roda com eles.
+  const TORRES = ['T1', 'T2', 'T3', 'T4', 'T5'];
+  const VIDAS_RADAR = [2, 12, 1, 3, 15, 2, 20];
+
+  // ---------- Andares (fases) ----------
+  // Cada andar da torre é uma fase, do mais simples (um let) ao mais
+  // avançado (função que recebe objeto, usa switch e laço). Cada um tem um
+  // terminal (altar) logo no começo: o herói não passa dele sem resolver,
+  // e o código aceito vira um poder que é usado NA BATALHA daquele andar —
+  // o aluno vê o código dele funcionando (a chamada aparece na tela).
+  const STAGES = [
+    {
+      id: 'vida', tema: 'Variáveis (let)', title: '❤️ Corações (let)',
+      text: 'O térreo da torre está cheio de espinhos e o seu herói aguenta só 1 golpe. Crie a variável <code>vida</code> com um <b>número</b> de 3 a 5 — é quantos corações ele vai ter na subida.',
+      concept: '<b>Variável</b> é uma caixinha com nome que guarda um valor. <code>let</code> cria a caixinha e o <code>=</code> guarda o valor dentro dela. <b>Número</b> vai sem aspas: <code>5</code>.',
+      format: 'Formato: <code>let nome = valor;</code>',
+      hint: 'let vida = 5;',
+      starter: '// Crie a variável vida (um número de 3 a 5)\n',
+      names: ['vida'],
+      check(v, code) {
+        if (v.vida === undefined) return 'A variável vida não foi criada. Use: let vida = 5;';
+        if (!/\blet\s+vida\b/.test(code)) return 'Crie a variável com let: let vida = 5;';
+        if (typeof v.vida === 'string') return 'vida virou TEXTO por causa das aspas. Número vai sem aspas: let vida = 5;';
+        if (typeof v.vida !== 'number' || !Number.isInteger(v.vida)) return 'vida precisa ser um número inteiro (3, 4 ou 5).';
+        if (v.vida < 3 || v.vida > 5) return `vida = ${v.vida}. Escolha um número de 3 a 5.`;
+        return null;
+      },
+      apply(v) { abilities.vidaMax = v.vida; },
+      success: v => `❤️ O herói agora tem ${v.vida} corações! Pule os espinhos (↑) e suba a escada no fim do andar.`
+    },
+    {
+      id: 'heroi', tema: 'Constantes e tipos', title: '⚔️ Nome e espada (const, texto e booleano)',
+      text: 'Slimes guardam este andar e o herói está de mãos vazias. Crie a <b>constante</b> <code>heroi</code> com o nome do seu herói (um <b>texto</b>) e a variável <code>temEspada</code> com o valor <code>true</code>.',
+      concept: '<code>const</code> cria uma caixinha que <b>nunca muda</b> de valor (o nome do herói não muda). Cada valor tem um <b>tipo</b>: <b>texto</b> (string) vai entre aspas — <code>"Luna"</code>; <b>booleano</b> é <code>true</code> ou <code>false</code>, sem aspas.',
+      format: 'Formato: <code>const heroi = "...";</code> e <code>let temEspada = true;</code>',
+      hint: 'const heroi = "Luna";\nlet temEspada = true;',
+      starter: '// Crie a constante heroi (texto) e a variável temEspada (booleano)\n',
+      names: ['heroi', 'temEspada'],
+      check(v, code) {
+        if (v.heroi === undefined) return 'A constante heroi não foi criada. Use: const heroi = "Luna";';
+        if (!/\bconst\s+heroi\b/.test(code)) return 'Crie heroi com const (o nome não vai mudar): const heroi = "Luna";';
+        if (typeof v.heroi !== 'string') return 'heroi precisa ser TEXTO, entre aspas. Ex.: const heroi = "Luna";';
+        const n = v.heroi.trim();
+        if (n.length < 2 || n.length > 14) return 'Use um nome de 2 a 14 letras.';
+        if (v.temEspada === undefined) return 'Falta a variável temEspada. Use: let temEspada = true;';
+        if (v.temEspada === 'true') return 'Quase! "true" entre aspas vira TEXTO. Tire as aspas: true é booleano.';
+        if (v.temEspada !== true) return `temEspada está valendo ${J(v.temEspada)} — precisa ser true (verdadeiro).`;
+        return null;
+      },
+      apply(v) { abilities.nome = v.heroi.trim(); abilities.espada = true; },
+      success: v => `⚔️ ${v.heroi.trim()} pegou a espada! Aperte J para atacar.`
+    },
+    {
+      id: 'golpe', tema: 'Operações e textos', title: '💥 Golpe e grito de guerra (operações)',
+      text: 'Os cavaleiros deste andar têm <b>12 de vida</b> e a espada só tira 1. A variável <code>forca</code> já vale 2. Crie <code>golpe</code> valendo <b>forca vezes 3</b> (use a variável, não o número pronto). Depois crie o <code>grito</code> de guerra juntando o texto <code>"Avante, "</code> com a constante <code>heroi</code> — a que você criou no andar anterior, e que já existe aqui.',
+      concept: 'Contas: <code>+</code> (mais), <code>-</code> (menos), <code>*</code> (vezes), <code>/</code> (dividido). Com textos, o <code>+</code> <b>junta</b>: <code>"Oi, " + nome</code> vira <code>"Oi, Luna"</code>.',
+      format: 'Formato: <code>let golpe = forca * 3;</code> e <code>let grito = "Avante, " + heroi;</code>',
+      hint: 'let forca = 2;\nlet golpe = forca * 3;\nlet grito = "Avante, " + heroi;',
+      starter: 'let forca = 2;\n\n// crie golpe e grito aqui\n',
+      names: ['golpe', 'grito', 'forca'],
+      makeGiven() { return { given: { heroi: abilities.nome || 'Herói' }, log: null }; },
+      check(v, code) {
+        const nome = abilities.nome || 'Herói';
+        if (v.forca !== 2) return 'Mantenha a primeira linha como está: let forca = 2;';
+        if (v.golpe === undefined) return 'A variável golpe não foi criada. Use: let golpe = forca * 3;';
+        if (typeof v.golpe !== 'number') return `golpe está valendo ${J(v.golpe)} — precisa ser um NÚMERO (a conta forca * 3).`;
+        if (v.golpe !== 6) return `golpe = ${v.golpe}, mas forca * 3 dá 6. Confira a conta.`;
+        const r = rerun(code, /let\s+forca\s*=\s*2\b/, 'let forca = 5', ['golpe'], { heroi: nome });
+        if (!r) return 'Mantenha a primeira linha como está: let forca = 2;';
+        if (r.error) return friendlyError(r.error);
+        if (r.vars.golpe !== 15) return 'golpe precisa ser calculado A PARTIR da variável: let golpe = forca * 3; (não escreva o 6 pronto).';
+        if (v.grito === undefined) return 'Falta a variável grito. Use: let grito = "Avante, " + heroi;';
+        if (typeof v.grito !== 'string') return 'grito precisa ser um TEXTO.';
+        if (!/avante/i.test(v.grito)) return `grito = ${J(v.grito)}. Ele precisa começar com o texto "Avante, ".`;
+        const outro = execCode(code, ['grito'], { heroi: 'Zé Teste' });
+        if (outro.error) return friendlyError(outro.error);
+        if (typeof outro.vars.grito !== 'string' || !outro.vars.grito.includes('Zé Teste')) return 'Junte o texto com a constante heroi (sem aspas nela): "Avante, " + heroi — não escreva o nome à mão.';
+        return null;
+      },
+      apply(v) { abilities.golpe = v.golpe; abilities.grito = v.grito; },
+      success: v => `💥 Cada golpe agora tira ${v.golpe}! E o herói grita: "${v.grito}"`
+    },
+    {
+      id: 'pulo', tema: 'Decisões (if / else)', title: '👢 Botas de pulo duplo (if / else)',
+      text: 'Este andar tem buracos largos demais pra um pulo só. As <b>botas de pulo duplo</b> só funcionam com energia. Escreva um <code>if / else</code>: SE <code>energia</code> for <b>maior ou igual a 50</b>, <code>pulo</code> recebe <code>"duplo"</code>; SENÃO, <code>pulo</code> recebe <code>"simples"</code>.',
+      concept: '<code>if (condição) { ... } else { ... }</code>: SE a condição for verdadeira, roda o primeiro bloco; SENÃO, roda o do <code>else</code>. Sempre um dos dois roda. Comparações: <code>&gt;=</code> (maior ou igual), <code>&lt;</code> (menor), <code>===</code> (igual).',
+      format: 'Formato: <code>if (energia >= 50) { ... } else { ... }</code>',
+      hint: 'let energia = 80;\nlet pulo = "";\n\nif (energia >= 50) {\n  pulo = "duplo";\n} else {\n  pulo = "simples";\n}',
+      starter: 'let energia = 80;\nlet pulo = "";\n\n// escreva o if / else aqui\n',
+      names: ['pulo'],
+      check(v, code) {
+        if (!/\bif\s*\(/.test(code) || !/\belse\b/.test(code)) return 'Use if E else: if (energia >= 50) { ... } else { ... }';
+        if (v.pulo !== 'duplo') return `Com energia = 80, pulo ficou ${J(v.pulo)} — devia ser "duplo".`;
+        for (const [energia, esperado] of [[20, 'simples'], [50, 'duplo'], [49, 'simples']]) {
+          const r = rerun(code, /let\s+energia\s*=\s*80\b/, `let energia = ${energia}`, ['pulo']);
+          if (!r) return 'Mantenha a linha let energia = 80; no começo do código.';
+          if (r.error) return friendlyError(r.error);
+          if (r.vars.pulo !== esperado) {
+            return `Com energia = ${energia}, pulo devia ser "${esperado}", mas ficou ${J(r.vars.pulo)}.` + (energia === 50 ? ' Lembre: "maior OU IGUAL" é >=.' : ' Confira o bloco do else.');
+          }
+        }
+        return null;
+      },
+      apply() { abilities.botas = true; },
+      success: '👢 Pulo duplo liberado! No ar, aperte ↑ de novo pra atravessar os buracos.'
+    },
+    {
+      id: 'luz', tema: 'else if e operadores lógicos', title: '🔦 A caverna escura (else if, &&)',
+      text: 'Este andar é uma caverna no breu. Use <code>if / else if / else</code> com <code>&&</code> ("E") pra decidir a <code>luz</code>: SE estiver <code>escuro</code> <b>E</b> <code>temTocha</code>, luz = <code>"tocha"</code>; SENÃO SE estiver só <code>escuro</code>, luz = <code>"breu"</code>; SENÃO (claro), luz = <code>"sol"</code>.',
+      concept: '<code>else if</code> testa uma <b>segunda condição</b> quando a primeira falha. Operadores lógicos juntam condições: <code>&&</code> (E: as duas precisam ser verdadeiras), <code>||</code> (OU: basta uma), <code>!</code> (NÃO: inverte).',
+      format: 'Formato: <code>if (escuro && temTocha) { ... } else if (escuro) { ... } else { ... }</code>',
+      hint: 'let escuro = true;\nlet temTocha = true;\nlet luz = "";\n\nif (escuro && temTocha) {\n  luz = "tocha";\n} else if (escuro) {\n  luz = "breu";\n} else {\n  luz = "sol";\n}',
+      starter: 'let escuro = true;\nlet temTocha = true;\nlet luz = "";\n\n// escreva o if / else if / else aqui\n',
+      names: ['luz'],
+      check(v, code) {
+        if (!/else\s+if\s*\(/.test(code)) return 'Use else if pra testar a segunda condição: if (...) { } else if (...) { } else { }';
+        if (!/&&/.test(code)) return 'Use o operador && ("E") pra juntar as duas condições: escuro && temTocha';
+        const reE = /let\s+escuro\s*=\s*true\b/, reT = /let\s+temTocha\s*=\s*true\b/;
+        if (!reE.test(code) || !reT.test(code)) return 'Mantenha as linhas let escuro = true; e let temTocha = true; no começo do código.';
+        const casos = [[true, true, 'tocha'], [true, false, 'breu'], [false, true, 'sol'], [false, false, 'sol']];
+        for (const [e, t, esperado] of casos) {
+          const r = execCode(code.replace(reE, `let escuro = ${e}`).replace(reT, `let temTocha = ${t}`), ['luz']);
+          if (r.error) return friendlyError(r.error);
+          if (r.vars.luz !== esperado) return `Com escuro = ${e} e temTocha = ${t}, luz devia ser "${esperado}", mas ficou ${J(r.vars.luz)}.`;
+        }
+        return null;
+      },
+      apply() { abilities.tocha = true; },
+      success: '🔦 luz = "tocha"! Agora dá pra enxergar os morcegos no escuro.'
+    },
+    {
+      id: 'escudo', tema: 'switch / case', title: '🛡️ Escudo elemental (switch)',
+      text: 'Magos deste andar atiram <b>fogo</b>, <b>gelo</b> e <b>raio</b>, e cada magia só é bloqueada pelo escudo certo. Use um <code>switch</code> no <code>elemento</code>: <code>"fogo"</code> → escudo <code>"agua"</code>; <code>"gelo"</code> → <code>"fogo"</code>; <code>"raio"</code> → <code>"terra"</code>; qualquer outro (<code>default</code>) → <code>"nenhum"</code>. Segurando <b>K</b>, o jogo roda o seu switch com a magia que está chegando.',
+      concept: '<code>switch</code> compara UM valor com vários <code>case</code>. Quando acha o igual, roda dali pra baixo até o <code>break</code> — sem o <code>break</code>, ele "vaza" pro próximo case! <code>default</code> é o caso "nenhum dos anteriores".',
+      format: 'Formato: <code>switch (elemento) { case "fogo": escudo = "agua"; break; ... default: escudo = "nenhum"; }</code>',
+      hint: 'let elemento = "fogo";\nlet escudo = "";\n\nswitch (elemento) {\n  case "fogo":\n    escudo = "agua";\n    break;\n  case "gelo":\n    escudo = "fogo";\n    break;\n  case "raio":\n    escudo = "terra";\n    break;\n  default:\n    escudo = "nenhum";\n}',
+      starter: 'let elemento = "fogo";\nlet escudo = "";\n\n// escreva o switch aqui\n',
+      names: ['escudo'],
+      check(v, code) {
+        if (!/\bswitch\s*\(/.test(code) || !/\bcase\b/.test(code)) return 'Use switch com case: switch (elemento) { case "fogo": ... }';
+        if (!/\bdefault\s*:/.test(code)) return 'Falta o default: — o caso de "nenhum dos anteriores" (escudo = "nenhum").';
+        const semBreak = (code.match(/\bbreak\b/g) || []).length < 3 ? ' Faltou o break no fim de cada case?' : '';
+        for (const el of ['fogo', 'gelo', 'raio', 'vento']) {
+          const esperado = ESCUDO_CERTO[el] || 'nenhum';
+          const r = el === 'fogo' ? { vars: v } : rerun(code, /let\s+elemento\s*=\s*["']fogo["']/, `let elemento = "${el}"`, ['escudo']);
+          if (!r) return 'Mantenha a linha let elemento = "fogo"; no começo do código.';
+          if (r.error) return friendlyError(r.error);
+          if (r.vars.escudo !== esperado) return `Com elemento = "${el}", escudo ficou ${J(r.vars.escudo)} — devia ser "${esperado}".${semBreak}`;
+        }
+        return null;
+      },
+      // O escudo usado na batalha é o que o switch DO ALUNO responde pra
+      // cada elemento (roda de novo o código dele com cada um).
+      apply(v, log, code) {
+        const mapa = {};
+        ELEMENTOS.forEach(el => {
+          const r = el === 'fogo' ? { vars: v } : rerun(code, /let\s+elemento\s*=\s*["']fogo["']/, `let elemento = "${el}"`, ['escudo']);
+          mapa[el] = r && !r.error ? r.vars.escudo : ESCUDO_CERTO[el];
+        });
+        abilities.escudo = mapa;
+      },
+      success: '🛡️ Escudo elemental pronto! Segure K: o seu switch escolhe o escudo certo pra cada magia.'
+    },
+    {
+      id: 'curar', tema: 'Funções, parâmetro e return', title: '🧪 Poções (função com parâmetro)',
+      text: 'Este andar tem arqueiros e magos por todo lado, mas também tem <b>poções</b> 🧪. Crie a função <code>curar</code>, que <b>recebe</b> a <code>vida</code> atual do herói e <b>devolve</b> (com <code>return</code>) essa vida <b>+ 2</b>. Quando o herói encostar numa poção, o jogo chama <code>curar(vida)</code>.',
+      concept: '<b>Função</b> é um bloco de código com nome, que só roda quando alguém <b>chama</b>. O <b>parâmetro</b> (entre parênteses) é a informação que ela recebe; <code>return</code> é a resposta que ela devolve pra quem chamou.',
+      format: 'Formato: <code>function curar(vida) { return ...; }</code>',
+      hint: 'function curar(vida) {\n  return vida + 2;\n}',
+      starter: '// Crie a função curar(vida)\n',
+      names: ['curar'],
+      check(v) {
+        if (!isFn(v.curar)) return 'A função curar não foi criada. Use: function curar(vida) { ... }';
+        for (const vida of [1, 3, 0.5, 4]) {
+          let r;
+          try { r = v.curar(vida); } catch (e) { return friendlyError(e); }
+          if (r === undefined) return 'curar(vida) não devolveu nada. Falta o return.';
+          if (r !== vida + 2) return `curar(${vida}) devolveu ${J(r)}, mas devia devolver ${vida + 2} (a vida + 2).`;
+        }
+        return null;
+      },
+      apply(v) { abilities.curar = v.curar; },
+      success: '🧪 Poções ativadas! Encoste numa poção: o jogo chama curar(vida) e usa o que ela devolver.'
+    },
+    {
+      id: 'dano', tema: 'Funções com vários parâmetros e if', title: '⚡ Golpe crítico (função + if / else)',
+      text: 'Os orcs deste andar têm <b>24 de vida</b>. Crie a função <code>calcularDano(forca, critico)</code>: SE <code>critico</code> for <code>true</code>, devolva <b>o dobro</b> da força; SENÃO, devolva a força normal. A cada 3 golpes de espada, o jogo chama a sua função com <code>critico</code> valendo <code>true</code>.',
+      concept: 'Uma função pode receber <b>vários parâmetros</b>, separados por vírgula. Dentro dela, o <code>if / else</code> escolhe qual <code>return</code> vai acontecer.',
+      format: 'Formato: <code>function calcularDano(forca, critico) { if (critico) { return ...; } else { return ...; } }</code>',
+      hint: 'function calcularDano(forca, critico) {\n  if (critico) {\n    return forca * 2;\n  } else {\n    return forca;\n  }\n}',
+      starter: '// Crie a função calcularDano(forca, critico)\n',
+      names: ['calcularDano'],
+      check(v) {
+        if (!isFn(v.calcularDano)) return 'A função calcularDano não foi criada. Use: function calcularDano(forca, critico) { ... }';
+        for (const [forca, critico, esperado] of [[6, true, 12], [6, false, 6], [3, true, 6], [10, false, 10]]) {
+          let r;
+          try { r = v.calcularDano(forca, critico); } catch (e) { return friendlyError(e); }
+          if (r !== esperado) return `calcularDano(${forca}, ${critico}) devolveu ${J(r)}, mas devia devolver ${esperado}.`;
+        }
+        return null;
+      },
+      apply(v) { abilities.calcularDano = v.calcularDano; },
+      success: '⚡ Crítico liberado! A cada 3 golpes, calcularDano(golpe, true) tira o dobro.'
+    },
+    {
+      id: 'flechas', tema: 'Listas (arrays)', title: '🏹 A aljava de flechas (listas)',
+      text: 'Morcegos voam alto aqui e há arqueiros do outro lado do abismo: hora do <b>arco</b>! A lista <code>flechas</code> já tem 2 flechas. (1) Coloque <code>"raio"</code> no fim dela com <code>push</code>. (2) Crie <code>quantidade</code> com o tamanho da lista (<code>length</code>). (3) Crie <code>primeira</code> com o item da posição 0. Apertando <b>L</b>, o herói atira as flechas na ordem da lista.',
+      concept: '<b>Lista</b> (array) guarda vários valores em ordem: <code>["fogo", "gelo"]</code>. Cada item tem uma <b>posição</b> (índice) que começa em <b>0</b>: <code>lista[0]</code> é o primeiro. <code>lista.push(x)</code> coloca x no fim e <code>lista.length</code> diz quantos itens ela tem.',
+      format: 'Formato: <code>flechas.push("raio");</code> · <code>let quantidade = flechas.length;</code> · <code>let primeira = flechas[0];</code>',
+      hint: 'let flechas = ["fogo", "gelo"];\nflechas.push("raio");\nlet quantidade = flechas.length;\nlet primeira = flechas[0];',
+      starter: 'let flechas = ["fogo", "gelo"];\n\n// 1) push   2) quantidade   3) primeira\n',
+      names: ['flechas', 'quantidade', 'primeira'],
+      check(v, code) {
+        if (!Array.isArray(v.flechas)) return 'flechas precisa continuar sendo uma lista. Mantenha: let flechas = ["fogo", "gelo"];';
+        if (!/flechas\.push\s*\(/.test(code)) return 'Use push pra colocar no fim: flechas.push("raio");';
+        if (v.flechas[v.flechas.length - 1] !== 'raio') return `A lista ficou ${J(v.flechas)} — o último item devia ser "raio".`;
+        if (v.flechas.some(f => !ELEMENTOS.includes(f))) return `A lista ficou ${J(v.flechas)}. Só valem flechas "fogo", "gelo" e "raio".`;
+        if (v.flechas.length > 6) return 'Flechas demais na aljava! No máximo 6.';
+        if (v.quantidade === undefined) return 'Falta a variável quantidade. Use: let quantidade = flechas.length;';
+        if (v.quantidade !== v.flechas.length) return `quantidade = ${J(v.quantidade)}, mas a lista tem ${v.flechas.length} itens. Use flechas.length.`;
+        if (v.primeira === undefined) return 'Falta a variável primeira. Use: let primeira = flechas[0];';
+        if (v.primeira !== v.flechas[0]) return `primeira = ${J(v.primeira)}, mas o item da posição 0 é ${J(v.flechas[0])}. O índice começa em 0!`;
+        const r = rerun(code, /let\s+flechas\s*=\s*\[\s*["']fogo["']\s*,\s*["']gelo["']\s*\]/, 'let flechas = ["gelo"]', ['flechas', 'quantidade', 'primeira']);
+        if (!r) return 'Mantenha a primeira linha como está: let flechas = ["fogo", "gelo"];';
+        if (r.error) return friendlyError(r.error);
+        if (!Array.isArray(r.vars.flechas) || r.vars.quantidade !== r.vars.flechas.length || r.vars.primeira !== 'gelo') {
+          return 'Use flechas.length e flechas[0] — não escreva o número ou o texto à mão (se a lista mudar, eles têm que acompanhar).';
+        }
+        return null;
+      },
+      apply(v) { abilities.flechas = v.flechas.slice(); },
+      success: v => `🏹 Arco pronto com ${v.quantidade} flechas! Aperte L: elas saem na ordem da lista, começando por flechas[0] = "${v.primeira}".`
+    },
+    {
+      id: 'muralha', tema: 'Laços (for...of)', title: '🎯 A muralha das torres (for...of)',
+      text: 'Este andar é uma muralha com torres de canhão lá no alto, e o portão só abre quando todas caírem. A lista <code>alvos</code> já existe, com o nome de cada torre, e a função <code>disparar(alvo)</code> também. Use um laço <code>for...of</code> pra chamar <code>disparar(alvo)</code> <b>uma vez pra cada alvo</b> da lista — o herói vai atirar em cada torre, na ordem do seu laço.',
+      concept: '<b>Laço</b> repete um bloco de código. <code>for (const item of lista) { ... }</code> roda o bloco <b>uma vez pra cada item</b>, e a cada volta <code>item</code> vale o próximo da lista. Tanto faz a lista ter 3 ou 300 itens: o código é o mesmo.',
+      format: 'Formato: <code>for (const alvo of alvos) { disparar(alvo); }</code>',
+      hint: 'for (const alvo of alvos) {\n  disparar(alvo);\n}',
+      starter: '// A lista alvos e a função disparar já existem.\n// Chame disparar(alvo) para CADA alvo da lista, com um laço for.\n',
+      names: [],
+      makeGiven(alvos) {
+        const log = { tiros: [] };
+        return { given: { alvos: (alvos || TORRES).slice(), disparar: (a) => { log.tiros.push(a); return true; } }, log };
+      },
+      check(v, code, log) {
+        if (!/\bfor\s*\(/.test(code)) return 'Use um laço for: for (const alvo of alvos) { disparar(alvo); }';
+        if (log.tiros.length === 0) return 'Nenhum disparo! Dentro do laço, chame disparar(alvo);';
+        if (!sameList(log.tiros, TORRES)) return `disparar foi chamado com ${J(log.tiros)}, mas os alvos eram ${J(TORRES)} — um disparo por alvo, na ordem da lista.`;
+        const { given, log: log2 } = this.makeGiven(['T4', 'T2']);
+        const r = execCode(code, [], given);
+        if (r.error) return friendlyError(r.error);
+        if (!sameList(log2.tiros, ['T4', 'T2'])) return 'Parece que os alvos foram escritos à mão. Percorra a lista alvos com o laço — ele tem que funcionar com qualquer lista.';
+        return null;
+      },
+      apply() { abilities.muralha = true; },
+      success: (v, log) => `🎯 Seu laço deu ${log.tiros.length} voltas: ${log.tiros.map(t => `disparar("${t}")`).join(', ')}. Olha as torres caindo!`
+    },
+    {
+      id: 'radar', tema: 'Métodos de lista (filter, includes)', title: '📡 O radar (filter e includes)',
+      text: 'O radar deste andar mostra a lista <code>vidas</code>, com a vida de cada inimigo (ela já existe). Um raio mágico derruba de uma vez todos os inimigos <b>fracos</b>. (1) Crie <code>fracos</code> com <code>filter</code>, só com as vidas <b>menores ou iguais a 3</b>. (2) Crie <code>temGigante</code> com <code>includes</code>: <code>true</code> se a lista tiver o número <code>20</code> (a vida do Gigante).',
+      concept: 'Listas têm <b>métodos</b> prontos. <code>lista.includes(x)</code> responde <code>true</code>/<code>false</code>: o x está na lista? <code>lista.filter(function (item) { return condição; })</code> cria uma lista NOVA só com os itens em que a condição deu <code>true</code>.',
+      format: 'Formato: <code>let fracos = vidas.filter(function (vida) { return vida &lt;= 3; });</code> e <code>let temGigante = vidas.includes(20);</code>',
+      hint: 'let fracos = vidas.filter(function (vida) {\n  return vida <= 3;\n});\nlet temGigante = vidas.includes(20);',
+      starter: '// A lista vidas já existe (a vida de cada inimigo deste andar).\n// 1) fracos com filter   2) temGigante com includes\n',
+      names: ['fracos', 'temGigante'],
+      makeGiven(vidas) { return { given: { vidas: (vidas || VIDAS_RADAR).slice() }, log: null }; },
+      check(v, code) {
+        if (!/\.filter\s*\(/.test(code)) return 'Use o método filter: let fracos = vidas.filter(function (vida) { return vida <= 3; });';
+        if (!/\.includes\s*\(/.test(code)) return 'Use o método includes: let temGigante = vidas.includes(20);';
+        const listas = [VIDAS_RADAR, [5, 1, 20, 3, 9], [4, 2, 8, 3]];
+        for (let i = 0; i < listas.length; i++) {
+          const vidas = listas[i];
+          const r = i === 0 ? { vars: v } : execCode(code, this.names, this.makeGiven(vidas).given);
+          if (r.error) return friendlyError(r.error);
+          const esperado = vidas.filter(x => x <= 3);
+          if (r.vars.fracos === undefined) return 'Falta a variável fracos.';
+          if (!sameList(r.vars.fracos, esperado)) {
+            return i === 0
+              ? `fracos ficou ${J(r.vars.fracos)}, mas devia ser ${J(esperado)} (as vidas <= 3, na ordem).`
+              : `Com vidas = ${J(vidas)}, fracos devia ser ${J(esperado)}, mas ficou ${J(r.vars.fracos)}. Use vidas.filter(...), não a lista escrita à mão.`;
+          }
+          if (r.vars.temGigante !== vidas.includes(20)) {
+            return `Com vidas = ${J(vidas)}, temGigante devia ser ${vidas.includes(20)}, mas ficou ${J(r.vars.temGigante)}. Use vidas.includes(20).`;
+          }
+        }
+        return null;
+      },
+      apply(v) { abilities.radar = { fracos: v.fracos.slice(), temGigante: v.temGigante }; },
+      success: v => `⚡ fracos = [${v.fracos.join(', ')}] — o raio vai derrubar esses! temGigante = ${v.temGigante}${v.temGigante ? ': o Gigante acordou, cuidado!' : '.'}`
+    },
+    {
+      id: 'pet', tema: 'Objetos', title: '🐾 Um companheiro (objetos)',
+      text: 'Este é o andar mais cheio de inimigos da torre, e você vai ganhar um <b>companheiro</b>! Crie o objeto <code>pet</code> com três propriedades: <code>nome</code> (texto), <code>tipo</code> (<code>"dragao"</code>, <code>"lobo"</code> ou <code>"coruja"</code>) e <code>ataque</code> (número de 1 a 5). Depois, numa linha nova, <b>aumente</b> o <code>pet.ataque</code> em 2.',
+      concept: '<b>Objeto</b> junta várias informações de UMA coisa, cada uma com um nome (propriedade): <code>{ nome: "Faísca", ataque: 3 }</code>. Pra ler ou mudar uma propriedade, use o <b>ponto</b>: <code>pet.nome</code>, <code>pet.ataque = pet.ataque + 2;</code> (mesmo com <code>const</code>, as propriedades de dentro podem mudar).',
+      format: 'Formato: <code>const pet = { nome: "...", tipo: "...", ataque: 3 };</code>',
+      hint: 'const pet = { nome: "Faísca", tipo: "dragao", ataque: 3 };\npet.ataque = pet.ataque + 2;',
+      starter: '// Crie o objeto pet (nome, tipo, ataque)\n// e depois aumente pet.ataque em 2\n',
+      names: ['pet'],
+      check(v, code) {
+        const p = v.pet;
+        if (p === undefined) return 'O objeto pet não foi criado. Use: const pet = { nome: "...", tipo: "...", ataque: 3 };';
+        if (!p || typeof p !== 'object' || Array.isArray(p)) return 'pet precisa ser um OBJETO, com chaves { }: { nome: "Faísca", tipo: "dragao", ataque: 3 }';
+        if (typeof p.nome !== 'string' || p.nome.trim().length < 2 || p.nome.trim().length > 12) return 'pet.nome precisa ser um texto de 2 a 12 letras.';
+        if (!(semAcento(p.tipo) in PET_TIPOS)) return `pet.tipo = ${J(p.tipo)}. Use "dragao", "lobo" ou "coruja".`;
+        if (typeof p.ataque !== 'number') return `pet.ataque = ${J(p.ataque)} — precisa ser um NÚMERO (sem aspas).`;
+        if (!/pet\.ataque\s*(\+=|=\s*pet\.ataque\s*\+)/.test(code)) return 'Aumente o ataque numa linha nova, usando o ponto: pet.ataque = pet.ataque + 2;';
+        if (p.ataque < 3 || p.ataque > 7) return `pet.ataque terminou valendo ${p.ataque}. Comece com um número de 1 a 5 e some 2.`;
+        return null;
+      },
+      apply(v) { abilities.pet = { nome: v.pet.nome.trim(), tipo: semAcento(v.pet.tipo), ataque: v.pet.ataque }; },
+      success: v => `🐾 ${v.pet.nome.trim()} entrou no time! A cada poucos segundos ele ataca o inimigo mais perto com pet.ataque = ${v.pet.ataque}.`
+    },
+    {
+      id: 'chefe', tema: 'Tudo junto: o chefão', title: '👑 O plano contra o Rei Bug (tudo junto)',
+      text: 'O topo da torre! O <b>Rei Bug</b> troca de elemento e se protege com escudos. Crie a função <code>planoDeAtaque(chefe)</code>. Ela recebe um <b>objeto</b> como <code>{ elemento: "gelo", escudos: [2, 1, 3] }</code> e devolve outro objeto <code>{ arma: ..., golpes: ... }</code>: <code>arma</code> é o elemento que vence o do chefe (<code>"fogo"</code> → <code>"agua"</code>, <code>"gelo"</code> → <code>"fogo"</code>, <code>"raio"</code> → <code>"terra"</code>) e <code>golpes</code> é a <b>soma</b> de todos os números de <code>escudos</code>, feita com um laço <code>for...of</code>.',
+      concept: 'Aqui entra tudo: <b>função</b> com parâmetro, <b>objeto</b> (<code>chefe.elemento</code>), <b>switch</b> (ou if / else if), <b>lista</b> (<code>chefe.escudos</code>), <b>laço</b> e uma variável que acumula a soma (<code>total = total + n</code>). A cada fase da luta, o jogo chama a sua função com o chefe daquele momento.',
+      format: 'Formato: <code>function planoDeAtaque(chefe) { ... return { arma: arma, golpes: total }; }</code>',
+      hint: 'function planoDeAtaque(chefe) {\n  let arma = "";\n  switch (chefe.elemento) {\n    case "fogo": arma = "agua"; break;\n    case "gelo": arma = "fogo"; break;\n    case "raio": arma = "terra"; break;\n  }\n  let total = 0;\n  for (const escudo of chefe.escudos) {\n    total = total + escudo;\n  }\n  return { arma: arma, golpes: total };\n}',
+      starter: '// Crie a função planoDeAtaque(chefe)\n',
+      names: ['planoDeAtaque'],
+      check(v, code) {
+        if (!isFn(v.planoDeAtaque)) return 'A função planoDeAtaque não foi criada. Use: function planoDeAtaque(chefe) { ... }';
+        if (!/\bfor\s*\(/.test(code)) return 'Some os escudos com um laço: for (const escudo of chefe.escudos) { total = total + escudo; }';
+        const casos = [['fogo', [2, 1, 3]], ['gelo', [1, 1]], ['raio', [3]], ['raio', [1, 2, 2, 1]]];
+        for (const [elemento, escudos] of casos) {
+          const chefe = { elemento, escudos: escudos.slice() };
+          const txt = `planoDeAtaque({ elemento: "${elemento}", escudos: ${J(escudos)} })`;
+          let r;
+          try { r = v.planoDeAtaque(chefe); } catch (e) { return friendlyError(e); }
+          if (!r || typeof r !== 'object') return `${txt} devolveu ${J(r)} — precisa devolver um objeto: return { arma: arma, golpes: total };`;
+          const soma = escudos.reduce((a, b) => a + b, 0);
+          if (r.arma !== ESCUDO_CERTO[elemento]) return `${txt} devolveu arma ${J(r.arma)}, mas contra "${elemento}" a arma certa é "${ESCUDO_CERTO[elemento]}".`;
+          if (r.golpes !== soma) return `${txt} devolveu golpes ${J(r.golpes)}, mas a soma dos escudos é ${soma}.`;
+        }
+        return null;
+      },
+      apply(v) { abilities.plano = v.planoDeAtaque; },
+      success: '👑 Plano pronto! Vá até o Rei Bug: a cada fase, o jogo chama planoDeAtaque(chefe) — a sua resposta decide a arma e quantos golpes quebram o escudo dele.'
+    }
+  ];
+  const stageIndex = id => STAGES.findIndex(s => s.id === id);
+  const LAST = STAGES.length - 1;
+
+  // Código-padrão de cada andar: usado pelo "Pular (professor)" e pra
+  // reconstruir os poderes quando o código salvo não passa mais.
+  const DEFAULT_CODE = {
+    vida: 'let vida = 5;',
+    heroi: 'const heroi = "Herói";\nlet temEspada = true;',
+    golpe: 'let forca = 2;\nlet golpe = forca * 3;\nlet grito = "Avante, " + heroi;',
+    pulo: 'let energia = 80;\nlet pulo = "";\nif (energia >= 50) {\n  pulo = "duplo";\n} else {\n  pulo = "simples";\n}',
+    luz: 'let escuro = true;\nlet temTocha = true;\nlet luz = "";\nif (escuro && temTocha) {\n  luz = "tocha";\n} else if (escuro) {\n  luz = "breu";\n} else {\n  luz = "sol";\n}',
+    escudo: 'let elemento = "fogo";\nlet escudo = "";\nswitch (elemento) {\n  case "fogo":\n    escudo = "agua";\n    break;\n  case "gelo":\n    escudo = "fogo";\n    break;\n  case "raio":\n    escudo = "terra";\n    break;\n  default:\n    escudo = "nenhum";\n}',
+    curar: 'function curar(vida) {\n  return vida + 2;\n}',
+    dano: 'function calcularDano(forca, critico) {\n  if (critico) {\n    return forca * 2;\n  } else {\n    return forca;\n  }\n}',
+    flechas: 'let flechas = ["fogo", "gelo"];\nflechas.push("raio");\nlet quantidade = flechas.length;\nlet primeira = flechas[0];',
+    muralha: 'for (const alvo of alvos) {\n  disparar(alvo);\n}',
+    radar: 'let fracos = vidas.filter(function (vida) {\n  return vida <= 3;\n});\nlet temGigante = vidas.includes(20);',
+    pet: 'const pet = { nome: "Faísca", tipo: "dragao", ataque: 3 };\npet.ataque = pet.ataque + 2;',
+    chefe: 'function planoDeAtaque(chefe) {\n  let arma = "";\n  switch (chefe.elemento) {\n    case "fogo": arma = "agua"; break;\n    case "gelo": arma = "fogo"; break;\n    case "raio": arma = "terra"; break;\n  }\n  let total = 0;\n  for (const escudo of chefe.escudos) {\n    total = total + escudo;\n  }\n  return { arma: arma, golpes: total };\n}'
+  };
+
+  // ---------- Cenário de cada andar ----------
+  const VIEW_H = 480;
+  const GROUND_Y = 400;
+  const FLOOR_W = 1800;
+  const ALTAR_X = 320;
+  const STAIRS_X = 1650;
+  const TURRET_Y = 110;
+
+  // [tipo, x, opções]. O andar 10 (muralha) e o 11 (radar) são os que o
+  // código do aluno "mira": torres T1..T5 e as vidas de VIDAS_RADAR.
+  const FLOORS = [
+    { nome: 'Térreo — Os Espinhos', spikes: [[620, 680], [840, 920], [1080, 1140], [1320, 1400]], enemies: [] },
+    { nome: 'Pátio dos Slimes', enemies: [['slime', 650], ['slime', 820], ['slime', 1000], ['bat', 1200], ['slime', 1380]] },
+    { nome: 'Guarda dos Cavaleiros', enemies: [['slime', 600], ['knight', 800], ['slime', 1000], ['knight', 1250], ['bat', 1450]] },
+    { nome: 'Os Buracos', ground: [[0, 580], [780, 1120], [1340, FLOOR_W]], enemies: [['bat', 950], ['slime', 1000], ['bat', 1500], ['slime', 1560]] },
+    { nome: 'A Caverna', dark: [440, FLOOR_W], enemies: [['bat', 650], ['slime', 800], ['bat', 950], ['slime', 1100], ['bat', 1250], ['archer', 1500]] },
+    { nome: 'Salão dos Magos', enemies: [['mage', 720, { elem: 'fogo' }], ['slime', 900], ['mage', 1080, { elem: 'gelo' }], ['knight', 1250], ['mage', 1480, { elem: 'raio' }]] },
+    { nome: 'A Enfermaria', potions: [900, 1300, 1580], enemies: [['archer', 760], ['knight', 980], ['mage', 1180], ['archer', 1400], ['mage', 1540]] },
+    { nome: 'Covil dos Orcs', potions: [1050, 1480], enemies: [['orc', 700], ['orc', 1000], ['mage', 1200], ['orc', 1400]] },
+    { nome: 'O Abismo', ground: [[0, 1180], [1380, FLOOR_W]], potions: [1000], enemies: [['bat', 650, { alto: true }], ['bat', 820, { alto: true }], ['bat', 1000, { alto: true }], ['archer', 1480], ['archer', 1580]] },
+    { nome: 'A Muralha', portao: 1420, potions: [1480], enemies: [['turret', 700, { id: 'T1' }], ['turret', 850, { id: 'T2' }], ['turret', 1000, { id: 'T3' }], ['turret', 1150, { id: 'T4' }], ['turret', 1300, { id: 'T5' }], ['slime', 1530], ['knight', 1590]] },
+    { nome: 'O Radar', potions: [1420], enemies: [['slime', 600, { hp: 2 }], ['knight', 760], ['bat', 900, { hp: 1 }], ['slime', 1040, { hp: 3 }], ['orc', 1200, { hp: 15 }], ['bat', 1340, { hp: 2 }], ['giant', 1520]] },
+    { nome: 'A Horda', potions: [1100, 1450], enemies: [['knight', 650], ['mage', 800], ['orc', 950], ['bat', 1080], ['mage', 1250], ['knight', 1380], ['orc', 1540]] },
+    { nome: 'Topo — Trono do Rei Bug', boss: [700, FLOOR_W - 30], potions: [560], enemies: [['boss', 1350]] }
+  ];
+
+  const ENEMY_TYPES = {
+    slime: { w: 30, h: 22, hp: 1, dmg: 1, speed: 0.8, range: 60 },
+    bat: { w: 28, h: 20, hp: 1, dmg: 1, speed: 1.2, range: 90, flying: true },
+    knight: { w: 34, h: 48, hp: 12, dmg: 1, speed: 0.7, range: 120, chase: 260 },
+    orc: { w: 38, h: 50, hp: 24, dmg: 2, speed: 0.9, range: 120, chase: 280 },
+    archer: { w: 28, h: 44, hp: 4, dmg: 1, speed: 0, range: 0, shoots: 'flecha', cool: 115, reach: 420 },
+    mage: { w: 30, h: 46, hp: 6, dmg: 1, speed: 0, range: 0, shoots: 'elem', cool: 125, reach: 420 },
+    turret: { w: 34, h: 30, hp: 99, dmg: 0, speed: 0, range: 0, shoots: 'raio', cool: 150, reach: 420 },
+    giant: { w: 60, h: 72, hp: 20, dmg: 2, speed: 0.6, range: 80, chase: 320 },
+    boss: { w: 84, h: 96, hp: 60, dmg: 2, speed: 1.1, range: 260, shoots: 'boss', cool: 75, reach: 620 }
+  };
+
+  const PHYS = { GRAVITY: 0.55, MAX_FALL: 13, MOVE: 4.2, JUMP: -11, DOUBLE_JUMP: -10 };
+
+  // ---------- Estado da tentativa (salvo no navegador) ----------
+  // Uma "tentativa" é uma subida inteira. O placar é da tentativa; o
+  // recorde (e o ranking) guardam só a melhor.
+  function novaTentativa() {
+    return { andar: 0, done: [], codes: {}, stats: {}, score: 0, segundos: 0, won: false };
+  }
+  function loadRun() {
+    try {
+      const r = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+      if (r && typeof r === 'object' && Array.isArray(r.done)) {
+        return Object.assign(novaTentativa(), r, { andar: Math.max(0, Math.min(LAST, r.andar | 0)) });
+      }
+    } catch (e) { /* estado corrompido: começa do zero */ }
+    return novaTentativa();
+  }
+  let run = loadRun();
+  let done = new Set(run.done);
+  function saveState() {
+    run.done = STAGES.map(s => s.id).filter(id => done.has(id));
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(run)); } catch (e) { /* segue só em memória */ }
+  }
+  function getBest() { try { return parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0; } catch (e) { return 0; } }
+  let best = getBest();
+  function statsOf(id) { return run.stats[id] || (run.stats[id] = { erros: 0, dica: false, pulado: false }); }
+
+  // ---------- Pontuação (ranking; o jogo NÃO vale nota) ----------
+  // Por andar concluído: 100 + bônus de até 50 (−10 por execução com erro)
+  // + 25 se não abriu a dica. Pulado pelo professor = 0. Ao derrotar o
+  // Rei Bug: +500 e bônus de tempo (600 − 10 por minuto de jogo, mínimo 0).
+  const PONTOS_BASE = 100, BONUS_ERROS = 50, BONUS_DICA = 25, BONUS_CHEFE = 500, BONUS_TEMPO = 600;
+  function pontosDoAndar(id) {
+    const s = statsOf(id);
+    if (s.pulado) return 0;
+    return PONTOS_BASE + Math.max(0, BONUS_ERROS - 10 * s.erros) + (s.dica ? 0 : BONUS_DICA);
+  }
+  function bonusTempo() { return Math.max(0, BONUS_TEMPO - 10 * Math.floor(run.segundos / 60)); }
+
+  function registrarPlacar() {
+    if (run.score > best) {
+      best = run.score;
+      try { localStorage.setItem(BEST_KEY, String(best)); } catch (e) { /* ok */ }
+    }
+    // O placar guarda só o MELHOR (game-leaderboard.js) e o total da
+    // tentativa só cresce, então gravar a cada andar nunca piora nada — e
+    // quem parar no meio não perde o que já subiu.
+    if (window.GameLeaderboard && run.score > 0) {
+      window.GameLeaderboard.submitScore({ game: GAME_KEY, turma, email: username, name: displayName, score: run.score });
+    }
+    renderTopbar();
+  }
+
+  function renderTopbar() {
+    document.getElementById('lblAndar').textContent = run.andar + 1;
+    document.getElementById('lblAndarTotal').textContent = STAGES.length;
+    document.getElementById('lblPontos').textContent = run.score;
+    document.getElementById('lblRecorde').textContent = best;
+    const feitos = run.won ? STAGES.length : run.andar;
+    document.getElementById('progressFill').style.width = `${Math.round((feitos / STAGES.length) * 100)}%`;
+  }
+
+  // ---------- Poderes do herói (derivados do código do aluno) ----------
+  const abilities = {};
+  function resetAbilities() {
+    Object.assign(abilities, {
+      vidaMax: 1, nome: '', espada: false, golpe: 1, grito: '', botas: false, tocha: false, escudo: null,
+      curar: null, calcularDano: null, flechas: null, muralha: false, radar: null, pet: null, plano: null
+    });
+  }
+  resetAbilities();
+
+  function runStageCode(stage, code) {
+    const { given, log } = stage.makeGiven ? stage.makeGiven() : { given: {}, log: null };
+    const r = execCode(code, stage.names, given);
+    if (r.error) return { error: r.error };
+    return { vars: r.vars, log, problem: stage.check(r.vars, code, log) };
+  }
+
+  // Recarregou a página: roda de novo o código salvo de cada andar já
+  // resolvido (na ordem — o andar 3 usa o heroi do andar 2); se não houver
+  // ou não passar mais, usa o DEFAULT_CODE.
+  function rebuildAbilities() {
+    resetAbilities();
+    STAGES.forEach(stage => {
+      if (!done.has(stage.id)) return;
+      for (const code of [run.codes[stage.id], DEFAULT_CODE[stage.id]]) {
+        if (!code) continue;
+        const r = runStageCode(stage, code);
+        if (!r.error && !r.problem) { stage.apply(r.vars, r.log, code); return; }
+      }
+    });
+  }
+
+  // Chamadas às funções do aluno DURANTE o jogo nunca podem derrubar o
+  // loop. Erro volta null e o jogo usa o comportamento padrão.
+  let fnErrorShown = false;
+  function safeCall(fn, ...args) {
+    try { return fn(...args); } catch (e) {
+      if (!fnErrorShown) { fnErrorShown = true; floatText(hero.x + hero.w / 2, hero.y - 30, 'Sua função deu erro!', '#ff3b30'); }
+      return null;
+    }
+  }
+
+  // ---------- Mundo do andar atual ----------
+  let floorIdx = 0;
+  let floor = FLOORS[0];
+  let ground = [[0, FLOOR_W]];
+  let enemies = [];
+  let projectiles = [];
+  let particles = [];
+  let texts = [];
+  let bolts = [];
+  let potions = [];
+  let acoes = [];
+  let hitCount = 0;
+  let arrowIdx = 0;
+  let frameCount = 0;
+  let transicao = 0;
+  let won = run.won;
+
+  const hero = { x: 80, y: GROUND_Y - 40, w: 26, h: 40, vx: 0, vy: 0, onGround: true, facing: 1, jumps: 0, hp: 1, inv: 0, attackT: 0, swing: 0, shootT: 0, defending: false, deadT: 0 };
+  const pet = { x: 0, y: 0, cool: 90 };
+  let checkpointX = 80;
+
+  const stageDone = () => done.has(STAGES[floorIdx].id);
+
+  function makeEnemy(def) {
+    const [type, x, o = {}] = def;
+    const t = ENEMY_TYPES[type];
+    const hp = o.hp || t.hp;
+    const baseY = t.flying ? (o.alto ? 220 : 300) : type === 'turret' ? TURRET_Y : GROUND_Y - t.h;
+    return {
+      type, id: o.id || null, elem: o.elem || null, baseX: x, x, y: baseY, baseY, w: t.w, h: t.h,
+      hp, maxHp: hp, dir: -1, alive: true, flash: 0, cool: 40 + Math.random() * 60,
+      t: Math.random() * 100, hitSwing: -1, shotKind: 0, sleeping: type === 'giant', minion: !!o.minion,
+      summonT: 420, active: false, fase: 0, shield: 0, shieldMax: 0, elemento: null, planoTxt: ''
+    };
+  }
+
+  // Monta os inimigos do andar e aplica, SEM animação, o que o código já
+  // aceito faz neles (torres caídas, fracos derrubados, chefe ativo) — usado
+  // ao entrar no andar e ao renascer.
+  function buildFloorEnemies() {
+    enemies = floor.enemies.map(makeEnemy);
+    if (!stageDone()) return;
+    const id = STAGES[floorIdx].id;
+    if (id === 'muralha') enemies.forEach(e => { if (e.type === 'turret') e.alive = false; });
+    if (id === 'radar' && abilities.radar) {
+      alvosDoRaio().forEach(e => { e.alive = false; });
+      if (abilities.radar.temGigante) enemies.forEach(e => { if (e.type === 'giant') e.sleeping = false; });
+    }
+    if (id === 'chefe') enemies.forEach(e => { if (e.type === 'boss') { e.active = true; startBossPhase(e, 0, true); } });
+  }
+
+  function alvosDoRaio() {
+    const restantes = abilities.radar ? abilities.radar.fracos.slice() : [];
+    return enemies.filter(e => {
+      if (!e.alive || e.type === 'giant') return false;
+      const k = restantes.indexOf(e.maxHp);
+      if (k === -1) return false;
+      restantes.splice(k, 1);
+      return true;
+    });
+  }
+
+  function loadFloor(i) {
+    floorIdx = i;
+    floor = FLOORS[i];
+    ground = floor.ground || [[0, FLOOR_W]];
+    hitCount = 0;
+    checkpointX = stageDone() ? ALTAR_X + 60 : 80;
+    respawn();
+    hero.inv = 0;
+    altarPromptFor = null;
+    renderTopbar();
+  }
+
+  function respawn() {
+    hero.x = checkpointX; hero.y = GROUND_Y - hero.h; hero.vx = 0; hero.vy = 0; hero.facing = 1;
+    hero.hp = abilities.vidaMax; hero.inv = 60; hero.deadT = 0; hero.attackT = 0; hero.shootT = 0;
+    projectiles = []; bolts = []; acoes = [];
+    potions = (floor.potions || []).map(x => ({ x, used: false }));
+    buildFloorEnemies();
+    pet.x = hero.x - 30; pet.y = hero.y - 30; pet.cool = 90;
+  }
+
+  function supportedAt(x, w) {
+    return ground.some(([a, b]) => a < x + w - 4 && b > x + 4);
+  }
+
+  // ---------- Terminal ----------
+  const terminalEl = document.getElementById('terminal');
+  const codeInput = document.getElementById('codeInput');
+  const consoleEl = document.getElementById('consoleOutput');
+  const hintBox = document.getElementById('hintBox');
+  let terminalStage = null;
+  let altarPromptFor = null;
+  let isProfessor = false;
+
+  function renderPontosInfo(stage) {
+    const s = statsOf(stage.id);
+    const el = document.getElementById('missionPontos');
+    if (done.has(stage.id)) { el.innerHTML = `Andar resolvido: <b>${pontosDoAndar(stage.id)} pts</b>.`; return; }
+    el.innerHTML = `Vale <b>${PONTOS_BASE}</b> pts + bônus: até <b>${BONUS_ERROS}</b> (−10 por execução com erro) e <b>${BONUS_DICA}</b> se não usar a dica. ` +
+      `Agora: <b>${pontosDoAndar(stage.id)} pts</b> · erros: ${s.erros}${s.dica ? ' · dica usada' : ''}.`;
+  }
+
+  function openTerminal(stage) {
+    terminalStage = stage;
+    const idx = STAGES.indexOf(stage);
+    document.getElementById('missionStep').textContent = `Andar ${idx + 1} de ${STAGES.length} — ${stage.tema}`;
+    document.getElementById('missionTitle').textContent = stage.title;
+    document.getElementById('missionText').innerHTML = stage.text;
+    document.getElementById('missionConcept').innerHTML = stage.concept;
+    document.getElementById('missionFormat').innerHTML = stage.format;
+    renderPontosInfo(stage);
+    hintBox.textContent = stage.hint;
+    hintBox.style.display = statsOf(stage.id).dica ? 'block' : 'none';
+    codeInput.value = run.codes[`rascunho_${stage.id}`] || run.codes[stage.id] || stage.starter;
+    consoleEl.innerHTML = '<span class="info">Escreva o código e clique em "Rodar código" (ou Ctrl+Enter).</span>';
+    document.getElementById('btnSkipProfessor').style.display = isProfessor && !done.has(stage.id) ? '' : 'none';
+    terminalEl.classList.add('open');
+    keys.clear();
+    setTimeout(() => codeInput.focus(), 30);
+    if (typeof window.reportActivity === 'function') window.reportActivity('jogos_torre_do_codigo', `Torre do Código — terminal: ${stage.title}`);
+  }
+
+  function closeTerminal() {
+    if (terminalStage && !done.has(terminalStage.id)) { run.codes[`rascunho_${terminalStage.id}`] = codeInput.value; saveState(); }
+    terminalEl.classList.remove('open');
+    terminalStage = null;
+    keys.clear();
+  }
+
+  function printConsole(html) { consoleEl.innerHTML = html; }
+  function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  function runTerminal(codeOverride, pulado) {
+    const stage = terminalStage;
+    if (!stage || done.has(stage.id)) return;
+    const code = codeOverride !== undefined ? codeOverride : codeInput.value;
+    if (!code.replace(/\/\/.*$/gm, '').trim()) { printConsole('<span class="err">O terminal está vazio — escreva o código primeiro.</span>'); return; }
+    const r = runStageCode(stage, code);
+    const falha = r.error ? friendlyError(r.error) : r.problem;
+    if (falha) {
+      statsOf(stage.id).erros++;
+      saveState();
+      renderPontosInfo(stage);
+      printConsole(`<span class="err">✗ ${escapeHtml(falha)}</span>`);
+      return;
+    }
+
+    stage.apply(r.vars, r.log, code);
+    run.codes[stage.id] = code;
+    delete run.codes[`rascunho_${stage.id}`];
+    if (pulado) statsOf(stage.id).pulado = true;
+    done.add(stage.id);
+    saveState();
+    renderPontosInfo(stage);
+    hero.hp = abilities.vidaMax;
+    checkpointX = ALTAR_X + 60;
+    onAccept(stage, r);
+    const msg = typeof stage.success === 'function' ? stage.success(r.vars, r.log) : stage.success;
+    printConsole(`<span class="ok">✓ Código aceito! (+${pontosDoAndar(stage.id)} pts ao subir a escada)\n${escapeHtml(msg)}</span>`);
+    floatText(hero.x + hero.w / 2, hero.y - 30, 'Código aceito!', '#7cff3f');
+    burst(hero.x + hero.w / 2, hero.y + 10, '#7cff3f', 24);
+    if (typeof window.reportActivity === 'function') window.reportActivity('jogos_torre_do_codigo', `Torre do Código — resolveu: ${stage.title}`);
+    setTimeout(() => { if (terminalStage === stage) closeTerminal(); }, 1800);
+  }
+
+  // O que o código recém-aceito faz NA HORA, com animação (roda quando o
+  // terminal fecha, porque o jogo fica pausado com ele aberto).
+  function onAccept(stage, r) {
+    if (stage.id === 'muralha') {
+      // Roda o laço do aluno de novo, agora com as torres DE VERDADE ainda
+      // de pé — cada disparar(alvo) vira uma flecha, na ordem do laço.
+      const vivas = enemies.filter(e => e.type === 'turret' && e.alive);
+      const { given, log } = stage.makeGiven(vivas.map(e => e.id));
+      const rr = execCode(run.codes.muralha, [], given);
+      const tiros = rr.error ? vivas.map(e => e.id) : log.tiros;
+      acoes.push({ delay: 20, run() {} });
+      tiros.forEach(id => {
+        acoes.push({ delay: 26, run() {
+          const alvo = enemies.find(e => e.type === 'turret' && e.alive && e.id === id);
+          if (!alvo) return;
+          const sx = hero.x + hero.w / 2, sy = hero.y + 12;
+          const tx = alvo.x + alvo.w / 2, ty = alvo.y + alvo.h / 2;
+          const d = Math.hypot(tx - sx, ty - sy) || 1;
+          projectiles.push({ x: sx, y: sy, vx: (tx - sx) / d * 10, vy: (ty - sy) / d * 10, type: 'raio', dmg: 999, life: Math.ceil(d / 10) + 20, hostile: false, alvo, label: `disparar("${id}")` });
+          floatText(sx, hero.y - 24, `disparar("${id}")`, '#d4c86a');
+        } });
+      });
+    }
+    if (stage.id === 'radar' && abilities.radar) {
+      acoes.push({ delay: 20, run() { floatText(hero.x + hero.w / 2, hero.y - 40, `fracos = [${abilities.radar.fracos.join(', ')}]`, '#ffe14a'); } });
+      alvosDoRaio().forEach(e => {
+        acoes.push({ delay: 22, run() {
+          if (!e.alive) return;
+          bolts.push({ x: e.x + e.w / 2, y: e.y + e.h, life: 22 });
+          floatText(e.x + e.w / 2, e.y - 24, `vida ${e.maxHp} <= 3`, '#ffe14a');
+          killEnemy(e);
+        } });
+      });
+      if (abilities.radar.temGigante) {
+        acoes.push({ delay: 30, run() {
+          enemies.forEach(e => { if (e.type === 'giant' && e.alive) { e.sleeping = false; floatText(e.x + e.w / 2, e.y - 30, 'temGigante = true: o Gigante acordou!', '#ff3b30'); } });
+        } });
+      }
+    }
+    if (stage.id === 'chefe') {
+      enemies.forEach(e => { if (e.type === 'boss' && e.alive) { e.active = true; startBossPhase(e, 0); } });
+    }
+  }
+
+  document.getElementById('btnRun').addEventListener('click', () => runTerminal());
+  document.getElementById('btnHint').addEventListener('click', () => {
+    if (terminalStage && !done.has(terminalStage.id) && !statsOf(terminalStage.id).dica) {
+      statsOf(terminalStage.id).dica = true;
+      saveState();
+      renderPontosInfo(terminalStage);
+    }
+    hintBox.style.display = 'block';
+  });
+  document.getElementById('btnCloseTerminal').addEventListener('click', closeTerminal);
+  document.getElementById('btnSkipProfessor').addEventListener('click', () => {
+    if (!terminalStage) return;
+    codeInput.value = DEFAULT_CODE[terminalStage.id];
+    runTerminal(DEFAULT_CODE[terminalStage.id], true);
+  });
+  codeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runTerminal(); }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const { selectionStart: a, selectionEnd: b, value } = codeInput;
+      codeInput.value = value.slice(0, a) + '  ' + value.slice(b);
+      codeInput.selectionStart = codeInput.selectionEnd = a + 2;
+    }
+    if (e.key === 'Escape') closeTerminal();
+  });
+
+  // ---------- Entrada ----------
+  const keys = new Set();
+  const pressed = new Set();
+  const KEYMAP = {
+    ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right',
+    ArrowUp: 'jump', w: 'jump', W: 'jump', ' ': 'jump',
+    j: 'attack', J: 'attack', k: 'defend', K: 'defend', l: 'shoot', L: 'shoot', e: 'terminal', E: 'terminal'
+  };
+  window.addEventListener('keydown', (e) => {
+    if (terminalEl.classList.contains('open') || e.target === codeInput || document.getElementById('glOverlay')) return;
+    const k = KEYMAP[e.key];
+    if (!k) return;
+    e.preventDefault();
+    if (!keys.has(k)) pressed.add(k);
+    keys.add(k);
+  });
+  window.addEventListener('keyup', (e) => {
+    const k = KEYMAP[e.key];
+    if (k) keys.delete(k);
+  });
+  window.addEventListener('blur', () => keys.clear());
+
+  // ---------- Efeitos ----------
+  function floatText(x, y, text, color) { texts.push({ x, y, text, color, life: 80 }); }
+  function burst(x, y, color, n) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 3;
+      particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1, life: 30 + Math.random() * 20, color });
+    }
+  }
+
+  // ---------- Dano no herói ----------
+  // Segurando K (depois do andar 6), magias de fogo/gelo/raio passam pelo
+  // switch do aluno: se o escudo que ele respondeu for o certo, bloqueia.
+  function hurtHero(amount, type, fromX) {
+    if (hero.inv > 0 || hero.deadT > 0) return;
+    let final = amount;
+    const cx = hero.x + hero.w / 2;
+    if (hero.defending && abilities.escudo && ELEMENTOS.includes(type)) {
+      const esc = abilities.escudo[type];
+      if (esc === ESCUDO_CERTO[type]) {
+        final = 0;
+        floatText(cx, hero.y - 20, `switch ("${type}") → escudo "${esc}"`, ELEM_COR[esc] || '#9ecbff');
+        burst(cx + hero.facing * 16, hero.y + 18, ELEM_COR[esc] || '#9ecbff', 14);
+      }
+    }
+    if (final > 0) floatText(cx, hero.y - 20, `-${final}`, '#ff3b30');
+    hero.hp -= final;
+    hero.inv = final > 0 ? 50 : 14;
+    if (final > 0 && fromX !== undefined) { hero.vx = hero.x < fromX ? -5 : 5; hero.vy = -5; hero.onGround = false; }
+    if (hero.hp <= 0.001) killHero();
+  }
+
+  function killHero() {
+    hero.hp = 0;
+    hero.deadT = 70;
+    burst(hero.x + hero.w / 2, hero.y + hero.h / 2, '#ff3b30', 30);
+  }
+
+  // Dano da espada: golpe (andar 3) e, depois do andar 8, a calcularDano
+  // do aluno — a cada 3 golpes com critico = true.
+  function heroDamage() {
+    let d = abilities.golpe || 1;
+    if (abilities.calcularDano) {
+      hitCount++;
+      const critico = hitCount % 3 === 0;
+      const r = safeCall(abilities.calcularDano, d, critico);
+      if (typeof r === 'number' && r >= 1 && r <= 200) {
+        if (critico) floatText(hero.x + hero.w / 2, hero.y - 34, `calcularDano(${d}, true) → ${r}`, '#ffb347');
+        d = r;
+      }
+    }
+    return d;
+  }
+
+  function killEnemy(e) {
+    e.alive = false;
+    burst(e.x + e.w / 2, e.y + e.h / 2, e.type === 'boss' ? '#d4c86a' : '#7cff3f', e.type === 'boss' ? 60 : 18);
+  }
+
+  function hitEnemy(e, dmg) {
+    e.flash = 10;
+    burst(e.x + e.w / 2, e.y + e.h / 2, '#ffffff', 8);
+    if (e.sleeping) e.sleeping = false;
+    if (e.type === 'boss') { hitBoss(e, dmg); return; }
+    e.hp = Math.max(0, e.hp - dmg);
+    floatText(e.x + e.w / 2, e.y - 14, `-${dmg}`, '#ffffff');
+    if (e.hp <= 0) killEnemy(e);
+  }
+
+  // ---------- Chefão ----------
+  // A cada fase (fogo → gelo → raio), o jogo monta o objeto chefe e chama
+  // a planoDeAtaque DO ALUNO: arma = cor da espada; golpes = quantos
+  // golpes quebram o escudo antes de o Rei Bug levar dano.
+  function startBossPhase(e, fase, silencioso) {
+    e.fase = fase;
+    e.elemento = ELEMENTOS[fase];
+    const n = 2 + Math.floor(Math.random() * 2);
+    const escudos = Array.from({ length: n }, () => 1 + Math.floor(Math.random() * 2));
+    const soma = escudos.reduce((a, b) => a + b, 0);
+    const r = abilities.plano ? safeCall(abilities.plano, { elemento: e.elemento, escudos: escudos.slice() }) : null;
+    const plano = r && typeof r === 'object' ? r : { arma: ESCUDO_CERTO[e.elemento], golpes: soma };
+    e.shield = Number.isInteger(plano.golpes) && plano.golpes >= 0 && plano.golpes <= 30 ? plano.golpes : soma;
+    e.shieldMax = e.shield;
+    e.arma = plano.arma;
+    e.planoTxt = `planoDeAtaque({ elemento: "${e.elemento}", escudos: [${escudos.join(', ')}] }) → { arma: "${plano.arma}", golpes: ${plano.golpes} }`;
+    if (!silencioso) {
+      floatText(e.x + e.w / 2, e.y - 44, `Fase ${fase + 1}: o Rei Bug virou ${e.elemento.toUpperCase()}!`, ELEM_COR[e.elemento]);
+      burst(e.x + e.w / 2, e.y + e.h / 2, ELEM_COR[e.elemento], 30);
+    }
+  }
+
+  function hitBoss(e, dmg) {
+    if (!e.active) return;
+    const cx = e.x + e.w / 2;
+    if (e.shield > 0) {
+      e.shield--;
+      floatText(cx, e.y - 20, e.shield > 0 ? `escudo ${e.shield}/${e.shieldMax}` : 'Escudo quebrado!', ELEM_COR[e.elemento]);
+      return;
+    }
+    e.hp = Math.max(0, e.hp - dmg);
+    floatText(cx, e.y - 14, `-${dmg}`, '#ffffff');
+    if (e.hp <= 0) { killEnemy(e); winGame(); return; }
+    const limite = ENEMY_TYPES.boss.hp - 20 * (e.fase + 1);
+    if (e.fase < 2 && e.hp <= limite) startBossPhase(e, e.fase + 1);
+  }
+
+  // ---------- Simulação (passo fixo de 60/s) ----------
+  let saveTick = 0;
+
+  function step() {
+    frameCount++;
+    if (!won) {
+      run.segundos += 1 / 60;
+      if (++saveTick % 300 === 0) saveState();
+    }
+    if (terminalEl.classList.contains('open') || won) { pressed.clear(); return; }
+    if (transicao > 0) {
+      transicao--;
+      if (transicao === 0) loadFloor(run.andar);
+      updateFx();
+      pressed.clear();
+      return;
+    }
+    if (hero.deadT > 0) {
+      hero.deadT--;
+      if (hero.deadT === 0) respawn();
+      updateFx();
+      pressed.clear();
+      return;
+    }
+
+    if (acoes.length) {
+      acoes[0].delay--;
+      if (acoes[0].delay <= 0) acoes.shift().run();
+    }
+
+    hero.defending = keys.has('defend') && !!abilities.escudo;
+    const move = PHYS.MOVE * (hero.defending ? 0.45 : 1);
+    let dir = 0;
+    if (keys.has('left')) dir -= 1;
+    if (keys.has('right')) dir += 1;
+    if (dir !== 0) hero.facing = dir;
+    hero.vx += (dir * move - hero.vx) * (hero.onGround ? 0.5 : 0.25);
+
+    if (pressed.has('jump')) {
+      if (hero.onGround) { hero.vy = PHYS.JUMP; hero.onGround = false; hero.jumps = 1; }
+      else if (abilities.botas && hero.jumps < 2) { hero.vy = PHYS.DOUBLE_JUMP; hero.jumps = 2; burst(hero.x + hero.w / 2, hero.y + hero.h, '#d4c86a', 10); }
+    }
+    if (pressed.has('attack') && abilities.espada && hero.attackT === 0) {
+      hero.attackT = 20; hero.swing++;
+      if (abilities.grito && hero.swing % 4 === 1) floatText(hero.x + hero.w / 2, hero.y - 48, abilities.grito.slice(0, 40), '#d4c86a');
+    }
+    if (pressed.has('shoot') && abilities.flechas && abilities.flechas.length && hero.shootT === 0) {
+      const i = arrowIdx % abilities.flechas.length;
+      const tipo = abilities.flechas[i];
+      arrowIdx++;
+      hero.shootT = 22;
+      projectiles.push({ x: hero.x + hero.w / 2 + hero.facing * 14, y: hero.y + 16, vx: hero.facing * 8, vy: 0, type: tipo, dmg: 4, life: 80, hostile: false });
+      floatText(hero.x + hero.w / 2, hero.y - 22, `flechas[${i}] → "${tipo}"`, ELEM_COR[tipo] || '#ffffff');
+    }
+    if (hero.attackT > 0) hero.attackT--;
+    if (hero.shootT > 0) hero.shootT--;
+    if (hero.inv > 0) hero.inv--;
+
+    hero.vy = Math.min(PHYS.MAX_FALL, hero.vy + PHYS.GRAVITY);
+    const prevBottom = hero.y + hero.h;
+    hero.x += hero.vx;
+    hero.y += hero.vy;
+
+    // Barreiras: terminal pendente, portão da muralha (andar 10) e o fim do andar.
+    if (!stageDone() && hero.x + hero.w > ALTAR_X + 34) { hero.x = ALTAR_X + 34 - hero.w; hero.vx = 0; }
+    if (floor.portao && enemies.some(e => e.type === 'turret' && e.alive) && hero.x + hero.w > floor.portao) { hero.x = floor.portao - hero.w; hero.vx = 0; }
+    const fim = floor.boss ? floor.boss[1] : FLOOR_W;
+    hero.x = Math.max(0, Math.min(fim - hero.w - 4, hero.x));
+
+    if (prevBottom > GROUND_Y + 2) {
+      const pit = ground.findIndex(([, b], i) => i < ground.length - 1 && hero.x + hero.w > b && hero.x < ground[i + 1][0]);
+      if (pit !== -1) hero.x = Math.max(ground[pit][1], Math.min(ground[pit + 1][0] - hero.w, hero.x));
+    }
+
+    hero.onGround = false;
+    if (hero.vy >= 0 && prevBottom <= GROUND_Y + 1 && hero.y + hero.h >= GROUND_Y && supportedAt(hero.x, hero.w)) {
+      hero.y = GROUND_Y - hero.h; hero.vy = 0; hero.onGround = true; hero.jumps = 0;
+    }
+    if (hero.y > VIEW_H + 80) { floatText(hero.x + hero.w / 2, GROUND_Y - 40, 'Caiu!', '#ff3b30'); killHero(); }
+
+    if (hero.onGround && (floor.spikes || []).some(([a, b]) => hero.x + hero.w - 4 > a && hero.x + 4 < b)) {
+      hurtHero(1, 'espinho');
+      hero.vy = -8; hero.onGround = false;
+    }
+
+    // Poções: chamam a curar(vida) do aluno (andar 7 em diante).
+    if (abilities.curar) {
+      potions.forEach(p => {
+        if (p.used || !overlap(hero, { x: p.x - 10, y: GROUND_Y - 26, w: 20, h: 26 })) return;
+        const antes = Math.round(hero.hp * 10) / 10;
+        const r = safeCall(abilities.curar, antes);
+        p.used = true;
+        if (typeof r === 'number' && r >= 0) {
+          hero.hp = Math.max(hero.hp, Math.min(abilities.vidaMax, r));
+          floatText(p.x, GROUND_Y - 60, `curar(${antes}) → ${r}`, '#7cff3f');
+          burst(p.x, GROUND_Y - 14, '#7cff3f', 14);
+        }
+      });
+    }
+
+    // Terminal: abre sozinho na 1ª encostada; depois, só com E.
+    if (!stageDone()) {
+      const stage = STAGES[floorIdx];
+      const near = hero.x + hero.w >= ALTAR_X - 12;
+      if (near && (altarPromptFor !== stage.id || pressed.has('terminal'))) { altarPromptFor = stage.id; openTerminal(stage); }
+      if (hero.x + hero.w < ALTAR_X - 90) altarPromptFor = null;
+    }
+
+    // Escada: sobe pro próximo andar.
+    if (stageDone() && floorIdx < LAST && hero.onGround && hero.x + hero.w >= STAIRS_X + 30) climb();
+
+    updateEnemies();
+    updatePet();
+    updateProjectiles();
+    updateFx();
+    pressed.clear();
+  }
+
+  function climb() {
+    const stage = STAGES[floorIdx];
+    const pts = pontosDoAndar(stage.id);
+    run.score += pts;
+    run.andar = floorIdx + 1;
+    saveState();
+    registrarPlacar();
+    showBanner(`Andar ${floorIdx + 1} concluído!`, `+${pts} pts · agora: ${FLOORS[run.andar].nome}`);
+    transicao = 50;
+    if (typeof window.reportActivity === 'function') window.reportActivity('jogos_torre_do_codigo', `Torre do Código — subiu para o andar ${run.andar + 1}`);
+  }
+
+  let bannerTimer = null;
+  function showBanner(titulo, sub) {
+    const el = document.getElementById('floorBanner');
+    el.innerHTML = `${escapeHtml(titulo)}<small>${escapeHtml(sub || '')}</small>`;
+    el.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  function overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+
+  function shootFrom(e, t, dx) {
+    let kind = t.shoots;
+    if (kind === 'elem') kind = e.elem || ELEMENTOS[e.shotKind++ % 3];
+    if (kind === 'boss') kind = e.elemento || 'fogo';
+    const sx = e.x + e.w / 2;
+    const sy = e.type === 'boss' ? e.y + 40 + (e.shotKind++ % 3) * 12 : e.y + 16;
+    let vx, vy = 0;
+    if (e.type === 'turret') {
+      const tx = hero.x + hero.w / 2, ty = hero.y + hero.h / 2;
+      const d = Math.hypot(tx - sx, ty - sy) || 1;
+      vx = (tx - sx) / d * 4.5; vy = (ty - sy) / d * 4.5;
+    } else {
+      vx = (Math.sign(dx) || -1) * (kind === 'flecha' ? 6 : 4.2);
+    }
+    projectiles.push({ x: sx, y: sy, vx, vy, type: kind, dmg: e.type === 'boss' ? 2 : 1, life: 150, hostile: true });
+  }
+
+  function updateEnemies() {
+    const swingActive = hero.attackT >= 8 && hero.attackT <= 16;
+    const hitbox = { x: hero.facing > 0 ? hero.x + hero.w - 2 : hero.x - 46, y: hero.y + 2, w: 48, h: 34 };
+    enemies.forEach(e => {
+      if (!e.alive) return;
+      const t = ENEMY_TYPES[e.type];
+      e.t++;
+      if (e.flash > 0) e.flash--;
+      const dx = (hero.x + hero.w / 2) - (e.x + e.w / 2);
+      if (Math.abs(dx) > 700) return;
+
+      if (e.type === 'boss') {
+        if (e.active) {
+          e.x += e.dir * t.speed * (e.fase === 2 ? 1.5 : 1);
+          if (e.x < floor.boss[0] + 40 || e.x + e.w > floor.boss[1] - 20) e.dir *= -1;
+          e.summonT--;
+          const lacaios = enemies.filter(m => m.minion && m.alive).length;
+          if (e.summonT <= 0 && lacaios < 2) {
+            e.summonT = 480;
+            const m = makeEnemy(['slime', e.x - 20, { minion: true, hp: 2 }]);
+            enemies.push(m);
+            floatText(e.x + e.w / 2, e.y - 30, 'O Rei Bug invocou um lacaio!', '#b84fd1');
+          }
+        }
+      } else if (e.type === 'turret' || e.sleeping) {
+        // parado
+      } else if (t.chase && Math.abs(dx) < t.chase) {
+        e.dir = Math.sign(dx) || e.dir;
+        e.x += e.dir * t.speed * 1.3;
+      } else if (t.speed > 0) {
+        e.x += e.dir * t.speed;
+        if (e.x < e.baseX - t.range) e.dir = 1;
+        if (e.x > e.baseX + t.range) e.dir = -1;
+      } else {
+        e.dir = Math.sign(dx) || -1;
+      }
+      if (t.flying) e.y = e.baseY + Math.sin(e.t / 22) * 45;
+
+      if (t.shoots && Math.abs(dx) < t.reach && (e.type !== 'boss' || e.active)) {
+        e.cool--;
+        if (e.cool <= 0) {
+          shootFrom(e, t, dx);
+          e.cool = t.cool * (e.type === 'boss' && e.fase === 2 ? 0.65 : 1);
+        }
+      }
+
+      if (e.type === 'turret') return;
+      if (swingActive && e.hitSwing !== hero.swing && overlap(hitbox, e)) {
+        e.hitSwing = hero.swing;
+        hitEnemy(e, heroDamage());
+        if (!['boss', 'archer', 'mage', 'giant'].includes(e.type)) e.x += hero.facing * 18;
+      }
+      if (e.alive && !e.sleeping && overlap(hero, e)) hurtHero(t.dmg, 'golpe', e.x + e.w / 2);
+    });
+  }
+
+  // O pet (andar 12) segue o herói e ataca o inimigo mais perto com o
+  // pet.ataque que o aluno definiu.
+  function updatePet() {
+    if (!abilities.pet) return;
+    const tx = hero.x + hero.w / 2 - hero.facing * 34;
+    const ty = hero.y - 22 + Math.sin(frameCount / 15) * 5;
+    pet.x += (tx - pet.x) * 0.12;
+    pet.y += (ty - pet.y) * 0.12;
+    if (--pet.cool > 0 || hero.deadT > 0) return;
+    let alvo = null, melhor = 340;
+    enemies.forEach(e => {
+      if (!e.alive || e.type === 'turret' || e.sleeping) return;
+      const d = Math.hypot(e.x + e.w / 2 - pet.x, e.y + e.h / 2 - pet.y);
+      if (d < melhor) { melhor = d; alvo = e; }
+    });
+    if (!alvo) { pet.cool = 20; return; }
+    const ex = alvo.x + alvo.w / 2, ey = alvo.y + alvo.h / 2;
+    const d = Math.hypot(ex - pet.x, ey - pet.y) || 1;
+    projectiles.push({ x: pet.x, y: pet.y, vx: (ex - pet.x) / d * 7, vy: (ey - pet.y) / d * 7, type: 'pet', dmg: abilities.pet.ataque, life: 70, hostile: false });
+    floatText(pet.x, pet.y - 18, `${abilities.pet.nome}: pet.ataque = ${abilities.pet.ataque}`, '#ffb3f0');
+    pet.cool = 110;
+  }
+
+  function updateProjectiles() {
+    projectiles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life--;
+      const box = { x: p.x - 8, y: p.y - 5, w: 16, h: 10 };
+      if (p.hostile) {
+        if (hero.deadT === 0 && overlap(hero, box)) { hurtHero(p.dmg, p.type, p.x); p.life = 0; burst(p.x, p.y, ELEM_COR[p.type] || '#c9b38a', 8); }
+        return;
+      }
+      if (p.alvo) {
+        if (p.alvo.alive && overlap(p.alvo, box)) {
+          p.life = 0;
+          floatText(p.alvo.x + p.alvo.w / 2, p.alvo.y - 16, `${p.alvo.id} derrubada!`, '#7cff3f');
+          killEnemy(p.alvo);
+          if (!enemies.some(e => e.type === 'turret' && e.alive)) floatText(floor.portao, GROUND_Y - 150, 'O portão abriu!', '#7cff3f');
+        }
+        return;
+      }
+      const alvo = enemies.find(e => e.alive && e.type !== 'turret' && overlap(e, box));
+      if (alvo) { hitEnemy(alvo, p.dmg); p.life = 0; burst(p.x, p.y, ELEM_COR[p.type] || '#ffb3f0', 8); }
+    });
+    projectiles = projectiles.filter(p => p.life > 0 && p.x > -50 && p.x < FLOOR_W + 50);
+  }
+
+  function updateFx() {
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life--; });
+    particles = particles.filter(p => p.life > 0);
+    texts.forEach(t => { t.y -= 0.5; t.life--; });
+    texts = texts.filter(t => t.life > 0);
+    bolts.forEach(b => { b.life--; });
+    bolts = bolts.filter(b => b.life > 0);
+  }
+
+  // ---------- Fim de jogo ----------
+  function finishCodeText() {
+    return STAGES.map((s, i) => `// ===== Andar ${i + 1} — ${s.tema} =====\n${run.codes[s.id] || DEFAULT_CODE[s.id]}`).join('\n\n');
+  }
+
+  function mmss(seg) {
+    const s = Math.floor(seg);
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  function renderFinish() {
+    const erros = STAGES.reduce((a, s) => a + (statsOf(s.id).erros || 0), 0);
+    const dicas = STAGES.filter(s => statsOf(s.id).dica).length;
+    document.getElementById('finishScore').textContent = `Pontuação: ${run.score} pts · Recorde: ${best} pts`;
+    document.getElementById('finishStats').textContent = `Tempo: ${mmss(run.segundos)} · Execuções com erro: ${erros} · Dicas usadas: ${dicas} de ${STAGES.length}`;
+    document.getElementById('finishCode').textContent = finishCodeText();
+  }
+
+  function winGame() {
+    if (won) return;
+    won = true;
+    const pts = pontosDoAndar('chefe') + BONUS_CHEFE + bonusTempo();
+    run.score += pts;
+    run.won = true;
+    saveState();
+    registrarPlacar();
+    renderFinish();
+    showBanner('O Rei Bug caiu!', `+${pts} pts (andar + chefão + bônus de tempo)`);
+    setTimeout(() => document.getElementById('finish').classList.add('open'), 1400);
+    if (typeof window.reportActivity === 'function') window.reportActivity('jogos_torre_do_codigo', `Torre do Código — venceu o Rei Bug com ${run.score} pts`);
+  }
+
+  function openRanking() {
+    window.GameLeaderboard.showPanel({
+      game: GAME_KEY, turma, email: username,
+      title: 'Ranking — Torre do Código', formatScore: s => `${s} pts`
+    });
+  }
+  const btnRanking = document.getElementById('btnRanking');
+  const btnFinishRanking = document.getElementById('btnFinishRanking');
+  btnRanking.addEventListener('click', openRanking);
+  btnFinishRanking.addEventListener('click', openRanking);
+  if (!window.GameLeaderboard || !window.GameLeaderboard.enabled) {
+    btnRanking.style.display = 'none';
+    btnFinishRanking.style.display = 'none';
+  }
+
+  // Nova tentativa: recomeça do térreo, sem os poderes — o código de cada
+  // andar é escrito de novo (é assim que se treina). O recorde fica.
+  document.getElementById('btnReplay').addEventListener('click', () => {
+    document.getElementById('finish').classList.remove('open');
+    run = novaTentativa();
+    done = new Set();
+    won = false;
+    saveState();
+    resetAbilities();
+    arrowIdx = 0;
+    loadFloor(0);
+    renderTopbar();
+  });
+
+  // ---------- Desenho ----------
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let scale = 1, viewW = 960, camX = 0;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(r.width * dpr));
+    canvas.height = Math.max(1, Math.round(r.height * dpr));
+    scale = canvas.height / VIEW_H;
+    viewW = canvas.width / scale;
+  }
+  window.addEventListener('resize', resize);
+
+  function emoji(ch, x, y, size) {
+    ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ch, x, y);
+  }
+
+  function label(text, x, y, color, size) {
+    ctx.fillStyle = color;
+    ctx.font = `bold ${size || 12}px "JetBrains Mono", monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  // Cores do céu vão do azul da noite (térreo) ao vermelho do trono (topo).
+  function mix(a, b, k) {
+    const pa = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16));
+    const pb = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16));
+    return '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * k).toString(16).padStart(2, '0')).join('');
+  }
+
+  function drawBackground() {
+    const k = floorIdx / LAST;
+    const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+    g.addColorStop(0, mix('#0b1a2e', '#3a0a14', k));
+    g.addColorStop(1, mix('#1b2f1a', '#1c1426', k));
+    ctx.fillStyle = g;
+    ctx.fillRect(camX, 0, viewW, VIEW_H);
+    // Paredes internas da torre: pilares e janelas em arco (parallax).
+    const par = camX * 0.5;
+    for (let i = -1; i < viewW / 240 + 2; i++) {
+      const bx = Math.floor(par / 240) * 240 + i * 240;
+      const x = camX + (bx - par);
+      ctx.fillStyle = mix('#16241a', '#2a1420', k);
+      ctx.fillRect(x, 40, 46, GROUND_Y - 40);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      for (let y = 60; y < GROUND_Y; y += 28) ctx.fillRect(x + 4, y, 38, 2);
+      ctx.fillStyle = mix('#23405a', '#6b2030', k);
+      ctx.beginPath();
+      ctx.moveTo(x + 90, 230); ctx.lineTo(x + 90, 150);
+      ctx.arc(x + 120, 150, 30, Math.PI, 0);
+      ctx.lineTo(x + 150, 230); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(x + 118, 120, 4, 110);
+    }
+    label(`ANDAR ${floorIdx + 1}`, 150, 110, 'rgba(217,230,210,0.35)', 22);
+    label(floor.nome, 150, 134, 'rgba(217,230,210,0.35)', 13);
+  }
+
+  function drawWorld() {
+    const pedra = floorIdx >= 3;
+    ground.forEach(([a, b]) => {
+      ctx.fillStyle = pedra ? '#2c2a30' : '#3b2a1a';
+      ctx.fillRect(a, GROUND_Y, b - a, VIEW_H - GROUND_Y);
+      ctx.fillStyle = pedra ? '#6b6f73' : '#4a9a2a';
+      ctx.fillRect(a, GROUND_Y, b - a, 8);
+    });
+    ctx.fillStyle = '#c9ccd1';
+    (floor.spikes || []).forEach(([a, b]) => {
+      for (let x = a; x < b; x += 12) {
+        ctx.beginPath();
+        ctx.moveTo(x, GROUND_Y); ctx.lineTo(x + 6, GROUND_Y - 16); ctx.lineTo(x + 12, GROUND_Y);
+        ctx.fill();
+      }
+    });
+
+    // Muralha (andar 10): pilares das torres + portão.
+    if (floor.portao) {
+      enemies.forEach(e => {
+        if (e.type !== 'turret') return;
+        ctx.fillStyle = '#3d3a44';
+        ctx.fillRect(e.baseX - 4, TURRET_Y + e.h, e.w + 8, GROUND_Y - TURRET_Y - e.h);
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        for (let y = TURRET_Y + e.h + 10; y < GROUND_Y; y += 22) ctx.fillRect(e.baseX - 4, y, e.w + 8, 2);
+      });
+      const aberto = !enemies.some(e => e.type === 'turret' && e.alive);
+      ctx.fillStyle = '#4b4453';
+      ctx.fillRect(floor.portao - 10, GROUND_Y - 150, 14, 150);
+      ctx.fillRect(floor.portao + 46, GROUND_Y - 150, 14, 150);
+      ctx.fillRect(floor.portao - 10, GROUND_Y - 160, 70, 14);
+      if (!aberto) {
+        ctx.strokeStyle = '#8a8f96'; ctx.lineWidth = 3;
+        for (let x = floor.portao + 8; x < floor.portao + 46; x += 10) { ctx.beginPath(); ctx.moveTo(x, GROUND_Y - 146); ctx.lineTo(x, GROUND_Y); ctx.stroke(); }
+        for (let y = GROUND_Y - 130; y < GROUND_Y; y += 26) { ctx.beginPath(); ctx.moveTo(floor.portao + 4, y); ctx.lineTo(floor.portao + 46, y); ctx.stroke(); }
+      }
+    }
+
+    // Arena do chefão
+    if (floor.boss) {
+      ctx.fillStyle = 'rgba(193,18,31,0.14)';
+      ctx.fillRect(floor.boss[0], 0, floor.boss[1] - floor.boss[0], GROUND_Y);
+      label('TRONO DO REI BUG', (floor.boss[0] + floor.boss[1]) / 2, 70, 'rgba(255,59,48,0.7)', 16);
+      ctx.fillStyle = '#4b4453';
+      ctx.fillRect(floor.boss[1] - 6, 0, 40, VIEW_H);
+    }
+
+    // Poções
+    potions.forEach(p => {
+      if (p.used) return;
+      ctx.globalAlpha = abilities.curar ? 1 : 0.35;
+      emoji('🧪', p.x, GROUND_Y - 14 + Math.sin(frameCount / 20) * 2, 22);
+      ctx.globalAlpha = 1;
+    });
+
+    // Escada pro próximo andar
+    if (floorIdx < LAST) {
+      const ok = stageDone();
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = ok ? '#8b6a2f' : '#4a3f30';
+        ctx.fillRect(STAIRS_X + i * 22, GROUND_Y - (i + 1) * 22, 110 - i * 22 + 40, 22);
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillRect(STAIRS_X + i * 22, GROUND_Y - (i + 1) * 22, 110 - i * 22 + 40, 3);
+      }
+      label(`⬆ ANDAR ${floorIdx + 2}`, STAIRS_X + 70, GROUND_Y - 160, ok ? '#7cff3f' : 'rgba(217,230,210,0.35)', 13);
+    }
+
+    // Terminal (altar) do andar
+    const stage = STAGES[floorIdx];
+    const ok = done.has(stage.id);
+    const x = ALTAR_X;
+    ctx.fillStyle = '#6b6f73';
+    ctx.fillRect(x - 18, GROUND_Y - 34, 36, 34);
+    ctx.fillStyle = ok ? '#123b12' : '#2b2a10';
+    ctx.fillRect(x - 14, GROUND_Y - 58, 28, 22);
+    label('</>', x, GROUND_Y - 47, ok ? '#7cff3f' : '#d4c86a', 12);
+    label(ok ? `✓ ${stage.id}` : stage.id, x, GROUND_Y - 70, ok ? '#7cff3f' : '#d4c86a', 11);
+    if (!ok) {
+      const a = 0.35 + Math.sin(Date.now() / 250) * 0.15;
+      ctx.fillStyle = `rgba(212,200,106,${a})`;
+      ctx.fillRect(x + 34, 0, 6, GROUND_Y);
+      label('encoste no terminal', x, GROUND_Y - 86, '#d4c86a', 11);
+    }
+  }
+
+  // Caverna (andar 5): sem a tocha, breu; com ela, luz em volta do herói.
+  function drawDarkness() {
+    if (!floor.dark) return;
+    const [a, b] = floor.dark;
+    const hx = hero.x + hero.w / 2, hy = hero.y + hero.h / 2;
+    if (abilities.tocha) {
+      const g = ctx.createRadialGradient(hx, hy, 70, hx, hy, 230);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.93)');
+      ctx.fillStyle = g;
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,0.93)';
+    }
+    ctx.fillRect(a, 0, b - a, VIEW_H);
+  }
+
+  function armaAtual() {
+    const boss = floor.boss && enemies.find(e => e.type === 'boss' && e.alive && e.active);
+    return boss ? boss.arma : null;
+  }
+
+  function drawHero() {
+    if (hero.deadT > 0) return;
+    if (hero.inv > 0 && Math.floor(hero.inv / 4) % 2 === 0) return;
+    const { x, y, w, h, facing } = hero;
+    ctx.fillStyle = abilities.botas ? '#d4a13a' : '#3a2a1a';
+    ctx.fillRect(x + 2, y + h - 7, 9, 7);
+    ctx.fillRect(x + w - 11, y + h - 7, 9, 7);
+    ctx.fillStyle = '#2f6fd1';
+    ctx.fillRect(x + 3, y + 16, w - 6, h - 22);
+    ctx.fillStyle = '#f1c9a0';
+    ctx.beginPath(); ctx.arc(x + w / 2, y + 9, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.fillRect(x + w / 2 + facing * 3 - 1, y + 7, 3, 3);
+    // Arco nas costas
+    if (abilities.flechas) {
+      ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x + w / 2 - facing * 6, y + 24, 12, -1.2, 1.2); ctx.stroke();
+    }
+    // Tocha na mão de trás (caverna)
+    if (abilities.tocha && floor.dark) {
+      const tx = x + w / 2 - facing * 12;
+      ctx.fillStyle = '#6b4a2b'; ctx.fillRect(tx - 2, y + 14, 4, 16);
+      ctx.fillStyle = '#ffb347'; ctx.beginPath(); ctx.arc(tx, y + 11, 5 + Math.sin(Date.now() / 90), 0, Math.PI * 2); ctx.fill();
+    }
+    if (abilities.espada) {
+      const hx = x + w / 2 + facing * 10, hy = y + 24;
+      let ang = facing > 0 ? -0.9 : Math.PI + 0.9;
+      if (hero.attackT > 0) {
+        const p = 1 - hero.attackT / 20;
+        ang = facing > 0 ? -1.6 + p * 2.6 : Math.PI + 1.6 - p * 2.6;
+      }
+      const arma = armaAtual();
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(ang);
+      ctx.fillStyle = '#8b5a2b'; ctx.fillRect(-2, -3, 8, 6);
+      ctx.fillStyle = (arma && ELEM_COR[arma]) || '#d9dde3'; ctx.fillRect(6, -2, 26, 4);
+      ctx.fillStyle = '#d4c86a'; ctx.fillRect(4, -6, 3, 12);
+      ctx.restore();
+      if (hero.attackT >= 8 && hero.attackT <= 16) {
+        ctx.strokeStyle = arma && ELEM_COR[arma] ? ELEM_COR[arma] : 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x + w / 2, y + 20, 38, facing > 0 ? -1.2 : Math.PI - 1.0, facing > 0 ? 1.0 : Math.PI + 1.2);
+        ctx.stroke();
+      }
+    }
+    if (hero.defending) {
+      ctx.fillStyle = 'rgba(120,170,255,0.85)';
+      ctx.beginPath();
+      ctx.ellipse(x + w / 2 + facing * 16, y + 22, 8, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (abilities.nome) label(abilities.nome, x + w / 2, y - 12, '#d4c86a', 11);
+  }
+
+  function drawPet() {
+    if (!abilities.pet || hero.deadT > 0) return;
+    emoji(PET_TIPOS[abilities.pet.tipo] || '🐾', pet.x, pet.y, 26);
+    label(abilities.pet.nome, pet.x, pet.y - 20, '#ffb3f0', 10);
+  }
+
+  function drawEnemy(e) {
+    const cx = e.x + e.w / 2, cy = e.y + e.h / 2;
+    ctx.globalAlpha = e.flash > 0 && e.flash % 2 ? 0.4 : 1;
+    switch (e.type) {
+      case 'slime':
+        ctx.fillStyle = e.minion ? '#b84fd1' : '#5bd13a';
+        ctx.beginPath(); ctx.ellipse(cx, e.y + e.h - 9, e.w / 2, 12 + Math.sin(e.t / 8) * 2, 0, Math.PI, 0); ctx.fill();
+        ctx.fillRect(e.x, e.y + e.h - 9, e.w, 9);
+        ctx.fillStyle = '#111'; ctx.fillRect(cx - 7, e.y + 6, 4, 4); ctx.fillRect(cx + 3, e.y + 6, 4, 4);
+        break;
+      case 'bat': emoji('🦇', cx, cy, 28); break;
+      case 'knight':
+        ctx.fillStyle = '#8a9099'; ctx.fillRect(e.x, e.y + 12, e.w, e.h - 12);
+        ctx.fillStyle = '#b4bac2'; ctx.fillRect(e.x + 5, e.y, e.w - 10, 16);
+        ctx.fillStyle = '#111'; ctx.fillRect(e.x + 9, e.y + 6, e.w - 18, 3);
+        break;
+      case 'orc': emoji('👹', cx, cy, 44); break;
+      case 'archer': emoji('🏹', cx, e.y + 10, 22); ctx.fillStyle = '#5a3f22'; ctx.fillRect(e.x + 4, e.y + 20, e.w - 8, e.h - 20); break;
+      case 'mage':
+        if (e.elem) { ctx.fillStyle = ELEM_COR[e.elem]; ctx.globalAlpha *= 0.35; ctx.beginPath(); ctx.arc(cx, cy, 26, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = e.flash > 0 && e.flash % 2 ? 0.4 : 1; }
+        emoji('🧙', cx, cy, 40);
+        break;
+      case 'turret':
+        ctx.fillStyle = '#5c5966'; ctx.fillRect(e.x, e.y + 8, e.w, e.h - 8);
+        ctx.fillStyle = '#2a2830'; ctx.fillRect(e.x + e.w / 2 - 4, e.y, 8, 12);
+        ctx.fillStyle = '#ffe14a'; ctx.beginPath(); ctx.arc(cx, e.y + 18, 4, 0, Math.PI * 2); ctx.fill();
+        label(e.id, cx, e.y - 10, '#d4c86a', 11);
+        break;
+      case 'giant':
+        emoji('👺', cx, cy, 66);
+        if (e.sleeping) label('zZ', e.x + e.w, e.y - 6 + Math.sin(e.t / 20) * 3, '#9ecbff', 14);
+        break;
+      case 'boss':
+        if (e.active && e.shield > 0) {
+          ctx.fillStyle = ELEM_COR[e.elemento];
+          ctx.globalAlpha *= 0.25;
+          ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = e.flash > 0 && e.flash % 2 ? 0.4 : 1;
+        }
+        emoji('🐛', cx, cy + 6, 84); emoji('👑', cx, e.y - 4, 34);
+        if (e.active) label(e.shield > 0 ? `🛡 ${e.shield}` : e.elemento.toUpperCase(), cx, e.y + e.h + 14, ELEM_COR[e.elemento], 12);
+        break;
+    }
+    ctx.globalAlpha = 1;
+    if (e.maxHp > 1 && e.type !== 'turret') {
+      ctx.fillStyle = '#300'; ctx.fillRect(e.x, e.y - 10, e.w, 4);
+      ctx.fillStyle = '#ff3b30'; ctx.fillRect(e.x, e.y - 10, e.w * Math.max(0, e.hp / e.maxHp), 4);
+    }
+  }
+
+  function drawProjectile(p) {
+    const cor = ELEM_COR[p.type];
+    if (p.type === 'pet') {
+      ctx.fillStyle = '#ffb3f0';
+      ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI * 2); ctx.fill();
+      return;
+    }
+    if (!p.hostile || p.type === 'flecha') {
+      // Flecha (do herói, colorida pelo elemento, ou dos arqueiros)
+      const ang = Math.atan2(p.vy, p.vx);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(ang);
+      ctx.strokeStyle = p.hostile ? '#c9b38a' : cor || '#ffffff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(12, 0); ctx.stroke();
+      ctx.fillStyle = p.hostile ? '#e6e6e6' : cor || '#ffffff';
+      ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(12, -4); ctx.lineTo(12, 4); ctx.fill();
+      ctx.restore();
+      return;
+    }
+    if (p.type === 'fogo') {
+      ctx.fillStyle = '#ff7a1a'; ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffd24a'; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
+    } else if (p.type === 'gelo') {
+      ctx.fillStyle = '#7fe3ff';
+      ctx.beginPath(); ctx.moveTo(p.x, p.y - 9); ctx.lineTo(p.x + 7, p.y); ctx.lineTo(p.x, p.y + 9); ctx.lineTo(p.x - 7, p.y); ctx.fill();
+    } else {
+      ctx.strokeStyle = '#ffe14a'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(p.x - 9, p.y - 5); ctx.lineTo(p.x - 2, p.y + 3); ctx.lineTo(p.x + 2, p.y - 3); ctx.lineTo(p.x + 9, p.y + 5); ctx.stroke();
+    }
+  }
+
+  function drawBolts() {
+    bolts.forEach(b => {
+      ctx.strokeStyle = `rgba(255,225,74,${b.life / 22})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      let x = b.x, y = 0;
+      ctx.moveTo(x, y);
+      while (y < b.y) { y += 30; x = b.x + (Math.random() - 0.5) * 30; ctx.lineTo(x, Math.min(y, b.y)); }
+      ctx.stroke();
+    });
+  }
+
+  const HUD_ITENS = [
+    ['vida', '❤️'], ['heroi', '⚔️'], ['golpe', '💥'], ['pulo', '👢'], ['luz', '🔦'], ['escudo', '🛡️'], ['curar', '🧪'],
+    ['dano', '⚡'], ['flechas', '🏹'], ['muralha', '🎯'], ['radar', '📡'], ['pet', '🐾'], ['chefe', '👑']
+  ];
+
+  function drawHud() {
+    const full = Math.floor(hero.hp + 0.001), half = hero.hp - full >= 0.5;
+    for (let i = 0; i < abilities.vidaMax; i++) {
+      emoji(i < full ? '❤️' : (i === full && half ? '💔' : '🖤'), 22 + i * 26, 22, 20);
+    }
+    HUD_ITENS.forEach(([id, ch], i) => {
+      ctx.globalAlpha = done.has(id) ? 1 : 0.2;
+      emoji(ch, viewW - 20 - (HUD_ITENS.length - 1 - i) * 24, 22, 16);
+    });
+    ctx.globalAlpha = 1;
+    const stage = STAGES[floorIdx];
+    ctx.fillStyle = '#d9e6d2';
+    ctx.font = '12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`Andar ${floorIdx + 1} de ${STAGES.length} — ${stage.tema}`, 12, 50);
+    ctx.fillStyle = '#d4c86a';
+    let objetivo;
+    if (won) objetivo = '🏆 Torre conquistada!';
+    else if (!stageDone()) objetivo = `Terminal: ${stage.title}`;
+    else if (floorIdx === LAST) objetivo = '👑 Derrote o Rei Bug!';
+    else if (floor.portao && enemies.some(e => e.type === 'turret' && e.alive)) objetivo = '🎯 Derrube as torres pra abrir o portão';
+    else objetivo = '⬆ Suba a escada no fim do andar';
+    ctx.fillText(objetivo, 12, 68);
+    if (abilities.flechas && abilities.flechas.length) {
+      const i = arrowIdx % abilities.flechas.length;
+      ctx.fillStyle = ELEM_COR[abilities.flechas[i]] || '#d9e6d2';
+      ctx.fillText(`🏹 próxima: flechas[${i}] = "${abilities.flechas[i]}" (L)`, 12, 86);
+    }
+    const boss = floor.boss && enemies.find(e => e.type === 'boss' && e.alive && e.active);
+    if (boss) {
+      ctx.fillStyle = '#020402'; ctx.globalAlpha = 0.75;
+      ctx.fillRect(0, VIEW_H - 30, viewW, 30);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = ELEM_COR[boss.elemento];
+      ctx.font = '12px "JetBrains Mono", monospace';
+      ctx.fillText(`Fase ${boss.fase + 1}/3 · ${boss.planoTxt}`, 12, VIEW_H - 15);
+    }
+    if (hero.deadT > 0) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, VIEW_H / 2 - 30, viewW, 60);
+      ctx.fillStyle = '#ff3b30'; ctx.font = 'bold 22px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+      ctx.fillText('Você caiu! Voltando ao começo do andar…', viewW / 2, VIEW_H / 2);
+    }
+    if (transicao > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(1, (50 - transicao) / 25)})`;
+      ctx.fillRect(0, 0, viewW, VIEW_H);
+    }
+  }
+
+  function render() {
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    camX = Math.max(0, Math.min(FLOOR_W - viewW, hero.x - viewW * 0.35));
+    ctx.save();
+    ctx.translate(-camX, 0);
+    drawBackground();
+    drawWorld();
+    enemies.forEach(e => { if (e.alive && e.x + e.w > camX - 80 && e.x < camX + viewW + 80) drawEnemy(e); });
+    projectiles.forEach(drawProjectile);
+    drawHero();
+    drawPet();
+    particles.forEach(p => { ctx.globalAlpha = Math.min(1, p.life / 20); ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 3, 3); });
+    ctx.globalAlpha = 1;
+    drawDarkness();
+    drawBolts();
+    texts.forEach(t => {
+      ctx.globalAlpha = Math.min(1, t.life / 20);
+      label(t.text, t.x, t.y, t.color, 12);
+    });
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    drawHud();
+  }
+
+  let last = performance.now(), acc = 0;
+  function frame(now) {
+    acc += Math.min(250, now - last);
+    last = now;
+    while (acc >= 1000 / 60) { step(); acc -= 1000 / 60; }
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Início ----------
+  rebuildAbilities();
+  loadFloor(run.andar);
+  texts = [];
+  renderTopbar();
+  resize();
+  requestAnimationFrame(frame);
+
+  if (run.won) {
+    won = true;
+    renderFinish();
+    document.getElementById('finish').classList.add('open');
+  }
+
+  (async function () {
+    const user = window.PortalSession ? await window.PortalSession.getUser().catch(() => null) : null;
+    isProfessor = !!(user && (user.role === 'professor' || user.role === 'admin'));
+    if (isProfessor && terminalStage && !done.has(terminalStage.id)) document.getElementById('btnSkipProfessor').style.display = '';
+  })();
+
+  // Ganchos pra depuração/testes automatizados (mesmo padrão de
+  // window.__heroiDoCodigo no "O Herói do Código").
+  window.__torreDoCodigo = {
+    hero, abilities, stages: STAGES,
+    get run() { return run; },
+    get enemies() { return enemies; },
+    get floorIdx() { return floorIdx; },
+    openTerminal: (i) => openTerminal(STAGES[i]),
+    loadFloor: (i) => loadFloor(i),
+    stageIndex
+  };
+})();
+</script>
+
+<script>
+  window.ACTIVITY_LOCATION = 'jogos_torre_do_codigo';
+  window.ACTIVITY_LABEL = 'Torre do Código — A Escalada do Programador';
+</script>
+<script src="../shared/activity-tracker.js"></script>
+<script src="../shared/vlibras-widget.js"></script>
+</body>
+</html>

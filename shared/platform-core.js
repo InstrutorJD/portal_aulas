@@ -3397,6 +3397,12 @@
         : 'Entre na corrida ao vivo criada pelo professor: mesma fase do Fuga do Bug pra todo mundo, mas cada checkpoint tem uma pergunta — acertar rápido rende mais pontos, errar 2x seguidas no mesmo checkpoint custa pontos.',
       icon: '🏁',
       src: '../../games/corrida-do-bug.html'
+    },
+    torredocodigo: {
+      title: 'Torre do Código — A Escalada do Programador',
+      desc: 'Suba os 13 andares da torre programando em JavaScript: cada terminal pede um código (do primeiro let até listas, laços, switch e objetos) que vira poder do herói na batalha, até o Rei Bug no topo. Vale ranking da turma, não vale nota.',
+      icon: '🗼',
+      src: '../../games/torre-do-codigo.html'
     }
     };
   }
