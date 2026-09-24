@@ -456,11 +456,11 @@ test.describe('Notas — dentro do portal da turma', () => {
     await expect(row).toContainText('85/100'); // nota da prova, em pontos — nunca em %
     // Banco de Dados: 3 de 7 módulos concluídos (sql: teoria/basico/join) =>
     // 3/7 ≈ 43% => Atividades 4,30. Prova 85/10=8,50. Nota3 (Prova Final)
-    // 70/10=7,00. Banco de Dados tem peso 3 (turmas/sistemas/config.js):
-    // Nota = (3 × 4,30 + 8,50 + 7,00) / (3 + 2) = 5.68.
-    await expect(row).toContainText('5.68');
+    // 70/10=7,00. Sem peso salvo em materia_pesos, Banco de Dados vale peso 1:
+    // Nota = (4,30 + 8,50 + 7,00) / 3 = 6.60.
+    await expect(row).toContainText('6.60');
     // Só essa matéria tem trilha neste bimestre — Média Geral = a própria nota dela.
-    await expect(row).toContainText('5.68');
+    await expect(row).toContainText('6.60');
     // Pior desempenho (maioria das matérias abaixo de 50% de CONCLUSÃO —
     // métrica separada da nota, não bimestrada) sai destacado.
     await expect(row).toHaveClass(/pior/);

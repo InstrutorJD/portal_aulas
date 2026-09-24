@@ -1207,6 +1207,38 @@ begin
   end if;
 end $$;
 
+-- Peso de cada matéria na nota (Gestão → Lançar Notas: campo "Peso"
+-- embaixo do nome da matéria) — quanto as ATIVIDADES dela valem contra
+-- Prova Diagnóstica e Prova Final (peso 1 cada). Um por turma+matéria,
+-- vale pra todos os bimestres; matéria sem linha vale 1. Ver
+-- pesoMateria em shared/platform-core.js.
+create table if not exists public.materia_pesos (
+  turma text not null,
+  materia_key text not null,
+  peso numeric not null default 1 check (peso > 0),
+  updated_at timestamptz not null default now(),
+  primary key (turma, materia_key)
+);
+
+alter table public.materia_pesos enable row level security;
+
+-- O aluno também lê: o Perfil dele calcula a nota com o mesmo peso.
+drop policy if exists "materia_pesos_select_all" on public.materia_pesos;
+create policy "materia_pesos_select_all"
+  on public.materia_pesos for select
+  using (true);
+
+drop policy if exists "materia_pesos_insert_professor" on public.materia_pesos;
+create policy "materia_pesos_insert_professor"
+  on public.materia_pesos for insert
+  with check (public.is_professor());
+
+drop policy if exists "materia_pesos_update_professor" on public.materia_pesos;
+create policy "materia_pesos_update_professor"
+  on public.materia_pesos for update
+  using (public.is_professor())
+  with check (public.is_professor());
+
 -- ============================================================
 -- BLOCO 9 — Placar dos minigames (Digitação, Campo Minado) por turma.
 -- Cada aluno guarda o MELHOR resultado dele em cada jogo; o jogo
@@ -2012,7 +2044,7 @@ end $$;
 -- Fim. Confira no painel do Supabase (Table Editor) se profiles,
 -- attendance, grades, student_module_progress, classroom_settings,
 -- student_activity, student_overrides, bimestre_dates, trilha_bimestre,
--- game_scores, quizrush_sessions/quizrush_players/
+-- materia_pesos, game_scores, quizrush_sessions/quizrush_players/
 -- quizrush_answers, student_activity_state, professor_tokens,
 -- exam_guard_events, user_preferences e corridadobug_sessions/
 -- corridadobug_players/corridadobug_progress foram criadas, se

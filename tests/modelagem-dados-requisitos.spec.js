@@ -145,15 +145,16 @@ test.describe('turmas/sistemas — trilha Modelagem de Dados e Requisitos', () =
     const blockedState = await page.evaluate(() => JSON.parse(localStorage.getItem('modelagem_dados_requisitos_questionario_guard_alexandre.natal')));
     expect(blockedState.blocked).toBe(true);
 
-    // O bloqueio também vira um alerta pendente pro sino do professor (ver
-    // shared/platform-core.js, setupExamGuardAlerts).
+    // CADA saída (a advertência e o bloqueio) vira um alerta pendente pro
+    // sino do professor (ver shared/platform-core.js, setupExamGuardAlerts).
     let alerts = await page.evaluate(() => window.__FAKE_DB__.exam_guard_events || []);
-    expect(alerts).toHaveLength(1);
-    expect(alerts[0]).toMatchObject({
+    expect(alerts).toHaveLength(2);
+    expect(alerts.map(a => a.warnings).sort()).toEqual([1, 2]);
+    alerts.forEach(a => expect(a).toMatchObject({
       student_email: 'alexandre.natal',
       activity_location: 'modelagem_dados_requisitos_questionario',
       resolved: false,
-    });
+    }));
 
     // Sem o token do professor não sai da tela de bloqueio.
     await page.fill('#unlockToken', '000000');
@@ -171,7 +172,7 @@ test.describe('turmas/sistemas — trilha Modelagem de Dados e Requisitos', () =
     // Desbloqueio pelo token físico também fecha o alerta pendente — senão
     // o sino do professor mostraria pra sempre um aluno que já foi liberado.
     alerts = await page.evaluate(() => window.__FAKE_DB__.exam_guard_events || []);
-    expect(alerts).toHaveLength(1);
-    expect(alerts[0]).toMatchObject({ resolved: true, resolution: 'liberado' });
+    expect(alerts).toHaveLength(2);
+    alerts.forEach(a => expect(a).toMatchObject({ resolved: true, resolution: 'liberado' }));
   });
 });

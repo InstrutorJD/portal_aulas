@@ -31,6 +31,7 @@
   let turmaStudentsCache = []; // alunos ATIVOS da turma (profiles, archived_at is null) — ver turmaStudents()
   let turmaArchivedCache = []; // alunos arquivados da turma (só usado pela seção "Alunos" da Gestão)
   let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim, notas_liberadas} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
+  let materiaPesoCache = {}; // materiaKey -> peso das atividades na nota, digitado pelo professor em Gestão → Lançar Notas (materia_pesos), ver pesoMateria()
   let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
   let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
   // fontMode saiu daqui — a fonte agora é controlada por prefs.fontFamily
@@ -43,7 +44,7 @@
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
   let alunoEmRecuperacao = false; // aluno com alguma matéria abaixo de 6,0 no bimestre atual — mostra o card "Recuperação" (ver refreshRecuperacaoStatus)
   let viewingStudentEmail = null; // não-nulo quando o PROFESSOR abriu o Perfil de um aluno (ver openStudentPerfil) — nunca setado pro aluno vendo o próprio
-  let examGuardEvents = []; // alertas pendentes (aluno saiu 2x de atividade/prova bloqueada) — só professor, ver setupExamGuardAlerts()
+  let examGuardEvents = []; // alertas pendentes (aluno saiu da tela numa atividade/prova protegida — advertência ou bloqueio), um por aluno+atividade — só professor, ver setupExamGuardAlerts()
   let examGuardRealtimeStarted = false;
 
   // ---------- Personalização do portal (botão de perfil → 🎨 Personalizar)
@@ -651,7 +652,7 @@
   // e quase todo mundo apareceria "em recuperação" no meio do bimestre.
   async function refreshRecuperacaoStatus() {
     if (!recuperacaoMateria || !sbClient || currentUser.role !== 'aluno') return;
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre(), fetchMateriaPesos()]);
     const bimestreAtual = currentBimestreNum();
     let emRecuperacao = false;
     if (bimestreAtual && (bimestreDatesCache[bimestreAtual] || {}).notas_liberadas) {
@@ -1679,9 +1680,10 @@
     }
   }
 
-  // ---------- Sino de alertas: aluno saiu 2x de uma atividade/prova que
-  // não podia sair e ficou bloqueado (detecção em shared/exam-proctor.js,
-  // PortalExamGuard) — só professor. ----------
+  // ---------- Sino de alertas: aluno saiu da tela numa atividade/prova
+  // que não podia sair (detecção em shared/exam-proctor.js,
+  // PortalExamGuard) — só professor. Chega um alerta a CADA saída: a 1ª
+  // é advertência (warnings 1), a 2ª bloqueia (warnings 2). ----------
   function humanizeActivityKey(key) {
     return (key || '').split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
@@ -1701,21 +1703,29 @@
       box.innerHTML = '<p class="exam-guard-empty">Nenhum alerta pendente. 🎉</p>';
       return;
     }
-    box.innerHTML = examGuardEvents.map(ev => `
-      <div class="exam-guard-item" data-event-id="${ev.id}">
-        <b>${ev.student_name || ev.student_email}</b>
-        <div class="exam-guard-meta">Saiu de "${humanizeActivityKey(ev.activity_location)}" e foi bloqueado há ${formatDurationSince(ev.created_at)}.</div>
+    // Bloqueado: "Liberar" destrava a atividade na hora. Advertência:
+    // "Liberar" zera a advertência (a próxima saída volta a ser a 1ª).
+    box.innerHTML = examGuardEvents.map(ev => {
+      const bloqueado = (ev.warnings || 0) >= 2;
+      const meta = bloqueado
+        ? `Saiu de "${humanizeActivityKey(ev.activity_location)}" pela 2ª vez e foi bloqueado há ${formatDurationSince(ev.created_at)}.`
+        : `Saiu da tela em "${humanizeActivityKey(ev.activity_location)}" há ${formatDurationSince(ev.created_at)} (advertência ${ev.warnings || 1}/2).`;
+      return `
+      <div class="exam-guard-item" data-event-ids="${ev.ids.join(',')}">
+        <b>${bloqueado ? '🚨' : '⚠️'} ${ev.student_name || ev.student_email}</b>
+        <div class="exam-guard-meta">${meta}</div>
         <div class="exam-guard-actions">
           <button class="btn" data-acao="liberado">Liberar</button>
-          <button class="btn btn-danger" data-acao="mantido">Manter bloqueado</button>
+          <button class="btn btn-danger" data-acao="mantido">${bloqueado ? 'Manter bloqueado' : 'Ciente'}</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     box.querySelectorAll('.exam-guard-item').forEach(item => {
-      const eventId = item.getAttribute('data-event-id');
+      const eventIds = item.getAttribute('data-event-ids').split(',');
       item.querySelectorAll('button[data-acao]').forEach(btn => {
-        btn.addEventListener('click', () => resolverExamGuardEvento(eventId, btn.getAttribute('data-acao'), item));
+        btn.addEventListener('click', () => resolverExamGuardEvento(eventIds, btn.getAttribute('data-acao'), item));
       });
     });
   }
@@ -1729,7 +1739,7 @@
 
   async function fetchExamGuardEvents() {
     if (!sbClient) return;
-    const previousIds = new Set(examGuardEvents.map(ev => ev.id));
+    const previousIds = new Set(examGuardEvents.allIds || []);
     const { data } = await sbClient.from('exam_guard_events')
       .select('*')
       .eq('turma', cfg.id)
@@ -1738,25 +1748,49 @@
     const rows = data || [];
     if (examGuardFirstFetchDone) {
       rows.filter(ev => !previousIds.has(ev.id)).forEach(ev => {
-        showToast('🚨 Aluno bloqueado', `${ev.student_name || ev.student_email} saiu de "${humanizeActivityKey(ev.activity_location)}" e foi bloqueado.`);
+        if ((ev.warnings || 0) >= 2) {
+          showToast('🚨 Aluno bloqueado', `${ev.student_name || ev.student_email} saiu de "${humanizeActivityKey(ev.activity_location)}" e foi bloqueado.`);
+        } else {
+          showToast('⚠️ Aluno saiu da tela', `${ev.student_name || ev.student_email} saiu da tela em "${humanizeActivityKey(ev.activity_location)}" (advertência ${ev.warnings || 1}/2).`);
+        }
       });
     }
     examGuardFirstFetchDone = true;
-    examGuardEvents = rows;
+    // Um card por aluno+atividade: a advertência e o bloqueio da mesma
+    // prova viram um card só, com o estado mais recente (rows já vêm do
+    // mais novo pro mais antigo). `ids` guarda todos, pra resolver juntos.
+    const grupos = new Map();
+    rows.forEach(ev => {
+      const chave = ev.student_email + '|' + ev.activity_location;
+      const g = grupos.get(chave);
+      if (g) {
+        g.ids.push(ev.id);
+        if ((ev.warnings || 0) > (g.warnings || 0)) g.warnings = ev.warnings;
+      } else {
+        grupos.set(chave, Object.assign({}, ev, { ids: [ev.id] }));
+      }
+    });
+    examGuardEvents = Array.from(grupos.values());
+    // previousIds precisa de TODOS os ids, não só do card.
+    examGuardEvents.allIds = rows.map(ev => ev.id);
     renderExamGuardBadge();
     renderExamGuardList();
   }
 
-  async function resolverExamGuardEvento(eventId, acao, itemEl) {
+  async function resolverExamGuardEvento(eventIds, acao, itemEl) {
     if (!sbClient) return;
     itemEl.querySelectorAll('button').forEach(b => { b.disabled = true; });
-    const { error } = await sbClient.rpc('resolver_exam_guard_event', { p_event_id: eventId, p_acao: acao });
-    if (error) {
-      showAlert('Não foi possível resolver o alerta: ' + error.message);
-      itemEl.querySelectorAll('button').forEach(b => { b.disabled = false; });
-      return;
+    for (const eventId of eventIds) {
+      const { error } = await sbClient.rpc('resolver_exam_guard_event', { p_event_id: eventId, p_acao: acao });
+      if (error) {
+        showAlert('Não foi possível resolver o alerta: ' + error.message);
+        itemEl.querySelectorAll('button').forEach(b => { b.disabled = false; });
+        return;
+      }
     }
-    examGuardEvents = examGuardEvents.filter(ev => ev.id !== eventId);
+    const allIds = (examGuardEvents.allIds || []).filter(id => !eventIds.includes(id));
+    examGuardEvents = examGuardEvents.filter(ev => !ev.ids.some(id => eventIds.includes(id)));
+    examGuardEvents.allIds = allIds;
     renderExamGuardBadge();
     renderExamGuardList();
   }
@@ -2029,7 +2063,7 @@
   //   (peso × atividades + Prova + Nota 3) / (peso + 2)
   // As duas provas são as mesmas pra todas as matérias do aluno — sem o
   // peso, quem concluía tudo tirava a MESMA nota em todas as matérias.
-  // Peso 1 = a média simples de antes. A Recuperação (grades.nota4) não
+  // Peso 1 = média simples. A Recuperação (grades.nota4) não
   // entra aqui — ela só se aplica DEPOIS, ver aplicarRecuperacao, e só
   // quando a nota base fica abaixo de 6,0.
   function calcMedia(n1, n2, n3, peso = 1) {
@@ -2037,11 +2071,20 @@
     return Math.round(((peso * vals[0] + vals[1] + vals[2]) / (peso + 2)) * 100) / 100;
   }
 
-  // Peso das ATIVIDADES de uma matéria na nota (campo `peso` de cada
-  // matéria em turmas/*/config.js). Sem `peso` (ou inválido) vale 1.
+  // Peso das ATIVIDADES de uma matéria na nota — digitado pelo professor
+  // no campo embaixo do nome da matéria em Gestão → Lançar Notas (tabela
+  // materia_pesos, um por turma+matéria, vale pra todos os bimestres).
+  // Matéria sem peso salvo (ou inválido) vale 1.
   function pesoMateria(materia) {
-    const p = parseFloat(materia && materia.peso);
+    const p = parseFloat(materia && materiaPesoCache[materia.key]);
     return p > 0 ? p : 1;
+  }
+
+  async function fetchMateriaPesos() {
+    if (!sbClient) return;
+    const { data } = await sbClient.from('materia_pesos').select('*').eq('turma', cfg.id);
+    materiaPesoCache = {};
+    (data || []).forEach(r => { materiaPesoCache[r.materia_key] = r.peso; });
   }
 
   // Recuperação (grades.nota4, rótulo "Recuperação" na tela): um valor só
@@ -2149,9 +2192,16 @@
     const materias = materiasParaNotas();
     const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3 (rótulo configurável via cfg.nota3Label), Recuperação + 1 por matéria
 
-    theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label} <span style="color:var(--ink-dim); font-size:10px; font-weight:400;">(peso ${pesoMateria(m)})</span></th>`).join('')}`;
+    const renderHead = () => {
+      theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label}<label class="peso-materia-field">Peso <input type="number" step="0.5" min="0.5" max="10" class="peso-materia-input" data-materia="${m.key}" value="${pesoMateria(m)}"></label></th>`).join('')}`;
+    };
+    renderHead();
 
     if (!sbClient) { tbody.innerHTML = noSupabaseRow(totalCols); return; }
+    // Antes de qualquer return: "Salvar" grava os pesos que estão nos
+    // campos, então eles precisam mostrar o que já está salvo.
+    await fetchMateriaPesos();
+    renderHead();
 
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const students = turmaStudents();
@@ -2248,7 +2298,7 @@
         }
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;
         const notaFinal = aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
-        return `<td class="materia-grade-cell" data-materia-n1="${mn1}" data-materia-peso="${pesoMateria(m)}"><span class="materia-grade-value">${notaFinal.toFixed(2)}</span></td>`;
+        return `<td class="materia-grade-cell" data-materia-n1="${mn1}" data-materia="${m.key}"><span class="materia-grade-value">${notaFinal.toFixed(2)}</span></td>`;
       }).join('');
 
       return `
@@ -2265,7 +2315,8 @@
     // Nota 3 (ou Prova/Nota 3 inteiras, pra aluno com nota manual — ver
     // notaManual acima) e Recuperação mudam a nota de TODAS as matérias ao
     // mesmo tempo (são compartilhadas entre elas) — recalcula as células
-    // de matéria ao vivo. Prova/Nota 3 podem ser uma célula travada (auto)
+    // de matéria ao vivo. O peso de uma matéria (campo no cabeçalho) muda
+    // a coluna dela em todas as linhas. Prova/Nota 3 podem ser uma célula travada (auto)
     // em vez de <input>, por isso lê o valor atual pelo seletor certo em
     // cada recálculo, em vez de assumir a ordem dos <input>.
     tbody.querySelectorAll('tr[data-email]').forEach(tr => {
@@ -2279,11 +2330,17 @@
         materiaCells.forEach(cell => {
           if (cell.dataset.semTrilha) return;
           const mn1 = parseFloat(cell.dataset.materiaN1);
-          cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3, parseFloat(cell.dataset.materiaPeso) || 1), n4).toFixed(2);
+          const pesoInput = theadRow.querySelector(`.peso-materia-input[data-materia="${cell.dataset.materia}"]`);
+          const peso = parseFloat(pesoInput && pesoInput.value);
+          cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3, peso > 0 ? peso : 1), n4).toFixed(2);
         });
       };
       tr.querySelectorAll('.nota-input').forEach(inp => inp.addEventListener('input', recalc));
+      tr._recalcNotas = recalc;
     });
+    theadRow.querySelectorAll('.peso-materia-input').forEach(inp => inp.addEventListener('input', () => {
+      tbody.querySelectorAll('tr[data-email]').forEach(tr => tr._recalcNotas && tr._recalcNotas());
+    }));
 
     document.getElementById('notasStatus').textContent = '';
   }
@@ -2319,6 +2376,17 @@
         updated_at: now
       };
     });
+
+    // Pesos das matérias (campos do cabeçalho) — salvos junto, mesmo sem
+    // aluno nenhum na turma. Campo vazio/inválido vira 1 (ver pesoMateria).
+    const pesoRows = Array.from(document.querySelectorAll('#notasHead .peso-materia-input')).map(inp => {
+      const p = parseFloat(inp.value);
+      return { turma: cfg.id, materia_key: inp.dataset.materia, peso: p > 0 ? p : 1, updated_at: now };
+    });
+    if (pesoRows.length) {
+      await sbClient.from('materia_pesos').upsert(pesoRows, { onConflict: 'turma,materia_key' });
+      pesoRows.forEach(r => { materiaPesoCache[r.materia_key] = r.peso; });
+    }
 
     if (rows.length === 0) return;
     await sbClient.from('grades').upsert(rows, { onConflict: 'student_email,bimestre' });
@@ -2650,7 +2718,7 @@
     // mostra o bimestre atual por enquanto — não dá pra escolher ver um
     // bimestre anterior ainda (ver notaPorMateria logo abaixo, que reusa o
     // mesmo bimestreAtual pra não buscar de novo).
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre(), fetchMateriaPesos()]);
     const bimestreAtual = currentBimestreNum();
     // "Mostrar Notas" (Gestão → Bloqueios e Liberações): o aluno só vê a
     // NOTA/selo de cada matéria depois que o professor liga isso PRA ESTE
@@ -2870,7 +2938,7 @@
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     const nota3Auto = !!cfg.nota3ActivityLocation;
 
-    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
+    await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre(), fetchMateriaPesos()]);
 
     const [gradesRes, progressRes, notaProvaByStudent, nota3AutoByStudent] = await Promise.all([
       sbClient.from('grades').select('*').eq('turma', cfg.id).eq('bimestre', bimestre),

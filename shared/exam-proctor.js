@@ -172,10 +172,18 @@ window.PortalExamGuard = (function () {
         const remote = data && data.state;
         if (remote) {
           const remoteFurther = (!!remote.blocked && !instance.blocked) || ((remote.warnings || 0) > instance.warnings);
-          if (remoteFurther) {
+          // O professor clicou "Liberar" no sino (resolver_exam_guard_event
+          // zera a linha remota) enquanto esta aba estava fechada ou
+          // recarregando — o aviso em tempo real se perdeu, mas a linha
+          // remota é MAIS NOVA que a local, então ela vale. Sem isso, o
+          // bloqueio local "mais grave" ganhava e o aluno ficava preso.
+          const remoteTime = Date.parse(remote.updatedAt || '') || 0;
+          const localTime = Date.parse(local.updatedAt || '') || 0;
+          const remoteNewer = remoteTime > localTime;
+          if (remoteFurther || remoteNewer) {
             instance.warnings = remote.warnings || 0;
             instance.blocked = !!remote.blocked;
-            writeLocal(activityLocation, instance.username, { warnings: instance.warnings, blocked: instance.blocked });
+            writeLocal(activityLocation, instance.username, { warnings: instance.warnings, blocked: instance.blocked, updatedAt: remote.updatedAt || new Date().toISOString() });
           }
         }
       } catch (e) { /* best-effort — localStorage já é a fonte confiável local */ }
@@ -189,24 +197,42 @@ window.PortalExamGuard = (function () {
     return instance;
   }
 
-  // Assina exam_guard_events em tempo real pra recarregar a atividade
-  // sozinha assim que o PROFESSOR clicar "Liberar" no sino de alertas
-  // (ver setupExamGuardAlerts em shared/platform-core.js). Sem isso, um
-  // "Liberar" clicado remotamente só valeria depois que o aluno recarregar
-  // a página por conta própria — o professor ficaria achando que já
-  // liberou, mas o aluno continuaria preso na tela de bloqueio.
+  // Assina exam_guard_events em tempo real pra reagir assim que o
+  // PROFESSOR clicar "Liberar" no sino de alertas (ver setupExamGuardAlerts
+  // em shared/platform-core.js). Bloqueado: recarrega a atividade sozinha
+  // (sem isso o aluno continuaria preso na tela de bloqueio até recarregar
+  // por conta própria). Só com advertência: zera a contagem na hora, sem
+  // recarregar — a próxima saída volta a ser a 1ª advertência.
   function watchForRemoteUnlock(instance) {
     if (instance.disabled || !instance.sb || instance._remoteUnlockChannel) return;
     instance._remoteUnlockChannel = instance.sb
       .channel('realtime_exam_guard_owner_' + instance.username)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'exam_guard_events', filter: `student_email=eq.${instance.username}` }, (payload) => {
-        const row = payload.new;
+        const row = payload && payload.new;
         if (row && row.activity_location === instance.activityLocation && row.resolved && row.resolution === 'liberado') {
-          writeLocal(instance.activityLocation, instance.username, { warnings: 0, blocked: false });
-          window.location.reload();
+          const wasBlocked = instance.blocked;
+          instance.warnings = 0;
+          instance.blocked = false;
+          writeLocal(instance.activityLocation, instance.username, { warnings: 0, blocked: false, updatedAt: new Date().toISOString() });
+          if (wasBlocked) window.location.reload();
         }
       })
       .subscribe();
+  }
+
+  // Alerta pro sino do professor — a CADA saída (advertência ou bloqueio),
+  // com `warnings` dizendo qual das duas foi (1 = advertência, 2 =
+  // bloqueio). O professor decide por lá se libera o aluno.
+  function notifyProfessor(instance) {
+    if (!instance.sb) return;
+    instance.sb.from('exam_guard_events').insert({
+      student_email: instance.username,
+      student_name: instance.studentName,
+      turma: instance.turma,
+      activity_location: instance.activityLocation,
+      warnings: instance.warnings,
+      resolved: false
+    }).then(() => {}, () => {});
   }
 
   // Liga o listener de troca de aba. onWarning(count) roda na 1ª saída;
@@ -222,6 +248,8 @@ window.PortalExamGuard = (function () {
   function arm(instance, { onWarning, onBlocked, isCompleted } = {}) {
     if (instance.disabled || instance.blocked || instance.armed) return;
     instance.armed = true;
+    // Já escuta o "Liberar" do professor desde a 1ª advertência.
+    watchForRemoteUnlock(instance);
     const hasFinished = typeof isCompleted === 'function'
       ? isCompleted
       : () => quizCompleted(instance.activityLocation, instance.username);
@@ -240,20 +268,7 @@ window.PortalExamGuard = (function () {
         instance.armed = false;
         stopListening(instance);
         persist(instance);
-        // Avisa o professor (sino de alertas em shared/platform-core.js) —
-        // só no BLOQUEIO de verdade (2ª saída), não a cada advertência
-        // isolada: é o momento em que o aluno efetivamente saiu de uma
-        // atividade/prova que não podia sair.
-        if (instance.sb) {
-          instance.sb.from('exam_guard_events').insert({
-            student_email: instance.username,
-            student_name: instance.studentName,
-            turma: instance.turma,
-            activity_location: instance.activityLocation,
-            warnings: instance.warnings,
-            resolved: false
-          }).then(() => {}, () => {});
-        }
+        notifyProfessor(instance);
         watchForRemoteUnlock(instance);
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(instance.activityLocation, 'Questionário BLOQUEADO — saiu do portal 2x', { blocked: true });
@@ -261,6 +276,7 @@ window.PortalExamGuard = (function () {
         if (onBlocked) onBlocked();
       } else {
         persist(instance);
+        notifyProfessor(instance);
         if (typeof window.reportActivity === 'function') {
           window.reportActivity(instance.activityLocation, `Questionário — advertência ${instance.warnings}/2 (saiu do portal)`, { warnings: instance.warnings });
         }

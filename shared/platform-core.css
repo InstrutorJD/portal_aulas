@@ -303,6 +303,9 @@ button.btn-secondary:hover{
 .field-row{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }
 .status-msg{ font-size:11px; color:var(--ink-dim); }
 .media-cell{ color:var(--yellow); font-weight:700; }
+/* Campo de peso embaixo do nome de cada matéria (cabeçalho de Lançar Notas) */
+.peso-materia-field{ display:flex; align-items:center; gap:6px; margin-top:6px; font-size:10px; font-weight:400; color:var(--ink-dim); }
+.peso-materia-field input{ width:64px; padding:4px 6px; }
 select, input[type="date"], input[type="number"], input[type="text"]{
   background:var(--panel2); color:var(--ink); border:1px solid var(--line);
   padding:7px 10px; font-family:inherit; font-size:12px; border-radius:var(--radius-sm);
