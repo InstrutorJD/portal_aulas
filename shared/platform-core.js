@@ -231,16 +231,13 @@
           <button id="btnLibras" title="Ativar Libras (VLibras)" aria-label="Ativar Libras">🤟</button>
         </div>
         <div id="sessionControl">
+          <span class="welcome-msg" id="txtWelcome">Bem-vindo(a), <b id="txtUserNom">--</b></span>
+          <span class="ranking-badge" id="rankingBadge" style="display:none;"></span>
           <button id="btnLogout" class="btn-danger" style="padding:4px 8px; font-size:10px;">Sair</button>
         </div>
       </div>
 
       <div class="app-container">
-        <div class="statusbar">
-          <div class="user-info">Usuário: <b id="txtUserNom">--</b> | Turma: <b id="txtUserTurma">--</b></div>
-          <div class="ranking-badge" id="rankingBadge" style="display:none;"></div>
-        </div>
-
         <div class="tabs" id="mainNavTabs">
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
@@ -466,6 +463,13 @@
                       <option value="4">4º Bimestre</option>
                     </select>
                   </div>
+                </div>
+                <div class="toggle-row" style="max-width:420px; border-bottom:none;">
+                  <div>
+                    <div class="toggle-row-label">Destacar notas abaixo de 6,0</div>
+                    <div class="toggle-row-desc">Pinta de vermelho as notas baixas desta tabela.</div>
+                  </div>
+                  <button class="toggle-switch" id="toggleNotasBaixas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="audit-table">
@@ -2186,6 +2190,36 @@
     return (cfg.materias || []).filter(m => m.key !== 'prova');
   }
 
+  // "Destacar notas abaixo de 6,0" (chave em Gestão → Lançar Notas): só
+  // visual, pro professor bater o olho nas notas baixas. Preferência deste
+  // navegador (localStorage), ligada por padrão — não vai pro Supabase
+  // porque não muda nada pro aluno. 6,0 é o mesmo corte de
+  // aplicarRecuperacao/selo "Recuperação".
+  const NOTAS_BAIXAS_KEY = 'pf_destacar_notas_baixas';
+  function destacarNotasBaixasOn() {
+    try { return localStorage.getItem(NOTAS_BAIXAS_KEY) !== '0'; } catch (e) { return true; }
+  }
+
+  // Pinta (ou despinta) cada nota da tabela: matérias, Prova/Nota 3
+  // automáticas e os campos digitáveis. Ignora célula sem nota de verdade
+  // (matéria "sem trilha", prova que não é deste bimestre/não feita, campo
+  // vazio) — ali o 0/— não é nota baixa, é falta de nota.
+  function pintarNotasBaixas() {
+    const on = destacarNotasBaixasOn();
+    setToggleState('toggleNotasBaixas', on);
+    document.querySelectorAll('#notasBody .materia-grade-cell, #notasBody .prova-cell, #notasBody .nota3-cell, #notasBody .nota-input').forEach(el => {
+      let v = NaN;
+      if (el.classList.contains('nota-input')) {
+        v = el.value.trim() === '' ? NaN : parseFloat(el.value);
+      } else if (el.classList.contains('materia-grade-cell')) {
+        if (!el.dataset.semTrilha) v = parseFloat(el.querySelector('.materia-grade-value').textContent);
+      } else if (!el.querySelector('span')) {
+        v = parseFloat(el.dataset.nota2 ?? el.dataset.nota3);
+      }
+      el.classList.toggle('nota-baixa', on && v < 6);
+    });
+  }
+
   async function loadNotas() {
     const tbody = document.getElementById('notasBody');
     const theadRow = document.getElementById('notasHead');
@@ -2334,6 +2368,7 @@
           const peso = parseFloat(pesoInput && pesoInput.value);
           cell.querySelector('.materia-grade-value').textContent = aplicarRecuperacao(calcMedia(mn1, n2, n3, peso > 0 ? peso : 1), n4).toFixed(2);
         });
+        pintarNotasBaixas();
       };
       tr.querySelectorAll('.nota-input').forEach(inp => inp.addEventListener('input', recalc));
       tr._recalcNotas = recalc;
@@ -2342,6 +2377,7 @@
       tbody.querySelectorAll('tr[data-email]').forEach(tr => tr._recalcNotas && tr._recalcNotas());
     }));
 
+    pintarNotasBaixas();
     document.getElementById('notasStatus').textContent = '';
   }
 
@@ -2458,7 +2494,7 @@
   // aluno alvo cai, mas só devolve a dele — nome/posição de colegas nunca
   // chegam a aparecer na tela (só entram como chave de desempate no sort).
   // Sem targetEmail, usa o usuário logado (paramUser) — é assim que o badge
-  // da statusbar (renderRankingBadge) e a própria aba Perfil do aluno usam.
+  // do topo, ao lado do Sair (renderRankingBadge) e a própria aba Perfil do aluno usam.
   // Com targetEmail explícito, calcula a posição de QUALQUER aluno da turma
   // — é o que a Gestão usa pra abrir o Perfil de um aluno específico
   // (openStudentPerfil). Não precisa mais checar `role === 'aluno'` aqui:
@@ -3366,6 +3402,11 @@
     document.getElementById('btnGerarPdfPresenca').addEventListener('click', gerarPdfChamadaMes);
     document.getElementById('btnGerarRelatorioNotas').addEventListener('click', gerarRelatorioNotasCompleto);
     document.getElementById('notasBimestre').addEventListener('change', loadNotas);
+    setToggleState('toggleNotasBaixas', destacarNotasBaixasOn());
+    document.getElementById('toggleNotasBaixas').addEventListener('click', () => {
+      try { localStorage.setItem(NOTAS_BAIXAS_KEY, destacarNotasBaixasOn() ? '0' : '1'); } catch (e) {}
+      pintarNotasBaixas();
+    });
     document.getElementById('btnSalvarNotas').addEventListener('click', salvarNotas);
     document.getElementById('btnSalvarBimestreDatas').addEventListener('click', salvarBimestreDatas);
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
@@ -4011,7 +4052,6 @@
   // ---------- Bootstrap ----------
   function setupRBAC() {
     document.getElementById('txtUserNom').textContent = currentUser.nome;
-    document.getElementById('txtUserTurma').textContent = currentUser.role === 'professor' ? 'Corpo Docente' : cfg.label;
 
     // Bimestres/trilha-bimestre valem pros dois papéis: o aluno depende
     // deles pra saber o que está visível, e agora o professor também —

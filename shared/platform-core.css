@@ -83,15 +83,17 @@ html[data-theme="light"] body{
 
 .app-container{ flex:1; display:flex; flex-direction:column; max-width:1280px; width:100%; margin:0 auto; padding:8px 16px; overflow:hidden; }
 
-.statusbar{
-  display:flex; align-items:center; justify-content:space-between; gap:18px;
-  border:1px solid var(--line); background:var(--panel); padding:6px 12px; margin-bottom:8px; flex-wrap:wrap;
-  border-radius:var(--radius-md); box-shadow:0 4px 14px rgba(0,0,0,0.4);
+/* Saudação no topo, ao lado do Sair (substituiu a antiga barra
+   "Usuário | Turma"); nome longo corta com reticências em vez de quebrar a barra. */
+.a11y-bar #sessionControl{ gap:8px; min-width:0; }
+.welcome-msg{
+  font-size:12px; color:var(--ink-dim); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; max-width:320px;
 }
-.user-info{ font-size:12px; color:var(--yellow); }
+.welcome-msg b{ color:var(--yellow); }
 .ranking-badge{
-  font-size:11.5px; font-weight:700; color:var(--green); background:var(--panel2);
-  border:1px solid var(--green-dim); padding:4px 10px; border-radius:var(--radius-pill); white-space:nowrap;
+  font-size:11px; font-weight:700; color:var(--green); background:var(--panel);
+  border:1px solid var(--green-dim); padding:2px 8px; border-radius:var(--radius-pill); white-space:nowrap;
 }
 
 .tabs{ display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
@@ -298,6 +300,10 @@ button.btn-secondary:hover{
 .toggle-switch.on .toggle-switch-knob{ transform:translateX(14px); }
 .toggle-switch:disabled{ opacity:0.35; cursor:not-allowed; }
 
+/* Lançar Notas com "Destacar notas abaixo de 6,0" ligado (pintarNotasBaixas). */
+.nota-baixa, .nota-baixa .materia-grade-value{ color:var(--blood-bright); font-weight:700; }
+input.nota-input.nota-baixa{ border-color:var(--blood-bright); }
+
 /* Chamada / Notas (aba Gestão, só professor) */
 .field-label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
 .field-row{ display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin-bottom:14px; }
@@ -458,7 +464,7 @@ iframe{ width:100%; height:100%; border:none; display:block; }
 @media (max-width:700px){
   .a11y-bar{ padding:4px 10px; }
   .app-container{ padding:6px 10px; }
-  .statusbar{ padding:6px 10px; gap:10px; }
+  .welcome-msg{ max-width:170px; }
   .card{ padding:11px; }
   .tab-btn{ padding:6px 11px; font-size:11px; }
   .subtabs select{ min-width:0; flex:1; }

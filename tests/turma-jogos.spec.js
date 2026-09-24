@@ -82,7 +82,7 @@ test.describe('turmas/jogos/plataforma.html', () => {
   test('carrega tema, usuário e trilhas dentro de Fundamentos de Programação', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#txtUserNom')).toHaveText('Breno Silva');
-    await expect(page.locator('#txtUserTurma')).toHaveText('Jogos Digitais');
+    await expect(page.locator('#txtWelcome')).toHaveText('Bem-vindo(a), Breno Silva');
 
     await openMateria1(page);
 

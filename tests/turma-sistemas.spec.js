@@ -19,7 +19,7 @@ test.describe('turmas/sistemas/plataforma.html', () => {
   test('carrega com tema próprio, diferente do tema de Jogos', async ({ page }) => {
     await page.goto(URL);
     await expect(page.locator('#txtUserNom')).toHaveText('Alexandre Natal');
-    await expect(page.locator('#txtUserTurma')).toHaveText('Sistemas');
+    await expect(page.locator('#txtWelcome')).toHaveText('Bem-vindo(a), Alexandre Natal');
 
     const green = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--green').trim());
     expect(green).toBe('#3aa0ff');
