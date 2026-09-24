@@ -93,6 +93,13 @@
     color: var(--blood-bright); font-size: 11px; margin-top: 12px;
     text-align: center; display: none; font-weight: bold;
   }
+  /* Rodapé só da tela de login: versão do portal + copyright. */
+  .login-footer {
+    position: fixed; left: 0; right: 0; bottom: 12px;
+    text-align: center; font-size: 10.5px; color: var(--ink-dim);
+    letter-spacing: 0.5px; pointer-events: none;
+  }
+  .login-footer .sep { margin: 0 6px; opacity: 0.5; }
 </style>
 </head>
 <body>
@@ -165,10 +172,17 @@
   </form>
 </div>
 
+<!-- versão: manter igual ao "version" do package.json -->
+<footer class="login-footer">
+  Portal v1.0.0<span class="sep">|</span>&copy; <span id="anoCopy">2026</span> Axis Corp.
+</footer>
+
 <script src="shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="shared/session.js"></script>
 <script>
+document.getElementById('anoCopy').textContent = new Date().getFullYear();
+
 // Palavra "Axis" do topo: acompanha o mouse inclinando alguns graus (suavizado
 // com requestAnimationFrame). Com o mouse em cima dela, volta ao centro,
 // fica parada e acende o neon forte (classe .acesa).
