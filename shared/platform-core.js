@@ -72,6 +72,18 @@
     laranja:   { label: 'Laranja Terracota', accent: '#ea580c', accentDim: '#b8450a' },
     rosa:      { label: 'Rosa Framboesa',   accent: '#db2777', accentDim: '#a81d5c' },
     ciano:     { label: 'Ciano Petróleo',   accent: '#0891b2', accentDim: '#066a85' },
+    // fx:'neon' = cor bem saturada + brilho (box/text-shadow) nos botões e
+    // títulos do shell, ver :root[data-accent-fx="neon"] no CSS.
+    neonVerde: { label: 'Neon Verde',       accent: '#39ff14', accentDim: '#1fae0a', fx: 'neon' },
+    neonRosa:  { label: 'Neon Rosa',        accent: '#ff2bd6', accentDim: '#b01a93', fx: 'neon' },
+    neonCiano: { label: 'Neon Ciano',       accent: '#00f0ff', accentDim: '#00a6b3', fx: 'neon' },
+    neonRoxo:  { label: 'Neon Roxo',        accent: '#b026ff', accentDim: '#7a12b8', fx: 'neon' },
+    // anim: a cor vai mudando sozinha (ver syncAccentAnim) — accent fica
+    // null porque o valor é calculado a cada passo, não fixo.
+    arcoiris:  { label: 'Arco-íris (vai trocando de cor)', accent: null, accentDim: null, fx: 'neon', anim: 'arcoiris',
+                 swatch: 'conic-gradient(#ff3b30, #ffb000, #39ff14, #00f0ff, #2f6fed, #b026ff, #ff2bd6, #ff3b30)' },
+    aurora:    { label: 'Aurora (verde, azul e roxo)', accent: null, accentDim: null, fx: 'neon', anim: 'aurora',
+                 swatch: 'linear-gradient(135deg, #39ff14, #00f0ff, #b026ff)' },
   };
 
   // Paleta clara única (não varia por turma) — só troca os tokens neutros
@@ -85,6 +97,7 @@
   // Cursores customizados — SVGs pequenos embutidos como data URI (sem
   // arquivo novo, sem CDN), aplicados via <style>*{cursor:...!important}
   // injetado (cobre até elementos que já têm cursor:pointer no CSS deles).
+  // trail: o cursor deixa um rastro animado ao mover (ver applyCursorTrail).
   const CURSOR_PRESETS = {
     default: { label: 'Padrão', css: 'auto' },
     seta: {
@@ -111,8 +124,36 @@
       label: 'Caveira',
       css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><ellipse cx='16' cy='13' rx='11' ry='10' fill='%23d9e6d2'/><rect x='8' y='20' width='16' height='8' fill='%23d9e6d2'/><circle cx='11' cy='13' r='3' fill='%2304220a'/><circle cx='21' cy='13' r='3' fill='%2304220a'/><polygon points='16,16 14,20 18,20' fill='%2304220a'/></svg>") 4 4, auto`,
     },
+    fantasma: {
+      label: 'Fantasma',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><path d='M4 14 C 4 6, 10 2, 16 2 C 22 2, 28 6, 28 14 L 28 29 L 24 26 L 20 29 L 16 26 L 12 29 L 8 26 L 4 29 Z' fill='%23f4f6fb' stroke='%23555566' stroke-width='1'/><circle cx='12' cy='13' r='2.5' fill='%23222222'/><circle cx='20' cy='13' r='2.5' fill='%23222222'/><ellipse cx='16' cy='20' rx='2' ry='3' fill='%23222222'/></svg>") 4 4, auto`,
+    },
+    raio: {
+      label: 'Raio',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><polygon points='18,1 5,18 14,18 10,31 27,11 17,11 22,1' fill='%23ffe14d' stroke='%23ff9500' stroke-width='1.2'/></svg>") 18 1, auto`,
+    },
+    pizza: {
+      label: 'Pizza',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><polygon points='3,3 29,10 10,29' fill='%23ffc94d' stroke='%23c77d1a' stroke-width='2'/><path d='M29 10 L 10 29' stroke='%23c77d1a' stroke-width='4' stroke-linecap='round'/><circle cx='12' cy='12' r='2.5' fill='%23d62828'/><circle cx='19' cy='15' r='2.3' fill='%23d62828'/><circle cx='13' cy='20' r='2.2' fill='%23d62828'/></svg>") 3 3, auto`,
+    },
+    foguete: {
+      label: 'Foguete ✨', trail: 'fogo',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><g transform='rotate(-45 16 16)'><path d='M16 2 C 22 8, 22 18, 20 22 L 12 22 C 10 18, 10 8, 16 2 Z' fill='%23e8eef5' stroke='%23334455' stroke-width='1'/><circle cx='16' cy='12' r='2.5' fill='%2300c2ff'/><path d='M12 17 L 8 24 L 12 22 Z M20 17 L 24 24 L 20 22 Z' fill='%23ff3b30'/><path d='M13 22 L 16 30 L 19 22 Z' fill='%23ffb000'/></g></svg>") 6 6, auto`,
+    },
+    varinha: {
+      label: 'Varinha Mágica ✨', trail: 'faiscas',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><line x1='10' y1='10' x2='29' y2='29' stroke='%23352a1a' stroke-width='4' stroke-linecap='round'/><line x1='25' y1='25' x2='29' y2='29' stroke='%23ffffff' stroke-width='4' stroke-linecap='round'/><polygon points='8,0 10,6 16,8 10,10 8,16 6,10 0,8 6,6' fill='%23ffe14d' stroke='%23b8860b' stroke-width='0.8'/></svg>") 8 8, auto`,
+    },
+    cometa: {
+      label: 'Cometa Arco-íris ✨', trail: 'arcoiris',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='8' cy='8' r='6' fill='%23ffffff' stroke='%23ff2bd6' stroke-width='2'/></svg>") 8 8, auto`,
+    },
+    sabre: {
+      label: 'Sabre de Luz ✨', trail: 'luz',
+      css: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><line x1='4' y1='4' x2='22' y2='22' stroke='%2300f0ff' stroke-width='6' stroke-linecap='round' opacity='0.45'/><line x1='4' y1='4' x2='22' y2='22' stroke='%23e9ffff' stroke-width='2.5' stroke-linecap='round'/><line x1='22' y1='22' x2='29' y2='29' stroke='%23555555' stroke-width='5' stroke-linecap='round'/><line x1='21' y1='25' x2='25' y2='21' stroke='%23999999' stroke-width='2'/></svg>") 3 3, auto`,
+    },
   };
-  const CURSOR_ORDER = ['default', 'seta', 'mira', 'espada', 'estrela', 'pata', 'caveira'];
+  const CURSOR_ORDER = ['default', 'seta', 'mira', 'espada', 'estrela', 'pata', 'caveira', 'fantasma', 'raio', 'pizza', 'foguete', 'varinha', 'cometa', 'sabre'];
 
   const AVATAR_EMOJIS = ['👤','🧑‍💻','🎮','🐱','🐶','🦊','🐼','🐸','🦄','🤖','👾','🎲','🏆','⭐','🔥','💎','🌟','🎯','🚀','🛸','👽','🧙','🥷','🎃','😎','🤠','🥸','🐧','🦖','🍀'];
   const BG_PATTERN_EMOJIS = ['🎮','💻','🕹️','📚','✨','🚀','🎲','🧩','⭐','🔧'];
@@ -3709,13 +3750,56 @@
   // fontScale — um controle só pra tudo que é "--user-font*")
   function applyAccentVars(root, accentKey) {
     const preset = ACCENT_PRESETS[accentKey] || ACCENT_PRESETS.padrao;
-    if (preset.accent) {
+    if (preset.fx) root.setAttribute('data-accent-fx', preset.fx);
+    else root.removeAttribute('data-accent-fx');
+    if (preset.anim) {
+      const c = accentAnimColors(preset.anim);
+      root.style.setProperty('--green', c.accent);
+      root.style.setProperty('--green-dim', c.accentDim);
+    } else if (preset.accent) {
       root.style.setProperty('--green', preset.accent);
       root.style.setProperty('--green-dim', preset.accentDim);
     } else {
       root.style.removeProperty('--green');
       root.style.removeProperty('--green-dim');
     }
+  }
+
+  // Cores animadas (Arco-íris/Aurora): a cor do momento sai do relógio, então
+  // o shell e qualquer atividade aberta num iframe mostram sempre a MESMA cor.
+  // Com "reduzir movimento" do sistema ligado, fica parada numa cor só.
+  const reduzMovimento = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function accentAnimColors(anim) {
+    const t = reduzMovimento() ? 0 : performance.now() / 1000;
+    const hue = anim === 'aurora'
+      ? 200 + 80 * Math.sin(t * 0.6)   // 120 (verde) ↔ 280 (roxo)
+      : (t * 40) % 360;                // volta inteira no círculo a cada 9s
+    return { accent: `hsl(${hue.toFixed(0)} 100% 58%)`, accentDim: `hsl(${hue.toFixed(0)} 75% 38%)` };
+  }
+
+  let accentAnimTimer = null;
+  function syncAccentAnim() {
+    const preset = ACCENT_PRESETS[prefs.accentKey] || ACCENT_PRESETS.padrao;
+    if (!preset.anim || reduzMovimento()) {
+      clearInterval(accentAnimTimer);
+      accentAnimTimer = null;
+      return;
+    }
+    if (accentAnimTimer) return;
+    accentAnimTimer = setInterval(() => {
+      const atual = ACCENT_PRESETS[prefs.accentKey] || ACCENT_PRESETS.padrao;
+      if (!atual.anim) return;
+      const c = accentAnimColors(atual.anim);
+      const roots = [document.documentElement];
+      const frames = [document.getElementById('gameFrame'), ...document.querySelectorAll('iframe[id^="moduleFrame_"]')];
+      frames.forEach(f => {
+        try { if (f && f.contentDocument && f.contentDocument.documentElement) roots.push(f.contentDocument.documentElement); } catch (e) {}
+      });
+      roots.forEach(r => {
+        r.style.setProperty('--green', c.accent);
+        r.style.setProperty('--green-dim', c.accentDim);
+      });
+    }, 120);
   }
 
   function applyThemeVars(root, theme) {
@@ -3741,6 +3825,59 @@
     } else if (tag) {
       tag.remove();
     }
+    applyCursorTrail(doc, preset.trail);
+  }
+
+  // Rastro do cursor (foguete, varinha, cometa, sabre): a cada movimento
+  // solta uma partícula no ponto do mouse que some sozinha (Web Animations
+  // API, sem CSS extra — funciona igual no shell e dentro do iframe da
+  // atividade, que não carrega este CSS). Um handler por documento, trocado
+  // a cada chamada; sem rastro com "reduzir movimento" ligado.
+  const TRAILS = {
+    faiscas: (p) => {
+      p.textContent = Math.random() < 0.5 ? '✦' : '✧';
+      Object.assign(p.style, { color: '#ffe14d', fontSize: `${10 + Math.random() * 10}px`, textShadow: '0 0 6px #ffb000' });
+      return { dx: (Math.random() - 0.5) * 40, dy: 10 + Math.random() * 30, ms: 800 };
+    },
+    arcoiris: (p, n) => {
+      const cor = `hsl(${(n * 12) % 360} 100% 60%)`;
+      Object.assign(p.style, { width: '10px', height: '10px', borderRadius: '50%', background: cor, boxShadow: `0 0 8px ${cor}` });
+      return { dx: 0, dy: 0, ms: 600 };
+    },
+    fogo: (p) => {
+      const s = 6 + Math.random() * 8;
+      Object.assign(p.style, { width: `${s}px`, height: `${s}px`, borderRadius: '50%', background: 'radial-gradient(circle, #fff3b0, #ff9500 55%, #ff3b30)' });
+      return { dx: (Math.random() - 0.5) * 16, dy: 18 + Math.random() * 18, ms: 500 };
+    },
+    luz: (p) => {
+      Object.assign(p.style, { width: '6px', height: '6px', borderRadius: '50%', background: '#e9ffff', boxShadow: '0 0 6px #00f0ff, 0 0 14px #00f0ff' });
+      return { dx: 0, dy: 0, ms: 450 };
+    },
+  };
+  function applyCursorTrail(doc, kind) {
+    if (doc.__pfTrail) {
+      doc.removeEventListener('pointermove', doc.__pfTrail);
+      doc.__pfTrail = null;
+    }
+    if (!kind || !TRAILS[kind] || reduzMovimento()) return;
+    let ultimo = 0, n = 0;
+    const handler = (ev) => {
+      const agora = performance.now();
+      if (agora - ultimo < 28 || !doc.body) return;
+      ultimo = agora;
+      const p = doc.createElement('span');
+      p.setAttribute('aria-hidden', 'true');
+      Object.assign(p.style, { position: 'fixed', left: `${ev.clientX}px`, top: `${ev.clientY}px`, pointerEvents: 'none', zIndex: '2147483647', lineHeight: '1' });
+      const { dx, dy, ms } = TRAILS[kind](p, n++);
+      doc.body.appendChild(p);
+      const anim = p.animate([
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.2)`, opacity: 0 },
+      ], { duration: ms, easing: 'ease-out' });
+      anim.onfinish = () => p.remove();
+    };
+    doc.addEventListener('pointermove', handler, { passive: true });
+    doc.__pfTrail = handler;
   }
 
   // Fundo decorativo de emojis, atrás de TUDO (z-index negativo) — só
@@ -3780,6 +3917,7 @@
     applyAccentVars(root, prefs.accentKey);
     applyThemeVars(root, prefs.theme);
     applyCursorVars(document, prefs.cursorKey);
+    syncAccentAnim();
     const emojiSpan = document.getElementById('perfilTabEmoji');
     if (emojiSpan) emojiSpan.textContent = prefs.avatarEmoji || '👤';
     toggleBgEmojiLayer(prefs.bgPattern);
@@ -3870,7 +4008,7 @@
     `).join('');
 
     const accentButtons = Object.entries(ACCENT_PRESETS).map(([key, a]) => `
-      <button type="button" class="pf-color-swatch ${prefs.accentKey === key ? 'active' : ''}" data-accent-key="${key}" title="${a.label}" style="background:${a.accent || 'var(--green)'};"></button>
+      <button type="button" class="pf-color-swatch ${prefs.accentKey === key ? 'active' : ''}${a.fx === 'neon' ? ' neon' : ''}" data-accent-key="${key}" title="${a.label}" aria-label="${a.label}" style="background:${a.swatch || a.accent || 'var(--green)'};${a.fx === 'neon' && a.accent ? ` --swatch-glow:${a.accent};` : ''}"></button>
     `).join('');
 
     const avatarButtons = AVATAR_EMOJIS.map(emoji => `
@@ -3880,7 +4018,7 @@
     const cursorButtons = CURSOR_ORDER.map(key => {
       const c = CURSOR_PRESETS[key];
       const cssAttr = c.css.replace(/"/g, '&quot;');
-      return `<button type="button" class="pf-cursor-btn ${prefs.cursorKey === key ? 'active' : ''}" data-cursor-key="${key}" style="cursor:${cssAttr};">${c.label}</button>`;
+      return `<button type="button" class="pf-cursor-btn ${prefs.cursorKey === key ? 'active' : ''}" data-cursor-key="${key}" style="cursor:${cssAttr};"${c.trail ? ' title="Deixa um rastro ao mover o mouse"' : ''}>${c.label}</button>`;
     }).join('');
 
     return `

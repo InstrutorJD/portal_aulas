@@ -441,6 +441,17 @@ iframe{ width:100%; height:100%; border:none; display:block; }
 }
 .pf-color-swatch:hover{ transform:scale(1.12); }
 .pf-color-swatch.active{ border-color:var(--ink); box-shadow:0 0 0 2px var(--green); }
+.pf-color-swatch.neon{ box-shadow:0 0 8px var(--swatch-glow, #fff); }
+.pf-color-swatch.neon.active{ box-shadow:0 0 0 2px var(--green), 0 0 12px var(--swatch-glow, #fff); }
+
+/* Cores "Neon"/"Arco-íris"/"Aurora" da personalização (ACCENT_PRESETS com
+   fx:'neon'): além da cor, dá brilho de neon no que usa a cor de destaque. */
+:root[data-accent-fx="neon"] .tab-btn.active,
+:root[data-accent-fx="neon"] button.btn:not(.btn-secondary):not(.btn-danger){
+  box-shadow:0 0 6px var(--green), 0 0 16px var(--green-dim);
+}
+:root[data-accent-fx="neon"] .card h2,
+:root[data-accent-fx="neon"] .tab-btn.active{ text-shadow:0 0 6px var(--green); }
 .pf-emoji-grid{ max-width:100%; }
 .pf-emoji-btn{
   font-size:18px; line-height:1; background:var(--panel2); border:1px solid var(--line);
