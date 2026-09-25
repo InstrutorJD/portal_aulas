@@ -4,94 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PixelForge Studios — FinancApp: Como o FinancApp Conversa com a Internet</title>
+<!-- Padrão novo de trilhas (docs/padrao-trilhas.md): visual base compartilhado
+     das práticas. Cor de destaque do projeto FinancApp (turma Sistemas) abaixo —
+     a Personalização do aluno (cor/tema) sobrescreve, porque o portal injeta as
+     variáveis no <html>. -->
+<link rel="stylesheet" href="../../../shared/aula-base.css">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;600;800&display=swap');
-
-  :root{
-    --bg:#0d0912; --panel:#171022; --panel2:#130d1c; --line:#2e2340;
-    --accent:#b98cff; --accent-dim:#7c56b3; --blood:#c1121f; --blood-bright:#ff5b4d;
-    --yellow:#e0c46a; --ink:#e7defa; --ink-dim:#8b7aa8;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; padding:10px; background:var(--bg); color:var(--ink);
-    font-family:var(--user-font, 'JetBrains Mono', monospace); height:100vh; overflow:hidden;
-  }
-
-  .env{
-    width:100%; height:100%; border:2px solid var(--accent-dim); background:#0a0710;
-    display:flex; flex-direction:column; box-shadow:0 0 15px rgba(185,140,255,0.15);
-  }
-
-  .topbar{
-    height:30px; background:var(--panel2); border-bottom:1px solid var(--line);
-    display:flex; align-items:center; justify-content:space-between; padding:0 12px;
-    font-size:11px; color:var(--ink-dim); text-transform:uppercase; flex-shrink:0;
-  }
-
-  .progress-track{ height:5px; background:var(--panel2); border-bottom:1px solid var(--line); flex-shrink:0; }
-  .progress-fill{ height:100%; background:var(--accent); width:0%; transition:width 0.4s ease; }
-
-  .stage{ flex:1; min-height:0; padding:18px; overflow-y:auto; display:flex; justify-content:center; }
-  .step-wrap{ width:100%; max-width:720px; display:flex; flex-direction:column; gap:14px; }
-
-  .card{ background:var(--panel); border:1px solid var(--line); padding:18px 20px; }
-  .card h2{
-    font-family:var(--user-font-display, 'VT323', monospace); font-size:22px; color:var(--yellow); margin:0 0 14px; letter-spacing:1px;
-  }
-
-  .md-body{ font-size:13.5px; line-height:1.7; }
-  .md-body h3, .md-body h4, .md-body h5, .md-body h6{
-    font-family:var(--user-font-display, 'VT323', monospace); color:var(--accent); letter-spacing:0.5px;
-    margin:16px 0 6px; font-size:16px;
-  }
-  .md-body h3{ padding-top:10px; border-top:1px dashed var(--line); }
-  .md-body h3:first-child{ padding-top:0; border-top:none; }
-  .md-body p{ margin:0 0 10px; }
-  .md-body code{ background:#000; color:var(--accent); padding:1px 5px; border-radius:2px; font-size:0.92em; }
-  .md-body pre{
-    background:#000; border:1px solid var(--line); padding:10px 12px; overflow-x:auto;
-    margin:0 0 12px; border-radius:2px;
-  }
-  .md-body pre code{ background:none; padding:0; color:var(--ink); white-space:pre; }
-  .md-body ul.md-list, .md-body ol.md-list{ margin:0 0 12px; padding-left:22px; }
-  .md-body ul.md-list li, .md-body ol.md-list li{ margin-bottom:5px; }
-  .md-body li.md-check{ list-style:none; margin-left:-22px; padding-left:0; }
-  .md-body li.md-check::before{ content:'☐ '; color:var(--accent-dim); }
-  .md-body blockquote{
-    margin:0 0 12px; padding:8px 14px; border-left:3px solid var(--accent-dim); color:var(--yellow); font-style:italic;
-  }
-  .md-table-wrap{ overflow-x:auto; margin:0 0 12px; }
-  table.md-table{ border-collapse:collapse; width:100%; font-size:13px; }
-  table.md-table th, table.md-table td{ border:1px solid var(--line); padding:6px 10px; text-align:left; }
-  table.md-table th{ background:var(--panel2); color:var(--yellow); }
-
-  .step-nav{ display:flex; justify-content:space-between; align-items:center; }
-  button.btn{
-    font-family:inherit; font-weight:800; font-size:11.5px; letter-spacing:1px; text-transform:uppercase;
-    background:var(--accent); color:#150a24; border:none; padding:10px 20px; cursor:pointer; border-radius:2px;
-  }
-  button.btn:disabled{ opacity:0.5; cursor:wait; }
-  button.btn-secondary{ background:transparent; color:var(--accent); border:1px solid var(--accent-dim); }
-
-  .visto-box p{ font-size:13.5px; line-height:1.7; margin:0 0 10px; }
-  .visto-form{ display:flex; flex-direction:column; gap:12px; max-width:340px; margin-top:14px; }
-  .visto-form label{ display:flex; flex-direction:column; gap:5px; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
-  .visto-form input{
-    font-family:inherit; font-size:14px; padding:9px 10px; background:#000; color:var(--ink);
-    border:1px solid var(--line); border-radius:2px;
-  }
-  .visto-form input:focus{ outline:none; border-color:var(--accent-dim); }
-  .visto-msg{ font-size:12.5px; padding:8px 10px; border:1px dashed var(--line); }
-  .visto-msg.erro{ border-color:var(--blood-bright); color:var(--blood-bright); }
-  .visto-msg.ok{ border-color:var(--accent); color:var(--accent); }
-
-  @media (max-width: 700px) {
-    body{ height:auto; min-height:100vh; overflow-y:auto; padding:6px; }
-    .env{ height:auto; min-height:calc(100vh - 12px); border-width:1px; }
-    .stage{ overflow:visible; padding:10px; }
-    .card{ padding:14px 16px; }
-  }
+  :root{ --green:#3aa0ff; --green-dim:#2b6ba3; --yellow:#e0c46a; }
 </style>
 <script>
   window.ACTIVITY_LOCATION = 'redes_servicos_financapp_pratica';
@@ -104,19 +23,20 @@
 <script src="../../../shared/progress-sync.js"></script>
 <script src="../../../shared/professor-visto.js"></script>
 <script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
 </head>
 <body>
 
-<div class="env">
-  <div class="topbar">
-    <div>REDES DE COMPUTADORES — FINANCAPP: COMO O FINANCAPP CONVERSA COM A INTERNET</div>
-    <div>ETAPA <span id="lblStepNum">1</span> DE <span id="lblStepTotal">8</span></div>
-  </div>
-  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Redes de Computadores — FinancApp: Como o FinancApp Conversa com a Internet</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">8</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
 
-  <div class="stage">
-    <div class="step-wrap" id="stepWrap"></div>
-  </div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
 </div>
 
 <script>
@@ -328,11 +248,30 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
 
   function renderNav(showBack, showNext) {
     return `
-      <div class="step-nav">
+      <div class="ab-nav">
         ${showBack ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
-        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : ''}
+        <span class="ab-nav-dica">use ← → do teclado</span>
+        ${showNext ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}
       </div>`;
   }
+
+  // Direção da última troca de etapa (1 = avançou, -1 = voltou) pra animação.
+  let direcao = 1;
+  function irPara(i) {
+    direcao = i < currentIndex ? -1 : 1;
+    currentIndex = Math.max(0, Math.min(i, STEPS.length));
+    renderStep();
+  }
+  // Volta o scroll pro topo e anima a entrada do cartão novo.
+  function mostrarEtapa() {
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  // Setas do teclado = os botões Voltar/Próximo da tela (se existirem).
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
 
   function renderStep() {
     if (currentIndex >= STEPS.length) { renderVisto(); return; }
@@ -344,16 +283,22 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
 
     const step = STEPS[currentIndex];
     reportStep(`Trabalho — ${step.titulo}`);
+    // As classes antigas (card, md-body, visto-box) continuam junto das .ab-*
+    // só como ganchos dos testes (tests/projeto-financapp-*.spec.js etc.) — sem CSS.
     stepWrap.innerHTML = `
-      <div class="card">
+      <article class="ab-cartao card">
+        <div class="ab-cartao-etapa">Etapa ${currentIndex + 1} de ${STEPS.length + 1}</div>
         <h2>${escapeHtml(step.titulo)}</h2>
-        <div class="md-body">${mdToHtml(step.corpo)}</div>
-      </div>
+        <div class="ab-conteudo md-body">${mdToHtml(step.corpo)}</div>
+      </article>
       ${renderNav(currentIndex > 0, true)}
     `;
+    // Código com Copiar e checklist clicável (lembra o que já foi marcado nesta etapa).
+    window.AulaBase.decorar(stepWrap, { chaveChecklist: `redes_servicos_financapp_pratica_check_${username}_${currentIndex}` });
+    mostrarEtapa();
     const btnBack = document.getElementById('btnBack');
-    if (btnBack) btnBack.addEventListener('click', () => { currentIndex--; renderStep(); });
-    document.getElementById('btnNext').addEventListener('click', () => { currentIndex++; renderStep(); });
+    if (btnBack) btnBack.addEventListener('click', () => irPara(currentIndex - 1));
+    document.getElementById('btnNext').addEventListener('click', () => irPara(currentIndex + 1));
   }
 
   function renderVisto() {
@@ -365,33 +310,38 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
     if (already && already.completed) {
       const quando = already.vistoEm ? new Date(already.vistoEm).toLocaleString('pt-BR') : '';
       stepWrap.innerHTML = `
-        <div class="card visto-box">
+        <div class="ab-cartao ab-concluida card visto-box">
           <h2>✅ Atividade concluída</h2>
           <p>Visto dado por <b>${escapeHtml(already.vistoPor || '')}</b>${quando ? ' em ' + escapeHtml(quando) : ''}.</p>
           <p>A próxima peça do projeto FinancApp (Programação de Aplicativos) já pode ser liberada pelo professor.</p>
         </div>
         ${renderNav(true, false)}
       `;
-      document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+      mostrarEtapa();
+      document.getElementById('btnBack').addEventListener('click', () => irPara(STEPS.length - 1));
       return;
     }
 
     stepWrap.innerHTML = `
-      <div class="card visto-box">
+      <div class="ab-cartao card visto-box">
+        <div class="ab-cartao-etapa">Etapa ${STEPS.length + 1} de ${STEPS.length + 1}</div>
         <h2>🧑‍🏫 Etapa final — Visto do professor</h2>
+        <div class="ab-conteudo">
         <p>Você já observou a requisição HTTP real (DevTools), identificou DNS/HTTPS, provocou e leu um status code de erro, e relacionou tudo à camada de aplicação?</p>
         <p>Chame o professor pra conferir suas anotações. Quando ele confirmar, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo — é assim que a atividade é marcada como concluída.</p>
-        <div class="visto-form">
+        </div>
+        <div class="ab-form">
           <label>Token do professor
             <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off">
           </label>
           <button class="btn" id="btnDarVisto">Dar visto</button>
-          <div class="visto-msg" id="vistoMsg" style="display:none;"></div>
+          <div class="ab-msg" id="vistoMsg" style="display:none;"></div>
         </div>
       </div>
       ${renderNav(true, false)}
     `;
-    document.getElementById('btnBack').addEventListener('click', () => { currentIndex = STEPS.length - 1; renderStep(); });
+    mostrarEtapa();
+    document.getElementById('btnBack').addEventListener('click', () => irPara(STEPS.length - 1));
 
     const btnDarVisto = document.getElementById('btnDarVisto');
     const vistoMsg = document.getElementById('vistoMsg');
@@ -399,7 +349,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
       const t = document.getElementById('vistoToken').value;
       vistoMsg.style.display = 'none';
       if (!t) {
-        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.className = 'ab-msg erro';
         vistoMsg.textContent = 'Informe o token do professor.';
         vistoMsg.style.display = 'block';
         return;
@@ -411,7 +361,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
           ? await window.PortalProfessorVisto.verificarToken(t)
           : { ok: false, erro: 'Verificação indisponível nesta tela.' };
         if (!result.ok) {
-          vistoMsg.className = 'visto-msg erro';
+          vistoMsg.className = 'ab-msg erro';
           vistoMsg.textContent = result.erro;
           vistoMsg.style.display = 'block';
           btnDarVisto.disabled = false;
@@ -421,7 +371,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
         saveProgress({ completed: true, vistoPor: result.nome, vistoEm: new Date().toISOString() });
         renderVisto();
       } catch (e) {
-        vistoMsg.className = 'visto-msg erro';
+        vistoMsg.className = 'ab-msg erro';
         vistoMsg.textContent = 'Erro inesperado ao verificar. Tente de novo.';
         vistoMsg.style.display = 'block';
         btnDarVisto.disabled = false;
