@@ -9,4 +9,5 @@
 // Aula nova: coloque o .md nesta pasta e acrescente o nome dele abaixo.
 window.MATERIAIS = [
   'guia-do-formato.md',
+  'aula-teste-passador.md',
 ];
