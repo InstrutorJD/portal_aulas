@@ -126,7 +126,7 @@ window.TURMA_CONFIG_SISTEMAS = {
             {
               key: 'trabalho', title: 'Trabalho — FinancApp: Banco de Dados e RLS',
               desc: 'Criem o projeto Supabase financapp, as 4 tabelas do DER com FK, habilitem RLS e criem as policies de leitura/inserção/atualização. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🗄️', src: 'atividades/projeto-financapp-banco-dados-trabalho.html',
+              icon: '🗄️', src: 'atividades/projeto-financapp-banco-dados-trabalho.html', telaCheia: true,
               progressKey: 'projeto_financapp_banco_dados_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
@@ -319,7 +319,7 @@ window.TURMA_CONFIG_SISTEMAS = {
               // demais trabalhos do projeto FinancApp.
               key: 'pratica-financapp', title: 'FinancApp — Como o FinancApp Conversa com a Internet',
               desc: 'Usem o projeto Supabase do FinancApp pra observar, no DevTools, uma requisição HTTP real: método, URL, headers, DNS, HTTPS, status code e a camada de aplicação. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🌐', src: 'atividades/redes-servicos-financapp-pratica.html',
+              icon: '🌐', src: 'atividades/redes-servicos-financapp-pratica.html', telaCheia: true,
               progressKey: 'redes_servicos_financapp_pratica_progress_', progressMode: 'flag',
               requires: 'pratica', hasGabarito: true
             }
@@ -402,7 +402,7 @@ window.TURMA_CONFIG_SISTEMAS = {
             {
               key: 'trabalho', title: 'Trabalho — Kickoff do Projeto FinancApp (GitHub)',
               desc: 'Crie o repositório financapp-seuusuario, um README completo e as 5 issues do MVP. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🚀', src: 'atividades/projeto-financapp-kickoff-trabalho.html',
+              icon: '🚀', src: 'atividades/projeto-financapp-kickoff-trabalho.html', telaCheia: true,
               progressKey: 'projeto_financapp_kickoff_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
@@ -470,7 +470,7 @@ window.TURMA_CONFIG_SISTEMAS = {
             {
               key: 'trabalho', title: 'Trabalho — FinancApp: Modelagem de Dados e Requisitos',
               desc: 'Levantem os requisitos funcionais/não funcionais do FinancApp, modelem as entidades/atributos/relacionamentos (incluindo a tabela de junção lançamento↔tag) e desenhem o DER, commitado em docs/der.png. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🧩', src: 'atividades/projeto-financapp-modelagem-trabalho.html',
+              icon: '🧩', src: 'atividades/projeto-financapp-modelagem-trabalho.html', telaCheia: true,
               progressKey: 'projeto_financapp_modelagem_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
@@ -725,7 +725,7 @@ window.TURMA_CONFIG_SISTEMAS = {
             {
               key: 'trabalho', title: 'Trabalho — FinancApp: Construa o Aplicativo (JavaScript)',
               desc: 'Escrevam as 5 funções assíncronas do backend do FinancApp (supabase-js, tratamento de erro) e, em seguida, liguem o HTML/CSS fornecidos pelo professor a elas — cadastro, login, perfil, saldo/extrato, registrar lançamento, tags e Web App Manifest, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '📱', src: 'atividades/projeto-financapp-app-trabalho.html',
+              icon: '📱', src: 'atividades/projeto-financapp-app-trabalho.html', telaCheia: true,
               progressKey: 'projeto_financapp_app_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }

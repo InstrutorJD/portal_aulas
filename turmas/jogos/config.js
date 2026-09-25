@@ -517,7 +517,7 @@ window.TURMA_CONFIG_JOGOS = {
             {
               key: 'pratica', title: 'Prática — Construa o Pacman no Phaser',
               desc: 'Mão na massa de verdade: monte os arquivos do zero no Codespace, ligue a biblioteca Phaser, desenhe o Pacman e o fantasma no Piskel, cole o código em blocos explicados até o jogo completo rodando no navegador — depois peça o visto do professor.',
-              icon: '👻', src: 'atividades/cod-phaser-pratica.html',
+              icon: '👻', src: 'atividades/cod-phaser-pratica.html', telaCheia: true,
               progressKey: 'cod_phaser_pratica_progress_', progressMode: 'flag',
               hasGabarito: true
             }

@@ -4005,6 +4005,11 @@
     document.getElementById(`moduleSelector_${trilhaKey}`).style.display = 'none';
     // 'flex' (não 'block') — .module-frame-modal centraliza o box do modal
     // via flexbox (ver shared/platform-core.css).
+    // Módulo do layout novo (telaCheia: true no config.js — docs/padrao-trilhas.md):
+    // ocupa a tela inteira, por cima até da barra do portal, só com a faixa
+    // "← Voltar" no topo — as telas dos alunos são pequenas. Os demais abrem
+    // no modal de sempre.
+    document.getElementById(`moduleFrameArea_${trilhaKey}`).classList.toggle('module-frame-modal--cheia', !!mod.telaCheia);
     zoomInScreen(document.getElementById(`moduleFrameArea_${trilhaKey}`), 'flex');
     document.getElementById(`moduleFrameTitle_${trilhaKey}`).textContent = mod.title;
     document.getElementById(`moduleFrameDesc_${trilhaKey}`).textContent = mod.desc || '';

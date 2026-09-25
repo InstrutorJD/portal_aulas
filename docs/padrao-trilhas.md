@@ -198,14 +198,14 @@ Igual ao de hoje (ver `README.md`, "Hierarquia Matéria → Trilha → Módulo")
     {
       key: 'teoria', title: 'Teoria — Fundamentos de Redes',
       desc: 'O que a teoria cobre, em uma frase.',
-      icon: '📖', src: 'atividades/redes-fundamentos-teoria.html',
+      icon: '📖', src: 'atividades/redes-fundamentos-teoria.html', telaCheia: true,
       progressKey: 'redes_fundamentos_teoria_progress_', progressMode: 'flag',
       hasGabarito: true
     },
     {
       key: 'pratica', title: 'Prática — ...',
       desc: '...',
-      icon: '🛠️', src: 'atividades/redes-fundamentos-pratica.html',
+      icon: '🛠️', src: 'atividades/redes-fundamentos-pratica.html', telaCheia: true,
       progressKey: 'redes_fundamentos_pratica_progress_', progressTotal: 6,
       requires: 'teoria', hasGabarito: true
     }
@@ -213,6 +213,7 @@ Igual ao de hoje (ver `README.md`, "Hierarquia Matéria → Trilha → Módulo")
 }
 ```
 
+- **`telaCheia: true` em TODO módulo do padrão novo** (teoria e prática): o módulo abre ocupando a tela inteira (sem margem, por cima até da barra do portal), só com a faixa "← Voltar" no topo — as telas dos alunos são pequenas. Módulos do padrão antigo não têm essa marca e continuam abrindo no modal de sempre.
 - `progressKey` = `activityLocation` da casca + `_progress_`.
 - Não use `hasSlides` em trilha nova: o `.pptx` é do padrão antigo; a
   apresentação agora é o botão ▶ Apresentação.

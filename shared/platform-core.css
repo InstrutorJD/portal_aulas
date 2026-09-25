@@ -449,6 +449,22 @@ iframe{ width:100%; height:100%; border:none; display:block; }
 }
 .module-frame-modal .game-frame-wrapper{ flex:1; min-height:0; }
 
+/* Módulo do layout novo em TELA CHEIA (mod.telaCheia, ver openModule em
+   platform-core.js): sem margem, sem limite de largura, por cima até da
+   .a11y-bar (z-index:700) — o aluno com tela pequena ganha a tela toda. No
+   topo só uma faixa fina: "← Voltar" à esquerda + o nome do módulo. A
+   própria atividade já tem cabeçalho com etapa/progresso (shared/aula-base.css). */
+.module-frame-modal.module-frame-modal--cheia{ padding:0; z-index:800; background:var(--bg); }
+.module-frame-modal--cheia .module-frame-modal-box{ max-width:none; border-radius:0; box-shadow:none; }
+.module-frame-modal--cheia .module-frame-header{
+  margin:0; padding:6px 10px; border-radius:0; border-width:0 0 1px 0; flex-wrap:nowrap; justify-content:flex-start; gap:12px;
+}
+.module-frame-modal--cheia .module-frame-header > button{ order:-1; flex-shrink:0; padding:6px 14px; }
+.module-frame-modal--cheia .module-frame-header > div{ min-width:0; }
+.module-frame-modal--cheia .module-frame-header h2{ font-size:13px !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.module-frame-modal--cheia .module-frame-header p{ display:none; }
+.module-frame-modal--cheia .game-frame-wrapper{ border:none !important; border-radius:0; }
+
 /* Modal de personalização (JS: openPersonalizacao em platform-core.js) —
    mesma caixa do pf-alert-*, só mais larga (tem 6 seções de controles) e
    com scroll próprio (o conteúdo pode passar da altura da tela). */

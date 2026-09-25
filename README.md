@@ -107,6 +107,9 @@ Login não é mais uma comparação de senha em array JS no navegador: cada alun
 - **`shared/session.js`** (`window.PortalSession`) é o único ponto de leitura de identidade no client: `getUser()` resolve a sessão + o profile; `requireUser(loginPath)` faz o mesmo e redireciona pro login se não houver sessão. Como a sessão fica no `localStorage` do domínio, qualquer `<iframe>` do mesmo site (módulo, jogo) já enxerga quem está logado sozinho — não é mais preciso propagar `role=`/`ip=`/`saldo=` por query string entre páginas (só `user=`/`name=`/`turma=` continuam sendo passados, como conveniência de exibição/namespacing de `localStorage`, nunca como fonte de identidade).
 - Inclua `shared/session.js` sempre depois de `shared/supabase-config.js` + a lib `@supabase/supabase-js`, e antes de qualquer script que precise saber quem está logado (`clipboard-guard.js`, `activity-tracker.js`, `progress-sync.js`, `platform-core.js` etc.).
 
+### Módulo em tela cheia (`telaCheia: true`, padrão novo)
+Módulo do padrão novo de trilhas (`docs/padrao-trilhas.md`) leva `telaCheia: true` no `config.js`. `openModule` (`shared/platform-core.js`) põe a classe `.module-frame-modal--cheia` na área do módulo: ocupa a tela inteira (sem margem nem limite de largura, `z-index` acima da `.a11y-bar`), e o cabeçalho vira uma faixa fina com **← Voltar** à esquerda e o nome do módulo. Hoje: a prática do Phaser/Pacman (Jogos) e os 5 módulos do FinancApp (Sistemas). Os demais módulos continuam no modal de sempre.
+
 ### Usuário substituto (`role = 'substituto'`)
 Pra quando o professor precisa se ausentar e outra pessoa dá a aula. Conta criada como as outras (Supabase Auth + linha em `profiles`) — passo a passo no fim de `sql/usuario-substituto.sql` (rodar uma vez; mesmo bloco no fim de `sql/supabase-setup-completo.sql`).
 
