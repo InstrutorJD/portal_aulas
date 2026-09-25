@@ -1,13 +1,13 @@
 ---
 aula: 1
 data: 2026-09-30
-titulo: Componentes de uma aplicação web
+titulo: Do bit à IA: como uma aplicação web funciona
 turma: IA
-descricao: Frontend, backend, banco, API e HTTP a partir de um Sistema de Comandas
+descricao: Boas-vindas, história, binário, linguagens, como a IA pensa e o caminho de um pedido
 ---
 
-# Por dentro de uma aplicação web
-Do papel da comanda ao pedido que viaja pela internet
+# Do bit à IA
+Aula 1: como a tecnologia conversa, e onde a IA entra nisso
 
 ---
 
@@ -25,9 +25,145 @@ Para abrir **uma** página comum, quantos pedidos o seu navegador faz?
 + Cada imagem, fonte e script é um **pedido** separado
 + Na mediana, uma página no computador faz **71 pedidos**
 + Você não vê nenhum deles, mas eles estão lá
-+ Hoje você vai aprender a **enxergar** esses pedidos
++ Até o fim da aula, você vai saber **quem atende** cada um
 
 > Fonte: Web Almanac 2024 (HTTP Archive), páginas no computador.
+
+---
+
+# Termômetro da turma
+O que você já sabe? Sem nota, só para a gente se conhecer
+
+---
+
+## Termômetro: levante os dedos
+**0** nunca ouvi · **1** já ouvi · **2** sei explicar · **3** já usei
+
++ Binário (bit e byte)
++ Linguagem de programação
++ IA generativa
++ Frontend e backend
++ API
++ HTTP
+
+---
+
+## Pergunta 1 de 3
+Como o computador guarda tudo o que você vê na tela?
+
+- [ ] Em letras e números, como a gente escreve
+- [x] Em 0 e 1
+- [ ] Em imagens pequenas
+- [ ] Depende do programa
+
+---
+
+## Pergunta 2 de 3
+Qual destes é um exemplo de **frontend**?
+
+- [x] A tela de login de um app
+- [ ] O servidor que confere a senha
+- [ ] A tabela que guarda os usuários
+- [ ] O cabo de rede do servidor
+
+---
+
+## Pergunta 3 de 3
+Uma IA como o ChatGPT **sempre** acerta quando responde com segurança?
+
+- [ ] Sim, ela busca a resposta num banco de verdades
+- [ ] Sim, se a pergunta for bem escrita
+- [x] Não, ela pode inventar com toda a confiança
+- [ ] Não, ela só erra em matemática
+
+---
+
+## Placar da turma
+Anote no quadro quantos acertaram cada pergunta.
+
+> No fim da aula, a gente faz o termômetro de novo e compara. 📈
+
+---
+
+## O que você vai aprender no curso
++ Como computadores, internet e web funcionam por dentro
++ Criar páginas com **HTML**, **CSS** e **JavaScript**
++ Guardar e consultar dados com **SQL**
++ Programar **com ajuda da IA**, e revisar o que ela faz
+
+---
+
+## Nossas ferramentas
+| Ferramenta | Para quê |
+|---|---|
+| Navegador | Ver e testar o que a gente cria |
+| Editor de código | Escrever HTML, CSS, JavaScript e SQL |
+| GitHub Copilot | Assistente que sugere código enquanto você digita |
+| Codex | Agente que executa tarefas inteiras de desenvolvimento |
+
+---
+
+## Projeto integrador: Sistema de Comandas
+Um restaurante ainda anota os pedidos em comanda de papel.
+
++ A comanda se **perde** no caminho até a cozinha
++ A **letra ilegível** vira o prato errado
++ A **soma** do total sai errada no caixa
++ Ao longo do curso, **você** vai construir o sistema que resolve isso
+
+---
+
+## Roteiro de hoje
+1. Boas-vindas e o curso (15 min)
+2. Como tudo começou: binário e computador (15 min)
+3. Linguagens de programação (20 min)
+4. Como uma IA "pensa" (25 min)
+5. Em grupo: tipos de IA no restaurante (25 min)
+6. O caminho de um pedido na web (20 min)
+
+---
+
+# Como tudo começou
+Das máquinas de calcular aos computadores
+
+---
+
+## Das contas às máquinas
+| Ano | O que aconteceu |
+|---|---|
+| 1642 | Pascal cria a **Pascaline**: soma e subtrai com engrenagens |
+| 1703 | Leibniz publica a aritmética **binária**: tudo com 0 e 1 |
+| 1837 | Babbage projeta a **máquina analítica**, um computador mecânico |
+| 1843 | Ada Lovelace escreve o **primeiro algoritmo** para essa máquina |
+| 1946 | **ENIAC**: 30 toneladas, 18 mil válvulas, programado por seis mulheres |
+
+---
+
+## A máquina de 1837 já tinha as 4 partes
+| Na máquina de Babbage | Hoje | Função |
+|---|---|---|
+| Leitor de cartões | Teclado, mouse, toque | **Entrada** |
+| Moinho (*mill*) | Processador (CPU) | **Processamento** |
+| Armazém (*store*) | Memória RAM e disco | **Memória** |
+| Impressora | Tela, som, impressora | **Saída** |
+
+---
+
+## Entrada, processamento, memória e saída
+Você toca no botão "Pedir" no app do restaurante. Esse toque é...
+
+- [x] Entrada
+- [ ] Processamento
+- [ ] Memória
+- [ ] Saída
+
+---
+
+## Por que 0 e 1?
++ Um processador tem **bilhões de transistores**
++ Cada transistor é um interruptor: **ligado ou desligado**
++ Ligado = **1**, desligado = **0**
++ Com interruptores suficientes, dá para representar **qualquer coisa**
 
 ---
 
@@ -63,24 +199,19 @@ Quanto vale o byte `00000101`?
 
 ---
 
-# Como tudo começou
-De 0 e 1 até a IA que escreve código
-
----
-
-## Das contas às máquinas
+## Do transistor à web
 | Ano | O que aconteceu |
 |---|---|
-| 1703 | Leibniz publica a aritmética **binária**: tudo com 0 e 1 |
-| 1843 | Ada Lovelace escreve o **primeiro algoritmo** para uma máquina |
-| 1946 | **ENIAC**: 30 toneladas, 18 mil válvulas, programado por seis mulheres |
-| 1947 | **Transistor**: um interruptor minúsculo que substitui a válvula |
-| 1952 | Grace Hopper cria o **compilador** A-0: código mais perto da nossa língua |
+| 1947 | **Transistor**: o interruptor minúsculo que substitui a válvula |
+| 1969 | **ARPANET**, avó da internet, conecta os primeiros computadores |
+| 1989 | Tim Berners-Lee propõe a **web** no CERN |
+| 1990 | Nascem **HTML**, **HTTP** e **URL**, e o primeiro servidor |
+| 1995 | **JavaScript** deixa as páginas interativas |
 
 ---
 
 ## Curiosidade
-Em 1969, a ARPANET, avó da internet, ligou dois computadores. Qual foi a primeira mensagem?
+Qual foi a primeira mensagem enviada pela ARPANET, em 1969?
 
 - [ ] "HELLO"
 - [x] "LO"
@@ -97,17 +228,6 @@ Em 1969, a ARPANET, avó da internet, ligou dois computadores. Qual foi a primei
 
 ---
 
-## Da rede à web
-| Ano | O que aconteceu |
-|---|---|
-| 1969 | ARPANET conecta os primeiros computadores |
-| 1989 | Tim Berners-Lee propõe a **web** no CERN |
-| 1990 | Nascem **HTML**, **HTTP** e **URL**, e o primeiro servidor |
-| 1995 | **JavaScript** deixa as páginas interativas |
-| 2022 | **ChatGPT** populariza a IA que conversa e escreve código |
-
----
-
 ## O primeiro site ainda está no ar
 Aponte a câmera e visite o endereço do primeiro servidor web da história.
 
@@ -115,183 +235,262 @@ Aponte a câmera e visite o endereço do primeiro servidor web da história.
 
 ---
 
-## E o que isso tem a ver com hoje?
-+ Tudo ainda vira **0 e 1** lá no fundo
-+ A web de 1990 já tinha **cliente, servidor e HTTP**
-+ A IA escreve código, mas ele roda **nessas mesmas peças**
-+ Quem conhece as peças manda na IA, e não o contrário
+# Linguagens de programação
+Como a gente conversa com a máquina
 
 ---
 
-# Termômetro da turma
-O que você já sabe? Sem nota, só para a gente se conhecer
+## Algoritmo é uma receita
+1. Ferva 500 ml de água
+2. Coloque o macarrão
+3. Espere 3 minutos
+4. Misture o tempero
+5. Sirva
+
+> **Algoritmo**: passos claros, em ordem, que resolvem um problema.
 
 ---
 
-## Termômetro: levante os dedos
-**0** nunca ouvi · **1** já ouvi · **2** sei explicar · **3** já usei
+## Qual passo está ruim?
+Qual destes **não** serve como passo de um algoritmo?
 
-+ Frontend
-+ Backend
-+ Banco de dados
-+ API
-+ HTTP
-+ Cliente x Servidor
+- [ ] Ferva 500 ml de água
+- [ ] Espere 3 minutos
+- [x] Cozinhe até ficar bom
+- [ ] Desligue o fogo
 
 ---
 
-## Pergunta 1 de 4
-Qual destes é um exemplo de **frontend**?
-
-- [x] A tela de login de um app
-- [ ] O servidor que confere a senha
-- [ ] A tabela que guarda os usuários
-- [ ] O cabo de rede do servidor
-
----
-
-## Pergunta 2 de 4
-Num app de delivery, onde fica o cardápio que você vê?
-
-- [ ] Dentro do celular, desde a instalação
-- [ ] Salvo no navegador para sempre
-- [x] Num servidor, que envia os dados quando você abre o app
-- [ ] No GPS do celular
-
----
-
-## Pergunta 3 de 4
-O que é uma **API**?
-
-- [ ] Um tipo de banco de dados
-- [x] Um jeito combinado de dois sistemas conversarem
-- [ ] Uma linguagem de programação
-- [ ] Um navegador mais rápido
-
----
-
-## Pergunta 4 de 4
-O que o **S** de HTTP**S** quer dizer?
-
-- [ ] Servidor
-- [ ] Sistema
-- [x] Seguro: os dados viajam criptografados
-- [ ] Super rápido
-
----
-
-## Placar da turma
-Anote no quadro quantos acertaram cada pergunta.
-
-> No fim da aula, a gente faz o termômetro de novo e compara. 📈
-
----
-
-## Hoje você vai
-+ Levantar as necessidades de um restaurante real
-+ Transformar necessidades em requisitos (RF e RNF)
-+ Identificar frontend, backend, banco de dados e API
-+ Ver requisições HTTP de verdade no navegador
-
----
-
-## Nosso roteiro
-| Parte | Atividade | Tempo |
+## Baixo nível x alto nível
+| Nível | Exemplo | Quem entende |
 |---|---|---|
-| 0 | Abertura: binário, história e termômetro | 20 min |
-| 1 | Design Thinking: o problema das comandas | 35 min |
-| 2 | Dinâmica: encenando um pedido | 25 min |
-| 3 | Prática: HTTP no DevTools + entregável | 40 min |
+| Linguagem de máquina | `10110000 01100001` | Só o processador |
+| Assembly | `MOV AL, 61h` | Especialistas |
+| Alto nível | `total = preco * quantidade` | Pessoas |
+
+Quanto mais alto o nível, mais perto da nossa língua.
 
 ---
 
-# Parte 1 — Design Thinking
-O problema das comandas de papel
+## Do código-fonte à máquina
++ Você escreve o **código-fonte**: texto que pessoas leem
++ O processador só entende **linguagem de máquina**: 0 e 1
++ Alguém precisa **traduzir** um no outro
++ Existem dois jeitos: **compilar** ou **interpretar**
 
 ---
 
-## O restaurante hoje
-O garçom anota o pedido num bloco de papel e leva até a cozinha.
-
-+ A comanda se **perde** no caminho
-+ A **letra ilegível** vira o prato errado
-+ A **soma** do total sai errada no caixa
-+ Ninguém sabe quanto tempo o pedido está esperando
-
----
-
-## Design Thinking em 5 etapas
-1. **Empatizar**: entender quem sofre com o problema
-2. **Definir**: escrever o problema com clareza
-3. **Idear**: pensar em muitas soluções
-4. **Prototipar**: construir uma versão simples
-5. **Testar**: colocar na mão do usuário e aprender
-
-> Hoje o foco é **empatizar** e **definir**: sem entender o problema, a solução erra o alvo.
+## Compilação x interpretação
+| Compilação | Interpretação |
+|---|---|
+| Traduz tudo **antes** de rodar | Traduz **enquanto** roda |
+| Gera um programa pronto (executável) | Precisa do interpretador junto |
+| Como um livro traduzido inteiro | Como um intérprete ao vivo |
+| Ex.: C, Go, Rust | Ex.: Python, JavaScript no navegador |
 
 ---
 
-## Quem sofre com a comanda?
-| Pessoa | Dor | Necessidade |
+## As linguagens do curso
+| Linguagem | Para quê | No Sistema de Comandas |
 |---|---|---|
-| Garçom | Letra ilegível, volta à cozinha | Anotar rápido e sem erro |
-| Cozinha | Comanda perdida ou fora de ordem | Ver os pedidos em fila |
-| Caixa | Soma errada no fechamento | Total calculado sozinho |
-| Cliente | Prato errado, espera longa | Receber o que pediu |
+| HTML | Estrutura da página | A tela do cardápio |
+| CSS | Aparência | Cores e layout no celular |
+| JavaScript | Comportamento | Somar o total, enviar o pedido |
+| SQL | Consultar e guardar dados | Os pedidos no banco |
+
+> HTML é marcação e CSS é estilo: não são linguagens de programação, mas são essenciais.
 
 ---
 
-## Requisito funcional (RF)
-**O que** o sistema faz. Uma ação que o usuário consegue realizar.
+## Um algoritmo de verdade
+Somar a comanda em JavaScript: fim da soma errada no caixa.
 
-- RF01 — O sistema deve registrar o pedido de uma mesa
-- RF02 — O sistema deve mostrar os pedidos para a cozinha
-- RF03 — O sistema deve calcular o total da comanda
+```js
+const itens = [
+  { nome: "X-Burger", preco: 22 },
+  { nome: "Suco", preco: 8 },
+];
 
-> Dica: comece com "O sistema deve..." e use um verbo de ação.
+let total = 0;
+for (const item of itens) {
+  total = total + item.preco;
+}
 
----
-
-## Requisito não funcional (RNF)
-**Como** o sistema deve ser. Qualidade, restrição ou ambiente.
-
-- RNF01 — Deve funcionar no **celular** do garçom
-- RNF02 — Deve usar **HTTPS** para proteger os dados
-- RNF03 — Deve ter **custo zero** de hospedagem
-
-> RNF não é uma tela nem um botão: é uma regra que vale para o sistema todo.
+console.log("Total: R$ " + total); // Total: R$ 30
+```
 
 ---
 
-## RF ou RNF?
-"A cozinha deve ver os pedidos na ordem em que chegaram."
+## Compilado ou interpretado?
+O navegador lê o seu JavaScript e executa na hora. Isso é...
 
-- [x] RF: é algo que o sistema faz
-- [ ] RNF: é uma qualidade do sistema
-- [ ] Nenhum dos dois: é só uma opinião
-
----
-
-## RF ou RNF?
-"O sistema deve abrir em menos de 3 segundos no celular."
-
-- [ ] RF: é algo que o sistema faz
-- [x] RNF: é uma qualidade do sistema
-- [ ] Nenhum dos dois: é só uma opinião
+- [ ] Compilação
+- [x] Interpretação
+- [ ] Linguagem de máquina
+- [ ] Assembly
 
 ---
 
-## Mão na massa: imersão
-1. Em grupo, liste as dores do **garçom**, da **cozinha** e do **caixa**
-2. Transforme cada dor em uma **necessidade**
-3. Escreva **5 RF** começando com "O sistema deve..."
-4. Escreva **3 RNF** (celular, HTTPS, custo zero...)
+# Como uma IA "pensa"
+Spoiler: não é do jeito que a gente pensa
+
+---
+
+## Aprender com exemplos
++ Um programa comum segue **regras escritas por pessoas**
++ Uma IA **descobre as regras** sozinha, a partir de exemplos
++ Milhares de fotos de gato → ela reconhece um gato
++ Modelos de linguagem aprenderam com **quantidades enormes de texto**
+
+---
+
+## Complete a frase
+### "Batatinha quando nasce..."
+
++ Você completou sem pensar
++ Porque já viu esse **padrão** muitas vezes
++ A IA faz a mesma coisa, em escala gigante
++ Ela reconhece **padrões**, não "sabe" as coisas como a gente
+
+---
+
+## Tokens: a IA lê em pedaços
+Nem letra por letra, nem palavra por palavra: **tokens**, pedaços de texto. Em inglês, 1 token ≈ 4 letras.
+
+```
+"O garçom anotou o pedido"
+→ [O] [ gar] [çom] [ an] [otou] [ o] [ pedido]
+  (divisão ilustrativa)
+```
+
+---
+
+## Prever a próxima palavra
+### "O cliente pediu um X-Burger e um..."
+
+| Próximo token | Chance |
+|---|---|
+| suco | 40% |
+| refrigerante | 35% |
+| batata | 20% |
+| guarda-chuva | 0,01% |
+
+Chances ilustrativas. A IA escolhe um dos mais prováveis e repete, token por token.
+
+---
+
+## Como a IA monta a resposta?
+Como um modelo de linguagem gera o texto de uma resposta?
+
+- [ ] Busca a resposta pronta num banco de dados
+- [x] Prevê o próximo token, várias vezes seguidas
+- [ ] Entende a pergunta como um humano
+- [ ] Copia o primeiro resultado do Google
+
+---
+
+## Alucinação
++ A IA gera o texto **mais provável**, não o **verdadeiro**
++ Muitas vezes, em vez de dizer "não sei", ela **inventa**
++ E inventa **com a mesma confiança** de quando acerta
++ Isso se chama **alucinação**
+
+---
+
+## Alucinação em código
+```js
+// Pedido à IA: "some o total da comanda"
+const total = itens.somarTudo();
+```
+
+Parece certo, mas `somarTudo()` **não existe** no JavaScript. O código quebra.
+
+---
+
+## Regra de ouro: revise tudo
+1. **Leia** o que a IA gerou
+2. **Teste** de verdade
+3. **Confira** na documentação oficial
+4. Só então **use**
+
+> A IA é assistente. A responsabilidade continua sendo sua.
+
+---
+
+## E agora?
+A IA respondeu com segurança e o código parece certo. O que você faz?
+
+- [ ] Usa direto: ela parece ter certeza
+- [ ] Pergunta para a própria IA se está certo
+- [x] Testa e confere antes de usar
+- [ ] Desiste de usar IA
+
+---
+
+# Tipos de IA
+Cada problema pede uma ferramenta
+
+---
+
+## Quatro tipos de IA
+| Tipo | O que faz | Exemplo |
+|---|---|---|
+| Preditiva | Prevê números a partir do histórico | Prever as vendas do sábado |
+| Generativa (texto e imagem) | Cria conteúdo novo | Texto do cardápio, foto do prato |
+| Assistente de código | Sugere código enquanto você digita | GitHub Copilot |
+| Agente de desenvolvimento | Executa uma tarefa inteira, em várias etapas | Codex |
+
+---
+
+## Assistente x agente
++ **Assistente** (Copilot): sugere a próxima linha, você decide cada passo
++ **Agente** (Codex): recebe uma tarefa, lê o projeto, altera arquivos e roda testes
++ O agente trabalha mais sozinho, mas **mostra o que mudou** para você aprovar
++ Nos dois casos: **você revisa** antes de aceitar
+
+---
+
+## Aquecimento
+O restaurante quer saber quantos hambúrgueres comprar para o sábado.
+
+- [x] IA preditiva
+- [ ] IA generativa
+- [ ] Assistente de código
+- [ ] Agente de desenvolvimento
+
+---
+
+## Cenários do restaurante
+1. Escrever a descrição dos pratos do novo cardápio
+2. Prever o movimento do próximo feriado
+3. Completar a função que soma a comanda
+4. Criar fotos dos pratos para o Instagram
+5. Criar a tela de pedidos inteira a partir de uma descrição
+6. Descobrir qual ingrediente vai faltar no estoque
+
+---
+
+## Mão na massa: em grupo
+1. Formem grupos de 4
+2. Para cada cenário, escolham o **tipo de IA**
+3. Justifiquem cada escolha em **uma frase**
+4. Cada grupo apresenta **um** cenário para a turma
 
 [cronômetro 20]
 
 ---
 
-# Parte 2 — O caminho de um pedido
+## Gabarito
++ 1. Descrição dos pratos → **generativa de texto**
++ 2. Movimento do feriado → **preditiva**
++ 3. Completar a função → **assistente de código**
++ 4. Fotos dos pratos → **generativa de imagem**
++ 5. Tela de pedidos inteira → **agente de desenvolvimento**
++ 6. Ingrediente em falta → **preditiva**
+
+---
+
+# O caminho de um pedido
 Cliente x Servidor, com HTTP no meio
 
 ---
@@ -357,36 +556,7 @@ O cliente pede um prato que não existe no cardápio.
 
 ---
 
-## E a IA com isso?
-Ferramentas de IA escrevem código, mas **você** precisa dizer onde ele entra.
-
-- Vago: *"faz um sistema de comandas"*
-- Preciso: *"crie no backend uma rota `POST /api/pedidos` que salve a mesa e os itens no banco"*
-
-> Quem conhece as peças faz pedidos melhores para a IA e confere o que ela entregou.
-
----
-
-## Dinâmica: encenando o pedido
-+ **Cliente**: faz o pedido no salão
-+ **Salão (Frontend)**: mostra o cardápio e monta o pedido
-+ **Garçom (API)**: leva o pedido com método e endereço
-+ **Cozinha (Backend)**: confere, prepara e calcula
-+ **Despensa (Banco de dados)**: guarda e entrega os dados
-
----
-
-## Mão na massa: dinâmica
-1. Formem grupos de 5 e dividam os papéis
-2. Encenem um pedido que **dá certo** (`201`)
-3. Encenem um pedido **com erro** (`404` ou `500`)
-4. Registrem o fluxo no quadro, com setas e status
-
-[cronômetro 15]
-
----
-
-## O fluxo de um pedido
+## No quadro: o fluxo de um pedido
 1. O cliente escolhe os pratos no **frontend**
 2. O frontend envia `POST /api/pedidos` pela **API**
 3. O **backend** confere os itens e calcula o total
@@ -405,108 +575,44 @@ Em qual componente deve ficar o cálculo do total da comanda?
 
 ---
 
-# Parte 3 — HTTP de verdade
-Espiando as requisições de um site conhecido
+## E a IA com isso?
+Para pedir código à IA, **você** precisa dizer onde ele entra.
+
+- Vago: *"faz um sistema de comandas"*
+- Preciso: *"crie no backend uma rota `POST /api/pedidos` que salve a mesa e os itens no banco"*
+
+> Quem conhece as peças faz pedidos melhores para a IA e confere o que ela entregou.
 
 ---
 
-## Abrindo a aba Rede
-1. Abra um site que você usa no dia a dia
-2. Aperte **F12** (ou `Ctrl + Shift + I`)
-3. Clique na aba **Rede** (*Network*)
-4. Recarregue a página com **F5**
+## Checklist de hoje
+Confira com o seu grupo:
 
-> A aba só registra o que acontece **enquanto está aberta**. Por isso, recarregue.
-
----
-
-## O que observar
-| Coluna | O que mostra |
-|---|---|
-| Nome | O recurso pedido (página, imagem, dados) |
-| Método | `GET`, `POST`... (botão direito no cabeçalho → Método) |
-| Status | O código da resposta (`200`, `304`, `404`...) |
-| Tipo | Documento, script, imagem, fetch... |
-
-Clique numa linha e abra **Cabeçalhos**: lá estão a URL e o endereço do servidor.
-
----
-
-## Mão na massa: observar
-1. Filtre por **Fetch/XHR**: são as chamadas de API
-2. Escolha 3 requisições: 1 documento, 1 Fetch/XHR, 1 imagem
-3. Anote de cada uma: método, endereço e status
-4. Diga quem é o **cliente** e quem é o **servidor**
-
-[cronômetro 15]
-
----
-
-## Entregável: requisitos.txt
-```
-SISTEMA DE COMANDAS
-Nome:
-
-REQUISITOS FUNCIONAIS
-RF01 - O sistema deve ... (até RF05)
-
-REQUISITOS NÃO FUNCIONAIS
-RNF01 - O sistema deve ... (até RNF03)
-
-MAPA DO SISTEMA
-Componentes: Frontend, API, Backend, Banco de dados
-Fluxo de um pedido (até 5 passos):
-1.
-```
-
----
-
-## Mão na massa: entregável
-1. Crie o arquivo `requisitos.txt` seguindo o modelo
-2. Passe a limpo os **5 RF** e os **3 RNF** do seu grupo
-3. Escreva o **mapa**: componentes e fluxo em até 5 passos
-
-[cronômetro 25]
-
----
-
-## Antes de entregar
-Confira no seu `requisitos.txt`:
-
-- ✅ 5 RF começando com "O sistema deve..."
-- ✅ 3 RNF sobre qualidade (celular, HTTPS, custo...)
-- ✅ Frontend, API, backend e banco no mapa
-- ✅ Fluxo de um pedido em até 5 passos
-
----
-
-## Revisão
-No DevTools, uma requisição aparece com status `500`. De quem é o problema?
-
-- [ ] Do cliente, que pediu errado
-- [x] Do servidor, que falhou ao atender
-- [ ] Da internet do aluno
-- [ ] Do navegador, que precisa ser atualizado
+- ✅ Cada cenário do restaurante tem um tipo de IA
+- ✅ Cada escolha tem uma justificativa
+- ✅ O fluxo do pedido tem frontend, API, backend e banco
+- ✅ O fluxo foi registrado no quadro, em até 5 passos
 
 ---
 
 ## Termômetro de novo
 Levante os dedos outra vez e compare com o placar do começo.
 
-+ Frontend
-+ Backend
-+ Banco de dados
++ Binário (bit e byte)
++ Linguagem de programação
++ IA generativa
++ Frontend e backend
 + API
 + HTTP
-+ Cliente x Servidor
 
 ---
 
 ## O que vimos hoje
-+ Design Thinking começa entendendo quem sofre com o problema
-+ RF diz o que o sistema faz; RNF, como ele deve ser
-+ Frontend, API, backend e banco trabalham como salão, garçom, cozinha e despensa
-+ HTTP é a conversa: método e endereço na ida, status na volta
++ O computador trabalha com **0 e 1**: bits e bytes
++ Todo computador tem entrada, processamento, memória e saída
++ Código-fonte vira linguagem de máquina: **compilação ou interpretação**
++ A IA **prevê tokens** e pode alucinar: revise sempre
++ Frontend, API, backend e banco: o **caminho de um pedido**
 
 ---
 
