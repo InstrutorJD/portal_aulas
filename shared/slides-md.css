@@ -188,11 +188,12 @@
 .sm-remoto[hidden]{ display:none; }
 .sm-remoto-card{ max-width:440px; width:100%; max-height:100%; overflow-y:auto; text-align:center; padding:26px 28px; border-radius:20px; background:var(--sm-bg2); border:1px solid var(--sm-line); box-shadow:0 24px 60px rgba(0,0,0,.4); }
 .sm-remoto-card h3{ margin:0 0 16px; font-size:20px; }
-.sm-remoto-qr{ width:min(260px, 60vh); margin:0 auto; padding:12px; border-radius:14px; background:#fff; }
+.sm-remoto-qr{ width:min(320px, 48vh); margin:0 auto; border-radius:10px; background:#fff; } /* a borda branca já vem no SVG */
 .sm-remoto-qr:empty{ display:none; }
 .sm-remoto-qr svg{ display:block; width:100%; height:auto; }
 .sm-remoto-card p{ font-size:14px; color:var(--sm-dim); line-height:1.5; margin:14px 0 6px; }
-.sm-remoto-link{ display:block; font-family:'JetBrains Mono', Consolas, monospace; font-size:11px; color:var(--sm-dim); word-break:break-all; }
+.sm-remoto-link{ font-family:'JetBrains Mono', Consolas, monospace; font-size:12px; color:var(--sm-accent); word-break:break-all; }
+.sm-remoto-codigo{ font-family:'JetBrains Mono', Consolas, monospace; font-size:34px; font-weight:800; letter-spacing:4px; color:var(--sm-ink); }
 .sm-remoto-card .sm-remoto-status{ font-weight:700; color:var(--sm-accent2); }
 .sm-remoto-ok .sm-remoto-status{ color:var(--sm-accent); }
 .sm-remoto-card button{ margin-top:8px; font:inherit; font-weight:700; padding:8px 22px; border-radius:999px; cursor:pointer; border:1px solid var(--sm-line); background:var(--sm-card); color:var(--sm-ink); }

@@ -9,7 +9,7 @@
 <!-- Passador de slides no celular (só professor). Aberto pelo QR Code do
      botão 📱 da apresentação de "Criar Material" (professor/materiais.html,
      shared/slides-md.js — ver ligarRemoto). O código da sala vem no #hash
-     da URL; os dois lados se falam por um canal de broadcast do Supabase
+     da URL (ou é digitado aqui, se a câmera não ler o QR); os dois lados se falam por um canal de broadcast do Supabase
      Realtime ('slides_remoto_<sala>'), sem tabela: daqui sai 'cmd'
      (next/prev/revelar/ola), de lá vem 'estado' (slide atual). -->
 <style>
@@ -56,7 +56,7 @@
   .ct-login input{ font:inherit; font-size:16px; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); }
   .ct-login button{ font:inherit; font-size:16px; font-weight:800; padding:13px; border-radius:12px; border:none; background:var(--accent); color:var(--bg); cursor:pointer; }
   .ct-erro{ color:var(--erro); font-size:14px; min-height:1em; }
-  .ct-aviso{ margin:auto 0; text-align:center; color:var(--dim); font-size:15px; line-height:1.6; }
+  .ct-login .ct-codigo-input{ font-family:'JetBrains Mono', Consolas, monospace; font-size:26px; font-weight:800; letter-spacing:4px; text-align:center; text-transform:uppercase; }
 </style>
 <script src="../shared/supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -73,7 +73,13 @@
   <div class="ct-erro" id="ctErro"></div>
 </form>
 
-<div class="ct-aviso" id="ctAviso" hidden></div>
+<form class="ct-login" id="ctCodigo" hidden>
+  <h1>📱 Passador de slides</h1>
+  <p>Digite o código que aparece no computador, embaixo do QR Code (botão 📱 da apresentação).</p>
+  <input id="ctCodigoInput" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="ABCD-2345" class="ct-codigo-input">
+  <button type="submit">Conectar</button>
+  <div class="ct-erro" id="ctCodigoErro"></div>
+</form>
 
 <div id="ctControle" hidden style="display:contents">
   <div class="ct-topo" id="ctTopo"><i class="ct-bolinha"></i><span id="ctStatus">Conectando…</span></div>
@@ -95,18 +101,23 @@
 <script>
 (async function () {
   const $ = id => document.getElementById(id);
-  const sala = (location.hash || '').slice(1).replace(/[^a-z0-9]/gi, '');
-
-  function aviso(txt) {
-    $('ctLogin').hidden = true;
-    $('ctControle').hidden = true;
-    $('ctAviso').hidden = false;
-    $('ctAviso').innerHTML = txt;
-  }
-
-  if (!sala) {
-    aviso('Abra esta página pelo QR Code do botão <b>📱</b> da apresentação.');
-    return;
+  // Código da sala: 8 caracteres, vem no #hash (QR Code) ou é digitado
+  // aqui (aparece embaixo do QR, no formato ABCD-EFGH).
+  const limpar = txt => (txt || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  let sala = limpar(location.hash.slice(1));
+  if (sala.length !== 8) {
+    $('ctCodigo').hidden = false;
+    $('ctCodigoInput').focus();
+    sala = await new Promise(resolve => {
+      $('ctCodigo').addEventListener('submit', e => {
+        e.preventDefault();
+        const s = limpar($('ctCodigoInput').value);
+        if (s.length === 8) { resolve(s); return; }
+        $('ctCodigoErro').textContent = 'O código tem 8 letras/números (ex.: ABCD-2345).';
+      });
+    });
+    $('ctCodigo').hidden = true;
+    try { history.replaceState(null, '', '#' + sala); } catch (e) {}
   }
 
   // Login próprio (sem voltar pro index.html): o redirecionamento de lá

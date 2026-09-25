@@ -286,7 +286,8 @@ window.SlidesMD = (function () {
           <h3>📱 Passador de slides no celular</h3>
           <div class="sm-remoto-qr"></div>
           <p>Aponte a câmera do celular para o QR Code. Na primeira vez, entre com o seu login de professor.</p>
-          <a class="sm-remoto-link" target="_blank" rel="noopener"></a>
+          <p>Se a câmera não ler, abra <a class="sm-remoto-link" target="_blank" rel="noopener"></a> no celular e digite o código:</p>
+          <div class="sm-remoto-codigo"></div>
           <p class="sm-remoto-status">Aguardando o celular…</p>
           <button type="button" data-acao="fecharRemoto">Fechar</button>
         </div>
@@ -368,18 +369,23 @@ window.SlidesMD = (function () {
     // celular. Os dois se falam por um canal de broadcast do Supabase
     // Realtime (sem tabela, nada fica gravado): o celular manda 'cmd'
     // (next/prev/revelar/ola) e a apresentação responde com 'estado'
-    // (slide atual). O nome do canal leva um código aleatório que só
-    // existe no QR. O código fica no sessionStorage, então recarregar a
+    // (slide atual). O nome do canal leva um código aleatório de 8
+    // caracteres (sem 0/O/1/I, pra dar pra digitar no celular se a câmera
+    // não ler o QR). O código fica no sessionStorage, então recarregar a
     // página mantém o celular pareado; o canal continua aberto ao sair da
     // apresentação (os comandos ficam ignorados até abrir outra aula).
     let canal = null, canalPronto = false;
+    const FORMATO_SALA = /^[A-HJ-NP-Z2-9]{8}$/;
     function salaSalva() {
-      try { return sessionStorage.getItem('sm_sala_remoto'); } catch (e) { return null; }
+      try { const s = sessionStorage.getItem('sm_sala_remoto'); return FORMATO_SALA.test(s || '') ? s : null; } catch (e) { return null; }
     }
     function codigoSala() {
       let sala = salaSalva();
       if (!sala) {
-        sala = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : `${Math.random()}${Date.now()}`).replace(/[^a-z0-9]/gi, '');
+        const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const sorteio = new Uint8Array(8);
+        crypto.getRandomValues(sorteio);
+        sala = Array.from(sorteio, n => letras[n % letras.length]).join('');
         try { sessionStorage.setItem('sm_sala_remoto', sala); } catch (e) {}
       }
       return sala;
@@ -421,20 +427,25 @@ window.SlidesMD = (function () {
     }
     function abrirRemoto() {
       ligarRemoto();
-      const url = `${remoto.url}#${codigoSala()}`;
+      const sala = codigoSala();
+      const url = `${remoto.url}#${sala}`;
       const qrEl = painelRemoto.querySelector('.sm-remoto-qr');
       qrEl.innerHTML = '';
       if (window.qrcode) {
         try {
-          const qr = window.qrcode(0, 'M');
+          // Correção "L" = menos módulos, cada um maior na tela (aqui o QR
+          // é lido de perto, não de um projetor). A margem é em pixels do
+          // SVG: 4 módulos de borda branca, o mínimo que os leitores esperam.
+          const qr = window.qrcode(0, 'L');
           qr.addData(url);
           qr.make();
-          qrEl.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
+          qrEl.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 32, scalable: true });
         } catch (e) {}
       }
+      painelRemoto.querySelector('.sm-remoto-codigo').textContent = `${sala.slice(0, 4)}-${sala.slice(4)}`;
       const link = painelRemoto.querySelector('.sm-remoto-link');
-      link.href = url;
-      link.textContent = url;
+      link.href = remoto.url;
+      link.textContent = remoto.url.replace(/^https?:\/\//, '');
       painelRemoto.querySelector('.sm-remoto-status').textContent = canal ? 'Aguardando o celular…' : 'Não deu para conectar ao servidor. Confira a internet.';
       painelRemoto.classList.remove('sm-remoto-ok');
       painelRemoto.hidden = false;
