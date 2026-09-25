@@ -324,9 +324,20 @@
           <div id="tabContentAulas" class="tab-page">
             <div id="materiaSelectorArea">
               <div class="card">
-                <h2 style="margin:0 0 4px;">Matérias</h2>
-                <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Escolha uma matéria para ver as trilhas dela.</p>
-                <div class="card-grid" id="materiaCardGrid"></div>
+                <div class="aulas-visao" id="aulasVisao" hidden>
+                  <button type="button" class="aulas-visao-btn ativo" data-visao="materias" onclick="PortalCore.mudarVisaoAulas('materias')">📚 Matérias</button>
+                  <button type="button" class="aulas-visao-btn" data-visao="pendentes" onclick="PortalCore.mudarVisaoAulas('pendentes')">📋 Pendentes <span class="aulas-visao-num" id="pendentesNum"></span></button>
+                </div>
+                <div id="visaoMaterias">
+                  <h2 style="margin:0 0 4px;">Matérias</h2>
+                  <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">Escolha uma matéria para ver as trilhas dela.</p>
+                  <div class="card-grid" id="materiaCardGrid"></div>
+                </div>
+                <div id="visaoPendentes" hidden>
+                  <h2 style="margin:0 0 4px;">Atividades pendentes</h2>
+                  <p style="font-size:11px; color:var(--ink-dim); margin:0 0 16px;">O que ainda falta fazer, em todas as matérias. Clique numa atividade para abrir.</p>
+                  <div id="pendentesList"></div>
+                </div>
               </div>
             </div>
 
@@ -694,6 +705,7 @@
           ${vazia ? '<div class="card-status">Em breve</div>' : ''}
         </div>`;
     }).join('') + recuperacaoCardHtml();
+    renderPendentes();
   }
 
   // Card "Recuperação" no fim do grid de matérias: pro aluno, só quando ele
@@ -708,6 +720,72 @@
           <h3>${recuperacaoMateria.label}</h3>
           ${currentUser.role === 'aluno' ? '' : '<div class="card-status">Só pra quem está em recuperação</div>'}
         </div>`;
+  }
+
+  // ---------- Atividades pendentes (só aluno) ----------
+  // Visão "📋 Pendentes" da tela de matérias: todo módulo que o aluno ainda
+  // não concluiu, de todas as matérias e trilhas que ele enxerga na
+  // navegação (mesmos filtros de renderMaterias/renderTrilhasFor, então
+  // todo item da lista é alcançável). Com trilha individual (visibleFor),
+  // vale trilhasParaAluno: só entra o que é cobrado DELE. Módulo bloqueado
+  // por pré-requisito aparece com o cadeado e o nome do que falta, sem
+  // clique. A lista fica fora de #materiaCardGrid de propósito (a grade
+  // de matérias continua igual).
+  function listarPendentes() {
+    const materias = (cfg.materias || []).filter(m => isMateriaVisibleToEmail(m, paramUser));
+    if (recuperacaoMateria && alunoEmRecuperacao) materias.push(recuperacaoMateria);
+    return materias.flatMap(materia =>
+      trilhasParaAluno(visibleTrilhas(materia.trilhas || []), paramUser)
+        .map(trilha => ({ materia, trilha, modulos: (trilha.modules || []).filter(m => !isModuleComplete(m)) }))
+        .filter(g => g.modulos.length > 0));
+  }
+
+  function renderPendentes() {
+    const barra = document.getElementById('aulasVisao');
+    if (!barra) return;
+    if (currentUser.role !== 'aluno') { barra.hidden = true; return; }
+    barra.hidden = false;
+    const grupos = listarPendentes();
+    const total = grupos.reduce((n, g) => n + g.modulos.length, 0);
+    document.getElementById('pendentesNum').textContent = total ? `(${total})` : '';
+    const lista = document.getElementById('pendentesList');
+    if (!total) {
+      lista.innerHTML = '<div class="empty-state">🎉 Nenhuma atividade pendente. Você está em dia!</div>';
+      return;
+    }
+    lista.innerHTML = grupos.map(({ materia, trilha, modulos }) => `
+      <div class="pendentes-grupo">
+        <div class="pendentes-grupo-titulo">${materia.label} › ${trilha.label}</div>
+        ${modulos.map(m => {
+          const locked = isModuleLocked(trilha, m);
+          const anterior = locked ? (trilha.modules || []).find(x => x.key === m.requires) : null;
+          const { current, total: passos } = getModuleProgress(m);
+          const detalhe = locked ? `🔒 Conclua “${anterior ? anterior.title : 'a atividade anterior'}” antes`
+            : current > 0 ? `Em andamento · ${current}/${passos}` : 'Não iniciada';
+          const click = locked ? 'disabled' : `onclick="PortalCore.abrirPendente('${materia.key}','${trilha.key}','${m.key}')"`;
+          return `
+            <button type="button" class="pendente-item${locked ? ' locked' : ''}" ${click}>
+              <span class="pendente-icone">${m.icon || '📘'}</span>
+              <span class="pendente-texto"><b>${m.title}</b><small>${detalhe}</small></span>
+              ${locked ? '' : '<span class="pendente-seta">▶</span>'}
+            </button>`;
+        }).join('')}
+      </div>`).join('');
+  }
+
+  function mudarVisaoAulas(visao) {
+    document.getElementById('visaoMaterias').hidden = visao !== 'materias';
+    document.getElementById('visaoPendentes').hidden = visao !== 'pendentes';
+    document.querySelectorAll('.aulas-visao-btn').forEach(b => b.classList.toggle('ativo', b.dataset.visao === visao));
+    if (visao === 'pendentes') renderPendentes();
+  }
+
+  // Atalho da lista de pendentes: o mesmo caminho que o aluno faria à mão
+  // (matéria → trilha → módulo), então "← Voltar" funciona como sempre.
+  function abrirPendente(materiaKey, trilhaKey, modKey) {
+    openMateria(materiaKey);
+    switchAulasSubTab(trilhaKey);
+    openModule(trilhaKey, modKey);
   }
 
   // Mesmo corte do selo "Recuperação" do Perfil (nota < 6,0 numa matéria
@@ -805,6 +883,7 @@
   function closeMateria() {
     zoomOutThenShow(document.getElementById('materiaDetailArea'), document.getElementById('materiaSelectorArea'), 'block');
     openMateriaKey = null;
+    renderPendentes();
     if (typeof window.resumeActivityHeartbeat === 'function') {
       window.resumeActivityHeartbeat('aulas_materias', 'Aulas & Atividades — Escolhendo matéria');
     }
@@ -1336,6 +1415,7 @@
       const grid = document.querySelector(`#moduleSelector_${trilha.key} .card-grid`);
       if (grid) grid.innerHTML = buildModuleCardsHtml(trilha);
     });
+    renderPendentes();
   }
 
   // Refaz tudo que depende de bimestreDatesCache/trilhaBimestreCache pra
@@ -4912,7 +4992,7 @@
   }
 
   // API usada pelos onclick="" gerados dinamicamente
-  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleGestaoSection, openStudentPerfil, closeStudentPerfil };
+  window.PortalCore = { openGame, closeGame, openModule, closeModule, openMateria, closeMateria, toggleGestaoSection, openStudentPerfil, closeStudentPerfil, mudarVisaoAulas, abrirPendente };
 
   document.addEventListener('DOMContentLoaded', init);
 })();

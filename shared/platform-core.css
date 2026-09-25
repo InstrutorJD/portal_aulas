@@ -241,6 +241,32 @@ html[data-theme="light"] body{
 .game-card.recuperacao-card h3{ color:var(--yellow); }
 .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; }
 
+/* Aba Aulas do aluno: "📚 Matérias" | "📋 Pendentes" (renderPendentes em
+   platform-core.js). Cada pendente é uma linha clicável que abre o módulo. */
+.aulas-visao{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.aulas-visao[hidden], #visaoMaterias[hidden], #visaoPendentes[hidden]{ display:none; }
+.aulas-visao-btn{
+  font:inherit; font-size:12px; font-weight:700; padding:7px 14px; cursor:pointer; border-radius:var(--radius-pill);
+  background:transparent; color:var(--ink-dim); border:1px solid var(--line);
+}
+.aulas-visao-btn:hover{ color:var(--ink); border-color:var(--green-dim); }
+.aulas-visao-btn.ativo{ color:var(--green); border-color:var(--green); background:color-mix(in srgb, var(--green) 10%, transparent); }
+.aulas-visao-num{ color:var(--yellow); }
+.pendentes-grupo{ margin-bottom:16px; }
+.pendentes-grupo-titulo{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--ink-dim); margin:0 0 6px 2px; }
+.pendente-item{
+  display:flex; align-items:center; gap:12px; width:100%; margin-bottom:6px; padding:10px 14px; text-align:left; cursor:pointer;
+  font:inherit; color:var(--ink); background:var(--panel2); border:1px solid var(--line); border-radius:var(--radius-sm);
+  transition:border-color .15s ease, transform .15s ease;
+}
+.pendente-item:not(.locked):hover{ border-color:var(--green-dim); transform:translateX(3px); }
+.pendente-item.locked{ opacity:0.5; cursor:not-allowed; }
+.pendente-icone{ font-size:20px; flex-shrink:0; }
+.pendente-texto{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.pendente-texto b{ color:var(--yellow); font-size:13px; }
+.pendente-texto small{ color:var(--ink-dim); font-size:11px; }
+.pendente-seta{ color:var(--green); font-size:12px; flex-shrink:0; }
+
 /* Brilho diagonal sutil (mesmo truque em todo botão/card clicável) — uma
    camada de gradiente neutra (branco translúcido) por cima do
    background-color de cada um, não depende da cor de tema escolhida.
