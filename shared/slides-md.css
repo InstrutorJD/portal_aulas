@@ -34,18 +34,22 @@
 /* ---------- Slide e transições ---------- */
 .sm-slide{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:64px 96px; box-sizing:border-box; }
 .sm-slide-inner{ width:100%; max-height:100%; display:flex; flex-direction:column; gap:22px; }
-.sm-in-next{ animation:smInNext .6s cubic-bezier(.2,.8,.2,1) both; }
-.sm-in-prev{ animation:smInPrev .6s cubic-bezier(.2,.8,.2,1) both; }
-.sm-out-next{ animation:smOutNext .55s cubic-bezier(.4,0,.2,1) both; }
-.sm-out-prev{ animation:smOutPrev .55s cubic-bezier(.4,0,.2,1) both; }
-@keyframes smInNext{ from{ opacity:0; transform:translateX(90px) scale(.97); filter:blur(6px); } to{ opacity:1; transform:none; filter:none; } }
-@keyframes smInPrev{ from{ opacity:0; transform:translateX(-90px) scale(.97); filter:blur(6px); } to{ opacity:1; transform:none; filter:none; } }
-@keyframes smOutNext{ to{ opacity:0; transform:translateX(-90px) scale(.97); filter:blur(6px); } }
-@keyframes smOutPrev{ to{ opacity:0; transform:translateX(90px) scale(.97); filter:blur(6px); } }
+/* Troca de slide suave: esmaecimento cruzado com um deslize curto, sem
+   escala nem desfoque. O antigo some um pouco mais rápido que o novo
+   aparece, pra os dois não "brigarem" na tela. O JS remove o antigo
+   depois de 650ms — a saída tem que caber nisso. */
+.sm-in-next{ animation:smInNext .7s cubic-bezier(.25,.1,.25,1) both; }
+.sm-in-prev{ animation:smInPrev .7s cubic-bezier(.25,.1,.25,1) both; }
+.sm-out-next{ animation:smOutNext .45s cubic-bezier(.4,0,.6,1) both; }
+.sm-out-prev{ animation:smOutPrev .45s cubic-bezier(.4,0,.6,1) both; }
+@keyframes smInNext{ from{ opacity:0; transform:translateX(24px); } to{ opacity:1; transform:none; } }
+@keyframes smInPrev{ from{ opacity:0; transform:translateX(-24px); } to{ opacity:1; transform:none; } }
+@keyframes smOutNext{ to{ opacity:0; transform:translateX(-16px); } }
+@keyframes smOutPrev{ to{ opacity:0; transform:translateX(16px); } }
 
 /* Entrada escalonada dos elementos (--d = ordem no slide). */
-.sm-anim{ animation:smSobe .7s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(.12s + var(--d, 0) * .09s); }
-@keyframes smSobe{ from{ opacity:0; transform:translateY(22px); } to{ opacity:1; transform:none; } }
+.sm-anim{ animation:smSobe .8s cubic-bezier(.25,.1,.25,1) both; animation-delay:calc(.15s + var(--d, 0) * .08s); }
+@keyframes smSobe{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
 .sm-estatico .sm-anim, .sm-estatico{ animation:none !important; }
 
 /* ---------- Tipografia ---------- */
