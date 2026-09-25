@@ -183,6 +183,21 @@
 .sm-thumb-mini{ text-align:left; position:absolute; left:0; top:0; width:1280px; height:720px; transform:scale(.2); transform-origin:0 0; pointer-events:none; }
 .sm-thumb-num{ position:absolute; z-index:2; right:8px; bottom:6px; font-size:12px; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--sm-accent); color:var(--sm-bg); }
 
+/* ---------- Passador no celular (📱) ---------- */
+.sm-remoto{ position:absolute; inset:0; z-index:6; display:flex; align-items:center; justify-content:center; padding:24px; background:color-mix(in srgb, var(--sm-bg) 88%, transparent); backdrop-filter:blur(8px); }
+.sm-remoto[hidden]{ display:none; }
+.sm-remoto-card{ max-width:440px; width:100%; max-height:100%; overflow-y:auto; text-align:center; padding:26px 28px; border-radius:20px; background:var(--sm-bg2); border:1px solid var(--sm-line); box-shadow:0 24px 60px rgba(0,0,0,.4); }
+.sm-remoto-card h3{ margin:0 0 16px; font-size:20px; }
+.sm-remoto-qr{ width:min(260px, 60vh); margin:0 auto; padding:12px; border-radius:14px; background:#fff; }
+.sm-remoto-qr:empty{ display:none; }
+.sm-remoto-qr svg{ display:block; width:100%; height:auto; }
+.sm-remoto-card p{ font-size:14px; color:var(--sm-dim); line-height:1.5; margin:14px 0 6px; }
+.sm-remoto-link{ display:block; font-family:'JetBrains Mono', Consolas, monospace; font-size:11px; color:var(--sm-dim); word-break:break-all; }
+.sm-remoto-card .sm-remoto-status{ font-weight:700; color:var(--sm-accent2); }
+.sm-remoto-ok .sm-remoto-status{ color:var(--sm-accent); }
+.sm-remoto-card button{ margin-top:8px; font:inherit; font-weight:700; padding:8px 22px; border-radius:999px; cursor:pointer; border:1px solid var(--sm-line); background:var(--sm-card); color:var(--sm-ink); }
+.sm-remoto-card button:hover{ border-color:var(--sm-accent); color:var(--sm-accent); }
+
 @media (prefers-reduced-motion: reduce){
   .sm-presenter *, .sm-presenter{ animation-duration:.01s !important; transition-duration:.01s !important; }
 }

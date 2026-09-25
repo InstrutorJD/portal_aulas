@@ -165,6 +165,8 @@
   const erroEl = document.getElementById('matErro');
   const presenterEl = document.getElementById('smPresenter');
   const presenter = SM.createPresenter(presenterEl, {
+    // Passador de slides no celular (botão 📱): abre professor/controle.html.
+    remoto: { client: () => window.PortalSession.client(), url: new URL('controle.html', location.href).href },
     onExit: () => {
       document.title = 'PixelForge Studios — Criar Material';
       try { history.replaceState(null, '', location.pathname); } catch (e) {}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0f17">
+<title>Passador de slides</title>
+
+<!-- Passador de slides no celular (só professor). Aberto pelo QR Code do
+     botão 📱 da apresentação de "Criar Material" (professor/materiais.html,
+     shared/slides-md.js — ver ligarRemoto). O código da sala vem no #hash
+     da URL; os dois lados se falam por um canal de broadcast do Supabase
+     Realtime ('slides_remoto_<sala>'), sem tabela: daqui sai 'cmd'
+     (next/prev/revelar/ola), de lá vem 'estado' (slide atual). -->
+<style>
+  :root{
+    --bg:#0b0f17; --bg2:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,0.12);
+    --accent:#4fd1c5; --accent2:#ff9466; --erro:#ff5c5c;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ height:100%; margin:0; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    display:flex; flex-direction:column; padding:16px; gap:14px;
+    user-select:none; -webkit-user-select:none; touch-action:manipulation; overscroll-behavior:none;
+  }
+  [hidden]{ display:none !important; }
+
+  .ct-topo{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--dim); }
+  .ct-bolinha{ width:10px; height:10px; border-radius:50%; background:var(--erro); flex-shrink:0; }
+  .ct-on .ct-bolinha{ background:var(--accent); box-shadow:0 0 10px var(--accent); }
+  .ct-topo span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .ct-info{ text-align:center; padding:6px 4px; }
+  .ct-aula{ font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ct-titulo{ font-size:20px; font-weight:800; margin:6px 0 10px; line-height:1.25; min-height:1.25em; }
+  .ct-num{ font-family:'JetBrains Mono', Consolas, monospace; font-size:15px; font-weight:700; color:var(--accent); }
+  .ct-barra{ height:5px; border-radius:3px; background:var(--line); margin-top:10px; overflow:hidden; }
+  .ct-barra div{ height:100%; width:0; background:linear-gradient(90deg, var(--accent), var(--accent2)); transition:width .3s; }
+
+  .ct-botoes{ flex:1; display:flex; flex-direction:column; gap:12px; min-height:0; }
+  .ct-botoes button{
+    font:inherit; font-weight:800; border-radius:22px; cursor:pointer; color:var(--ink);
+    border:1px solid var(--line); background:var(--bg2); transition:transform .08s, background .15s;
+  }
+  .ct-botoes button:active{ transform:scale(.97); background:color-mix(in srgb, var(--accent) 22%, var(--bg2)); }
+  .ct-botoes button:disabled{ opacity:.35; }
+  .ct-next{ flex:3; font-size:28px; border-color:color-mix(in srgb, var(--accent) 55%, transparent) !important; }
+  .ct-linha{ flex:1; display:flex; gap:12px; }
+  .ct-linha button{ flex:1; font-size:18px; }
+
+  .ct-login{ margin:auto 0; display:flex; flex-direction:column; gap:12px; }
+  .ct-login h1{ font-size:22px; margin:0 0 4px; }
+  .ct-login p{ font-size:14px; color:var(--dim); margin:0 0 6px; line-height:1.5; }
+  .ct-login input{ font:inherit; font-size:16px; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); }
+  .ct-login button{ font:inherit; font-size:16px; font-weight:800; padding:13px; border-radius:12px; border:none; background:var(--accent); color:var(--bg); cursor:pointer; }
+  .ct-erro{ color:var(--erro); font-size:14px; min-height:1em; }
+  .ct-aviso{ margin:auto 0; text-align:center; color:var(--dim); font-size:15px; line-height:1.6; }
+</style>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/session.js"></script>
+</head>
+<body>
+
+<form class="ct-login" id="ctLogin" hidden>
+  <h1>📱 Passador de slides</h1>
+  <p>Entre com o seu login de professor. Depois disso, este celular fica conectado.</p>
+  <input id="ctUser" autocomplete="username" autocapitalize="none" placeholder="Usuário" required>
+  <input id="ctSenha" type="password" autocomplete="current-password" placeholder="Senha" required>
+  <button type="submit" id="ctEntrar">Entrar</button>
+  <div class="ct-erro" id="ctErro"></div>
+</form>
+
+<div class="ct-aviso" id="ctAviso" hidden></div>
+
+<div id="ctControle" hidden style="display:contents">
+  <div class="ct-topo" id="ctTopo"><i class="ct-bolinha"></i><span id="ctStatus">Conectando…</span></div>
+  <div class="ct-info">
+    <div class="ct-aula" id="ctAula"></div>
+    <div class="ct-titulo" id="ctTitulo"></div>
+    <div class="ct-num" id="ctNum"></div>
+    <div class="ct-barra"><div id="ctBarra"></div></div>
+  </div>
+  <div class="ct-botoes">
+    <button type="button" class="ct-next" data-cmd="next">Próximo ⟶</button>
+    <div class="ct-linha">
+      <button type="button" data-cmd="prev">⟵ Voltar</button>
+      <button type="button" data-cmd="revelar">💡 Revelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function () {
+  const $ = id => document.getElementById(id);
+  const sala = (location.hash || '').slice(1).replace(/[^a-z0-9]/gi, '');
+
+  function aviso(txt) {
+    $('ctLogin').hidden = true;
+    $('ctControle').hidden = true;
+    $('ctAviso').hidden = false;
+    $('ctAviso').innerHTML = txt;
+  }
+
+  if (!sala) {
+    aviso('Abra esta página pelo QR Code do botão <b>📱</b> da apresentação.');
+    return;
+  }
+
+  // Login próprio (sem voltar pro index.html): o redirecionamento de lá
+  // perderia o código da sala que veio no #hash.
+  let user = await window.PortalSession.getUser();
+  if (!user || user.role !== 'professor') {
+    if (user) await window.PortalSession.signOut();
+    $('ctLogin').hidden = false;
+    user = await new Promise(resolve => {
+      $('ctLogin').addEventListener('submit', async e => {
+        e.preventDefault();
+        $('ctEntrar').disabled = true;
+        $('ctErro').textContent = '';
+        const { error } = await window.PortalSession.signIn($('ctUser').value, $('ctSenha').value);
+        const u = error ? null : await window.PortalSession.getUser();
+        if (u && u.role === 'professor') { resolve(u); return; }
+        if (u) await window.PortalSession.signOut();
+        $('ctErro').textContent = error ? 'Usuário ou senha incorretos.' : 'Só o professor pode usar o passador.';
+        $('ctEntrar').disabled = false;
+      });
+    });
+    $('ctLogin').hidden = true;
+  }
+
+  $('ctControle').hidden = false;
+  const topo = $('ctTopo');
+  const botoes = document.querySelectorAll('[data-cmd]');
+  let recebeu = false, ultimoEstado = 0;
+
+  function mostrar(estado) {
+    recebeu = true;
+    ultimoEstado = Date.now();
+    topo.classList.add('ct-on');
+    if (!estado.aberta) {
+      $('ctStatus').textContent = 'Conectado — nenhuma aula aberta';
+      $('ctAula').textContent = '';
+      $('ctTitulo').textContent = 'Abra uma aula no computador';
+      $('ctNum').textContent = '';
+      $('ctBarra').style.width = '0';
+      botoes.forEach(b => { b.disabled = true; });
+      return;
+    }
+    $('ctStatus').textContent = 'Conectado à apresentação';
+    $('ctAula').textContent = estado.aula || '';
+    $('ctTitulo').textContent = estado.titulo || '';
+    $('ctNum').textContent = `${estado.i + 1} / ${estado.total}`;
+    $('ctBarra').style.width = `${((estado.i + 1) / estado.total) * 100}%`;
+    botoes.forEach(b => { b.disabled = false; });
+  }
+
+  const sb = window.PortalSession.client();
+  const canal = sb.channel('slides_remoto_' + sala, { config: { broadcast: { self: false } } });
+  const enviar = acao => canal.send({ type: 'broadcast', event: 'cmd', payload: { acao } }).catch(() => {});
+
+  canal.on('broadcast', { event: 'estado' }, ({ payload }) => mostrar(payload || {}))
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') { $('ctStatus').textContent = 'Procurando a apresentação…'; enviar('ola'); }
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        topo.classList.remove('ct-on');
+        $('ctStatus').textContent = 'Sem conexão — tentando de novo…';
+      }
+    });
+
+  // "ola" a cada 4s: a apresentação sempre responde com o estado, então
+  // isso mantém a bolinha verde viva e reencontra a apresentação se ela
+  // for recarregada (ou se o 📱 ainda não foi aberto no computador).
+  setInterval(() => {
+    if (recebeu && Date.now() - ultimoEstado > 9000) {
+      topo.classList.remove('ct-on');
+      $('ctStatus').textContent = 'Procurando a apresentação…';
+    }
+    enviar('ola');
+  }, 4000);
+
+  botoes.forEach(b => b.addEventListener('click', () => {
+    if (navigator.vibrate) navigator.vibrate(15);
+    enviar(b.dataset.cmd);
+  }));
+
+  // Deslizar também passa os slides.
+  let toqueX = null;
+  document.addEventListener('touchstart', e => { toqueX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (toqueX === null) return;
+    const dx = e.changedTouches[0].clientX - toqueX;
+    if (Math.abs(dx) > 60) enviar(dx < 0 ? 'next' : 'prev');
+    toqueX = null;
+  });
+
+  // Mantém a tela do celular acesa durante a aula (quando o navegador deixa).
+  async function telaAcesa() {
+    try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {}
+  }
+  telaAcesa();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') { telaAcesa(); enviar('ola'); }
+  });
+})();
+</script>
+</body>
+</html>

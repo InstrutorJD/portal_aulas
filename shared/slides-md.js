@@ -262,7 +262,9 @@ window.SlidesMD = (function () {
   // ---------- Apresentação ----------
   const W = 1280, H = 720;
 
-  function createPresenter(root, { onExit } = {}) {
+  // remoto (opcional): { client: () => clienteSupabase, url: 'https://…/controle.html' }
+  // liga o passador de slides no celular (botão 📱 — ver ligarRemoto).
+  function createPresenter(root, { onExit, remoto } = {}) {
     root.innerHTML = `
       <div class="sm-bg"><span></span><span></span><span></span></div>
       <div class="sm-stage-wrap"><div class="sm-stage"></div></div>
@@ -275,12 +277,24 @@ window.SlidesMD = (function () {
         <button type="button" data-acao="overview" title="Visão geral (O)">▦</button>
         <button type="button" data-acao="theme" title="Tema claro/escuro (T)">◐</button>
         <button type="button" data-acao="fullscreen" title="Tela cheia (F)">⛶</button>
+        ${remoto ? '<button type="button" data-acao="remoto" title="Passar os slides pelo celular">📱</button>' : ''}
         <button type="button" data-acao="exit" title="Sair (Esc)">✕</button>
       </div>
       <div class="sm-overview" hidden><div class="sm-overview-grid"></div></div>
+      <div class="sm-remoto" hidden>
+        <div class="sm-remoto-card">
+          <h3>📱 Passador de slides no celular</h3>
+          <div class="sm-remoto-qr"></div>
+          <p>Aponte a câmera do celular para o QR Code. Na primeira vez, entre com o seu login de professor.</p>
+          <a class="sm-remoto-link" target="_blank" rel="noopener"></a>
+          <p class="sm-remoto-status">Aguardando o celular…</p>
+          <button type="button" data-acao="fecharRemoto">Fechar</button>
+        </div>
+      </div>
     `;
     const stage = root.querySelector('.sm-stage');
     const overview = root.querySelector('.sm-overview');
+    const painelRemoto = root.querySelector('.sm-remoto');
     let deck = null, idx = 0, atual = null, hudTimer = 0;
     const timers = new Set();
 
@@ -346,7 +360,86 @@ window.SlidesMD = (function () {
       root.querySelector('.sm-count').textContent = `${i + 1} / ${deck.slides.length}`;
       root.querySelector('.sm-progress > div').style.width = `${((i + 1) / deck.slides.length) * 100}%`;
       try { history.replaceState(null, '', `#${i + 1}`); } catch (e) {}
+      enviarEstado();
     }
+
+    // ---------- Passador de slides no celular ----------
+    // O botão 📱 mostra um QR Code que abre professor/controle.html no
+    // celular. Os dois se falam por um canal de broadcast do Supabase
+    // Realtime (sem tabela, nada fica gravado): o celular manda 'cmd'
+    // (next/prev/revelar/ola) e a apresentação responde com 'estado'
+    // (slide atual). O nome do canal leva um código aleatório que só
+    // existe no QR. O código fica no sessionStorage, então recarregar a
+    // página mantém o celular pareado; o canal continua aberto ao sair da
+    // apresentação (os comandos ficam ignorados até abrir outra aula).
+    let canal = null, canalPronto = false;
+    function salaSalva() {
+      try { return sessionStorage.getItem('sm_sala_remoto'); } catch (e) { return null; }
+    }
+    function codigoSala() {
+      let sala = salaSalva();
+      if (!sala) {
+        sala = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : `${Math.random()}${Date.now()}`).replace(/[^a-z0-9]/gi, '');
+        try { sessionStorage.setItem('sm_sala_remoto', sala); } catch (e) {}
+      }
+      return sala;
+    }
+    function ligarRemoto() {
+      if (canal || !remoto) return;
+      const sb = remoto.client();
+      if (!sb) return;
+      canal = sb.channel('slides_remoto_' + codigoSala(), { config: { broadcast: { self: false } } });
+      canal.on('broadcast', { event: 'cmd' }, ({ payload }) => {
+        const acao = payload && payload.acao;
+        if (acao === 'ola') { celularConectou(); enviarEstado(); return; }
+        if (root.hidden || !deck) return;
+        if (acao === 'next') next();
+        else if (acao === 'prev') prev();
+        else if (acao === 'revelar') { const q = atual && atual.querySelector('.sm-quiz:not(.sm-revealed)'); if (q) revelarQuiz(q); }
+        enviarEstado();
+      }).subscribe(status => {
+        canalPronto = status === 'SUBSCRIBED';
+        if (canalPronto) enviarEstado();
+      });
+    }
+    function enviarEstado() {
+      if (!canal || !canalPronto) return;
+      const aberta = !root.hidden && !!deck;
+      const h = aberta && atual ? atual.querySelector('h1, h2, h3') : null;
+      canal.send({
+        type: 'broadcast', event: 'estado',
+        payload: aberta
+          ? { aberta, i: idx, total: deck.slides.length, titulo: h ? h.textContent.trim() : '', aula: deck.titulo || '' }
+          : { aberta },
+      }).catch(() => {});
+    }
+    function celularConectou() {
+      if (painelRemoto.hidden) return;
+      painelRemoto.querySelector('.sm-remoto-status').textContent = '✔ Celular conectado!';
+      painelRemoto.classList.add('sm-remoto-ok');
+      setTimeout(fecharRemoto, 1200);
+    }
+    function abrirRemoto() {
+      ligarRemoto();
+      const url = `${remoto.url}#${codigoSala()}`;
+      const qrEl = painelRemoto.querySelector('.sm-remoto-qr');
+      qrEl.innerHTML = '';
+      if (window.qrcode) {
+        try {
+          const qr = window.qrcode(0, 'M');
+          qr.addData(url);
+          qr.make();
+          qrEl.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
+        } catch (e) {}
+      }
+      const link = painelRemoto.querySelector('.sm-remoto-link');
+      link.href = url;
+      link.textContent = url;
+      painelRemoto.querySelector('.sm-remoto-status').textContent = canal ? 'Aguardando o celular…' : 'Não deu para conectar ao servidor. Confira a internet.';
+      painelRemoto.classList.remove('sm-remoto-ok');
+      painelRemoto.hidden = false;
+    }
+    function fecharRemoto() { painelRemoto.hidden = true; }
 
     // "Finalizar aula" no último slide (só quando quem abriu passou
     // onFinalizar — ver abrir): é o ÚNICO jeito de a aula virar
@@ -505,8 +598,10 @@ window.SlidesMD = (function () {
 
     function sair() {
       pararTimers();
+      fecharRemoto();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       root.hidden = true;
+      enviarEstado();
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('resize', fit);
       try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
@@ -516,6 +611,7 @@ window.SlidesMD = (function () {
     function onKey(e) {
       if (e.target.closest && e.target.closest('input, textarea')) return;
       const k = e.key;
+      if (!painelRemoto.hidden && k === 'Escape') { e.preventDefault(); fecharRemoto(); return; }
       if (!overview.hidden) {
         if (k === 'Escape' || k === 'o' || k === 'O') { e.preventDefault(); fecharOverview(); }
         return;
@@ -538,9 +634,10 @@ window.SlidesMD = (function () {
     root.addEventListener('click', e => {
       const acao = e.target.closest('[data-acao]');
       if (acao) {
-        ({ prev, next, overview: abrirOverview, theme: alternarTema, fullscreen: telaCheia, exit: sair })[acao.dataset.acao]();
+        ({ prev, next, overview: abrirOverview, theme: alternarTema, fullscreen: telaCheia, exit: sair, remoto: abrirRemoto, fecharRemoto })[acao.dataset.acao]();
         return;
       }
+      if (e.target === painelRemoto) { fecharRemoto(); return; }
       const opt = e.target.closest('.sm-opt');
       if (opt) {
         const quiz = opt.closest('.sm-quiz');
@@ -595,6 +692,8 @@ window.SlidesMD = (function () {
       window.addEventListener('resize', fit);
       document.removeEventListener('keydown', onKey);
       document.addEventListener('keydown', onKey);
+      // Recarregou a página com um celular já pareado: reconecta sozinho.
+      if (remoto && salaSalva()) ligarRemoto();
       ir(Math.min(Math.max(inicio, 0), deck.slides.length - 1), 1);
     }
 
