@@ -10,4 +10,5 @@
 window.MATERIAIS = [
   'guia-do-formato.md',
   'aula-teste-passador.md',
+  'aula-01-componentes-aplicacao-web.md',
 ];
