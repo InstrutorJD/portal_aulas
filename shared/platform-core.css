@@ -509,3 +509,12 @@ iframe{ width:100%; height:100%; border:none; display:block; }
   .subtabs select{ min-width:0; flex:1; }
   .module-frame-modal{ padding:48px 6px 6px; }
 }
+
+/* Substituto (shared/session.js → html[data-substituto]): esconde o que ele
+   não usa na Gestão (.so-professor) e mostra o aviso de modo (.so-substituto).
+   Só visual — quem garante que ele não edita é o banco (sql/usuario-substituto.sql). */
+.so-substituto{ display:none; }
+html[data-substituto] .so-substituto{ display:block; }
+html[data-substituto] .so-professor{ display:none !important; }
+html[data-substituto] .aluno-nome-link{ pointer-events:none; text-decoration:none; color:inherit; }
+.substituto-aviso{ font-size:12px; line-height:1.6; border-left:4px solid var(--yellow); }

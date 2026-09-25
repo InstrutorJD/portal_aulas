@@ -395,7 +395,13 @@
           </div>
 
           <div id="tabContentGestao" class="tab-page" style="display:none;">
-            <div class="card collapsible-card">
+            <!-- Substituto (shared/session.js, sql/usuario-substituto.sql): vê a
+                 Gestão com as seções .so-professor escondidas (CSS por
+                 html[data-substituto], ver platform-core.css). -->
+            <div class="card so-substituto substituto-aviso">
+              <b>Modo substituto.</b> Você pode liberar/bloquear Copiar e Colar e Jogos, fazer a chamada, dar visto (🔑) e acompanhar os relatórios. As notas aparecem só para consulta.
+            </div>
+            <div class="card collapsible-card so-professor">
               <div class="collapsible-head" onclick="PortalCore.toggleGestaoSection(this)">
                 <h2>Alunos</h2>
                 <span class="collapsible-arrow">▶</span>
@@ -436,14 +442,14 @@
                     </div>
                     <button class="toggle-switch" id="toggleJogos" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                   </div>
-                  <div class="toggle-row">
+                  <div class="toggle-row so-professor">
                     <div>
                       <div class="toggle-row-label">Mostrar Notas</div>
                       <div class="toggle-row-desc" id="toggleNotasDesc"></div>
                     </div>
                     <button class="toggle-switch" id="toggleNotas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                   </div>
-                  <div class="toggle-row">
+                  <div class="toggle-row so-professor">
                     <div>
                       <div class="toggle-row-label">Editar Notas Manuais</div>
                       <div class="toggle-row-desc" id="toggleNotasManuaisDesc">Travado — as notas de matéria em Lançar Notas não podem ser editadas.</div>
@@ -452,6 +458,7 @@
                   </div>
                 </div>
 
+                <div class="so-professor">
                 <h3 class="gestao-subhead">Bimestres — Início e Fim</h3>
                 <table class="audit-table">
                   <thead><tr><th>Bimestre</th><th>Início</th><th>Fim</th><th>Notas</th></tr></thead>
@@ -470,6 +477,7 @@
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
                   <button class="btn" id="btnSalvarTrilhaBimestre">Salvar</button>
                   <span class="status-msg" id="trilhaBimestreStatus"></span>
+                </div>
                 </div>
               </div>
             </div>
@@ -530,7 +538,7 @@
                   </table>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; margin-top:14px;">
-                  <button class="btn" id="btnSalvarNotas">Salvar</button>
+                  <button class="btn so-professor" id="btnSalvarNotas">Salvar</button>
                   <span class="status-msg" id="notasStatus"></span>
                 </div>
               </div>
@@ -2491,6 +2499,8 @@
 
     const renderHead = () => {
       theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label}<label class="peso-materia-field">Peso <input type="number" step="0.5" min="0.5" max="10" class="peso-materia-input" data-materia="${m.key}" value="${pesoMateria(m)}"></label></th>`).join('')}`;
+      // Substituto só consulta: peso das matérias também travado.
+      if (currentUser.substituto) theadRow.querySelectorAll('.peso-materia-input').forEach(inp => { inp.disabled = true; });
     };
     renderHead();
 
@@ -2695,12 +2705,18 @@
 
     pintarNotasBaixas();
     document.getElementById('notasStatus').textContent = '';
+    // Substituto só consulta: nenhum campo da tabela (notas, pesos) editável.
+    if (currentUser.substituto) {
+      document.querySelectorAll('#notasBody input, #notasHead input').forEach(inp => { inp.disabled = true; });
+      document.getElementById('notasStatus').textContent = 'Modo substituto: notas só para consulta.';
+    }
   }
 
   async function salvarNotas() {
     if (!sbClient) return;
     const bimestre = parseInt(document.getElementById('notasBimestre').value, 10);
     if (bimestreFechado(bimestre)) return; // congelado — ver fecharBimestre
+    if (currentUser.substituto) return; // substituto só consulta as notas
     const now = new Date().toISOString();
 
     // Prova/Nota 3 podem ser <input> (manual — turma inteira pra Nota 3
@@ -3232,6 +3248,7 @@
   // a única porta de entrada; closeStudentPerfil() é a saída (botão
   // "← Voltar à Gestão" que só aparece nesse modo).
   function openStudentPerfil(email) {
+    if (currentUser.substituto) return; // substituto não abre o Perfil dos alunos
     viewingStudentEmail = email;
     switchTab('perfil');
   }
@@ -4748,6 +4765,8 @@
     // embute prefs.avatarEmoji direto no template).
     await fetchUserPreferences();
 
+    // Marca o documento pro CSS esconder o que o substituto não usa (.so-professor).
+    document.documentElement.toggleAttribute('data-substituto', !!currentUser.substituto);
     renderShell();
     renderMaterias();
     renderGameCards();

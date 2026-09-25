@@ -54,6 +54,17 @@ window.PortalSession = (function () {
       if (profileError || !profile) return null;
 
       cachedUser = { ...profile };
+      // Substituto (sql/usuario-substituto.sql): na TELA ele se comporta
+      // como professor em todo o portal — aulas destravadas, gabarito,
+      // sem bloqueio de copiar, sem contar como aluno, anfitrião dos jogos
+      // — sem precisar mexer nas dezenas de páginas que testam
+      // role === 'professor'. A marca `substituto` é o que a aba Gestão
+      // (shared/platform-core.js) usa pra esconder o que ele não pode usar.
+      // A segurança de verdade continua no banco: lá o papel é
+      // 'substituto' e is_professor() é falso pra ele.
+      if (profile.role === 'substituto') {
+        cachedUser = { ...profile, role: 'professor', papel: 'substituto', substituto: true };
+      }
       return cachedUser;
     })();
 
