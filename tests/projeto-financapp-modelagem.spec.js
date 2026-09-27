@@ -31,11 +31,12 @@ test.describe('turmas/sistemas — trilha FinancApp: Modelagem de Dados e Requis
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Modelagem de Sistemas 1, ao lado da trilha genérica', async ({ page }) => {
+  test('aparece na trilha única do FinancApp, no card Projetos', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Modelagem de Sistemas 1")');
-    await page.selectOption('#trilhaSelect', 'projeto-financapp-modelagem');
-    await expect(page.locator('#moduleSelector_projeto-financapp-modelagem')).toContainText('FinancApp: Modelagem de Dados e Requisitos');
+    // Card "Projetos" (h3 exato — "Introdução de Desenvolvimento de Projetos"
+    // também contém "Projetos"); trilha única, então sem #trilhaSelect.
+    await page.click('.game-card:has(h3:text-is("Projetos"))');
+    await expect(page.locator('#moduleSelector_projeto-financapp')).toContainText('FinancApp: Modelagem de Dados e Requisitos');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {

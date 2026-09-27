@@ -1,11 +1,8 @@
 // @ts-check
-// Módulo "FinancApp — Como o FinancApp Conversa com a Internet" (dentro da
-// trilha JÁ EXISTENTE "Serviços de Internet e Modelos", Redes de
-// Computadores, turma Sistemas) — 4ª de 5 peças do projeto interdisciplinar
-// FinancApp (ver tests/projeto-financapp-kickoff.spec.js pra 1ª peça). Não é
-// trilha nova (pra não duplicar a capacidade já coberta por "Serviços de
-// Internet e Modelos") — só um módulo extra, travado até a prática normal
-// da trilha (requires:'pratica') ser concluída. Aluno navega pelas telas
+// Módulo "Como o FinancApp Conversa com a Internet" — 4ª de 5 peças do
+// projeto FinancApp, na trilha única 'projeto-financapp' (card "Projetos",
+// turma Sistemas). Antes ficava dentro da trilha "Serviços de Internet e
+// Modelos" de Redes, travado até a prática dela. Aluno navega pelas telas
 // com Voltar/Próximo e o professor dá "visto" com um token temporário
 // (mesmo padrão de projeto-financapp-kickoff-trabalho.html).
 const { test, expect } = require('@playwright/test');
@@ -35,13 +32,21 @@ test.describe('turmas/sistemas — módulo FinancApp: Como o FinancApp Conversa 
     await stubSupabaseFake(page, SEED);
   });
 
-  test('fica bloqueado até a prática normal da trilha ser concluída', async ({ page }) => {
+  test('aparece na trilha única do FinancApp, no card Projetos, sem trava', async ({ page }) => {
+    await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
+    // Card "Projetos" (h3 exato — "Introdução de Desenvolvimento de Projetos"
+    // também contém "Projetos"); trilha única, então sem #trilhaSelect.
+    await page.click('.game-card:has(h3:text-is("Projetos"))');
+    const card = page.locator('#moduleSelector_projeto-financapp .game-card', { hasText: 'Como o FinancApp Conversa com a Internet' });
+    await expect(card).toBeVisible();
+    await expect(card).not.toHaveClass(/locked/);
+  });
+
+  test('não aparece mais na trilha "Serviços de Internet e Modelos" de Redes', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
     await page.click('.game-card:has-text("Redes de Computadores")');
     await page.selectOption('#trilhaSelect', 'redes-servicos-modelos');
-    const card = page.locator('#moduleSelector_redes-servicos-modelos .game-card', { hasText: 'FinancApp — Como o FinancApp Conversa com a Internet' });
-    await expect(card).toHaveClass(/locked/);
-    await expect(card).toContainText('Bloqueado');
+    await expect(page.locator('#moduleSelector_redes-servicos-modelos')).not.toContainText('FinancApp');
   });
 
   test('navega pelas telas com Voltar/Próximo e lembra onde o aluno parou', async ({ page }) => {

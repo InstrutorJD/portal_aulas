@@ -700,7 +700,7 @@
       const vazia = visibleTrilhas(m.trilhas || []).length === 0;
       return `
         <div class="game-card" onclick="PortalCore.openMateria('${m.key}')">
-          <div class="icon">📚</div>
+          <div class="icon">${m.icon || '📚'}</div>
           <h3>${m.label}</h3>
           ${vazia ? '<div class="card-status">Em breve</div>' : ''}
         </div>`;

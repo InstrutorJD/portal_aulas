@@ -35,11 +35,12 @@ test.describe('turmas/sistemas — trilha FinancApp: Construa o Aplicativo', () 
     await stubSupabaseFake(page, SEED);
   });
 
-  test('aparece na matéria Programação de Aplicativos, ao lado do ClipZone', async ({ page }) => {
+  test('aparece na trilha única do FinancApp, no card Projetos', async ({ page }) => {
     await page.goto('/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno');
-    await page.click('.game-card:has-text("Programação de Aplicativos")');
-    await page.selectOption('#trilhaSelect', 'projeto-financapp-app');
-    await expect(page.locator('#moduleSelector_projeto-financapp-app')).toContainText('FinancApp: Construa o Aplicativo (JavaScript)');
+    // Card "Projetos" (h3 exato — "Introdução de Desenvolvimento de Projetos"
+    // também contém "Projetos"); trilha única, então sem #trilhaSelect.
+    await page.click('.game-card:has(h3:text-is("Projetos"))');
+    await expect(page.locator('#moduleSelector_projeto-financapp')).toContainText('FinancApp: Construa o Aplicativo (JavaScript)');
   });
 
   test('a apresentação explica que o HTML/CSS já vêm prontos', async ({ page }) => {

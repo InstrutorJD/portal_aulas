@@ -417,15 +417,13 @@ test.describe('Notas — dentro do portal da turma', () => {
         { turma: 'sistemas', trilha_key: 'sql', bimestre: 1 },
         { turma: 'sistemas', trilha_key: 'sql-comentarios', bimestre: 1 },
         { turma: 'sistemas', trilha_key: 'db-conexao-supabase', bimestre: 1 },
-        { turma: 'sistemas', trilha_key: 'projeto-financapp-banco-dados', bimestre: 1 },
       ],
       student_module_progress: [
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'teoria', progress_current: 1, progress_total: 1, completed: true },
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'basico', progress_current: 8, progress_total: 8, completed: true },
         { student_email: 'alexandre.natal', turma: 'sistemas', trilha_key: 'sql', module_key: 'join', progress_current: 5, progress_total: 5, completed: true },
-        // "agregacao" (trilha sql), "teoria" (sql-comentarios), "pratica"
-        // (db-conexao-supabase) e "trabalho" (projeto-financapp) nunca
-        // abertos — contam como 0% na média da MATÉRIA Banco de Dados.
+        // "agregacao" (trilha sql), "teoria" (sql-comentarios) e "pratica"
+        // (db-conexao-supabase) nunca abertos — contam como 0% na média da MATÉRIA Banco de Dados.
       ],
       // "Nota da Prova" não vem de student_module_progress (que só sabe
       // "concluiu ou não" pro módulo progressMode:'flag' da prova) — vem
@@ -457,13 +455,13 @@ test.describe('Notas — dentro do portal da turma', () => {
 
     const row = popup.locator('table tbody tr', { hasText: 'Alexandre Natal' });
     await expect(row).toContainText('85/100'); // nota da prova, em pontos — nunca em %
-    // Banco de Dados: 3 de 7 módulos concluídos (sql: teoria/basico/join) =>
-    // 3/7 ≈ 43% => Atividades 4,30. Prova 85/10=8,50. Nota3 (Prova Final)
+    // Banco de Dados: 3 de 6 módulos concluídos (sql: teoria/basico/join) =>
+    // 3/6 = 50% => Atividades 5,00. Prova 85/10=8,50. Nota3 (Prova Final)
     // 70/10=7,00. Sem peso salvo em materia_pesos, Banco de Dados vale peso 1:
-    // Nota = (4,30 + 8,50 + 7,00) / 3 = 6.60.
-    await expect(row).toContainText('6.60');
+    // Nota = (5,00 + 8,50 + 7,00) / 3 = 6.83.
+    await expect(row).toContainText('6.83');
     // Só essa matéria tem trilha neste bimestre — Média Geral = a própria nota dela.
-    await expect(row).toContainText('6.60');
+    await expect(row).toContainText('6.83');
     // Pior desempenho (maioria das matérias abaixo de 50% de CONCLUSÃO —
     // métrica separada da nota, não bimestrada) sai destacado.
     await expect(row).toHaveClass(/pior/);

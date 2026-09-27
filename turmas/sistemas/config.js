@@ -1,4 +1,4 @@
-// Matérias/trilhas/módulos da turma Sistemas (10 matérias no total).
+// Matérias/trilhas/módulos da turma Sistemas (11 matérias no total, contando o card "Projetos").
 // Consumido por plataforma.html (via window.TURMA_CONFIG) — inclusive pela
 // aba "Gestão" do próprio portal (shared/platform-core.js), que lê isso
 // pra montar as colunas de desempenho por trilha do relatório de notas e a
@@ -109,29 +109,9 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
-        },
-        {
-          // 3ª de 5 peças do projeto interdisciplinar "FinancApp" (ver
-          // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
-          // Desenvolvimento de Projetos, pra 1ª peça, e
-          // projeto-financapp-modelagem-trabalho.html, matéria Modelagem de
-          // Sistemas 1, pra 2ª). O DER da peça anterior vira tabelas reais
-          // num projeto Supabase próprio, com RLS — mesmo padrão de ponta a
-          // ponta de "Conexão com Supabase" (TikTak), aplicado ao FinancApp.
-          key: 'projeto-financapp-banco-dados',
-          label: 'FinancApp — Banco de Dados e RLS',
-          desc: 'Projeto integrador: crie, num projeto Supabase próprio, as 4 tabelas do DER do FinancApp (usuários, lançamentos, tags, lancamento_tags — a última é a junção do relacionamento N:N), com chaves estrangeiras e políticas de RLS.',
-          capacidade: 'Aplicar procedimentos de segurança e backup no SGBD.',
-          modules: [
-            {
-              key: 'trabalho', title: 'Trabalho — FinancApp: Banco de Dados e RLS',
-              desc: 'Criem o projeto Supabase financapp, as 4 tabelas do DER com FK, habilitem RLS e criem as policies de leitura/inserção/atualização. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🗄️', src: 'atividades/projeto-financapp-banco-dados-trabalho.html', telaCheia: true,
-              progressKey: 'projeto_financapp_banco_dados_trabalho_progress_', progressMode: 'flag',
-              hasGabarito: true
-            }
-          ]
         }
+        // A peça "FinancApp — Banco de Dados e RLS" ficava aqui; agora está
+        // na trilha única do FinancApp, card "Projetos" (fim deste arquivo).
       ]
     },
     {
@@ -231,14 +211,6 @@ window.TURMA_CONFIG_SISTEMAS = {
             }
           ]
         }
-        // Havia aqui a 5ª de 6 peças do projeto interdisciplinar "FinancApp"
-        // ("Lógica de Backend com Supabase"). Foi INCORPORADA na peça de
-        // Programação de Aplicativos (trilha projeto-financapp-app, matéria
-        // prog-aplicativos abaixo), já que o conteúdo dela também era só
-        // JavaScript — o projeto passou de 6 pra 5 peças. Desenvolvimento de
-        // Sistemas 1 continua cobrindo a mesma capacidade (apis, bibliotecas,
-        // frameworks) através da trilha "APIs, Bibliotecas e Frameworks" logo
-        // acima, que já existia e não depende do projeto FinancApp.
       ]
     },
     {
@@ -308,20 +280,6 @@ window.TURMA_CONFIG_SISTEMAS = {
               icon: '🛰️', src: 'atividades/redes-servicos-pratica.html',
               progressKey: 'redes_servicos_pratica_progress_', progressTotal: 5,
               requires: 'teoria', hasGabarito: true
-            },
-            {
-              // 4ª de 5 peças do projeto interdisciplinar "FinancApp" —
-              // módulo EXTRA dentro desta trilha JÁ EXISTENTE (não é trilha
-              // nova, pra não duplicar a capacidade sem necessidade). Usa o
-              // banco Supabase da peça anterior (Banco de Dados) pra
-              // observar tráfego HTTP real com o DevTools. Sem correção
-              // automática — visto do professor no final, mesmo padrão dos
-              // demais trabalhos do projeto FinancApp.
-              key: 'pratica-financapp', title: 'FinancApp — Como o FinancApp Conversa com a Internet',
-              desc: 'Usem o projeto Supabase do FinancApp pra observar, no DevTools, uma requisição HTTP real: método, URL, headers, DNS, HTTPS, status code e a camada de aplicação. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🌐', src: 'atividades/redes-servicos-financapp-pratica.html', telaCheia: true,
-              progressKey: 'redes_servicos_financapp_pratica_progress_', progressMode: 'flag',
-              requires: 'pratica', hasGabarito: true
             }
           ]
         },
@@ -380,35 +338,12 @@ window.TURMA_CONFIG_SISTEMAS = {
     {
       key: 'intro-dev-projetos',
       label: 'Introdução de Desenvolvimento de Projetos',
-      trilhas: [
-        {
-          // 1ª peça do projeto interdisciplinar "FinancApp" (app de
-          // controle financeiro pessoal) — mesmo repositório GitHub criado
-          // aqui é reaproveitado pelas próximas 4 peças (Modelagem de
-          // Sistemas 1, Banco de Dados, Redes de Computadores e
-          // Programação de Aplicativos — esta última incorporou o que
-          // antes era a peça separada de Desenvolvimento de Sistemas 1).
-          // Ver Atividades/Desenvolvimento de Sistemas/Projeto FinancApp —
-          // *.md pra especificação completa de cada peça. Única trilha
-          // desta matéria — a antiga "Oficina de Comunicação" (CodePen)
-          // foi removida do portal (mesma capacidade, produto diferente:
-          // repositório GitHub real, não CodePen); ver
-          // sql/remover-visto-oficina-comunicacao.sql.
-          key: 'projeto-financapp-kickoff',
-          label: 'Kickoff: App de Controle Financeiro (FinancApp)',
-          desc: 'Projeto integrador: ao longo do curso você vai construir, matéria por matéria, um app de controle financeiro de verdade — aqui você dá o pontapé inicial, criando o repositório no GitHub e planejando o trabalho.',
-          capacidade: 'Reconhecer as diferentes fases pertinentes à elaboração de um projeto.',
-          modules: [
-            {
-              key: 'trabalho', title: 'Trabalho — Kickoff do Projeto FinancApp (GitHub)',
-              desc: 'Crie o repositório financapp-seuusuario, um README completo e as 5 issues do MVP. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🚀', src: 'atividades/projeto-financapp-kickoff-trabalho.html', telaCheia: true,
-              progressKey: 'projeto_financapp_kickoff_trabalho_progress_', progressMode: 'flag',
-              hasGabarito: true
-            }
-          ]
-        }
-      ]
+      // A única trilha daqui era o Kickoff do FinancApp, que foi pra trilha
+      // única do FinancApp no card "Projetos" (fim deste arquivo) — a
+      // matéria fica vazia ("Em breve") até receber trilhas próprias. A
+      // antiga "Oficina de Comunicação" (CodePen) foi removida do portal;
+      // ver sql/remover-visto-oficina-comunicacao.sql.
+      trilhas: []
     },
     {
       key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1',
@@ -452,30 +387,9 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'trabalho', hasSlides: true, hasGabarito: true
             }
           ]
-        },
-        {
-          // 2ª de 5 peças do projeto interdisciplinar "FinancApp" (ver
-          // projeto-financapp-kickoff-trabalho.html, matéria Introdução de
-          // Desenvolvimento de Projetos, pra 1ª peça). Reaproveita a MESMA
-          // capacidade da trilha "Modelagem de Dados e Requisitos" (acima,
-          // mesma matéria) — produto diferente (DER real do projeto
-          // FinancApp, commitado no repositório GitHub, não uma
-          // apresentação isolada) — por isso não repete o questionário já
-          // coberto por aquela trilha.
-          key: 'projeto-financapp-modelagem',
-          label: 'FinancApp — Modelagem de Dados e Requisitos',
-          desc: 'Projeto integrador: modelem os requisitos e os dados do FinancApp (entidades, atributos, cardinalidade, chaves — incluindo a relação N:N entre lançamentos e tags) e desenhem o DER, commitado no MESMO repositório GitHub criado no Kickoff.',
-          capacidade: 'Elaborar modelo de dados e definir requisitos funcionais e não funcionais de um sistema.',
-          modules: [
-            {
-              key: 'trabalho', title: 'Trabalho — FinancApp: Modelagem de Dados e Requisitos',
-              desc: 'Levantem os requisitos funcionais/não funcionais do FinancApp, modelem as entidades/atributos/relacionamentos (incluindo a tabela de junção lançamento↔tag) e desenhem o DER, commitado em docs/der.png. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '🧩', src: 'atividades/projeto-financapp-modelagem-trabalho.html', telaCheia: true,
-              progressKey: 'projeto_financapp_modelagem_trabalho_progress_', progressMode: 'flag',
-              hasGabarito: true
-            }
-          ]
         }
+        // A peça "FinancApp — Modelagem de Dados e Requisitos" ficava aqui;
+        // agora está na trilha única do FinancApp, card "Projetos".
       ]
     },
     {
@@ -707,30 +621,8 @@ window.TURMA_CONFIG_SISTEMAS = {
             }
           ]
         },
-        {
-          // 5ª e última peça do projeto interdisciplinar "FinancApp" (antes
-          // eram 6 — esta peça INCORPOROU a antiga "Lógica de Backend com
-          // Supabase", que ficava em Desenvolvimento de Sistemas 1; ver
-          // comentário na trilha "JavaScript" daquela matéria). Foco em
-          // JAVASCRIPT de ponta a ponta: o aluno escreve as 5 funções de
-          // backend com supabase-js (app.js), depois o JS que liga o
-          // HTML/CSS já prontos (Atividades/Desenvolvimento de Sistemas/
-          // financapp-starter/) a essas funções (financapp.js), e por fim
-          // um Web App Manifest (manifest.json).
-          key: 'projeto-financapp-app',
-          label: 'FinancApp — Construa o Aplicativo',
-          desc: 'Projeto integrador: escrevam, em JavaScript, as funções de backend (cadastrarUsuario, fazerLogin, criarLancamento, carregarLancamentos, adicionarTag) com supabase-js e, com o HTML/CSS já entregues pelo professor, o JavaScript que liga a interface a elas — cadastro, login, perfil, saldo/extrato, registrar lançamento e tags — mais o Web App Manifest, com dados reais.',
-          capacidade: 'Aplicar, de forma integrada, lógica de programação, manipulação de objetos e validação de formulário na construção de um aplicativo completo em JavaScript.',
-          modules: [
-            {
-              key: 'trabalho', title: 'Trabalho — FinancApp: Construa o Aplicativo (JavaScript)',
-              desc: 'Escrevam as 5 funções assíncronas do backend do FinancApp (supabase-js, tratamento de erro) e, em seguida, liguem o HTML/CSS fornecidos pelo professor a elas — cadastro, login, perfil, saldo/extrato, registrar lançamento, tags e Web App Manifest, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
-              icon: '📱', src: 'atividades/projeto-financapp-app-trabalho.html', telaCheia: true,
-              progressKey: 'projeto_financapp_app_trabalho_progress_', progressMode: 'flag',
-              hasGabarito: true
-            }
-          ]
-        },
+        // A peça "FinancApp — Construa o Aplicativo" ficava aqui; agora está
+        // na trilha única do FinancApp, card "Projetos" (logo abaixo).
         {
           // Trilha STANDALONE (não é uma das 5 peças do projeto FinancApp)
           // — fundamento complementar sobre boas práticas de segurança
@@ -748,6 +640,72 @@ window.TURMA_CONFIG_SISTEMAS = {
               desc: 'Entenda os tipos de chave do Supabase, crie um .env protegido por .gitignore no seu projeto e ajuste o código pra ler a chave de lá, em vez de escrita direto no arquivo. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
               icon: '🔐', src: 'atividades/prog-conexao-segura-trabalho.html',
               progressKey: 'prog_conexao_segura_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      // Card "Projetos": projetos integradores que atravessam várias
+      // matérias. Antes, cada peça do FinancApp ficava na matéria de onde
+      // vinha a capacidade (Introdução de Dev. de Projetos, Modelagem de
+      // Sistemas 1, Banco de Dados, Redes e Programação de Aplicativos) e
+      // entrava na contagem de concluídos/nota DAQUELA matéria; agora o
+      // projeto inteiro é uma trilha só, aqui, e conta só pra este card.
+      // As chaves de progresso (progressKey) continuam as mesmas de antes,
+      // então o que o aluno já fez no navegador não se perde; pro que já
+      // estava no Supabase, ver sql/unificar-trilha-financapp.sql.
+      key: 'projetos', label: 'Projetos', icon: '🚀',
+      trilhas: [
+        {
+          // App de controle financeiro pessoal, construído peça por peça no
+          // MESMO repositório GitHub criado no Kickoff. Ver
+          // Atividades/Desenvolvimento de Sistemas/Projeto FinancApp — *.md
+          // pra especificação completa de cada peça. Nenhuma peça tem
+          // correção automática: todas terminam com o visto do professor
+          // (shared/professor-visto.js). Sem `requires` entre as peças de
+          // propósito — antes elas eram independentes, e travar agora
+          // bloquearia quem já fez uma peça fora de ordem.
+          key: 'projeto-financapp',
+          label: 'FinancApp: App de Controle Financeiro',
+          desc: 'Projeto integrador: construa, peça por peça, um app de controle financeiro de verdade — do repositório no GitHub e do DER até o banco no Supabase com RLS, o tráfego HTTP no DevTools e o aplicativo em JavaScript funcionando com dados reais.',
+          // As capacidades MSEP de cada peça, na ordem das peças.
+          capacidade: 'Reconhecer as diferentes fases pertinentes à elaboração de um projeto / Elaborar modelo de dados e definir requisitos funcionais e não funcionais de um sistema / Aplicar procedimentos de segurança e backup no SGBD / Reconhecer tipos e características (classificação, estrutura e modelos) / Aplicar, de forma integrada, lógica de programação, manipulação de objetos e validação de formulário na construção de um aplicativo completo em JavaScript.',
+          modules: [
+            {
+              key: 'kickoff', title: 'Kickoff do Projeto FinancApp (GitHub)',
+              desc: 'Crie o repositório financapp-seuusuario, um README completo e as 5 issues do MVP. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🚀', src: 'atividades/projeto-financapp-kickoff-trabalho.html', telaCheia: true,
+              progressKey: 'projeto_financapp_kickoff_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'modelagem', title: 'FinancApp: Modelagem de Dados e Requisitos',
+              desc: 'Levantem os requisitos funcionais/não funcionais do FinancApp, modelem as entidades/atributos/relacionamentos (incluindo a tabela de junção lançamento↔tag) e desenhem o DER, commitado em docs/der.png. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🧩', src: 'atividades/projeto-financapp-modelagem-trabalho.html', telaCheia: true,
+              progressKey: 'projeto_financapp_modelagem_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'banco-dados', title: 'FinancApp: Banco de Dados e RLS',
+              desc: 'Criem o projeto Supabase financapp, as 4 tabelas do DER com FK, habilitem RLS e criem as policies de leitura/inserção/atualização. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🗄️', src: 'atividades/projeto-financapp-banco-dados-trabalho.html', telaCheia: true,
+              progressKey: 'projeto_financapp_banco_dados_trabalho_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'redes', title: 'FinancApp: Como o FinancApp Conversa com a Internet',
+              desc: 'Usem o projeto Supabase do FinancApp pra observar, no DevTools, uma requisição HTTP real: método, URL, headers, DNS, HTTPS, status code e a camada de aplicação. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '🌐', src: 'atividades/redes-servicos-financapp-pratica.html', telaCheia: true,
+              progressKey: 'redes_servicos_financapp_pratica_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'app', title: 'FinancApp: Construa o Aplicativo (JavaScript)',
+              desc: 'Escrevam as 5 funções assíncronas do backend do FinancApp (supabase-js, tratamento de erro) e, em seguida, liguem o HTML/CSS fornecidos pelo professor a elas — cadastro, login, perfil, saldo/extrato, registrar lançamento, tags e Web App Manifest, funcionando de ponta a ponta com dados reais. O portal não corrige essa atividade sozinho — na última etapa, chame o professor pra dar o visto.',
+              icon: '📱', src: 'atividades/projeto-financapp-app-trabalho.html', telaCheia: true,
+              progressKey: 'projeto_financapp_app_trabalho_progress_', progressMode: 'flag',
               hasGabarito: true
             }
           ]

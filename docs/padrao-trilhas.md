@@ -11,7 +11,7 @@
 >
 > **Trilhas piloto** (ainda em andamento, as ÚNICAS já existentes que vão
 > para o layout novo): as trilhas do **FinancApp** em Sistemas
-> (`projeto-financapp-*` e o módulo `pratica-financapp` de Redes) e a
+> (hoje a trilha única `projeto-financapp`, no card "Projetos") e a
 > trilha **Motor Phaser: Construa o Pacman** em Jogos (`cod-phaser`).
 
 Este documento vale para **toda trilha criada daqui pra frente** nas turmas
