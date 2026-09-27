@@ -3,7 +3,7 @@ aula: 1
 data: 2026-09-30
 titulo: Do bit à IA: como uma aplicação web funciona
 turma: IA
-descricao: Boas-vindas, história, binário, linguagens, como a IA pensa e o caminho de um pedido
+descricao: Boas-vindas, história, binário, linguagens, como a IA pensa, tipos de IA na mineração e o caminho de uma inspeção
 ---
 
 # Do bit à IA
@@ -41,7 +41,7 @@ O que você já sabe? Sem nota, só para a gente se conhecer
 
 + Binário (bit e byte)
 + Linguagem de programação
-+ IA generativa
++ Tipos de IA (preditiva, generativa...)
 + Frontend e backend
 + API
 + HTTP
@@ -103,13 +103,23 @@ Anote no quadro quantos acertaram cada pergunta.
 
 ---
 
-## Projeto integrador: Sistema de Comandas
-Um restaurante ainda anota os pedidos em comanda de papel.
+## Projeto integrador: Checklist Digital de Inspeção
+Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 
-+ A comanda se **perde** no caminho até a cozinha
-+ A **letra ilegível** vira o prato errado
-+ A **soma** do total sai errada no caixa
++ A folha **molha, suja e se perde** no caminho até a manutenção
++ A **letra ilegível** esconde um freio reprovado
++ Ninguém vê a **tendência**: qual equipamento falha mais?
 + Ao longo do curso, **você** vai construir o sistema que resolve isso
+
+---
+
+## O que o sistema vai ter
+| Parte | O que faz |
+|---|---|
+| Checklist no celular | O operador marca cada item em campo |
+| Regras de aprovação | Item crítico reprovado **bloqueia** o equipamento |
+| Histórico | Toda inspeção fica registrada |
+| Dashboard | Gráficos: equipamentos liberados, bloqueados e falhas mais comuns |
 
 ---
 
@@ -118,8 +128,8 @@ Um restaurante ainda anota os pedidos em comanda de papel.
 2. Como tudo começou: binário e computador (15 min)
 3. Linguagens de programação (20 min)
 4. Como uma IA "pensa" (25 min)
-5. Em grupo: tipos de IA no restaurante (25 min)
-6. O caminho de um pedido na web (20 min)
+5. Em grupo: tipos de IA na mineração (25 min)
+6. O caminho de uma inspeção na web (20 min)
 
 ---
 
@@ -150,7 +160,7 @@ Das máquinas de calcular aos computadores
 ---
 
 ## Entrada, processamento, memória e saída
-Você toca no botão "Pedir" no app do restaurante. Esse toque é...
+O operador toca em "Pneus: OK" no checklist do celular. Esse toque é...
 
 - [x] Entrada
 - [ ] Processamento
@@ -291,32 +301,33 @@ Quanto mais alto o nível, mais perto da nossa língua.
 ---
 
 ## As linguagens do curso
-| Linguagem | Para quê | No Sistema de Comandas |
+| Linguagem | Para quê | No Checklist de Inspeção |
 |---|---|---|
-| HTML | Estrutura da página | A tela do cardápio |
-| CSS | Aparência | Cores e layout no celular |
-| JavaScript | Comportamento | Somar o total, enviar o pedido |
-| SQL | Consultar e guardar dados | Os pedidos no banco |
+| HTML | Estrutura da página | O formulário do checklist |
+| CSS | Aparência | Botões grandes, legíveis em campo |
+| JavaScript | Comportamento | Validar itens, enviar, gráficos |
+| SQL | Consultar e guardar dados | O histórico de inspeções |
 
 > HTML é marcação e CSS é estilo: não são linguagens de programação, mas são essenciais.
 
 ---
 
 ## Um algoritmo de verdade
-Somar a comanda em JavaScript: fim da soma errada no caixa.
+Contar os itens reprovados da inspeção, em JavaScript:
 
 ```js
 const itens = [
-  { nome: "X-Burger", preco: 22 },
-  { nome: "Suco", preco: 8 },
+  { nome: "Pneus", ok: true },
+  { nome: "Freios", ok: false },
+  { nome: "Luzes", ok: true },
 ];
 
-let total = 0;
+let reprovados = 0;
 for (const item of itens) {
-  total = total + item.preco;
+  if (!item.ok) reprovados = reprovados + 1;
 }
 
-console.log("Total: R$ " + total); // Total: R$ 30
+console.log("Reprovados: " + reprovados); // Reprovados: 1
 ```
 
 ---
@@ -358,22 +369,22 @@ Spoiler: não é do jeito que a gente pensa
 Nem letra por letra, nem palavra por palavra: **tokens**, pedaços de texto. Em inglês, 1 token ≈ 4 letras.
 
 ```
-"O garçom anotou o pedido"
-→ [O] [ gar] [çom] [ an] [otou] [ o] [ pedido]
+"O operador inspecionou o caminhão"
+→ [O] [ oper] [ador] [ insp] [ecion] [ou] [ o] [ caminh] [ão]
   (divisão ilustrativa)
 ```
 
 ---
 
 ## Prever a próxima palavra
-### "O cliente pediu um X-Burger e um..."
+### "Antes de ligar o caminhão, o operador confere os..."
 
 | Próximo token | Chance |
 |---|---|
-| suco | 40% |
-| refrigerante | 35% |
-| batata | 20% |
-| guarda-chuva | 0,01% |
+| pneus | 45% |
+| freios | 30% |
+| retrovisores | 20% |
+| guarda-chuvas | 0,01% |
 
 Chances ilustrativas. A IA escolhe um dos mais prováveis e repete, token por token.
 
@@ -399,11 +410,11 @@ Como um modelo de linguagem gera o texto de uma resposta?
 
 ## Alucinação em código
 ```js
-// Pedido à IA: "some o total da comanda"
-const total = itens.somarTudo();
+// Pedido à IA: "conte os itens reprovados"
+const reprovados = itens.contarReprovados();
 ```
 
-Parece certo, mas `somarTudo()` **não existe** no JavaScript. O código quebra.
+Parece certo, mas `contarReprovados()` **não existe** no JavaScript. O código quebra.
 
 ---
 
@@ -432,13 +443,14 @@ Cada problema pede uma ferramenta
 
 ---
 
-## Quatro tipos de IA
-| Tipo | O que faz | Exemplo |
+## Cinco tipos de IA
+| Tipo | O que faz | Exemplo na mina |
 |---|---|---|
-| Preditiva | Prevê números a partir do histórico | Prever as vendas do sábado |
-| Generativa (texto e imagem) | Cria conteúdo novo | Texto do cardápio, foto do prato |
+| Preditiva | Prevê o futuro a partir do histórico | Prever a falha de um equipamento |
+| Visão computacional | Enxerga e analisa imagens | Achar desgaste na foto de um pneu |
+| Generativa | Cria conteúdo novo | Redigir o relatório de turno |
 | Assistente de código | Sugere código enquanto você digita | GitHub Copilot |
-| Agente de desenvolvimento | Executa uma tarefa inteira, em várias etapas | Codex |
+| Agente de desenvolvimento | Executa uma tarefa inteira, em etapas | Codex |
 
 ---
 
@@ -451,7 +463,7 @@ Cada problema pede uma ferramenta
 ---
 
 ## Aquecimento
-O restaurante quer saber quantos hambúrgueres comprar para o sábado.
+A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca de óleo.
 
 - [x] IA preditiva
 - [ ] IA generativa
@@ -460,13 +472,13 @@ O restaurante quer saber quantos hambúrgueres comprar para o sábado.
 
 ---
 
-## Cenários do restaurante
-1. Escrever a descrição dos pratos do novo cardápio
-2. Prever o movimento do próximo feriado
-3. Completar a função que soma a comanda
-4. Criar fotos dos pratos para o Instagram
-5. Criar a tela de pedidos inteira a partir de uma descrição
-6. Descobrir qual ingrediente vai faltar no estoque
+## Cenários da mineração
+1. Avisar a manutenção antes de a bomba da mina quebrar, pela vibração
+2. Conferir, por foto, se a correia transportadora está rasgada
+3. Escrever o resumo do turno a partir das inspeções do dia
+4. Completar a função que confere se todos os itens foram marcados
+5. Criar a tela inteira do dashboard a partir de uma descrição
+6. Ler pela câmera a placa de identificação do equipamento
 
 ---
 
@@ -481,16 +493,16 @@ O restaurante quer saber quantos hambúrgueres comprar para o sábado.
 ---
 
 ## Gabarito
-+ 1. Descrição dos pratos → **generativa de texto**
-+ 2. Movimento do feriado → **preditiva**
-+ 3. Completar a função → **assistente de código**
-+ 4. Fotos dos pratos → **generativa de imagem**
-+ 5. Tela de pedidos inteira → **agente de desenvolvimento**
-+ 6. Ingrediente em falta → **preditiva**
++ 1. Bomba da mina → **preditiva**
++ 2. Correia rasgada na foto → **visão computacional**
++ 3. Resumo do turno → **generativa**
++ 4. Completar a função → **assistente de código**
++ 5. Dashboard inteiro → **agente de desenvolvimento**
++ 6. Placa do equipamento → **visão computacional**
 
 ---
 
-# O caminho de um pedido
+# O caminho de uma inspeção
 Cliente x Servidor, com HTTP no meio
 
 ---
@@ -504,12 +516,12 @@ Cliente x Servidor, com HTTP no meio
 ---
 
 ## As peças de uma aplicação web
-| Na web | No restaurante | Papel |
+| Na web | Na inspeção | Papel |
 |---|---|---|
-| Frontend | Salão | O que o usuário vê e toca |
-| API | Garçom | Leva pedidos e traz respostas |
-| Backend | Cozinha | Aplica as regras e processa |
-| Banco de dados | Despensa | Guarda os dados com segurança |
+| Frontend | Checklist no celular do operador | O que o usuário vê e toca |
+| API | O envio dos dados | Leva pedidos e traz respostas |
+| Backend | Regras de aprovação | Aplica as regras e processa |
+| Banco de dados | Registro histórico | Guarda os dados com segurança |
 
 ---
 
@@ -517,37 +529,37 @@ Cliente x Servidor, com HTTP no meio
 Toda conversa é um par: o cliente envia uma **requisição** e o servidor devolve uma **resposta**.
 
 ```http
-POST /api/pedidos HTTP/1.1
-Host: comandas.exemplo.com
+POST /api/inspecoes HTTP/1.1
+Host: checklist.exemplo.com
 Content-Type: application/json
 
-{ "mesa": 7, "itens": ["X-Burger", "Suco"] }
+{ "equipamento": "CAM-07", "pneus": "ok", "freios": "reprovado" }
 ```
 
 ---
 
 ## Métodos: o que o cliente quer
-| Método | Serve para | No restaurante |
+| Método | Serve para | No checklist |
 |---|---|---|
-| `GET` | Buscar dados | Ver o cardápio |
-| `POST` | Criar algo novo | Fazer um pedido |
-| `PUT` / `PATCH` | Alterar algo | Trocar o suco por refri |
-| `DELETE` | Remover | Cancelar o pedido |
+| `GET` | Buscar dados | Ver a lista de equipamentos |
+| `POST` | Criar algo novo | Enviar uma inspeção |
+| `PUT` / `PATCH` | Alterar algo | Corrigir um item marcado errado |
+| `DELETE` | Remover | Apagar uma inspeção de teste |
 
 ---
 
 ## Status: como foi o atendimento
 | Faixa | Significa | Exemplo |
 |---|---|---|
-| `2xx` | Deu certo | `200` OK, `201` pedido criado |
+| `2xx` | Deu certo | `200` OK, `201` inspeção registrada |
 | `3xx` | Procure em outro lugar | `301` o endereço mudou |
-| `4xx` | Erro de quem pediu | `404` prato não existe |
-| `5xx` | Erro de quem atende | `500` o fogão quebrou |
+| `4xx` | Erro de quem pediu | `404` equipamento não existe |
+| `5xx` | Erro de quem atende | `500` o servidor falhou |
 
 ---
 
 ## Qual é o status?
-O cliente pede um prato que não existe no cardápio.
+O operador envia a inspeção do caminhão CAM-99, que não está cadastrado.
 
 - [ ] `200`
 - [ ] `201`
@@ -556,30 +568,30 @@ O cliente pede um prato que não existe no cardápio.
 
 ---
 
-## No quadro: o fluxo de um pedido
-1. O cliente escolhe os pratos no **frontend**
-2. O frontend envia `POST /api/pedidos` pela **API**
-3. O **backend** confere os itens e calcula o total
-4. O **banco de dados** grava o pedido
-5. A resposta `201` volta e a tela confirma
+## No quadro: o fluxo de uma inspeção
+1. O operador preenche o checklist no celular (**frontend**)
+2. O app envia `POST /api/inspecoes` pela **API**
+3. O **backend** aplica as regras: freio reprovado = bloqueado
+4. O **banco de dados** grava a inspeção no histórico
+5. A resposta `201` volta: a tela mostra **Liberado** ou **Bloqueado**
 
 ---
 
 ## Onde fica a regra?
-Em qual componente deve ficar o cálculo do total da comanda?
+Em qual componente deve ficar a regra que bloqueia o equipamento com freio reprovado?
 
 - [ ] Frontend, para aparecer mais rápido
 - [x] Backend, onde a regra é confiável
 - [ ] Banco de dados, junto com o pedido
-- [ ] API, porque ela transporta o pedido
+- [ ] API, porque ela transporta a inspeção
 
 ---
 
 ## E a IA com isso?
 Para pedir código à IA, **você** precisa dizer onde ele entra.
 
-- Vago: *"faz um sistema de comandas"*
-- Preciso: *"crie no backend uma rota `POST /api/pedidos` que salve a mesa e os itens no banco"*
+- Vago: *"faz um sistema de inspeção"*
+- Preciso: *"crie no backend uma rota `POST /api/inspecoes` que bloqueie o equipamento se um item crítico for reprovado e salve a inspeção no banco"*
 
 > Quem conhece as peças faz pedidos melhores para a IA e confere o que ela entregou.
 
@@ -588,9 +600,9 @@ Para pedir código à IA, **você** precisa dizer onde ele entra.
 ## Checklist de hoje
 Confira com o seu grupo:
 
-- ✅ Cada cenário do restaurante tem um tipo de IA
+- ✅ Cada cenário da mineração tem um tipo de IA
 - ✅ Cada escolha tem uma justificativa
-- ✅ O fluxo do pedido tem frontend, API, backend e banco
+- ✅ O fluxo da inspeção tem frontend, API, backend e banco
 - ✅ O fluxo foi registrado no quadro, em até 5 passos
 
 ---
@@ -600,7 +612,7 @@ Levante os dedos outra vez e compare com o placar do começo.
 
 + Binário (bit e byte)
 + Linguagem de programação
-+ IA generativa
++ Tipos de IA (preditiva, generativa...)
 + Frontend e backend
 + API
 + HTTP
@@ -612,7 +624,8 @@ Levante os dedos outra vez e compare com o placar do começo.
 + Todo computador tem entrada, processamento, memória e saída
 + Código-fonte vira linguagem de máquina: **compilação ou interpretação**
 + A IA **prevê tokens** e pode alucinar: revise sempre
-+ Frontend, API, backend e banco: o **caminho de um pedido**
++ Cada problema pede um **tipo de IA**: preditiva, visão, generativa, assistente, agente
++ Frontend, API, backend e banco: o **caminho de uma inspeção**
 
 ---
 
