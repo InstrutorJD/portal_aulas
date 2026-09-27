@@ -2473,6 +2473,7 @@
   function bimestrePortalPercentForStudent(bimestreNum, progressRows, studentEmail) {
     const provaKey = provaTrilhaKey();
     const trilhas = (cfg.materias || [])
+      .filter(m => !m.notaSoManual)
       .flatMap(m => trilhasParaAluno(m.trilhas || [], studentEmail))
       .filter(t => t.key !== provaKey);
     return bimestreModulesPercent(trilhas, bimestreNum, progressRows, studentEmail);
@@ -2484,6 +2485,23 @@
   function bimestreMateriaPercentForStudent(materia, bimestreNum, progressRows, studentEmail) {
     return bimestreModulesPercent(trilhasParaAluno(materia.trilhas || [], studentEmail), bimestreNum, progressRows, studentEmail);
   }
+
+  // Matéria com notaSoManual (ex.: "Projetos" em Sistemas): o professor
+  // lança a nota à mão e só precisa saber quanto o aluno entregou —
+  // módulos concluídos (com visto) de todas as trilhas dela, sem olhar
+  // bimestre. 'tudo' | 'parte' | 'nada'.
+  function statusEntregaMateria(materia, progressRows, studentEmail) {
+    const modules = trilhasParaAluno(materia.trilhas || [], studentEmail)
+      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+    const feitos = modules.filter(({ trilhaKey, mod }) =>
+      progressRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
+    ).length;
+    const total = modules.length;
+    const status = total > 0 && feitos === total ? 'tudo' : feitos > 0 ? 'parte' : 'nada';
+    return { feitos, total, status };
+  }
+
+  const STATUS_ENTREGA_LABEL = { tudo: '✅ Fez tudo', parte: '◐ Fez parte', nada: '✗ Não fez' };
 
   // Chave da trilha da prova diagnóstica ("Prova" na Gestão): a matéria
   // 'prova' tem uma única trilha (prova-diagnostica, ver turmas/*/
@@ -2580,7 +2598,10 @@
     const totalCols = 4 + materias.length; // Aluno, Prova, Nota 3 (rótulo configurável via cfg.nota3Label), Recuperação + 1 por matéria
 
     const renderHead = () => {
-      theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => `<th>${m.label}<label class="peso-materia-field">Peso <input type="number" step="0.5" min="0.5" max="10" class="peso-materia-input" data-materia="${m.key}" value="${pesoMateria(m)}"></label></th>`).join('')}`;
+      // Matéria notaSoManual não tem nota calculada, então peso não faz sentido.
+      theadRow.innerHTML = `<th>Aluno</th><th>Prova</th><th>${cfg.nota3Label || 'Nota 3'}</th><th>Recuperação</th>${materias.map(m => m.notaSoManual
+        ? `<th>${m.label}<span class="peso-materia-field">nota manual</span></th>`
+        : `<th>${m.label}<label class="peso-materia-field">Peso <input type="number" step="0.5" min="0.5" max="10" class="peso-materia-input" data-materia="${m.key}" value="${pesoMateria(m)}"></label></th>`).join('')}`;
       // Substituto só consulta: peso das matérias também travado.
       if (currentUser.substituto) theadRow.querySelectorAll('.peso-materia-input').forEach(inp => { inp.disabled = true; });
     };
@@ -2710,8 +2731,18 @@
       // .nota-manual-input fica oculto até o professor destravar a edição
       // (ver setEdicaoNotasManuais).
       const materiaCellsHtml = materias.map(m => {
-        const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
         const manual = notaManualMateria(g, m.key);
+        // Matéria só com nota manual (ex.: Projetos): mostra o quanto o aluno
+        // entregou e deixa o campo de nota SEMPRE aberto (não depende da
+        // chave "Editar Notas Manuais", que protege as notas calculadas).
+        if (m.notaSoManual) {
+          const e = statusEntregaMateria(m, pRows, u.email);
+          return `<td class="materia-grade-cell materia-so-manual" data-so-manual="1" data-materia="${m.key}">`
+            + `<div class="entrega-status entrega-${e.status}" title="Módulos concluídos (com visto) de ${m.label}">${STATUS_ENTREGA_LABEL[e.status]} (${e.feitos}/${e.total})</div>`
+            + `<input type="number" step="0.1" min="0" max="10" class="nota-manual-input" data-materia="${m.key}" value="${manual ?? ''}" placeholder="nota" title="Nota de ${m.label}, lançada à mão">`
+            + `<span class="materia-grade-view"></span></td>`;
+        }
+        const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
         const campoManual = `<input type="number" step="0.1" min="0" max="10" class="nota-manual-input" data-materia="${m.key}" value="${manual ?? ''}" title="Nota manual — deixe vazio para usar a nota calculada">`;
         // Matéria sem trilha atribuída a ESTE bimestre não tem nota nenhuma
         // pra calcular — mostrar "0" ali faria a média cair só em n2/n3
@@ -2754,6 +2785,12 @@
         const n3 = n3Input ? n3Input.value : parseFloat(tr.querySelector('.nota3-cell').dataset.nota3);
         const n4 = tr.querySelector('.nota-input[data-campo="nota4"]').value;
         materiaCells.forEach(cell => {
+          if (cell.dataset.soManual) {
+            // Só o valor (escondido) pra pintarNotasBaixas; o campo já é a nota.
+            const manual = parseNotaManual(cell.querySelector('.nota-manual-input').value.trim());
+            cell.querySelector('.materia-grade-view').innerHTML = manual === null ? '' : `<span class="materia-grade-value" hidden>${manual.toFixed(2)}</span>`;
+            return;
+          }
           let calculada = null;
           if (!cell.dataset.semTrilha) {
             const mn1 = parseFloat(cell.dataset.materiaN1);
@@ -3131,6 +3168,12 @@
         notaPorMateria[m.key] = { nota: manual, semTrilha: false };
         return;
       }
+      // Só nota manual e ela ainda não foi lançada: fica sem nota ("—"),
+      // igual matéria sem trilha — não conta pra média nem pra Recuperação.
+      if (m.notaSoManual) {
+        notaPorMateria[m.key] = { nota: 0, semTrilha: true };
+        return;
+      }
       const nota = pctMateria === null ? calcMedia(mn1, n2, n3, pesoMateria(m)) : aplicarRecuperacao(calcMedia(mn1, n2, n3, pesoMateria(m)), n4);
       notaPorMateria[m.key] = { nota, semTrilha: pctMateria === null };
     });
@@ -3303,7 +3346,7 @@
           notaHtml = !info
             ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(fora do período letivo)</span></div>`
             : info.semTrilha
-              ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(sem trilha neste bimestre)</span></div>`
+              ? `<div class="perfil-materia-nota" style="color:var(--ink-dim);">NOTA: — <span style="font-size:11px;">(${m.notaSoManual ? 'o professor ainda não lançou a nota' : 'sem trilha neste bimestre'})</span></div>`
               : `<div class="perfil-materia-nota">NOTA: <b>${info.nota.toFixed(2)}</b>${statusHtml}</div>`;
         }
       }
@@ -3513,6 +3556,7 @@
       materias.forEach(m => {
         const manual = notaManualMateria(g, m.key);
         if (manual !== null) { notasMateria[m.key] = manual; return; }
+        if (m.notaSoManual) { notasMateria[m.key] = null; return; } // sem nota lançada ainda
         const pctMateria = bimestreMateriaPercentForStudent(m, bimestre, pRows, u.email);
         if (pctMateria === null) { notasMateria[m.key] = null; return; }
         const mn1 = Math.round((pctMateria / 100) * 10 * 100) / 100;

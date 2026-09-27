@@ -357,6 +357,14 @@ button.btn-bimestre-notas{ padding:6px 12px; font-size:10.5px; }
 #notasTabela.notas-editando .nota-manual-input{ display:inline-block; border-color:#c62828; }
 #notasTabela.notas-editando .materia-grade-view{ display:none; }
 .nota-manual-tag{ font-size:10px; color:var(--yellow); font-weight:700; white-space:nowrap; }
+/* Matéria só com nota manual (notaSoManual, ex.: Projetos): status de
+   entrega + campo de nota sempre visível, com ou sem a chave acima. */
+#notasTabela .materia-so-manual .nota-manual-input,
+#notasTabela.notas-editando .materia-so-manual .nota-manual-input{ display:inline-block; border-color:var(--line); }
+.entrega-status{ font-size:10.5px; font-weight:700; white-space:nowrap; margin-bottom:4px; }
+.entrega-tudo{ color:var(--green); }
+.entrega-parte{ color:var(--yellow); }
+.entrega-nada{ color:var(--blood-bright, #ff3b30); }
 
 /* Chamada / Notas (aba Gestão, só professor) */
 .field-label{ display:block; font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }

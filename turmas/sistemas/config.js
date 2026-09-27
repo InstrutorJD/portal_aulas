@@ -656,7 +656,10 @@ window.TURMA_CONFIG_SISTEMAS = {
       // As chaves de progresso (progressKey) continuam as mesmas de antes,
       // então o que o aluno já fez no navegador não se perde; pro que já
       // estava no Supabase, ver sql/unificar-trilha-financapp.sql.
-      key: 'projetos', label: 'Projetos', icon: '🚀',
+      // notaSoManual: sem nota calculada. Em Lançar Notas a coluna mostra
+      // só se o aluno fez tudo, parte ou nada (módulos com visto) e um campo
+      // sempre aberto pra o professor digitar a nota; não entra na % geral.
+      key: 'projetos', label: 'Projetos', icon: '🚀', notaSoManual: true,
       trilhas: [
         {
           // App de controle financeiro pessoal, construído peça por peça no
