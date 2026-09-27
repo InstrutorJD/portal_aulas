@@ -938,12 +938,14 @@
       const status = currentUser.role === 'aluno' ? trilhaStatus(trilha) : 'aberta';
       const statusBadge = status === 'concluida' ? '<span style="color:var(--green);"> · ✅ Concluída</span>' : '';
 
+      // Sem o parágrafo com trilha.desc: os alunos não liam, e ele
+      // empurrava os cards dos módulos pra baixo. O campo desc continua no
+      // config.js (documenta a trilha pra quem mantém o portal).
       page.innerHTML = `
         <div id="moduleSelector_${trilha.key}" class="card" style="padding:16px;">
           <h2 style="margin:0 0 4px;">Trilha ${trilha.label}${statusBadge}</h2>
           ${trilha.capacidade ? `<p style="font-size:14px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
-          <p style="font-size:14px; color:var(--ink-dim); margin:0 0 16px;">${trilha.desc || 'Escolha um módulo para começar.'}</p>
-          <div class="card-grid">${buildModuleCardsHtml(trilha)}</div>
+          <div class="card-grid" style="margin-top:12px;">${buildModuleCardsHtml(trilha)}</div>
         </div>
         <div id="moduleFrameArea_${trilha.key}" class="module-frame-modal" style="display:none;">
           <div class="module-frame-modal-box">
