@@ -107,6 +107,9 @@
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="recuperacao-trava.js"></script>
 </head>
 <body>
 <div class="env">
@@ -169,18 +172,30 @@
   // nome, força, funções, inimigos criados). Sem isso (outro computador),
   // usa DEFAULT_CODE.
   const CODE_KEY = `recuperacao_jogo_codigo_${username}`;
+  // A turma Sistemas tem mais alunos em recuperação, então ganha 2
+  // capítulos a mais antes do chefão (5. Listas e repetição, 6. Objetos —
+  // ver STAGES_SISTEMAS). As outras turmas continuam com a jornada de 17
+  // etapas. O portal manda ?turma= na URL de todo módulo (openModule).
+  const EXTRA_SISTEMAS = new URLSearchParams(window.location.search).get('turma') === 'sistemas';
 
   // ---------- Execução do código do aluno ----------
   // Mesmo jeito dos desafios de JavaScript (shared/js-challenge-engine.js):
   // new Function com o código + um return que captura as variáveis/funções
   // pedidas. `given` injeta funções prontas (ex.: abrirPortal) no escopo do
-  // código do aluno. Nunca deixa exceção escapar — vira `error`.
+  // código do aluno. Nunca deixa exceção escapar — vira `error`. Todo
+  // for/while ganha um contador de voltas (igual à Torre do Código): loop
+  // infinito vira mensagem de erro em vez de travar a aba.
+  const LOOP_LIMIT = 100000;
+  function guardLoops(code) {
+    return code.replace(/\b(for|while)\s*\([^{]*?\)\s*\{/g, m => `${m} if (++__voltas > ${LOOP_LIMIT}) throw new Error('__LOOP__');`);
+  }
+
   function execCode(code, names, given) {
     const g = given || {};
     const gk = Object.keys(g);
     const capture = names.map(n => `${n}: (typeof ${n} !== 'undefined' ? ${n} : undefined)`).join(', ');
     try {
-      return { vars: new Function(...gk, `${code}\n;return { ${capture} };`)(...gk.map(k => g[k])) };
+      return { vars: new Function(...gk, `let __voltas = 0;\n${guardLoops(code)}\n;return { ${capture} };`)(...gk.map(k => g[k])) };
     } catch (err) {
       return { error: err };
     }
@@ -188,6 +203,7 @@
 
   function friendlyError(err) {
     const msg = String((err && err.message) || err);
+    if (msg === '__LOOP__') return 'O seu laço não para nunca (loop infinito)! Confira a condição de parada do for: ela precisa ficar falsa em algum momento.';
     const notDefined = msg.match(/^(\S+) is not defined/);
     if (notDefined) {
       return `O computador não conhece "${notDefined[1]}". Se for um texto, ele precisa ficar entre aspas ("assim"). Se for uma variável, ela foi criada com let? Confira também maiúsculas/minúsculas.`;
@@ -223,7 +239,10 @@
   // do altar enquanto a etapa não for resolvida — por isso não há inimigo
   // antes de atacar(), nem espinho/buraco antes de pular(). A última
   // ('chefao') é a luta final.
-  const CAPITULOS = { 1: 'Variáveis', 2: 'Funções', 3: 'Decisões', 4: 'Criando o mundo', 5: 'Chefão' };
+  const CAP_CHEFAO = EXTRA_SISTEMAS ? 7 : 5;
+  const CAPITULOS = EXTRA_SISTEMAS
+    ? { 1: 'Variáveis', 2: 'Funções', 3: 'Decisões', 4: 'Criando o mundo', 5: 'Listas e repetição', 6: 'Objetos', 7: 'Chefão' }
+    : { 1: 'Variáveis', 2: 'Funções', 3: 'Decisões', 4: 'Criando o mundo', 5: 'Chefão' };
 
   // Itens do Capítulo 1: variável booleana que precisa valer true.
   function checkItem(nome) {
@@ -241,7 +260,7 @@
       text: 'A jornada começa aqui. O seu herói está de mãos vazias e, por enquanto, só sabe <b>andar</b>. Crie uma variável chamada <code>espada</code> com o valor <code>true</code> (verdadeiro) — é assim que você diz pro jogo que o herói TEM uma espada.',
       concept: '<b>Variável</b> é uma caixinha com nome que guarda um valor. <code>true</code>/<code>false</code> (sem aspas) é o tipo <b>booleano</b>: sim ou não.',
       format: 'Formato: <code>let nome = valor;</code>',
-      hint: 'let espada = true;',
+      hint: 'São três partes: a palavra que cria variável, o nome que o enunciado pediu e o valor que quer dizer "sim". Lembre: sim/não vai SEM aspas.',
       starter: '// Escreva seu código aqui\n',
       names: ['espada'],
       check: checkItem('espada'),
@@ -252,7 +271,7 @@
       text: 'Todo herói precisa de um escudo. Crie a variável <code>escudo</code> com o valor <code>true</code>. Ele vai aparecer nas costas do herói, mas ainda não protege nada — quem defende é a função <code>defender</code>, lá no Capítulo 2.',
       concept: 'Cada item é uma variável própria, com um nome que diz o que ela guarda. <code>let</code> cria a variável; o <code>=</code> guarda o valor dentro dela.',
       format: 'Formato: <code>let escudo = valor;</code>',
-      hint: 'let escudo = true;',
+      hint: 'É o mesmo formato do terminal da espada — só muda o nome da variável.',
       starter: '// Escreva seu código aqui\n',
       names: ['escudo'],
       check: checkItem('escudo'),
@@ -263,7 +282,7 @@
       text: 'Pra pular, o herói precisa de botas. Crie a variável <code>botas</code> com o valor <code>true</code>. Mesmo calçado, ele continua só andando: o pulo vem da função <code>pular()</code>, no Capítulo 2.',
       concept: 'Um <b>booleano</b> só tem dois valores: <code>true</code> (sim) ou <code>false</code> (não). É o tipo certo pra dizer se o herói TEM ou NÃO TEM um item.',
       format: 'Formato: <code>let botas = valor;</code>',
-      hint: 'let botas = true;',
+      hint: 'Mesmo formato dos dois itens anteriores. Confira se o nome está todo em letras minúsculas.',
       starter: '// Escreva seu código aqui\n',
       names: ['botas'],
       check: checkItem('botas'),
@@ -274,7 +293,7 @@
       text: 'Lá na frente tem espinhos e inimigos, e hoje o herói só aguenta 1 golpe. Crie a variável <code>vida</code> com um <b>número</b> de 3 a 5 — é quantos corações ele vai ter.',
       concept: '<b>Números</b> vão sem aspas: <code>10</code>, <code>3</code>, <code>2.5</code>. Com aspas (<code>"3"</code>) seria texto, e o jogo não consegue fazer conta com texto.',
       format: 'Formato: <code>let vida = número;</code>',
-      hint: 'let vida = 3;',
+      hint: 'Número vai sem aspas. Escolha quantos corações quer (entre 3 e 5) e guarde na variável pedida.',
       starter: '// Quantos corações o herói terá? (de 3 a 5)\n',
       names: ['vida'],
       check(v) {
@@ -291,7 +310,7 @@
       text: 'Este portão só abre pra quem diz o próprio nome. Crie a variável <code>nome</code> com o nome do seu herói, como <b>texto</b>.',
       concept: '<b>Texto</b> (chamado de <i>string</i>) sempre vai entre aspas: <code>"Luna"</code>. Sem aspas, o computador acha que é o nome de outra variável.',
       format: 'Formato: <code>let nome = "...";</code>',
-      hint: 'let nome = "Luna";',
+      hint: 'Texto sempre vai entre aspas. Pense num nome pro seu herói e guarde na variável pedida.',
       starter: '// Qual o nome do seu herói?\n',
       names: ['nome'],
       check(v) {
@@ -308,7 +327,7 @@
       text: 'Mais adiante tem cavaleiros de armadura com 6 de vida. Quando o herói puder atacar, cada golpe vai tirar o valor da <code>forca</code> — e hoje ela vale só 1. A primeira linha já cria <code>forca</code> valendo 1. Na linha de baixo, <b>aumente</b> a força usando a própria variável — ela precisa terminar com pelo menos 6 (e no máximo 20).',
       concept: 'O valor de uma variável pode <b>mudar</b>. Pra mudar, não use <code>let</code> de novo: <code>moedas = moedas + 3;</code> pega o valor atual, soma 3 e guarda de volta.',
       format: 'Formato: <code>forca = forca + ...;</code> ou <code>forca = forca * ...;</code>',
-      hint: 'let forca = 1;\nforca = forca + 5;',
+      hint: 'Não crie a variável de novo (sem let). Na linha de baixo, forca recebe uma conta que usa a própria forca e dá pelo menos 6.',
       starter: 'let forca = 1;\n',
       names: ['forca'],
       check(v, code) {
@@ -325,7 +344,7 @@
       text: 'O herói tem itens, mas ainda não FAZ nada com eles. Quem faz as coisas acontecerem são as <b>funções</b>. Pra começar, o mago deixou uma função PRONTA chamada <code>abrirPortal</code>. Você não precisa criar nada: só <b>chamar</b> a função — o nome dela seguido de parênteses.',
       concept: '<b>Função</b> é um bloco de código com nome. Criar a função é escrever a receita; <b>chamar</b> é mandar executar: <code>nome()</code>. Sem os parênteses, a função só é citada, não roda.',
       format: 'Formato: <code>nomeDaFuncao();</code>',
-      hint: 'abrirPortal();',
+      hint: 'Aqui você não cria nada: só escreve o nome da função seguido do que faz uma função RODAR.',
       starter: '// A função abrirPortal já existe. Chame ela!\n',
       names: [],
       makeGiven() {
@@ -348,7 +367,7 @@
       text: 'Espinhos e um buraco vêm aí, e o herói ainda não sabe pular — as botas sozinhas não fazem nada. Agora é a sua vez de CRIAR uma função. Crie a função <code>pular</code>, que devolve com <code>return</code> a força do pulo: um número de 8 a 14. Toda vez que você apertar <b>↑</b> ou <b>Espaço</b>, o jogo vai chamar <code>pular()</code> e usar o número que ela devolver.',
       concept: '<code>function nome() { ... }</code> CRIA a função: a receita de uma ação. <code>return</code> é a resposta que ela devolve pra quem chamou — aqui, quem chama é o jogo.',
       format: 'Formato: <code>function pular() { return ...; }</code>',
-      hint: 'function pular() {\n  return 11;\n}',
+      hint: 'Comece com a palavra que cria função, o nome e os parênteses. Entre as chaves, use return com um número dentro da faixa pedida.',
       starter: '// Crie a função pular\n',
       names: ['pular'],
       check(v) {
@@ -365,9 +384,9 @@
     {
       id: 'atacar', cap: 2, altarX: 4600, title: '⚔️ Criar função: atacar()',
       text: 'Slimes e cavaleiros vêm aí, e a espada ainda não faz nada. Crie a função <code>atacar</code>, que devolve com <code>return</code> a sua variável <code>forca</code> — ela já existe, você criou no Capítulo 1. Toda vez que você apertar <b>J</b>, o jogo chama <code>atacar()</code>, e o número devolvido é o dano do golpe.',
-      concept: 'Uma função pode usar variáveis que já existem. <code>return forca;</code> (sem aspas) devolve o VALOR guardado na variável — se a força mudar, o golpe muda junto.',
-      format: 'Formato: <code>function atacar() { return forca; }</code>',
-      hint: 'function atacar() {\n  return forca;\n}',
+      concept: 'Uma função pode usar variáveis que já existem. <code>return pontos;</code> (sem aspas) devolve o VALOR guardado na variável <code>pontos</code> — se ela mudar, o que a função devolve muda junto.',
+      format: 'Formato: <code>function atacar() { return ...; }</code>',
+      hint: 'O return não pode ter um número digitado: ele devolve a variável que guarda a força do herói (sem aspas).',
       starter: '// A variável forca já existe. Crie a função atacar\n',
       names: ['atacar'],
       // forca entra pronta no código do aluno, com o valor que ELE criou no
@@ -400,7 +419,7 @@
       text: 'Arqueiros atiram flechas que tiram 2 corações, e o escudo nas costas ainda não protege nada. Crie a função <code>defender</code>, que <b>recebe</b> o <code>dano</code> e devolve <b>metade</b> dele. Segurando <b>K</b>, o herói levanta o escudo e o jogo chama <code>defender(dano)</code> antes de machucar o herói.',
       concept: '<b>Parâmetro</b> é a informação que a função recebe entre os parênteses. <code>defender(10)</code> faz o <code>dano</code> valer 10 lá dentro; <code>defender(4)</code>, 4.',
       format: 'Formato: <code>function defender(dano) { return ...; }</code>',
-      hint: 'function defender(dano) {\n  return dano / 2;\n}',
+      hint: 'O parâmetro vai dentro dos parênteses da função. E a metade de um valor é esse valor dividido por quanto?',
       starter: '// Crie a função defender(dano)\n',
       names: ['defender'],
       check(v) {
@@ -418,8 +437,8 @@
       id: 'bau', cap: 3, altarX: 6650, title: '👢 Baú do Pulo Duplo (if)',
       text: 'Logo à frente tem um buraco largo demais pra um pulo só. O <b>pulo duplo</b> das botas está num baú que só abre <b>SE</b> você tiver a chave. Escreva um <code>if</code>: se <code>chave</code> for <code>true</code>, <code>bauAberto</code> recebe <code>true</code>.',
       concept: '<code>if (condição) { ... }</code> quer dizer "SE a condição for verdadeira, faça o que está entre as chaves". Se for falsa, o bloco é pulado.',
-      format: 'Formato: <code>if (chave) { bauAberto = true; }</code>',
-      hint: 'let chave = true;\nlet bauAberto = false;\n\nif (chave) {\n  bauAberto = true;\n}',
+      format: 'Formato: <code>if (condição) { ... }</code>',
+      hint: 'Entre os parênteses do if vai a variável que diz se você tem a chave. Entre as chaves, mude bauAberto — sem let, porque ela já existe.',
       starter: 'let chave = true;\nlet bauAberto = false;\n\n// escreva o if aqui\n',
       names: ['bauAberto'],
       check(v, code) {
@@ -440,7 +459,7 @@
       text: 'A caverna à frente é escura como breu. Escreva um <code>if / else</code>: SE <code>escuro</code> for <code>true</code>, <code>tocha</code> recebe <code>"acesa"</code>; SENÃO, <code>tocha</code> recebe <code>"apagada"</code>.',
       concept: '<code>else</code> quer dizer "senão": é o caminho quando a condição do <code>if</code> é falsa. Sempre um dos dois blocos roda — nunca os dois, nunca nenhum.',
       format: 'Formato: <code>if (escuro) { ... } else { ... }</code>',
-      hint: 'let escuro = true;\nlet tocha = "";\n\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "apagada";\n}',
+      hint: 'São dois blocos: no do if, a tocha recebe um texto; no do else, recebe o outro. Os textos vão entre aspas e sem let (a variável já existe).',
       starter: 'let escuro = true;\nlet tocha = "";\n\n// escreva o if / else aqui\n',
       names: ['tocha'],
       check(v, code) {
@@ -461,7 +480,7 @@
       text: 'Magos lançam bolas de fogo. Crie a função <code>bloquear</code>, que recebe o tipo do <code>ataque</code> e devolve <code>true</code> <b>se</b> ele for <code>"fogo"</code>, e <code>false</code> em qualquer outro caso. Segurando <b>K</b>, ataque bloqueado não tira nada.',
       concept: 'Dentro de uma função também dá pra usar <code>if</code>. Pra <b>comparar</b> use <code>===</code> (um <code>=</code> sozinho guarda valor, não compara).',
       format: 'Formato: <code>function bloquear(ataque) { if (...) { return true; } return false; }</code>',
-      hint: 'function bloquear(ataque) {\n  if (ataque === "fogo") {\n    return true;\n  }\n  return false;\n}',
+      hint: 'Compare o parâmetro com o texto do fogo usando três sinais de igual. Um return fica dentro do if e o outro, depois dele.',
       starter: '// Crie a função bloquear(ataque)\n',
       names: ['bloquear'],
       check(v) {
@@ -481,7 +500,7 @@
       text: 'Até aqui era o JOGO que tirava a vida dos inimigos. A partir de agora é a SUA função. <code>tirarVida</code> recebe a vida atual do inimigo e o dano do golpe, e devolve a vida que sobra. Só que vida não pode ficar negativa: <b>SE</b> o dano for maior ou igual à vida, devolva <code>0</code>; <b>SENÃO</b>, devolva a vida menos o dano.',
       concept: 'Uma função pode receber <b>vários parâmetros</b>, separados por vírgula. E dentro dela o <code>if / else</code> escolhe qual <code>return</code> vai acontecer. Compare com <code>&gt;=</code> ("maior ou igual").',
       format: 'Formato: <code>function tirarVida(vidaInimigo, dano) { if (...) { return ...; } else { return ...; } }</code>',
-      hint: 'function tirarVida(vidaInimigo, dano) {\n  if (dano >= vidaInimigo) {\n    return 0;\n  } else {\n    return vidaInimigo - dano;\n  }\n}',
+      hint: 'Dois parâmetros separados por vírgula. A condição compara o dano com a vida usando >=. Num caminho a função devolve zero; no outro, faz a conta de subtração.',
       starter: '// Crie a função tirarVida(vidaInimigo, dano)\n',
       names: ['tirarVida'],
       check(v, code) {
@@ -501,8 +520,8 @@
       id: 'criarInimigo', cap: 4, altarX: 10100, title: '🧪 Função que cria: criarInimigo(tipo, vida)',
       text: 'A arena de treino monta inimigos com uma função que VOCÊ escreve. <code>criarInimigo</code> recebe o <code>tipo</code> e a <code>vida</code>, e devolve um <b>objeto</b> com esses dois dados. Assim que o código for aceito, a arena chama <code>criarInimigo("slime", 3)</code> e <code>criarInimigo("cavaleiro", 5)</code>.',
       concept: 'Um <b>objeto</b> junta várias informações numa coisa só, cada uma com nome: <code>{ tipo: "slime", vida: 3 }</code>. É assim que os jogos guardam os dados de cada inimigo.',
-      format: 'Formato: <code>function criarInimigo(tipo, vida) { return { tipo: tipo, vida: vida }; }</code>',
-      hint: 'function criarInimigo(tipo, vida) {\n  return { tipo: tipo, vida: vida };\n}',
+      format: 'Formato: <code>function criarInimigo(tipo, vida) { return { ...: ..., ...: ... }; }</code>',
+      hint: 'O return devolve um objeto entre chaves com duas propriedades. O valor de cada propriedade é o parâmetro que tem o mesmo nome.',
       starter: '// Crie a função criarInimigo(tipo, vida)\n',
       names: ['criarInimigo'],
       check(v) {
@@ -522,7 +541,7 @@
       text: 'Agora é você quem USA a sua função! Chame <code>criarInimigo</code> de <b>2 a 5 vezes</b> pra montar a onda de treino antes do chefão. Tipos: <code>"slime"</code>, <code>"morcego"</code>, <code>"cavaleiro"</code> ou <code>"orc"</code>; vida de 1 a 10. Cada chamada vira um inimigo de verdade.',
       concept: 'Função boa é função <b>reutilizada</b>: a mesma <code>criarInimigo</code>, chamada com argumentos diferentes, cria inimigos diferentes — sem reescrever nada.',
       format: 'Formato: <code>criarInimigo("slime", 2);</code> — uma chamada por linha',
-      hint: 'criarInimigo("slime", 2);\ncriarInimigo("morcego", 1);\ncriarInimigo("orc", 6);',
+      hint: 'Não crie a função: só chame criarInimigo algumas vezes, uma por linha, cada chamada com um tipo entre aspas e um número de vida.',
       starter: '// Sua função criarInimigo já existe. Chame ela de 2 a 5 vezes:\n',
       names: [],
       makeGiven() {
@@ -541,10 +560,201 @@
         }
         return null;
       },
-      success: (v, log) => `👾 ${log.created.length} inimigos criados pela sua função! Derrote a onda e siga pro chefão.`
-    },
-    { id: 'chefao', cap: 5, title: '👑 Chefão: Rei Bug' }
+      success: (v, log) => EXTRA_SISTEMAS
+        ? `👾 ${log.created.length} inimigos criados pela sua função! Derrote a onda e siga pro Salão das Listas.`
+        : `👾 ${log.created.length} inimigos criados pela sua função! Derrote a onda e siga pro chefão.`
+    }
   ];
+
+  // Capítulos 5 e 6 — só turma Sistemas (EXTRA_SISTEMAS). Ficam entre a
+  // onda e o chefão, num trecho de mapa a mais (ZONA_EXTRA): listas (array,
+  // push, length), repetição (for, for...of) e objetos (propriedade com
+  // ponto, função que recebe objeto, função com laço que devolve lista).
+  const STAGES_SISTEMAS = [
+    {
+      id: 'pocoes', cap: 5, altarX: 11900, title: '⚗️ Lista de poções',
+      text: 'O Salão das Listas guarda poções de vida. Em vez de criar uma variável pra cada poção, crie <b>UMA</b> variável <code>pocoes</code> com uma <b>lista</b> de 3 a 5 poções (cada uma é um texto, como <code>"vermelha"</code>). Cada poção da lista vira <b>+1 coração</b> pro herói.',
+      concept: '<b>Lista</b> (array) guarda vários valores em ordem, entre colchetes e separados por vírgula: <code>["a", "b", "c"]</code>. Cada item tem uma <b>posição</b> (índice) que começa em <b>0</b>: <code>pocoes[0]</code> é a primeira.',
+      format: 'Formato: <code>let pocoes = ["...", "...", "..."];</code>',
+      hint: 'Lista vai entre colchetes. Cada poção é um texto entre aspas, separado da próxima por vírgula.',
+      starter: '// Crie a lista de poções (de 3 a 5 textos)\n',
+      names: ['pocoes'],
+      check(v) {
+        if (v.pocoes === undefined) return 'A variável pocoes não foi criada. Use: let pocoes = ["vermelha", "azul", "verde"];';
+        if (!Array.isArray(v.pocoes)) return `pocoes está valendo ${JSON.stringify(v.pocoes)} — precisa ser uma LISTA, entre colchetes [ ].`;
+        if (v.pocoes.length < 3 || v.pocoes.length > 5) return `A lista tem ${v.pocoes.length} poções. Coloque de 3 a 5.`;
+        const i = v.pocoes.findIndex(p => typeof p !== 'string' || !p.trim());
+        if (i !== -1) return `O item da posição ${i} (${JSON.stringify(v.pocoes[i])}) não é um texto. Cada poção vai entre aspas: "azul".`;
+        return null;
+      },
+      success: v => `⚗️ ${v.pocoes.length} poções na lista — ${v.pocoes.length} corações a mais! A primeira, pocoes[0], é a "${v.pocoes[0]}".`
+    },
+    {
+      id: 'mochila', cap: 5, altarX: 12400, title: '🎒 push e length: a mochila',
+      text: 'A mochila do herói já tem <code>"mapa"</code> e <code>"corda"</code>. Coloque a <code>"gema"</code> no fim da lista usando <code>push</code>, e depois crie a variável <code>total</code> com a <b>quantidade</b> de itens da mochila, usando <code>length</code> (não vale digitar o número).',
+      concept: '<code>lista.push(x)</code> coloca <code>x</code> no <b>fim</b> da lista. <code>lista.length</code> diz <b>quantos itens</b> ela tem agora — se a lista crescer, o <code>length</code> cresce junto.',
+      format: 'Formato: <code>lista.push(item);</code> e <code>lista.length</code>',
+      hint: 'O push é chamado com um ponto depois do nome da lista, e o item vai entre os parênteses. Pro total, leia a propriedade que diz o tamanho da lista.',
+      starter: 'let mochila = ["mapa", "corda"];\n\n// coloque "gema" no fim da mochila e guarde o tamanho em total\n',
+      names: ['mochila', 'total'],
+      check(v, code) {
+        if (!Array.isArray(v.mochila)) return 'A lista mochila sumiu — mantenha a primeira linha: let mochila = ["mapa", "corda"];';
+        if (!/mochila\s*\.\s*push\s*\(/.test(code)) return 'Use o push pra colocar a gema: mochila.push("gema");';
+        if (v.mochila[v.mochila.length - 1] !== 'gema') return `O último item da mochila é ${JSON.stringify(v.mochila[v.mochila.length - 1])} — devia ser "gema".`;
+        if (v.mochila.length !== 3) return `A mochila devia ter 3 itens (mapa, corda e gema), mas tem ${v.mochila.length}.`;
+        if (v.total === undefined) return 'Falta a variável total. Use: let total = mochila.length;';
+        if (!/total\s*=\s*mochila\s*\.\s*length/.test(code)) return 'O total precisa vir de mochila.length, não de um número digitado.';
+        if (v.total !== v.mochila.length) return `total vale ${JSON.stringify(v.total)}, mas a mochila tem ${v.mochila.length} itens.`;
+        return null;
+      },
+      success: v => `🎒 A mochila tem ${v.total} itens: ${v.mochila.join(', ')}. A gema brilha no fim da lista!`
+    },
+    {
+      id: 'escada', cap: 5, altarX: 12900, title: '🪜 Repetição: a escada (for)',
+      text: 'Pra subir ao andar de cima, o herói precisa de uma escada de <b>6 degraus</b>. Em vez de escrever a mesma linha 6 vezes, use um <code>for</code> que repete 6 vezes a linha <code>degraus = degraus + 1;</code>.',
+      concept: 'O <code>for</code> repete um bloco: <code>for (let i = 0; i &lt; 3; i++) { ... }</code> quer dizer "comece o i em 0; ENQUANTO i for menor que 3, rode o bloco; depois de cada volta, some 1 no i". São 3 voltas: i vale 0, 1 e 2.',
+      format: 'Formato: <code>for (início; condição; passo) { ... }</code>',
+      hint: 'O for tem três partes separadas por ponto e vírgula: onde o i começa, até quando repete e como o i muda a cada volta. Dentro das chaves, some 1 em degraus.',
+      starter: 'let degraus = 0;\n\n// use um for pra repetir 6 vezes: degraus = degraus + 1;\n',
+      names: ['degraus'],
+      check(v, code) {
+        if (!/\bfor\s*\(/.test(code)) return 'Use um for pra repetir: for (let i = 0; i < 6; i++) { ... }';
+        if (/degraus\s*=\s*6\s*;/.test(code)) return 'Não vale escrever degraus = 6 direto: quem precisa contar os degraus é o for.';
+        if (v.degraus === undefined) return 'A variável degraus sumiu — mantenha a primeira linha: let degraus = 0;';
+        if (v.degraus !== 6) return `degraus terminou valendo ${JSON.stringify(v.degraus)}. O for precisa dar exatamente 6 voltas — confira o i < 6 e o degraus = degraus + 1 dentro das chaves.`;
+        return null;
+      },
+      success: '🪜 6 voltas do for, 6 degraus! A escada subiu sozinha.'
+    },
+    {
+      id: 'disparar', cap: 5, altarX: 13400, title: '🏹 for...of: um disparo por alvo',
+      text: 'Três inimigos esperam depois deste terminal. A lista <code>alvos</code> diz quem são. Use um <code>for...of</code> pra passar por <b>cada</b> alvo da lista e, pra cada um, chamar a função pronta <code>disparar(alvo)</code>. Uma flecha por alvo, sem escrever o nome de nenhum deles.',
+      concept: '<code>for (const fruta of frutas) { ... }</code> passa pelos itens da lista <code>frutas</code>, um de cada vez: na 1ª volta <code>fruta</code> vale o 1º item, na 2ª o 2º... Se a lista mudar, o laço acompanha sozinho.',
+      format: 'Formato: <code>for (const item of lista) { ... }</code>',
+      hint: 'No for...of você dá um nome pra cada item (por exemplo, alvo) e diz de qual lista eles vêm. Dentro das chaves, chame a função passando esse nome.',
+      starter: 'let alvos = ["slime", "morcego", "slime"];\n\n// chame disparar(alvo) pra cada alvo da lista\n',
+      names: [],
+      makeGiven() {
+        const log = { tiros: [] };
+        return { given: { disparar: (alvo) => { log.tiros.push(alvo); } }, log };
+      },
+      check(v, code, log) {
+        if (/function\s+disparar/.test(code)) return 'A função disparar já existe — não precisa criar, só chamar dentro do laço.';
+        if (!/\bfor\s*\(/.test(code)) return 'Use um laço: for (const alvo of alvos) { disparar(alvo); }';
+        if (!/let\s+alvos\s*=\s*\[\s*"slime"\s*,\s*"morcego"\s*,\s*"slime"\s*\]/.test(code)) return 'Mantenha a primeira linha como estava: let alvos = ["slime", "morcego", "slime"];';
+        if (JSON.stringify(log.tiros) !== JSON.stringify(['slime', 'morcego', 'slime'])) return `Os disparos foram ${JSON.stringify(log.tiros)} — devia ser um disparar pra cada alvo da lista, na ordem.`;
+        // Roda de novo com OUTRA lista: se os tiros não acompanharem, o
+        // aluno escreveu os disparos à mão em vez de usar o laço.
+        const outra = code.replace(/let\s+alvos\s*=\s*\[[^\]]*\]/, 'let alvos = ["orc", "cavaleiro"]');
+        const r = runStageCode(this, outra);
+        if (r.error) return friendlyError(r.error);
+        if (JSON.stringify(r.log.tiros) !== JSON.stringify(['orc', 'cavaleiro'])) return 'Com outra lista de alvos, os disparos não mudaram. Não escreva os nomes: dentro do laço, chame disparar(alvo).';
+        return null;
+      },
+      success: (v, log) => `🏹 Seu laço deu ${log.tiros.length} voltas: ${log.tiros.map(t => `disparar("${t}")`).join(', ')}. Caminho livre!`
+    },
+    {
+      id: 'somarDano', cap: 5, altarX: 14000, title: '➕ Laço dentro da função: somarDano(golpes)',
+      text: 'Uma porta de pedra bloqueia o caminho e só cai com um combo. Crie a função <code>somarDano</code>, que recebe uma <b>lista</b> de golpes (números) e devolve a <b>soma</b> de todos eles. Comece uma variável <code>total</code> em 0, passe pela lista com um laço somando cada golpe e, no fim, devolva o <code>total</code>.',
+      concept: 'É o padrão do <b>acumulador</b>: uma variável começa em 0 e, a cada volta do laço, recebe mais um valor (<code>total = total + golpe;</code>). Quando o laço termina, ela guarda a soma de tudo.',
+      format: 'Formato: <code>function somarDano(golpes) { let total = 0; for (...) { ... } return total; }</code>',
+      hint: 'Antes do laço, uma variável começa em zero. Dentro do laço, cada golpe é somado nela. Depois do laço — fora das chaves dele — devolva essa variável.',
+      starter: '// Crie a função somarDano(golpes)\n',
+      names: ['somarDano'],
+      check(v, code) {
+        if (!isFn(v.somarDano)) return 'A função somarDano não foi criada. Use: function somarDano(golpes) { ... }';
+        if (!/\bfor\s*\(/.test(code)) return 'Use um laço (for) pra passar pelos golpes da lista.';
+        const casos = [[[4, 5, 6], 15], [[2, 3], 5], [[7], 7], [[], 0]];
+        for (const [golpes, esperado] of casos) {
+          let r;
+          try { r = v.somarDano(golpes.slice()); } catch (e) { return friendlyError(e); }
+          if (r !== esperado) return `somarDano(${JSON.stringify(golpes)}) devolveu ${JSON.stringify(r)}, mas devia devolver ${esperado}.`;
+        }
+        return null;
+      },
+      success: '➕ somarDano([4, 5, 6]) → 15. O combo derrubou a porta de pedra!'
+    },
+    {
+      id: 'heroi', cap: 6, altarX: 14700, title: '🧍 Objeto: a ficha do herói',
+      text: 'Na Sala dos Objetos, todo herói tem uma <b>ficha</b>. Crie o objeto <code>heroi</code> com três propriedades: <code>nome</code> e <code>vida</code> (use as variáveis <code>nome</code> e <code>vida</code> que você criou no Capítulo 1 — elas já existem aqui) e <code>nivel</code> valendo 1. Depois, numa linha nova, <b>suba o nível</b>: some 1 em <code>heroi.nivel</code>.',
+      concept: 'Um <b>objeto</b> junta informações com nome: <code>{ nome: "Luna", nivel: 1 }</code>. Pra ler ou mudar uma delas, use o <b>ponto</b>: <code>heroi.nivel</code> é o nível; <code>heroi.nivel = heroi.nivel + 1;</code> sobe um nível.',
+      format: 'Formato: <code>let objeto = { propriedade: valor, ... };</code> e <code>objeto.propriedade = ...;</code>',
+      hint: 'Objeto vai entre chaves, com propriedade: valor separados por vírgula. Em nome e vida, use as variáveis (sem aspas). Depois, mude o nível escrevendo heroi, ponto e nivel.',
+      starter: '// nome e vida já existem (Capítulo 1). Crie o objeto heroi\n',
+      names: ['heroi'],
+      makeGiven() { return { given: { nome: abilities.nome || 'Herói', vida: abilities.vidaBase }, log: null }; },
+      explainError(code) {
+        if (/\b(let|const|var)\s+(nome|vida)\b/.test(code)) return 'As variáveis nome e vida já existem (Capítulo 1) — não crie de novo com let, só use dentro do objeto: { nome: nome, vida: vida, nivel: 1 }';
+        return null;
+      },
+      check(v, code) {
+        const h = v.heroi;
+        if (!h || typeof h !== 'object' || Array.isArray(h)) return 'Crie o objeto heroi entre chaves: let heroi = { nome: nome, vida: vida, nivel: 1 };';
+        if (!/heroi\s*\.\s*nivel\s*(=|\+\+|\+=)/.test(code)) return 'Falta subir o nível numa linha nova, usando o ponto: heroi.nivel = heroi.nivel + 1;';
+        if (h.nivel !== 2) return `heroi.nivel terminou valendo ${JSON.stringify(h.nivel)}. Ele começa em 1 e sobe 1, então devia ser 2.`;
+        // Roda de novo com outro nome/vida: tem que usar as VARIÁVEIS, não
+        // o nome digitado à mão.
+        const x = execCode(code, ['heroi'], { nome: 'Teste', vida: 4 });
+        if (x.error) return friendlyError(x.error);
+        if (!x.vars.heroi || x.vars.heroi.nome !== 'Teste') return 'Em nome, use a variável nome (sem aspas): { nome: nome, ... } — assim a ficha acompanha o nome do seu herói.';
+        if (x.vars.heroi.vida !== 4) return 'Em vida, use a variável vida (sem aspas): { vida: vida, ... }.';
+        return null;
+      },
+      success: v => `🧍 Ficha criada: ${v.heroi.nome}, nível ${v.heroi.nivel}. Olha em cima da cabeça do herói!`
+    },
+    {
+      id: 'descrever', cap: 6, altarX: 15200, title: '🏷️ Função que lê um objeto: descrever(inimigo)',
+      text: 'Chega de lutar no escuro: crie a função <code>descrever</code>, que recebe um <code>inimigo</code> (um objeto com <code>tipo</code> e <code>vida</code>) e devolve um <b>texto</b> no formato <code>"orc com 8 de vida"</code>. Depois disso, o jogo chama <code>descrever(...)</code> pra escrever a etiqueta em cima de cada inimigo.',
+      concept: 'Dentro da função, <code>objeto.propriedade</code> lê uma informação do objeto que chegou. Pra juntar textos e números, use o <code>+</code>: com <code>pet = { nome: "Rex", idade: 3 }</code>, <code>pet.nome + " tem " + pet.idade + " anos"</code> vira <code>"Rex tem 3 anos"</code>.',
+      format: 'Formato: <code>function descrever(inimigo) { return inimigo.tipo + ...; }</code>',
+      hint: 'Leia as propriedades com inimigo.tipo e inimigo.vida e junte com os textos " com " e " de vida" usando o +. Atenção aos espaços dentro das aspas.',
+      starter: '// Crie a função descrever(inimigo)\n',
+      names: ['descrever'],
+      check(v) {
+        if (!isFn(v.descrever)) return 'A função descrever não foi criada. Use: function descrever(inimigo) { ... }';
+        const casos = [[{ tipo: 'orc', vida: 8 }, 'orc com 8 de vida'], [{ tipo: 'slime', vida: 1 }, 'slime com 1 de vida'], [{ tipo: 'cavaleiro', vida: 6 }, 'cavaleiro com 6 de vida']];
+        for (const [inimigo, esperado] of casos) {
+          let r;
+          try { r = v.descrever(Object.assign({}, inimigo)); } catch (e) { return friendlyError(e); }
+          if (r !== esperado) return `descrever(${JSON.stringify(inimigo)}) devolveu ${JSON.stringify(r)}, mas devia devolver "${esperado}". Confira os espaços dentro das aspas.`;
+        }
+        return null;
+      },
+      success: '🏷️ Pronto! Cada inimigo agora mostra a etiqueta que a SUA função escreveu.'
+    },
+    {
+      id: 'criarOnda', cap: 6, altarX: 15800, title: '🌊 Laço + objetos: criarOnda(quantidade)',
+      text: 'Última prova antes do chefão: crie a função <code>criarOnda</code>, que recebe uma <code>quantidade</code> e devolve uma <b>lista</b> com essa quantidade de inimigos. Comece uma lista vazia, use um <code>for</code> que dá <code>quantidade</code> voltas e, em cada volta, coloque na lista (com <code>push</code>) um inimigo feito pela sua <code>criarInimigo</code> — ela já existe aqui. No fim, devolva a lista. O jogo chama <code>criarOnda(4)</code> pra montar a Onda Final.',
+      concept: 'Aqui entra tudo junto: lista vazia <code>[]</code>, laço <code>for</code> que repete <code>quantidade</code> vezes, <code>push</code> pra guardar e a sua função que cria <b>objetos</b>. Tipos: <code>"slime"</code>, <code>"morcego"</code>, <code>"cavaleiro"</code> ou <code>"orc"</code>; vida de 1 a 10.',
+      format: 'Formato: <code>function criarOnda(quantidade) { let ... = []; for (...) { ... } return ...; }</code>',
+      hint: 'Comece uma lista vazia. O for repete "quantidade" vezes e, em cada volta, usa push pra guardar o que a criarInimigo devolve. O return fica depois do for.',
+      starter: '// Sua criarInimigo já existe. Crie a função criarOnda(quantidade)\n',
+      names: ['criarOnda'],
+      makeGiven() { return { given: { criarInimigo: abilities.criarInimigo || defaultCriarInimigo }, log: null }; },
+      explainError(code) {
+        if (/function\s+criarInimigo/.test(code)) return 'A função criarInimigo já existe (Capítulo 4) — não precisa criar de novo, só chamar dentro do laço.';
+        return null;
+      },
+      check(v, code) {
+        if (!isFn(v.criarOnda)) return 'A função criarOnda não foi criada. Use: function criarOnda(quantidade) { ... }';
+        if (!/\bfor\s*\(/.test(code)) return 'Use um for que dá "quantidade" voltas.';
+        for (const n of [4, 2, 6]) {
+          let r;
+          try { r = v.criarOnda(n); } catch (e) { return friendlyError(e); }
+          if (!Array.isArray(r)) return `criarOnda(${n}) devolveu ${JSON.stringify(r)} — precisa devolver uma LISTA (return onda;).`;
+          if (r.length !== n) return `criarOnda(${n}) devolveu uma lista com ${r.length} inimigos — devia ter ${n}. O for precisa usar a quantidade: i < quantidade.`;
+          for (let i = 0; i < r.length; i++) {
+            const problema = inimigoInvalido(r[i], 10);
+            if (problema) return `No item ${i} da lista, ${problema}`;
+          }
+        }
+        return null;
+      },
+      success: '🌊 criarOnda(4) montou a Onda Final com a sua lista de inimigos! Derrote todos e siga pro Rei Bug.'
+    }
+  ];
+  if (EXTRA_SISTEMAS) STAGES.push(...STAGES_SISTEMAS);
+  STAGES.push({ id: 'chefao', cap: CAP_CHEFAO, title: '👑 Chefão: Rei Bug' });
   const CODE_STAGES = STAGES.filter(s => s.id !== 'chefao');
   const stageById = id => STAGES.find(s => s.id === id);
 
@@ -564,7 +774,15 @@
     bloquear: 'function bloquear(ataque) {\n  if (ataque === "fogo") {\n    return true;\n  }\n  return false;\n}',
     tirarVida: 'function tirarVida(vidaInimigo, dano) {\n  if (dano >= vidaInimigo) {\n    return 0;\n  } else {\n    return vidaInimigo - dano;\n  }\n}',
     criarInimigo: 'function criarInimigo(tipo, vida) {\n  return { tipo: tipo, vida: vida };\n}',
-    onda: 'criarInimigo("slime", 2);\ncriarInimigo("morcego", 1);\ncriarInimigo("orc", 6);'
+    onda: 'criarInimigo("slime", 2);\ncriarInimigo("morcego", 1);\ncriarInimigo("orc", 6);',
+    pocoes: 'let pocoes = ["vermelha", "azul", "verde"];',
+    mochila: 'let mochila = ["mapa", "corda"];\nmochila.push("gema");\nlet total = mochila.length;',
+    escada: 'let degraus = 0;\nfor (let i = 0; i < 6; i++) {\n  degraus = degraus + 1;\n}',
+    disparar: 'let alvos = ["slime", "morcego", "slime"];\nfor (const alvo of alvos) {\n  disparar(alvo);\n}',
+    somarDano: 'function somarDano(golpes) {\n  let total = 0;\n  for (const golpe of golpes) {\n    total = total + golpe;\n  }\n  return total;\n}',
+    heroi: 'let heroi = { nome: nome, vida: vida, nivel: 1 };\nheroi.nivel = heroi.nivel + 1;',
+    descrever: 'function descrever(inimigo) {\n  return inimigo.tipo + " com " + inimigo.vida + " de vida";\n}',
+    criarOnda: 'function criarOnda(quantidade) {\n  let onda = [];\n  for (let i = 0; i < quantidade; i++) {\n    onda.push(criarInimigo("slime", 2));\n  }\n  return onda;\n}'
   };
 
   // ---------- Progresso ----------
@@ -604,7 +822,10 @@
   const abilities = {
     espada: false, escudo: false, botas: false, vidaMax: 1, nome: '', forca: 1, portal: false,
     pular: null, atacar: null, defender: null, puloDuplo: false, tocha: false,
-    bloquear: null, tirarVida: null, criarInimigo: null, onda: []
+    bloquear: null, tirarVida: null, criarInimigo: null, onda: [],
+    // Capítulos 5 e 6 (turma Sistemas): vidaMax = vidaBase (etapa 'vida')
+    // + 1 coração por poção da lista.
+    vidaBase: 1, pocoes: [], degraus: 0, heroi: null, descrever: null, ondaFinal: []
   };
 
   // Roda o código de UMA etapa (com as funções prontas que ela injeta) e
@@ -621,7 +842,7 @@
       case 'espada': abilities.espada = true; break;
       case 'escudo': abilities.escudo = true; break;
       case 'botas': abilities.botas = true; break;
-      case 'vida': abilities.vidaMax = vars.vida; break;
+      case 'vida': abilities.vidaBase = vars.vida; abilities.vidaMax = vars.vida + abilities.pocoes.length; break;
       case 'nome': abilities.nome = vars.nome.trim(); break;
       case 'forca': abilities.forca = vars.forca; break;
       case 'portal': abilities.portal = true; break;
@@ -634,6 +855,15 @@
       case 'tirarVida': abilities.tirarVida = vars.tirarVida; break;
       case 'criarInimigo': abilities.criarInimigo = vars.criarInimigo; break;
       case 'onda': abilities.onda = log.created.slice(); break;
+      case 'pocoes': abilities.pocoes = vars.pocoes.slice(); abilities.vidaMax = abilities.vidaBase + abilities.pocoes.length; break;
+      case 'escada': abilities.degraus = vars.degraus; break;
+      case 'heroi': abilities.heroi = vars.heroi; break;
+      case 'descrever': abilities.descrever = vars.descrever; break;
+      case 'criarOnda': {
+        const onda = safeCall(vars.criarOnda, 4);
+        abilities.ondaFinal = Array.isArray(onda) ? onda.slice(0, 6) : [];
+        break;
+      }
     }
   }
 
@@ -668,7 +898,10 @@
   // Capítulo 1 (até o altar 'forca') é chão liso e sem inimigos: o herói
   // só anda. Espinhos e o 1º buraco só depois do altar 'pular'; inimigos
   // só depois do 'atacar'; o buraco largo só depois do 'bau' (pulo duplo).
-  const WORLD_END = 12700;
+  // Turma Sistemas: o trecho dos Capítulos 5 e 6 (ZONA_EXTRA) entra entre
+  // a onda e o trono do Rei Bug, que anda EXTRA_W pra direita.
+  const EXTRA_W = EXTRA_SISTEMAS ? 4800 : 0;
+  const WORLD_END = 12700 + EXTRA_W;
   const GROUND = [[0, 4260], [4340, 6780], [7000, WORLD_END]];
   const SPIKES = [[3950, 4010], [4090, 4150]];
   const GATE_X = 2410;
@@ -677,7 +910,12 @@
   const CASTLE_FROM = 8200;
   const TRAINING = [10180, 10800];
   const WAVE = [10980, 11700];
-  const BOSS_ARENA = [11800, 12550];
+  const BOSS_ARENA = [11800 + EXTRA_W, 12550 + EXTRA_W];
+  const SALAO_LISTAS = [11760, 14560];
+  const SALA_OBJETOS = [14560, 16550];
+  const DISPARO_ALVOS = [13600, 13950]; // inimigos derrubados pelo laço da etapa 'disparar'
+  const PORTA_PEDRA_X = 14090;         // cai com a somarDano
+  const ONDA_FINAL = [15900, 16500];
 
   const PHYS = { GRAVITY: 0.55, MAX_FALL: 13, MOVE: 4.2, JUMP: -11, DOUBLE_JUMP: -10 };
 
@@ -692,7 +930,16 @@
     ['bat', 7550], ['slime', 7730], ['bat', 7920],
     ['mage', 8710], ['archer', 8850], ['mage', 9000],
     ['knight', 9550], ['orc', 9780],
-    ['boss', 12200]
+    ...(EXTRA_SISTEMAS ? [
+      ['slime', 12150], ['bat', 12250],
+      ['knight', 12700],
+      ['archer', 13300],
+      ['slime', 13650], ['bat', 13750], ['slime', 13880],
+      ['orc', 14350], ['mage', 14520],
+      ['knight', 14980],
+      ['slime', 15450], ['orc', 15600]
+    ] : []),
+    ['boss', 12200 + EXTRA_W]
   ].map(([type, x]) => ({ type, x }));
 
   const ENEMY_TYPES = {
@@ -715,7 +962,7 @@
     const hp = def.hp || t.hp;
     return {
       type: def.type, defIndex, baseX: def.x, x: def.x, y: t.flying ? 300 : GROUND_Y - t.h, w: t.w, h: t.h,
-      hp, maxHp: hp, dir: -1, alive: true, flash: 0, cool: 40 + Math.random() * 40,
+      hp, maxHp: hp, dir: -1, alive: !def.gone, flash: 0, cool: 40 + Math.random() * 40,
       t: Math.random() * 100, hitSwing: -1, shotKind: 0, summonT: 240, minion: !!def.minion
     };
   }
@@ -743,6 +990,19 @@
     }
     if (id === 'onda') {
       abilities.onda.forEach((obj, i) => addEnemyFromObject(obj, WAVE[0] + 170 + i * 110));
+    }
+    // O laço do aluno derruba os alvos: ficam marcados como `gone` pra não
+    // voltarem quando o herói renasce (resetEnemiesFrom recria pelo def).
+    if (id === 'disparar') {
+      enemies.forEach(e => {
+        if (e.defIndex < 0 || e.baseX < DISPARO_ALVOS[0] || e.baseX > DISPARO_ALVOS[1]) return;
+        enemyDefs[e.defIndex].gone = true;
+        if (e.alive) { e.alive = false; burst(e.x + e.w / 2, e.y + e.h / 2, '#c9b38a', 14); }
+      });
+    }
+    if (id === 'criarOnda') {
+      abilities.ondaFinal.forEach((obj, i) => addEnemyFromObject(obj, ONDA_FINAL[0] + 120 + i * 90));
+      floatText((ONDA_FINAL[0] + ONDA_FINAL[1]) / 2, GROUND_Y - 120, `criarOnda(4) → ${abilities.ondaFinal.length} inimigos`, '#d4c86a');
     }
   }
 
@@ -867,8 +1127,9 @@
     ArrowUp: 'jump', w: 'jump', W: 'jump', ' ': 'jump',
     j: 'attack', J: 'attack', k: 'defend', K: 'defend', e: 'terminal', E: 'terminal'
   };
+  const travado = () => !!(window.RecuperacaoTrava && window.RecuperacaoTrava.ativa());
   window.addEventListener('keydown', (e) => {
-    if (terminalEl.classList.contains('open') || e.target === codeInput) return;
+    if (terminalEl.classList.contains('open') || e.target === codeInput || travado()) return;
     const k = KEYMAP[e.key];
     if (!k) return;
     e.preventDefault();
@@ -959,7 +1220,9 @@
   const pendingStage = () => STAGES[firstPendingIndex()];
 
   function step() {
-    if (terminalEl.classList.contains('open') || won) { pressed.clear(); return; }
+    // Pausado com o terminal aberto, depois de vencer e enquanto a trava da
+    // Recuperação (recuperacao-trava.js) mostra regras/aviso/bloqueio.
+    if (terminalEl.classList.contains('open') || won || travado()) { pressed.clear(); keys.clear(); return; }
 
     if (hero.deadT > 0) {
       hero.deadT--;
@@ -1114,7 +1377,7 @@
   }
 
   function finishCodeText() {
-    return [1, 2, 3, 4].map(cap => {
+    return (EXTRA_SISTEMAS ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4]).map(cap => {
       const blocos = CODE_STAGES.filter(s => s.cap === cap).map(s => `// ${s.title}\n${codes[s.id] || DEFAULT_CODE[s.id]}`);
       return `// ===== Capítulo ${cap} — ${CAPITULOS[cap]} =====\n\n${blocos.join('\n\n')}`;
     }).join('\n\n');
@@ -1291,8 +1554,10 @@
     ctx.fillRect(BOSS_ARENA[0], 0, BOSS_ARENA[1] - BOSS_ARENA[0], GROUND_Y);
     label('TRONO DO REI BUG', (BOSS_ARENA[0] + BOSS_ARENA[1]) / 2, 90, 'rgba(255,59,48,0.7)', 16);
 
+    if (EXTRA_SISTEMAS) drawZonaExtra();
+
     // Início de cada capítulo
-    [[1, 150], [2, 3180], [3, 6540], [4, 10000]].forEach(([cap, x]) => {
+    [[1, 150], [2, 3180], [3, 6540], [4, 10000]].concat(EXTRA_SISTEMAS ? [[5, SALAO_LISTAS[0] + 60], [6, SALA_OBJETOS[0] + 60]] : []).forEach(([cap, x]) => {
       label(`Capítulo ${cap} — ${CAPITULOS[cap]}`, x, 130, 'rgba(217,230,210,0.45)', 14);
     });
 
@@ -1315,6 +1580,51 @@
       }
     });
   }
+
+  // Capítulos 5 e 6 (turma Sistemas): Salão das Listas e Sala dos Objetos.
+  function drawZonaExtra() {
+    ctx.fillStyle = 'rgba(60,140,220,0.08)';
+    ctx.fillRect(SALAO_LISTAS[0], 0, SALAO_LISTAS[1] - SALAO_LISTAS[0], GROUND_Y);
+    label('SALÃO DAS LISTAS', (SALAO_LISTAS[0] + SALAO_LISTAS[1]) / 2, 90, 'rgba(120,190,255,0.7)', 16);
+    ctx.fillStyle = 'rgba(200,120,255,0.08)';
+    ctx.fillRect(SALA_OBJETOS[0], 0, SALA_OBJETOS[1] - SALA_OBJETOS[0], GROUND_Y);
+    label('SALA DOS OBJETOS', (SALA_OBJETOS[0] + SALA_OBJETOS[1]) / 2, 90, 'rgba(210,160,255,0.7)', 16);
+    ctx.fillStyle = 'rgba(124,255,63,0.07)';
+    ctx.fillRect(ONDA_FINAL[0], 0, ONDA_FINAL[1] - ONDA_FINAL[0], GROUND_Y);
+    label('ONDA FINAL', (ONDA_FINAL[0] + ONDA_FINAL[1]) / 2, 112, 'rgba(124,255,63,0.7)', 14);
+
+    // Prateleira das poções: uma por item da lista, com o índice embaixo.
+    const px = stageById('pocoes').altarX + 80;
+    abilities.pocoes.forEach((p, i) => {
+      emoji('🧪', px + i * 34, GROUND_Y - 54, 22);
+      label(`[${i}]`, px + i * 34, GROUND_Y - 30, '#9ecbff', 10);
+    });
+
+    // Escada: um degrau por volta do for.
+    const ex = stageById('escada').altarX + 70;
+    for (let i = 0; i < abilities.degraus; i++) {
+      ctx.fillStyle = '#8b6a2f';
+      ctx.fillRect(ex + i * 18, GROUND_Y - (i + 1) * 14, 18, (i + 1) * 14);
+      ctx.fillStyle = '#b08a4a';
+      ctx.fillRect(ex + i * 18, GROUND_Y - (i + 1) * 14, 18, 3);
+    }
+    if (abilities.degraus) label(`degraus = ${abilities.degraus}`, ex + 50, GROUND_Y - 110, '#d4c86a', 11);
+
+    // Porta de pedra: cai com a somarDano.
+    if (!done.has('somarDano')) {
+      ctx.fillStyle = '#55595e';
+      ctx.fillRect(PORTA_PEDRA_X, GROUND_Y - 150, 44, 150);
+      ctx.fillStyle = '#3f4246';
+      for (let y = GROUND_Y - 150; y < GROUND_Y; y += 25) ctx.fillRect(PORTA_PEDRA_X, y, 44, 3);
+      label('15', PORTA_PEDRA_X + 22, GROUND_Y - 165, '#d4c86a', 13);
+    } else {
+      ctx.fillStyle = '#55595e';
+      for (let k = 0; k < 5; k++) ctx.fillRect(PORTA_PEDRA_X - 10 + k * 14, GROUND_Y - 10 - (k % 2) * 6, 12, 10 + (k % 2) * 6);
+    }
+  }
+
+  // Tipos internos -> nome em português, pra etiqueta da descrever().
+  const TIPO_PT = { slime: 'slime', bat: 'morcego', knight: 'cavaleiro', orc: 'orc', archer: 'arqueiro', mage: 'mago' };
 
   // Escuridão da caverna: sem a tocha, breu; com ela, um círculo de luz em
   // volta do herói (desenhado por cima de inimigos e herói).
@@ -1386,7 +1696,10 @@
       ctx.ellipse(x + w / 2 - facing * 12, y + 24, 6, 12, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-    if (abilities.nome) label(abilities.nome, x + w / 2, y - 12, '#d4c86a', 11);
+    // Com a ficha (objeto heroi) criada, o rótulo lê as propriedades dela.
+    const ficha = abilities.heroi;
+    if (ficha && typeof ficha === 'object') label(`${ficha.nome} · nível ${ficha.nivel}`, x + w / 2, y - 12, '#d4c86a', 11);
+    else if (abilities.nome) label(abilities.nome, x + w / 2, y - 12, '#d4c86a', 11);
   }
 
   function drawEnemy(e) {
@@ -1416,6 +1729,11 @@
       ctx.fillStyle = '#300'; ctx.fillRect(e.x, e.y - 10, e.w, 4);
       ctx.fillStyle = '#ff3b30'; ctx.fillRect(e.x, e.y - 10, e.w * Math.max(0, e.hp / e.maxHp), 4);
     }
+    // Etiqueta escrita pela descrever() do aluno (Capítulo 6).
+    if (abilities.descrever && e.type !== 'boss') {
+      const txt = safeCall(abilities.descrever, { tipo: TIPO_PT[e.type] || e.type, vida: e.hp });
+      if (typeof txt === 'string') label(txt.slice(0, 40), cx, e.y - 22, '#e0c8ff', 10);
+    }
   }
 
   function drawProjectile(p) {
@@ -1437,16 +1755,22 @@
     ['espada', '🗡️'], ['escudo', '🛡️'], ['botas', '👢'], ['vida', '❤️'], ['nome', '📛'], ['forca', '💪'],
     ['portal', '🌀'], ['pular', '🦘'], ['atacar', '⚔️'], ['defender', '🔰'],
     ['bau', '🎁'], ['tocha', '🔦'], ['bloquear', '🔥'], ['tirarVida', '💥'], ['criarInimigo', '🧪'], ['onda', '👾']
-  ];
+  ].concat(EXTRA_SISTEMAS ? [
+    ['pocoes', '⚗️'], ['mochila', '🎒'], ['escada', '🪜'], ['disparar', '🏹'], ['somarDano', '➕'],
+    ['heroi', '🧍'], ['descrever', '🏷️'], ['criarOnda', '🌊']
+  ] : []);
+  // Com os capítulos extras, ícones e corações ficam mais juntos pra caber.
+  const HUD_GAP = EXTRA_SISTEMAS ? 19 : 24;
+  const HEART_GAP = EXTRA_SISTEMAS ? 22 : 26;
 
   function drawHud() {
     const full = Math.floor(hero.hp + 0.001), half = hero.hp - full >= 0.5;
     for (let i = 0; i < abilities.vidaMax; i++) {
-      emoji(i < full ? '❤️' : (i === full && half ? '💔' : '🖤'), 22 + i * 26, 22, 20);
+      emoji(i < full ? '❤️' : (i === full && half ? '💔' : '🖤'), 22 + i * HEART_GAP, 22, EXTRA_SISTEMAS ? 17 : 20);
     }
     HUD_ITENS.forEach(([id, ch], i) => {
       ctx.globalAlpha = done.has(id) ? 1 : 0.2;
-      emoji(ch, viewW - 20 - (HUD_ITENS.length - 1 - i) * 24, 22, 16);
+      emoji(ch, viewW - 20 - (HUD_ITENS.length - 1 - i) * HUD_GAP, 22, EXTRA_SISTEMAS ? 14 : 16);
     });
     ctx.globalAlpha = 1;
     const pend = pendingStage();
@@ -1501,7 +1825,7 @@
   if (done.has('chefao') && CODE_STAGES.some(s => !done.has(s.id))) { done.delete('chefao'); saveDone(); }
   rebuildAbilities();
   enemies = enemyDefs.map(makeEnemy);
-  ['criarInimigo', 'onda'].forEach(id => { if (done.has(id)) spawnForStage(id); });
+  ['criarInimigo', 'onda', 'disparar', 'criarOnda'].forEach(id => { if (done.has(id)) spawnForStage(id); });
   texts = [];
   checkpointX = spawnPoint();
   // Inimigos que ficaram pra trás de onde o herói renasce já foram vencidos.
@@ -1516,6 +1840,15 @@
     won = true;
     document.getElementById('finishCode').textContent = finishCodeText();
     document.getElementById('finish').classList.add('open');
+  }
+
+  // Trava de não sair da tela (nem dividir a tela) — ver recuperacao-trava.js.
+  if (window.RecuperacaoTrava) {
+    window.RecuperacaoTrava.iniciar({
+      activityLocation: 'recuperacao_jogo',
+      nome: '<b>O Herói do Código</b>',
+      isCompleted: () => done.has('chefao')
+    });
   }
 
   (async function () {

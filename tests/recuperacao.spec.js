@@ -92,6 +92,15 @@ test.describe('Trilha "Programação do Zero" (teoria)', () => {
   });
 });
 
+// A Recuperação abre com a trava de "não sair da tela"
+// (turmas/recuperacao/atividades/recuperacao-trava.js): o jogo fica pausado
+// até o aluno ler as regras e clicar em "Começar".
+async function abrirJogo(page) {
+  await page.goto(JOGO_URL);
+  await page.click('#btnTravaComecar');
+  await expect(page.locator('#recuperacaoTrava')).toHaveCount(0);
+}
+
 async function openTerminalFor(page, id) {
   await page.evaluate((stageId) => window.__heroiDoCodigo.openTerminal(window.__heroiDoCodigo.stageIndex(stageId)), id);
 }
@@ -107,7 +116,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('andando até o 1º altar abre o terminal; let espada = true; dá a espada ao herói e salva o progresso', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await page.locator('#gameCanvas').click();
     await page.keyboard.down('ArrowRight');
     await expect(page.locator('#terminal')).toHaveClass(/open/, { timeout: 5000 });
@@ -130,7 +139,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('o if do baú precisa decidir de verdade: abrir o baú fora do if é recusado', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await openTerminalFor(page, 'bau');
     await expect(page.locator('#missionTitle')).toContainText('Baú');
 
@@ -145,7 +154,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('funções: defender(dano) precisa devolver a metade, e o jogo passa a usar a função do aluno', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await openTerminalFor(page, 'defender');
 
     await page.fill('#codeInput', 'function defender(dano) {\n  return dano - 1;\n}');
@@ -159,7 +168,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('são 17 etapas em 4 capítulos, na ordem variáveis → funções → decisões → criando o mundo', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await expect(page.locator('#lblStepTotal')).toHaveText('17');
     const ids = await page.evaluate(() => window.__heroiDoCodigo.stages.map(s => `${s.cap}:${s.id}`));
     expect(ids).toEqual([
@@ -174,7 +183,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('if / else da tocha: o else precisa funcionar quando escuro é false', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await openTerminalFor(page, 'tocha');
     await runCode(page, 'let escuro = true;\nlet tocha = "";\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "acesa";\n}');
     await expect(page.locator('#consoleOutput')).toContainText('devia ficar "apagada"');
@@ -185,7 +194,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('chamar função: sem parênteses não roda; abrirPortal(); abre o portal', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await openTerminalFor(page, 'portal');
     await runCode(page, 'abrirPortal;');
     await expect(page.locator('#consoleOutput')).toContainText('Faltaram os parênteses');
@@ -196,7 +205,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('tirarVida(vidaInimigo, dano) exige if / else e nunca deixa a vida negativa', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await openTerminalFor(page, 'tirarVida');
     await runCode(page, 'function tirarVida(vidaInimigo, dano) {\n  if (true) { return vidaInimigo - dano; } else { return 0; }\n}');
     await expect(page.locator('#consoleOutput')).toContainText('tirarVida(2, 5) devolveu -3, mas devia devolver 0');
@@ -207,7 +216,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('criarInimigo devolve objeto e a arena cria inimigos com ela; depois o aluno chama a função pra montar a onda', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     const antes = await page.evaluate(() => window.__heroiDoCodigo.enemies.length);
 
     await openTerminalFor(page, 'criarInimigo');
@@ -237,7 +246,7 @@ test.describe('Jogo "O Herói do Código"', () => {
   });
 
   test('recarregar a página reconstrói os itens a partir do código salvo', async ({ page }) => {
-    await page.goto(JOGO_URL);
+    await abrirJogo(page);
     await openTerminalFor(page, 'vida');
     await page.fill('#codeInput', 'let vida = 5;');
     await page.click('#btnRun');

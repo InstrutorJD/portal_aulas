@@ -115,6 +115,9 @@
 <script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/exam-proctor.js"></script>
+<script src="recuperacao-trava.js"></script>
 <script src="../../../shared/quiz-teoria-engine.js"></script>
 </head>
 <body>
@@ -365,6 +368,102 @@
     }
   ];
 
+  // Turma Sistemas: mais alunos em recuperação, então a teoria ganha as
+  // etapas de listas, repetição e objetos — a base dos Capítulos 5 e 6 do
+  // Herói do Código, que só a turma Sistemas tem (ver EXTRA_SISTEMAS lá).
+  const EXTRA_SISTEMAS = new URLSearchParams(window.location.search).get('turma') === 'sistemas';
+  if (EXTRA_SISTEMAS) STEPS.push(
+    {
+      story: 'Às vezes uma variável só não basta: e se o herói tem 5 poções? Em vez de 5 variáveis, usamos uma <b>lista</b> (em inglês, <i>array</i>): <code>let frutas = ["maçã", "uva", "pera"];</code>. Os itens ficam entre <b>colchetes</b>, separados por vírgula, e cada um tem uma <b>posição</b> que começa em <b>0</b>: <code>frutas[0]</code> é "maçã", <code>frutas[1]</code> é "uva".',
+      question: {
+        prompt: 'Com let cores = ["azul", "verde", "roxo"]; o que vale cores[1]?',
+        options: [
+          '"verde"',
+          '"azul"',
+          '"roxo"',
+          '1'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! A contagem começa em 0: cores[0] é "azul", cores[1] é "verde" e cores[2] é "roxo".'
+      }
+    },
+    {
+      story: 'Listas crescem. <code>lista.push(item)</code> coloca um item no <b>fim</b> da lista, e <code>lista.length</code> diz <b>quantos itens</b> ela tem agora. Exemplo: <code>let fila = ["Ana"];</code>, depois <code>fila.push("Bruno");</code> — agora <code>fila.length</code> vale 2.',
+      question: {
+        prompt: 'Com let placar = [3, 7]; e depois placar.push(5); quanto vale placar.length?',
+        options: [
+          '3',
+          '2',
+          '5',
+          '15'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! A lista tinha 2 números e o push colocou mais um no fim: [3, 7, 5] tem 3 itens.'
+      }
+    },
+    {
+      story: 'Pra <b>repetir</b> uma instrução sem copiar e colar, existe o <code>for</code>: <code>for (let i = 0; i &lt; 3; i++) { pontos = pontos + 10; }</code>. Ele tem três partes: onde o contador <code>i</code> começa (0), até quando repete (enquanto <code>i &lt; 3</code>) e como o <code>i</code> muda a cada volta (<code>i++</code> soma 1). Nesse exemplo são 3 voltas.',
+      question: {
+        prompt: 'Começando com let total = 0; quanto vale total depois de for (let i = 0; i < 4; i++) { total = total + 2; }?',
+        options: [
+          '8',
+          '4',
+          '6',
+          '2'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O i vale 0, 1, 2 e 3 — são 4 voltas, e cada uma soma 2: 4 × 2 = 8.'
+      }
+    },
+    {
+      story: 'Quando o que você quer é passar por <b>cada item de uma lista</b>, o <code>for...of</code> é mais simples: <code>for (const nome of alunos) { chamar(nome); }</code>. Na 1ª volta, <code>nome</code> vale o 1º aluno; na 2ª, o 2º; e assim até o fim. Se a lista crescer, o laço acompanha sozinho — ninguém precisa mudar o código.',
+      question: {
+        prompt: 'Com let alvos = ["orc", "slime"]; quantas vezes o bloco de for (const alvo of alvos) { ... } roda?',
+        options: [
+          '2 vezes, uma para cada item da lista',
+          '1 vez, porque o for...of olha a lista inteira de uma só vez',
+          '3 vezes, porque a contagem das listas começa em 0',
+          'Nenhuma vez, porque alvo não foi criado antes com let'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! O for...of dá uma volta por item: primeiro com alvo valendo "orc", depois "slime".'
+      }
+    },
+    {
+      story: 'Laço e função combinam muito bem. O padrão do <b>acumulador</b>: uma variável começa em 0 e, a cada volta, recebe mais um valor. <code>function somar(lista) { let total = 0; for (const n of lista) { total = total + n; } return total; }</code> — o <code>return</code> fica <b>depois</b> do laço, quando a soma já terminou.',
+      question: {
+        prompt: 'Usando essa função somar, quanto vale somar([2, 5, 1])?',
+        options: [
+          '8',
+          '1',
+          '10',
+          '3'
+        ],
+        correctIndex: 0,
+        explanation: 'Isso! O total começa em 0 e recebe 2, depois 5, depois 1: 2 + 5 + 1 = 8.'
+      }
+    },
+    {
+      story: 'Você já viu objetos como <code>{ tipo: "slime", vida: 3 }</code>. Pra <b>ler ou mudar</b> uma informação deles, use o <b>ponto</b>: com <code>let pet = { nome: "Rex", idade: 3 };</code>, <code>pet.nome</code> vale "Rex", e <code>pet.idade = pet.idade + 1;</code> faz o aniversário do Rex. Dá pra juntar tudo num texto com <code>+</code>: <code>pet.nome + " tem " + pet.idade + " anos"</code>.',
+      question: {
+        prompt: 'Com let carro = { marca: "Fiat", ano: 2020 }; qual linha troca o ano para 2024?',
+        options: [
+          'carro.ano = 2024;',
+          'carro = 2024;',
+          'let ano = 2024;',
+          'carro.2024 = ano;'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! objeto.propriedade = valor muda só aquela informação. carro = 2024 jogaria o objeto inteiro fora.'
+      }
+    }
+  );
+
+  // Trava de não sair da tela (nem dividir a tela) — ver recuperacao-trava.js.
+  if (window.RecuperacaoTrava) {
+    window.RecuperacaoTrava.iniciar({ activityLocation: 'recuperacao_teoria', nome: '<b>Programação do Zero</b>' });
+  }
+
   window.PortalQuizTeoria.run({
     activityLocation: "recuperacao_teoria",
     steps: STEPS,
@@ -372,7 +471,9 @@
     mentor: { rowClass: "eri", avatar: "🦉", name: "Bia, sua parceira de Recuperação" },
     finishPassed: {
       title: "Programação do Zero concluída!",
-      introHtml: "<p>Você já sabe o que é uma variável, os tipos de valor (número, texto e verdadeiro/falso), como mudar um valor, decidir com if / else, chamar e criar funções com parâmetros e return, e montar objetos.</p>",
+      introHtml: EXTRA_SISTEMAS
+        ? "<p>Você já sabe o que é uma variável, os tipos de valor (número, texto e verdadeiro/falso), como mudar um valor, decidir com if / else, chamar e criar funções com parâmetros e return, montar objetos, usar listas (push e length) e repetir com for e for...of.</p>"
+        : "<p>Você já sabe o que é uma variável, os tipos de valor (número, texto e verdadeiro/falso), como mudar um valor, decidir com if / else, chamar e criar funções com parâmetros e return, e montar objetos.</p>",
       closingHtml: "<p>Agora é hora de usar isso de verdade: volte e abra a trilha <b>O Herói do Código</b> — cada item do herói vai ser construído por você, em código.</p>",
       restartLabel: "🔁 Rever a teoria"
     }
