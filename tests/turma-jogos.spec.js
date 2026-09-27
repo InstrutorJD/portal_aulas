@@ -71,11 +71,12 @@ test.describe('turmas/jogos/plataforma.html', () => {
     await stubSupabaseFake(page, {});
   });
 
-  test('mostra os cards das 7 matérias de Jogos Digitais', async ({ page }) => {
+  test('mostra os cards das 8 matérias de Jogos Digitais (inclui o card Projetos)', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(7);
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(8);
     await expect(page.locator('#materiaCardGrid')).toContainText('Fundamentos de Programação');
     await expect(page.locator('#materiaCardGrid')).toContainText('Testes de Jogos Digitais');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Projetos');
     await expect(page.locator('#materiaCardGrid')).toContainText('Prova');
   });
 

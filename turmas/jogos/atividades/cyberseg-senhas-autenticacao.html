@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Cibersegurança: Senhas e Autenticação</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#5aa9ff; --green-dim:#3574c0; --yellow:#ffd27a; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cyberseg_senhas_autenticacao';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Cibersegurança: Senhas e Autenticação</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+  {
+    titulo: 'O tema do seu grupo: Senhas e Autenticação',
+    corpo: `
+O seu grupo ficou com o tema **Senhas e Autenticação** dentro do projeto de **Cibersegurança**. É a fechadura da vida digital de todo mundo.
+
+### O que o grupo vai entregar
+1. Uma **explicação para leigos** sobre como criar senhas fortes e por que a verificação em duas etapas salva a conta.
+2. Um **jogo simples** (com a ajuda de uma IA, rodando no JSFiddle) que mostre, na prática, a diferença entre uma senha fraca e uma forte.`
+  },
+  {
+    titulo: 'Tópicos para pesquisar',
+    corpo: `
+### 1. O que faz uma senha ser forte
+- Por que **tamanho** importa mais do que só trocar "a" por "@"?
+- Por que "123456", "senha" e a data de aniversário são péssimas escolhas?
+- O que é uma **frase-senha** (várias palavras) e por que é fácil de lembrar e difícil de quebrar.
+
+### 2. Como as senhas vazam
+- O que é um **vazamento de dados** (data breach): sites que já tiveram milhões de senhas expostas.
+- Por que **repetir a mesma senha** em vários sites é perigoso (se um vaza, caem todos).
+- O que é o site **Have I Been Pwned** e para que serve.
+
+### 3. Verificação em duas etapas (2FA)
+- O que é o **segundo fator** (código no app, SMS, biometria).
+- Por que, mesmo que roubem sua senha, o 2FA ainda **barra** o invasor.
+
+### 4. Gerenciador de senhas
+- O que é um **gerenciador de senhas** e por que ele é melhor do que anotar num caderno ou repetir a mesma senha.
+
+> Tragam **um número real**: quantas senhas vazaram em algum caso famoso? Anotem a fonte.`
+  },
+  {
+    titulo: 'Montando a explicação para leigos',
+    corpo: `
+1. **Abertura** — *"Quanto tempo um computador leva para adivinhar a sua senha? Segundos ou séculos?"*
+2. **Ideia central em 1 frase** — *"Uma senha forte é longa e única; e a verificação em duas etapas é o cadeado extra que segura o invasor mesmo se ele descobrir a senha."*
+3. **Mostrem a diferença** — comparem uma senha fraca e uma frase-senha, e o tempo estimado para quebrar cada uma.
+4. **Um exemplo real** — citem um vazamento famoso e quantas contas foram expostas.
+5. **O que fazer hoje** — três dicas práticas: senha longa, uma diferente por site (ou gerenciador) e ligar o 2FA.
+
+### Comparação para o cartaz (confirmem na pesquisa)
+| Senha | Problema |
+|---|---|
+| \`123456\` | Está no topo das mais usadas do mundo |
+| \`Joao2008\` | Nome + ano de nascimento: fácil de descobrir |
+| \`cavalo-azul-pizza-77\` | Longa e sem sentido óbvio: bem mais difícil |
+
+> A frase de efeito: **senha boa é longa e só sua; e o 2FA é o cadeado reserva.**`
+  },
+  {
+    titulo: 'O jogo do tema (no JSFiddle, com a IA)',
+    corpo: `
+Vocês vão criar um **medidor de força de senha** que ensina brincando, pedindo o código a uma IA (ChatGPT) e rodando no **JSFiddle**.
+
+### Ideia de jogo para este tema
+**"Quebre a senha"** — o jogador digita uma senha e o jogo mostra uma "barra de força" e uma estimativa de quanto tempo levaria para adivinhá-la, com dicas de como melhorar. (Tudo simulado no navegador, nenhuma senha real é enviada para lugar nenhum.)
+
+### Como fazer
+1. Abram o **[JSFiddle](https://jsfiddle.net)**.
+2. Mandem o prompt abaixo no **ChatGPT** e ajustem.
+3. Colem o HTML no JSFiddle e cliquem em **Run**.
+4. **Testem e revisem**: a barra reage ao tamanho e à variedade da senha? As dicas fazem sentido?
+
+### Estrutura de prompt para a IA
+\`\`\`text
+Você é um professor de programação criando um jogo educativo simples.
+
+CONTEXTO: aula de cibersegurança, tema "senhas fortes".
+Importante: é só uma demonstração; nenhuma senha real deve ser enviada
+para fora da página.
+
+TAREFA: crie um "medidor de força de senha" em UM único arquivo HTML
+(HTML, CSS e JavaScript juntos) que rode no JSFiddle.
+- Um campo de digitação e uma barra de força que muda de cor
+  (fraca/média/forte) conforme o tamanho e a variedade dos caracteres.
+- Mostre uma dica do que falta para ficar mais forte.
+- Não envie nada para nenhum servidor: tudo acontece no navegador.
+
+FORMATO: responda só com o código HTML completo, sem explicação fora dele.
+\`\`\`
+
+> Confiram: o medidor considera **tamanho** (não só símbolos)? Uma frase longa deveria pontuar bem.`
+  },
+  {
+    titulo: 'Antes de chamar o professor',
+    corpo: `
+Confiram com o grupo:
+
+- [ ] Sabemos explicar o que faz uma senha ser forte (tamanho e ser única).
+- [ ] Sabemos explicar o que é 2FA e por que ele protege mesmo se a senha vazar.
+- [ ] Temos **um vazamento real** com número e fonte anotados.
+- [ ] O medidor de senha roda no JSFiddle e foi conferido por nós.
+- [ ] Deixamos claro que nenhuma senha de verdade deve ser digitada na demonstração.`
+  }
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'cyberseg_senhas_autenticacao',
+  tituloTopo: 'Projetos — Cibersegurança: Senhas e Autenticação',
+  steps: STEPS,
+  textoVisto: 'A explicação está pronta e o medidor de senha roda no JSFiddle, conferido pelo grupo?',
+  gabarito: {
+    title: 'Cibersegurança — Senhas e Autenticação — Checklist de correção',
+    subtitle: 'Projeto em grupo (explicação + jogo no JSFiddle, verificado presencialmente) · Projetos · Turma Jogos Digitais',
+    items: [
+      { number: 1, title: 'Senha forte', prompt: 'Explicam que tamanho e ser única importam mais que só trocar letras por símbolos?', answer: 'Frase-senha longa > senha curta com @; nunca repetir em vários sites.' },
+      { number: 2, title: 'Vazamentos', prompt: 'Sabem o que é um vazamento e por que repetir senha é perigoso?', answer: 'Se um site vaza, a senha repetida abre os outros; citam caso real com fonte.' },
+      { number: 3, title: '2FA', prompt: 'Explicam a verificação em duas etapas e por que protege mesmo com a senha roubada?', answer: 'Segundo fator (código/app/biometria) barra o invasor sem o dispositivo.' },
+      { number: 4, title: 'Jogo no JSFiddle', prompt: 'O medidor de força roda e reage ao tamanho/variedade da senha?', answer: 'HTML único no JSFiddle, barra de força e dicas; nada é enviado a servidor.' },
+      { number: 5, title: 'Revisão', prompt: 'O grupo conferiu o comportamento do jogo?', answer: 'Devem notar que frase longa pontua bem e senha curta não.' }
+    ]
+  }
+});
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

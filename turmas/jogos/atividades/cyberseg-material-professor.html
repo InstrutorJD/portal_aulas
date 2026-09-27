@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Cibersegurança: Material do Professor</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#9b8cff; --green-dim:#6a5cc0; --yellow:#ffd27a; }
+  .mat-topo-acoes{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 18px; }
+  .mat-aviso{ font-size:12px; color:var(--ink-dim); margin:0 0 16px; }
+  .fichas-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
+  .ficha{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--panel2); page-break-inside:avoid; }
+  .ficha h4{ margin:0 0 8px; font-size:13px; color:var(--ab-acento); }
+  .ficha .linha{ font-size:13px; margin:2px 0; }
+  .ficha .rotulo{ color:var(--ink-dim); }
+  .ficha .codigo{ font-family:var(--ab-mono); font-size:16px; letter-spacing:2px; color:var(--ink); font-weight:700; }
+  .so-professor{ text-align:center; padding:40px 16px; color:var(--ink-dim); }
+
+  @media print{
+    /* Ao imprimir, some tudo menos as fichas: papel limpo pra recortar. */
+    body{ background:#fff; color:#000; }
+    .ab-topo, .ab-progresso, .mat-topo-acoes, .mat-aviso, .ab-cartao-etapa, h2.mat-titulo{ display:none !important; }
+    .ab-palco{ padding:0; overflow:visible; }
+    .ab-cartao{ border:none; box-shadow:none; padding:0; }
+    .fichas-grid{ grid-template-columns:repeat(2, 1fr); gap:8px; }
+    .ficha{ border:1px solid #999; background:#fff; color:#000; }
+    .ficha h4{ color:#000; }
+    .ficha .codigo{ color:#000; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cyberseg_material_professor';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Cibersegurança: Material do Professor</div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" style="width:100%"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna">
+      <article class="ab-cartao">
+        <div class="ab-cartao-etapa">Só para o professor</div>
+        <h2 class="mat-titulo">Fichas da simulação — para imprimir</h2>
+        <div id="conteudo"></div>
+      </article>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  const conteudo = document.getElementById('conteudo');
+
+  // Conteúdo só para o professor: a simulação de cibersegurança depende de
+  // as fichas e os códigos NÃO circularem antes da hora. Aluno que abrir vê
+  // só um aviso. A verificação de verdade é a mesma do resto do portal (o
+  // papel vem da sessão do Supabase); isto é só pra não exibir na tela.
+  async function ehProfessor() {
+    try {
+      const u = window.PortalSession ? await window.PortalSession.getUser() : null;
+      return !!(u && (u.role === 'professor' || u.role === 'admin'));
+    } catch (e) { return false; }
+  }
+
+  // Dados 100% FICTÍCIOS: nada aqui é de um aluno real. Servem só como
+  // "identidade de papel" que cada participante recebe na simulação — assim
+  // ninguém precisa entregar nome, e-mail ou qualquer dado verdadeiro.
+  const NOMES = ['Ana Prado', 'Bruno Vale', 'Carla Nunes', 'Davi Rocha', 'Elis Faro', 'Felipe Sá',
+    'Gabi Melo', 'Hugo Reis', 'Íris Lima', 'João Teles', 'Kaue Brito', 'Lara Pires',
+    'Marina Cruz', 'Nicolas Aru', 'Olga Serra', 'Pedro Vargas', 'Rita Bastos', 'Saulo Dantas',
+    'Tainá Couto', 'Uriel Matos', 'Vera Lira', 'Yuri Campos', 'Zeca Farias', 'Alice Bueno',
+    'Caio Peixoto', 'Duda Freire', 'Enzo Galvão', 'Fabi Rios', 'Léo Quintana', 'Mila Tavora'];
+  const MAES = ['Sônia Prado', 'Célia Vale', 'Dora Nunes', 'Neide Rocha', 'Rosa Faro', 'Marta Sá',
+    'Lúcia Melo', 'Vânia Reis', 'Alda Lima', 'Bruna Teles', 'Cida Brito', 'Elza Pires',
+    'Fátima Cruz', 'Gina Aru', 'Ivone Serra', 'Jussara Vargas', 'Katia Bastos', 'Lena Dantas',
+    'Marli Couto', 'Nara Matos', 'Odete Lira', 'Paula Campos', 'Regina Farias', 'Selma Bueno',
+    'Tereza Peixoto', 'Ubiratã Freire', 'Vilma Galvão', 'Zilda Rios', 'Bela Quintana', 'Cléo Tavora'];
+
+  function slugEmail(nome) {
+    return nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '');
+  }
+  // Código único e aleatório, sem caracteres que confundem (0/O, 1/I).
+  function codigo() {
+    const alf = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = '';
+    for (let i = 0; i < 6; i++) c += alf[Math.floor(Math.random() * alf.length)];
+    return c;
+  }
+  function gerarFichas(n) {
+    const usados = new Set();
+    const fichas = [];
+    for (let i = 0; i < n; i++) {
+      let cod;
+      do { cod = codigo(); } while (usados.has(cod));
+      usados.add(cod);
+      const nome = NOMES[i % NOMES.length];
+      fichas.push({ nome, email: slugEmail(nome) + '@exemplo.test', mae: MAES[i % MAES.length], codigo: cod });
+    }
+    return fichas;
+  }
+
+  const CHAVE = 'cyberseg_fichas_v1';
+  function carregar() { try { return JSON.parse(localStorage.getItem(CHAVE) || 'null'); } catch (e) { return null; } }
+  function salvar(f) { try { localStorage.setItem(CHAVE, JSON.stringify(f)); } catch (e) {} }
+
+  function render(fichas) {
+    conteudo.innerHTML = `
+      <p class="mat-aviso">Todos os dados abaixo são <b>fictícios</b> — nomes, e-mails e "nome da mãe" foram inventados só para a simulação. Cada participante recebe UMA ficha e UM código. Depois da atividade, recolha e descarte os papéis.</p>
+      <div class="mat-topo-acoes">
+        <button class="btn" id="btnImprimir">🖨️ Imprimir as fichas</button>
+        <button class="btn btn-secondary" id="btnNovas">🎲 Gerar novas fichas</button>
+      </div>
+      <div class="fichas-grid">
+        ${fichas.map((f, i) => `
+          <div class="ficha">
+            <h4>Ficha ${i + 1}</h4>
+            <div class="linha"><span class="rotulo">Nome:</span> ${f.nome}</div>
+            <div class="linha"><span class="rotulo">E-mail:</span> ${f.email}</div>
+            <div class="linha"><span class="rotulo">Nome da mãe:</span> ${f.mae}</div>
+            <div class="linha"><span class="rotulo">Código do brinde:</span> <span class="codigo">${f.codigo}</span></div>
+          </div>`).join('')}
+      </div>`;
+    document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+    document.getElementById('btnNovas').addEventListener('click', () => {
+      if (!window.confirm('Gerar 30 fichas novas? As atuais serão substituídas.')) return;
+      const novas = gerarFichas(30);
+      salvar(novas);
+      render(novas);
+    });
+  }
+
+  (async function () {
+    if (!(await ehProfessor())) {
+      conteudo.innerHTML = `<div class="so-professor">🔒 Este material é só para o professor.<br>Ele traz as fichas da simulação para imprimir.</div>`;
+      return;
+    }
+    let fichas = carregar();
+    if (!fichas || fichas.length !== 30) { fichas = gerarFichas(30); salvar(fichas); }
+    render(fichas);
+  })();
+})();
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

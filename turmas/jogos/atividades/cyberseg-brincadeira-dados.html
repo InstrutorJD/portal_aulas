@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Cibersegurança: Simulação dos Dados da Ficha</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#f0a836; --green-dim:#b8862f; --yellow:#ffd27a; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cyberseg_brincadeira_dados';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Simulação: Os Dados da Ficha</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">5</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+  {
+    titulo: 'O que é esta simulação',
+    corpo: `
+Esta é a **segunda simulação** do tema **Cibersegurança**. Ela mostra outra face da **engenharia social**: como alguém consegue **dados pessoais** só pedindo com jeito, "em nome" de uma autoridade.
+
+### Por que usamos dados de mentira
+Cada participante recebe uma **ficha de personagem fictícia** — nome, e-mail e "nome da mãe" **inventados**. Ninguém usa dados de verdade.
+
+> Na vida real, o **nome da mãe** é uma das perguntas de segurança mais usadas por bancos e sites. É exatamente por isso que aqui ele é **fictício**: para você sentir como esse tipo de dado é cobiçado, sem expor nada seu.`
+  },
+  {
+    titulo: 'Como funciona',
+    corpo: `
+O professor entrega a cada participante uma **ficha fictícia** (num papel). A regra combinada: esses "dados" são particulares do personagem e não deveriam ser repassados.
+
+Um colega recebe o papel de **agente**: a missão é conseguir o máximo de fichas fictícias que puder, alegando que **o professor pediu os dados** — mesmo que o professor **não tenha pedido nada**. A lição é a mesma: um pedido "oficial" pode ser falso.
+
+> **Regras e limites (valem para todo mundo):**
+> - Só entram os **dados fictícios da ficha**. **Nunca** peça ou entregue dado **real** de ninguém (nome verdadeiro, e-mail real, CPF, nome da mãe de verdade, foto, etc.).
+> - Nada de **pressão, ameaça ou constrangimento**. "Não" encerra a conversa.
+> - Ninguém acessa **conta, celular ou perfil** de outra pessoa.
+> - O professor pode **encerrar** a qualquer momento.`
+  },
+  {
+    titulo: 'Orientações do professor',
+    corpo: `
+> **Espaço reservado.** O professor escreve aqui as orientações específicas: quem será o agente, o tempo, como as fichas fictícias são entregues e recolhidas, e o combinado com a turma que vai participar.
+
+Enquanto o professor não preencher, siga o que foi combinado em sala.`
+  },
+  {
+    titulo: 'A parte que mais importa: a conversa no fim',
+    corpo: `
+No fim, o professor conduz a conversa com todos:
+
+- Quem **entregou** os dados da ficha? O que fez acreditar no pedido?
+- Que **sinal** deveria ter acendido o alerta? ("o professor mandou", pressa, pedido incomum)
+- Por que dar **nome, e-mail e nome da mãe** para um estranho é perigoso na vida real? (recuperação de conta, golpe personalizado)
+- O que fazer antes de entregar um dado? **Confirmar com quem supostamente pediu**, pelo canal oficial.
+
+### A regra de ouro que fica
+> **Dado pessoal não se entrega no susto nem "porque mandaram".** Desconfie de quem pede seus dados, principalmente em nome de outra pessoa — e confirme antes.`
+  },
+  {
+    titulo: 'Fechamento',
+    corpo: `
+- [ ] Entendi que as fichas são fictícias e serão descartadas.
+- [ ] Entendi que dado real de ninguém entra na brincadeira, em hipótese nenhuma.
+- [ ] Sei por que nome da mãe e e-mail são dados cobiçados na vida real.
+- [ ] Sei a lição: confirmar antes de entregar qualquer dado pessoal.
+
+Recolha as fichas com o professor e descarte-as. A conversa do fim é o que faz a lição valer.`
+  }
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'cyberseg_brincadeira_dados',
+  tituloTopo: 'Projetos — Simulação: Os Dados da Ficha',
+  steps: STEPS,
+  semVisto: true
+});
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Cibersegurança: Engenharia Social</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#f0a836; --green-dim:#b8862f; --yellow:#ffd27a; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cyberseg_engenharia_social';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Cibersegurança: Engenharia Social</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+  {
+    titulo: 'O tema do seu grupo: Engenharia Social',
+    corpo: `
+O seu grupo ficou com o tema **Engenharia Social** dentro do projeto de **Cibersegurança**. Esse é o golpe que não ataca o computador: ataca **a pessoa**.
+
+### O que o grupo vai entregar
+1. Uma **explicação para leigos** que ensine a turma a **reconhecer e se defender** de um golpe.
+2. Um **jogo simples** (feito com a ajuda de uma IA e rodando no JSFiddle) que treine as pessoas a diferenciar uma mensagem confiável de um golpe.
+
+### O foco deste tema é a defesa
+O objetivo de vocês não é ensinar a enganar ninguém — é o contrário: mostrar **os sinais de alerta** e o que fazer para não cair. Um bom especialista em engenharia social é quem consegue **desarmar** o golpe.`
+  },
+  {
+    titulo: 'Tópicos para pesquisar',
+    corpo: `
+### 1. O que é engenharia social
+- Por que atacar a pessoa costuma ser **mais fácil** do que atacar o sistema?
+- O que o golpista quer: senha, dado, dinheiro, um clique.
+
+### 2. Os tipos mais comuns
+- **Phishing**: mensagem falsa (e-mail, SMS) fingindo ser um banco, loja ou serviço.
+- **Golpe do WhatsApp**: o "número novo" que se passa por um parente pedindo dinheiro.
+- **Pretexto**: a história inventada ("sou do suporte técnico", "sou da diretoria") para ganhar confiança.
+
+### 3. Os gatilhos que o golpe usa
+- **Urgência** ("resolva agora ou sua conta será bloqueada").
+- **Autoridade** ("é uma ordem do chefe / do professor").
+- **Medo** e **curiosidade** ("você tem uma dívida", "veja quem visitou seu perfil").
+
+### 4. Como se defender
+- Desconfiar de pedido urgente e de link.
+- **Confirmar pelo canal oficial** (ligar para o número verdadeiro, procurar a pessoa).
+- Nunca informar senha ou código; empresas sérias não pedem isso.
+
+> Tragam **um golpe real** que saiu no noticiário — quanto as vítimas perderam? Anotem a fonte.`
+  },
+  {
+    titulo: 'Montando a explicação para leigos',
+    corpo: `
+Sigam este roteiro para a turma entender e, principalmente, **saber se defender**:
+
+1. **Abertura** — *"Já receberam mensagem de um número desconhecido dizendo 'oi, troquei de número, é a tia'?"*
+2. **Ideia central em 1 frase** — *"Engenharia social é o golpe que engana a pessoa, não o computador, para conseguir uma senha, um dado ou dinheiro."*
+3. **Como reconhecer** — apresentem uma lista curta de **sinais de alerta** (o quadro abaixo).
+4. **Um exemplo real** — contem um caso do noticiário e o que a vítima poderia ter notado.
+5. **O que fazer** — feche com a regra de ouro: *"Na dúvida, não responda no calor da hora. Confirme pelo canal oficial."*
+
+### Sinais de alerta de um golpe (use no cartaz)
+| Sinal | Exemplo |
+|---|---|
+| Pressa / urgência | "Resolva nos próximos 10 minutos ou perde tudo" |
+| Fala em nome de alguém | "É a diretoria mandando", "sou do suporte" |
+| Pede senha ou código | "Me passa o código que chegou no seu SMS" |
+| Canal estranho | Um contato oficial que só aparece por mensagem de número desconhecido |
+| Bom demais | "Você ganhou um prêmio, só clique aqui" |
+
+> A regra que resume tudo: **confirme antes de entregar qualquer coisa.**`
+  },
+  {
+    titulo: 'O jogo do tema (no JSFiddle, com a IA)',
+    corpo: `
+Vocês vão criar um **joguinho** que treina a pessoa a reconhecer um golpe, pedindo o código a uma IA (ChatGPT) e rodando no **JSFiddle**.
+
+### Ideia de jogo para este tema
+**"Golpe ou mensagem de verdade?"** — a tela mostra uma mensagem (ex.: um SMS dizendo *"Seu CPF foi bloqueado, clique aqui"*) e o jogador decide: **Golpe** ou **Confiável**. O jogo explica os sinais de alerta a cada resposta.
+
+### Como fazer
+1. Abram o **[JSFiddle](https://jsfiddle.net)**.
+2. Mandem o prompt abaixo no **ChatGPT** e ajustem como quiserem.
+3. Colem o HTML no JSFiddle e cliquem em **Run**.
+4. **Testem e revisem** cada mensagem do jogo: a classificação está certa? O motivo explicado faz sentido?
+
+### Estrutura de prompt para a IA
+\`\`\`text
+Você é um professor de programação criando um jogo educativo simples.
+
+CONTEXTO: aula de cibersegurança, tema "engenharia social".
+Objetivo: ensinar a RECONHECER golpes (phishing, golpe do WhatsApp).
+
+TAREFA: crie um jogo "Golpe ou Confiável?" em UM único arquivo HTML
+(HTML, CSS e JavaScript juntos) que rode no JSFiddle.
+- Mostre uma mensagem por vez (SMS, e-mail ou WhatsApp fictício).
+- Dois botões: "Golpe" e "Confiável".
+- Ao clicar, diga se acertou e aponte o sinal de alerta em 1 frase.
+- Some 1 ponto por acerto e mostre o placar.
+- Use pelo menos 6 mensagens, misturando golpes e mensagens legítimas.
+
+FORMATO: responda só com o código HTML completo, sem explicação fora dele.
+\`\`\`
+
+> Vocês são os especialistas: confiram se cada mensagem do jogo foi classificada corretamente e se o sinal de alerta apontado está certo.`
+  },
+  {
+    titulo: 'Antes de chamar o professor',
+    corpo: `
+Confiram com o grupo:
+
+- [ ] Sabemos explicar o que é engenharia social sem ler.
+- [ ] Temos uma lista de **sinais de alerta** clara para a turma.
+- [ ] Temos **um golpe real** com a fonte anotada.
+- [ ] Sabemos dizer a regra de ouro da defesa (confirmar pelo canal oficial, não agir no susto).
+- [ ] O jogo "Golpe ou Confiável?" roda no JSFiddle e foi conferido por nós.`
+  }
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'cyberseg_engenharia_social',
+  tituloTopo: 'Projetos — Cibersegurança: Engenharia Social',
+  steps: STEPS,
+  textoVisto: 'A explicação com os sinais de alerta está pronta e o jogo roda no JSFiddle, conferido pelo grupo?',
+  gabarito: {
+    title: 'Cibersegurança — Engenharia Social — Checklist de correção',
+    subtitle: 'Projeto em grupo (explicação + jogo no JSFiddle, verificado presencialmente) · Projetos · Turma Jogos Digitais',
+    items: [
+      { number: 1, title: 'Explicação para leigos', prompt: 'O grupo explica engenharia social como um ataque à pessoa, não ao sistema?', answer: 'Deve deixar claro que o alvo é a confiança/emoção da pessoa.' },
+      { number: 2, title: 'Sinais de alerta', prompt: 'Apresentaram uma lista de sinais (urgência, autoridade, pedir senha/código, canal estranho)?', answer: 'Ao menos 3 sinais claros, com exemplo.' },
+      { number: 3, title: 'Exemplo real', prompt: 'Trouxeram um golpe real com fonte?', answer: 'Caso do noticiário (phishing, golpe do WhatsApp) com o link da fonte.' },
+      { number: 4, title: 'Regra de defesa', prompt: 'Sabem dizer o que fazer para não cair (confirmar pelo canal oficial, não agir no susto)?', answer: 'Confirmar pelo canal oficial; nunca passar senha/código.' },
+      { number: 5, title: 'Jogo no JSFiddle', prompt: 'O jogo "Golpe ou Confiável?" roda e foi revisado pelo grupo?', answer: 'HTML único no JSFiddle, com placar; grupo conferiu as classificações.' }
+    ]
+  }
+});
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

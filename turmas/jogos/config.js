@@ -1011,6 +1011,98 @@ window.TURMA_CONFIG_JOGOS = {
       ]
     },
     {
+      // Card "Projetos": projetos integradores em grupo. Mesmo padrão do
+      // card Projetos da turma Sistemas — notaSoManual: true, sem nota
+      // calculada. Em Lançar Notas o professor vê quanto cada aluno entregou
+      // (módulos com visto) e digita a nota à mão. Ver README, "Matéria só
+      // com nota manual". Trilhas novas seguem docs/padrao-trilhas.md (motor
+      // de roteiro compartilhado shared/roteiro-slides.js, visto do professor).
+      key: 'projetos', label: 'Projetos', icon: '🚀', notaSoManual: true,
+      trilhas: [
+        {
+          // Projeto de Cibersegurança: a turma se divide em 4 grupos, cada um
+          // com um tema. Cada grupo pesquisa, monta uma "explicação para
+          // leigos" com exemplos reais e cria um joguinho no JSFiddle (gerado
+          // com IA e revisado por eles) sobre o tema. Cada tema é um módulo
+          // (card). Sem correção automática — visto do professor em cada um.
+          key: 'cyberseguranca',
+          label: 'Cibersegurança',
+          desc: 'Projeto em grupo: cada grupo vira especialista em um tema de segurança digital, explica para leigos com exemplos reais e cria um joguinho no JSFiddle sobre o tema.',
+          // TODO(professor): capacidade PROVISÓRIA — troque pelo texto exato
+          // da capacidade MSEP antes de liberar pra turma (ver README, seção
+          // "Trilha por capacidade (MSEP)": a capacidade não pode ser inventada).
+          capacidade: 'Pesquisar e comunicar, de forma acessível, conceitos de segurança da informação, aplicando-os na construção de um pequeno artefato interativo com apoio de IA.',
+          modules: [
+            {
+              key: 'hacker-etico', title: 'Grupo 1 — Hacker Ético',
+              desc: 'Pentest, bug bounty e a diferença entre hacker ético e criminoso. Explicação para leigos + jogo "Ético ou Crime?" no JSFiddle.',
+              icon: '🛡️', src: 'atividades/cyberseg-hacker-etico.html', telaCheia: true,
+              progressKey: 'cyberseg_hacker_etico_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'engenharia-social', title: 'Grupo 2 — Engenharia Social',
+              desc: 'Phishing, golpe do WhatsApp e os sinais de alerta de um golpe. Explicação para leigos + jogo "Golpe ou Confiável?" no JSFiddle.',
+              icon: '🎭', src: 'atividades/cyberseg-engenharia-social.html', telaCheia: true,
+              progressKey: 'cyberseg_engenharia_social_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'senhas-autenticacao', title: 'Grupo 3 — Senhas e Autenticação',
+              desc: 'Senhas fortes, vazamentos e verificação em duas etapas. Explicação para leigos + medidor de força de senha no JSFiddle.',
+              icon: '🔑', src: 'atividades/cyberseg-senhas-autenticacao.html', telaCheia: true,
+              progressKey: 'cyberseg_senhas_autenticacao_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'malware-golpes', title: 'Grupo 4 — Malware e Golpes Digitais',
+              desc: 'Vírus, ransomware e golpes do Pix. Explicação para leigos + jogo "Clico ou não clico?" no JSFiddle.',
+              icon: '🐛', src: 'atividades/cyberseg-malware-golpes.html', telaCheia: true,
+              progressKey: 'cyberseg_malware_golpes_progress_', progressMode: 'flag',
+              hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Simulações de engenharia social (feitas em sala, no papel, com
+          // dados fictícios) e o material do professor pra imprimir. Não são
+          // entrega de nota do aluno, por isso semEntrega:true (não contam no
+          // "fez tudo/parte/nada" — ver statusEntregaMateria em
+          // shared/platform-core.js). As duas simulações são visíveis pra
+          // turma (os participantes leem as regras); o material de impressão
+          // só aparece pro professor (a própria página confere o papel).
+          key: 'cyberseg-simulacoes',
+          label: 'Simulações e material do professor',
+          desc: 'Duas simulações de engenharia social feitas em sala (no papel, com dados fictícios) e o material do professor para imprimir.',
+          capacidade: 'Reconhecer, na prática, táticas de engenharia social e desenvolver o hábito de confirmar antes de entregar dados ou credenciais.',
+          semEntrega: true,
+          modules: [
+            {
+              key: 'brincadeira-senha', title: 'Simulação — A Senha do Brinde',
+              desc: 'Regras, limites e a conversa final da simulação em que um pedido "em nome do professor" tenta recolher os códigos fictícios do brinde.',
+              icon: '🎟️', src: 'atividades/cyberseg-brincadeira-senha.html', telaCheia: true,
+              progressKey: 'cyberseg_brincadeira_senha_progress_', progressMode: 'flag',
+              semEntrega: true
+            },
+            {
+              key: 'brincadeira-dados', title: 'Simulação — Os Dados da Ficha',
+              desc: 'Regras, limites e a conversa final da simulação em que um pedido "oficial" tenta recolher os dados fictícios das fichas de personagem.',
+              icon: '🪪', src: 'atividades/cyberseg-brincadeira-dados.html', telaCheia: true,
+              progressKey: 'cyberseg_brincadeira_dados_progress_', progressMode: 'flag',
+              semEntrega: true
+            },
+            {
+              key: 'material-professor', title: 'Material do professor — Fichas para imprimir',
+              desc: 'Só para o professor: gera 30 fichas fictícias (nome, e-mail e nome da mãe inventados) e 30 códigos únicos do brinde, com botão de imprimir.',
+              icon: '🖨️', src: 'atividades/cyberseg-material-professor.html', telaCheia: true,
+              progressKey: 'cyberseg_material_professor_progress_', progressMode: 'flag',
+              semEntrega: true
+            }
+          ]
+        }
+      ]
+    },
+    {
       key: 'prova', label: 'Prova',
       trilhas: [
         {

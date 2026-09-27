@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Cibersegurança: Hacker Ético</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#4ade80; --green-dim:#2f8f5b; --yellow:#e0b84a; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cyberseg_hacker_etico';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Cibersegurança: Hacker Ético</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+  {
+    titulo: 'O tema do seu grupo: Hacker Ético',
+    corpo: `
+O seu grupo ficou com o tema **Hacker Ético** dentro do projeto de **Cibersegurança**. A missão é virar "especialista" nesse assunto e ensinar o resto da turma.
+
+### O que o grupo vai entregar
+1. Uma **explicação para leigos**: alguém que nunca ouviu falar do assunto precisa entender vocês. Nada de decorar palavra difícil sem saber o que é.
+2. Um **jogo simples**, feito com a ajuda de uma IA e rodando no navegador (JSFiddle), que ensine a ideia central do tema de um jeito divertido.
+
+### As regras do jogo do conhecimento
+- Todo exemplo que vocês contarem precisa ser **real** e vocês precisam **entender** o que aconteceu.
+- Quando usarem uma IA (ChatGPT) para ajudar, **confiram tudo**: a IA erra com confiança (isso vocês já viram no curso).
+- No fim, o professor dá o visto quando a explicação e o jogo estiverem prontos.`
+  },
+  {
+    titulo: 'Tópicos para pesquisar',
+    corpo: `
+Pesquisem cada tópico abaixo. A pergunta ao lado é o que vocês precisam saber responder com as próprias palavras.
+
+### 1. O que é um hacker ético
+- O que significa "hacker" de verdade (não é só o vilão dos filmes).
+- Qual a **diferença** entre hacker ético (chapéu branco), criminoso (chapéu preto) e o meio-termo (chapéu cinza)?
+- Por que uma empresa **pagaria** alguém para tentar invadir os próprios sistemas?
+
+### 2. Pentest (teste de invasão)
+- O que é um **pentest** e quais as fases (reconhecimento, varredura, exploração, relatório).
+- Por que o hacker ético só age **com autorização por escrito**? O que muda sem ela?
+
+### 3. Bug bounty (recompensa por falhas)
+- O que é um programa de **bug bounty** (ex.: HackerOne, Google, Meta).
+- Quanto uma empresa grande já pagou por uma falha grave? Tragam **um número real**.
+
+### 4. A profissão
+- Que estudos e certificações levam a essa carreira (ex.: CEH, redes, Linux).
+- Onde um profissional desses trabalha no dia a dia.
+
+> Guardem o **link de cada fonte** que usarem. Vão precisar mostrar de onde tiraram os números.`
+  },
+  {
+    titulo: 'Montando a explicação para leigos',
+    corpo: `
+Agora transformem a pesquisa numa explicação que qualquer pessoa entenda. Sigam este roteiro:
+
+1. **A pergunta de abertura** — comecem com algo que prenda: *"Você contrataria alguém para tentar arrombar a sua casa e te contar como conseguiu?"*
+2. **A ideia central em 1 frase** — *"Hacker ético é quem invade sistemas com permissão, para achar as falhas antes dos criminosos."*
+3. **Uma analogia do dia a dia** — comparem com algo conhecido (um segurança testando as fechaduras de um prédio, um provador de comida do rei...).
+4. **Um exemplo real** — contem um caso de verdade que vocês pesquisaram (um bug bounty famoso, uma falha encontrada por um pesquisador).
+5. **Por que isso importa para você** — fechem mostrando como isso protege apps que a turma usa.
+
+### Exemplos reais que vocês podem usar (confirmem os detalhes na pesquisa)
+- Empresas como **Google e Meta** mantêm programas que já pagaram **milhões de dólares** a pesquisadores que reportaram falhas.
+- Pesquisadores de segurança já acharam falhas em apps de banco e redes sociais e foram **recompensados** por avisar em vez de explorar.
+
+> A explicação pode ser um cartaz, alguns slides ou uma fala de 5 minutos. O que vale é a turma **entender**.`
+  },
+  {
+    titulo: 'O jogo do tema (no JSFiddle, com a IA)',
+    corpo: `
+Vocês vão criar um **joguinho** que ensina a ideia do hacker ético, pedindo a uma IA (ChatGPT) para escrever o código e rodando no **JSFiddle** (um site que roda HTML, CSS e JavaScript na hora, sem instalar nada).
+
+### Ideia de jogo para este tema
+**"Com ou sem permissão?"** — a tela mostra uma situação (ex.: *"Testei a segurança do site da escola sem avisar ninguém"*) e o jogador clica em **Ético** ou **Crime**. A cada resposta, o jogo explica por quê e soma pontos.
+
+### Como fazer
+1. Abram o **[JSFiddle](https://jsfiddle.net)** (não precisa de conta para testar).
+2. Abram o **ChatGPT** e mandem o prompt abaixo (ajustem o que quiserem).
+3. Copiem o HTML que a IA gerar, colem no JSFiddle (na parte de HTML) e cliquem em **Run**.
+4. **Testem e revisem**: o jogo funciona? As respostas certas estão certas mesmo? Melhorem o que estiver ruim.
+
+### Estrutura de prompt para a IA
+\`\`\`text
+Você é um professor de programação criando um jogo educativo simples.
+
+CONTEXTO: é para uma aula de cibersegurança, tema "hacker ético".
+O público são estudantes do ensino técnico.
+
+TAREFA: crie um jogo de "Ético ou Crime?" em UM único arquivo HTML
+(com HTML, CSS e JavaScript juntos), que rode no JSFiddle.
+- Mostre uma situação por vez sobre segurança digital.
+- Dois botões: "Ético" e "Crime".
+- Ao clicar, diga se acertou e explique em 1 frase por quê.
+- Some 1 ponto por acerto e mostre o placar.
+- Use pelo menos 6 situações diferentes.
+
+FORMATO: responda só com o código HTML completo, sem explicação fora dele.
+\`\`\`
+
+> Depois que rodar, o grupo precisa **conferir cada situação** do jogo: a resposta que a IA marcou como certa está mesmo certa? Corrijam o que estiver errado — vocês são os especialistas.`
+  },
+  {
+    titulo: 'Antes de chamar o professor',
+    corpo: `
+Confiram com o grupo:
+
+- [ ] Sabemos explicar, sem ler, o que é um hacker ético e a diferença dele para um criminoso.
+- [ ] Temos pelo menos **um exemplo real** com a fonte anotada.
+- [ ] A explicação para leigos está pronta (cartaz, slides ou fala).
+- [ ] O jogo roda no JSFiddle e todas as respostas dele foram conferidas por nós.
+- [ ] Cada pessoa do grupo consegue apresentar pelo menos uma parte.`
+  }
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'cyberseg_hacker_etico',
+  tituloTopo: 'Projetos — Cibersegurança: Hacker Ético',
+  steps: STEPS,
+  textoVisto: 'A explicação para leigos está pronta e o jogo roda no JSFiddle, com as respostas conferidas pelo grupo?',
+  gabarito: {
+    title: 'Cibersegurança — Hacker Ético — Checklist de correção',
+    subtitle: 'Projeto em grupo (explicação + jogo no JSFiddle, verificado presencialmente) · Projetos · Turma Jogos Digitais',
+    items: [
+      { number: 1, title: 'Explicação para leigos', prompt: 'O grupo explica com as próprias palavras o que é um hacker ético e a diferença para um criminoso?', answer: 'Deve distinguir chapéu branco/preto/cinza e citar o papel da AUTORIZAÇÃO.' },
+      { number: 2, title: 'Exemplo real', prompt: 'Trouxeram ao menos um caso real (bug bounty, falha reportada) com fonte?', answer: 'Ex.: programas de recompensa de Google/Meta; valor real citado com o link da fonte.' },
+      { number: 3, title: 'Pentest e bug bounty', prompt: 'Sabem o que é pentest (fases) e bug bounty?', answer: 'Pentest = teste de invasão autorizado, em fases; bug bounty = recompensa por reportar falha.' },
+      { number: 4, title: 'Jogo no JSFiddle', prompt: 'O jogo "Ético ou Crime?" roda no navegador e tem placar?', answer: 'HTML único no JSFiddle, situações com botões e pontuação.' },
+      { number: 5, title: 'Revisão do jogo', prompt: 'O grupo conferiu se as respostas do jogo geradas pela IA estão corretas?', answer: 'Devem apontar ao menos um ponto que revisaram ou corrigiram.' }
+    ]
+  }
+});
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

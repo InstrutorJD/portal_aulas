@@ -2491,8 +2491,12 @@
   // módulos concluídos (com visto) de todas as trilhas dela, sem olhar
   // bimestre. 'tudo' | 'parte' | 'nada'.
   function statusEntregaMateria(materia, progressRows, studentEmail) {
+    // Trilha/módulo com semEntrega:true (ex.: as simulações e o material do
+    // professor no card Projetos da turma Jogos) não é entrega do aluno —
+    // não entra na conta de "fez tudo/parte/nada".
     const modules = trilhasParaAluno(materia.trilhas || [], studentEmail)
-      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+      .filter(t => !t.semEntrega)
+      .flatMap(t => (t.modules || []).filter(m => !m.semEntrega).map(m => ({ trilhaKey: t.key, mod: m })));
     const feitos = modules.filter(({ trilhaKey, mod }) =>
       progressRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
     ).length;

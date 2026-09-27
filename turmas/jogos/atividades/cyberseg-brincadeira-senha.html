@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Cibersegurança: Simulação da Senha do Brinde</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#f0a836; --green-dim:#b8862f; --yellow:#ffd27a; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'cyberseg_brincadeira_senha';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Simulação: A Senha do Brinde</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">5</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+  {
+    titulo: 'O que é esta simulação',
+    corpo: `
+Esta é uma **simulação de sala de aula**, dentro do tema **Cibersegurança**. Ela existe para mostrar, na prática, uma lição de **engenharia social**: como um pedido feito "em nome de uma autoridade" faz muita gente entregar o que não devia — sem checar se o pedido é verdadeiro.
+
+### O combinado
+- Tudo aqui é **de mentira e combinado**: os códigos são fictícios, valem só nesta brincadeira e serão **descartados** no fim.
+- Ninguém é obrigado a participar, e ninguém é o "trouxa" da história: no fim, **todo mundo aprende junto** a não cair.
+- O objetivo nunca é humilhar alguém — é treinar o reflexo de **desconfiar e confirmar**.`
+  },
+  {
+    titulo: 'Como funciona',
+    corpo: `
+O professor entrega a cada participante um **código do brinde** (num papel). A regra combinada é simples: esse código é "secreto" e não deveria ser repassado a ninguém.
+
+Um colega recebe o papel de **agente**: a missão dele é conseguir o máximo de códigos que puder, alegando que **o professor pediu** — mesmo que o professor **não tenha pedido nada**. É aí que está a lição: a autoridade citada pode ser falsa.
+
+> **Regras e limites (valem para todo mundo):**
+> - Só os **códigos fictícios do brinde** entram na brincadeira. **Nenhuma senha de verdade**, de nenhuma conta, e-mail ou aparelho.
+> - Nada de **pressão, ameaça, chantagem ou constrangimento**. Se alguém disser "não", a conversa acaba ali.
+> - Ninguém toca no **celular, na conta ou nas coisas** de outra pessoa.
+> - O professor pode **encerrar** a qualquer momento.`
+  },
+  {
+    titulo: 'Orientações do professor',
+    corpo: `
+> **Espaço reservado.** O professor escreve aqui as orientações específicas desta turma: quem será o agente, quanto tempo dura, como os códigos são entregues e recolhidos, e o combinado com a turma que vai participar.
+
+Enquanto o professor não preencher, siga o que foi combinado em sala.`
+  },
+  {
+    titulo: 'A parte que mais importa: a conversa no fim',
+    corpo: `
+Quando a brincadeira acabar, o professor conduz uma conversa rápida com todos. É aqui que a lição gruda:
+
+- Quem **entregou** o código? O que fez acreditar que o pedido era verdadeiro?
+- Qual **sinal** deveria ter feito a pessoa desconfiar? (pressa, "o professor mandou", pedido estranho...)
+- O que a pessoa **poderia ter feito** antes de entregar? (confirmar direto com o professor, perguntar o porquê, dizer que não repassa código).
+
+### A regra de ouro que fica
+> **Autoridade citada não é autoridade confirmada.** Antes de entregar qualquer coisa "porque fulano pediu", confirme pelo canal oficial — pergunte à própria pessoa que supostamente pediu.`
+  },
+  {
+    titulo: 'Fechamento',
+    corpo: `
+- [ ] Entendi que esta é uma simulação com códigos fictícios, que serão descartados.
+- [ ] Entendi os limites: nada de senha real, nada de pressão, respeitar o "não".
+- [ ] Sei qual é a lição: confirmar antes de entregar algo "porque uma autoridade pediu".
+
+Recolha os papéis com o professor. A conversa do fim é a parte mais importante — é ela que ensina a não cair de verdade.`
+  }
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'cyberseg_brincadeira_senha',
+  tituloTopo: 'Projetos — Simulação: A Senha do Brinde',
+  steps: STEPS,
+  semVisto: true
+});
+</script>
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
