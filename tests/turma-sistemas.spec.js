@@ -4,8 +4,8 @@ const { stubSupabaseFake, gerarGabaritoFlutuante } = require('./helpers');
 
 const URL = '/turmas/sistemas/plataforma.html?user=alexandre.natal&ip=192.168.2.1&saldo=1183.50&role=aluno&name=Alexandre%20Natal&turma=sistemas';
 
-// Todas as 10 matérias de Sistemas já têm trilha de verdade, incluindo
-// "Prova" (Prova Diagnóstica, 20 de 60 questões sorteadas — ver
+// São 11 cards de matéria em Sistemas (as 10 matérias + o card "Projetos",
+// com o FinancApp), incluindo "Prova" (Prova Diagnóstica, 20 de 60 questões sorteadas — ver
 // turmas/sistemas/atividades/prova-sistemas.html).
 async function openMateria1(page) {
   await page.click('.game-card:has-text("Banco de Dados")');
@@ -26,10 +26,11 @@ test.describe('turmas/sistemas/plataforma.html', () => {
     expect(green).not.toBe('#7cff3f'); // não é o verde da turma Jogos
   });
 
-  test('mostra os cards das 10 matérias de Sistemas', async ({ page }) => {
+  test('mostra os cards das 11 matérias de Sistemas (10 + o card Projetos)', async ({ page }) => {
     await page.goto(URL);
-    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(10);
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(11);
     await expect(page.locator('#materiaCardGrid')).toContainText('Prova');
+    await expect(page.locator('#materiaCardGrid')).toContainText('Projetos');
   });
 
   test('mostra a trilha SQL dentro de Banco de Dados, com teoria e prática', async ({ page }) => {
