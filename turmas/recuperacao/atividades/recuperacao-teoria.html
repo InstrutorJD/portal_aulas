@@ -118,6 +118,7 @@
 <script src="../../../shared/professor-visto.js"></script>
 <script src="../../../shared/exam-proctor.js"></script>
 <script src="recuperacao-trava.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 <script src="../../../shared/quiz-teoria-engine.js"></script>
 </head>
 <body>
@@ -463,6 +464,22 @@
   if (window.RecuperacaoTrava) {
     window.RecuperacaoTrava.iniciar({ activityLocation: 'recuperacao_teoria', nome: '<b>Programação do Zero</b>' });
   }
+
+  // Botão "📋 Gerar Gabarito" (só professor — ver shared/gabarito-generator.js).
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Programação do Zero — Gabarito',
+      subtitle: `Recuperação · ${EXTRA_SISTEMAS ? 'versão da turma Sistemas' : 'versão padrão'}`,
+      items: STEPS.map((s, i) => ({
+        number: i + 1,
+        prompt: s.question.prompt,
+        options: s.question.options,
+        correctIndex: s.question.correctIndex,
+        answer: s.question.options[s.question.correctIndex] + (s.question.explanation ? `\n(${s.question.explanation})` : '')
+      })),
+      fileName: EXTRA_SISTEMAS ? 'recuperacao-programacao-do-zero-sistemas-gabarito.txt' : 'recuperacao-programacao-do-zero-gabarito.txt'
+    });
+  };
 
   window.PortalQuizTeoria.run({
     activityLocation: "recuperacao_teoria",

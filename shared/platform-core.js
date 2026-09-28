@@ -303,6 +303,7 @@
             <button class="pf-toast-close" id="btnFecharProfessorToken" title="Fechar">✕</button>
             <div id="professorTokenValue" style="font-family:'JetBrains Mono', monospace; font-size:36px; font-weight:800; letter-spacing:6px; margin-bottom:6px;">------</div>
             <div class="status-msg" id="professorTokenStatus"></div>
+            <button class="btn btn-secondary" id="btnRenovarProfessorToken" style="margin-top:10px; font-size:12px;" title="Gera um token novo na hora; o anterior deixa de valer">🔄 Renovar token</button>
           </div>
         </div>
 
@@ -3958,13 +3959,19 @@
 
     // Chave 🔑 (ao lado do Perfil, só professor): abre o card mínimo
     // (número + tempo restante) e gera um token novo sozinho se o atual já
-    // expirou (ou nunca existiu) — sem botão "Gerar" separado, ver
-    // showProfessorToken/gerarProfessorToken.
+    // expirou (ou nunca existiu), ver showProfessorToken/gerarProfessorToken.
+    // "🔄 Renovar token" gera um novo antes da hora: gerar_professor_token()
+    // apaga o token vigente, então o número antigo para de valer na hora.
     document.getElementById('btnQuickToken').addEventListener('click', async () => {
       document.getElementById('professorTokenOverlay').style.display = 'flex';
       if (!professorTokenExpiresAtMs || professorTokenExpiresAtMs <= Date.now()) {
         await gerarProfessorToken();
       }
+    });
+    document.getElementById('btnRenovarProfessorToken').addEventListener('click', async () => {
+      const btn = document.getElementById('btnRenovarProfessorToken');
+      btn.disabled = true;
+      try { await gerarProfessorToken(); } finally { btn.disabled = false; }
     });
     document.getElementById('btnFecharProfessorToken').addEventListener('click', () => {
       document.getElementById('professorTokenOverlay').style.display = 'none';

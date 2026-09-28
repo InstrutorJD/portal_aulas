@@ -110,6 +110,7 @@
 <script src="../../../shared/professor-visto.js"></script>
 <script src="../../../shared/exam-proctor.js"></script>
 <script src="recuperacao-trava.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
 </head>
 <body>
 <div class="env">
@@ -1856,6 +1857,51 @@
     isProfessor = !!(user && (user.role === 'professor' || user.role === 'admin'));
     if (isProfessor && terminalStage) document.getElementById('btnSkipProfessor').style.display = '';
   })();
+
+  // ---------- Gabarito (botão "📋 Gerar Gabarito", só professor) ----------
+  // As etapas não guardam uma solução pronta (a correção é pelo check()),
+  // então a resposta de referência de cada terminal mora aqui. Nas etapas
+  // de valor livre (vida, nome, força, pulo, onda) é UM exemplo que passa.
+  const SOLUCOES_GABARITO = {
+    espada: 'let espada = true;',
+    escudo: 'let escudo = true;',
+    botas: 'let botas = true;',
+    vida: 'let vida = 3;   // qualquer número inteiro de 3 a 5',
+    nome: 'let nome = "Luna";   // qualquer texto de 2 a 14 letras, entre aspas',
+    forca: 'let forca = 1;\nforca = forca + 5;   // precisa terminar entre 6 e 20, usando a própria forca',
+    portal: 'abrirPortal();',
+    pular: 'function pular() {\n  return 10;   // qualquer número de 8 a 14\n}',
+    atacar: 'function atacar() {\n  return forca;   // a VARIÁVEL, não um número fixo\n}',
+    defender: 'function defender(dano) {\n  return dano / 2;\n}',
+    bau: 'let chave = true;\nlet bauAberto = false;\n\nif (chave) {\n  bauAberto = true;\n}',
+    tocha: 'let escuro = true;\nlet tocha = "";\n\nif (escuro) {\n  tocha = "acesa";\n} else {\n  tocha = "apagada";\n}',
+    bloquear: 'function bloquear(ataque) {\n  if (ataque === "fogo") {\n    return true;\n  }\n  return false;\n}',
+    tirarVida: 'function tirarVida(vidaInimigo, dano) {\n  if (dano >= vidaInimigo) {\n    return 0;\n  } else {\n    return vidaInimigo - dano;\n  }\n}',
+    criarInimigo: 'function criarInimigo(tipo, vida) {\n  return { tipo: tipo, vida: vida };\n}',
+    onda: 'criarInimigo("slime", 2);\ncriarInimigo("morcego", 3);\ncriarInimigo("cavaleiro", 5);\n// de 2 a 5 chamadas; tipos: slime, morcego, cavaleiro ou orc; vida de 1 a 10',
+    pocoes: 'let pocoes = ["vermelha", "azul", "verde"];   // de 3 a 5 textos',
+    mochila: 'let mochila = ["mapa", "corda"];\n\nmochila.push("gema");\nlet total = mochila.length;',
+    escada: 'let degraus = 0;\n\nfor (let i = 0; i < 6; i++) {\n  degraus = degraus + 1;\n}',
+    disparar: 'let alvos = ["slime", "morcego", "slime"];\n\nfor (const alvo of alvos) {\n  disparar(alvo);\n}',
+    somarDano: 'function somarDano(golpes) {\n  let total = 0;\n  for (const golpe of golpes) {\n    total = total + golpe;\n  }\n  return total;\n}',
+    heroi: 'let heroi = { nome: nome, vida: vida, nivel: 1 };\nheroi.nivel = heroi.nivel + 1;',
+    descrever: 'function descrever(inimigo) {\n  return inimigo.tipo + " com " + inimigo.vida + " de vida";\n}',
+    criarOnda: 'function criarOnda(quantidade) {\n  let onda = [];\n  for (let i = 0; i < quantidade; i++) {\n    onda.push(criarInimigo("slime", 2));\n  }\n  return onda;\n}'
+  };
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'O Herói do Código — Gabarito de referência',
+      subtitle: `Recuperação · ${EXTRA_SISTEMAS ? 'versão da turma Sistemas (6 capítulos)' : 'versão de 4 capítulos'} · outras respostas corretas também são aceitas`,
+      items: STAGES.filter(s => SOLUCOES_GABARITO[s.id]).map((s, i) => ({
+        number: i + 1,
+        title: `Cap. ${s.cap} (${CAPITULOS[s.cap]}) — ${s.title}`,
+        prompt: s.text,
+        answer: `Código de referência (não é a única forma correta):\n${SOLUCOES_GABARITO[s.id]}`
+      })),
+      fileName: EXTRA_SISTEMAS ? 'recuperacao-heroi-do-codigo-sistemas-gabarito.txt' : 'recuperacao-heroi-do-codigo-gabarito.txt'
+    });
+  };
 
   // Ganchos pros testes automatizados (tests/recuperacao.spec.js).
   window.__heroiDoCodigo = {
