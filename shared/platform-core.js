@@ -287,7 +287,7 @@
         <div class="tabs" id="mainNavTabs">
           <button class="tab-btn active" data-tab="aulas">Aulas & Atividades</button>
           <button class="tab-btn disabled" id="tabBtnJogos" data-tab="jogos">Jogos 🔒</button>
-          <button class="quick-action-btn" id="btnOpenPixelCode" title="Abrir o PixelCode (editor de JavaScript) numa aba nova">💻 PixelCode</button>
+          <button class="quick-action-btn" id="btnOpenPixelCode" title="Abrir o PixelCode (editor de HTML, CSS e JavaScript, com navegador) numa aba nova">💻 PixelCode</button>
           ${currentUser.role === 'professor' ? `<button class="tab-btn" data-tab="gestao">Gestão 🛠️</button>` : ''}
           <div class="nav-right-group">
             ${currentUser.role === 'professor' ? `<button class="quick-token-btn" id="btnQuickToken" title="Ver/gerar o token de Dar Visto e Pular Etapa">🔑</button>` : ''}
