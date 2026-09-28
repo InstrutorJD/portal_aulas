@@ -8,7 +8,8 @@
 
 <!-- Passador de slides no celular (só professor). Aberto pelo QR Code do
      botão 📱 da apresentação de "Criar Material" (professor/materiais.html,
-     shared/slides-md.js — ver ligarRemoto). O código da sala vem no #hash
+     shared/slides-md.js — ver ligarRemoto) ou do 📱 das atividades do
+     portal (shared/passador-remoto.js). O código da sala vem no #hash
      da URL (ou é digitado aqui, se a câmera não ler o QR); os dois lados se falam por um canal de broadcast do Supabase
      Realtime ('slides_remoto_<sala>'), sem tabela: daqui sai 'cmd'
      (next/prev/revelar/ola), de lá vem 'estado' (slide atual). -->
@@ -160,7 +161,10 @@
       botoes.forEach(b => { b.disabled = true; });
       return;
     }
-    $('ctStatus').textContent = 'Conectado à apresentação';
+    // Atividades do portal (shared/passador-remoto.js) mandam tipo
+    // 'atividade' e semRevelar: lá não há pergunta pra revelar.
+    $('ctStatus').textContent = estado.tipo === 'atividade' ? 'Conectado à atividade' : 'Conectado à apresentação';
+    document.querySelector('[data-cmd="revelar"]').hidden = !!estado.semRevelar;
     $('ctAula').textContent = estado.aula || '';
     $('ctTitulo').textContent = estado.titulo || '';
     $('ctNum').textContent = `${estado.i + 1} / ${estado.total}`;

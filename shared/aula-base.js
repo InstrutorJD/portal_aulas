@@ -11,8 +11,11 @@
 //       vira uma caixinha clicável que lembra o que o aluno marcou
 //       (localStorage, na chave passada — uma por etapa).
 //   AulaBase.transicao(el, direcao)   — entrada animada (1 = avançou, -1 = voltou)
-//   AulaBase.teclado({ proximo, anterior }) — setas → e ← navegam
+//   AulaBase.teclado({ proximo, anterior }) — setas → e ← navegam; pro
+//     professor, também põe o botão 📱 (passador de slides no celular,
+//     shared/passador-remoto.js) na barra .ab-topo, com as mesmas ações.
 window.AulaBase = (function () {
+  const MEU_SRC = (document.currentScript && document.currentScript.src) || '';
   function bloqueado() {
     return document.documentElement.classList.contains('clipboard-guard-blocked');
   }
@@ -86,6 +89,50 @@ window.AulaBase = (function () {
       if (e.key === 'ArrowRight' && proximo) { e.preventDefault(); proximo(); }
       else if (e.key === 'ArrowLeft' && anterior) { e.preventDefault(); anterior(); }
     });
+    passador({ proximo, anterior });
+  }
+
+  // O que o celular mostra: "Etapa X de Y" e o título da etapa, lidos da
+  // própria tela (toda página do padrão novo tem #lblStepNum/#lblStepTotal
+  // na .ab-topo e o título no h2 do cartão).
+  function estadoDaTela() {
+    const num = parseInt((document.getElementById('lblStepNum') || {}).textContent, 10);
+    const total = parseInt((document.getElementById('lblStepTotal') || {}).textContent, 10);
+    const h = document.querySelector('.ab-cartao h2, .ab-cartao h3');
+    const aula = document.querySelector('.ab-topo-titulo');
+    return {
+      i: Number.isInteger(num) ? num - 1 : 0,
+      total: Number.isInteger(total) ? total : 1,
+      titulo: h ? h.textContent.trim() : '',
+      aula: aula ? aula.textContent.trim() : document.title,
+    };
+  }
+
+  // Só pro professor (aluno nunca baixa o arquivo nem vê o botão).
+  async function passador(nav) {
+    const topo = document.querySelector('.ab-topo');
+    if (!topo || !window.PortalSession || !MEU_SRC) return;
+    let user = null;
+    try { user = await window.PortalSession.getUser(); } catch (e) { return; }
+    if (!user || user.role !== 'professor') return;
+    if (!window.PassadorRemoto) {
+      await new Promise(resolve => {
+        const s = document.createElement('script');
+        s.src = new URL('passador-remoto.js', MEU_SRC).href;
+        s.onload = resolve;
+        s.onerror = resolve;
+        document.head.appendChild(s);
+      });
+    }
+    if (!window.PassadorRemoto) return;
+    try {
+      window.PassadorRemoto.iniciar({
+        client: () => window.PortalSession.client(),
+        proximo: nav.proximo, anterior: nav.anterior,
+        estado: estadoDaTela,
+        botaoEm: topo,
+      });
+    } catch (e) {}
   }
 
   return { decorar, transicao, teclado };

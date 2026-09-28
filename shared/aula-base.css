@@ -167,6 +167,22 @@ button.btn-secondary{ background:transparent; color:var(--ab-acento); border:1px
 .ab-msg.ok{ border-color:var(--ok); color:var(--ok); }
 .ab-concluida h2{ color:var(--ok); }
 
+/* ---------- Passador de slides no celular (só professor — shared/passador-remoto.js) ---------- */
+.ab-passador-btn{ flex-shrink:0; font-size:16px; width:34px; height:34px; border-radius:50%; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--ink); }
+.ab-passador-btn:hover{ border-color:var(--green); }
+.ab-passador{ position:fixed; inset:0; z-index:9998; display:flex; align-items:center; justify-content:center; padding:20px; background:color-mix(in srgb, var(--bg) 88%, transparent); }
+.ab-passador[hidden]{ display:none; }
+.ab-passador-card{ max-width:420px; width:100%; max-height:100%; overflow-y:auto; text-align:center; padding:22px 24px; border-radius:18px; background:var(--panel); border:1px solid var(--line); box-shadow:0 24px 60px rgba(0,0,0,.4); }
+.ab-passador-card h3{ margin:0 0 14px; font-size:18px; }
+.ab-passador-qr{ width:min(300px, 46vh); margin:0 auto; border-radius:10px; background:#fff; }
+.ab-passador-qr:empty{ display:none; }
+.ab-passador-qr svg{ display:block; width:100%; height:auto; }
+.ab-passador-card p{ font-size:13px; color:var(--ink-dim); line-height:1.5; margin:12px 0 6px; }
+.ab-passador-link{ font-family:var(--ab-mono); font-size:12px; color:var(--ab-acento); word-break:break-all; }
+.ab-passador-codigo{ font-family:var(--ab-mono); font-size:30px; font-weight:800; letter-spacing:4px; }
+.ab-passador-card .ab-passador-status{ font-weight:700; color:var(--yellow); }
+.ab-passador-ok .ab-passador-status{ color:var(--ok); }
+
 @media (max-width:700px){
   .ab-palco{ padding:14px 10px 28px; }
   .ab-cartao{ padding:18px 16px; border-radius:14px; }
