@@ -12,5 +12,4 @@ window.MATERIAIS = [
   'aula-teste-passador.md',
   'aula-01-componentes-aplicacao-web.md',
   'aula-02-json-rest-copilot.md',
-  'aula-03-html-css-js-comanda.md',
 ];
