@@ -134,6 +134,7 @@
 </div>
 <iframe id="runner" title="Execução do JavaScript" sandbox="allow-scripts allow-modals"></iframe>
 
+<script src="shared/pixelcode-docs.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 <script>
   // PixelCode — editor do portal (Monaco, só CDN). Dois modos:
@@ -283,6 +284,16 @@
       jsSolo: monaco.editor.createModel(salvo.jsSolo != null ? salvo.jsSolo : INICIAL.jsSolo, 'javascript'),
     };
     const vistas = {};
+    // Documentação em português ao passar o mouse (shared/pixelcode-docs.js).
+    // Registrada DEPOIS dos provedores do Monaco (que só entram quando cada
+    // linguagem termina de carregar), para aparecer em cima da explicação em
+    // inglês: espera o worker de JavaScript ficar pronto e dá uma folga para
+    // HTML e CSS.
+    if (window.PixelCodeDocs) {
+      const js = monaco.languages.typescript && monaco.languages.typescript.getJavaScriptWorker
+        ? monaco.languages.typescript.getJavaScriptWorker().catch(() => null) : Promise.resolve();
+      Promise.all([js, new Promise(r => setTimeout(r, 1500))]).then(() => window.PixelCodeDocs.registrar(monaco));
+    }
     const editor = monaco.editor.create(document.getElementById('editor'), {
       model: modelos.html,
       theme: 'vs-dark',
