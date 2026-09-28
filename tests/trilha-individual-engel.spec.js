@@ -81,6 +81,9 @@ test.describe('Trilha individual "JavaScript Básico (Engel)"', () => {
       ];
       teoriaFlag.forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
       localStorage.setItem(`cobrinha_construcao_progress_${user}`, JSON.stringify({ completed: true }));
+      // Card Projetos: os 4 grupos da trilha Cibersegurança (semEntrega não conta).
+      ['cyberseg_hacker_etico', 'cyberseg_engenharia_social', 'cyberseg_senhas_autenticacao', 'cyberseg_malware_golpes']
+        .forEach(k => localStorage.setItem(`${k}_progress_${user}`, JSON.stringify({ completed: true })));
 
       const praticaDez = [
         'mundo_revolucao_pratica', 'mundo_inovacao_pratica', 'mundo_equipe_pratica',

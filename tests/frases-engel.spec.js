@@ -67,8 +67,9 @@ test.describe('Matéria "Comunicação (Engel)" — visibilidade do card', () =>
     await stubSupabaseFake(page, {});
     await page.goto(BRENO_URL);
     await expect(page.locator('#materiaCardGrid')).not.toContainText('Comunicação (Engel)');
-    // regressão: continua vendo as mesmas 7 matérias de sempre, não 8.
-    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(7);
+    // regressão: continua vendo as mesmas 8 matérias de sempre (as 7 + o
+    // card Projetos), não 9.
+    await expect(page.locator('#materiaCardGrid .game-card')).toHaveCount(8);
   });
 
   test('outro aluno também não vê a matéria na aba Perfil', async ({ page }) => {

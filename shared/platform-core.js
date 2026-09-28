@@ -743,7 +743,7 @@
     if (recuperacaoMateria && alunoEmRecuperacao) materias.push(recuperacaoMateria);
     return materias.flatMap(materia =>
       trilhasParaAluno(visibleTrilhas(materia.trilhas || []), paramUser)
-        .map(trilha => ({ materia, trilha, modulos: (trilha.modules || []).filter(m => !isModuleComplete(m)) }))
+        .map(trilha => ({ materia, trilha, modulos: modulosDeEntrega(trilha).filter(m => !isModuleComplete(m)) }))
         .filter(g => g.modulos.length > 0));
   }
 
@@ -1327,10 +1327,22 @@
   // ainda não começou) não pode travar o desbloqueio dos jogos por algo que
   // o aluno nem tem como ter feito ainda, e trilha de bimestre já
   // encerrado (sumiu da aba Aulas) também não: a cada bimestre, recomeça.
+  // Módulos de uma trilha que contam como tarefa do aluno. Trilha/módulo com
+  // semEntrega:true (ex.: simulações feitas em sala e o material do
+  // professor no card Projetos da turma Jogos) continua aparecendo na aba
+  // Aulas, mas fica fora de TODA conta: desbloqueio dos jogos, % de
+  // progresso, ranking, Perfil e "fez tudo/parte/nada". Sem isso, o
+  // material só do professor (que aluno nem consegue concluir) travava a
+  // aba Jogos da turma inteira.
+  function modulosDeEntrega(t) {
+    if (t.semEntrega) return [];
+    return (t.modules || []).filter(m => !m.semEntrega);
+  }
+
   function allModulesComplete() {
     const modules = allTrilhas()
       .filter(t => trilhaNoPeriodoAtual(t) && trilhaStatus(t) !== 'futura')
-      .flatMap(t => t.modules || []);
+      .flatMap(modulosDeEntrega);
     if (modules.length === 0) return false;
     return modules.every(isModuleComplete);
   }
@@ -2456,7 +2468,7 @@
   function bimestreModulesPercent(trilhas, bimestreNum, progressRows, studentEmail) {
     const modules = trilhas
       .filter(t => trilhaBimestreCache[t.key] === bimestreNum)
-      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+      .flatMap(t => modulosDeEntrega(t).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
     modules.forEach(({ trilhaKey, mod }) => {
@@ -2498,12 +2510,9 @@
   // módulos concluídos (com visto) de todas as trilhas dela, sem olhar
   // bimestre. 'tudo' | 'parte' | 'nada'.
   function statusEntregaMateria(materia, progressRows, studentEmail) {
-    // Trilha/módulo com semEntrega:true (ex.: as simulações e o material do
-    // professor no card Projetos da turma Jogos) não é entrega do aluno —
-    // não entra na conta de "fez tudo/parte/nada".
+    // Trilha/módulo com semEntrega:true não é entrega do aluno (ver modulosDeEntrega).
     const modules = trilhasParaAluno(materia.trilhas || [], studentEmail)
-      .filter(t => !t.semEntrega)
-      .flatMap(t => (t.modules || []).filter(m => !m.semEntrega).map(m => ({ trilhaKey: t.key, mod: m })));
+      .flatMap(t => modulosDeEntrega(t).map(m => ({ trilhaKey: t.key, mod: m })));
     const feitos = modules.filter(({ trilhaKey, mod }) =>
       progressRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
     ).length;
@@ -2947,7 +2956,7 @@
   // só o progresso bruto por módulo (student_module_progress).
   function materiaPercentForStudent(materia, progressRows, studentEmail) {
     const modules = trilhasAtuaisParaAluno(materia.trilhas || [], studentEmail)
-      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+      .flatMap(t => modulosDeEntrega(t).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
     modules.forEach(({ trilhaKey, mod }) => {
@@ -2968,7 +2977,7 @@
   function overallProgressForStudent(progressRows, studentEmail) {
     const modules = (cfg.materias || [])
       .flatMap(m => trilhasAtuaisParaAluno(m.trilhas || [], studentEmail))
-      .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+      .flatMap(t => modulosDeEntrega(t).map(m => ({ trilhaKey: t.key, mod: m })));
     if (modules.length === 0) return null;
     let sum = 0;
     modules.forEach(({ trilhaKey, mod }) => {
@@ -3030,7 +3039,7 @@
         // módulo removido não pode inflar o numerador acima do total.
         const modules = (cfg.materias || [])
           .flatMap(m => trilhasAtuaisParaAluno(m.trilhas || [], u.email))
-          .flatMap(t => (t.modules || []).map(m => ({ trilhaKey: t.key, mod: m })));
+          .flatMap(t => modulosDeEntrega(t).map(m => ({ trilhaKey: t.key, mod: m })));
         const concluidas = modules.filter(({ trilhaKey, mod }) =>
           studentRows.some(r => r.trilha_key === trilhaKey && r.module_key === mod.key && r.completed)
         ).length;
@@ -3261,7 +3270,7 @@
     const overallPct = Math.round(overallProgressForStudent(rows, targetEmail) || 0);
     const modulosAtuais = (cfg.materias || [])
       .flatMap(m => trilhasAtuaisParaAluno(m.trilhas || [], targetEmail))
-      .flatMap(t => (t.modules || []).map(mod => ({ trilhaKey: t.key, mod })));
+      .flatMap(t => modulosDeEntrega(t).map(mod => ({ trilhaKey: t.key, mod })));
     const totalModules = modulosAtuais.length;
     // Só conta módulo concluído de trilha do bimestre atual — progresso de
     // bimestres passados não vale mais pra insígnia/resumo.
@@ -3332,11 +3341,12 @@
       const pctDisplay = pct === null ? 0 : pct;
       // Só as trilhas do bimestre atual — as de bimestres passados não
       // aparecem mais pro aluno (nem aqui, nem na aba Aulas).
-      const trilhasAtuais = trilhasAtuaisParaAluno(m.trilhas || [], targetEmail);
+      // Trilha semEntrega (ver modulosDeEntrega) não é tarefa do aluno — fora da lista.
+      const trilhasAtuais = trilhasAtuaisParaAluno(m.trilhas || [], targetEmail).filter(t => modulosDeEntrega(t).length > 0);
       const trilhasHtml = trilhasAtuais.length === 0
         ? `<div class="perfil-trilha-row" style="color:var(--ink-dim);"><span>Nenhuma trilha neste bimestre.</span></div>`
         : trilhasAtuais.map(t => {
-          const mods = t.modules || [];
+          const mods = modulosDeEntrega(t);
           const doneCount = mods.filter(mod => {
             const r = rows.find(rr => rr.trilha_key === t.key && rr.module_key === mod.key);
             return !!(r && r.completed);
