@@ -33,6 +33,7 @@
   let bimestreDatesCache = {}; // bimestre (1-4) -> {inicio, fim, notas_liberadas} do calendário letivo, definidos pelo professor na Gestão (bimestre_dates), ver trilhaWindow()
   let materiaPesoCache = {}; // materiaKey -> peso das atividades na nota, digitado pelo professor em Gestão → Lançar Notas (materia_pesos), ver pesoMateria()
   let trilhaBimestreCache = {}; // trilhaKey -> bimestre (1-4) atribuído pelo professor na Gestão (trilha_bimestre), ver trilhaWindow() — por TRILHA, não por matéria: a mesma matéria pode ter trilhas em bimestres diferentes
+  let trilhaLiberarEmCache = {}; // trilhaKey -> 'YYYY-MM-DD' ("Liberar em" da Gestão, trilha_bimestre.liberar_em): a trilha só aparece pro aluno a partir desse dia, mesmo com o bimestre já em andamento, ver trilhaWindow()
   let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
   // fontMode saiu daqui — a fonte agora é controlada por prefs.fontFamily
   // (4 opções, ver FONT_PRESETS), persistida no banco junto com o resto da
@@ -483,9 +484,10 @@
 
                 <h3 class="gestao-subhead">Liberação por Trilha</h3>
                 <table class="audit-table">
-                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Bimestre</th></tr></thead>
+                  <thead><tr><th>Matéria</th><th>Trilha</th><th>Bimestre</th><th title="Opcional: dia, dentro do bimestre, em que a trilha aparece pro aluno. Vazio = libera no início do bimestre.">Liberar em</th></tr></thead>
                   <tbody id="tblGestaoTrilhasBody"></tbody>
                 </table>
+                <p style="color:var(--ink-dim); font-size:11px; margin:6px 0 0;">"Liberar em" é opcional: a trilha só aparece pro aluno a partir desse dia, mesmo com o bimestre em andamento. Vazio = libera no início do bimestre.</p>
                 <div style="display:flex; align-items:center; gap:12px; margin:10px 0 4px;">
                   <button class="btn" id="btnSalvarTrilhaBimestre">Salvar</button>
                   <span class="status-msg" id="trilhaBimestreStatus"></span>
@@ -1037,10 +1039,16 @@
   // visível/aberta, mesma filosofia de "sem período = sempre visível" de
   // antes. Por trilha, não por matéria: duas trilhas da mesma matéria podem
   // pertencer a bimestres diferentes (currículo que se repete/continua).
+  // "Liberar em" (trilhaLiberarEmCache) adia o INÍCIO pra um dia dentro do
+  // bimestre — vale a data mais tarde entre as duas, então a trilha não
+  // fica disponível o bimestre inteiro e o aluno não adianta os colegas.
   function trilhaWindow(trilha) {
     const bimestreNum = trilhaBimestreCache[trilha.key];
     const b = bimestreNum && bimestreDatesCache[bimestreNum];
-    return { inicio: (b && b.inicio) || null, fim: (b && b.fim) || null };
+    const inicioBimestre = (b && b.inicio) || null;
+    const liberarEm = trilhaLiberarEmCache[trilha.key] || null;
+    const inicio = [inicioBimestre, liberarEm].filter(Boolean).sort().pop() || null;
+    return { inicio, fim: (b && b.fim) || null };
   }
 
   // Passou do FIM DO BIMESTRE da matéria dona da trilha — a trilha inteira
@@ -1083,7 +1091,7 @@
   // cresce (bimestre a bimestre) sem precisar de um "bimestre ativo"
   // configurado à parte — só usa a janela da matéria dona (trilhaWindow)
   // contra o dia de hoje:
-  //  'futura'    -> o bimestre da matéria ainda não começou (nem aparece pro aluno)
+  //  'futura'    -> o bimestre (ou o "Liberar em") da trilha ainda não chegou (nem aparece pro aluno)
   //  'concluida' -> todos os módulos já foram concluídos (some pro grupo recolhido)
   //  'aberta'    -> o normal (matéria sem bimestre atribuído, ou dentro da janela)
   // Trilha cuja matéria não tem bimestre atribuído sempre cai em 'aberta'
@@ -1495,7 +1503,11 @@
     if (!sbClient) return;
     const { data } = await sbClient.from('trilha_bimestre').select('*').eq('turma', cfg.id);
     trilhaBimestreCache = {};
-    (data || []).forEach(r => { trilhaBimestreCache[r.trilha_key] = r.bimestre; });
+    trilhaLiberarEmCache = {};
+    (data || []).forEach(r => {
+      trilhaBimestreCache[r.trilha_key] = r.bimestre;
+      if (r.liberar_em) trilhaLiberarEmCache[r.trilha_key] = r.liberar_em;
+    });
     refreshTrilhaVisibilityUI();
   }
 
@@ -1792,27 +1804,43 @@
   // salva (ver renderTrilhaBimestreTable) — nunca olha o progresso de um
   // aluno específico (não faria sentido "concluída" aqui — conclusão é por
   // aluno; quem vê isso é o trilhaStatus() que cada aluno usa pra si).
-  function trilhaBimestreStatusLabel(num) {
+  // liberarEm ("Liberar em", opcional) adia o início pra um dia dentro do
+  // bimestre — mesma regra de trilhaWindow().
+  function trilhaBimestreStatusLabel(num, liberarEm) {
     const hoje = todayStr();
-    if (!num) return { text: 'Sempre visível', color: 'var(--ink-dim)' };
-    const b = bimestreDatesCache[num] || {};
-    if (b.inicio && b.inicio > hoje) return { text: 'Ainda não iniciada', color: 'var(--ink-dim)' };
+    if (!num && !liberarEm) return { text: 'Sempre visível', color: 'var(--ink-dim)' };
+    const b = (num && bimestreDatesCache[num]) || {};
     if (b.fim && b.fim < hoje) return { text: 'Encerrada — sumiu da Aulas', color: 'var(--blood-bright)' };
+    if (liberarEm && b.fim && liberarEm > b.fim) return { text: '⚠️ Data depois do fim do bimestre', color: 'var(--blood-bright)' };
+    if (liberarEm && b.inicio && liberarEm < b.inicio) return { text: '⚠️ Data antes do início do bimestre', color: 'var(--blood-bright)' };
+    if (b.inicio && b.inicio > hoje && !(liberarEm && liberarEm > b.inicio)) return { text: 'Ainda não iniciada', color: 'var(--ink-dim)' };
+    if (liberarEm && liberarEm > hoje) return { text: `Libera em ${dataCurtaBR(liberarEm)}`, color: 'var(--ink-dim)' };
     return { text: 'Em andamento', color: 'var(--green)' };
   }
 
-  function trilhaBimestreRowHtml({ materiaLabel, trilha }, selected) {
-    const status = trilhaBimestreStatusLabel(selected);
+  // 'YYYY-MM-DD' -> 'DD/MM' (rótulo curto da Gestão).
+  function dataCurtaBR(iso) {
+    const [, m, d] = String(iso).split('-');
+    return `${d}/${m}`;
+  }
+
+  function trilhaBimestreRowHtml({ materiaLabel, trilha }, selected, liberarEm) {
+    const status = trilhaBimestreStatusLabel(selected, liberarEm);
     const options = ['<option value="">Sem bimestre</option>'].concat(
       BIMESTRE_NUMS.map(num => `<option value="${num}" ${String(selected) === String(num) ? 'selected' : ''}>${BIMESTRE_LABELS[num]}</option>`)
     );
+    // min/max = janela do bimestre escolhido: o calendário do navegador já
+    // sugere só dias dentro do bimestre.
+    const b = (selected && bimestreDatesCache[selected]) || {};
+    const minMax = `${b.inicio ? `min="${b.inicio}"` : ''} ${b.fim ? `max="${b.fim}"` : ''}`;
     return `
       <tr data-trilha="${trilha.key}">
         <td>${materiaLabel}</td>
         <td>${trilha.label}</td>
+        <td><select class="trilha-bimestre-input">${options.join('')}</select></td>
         <td>
-          <select class="trilha-bimestre-input">${options.join('')}</select>
-          <span style="color:${status.color}; margin-left:8px; font-size:11px;">${status.text}</span>
+          <input type="date" class="trilha-liberar-input" value="${liberarEm || ''}" ${minMax}>
+          <span class="trilha-bimestre-status" style="color:${status.color}; margin-left:8px; font-size:11px;">${status.text}</span>
         </td>
       </tr>
     `;
@@ -1825,11 +1853,12 @@
   // qualquer <select> da tabela (ver wireGestaoTrilhasRegroup), vem do
   // valor ainda não salvo escolhido na tela — é isso que faz o
   // agrupamento reagir na hora, sem precisar clicar em "Salvar" antes.
-  function renderTrilhaBimestreTable(pares, selecaoAtual) {
+  // liberarAtual(trilhaKey) é o mesmo esquema pra data "Liberar em".
+  function renderTrilhaBimestreTable(pares, selecaoAtual, liberarAtual) {
     const tbody = document.getElementById('tblGestaoTrilhasBody');
     if (!tbody) return;
     if (pares.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" style="color:var(--ink-dim); text-align:center; padding:14px;">Nenhuma trilha cadastrada ainda nesta turma.</td></tr>`;
       return;
     }
 
@@ -1840,17 +1869,17 @@
       (num && porBimestre[num] ? porBimestre[num] : semBimestre).push(par);
     });
 
-    const groupHeaderHtml = label => `<tr class="trilha-bimestre-group"><td colspan="3" style="background:var(--panel2); color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; font-size:11px;">${label}</td></tr>`;
+    const groupHeaderHtml = label => `<tr class="trilha-bimestre-group"><td colspan="4" style="background:var(--panel2); color:var(--green); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; font-size:11px;">${label}</td></tr>`;
 
     let html = '';
     if (semBimestre.length > 0) {
       html += groupHeaderHtml('Sem bimestre');
-      html += semBimestre.map(par => trilhaBimestreRowHtml(par, '')).join('');
+      html += semBimestre.map(par => trilhaBimestreRowHtml(par, '', liberarAtual(par.trilha.key))).join('');
     }
     BIMESTRE_NUMS.forEach(num => {
       if (porBimestre[num].length === 0) return;
       html += groupHeaderHtml(BIMESTRE_LABELS[num]);
-      html += porBimestre[num].map(par => trilhaBimestreRowHtml(par, num)).join('');
+      html += porBimestre[num].map(par => trilhaBimestreRowHtml(par, num, liberarAtual(par.trilha.key))).join('');
     });
     tbody.innerHTML = html;
 
@@ -1859,20 +1888,38 @@
 
   // Reagrupa ao vivo sempre que QUALQUER <select> de bimestre da tabela
   // muda — refaz a tabela inteira lendo o valor atual de cada <select>
-  // (não o que está salvo no banco), preservando o que o professor já
-  // escolheu nas outras linhas. Precisa ser rechamada depois de cada
-  // innerHTML novo, já que ele destrói os <select> (e os listeners) antigos.
+  // e de cada "Liberar em" (não o que está salvo no banco), preservando o
+  // que o professor já escolheu nas outras linhas. Precisa ser rechamada
+  // depois de cada innerHTML novo, já que ele destrói os <select> (e os
+  // listeners) antigos. Mudar só a data não reagrupa nada — só atualiza o
+  // rótulo de status da própria linha, sem redesenhar (o campo de data
+  // perderia o foco no meio da digitação).
   function wireGestaoTrilhasRegroup(pares) {
     const tbody = document.getElementById('tblGestaoTrilhasBody');
     if (!tbody) return;
     tbody.querySelectorAll('.trilha-bimestre-input').forEach(sel => {
       sel.addEventListener('change', () => {
         const valores = {};
+        const datas = {};
         tbody.querySelectorAll('tr[data-trilha]').forEach(tr => {
           const s = tr.querySelector('.trilha-bimestre-input');
+          const d = tr.querySelector('.trilha-liberar-input');
           valores[tr.getAttribute('data-trilha')] = s ? s.value : '';
+          datas[tr.getAttribute('data-trilha')] = d ? d.value : '';
         });
-        renderTrilhaBimestreTable(pares, key => (valores[key] ? parseInt(valores[key], 10) : null));
+        renderTrilhaBimestreTable(pares,
+          key => (valores[key] ? parseInt(valores[key], 10) : null),
+          key => datas[key] || null);
+      });
+    });
+    tbody.querySelectorAll('.trilha-liberar-input').forEach(inp => {
+      inp.addEventListener('change', () => {
+        const tr = inp.closest('tr');
+        const sel = tr.querySelector('.trilha-bimestre-input');
+        const num = sel && sel.value ? parseInt(sel.value, 10) : null;
+        const status = trilhaBimestreStatusLabel(num, inp.value || null);
+        const span = tr.querySelector('.trilha-bimestre-status');
+        if (span) { span.textContent = status.text; span.style.color = status.color; }
       });
     });
   }
@@ -1883,21 +1930,42 @@
   async function renderGestaoTrilhaBimestre() {
     await Promise.all([fetchBimestreDates(), fetchTrilhaBimestre()]);
     const pares = allTrilhasComMateria();
-    renderTrilhaBimestreTable(pares, trilhaKey => trilhaBimestreCache[trilhaKey] || null);
+    renderTrilhaBimestreTable(pares,
+      trilhaKey => trilhaBimestreCache[trilhaKey] || null,
+      trilhaKey => trilhaLiberarEmCache[trilhaKey] || null);
   }
 
   // Salva TODAS as linhas de uma vez (igual salvarBimestreDatas/salvarNotas).
+  // "Liberar em" fora da janela do bimestre escolhido não salva nada: antes
+  // do início não teria efeito (o bimestre já segura a trilha) e depois do
+  // fim a trilha nunca apareceria pro aluno.
   async function salvarTrilhaBimestre() {
     if (!sbClient) return;
     const now = new Date().toISOString();
+    const status = document.getElementById('trilhaBimestreStatus');
+    const foraDoBimestre = [];
     const rows = Array.from(document.querySelectorAll('#tblGestaoTrilhasBody tr[data-trilha]')).map(tr => {
       const sel = tr.querySelector('.trilha-bimestre-input');
       const bimestre = sel && sel.value ? parseInt(sel.value, 10) : null;
-      return { turma: cfg.id, trilha_key: tr.getAttribute('data-trilha'), bimestre, updated_at: now };
+      const data = tr.querySelector('.trilha-liberar-input');
+      const liberarEm = data && data.value ? data.value : null;
+      const b = (bimestre && bimestreDatesCache[bimestre]) || {};
+      if (liberarEm && ((b.inicio && liberarEm < b.inicio) || (b.fim && liberarEm > b.fim))) {
+        foraDoBimestre.push(tr.children[1] ? tr.children[1].textContent.trim() : tr.getAttribute('data-trilha'));
+      }
+      return { turma: cfg.id, trilha_key: tr.getAttribute('data-trilha'), bimestre, liberar_em: liberarEm, updated_at: now };
     });
     if (rows.length === 0) return;
-    await sbClient.from('trilha_bimestre').upsert(rows, { onConflict: 'turma,trilha_key' });
-    const status = document.getElementById('trilhaBimestreStatus');
+    if (foraDoBimestre.length > 0) {
+      if (status) status.textContent = `⚠️ "Liberar em" fora do bimestre em: ${foraDoBimestre.join(', ')}. Nada foi salvo.`;
+      return;
+    }
+    const { error } = await sbClient.from('trilha_bimestre').upsert(rows, { onConflict: 'turma,trilha_key' });
+    if (error) {
+      // Coluna liberar_em ainda não criada no Supabase (sql/trilha-liberar-em.sql).
+      if (status) status.textContent = `Erro ao salvar: ${error.message}`;
+      return;
+    }
     if (status) status.textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
     renderGestaoTrilhaBimestre();
   }

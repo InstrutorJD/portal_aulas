@@ -1195,6 +1195,13 @@ create table if not exists public.trilha_bimestre (
   primary key (turma, trilha_key)
 );
 
+-- "Liberar em" (Gestão → Liberação por Trilha): data opcional, dentro do
+-- bimestre, a partir da qual a trilha aparece pro aluno — pra não ficar
+-- disponível o bimestre inteiro e o aluno adiantar atividade dos colegas.
+-- null = libera junto com o início do bimestre, como antes. Ver
+-- sql/trilha-liberar-em.sql.
+alter table public.trilha_bimestre add column if not exists liberar_em date;
+
 alter table public.trilha_bimestre enable row level security;
 
 drop policy if exists "trilha_bimestre_select_all" on public.trilha_bimestre;

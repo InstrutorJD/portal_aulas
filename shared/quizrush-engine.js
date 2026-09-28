@@ -57,7 +57,8 @@ window.QuizRushEngine = (function () {
   // Trilhas que NÃO são do bimestre atual (mesma regra de
   // trilhaNoPeriodoAtual em shared/platform-core.js): atribuídas em
   // "Liberação por Trilha" a um bimestre cuja janela não contém hoje —
-  // já encerrado, ainda não começou, ou entre um bimestre e outro. Trilha
+  // já encerrado, ainda não começou, ou entre um bimestre e outro — ou com
+  // "Liberar em" ainda no futuro. Trilha
   // sem bimestre atribuído (ou bimestre sem datas) nunca entra aqui. O
   // QuizRush e a Corrida do Bug só oferecem módulos das trilhas atuais.
   async function trilhasForaDoPeriodo(turma) {
@@ -75,6 +76,8 @@ window.QuizRushEngine = (function () {
       (atribRes.data || []).forEach(r => {
         const b = datas[r.bimestre];
         if (b && ((b.inicio && b.inicio > hoje) || (b.fim && b.fim < hoje))) fora.add(r.trilha_key);
+        // "Liberar em": a trilha ainda não foi liberada dentro do bimestre.
+        if (r.liberar_em && r.liberar_em > hoje) fora.add(r.trilha_key);
       });
     } catch (e) { /* sem calendário legível: oferece tudo, como antes */ }
     return fora;
