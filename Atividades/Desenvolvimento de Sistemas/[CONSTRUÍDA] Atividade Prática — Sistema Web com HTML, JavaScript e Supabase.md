@@ -564,7 +564,7 @@ const supabaseUrl = "SUA_URL";
 
 const supabaseKey = "SUA_PUBLISHABLE_KEY";
 
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
     supabaseUrl,
     supabaseKey
 );
@@ -593,7 +593,7 @@ pela sua Publishable Key.
 Crie um teste simples:
 
 ```javascript
-console.log(supabase);
+console.log(supabaseClient);
 ```
 
 Abra o console do navegador.
@@ -605,7 +605,7 @@ Se o objeto do Supabase aparecer, a biblioteca foi carregada corretamente.
 - [ ] A biblioteca foi carregada.
 - [ ] A URL foi configurada.
 - [ ] A Publishable Key foi configurada.
-- [ ] O objeto `supabase` aparece no console.
+- [ ] O objeto `supabaseClient` aparece no console.
 
 ---
 
@@ -626,7 +626,7 @@ async function carregarClientes() {
 Dentro dela, faça uma consulta utilizando:
 
 ```javascript
-const { data, error } = await supabase
+const { data, error } = await supabaseClient
     .from("clientes")
     .select("*");
 ```
@@ -731,7 +731,7 @@ Depois faça um `insert`.
 A estrutura será:
 
 ```javascript
-const { data, error } = await supabase
+const { data, error } = await supabaseClient
     .from("clientes")
     .insert([
         {

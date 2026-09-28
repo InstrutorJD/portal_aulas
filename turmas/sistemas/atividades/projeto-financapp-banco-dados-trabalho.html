@@ -93,13 +93,17 @@ create table usuarios (
     nome text,
     turma text,
     foto_url text,
-    usuario text,
+    usuario text unique,
     senha text,
     criado_em timestamptz default now()
 );
 §§§
 
-Salve esse mesmo código em ¤database/schema.sql¤, no repositório ¤financapp-seuusuario¤ (vai crescer com as próximas 3 tabelas).`
+¤unique¤ em ¤usuario¤ impede 2 contas com o mesmo nome de usuário — sem isso, o login do app (que busca UM usuário por nome e senha) quebraria pros dois donos do nome repetido.
+
+Salve esse mesmo código em ¤database/schema.sql¤, no repositório ¤financapp-seuusuario¤ (vai crescer com as próximas 3 tabelas).
+
+> Já criou a tabela ¤usuarios¤ sem o ¤unique¤? Não precisa apagar nada: rode ¤alter table usuarios add constraint usuarios_usuario_key unique (usuario);¤ no SQL Editor (se der erro, é porque já existem usuários repetidos — apague os repetidos antes) e atualize o ¤database/schema.sql¤.`
     },
     {
       titulo: 'Tabela lancamentos (com FK)',
@@ -242,7 +246,7 @@ Teste ¤select¤/¤insert¤/¤update¤ de cada tabela antes de chamar o professo
 
 - [ ] Projeto Supabase ¤financapp¤ criado.
 - [ ] 4 tabelas criadas com FK corretas (¤database/schema.sql¤ com os 4 ¤create table¤).
-- [ ] ¤check (tipo in (...))¤ em ¤lancamentos¤ e ¤unique¤ em ¤tags.nome¤ e em ¤lancamento_tags¤.
+- [ ] ¤check (tipo in (...))¤ em ¤lancamentos¤ e ¤unique¤ em ¤usuarios.usuario¤, em ¤tags.nome¤ e em ¤lancamento_tags¤.
 - [ ] RLS habilitado nas 4 tabelas.
 - [ ] 8 policies de leitura/inserção + 2 de atualização/exclusão restrita testadas (¤database/policies.sql¤ com as 10 ¤create policy¤).
 - [ ] Limitação da restrição por autor documentada no README.
@@ -506,7 +510,7 @@ Quando tudo estiver certo, avance e peça o visto — é isso que libera a próx
       title: 'Projeto FinancApp — Banco de Dados e RLS — Checklist de correção',
       subtitle: 'Trabalho (projeto Supabase real, scripts commitados no GitHub) · Banco de Dados · Turma Sistemas',
       items: [
-        { number: 1, title: 'Tabelas e FK', prompt: 'As 4 tabelas existem com as colunas e FKs certas?', answer: 'usuarios (id PK, nome, turma, foto_url, usuario, senha, criado_em); lancamentos (id PK, autor_id FK→usuarios, descricao, valor, tipo com check receita/despesa, criado_em); tags (id PK, nome unique, criado_em); lancamento_tags (id PK, lancamento_id FK→lancamentos, tag_id FK→tags, unique(lancamento_id, tag_id)).' },
+        { number: 1, title: 'Tabelas e FK', prompt: 'As 4 tabelas existem com as colunas e FKs certas?', answer: 'usuarios (id PK, nome, turma, foto_url, usuario unique, senha, criado_em); lancamentos (id PK, autor_id FK→usuarios, descricao, valor, tipo com check receita/despesa, criado_em); tags (id PK, nome unique, criado_em); lancamento_tags (id PK, lancamento_id FK→lancamentos, tag_id FK→tags, unique(lancamento_id, tag_id)).' },
         { number: 2, title: 'RLS e policies', prompt: 'RLS e as policies estão corretas?', answer: 'RLS habilitado nas 4 tabelas; policies de leitura pública (select) e inserção liberada (insert) nas 4; policies de update/delete em lancamentos (using(true) — a restrição real por autor fica no JavaScript da próxima matéria, não no banco, e essa limitação está documentada no README do aluno).' },
         { number: 3, title: 'Scripts commitados', prompt: 'Os arquivos SQL foram commitados?', answer: '`database/schema.sql` e `database/policies.sql` presentes no repositório `financapp-<usuario>`.' }
       ],

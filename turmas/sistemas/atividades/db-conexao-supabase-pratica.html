@@ -513,7 +513,7 @@ const supabaseUrl = "SUA_URL";
 
 const supabaseKey = "SUA_PUBLISHABLE_KEY";
 
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
     supabaseUrl,
     supabaseKey
 );
@@ -521,14 +521,16 @@ const supabase = window.supabase.createClient(
 
 Substitua ¤SUA_URL¤ pela URL do seu projeto, e ¤SUA_PUBLISHABLE_KEY¤ pela sua Publishable Key.
 
-¤createClient()¤ monta um objeto (guardado aqui na variável ¤supabase¤) que já sabe pra qual projeto conversar e com qual chave se identificar — é ele que as próximas etapas vão usar toda vez que precisarem ler ou gravar na tabela ¤usuarios¤.
+> ⚠️ **Por que ¤supabaseClient¤ e não só ¤supabase¤?** A biblioteca do CDN já cria uma variável global chamada ¤supabase¤ (é dela que vem o ¤window.supabase.createClient¤). Se você escrever ¤const supabase = ...¤, o navegador acusa ¤SyntaxError: Identifier 'supabase' has already been declared¤ e ignora o ¤script.js¤ INTEIRO. Por isso o cliente ganha outro nome.
+
+¤createClient()¤ monta um objeto (guardado aqui na variável ¤supabaseClient¤) que já sabe pra qual projeto conversar e com qual chave se identificar — é ele que as próximas etapas vão usar toda vez que precisarem ler ou gravar na tabela ¤usuarios¤.
 
 ### ETAPA 17 — Testar a conexão
 
 Crie um teste simples:
 
 §§§javascript
-console.log(supabase);
+console.log(supabaseClient);
 §§§
 
 Abra o console do navegador. Se o objeto do Supabase aparecer, a biblioteca foi carregada corretamente.
@@ -538,7 +540,7 @@ Abra o console do navegador. Se o objeto do Supabase aparecer, a biblioteca foi 
 - [ ] A biblioteca foi carregada.
 - [ ] A URL foi configurada.
 - [ ] A Publishable Key foi configurada.
-- [ ] O objeto ¤supabase¤ aparece no console.`
+- [ ] O objeto ¤supabaseClient¤ aparece no console.`
     },
     {
       titulo: 'Consultar os usuários (SELECT)',
@@ -558,7 +560,7 @@ async function carregarUsuarios() {
 Dentro dela, faça uma consulta utilizando:
 
 §§§javascript
-const { data, error } = await supabase
+const { data, error } = await supabaseClient
     .from("usuarios")
     .select("*");
 §§§
@@ -610,7 +612,7 @@ async function cadastrarUsuario() {
     const email = document.getElementById("email").value;
     const telefone = document.getElementById("telefone").value;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("usuarios")
         .insert([
             {
@@ -634,7 +636,7 @@ async function cadastrarUsuario() {
     const email = document.getElementById("email").value;
     const telefone = document.getElementById("telefone").value;
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("usuarios")
         .insert([
             {
@@ -733,7 +735,7 @@ Complete a função ¤carregarUsuarios¤ (criada na ETAPA 18) pra desenhar os us
 
 §§§javascript
 async function carregarUsuarios() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("usuarios")
         .select("*");
 
@@ -837,7 +839,7 @@ async function cadastrarUsuario() {
         return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from("usuarios")
         .insert([
             {

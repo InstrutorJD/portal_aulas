@@ -110,8 +110,10 @@ Crie o arquivo ¤app.js¤ com o cliente, usando a **Project URL** e a **Publisha
 const supabaseUrl = 'SUA_URL';
 const supabaseKey = 'SUA_PUBLISHABLE_KEY';
 
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-§§§`
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+§§§
+
+> ⚠️ **Por que ¤supabaseClient¤ e não só ¤supabase¤?** A biblioteca do CDN já cria uma variável global chamada ¤supabase¤ (é dela que vem o ¤window.supabase.createClient¤). Se você escrever ¤const supabase = ...¤, o navegador acusa ¤SyntaxError: Identifier 'supabase' has already been declared¤ e ignora o ¤app.js¤ INTEIRO — nenhuma função existe. Por isso o cliente ganha outro nome, e é ¤supabaseClient¤ que as funções abaixo usam.`
     },
     {
       titulo: 'cadastrarUsuario',
@@ -124,7 +126,7 @@ No ¤app.js¤:
 
 §§§javascript
 async function cadastrarUsuario(nome, turma, usuario, senha) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('usuarios')
     .insert([{ nome: nome, turma: turma, usuario: usuario, senha: senha }])
     .select();
@@ -150,7 +152,7 @@ Uma consulta condicional (¤.eq()¤) filtra linhas por um valor específico.
 
 §§§javascript
 async function fazerLogin(usuario, senha) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('usuarios')
     .select('*')
     .eq('usuario', usuario)
@@ -182,7 +184,7 @@ Um insert com relação grava a **FK** (quem é o autor) junto com o dado. Aqui 
 
 §§§javascript
 async function criarLancamento(autorId, descricao, valor, tipo) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('lancamentos')
     .insert([{ autor_id: autorId, descricao: descricao, valor: Number(valor), tipo: tipo }])
     .select()
@@ -209,7 +211,7 @@ Select com **join** junta dados de duas (ou mais) tabelas relacionadas numa úni
 
 §§§javascript
 async function carregarLancamentos(autorId) {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('lancamentos')
     .select('*, lancamento_tags(tags(nome))')
     .eq('autor_id', autorId)
@@ -246,7 +248,7 @@ async function adicionarTag(lancamentoId, nomeTag) {
   }
 
   let tag = null;
-  const busca = await supabase
+  const busca = await supabaseClient
     .from('tags')
     .select('*')
     .eq('nome', nome)
@@ -259,7 +261,7 @@ async function adicionarTag(lancamentoId, nomeTag) {
   tag = busca.data;
 
   if (!tag) {
-    const criacao = await supabase
+    const criacao = await supabaseClient
       .from('tags')
       .insert([{ nome: nome }])
       .select()
@@ -272,7 +274,7 @@ async function adicionarTag(lancamentoId, nomeTag) {
     tag = criacao.data;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('lancamento_tags')
     .insert([{ lancamento_id: lancamentoId, tag_id: tag.id }])
     .select();
@@ -416,7 +418,7 @@ document.getElementById('formLogin').addEventListener('submit', async function (
 });
 §§§
 
-¤sessionStorage¤ guarda o usuário só enquanto a aba estiver aberta (some ao fechar) — suficiente pra este projeto, sem precisar de autenticação de verdade. ¤mostrarPerfil¤ e ¤atualizarExtrato¤ são as funções das próximas 2 etapas — ainda vão dar erro até você escrevê-las, e tudo bem.`
+¤sessionStorage¤ guarda o usuário só enquanto a aba estiver aberta (some ao fechar) — suficiente pra este projeto, sem precisar de autenticação de verdade. Na etapa Perfil você vai usar esse valor pra manter o login quando a página for recarregada (F5). ¤mostrarPerfil¤ e ¤atualizarExtrato¤ são as funções das próximas 2 etapas — ainda vão dar erro até você escrevê-las, e tudo bem.`
     },
     {
       titulo: 'Perfil',
@@ -445,7 +447,23 @@ document.getElementById('btnSair').addEventListener('click', function () {
   document.getElementById('telaAuth').hidden = false;
   document.getElementById('btnSair').hidden = true;
 });
-§§§`
+§§§
+
+Por último, faça o login **sobreviver ao F5**: quando a página carrega, se já existe um usuário guardado no ¤sessionStorage¤ (gravado no login), entre direto no app em vez de mostrar a tela de login de novo:
+
+§§§javascript
+const usuarioSalvo = sessionStorage.getItem('financapp_usuario');
+if (usuarioSalvo) {
+  usuarioLogado = JSON.parse(usuarioSalvo);
+  document.getElementById('telaAuth').hidden = true;
+  document.getElementById('telaApp').hidden = false;
+  document.getElementById('btnSair').hidden = false;
+  mostrarPerfil(usuarioLogado);
+  atualizarExtrato();
+}
+§§§
+
+¤sessionStorage¤ só guarda **texto** — por isso o login salvou com ¤JSON.stringify¤ e aqui lemos de volta com ¤JSON.parse¤. Esse trecho precisa ficar **depois** do ¤let usuarioLogado = null;¤ (ele usa essa variável). Pode chamar ¤atualizarExtrato¤ mesmo ela sendo escrita só na próxima etapa: funções criadas com ¤function¤ já existem desde o início do arquivo.`
     },
     {
       titulo: 'Saldo e Extrato',
@@ -555,7 +573,7 @@ document.getElementById('formLancamento').addEventListener('submit', async funct
 ¤tagsTexto.split(',')¤ separa ¤"mercado, transporte"¤ em ¤["mercado", " transporte"]¤; ¤.map(t => t.trim())¤ remove os espaços de cada item; ¤.filter(Boolean)¤ descarta strings vazias (ex.: se o aluno digitar ¤"mercado,"¤ com vírgula sobrando no final). O ¤for¤ chama ¤adicionarTag¤ uma vez pra cada tag — precisa ser um ¤for¤ comum (não ¤forEach¤) porque ¤await¤ dentro de ¤forEach¤ não pausa o loop.`
     },
     {
-      titulo: 'Web App Manifest — deixe o FinancApp instalável',
+      titulo: 'Web App Manifest — o primeiro passo pra instalar o app',
       corpo: `
 Um **Web App Manifest** é um arquivo JSON que descreve o site pro navegador: nome, cores e como ele deve se comportar quando alguém "instala" o app (adiciona à tela inicial do celular, ou como um app de desktop) — é o que separa uma página qualquer de algo que parece um aplicativo de verdade, sem precisar publicar em loja nenhuma.
 
@@ -590,7 +608,7 @@ Crie o arquivo ¤manifest.json¤:
 - ¤display: "standalone"¤: esconde a barra de endereço e os controles do navegador quando instalado — o FinancApp passa a se parecer com um app nativo, não uma aba de navegador.
 - ¤background_color¤/¤theme_color¤: cor de fundo da tela de splash (enquanto o app carrega) e cor da barra do sistema — usei os mesmos tons de ¤style.css¤ (fundo ¤#eef6f0¤, verde ¤#1f7a4d¤), pra ficar consistente.
 
-> Um manifest completo também costuma ter um campo ¤icons¤ (lista de imagens em tamanhos diferentes, ex.: 192×192 e 512×512) — como este projeto não trouxe arquivos de ícone prontos, deixamos de fora por enquanto; se quiser ir além, é um bom próximo passo depois do visto.
+> Um manifest completo também costuma ter um campo ¤icons¤ (lista de imagens em tamanhos diferentes, ex.: 192×192 e 512×512) — como este projeto não trouxe arquivos de ícone prontos, deixamos de fora por enquanto. **Sem ¤icons¤, o Chrome/Edge ainda não oferece o botão "Instalar"**: o seu manifest já aparece certinho no DevTools, mas pra instalar de verdade falta esse campo. Se quiser ir além, é um bom próximo passo depois do visto.
 
 ### Teste
 
