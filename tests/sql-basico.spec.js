@@ -150,6 +150,10 @@ test.describe('turmas/sistemas/plataforma.html — trilha SQL desbloqueia jogos'
       localStorage.setItem(`vida_emocional_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
       localStorage.setItem(`vida_equipe_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`vida_equipe_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5]));
+      localStorage.setItem(`vida_foco_autocontrole_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_foco_autocontrole_pratica_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_cidadania_digital_teoria_progress_${user}`, JSON.stringify({ completed: true }));
+      localStorage.setItem(`vida_cidadania_digital_pratica_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`mundo_revolucao_teoria_progress_${user}`, JSON.stringify({ completed: true }));
       localStorage.setItem(`mundo_revolucao_pratica_progress_${user}`, JSON.stringify([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
       localStorage.setItem(`mundo_inovacao_teoria_progress_${user}`, JSON.stringify({ completed: true }));

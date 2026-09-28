@@ -6,7 +6,7 @@
 const { test, expect } = require('@playwright/test');
 const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 
-// Turma Jogos tem 75 módulos que contam (teoria+prática de todas as trilhas de
+// Turma Jogos tem 79 módulos que contam (teoria+prática de todas as trilhas de
 // todas as matérias com conteúdo, incluindo os 4 módulos da trilha 'csharp'
 // (teoria/comparacao/pratica-simples/desafios), os 5 da trilha 'gdscript'
 // (os mesmos 4 + 'cenarios', só dela), os 2 da trilha 'cod-godot' (prática
@@ -15,9 +15,9 @@ const { stubSupabaseFake, jogosAlunoProfiles } = require('./helpers');
 // "Prova Final — Turma Jogos Digitais" e os 4 módulos de grupo da trilha
 // Cibersegurança (card Projetos; simulações e material do professor são
 // semEntrega e não contam) e os 4 módulos das trilhas compartilhadas com
-// Sistemas (projetos-estrutura-banco e projetos-pre-textuais) — usados como
+// Sistemas (projetos-estrutura-banco e projetos-pre-textuais) e os 4 das trilhas compartilhadas de Projeto de Vida (vida-foco-autocontrole e vida-cidadania-digital) — usados como
 // base do % geral. O %
-// de cada aluno é a MÉDIA da fração current/total de cada um dos 75
+// de cada aluno é a MÉDIA da fração current/total de cada um dos 79
 // módulos, não uma simples contagem de módulos concluídos.
 //
 // O progresso do PRÓPRIO aluno logado é lido do localStorage do navegador
@@ -29,14 +29,14 @@ const SEED = {
   profiles: jogosAlunoProfiles(),
   student_module_progress: [
     // edward.guzman: completa 2 módulos pré-existentes (js/basico,
-    // js/intermediario) → soma 2 frações de 1.0 / 75 módulos = 2,67% → arredonda 3%.
+    // js/intermediario) → soma 2 frações de 1.0 / 79 módulos = 2,53% → arredonda 3%.
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'basico', progress_current: 5, progress_total: 5, completed: true },
     { student_email: 'edward.guzman', turma: 'jogos', trilha_key: 'js', module_key: 'intermediario', progress_current: 7, progress_total: 7, completed: true },
   ],
 };
 
 // breno.silva80 completa os 10 desafios de js/basico (progressTotal:10) e
-// nada mais → 1 fração de 1.0 / 75 módulos da turma = 1,33% → arredonda 1%.
+// nada mais → 1 fração de 1.0 / 79 módulos da turma = 1,27% → arredonda 1%.
 async function seedBrenoLocalProgress(page) {
   await page.addInitScript(() => {
     localStorage.setItem('js_basico_progress_breno.silva80', JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
@@ -97,11 +97,11 @@ test.describe('Ranking do aluno na turma', () => {
     // edward (2 módulos concluídos) em 1º; o resto zerado, desempate por e-mail.
     await expect(linhas.nth(0)).toContainText('1º');
     await expect(linhas.nth(0)).toContainText('Edward Guzman');
-    await expect(linhas.nth(0)).toContainText('2/75');
+    await expect(linhas.nth(0)).toContainText('2/79');
     await expect(linhas.nth(0)).toContainText('3%');
     await expect(linhas.nth(1)).toContainText('2º');
     await expect(linhas.nth(1)).toContainText('Breno Silva');
-    await expect(linhas.nth(1)).toContainText('0/75');
+    await expect(linhas.nth(1)).toContainText('0/79');
   });
 
   test('professor não vê o badge de ranking', async ({ page }) => {

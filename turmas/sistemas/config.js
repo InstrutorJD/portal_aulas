@@ -824,6 +824,61 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        // As duas trilhas abaixo são COMPARTILHADAS entre Sistemas e Jogos
+        // (mesmas aulas 32 e 33 do plano de ensino). Os arquivos ficam em
+        // turmas/sistemas/ e o config.js de Jogos aponta para eles.
+        {
+          // Padrão novo (docs/padrao-trilhas.md). Plano de ensino: Aula 32
+          // (06/10/2026), 1h — teoria ~15 min + sprint de foco ~40 min, tudo
+          // numa tela só (o editor e os testes ficam no portal).
+          key: 'vida-foco-autocontrole',
+          label: 'Autocontrole e Foco',
+          aula: 32, dataAula: '2026-10-06',
+          desc: 'Foco, distrações e autocontrole num sprint de programação de lógica, respeitando as normas de convivência do laboratório.',
+          capacidade: 'Identificar normas e valores sociais relevantes à convivência cidadã.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Autocontrole e Foco',
+              desc: 'Foco × multitarefa, distrações externas e internas, autocontrole diante do erro, Pomodoro e normas de convivência que protegem o foco da turma.',
+              icon: '📖', src: 'atividades/vida-foco-autocontrole-teoria.html', telaCheia: true,
+              progressKey: 'vida_foco_autocontrole_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Sprint de Foco',
+              desc: 'Dois desafios de lógica com testes automáticos num sprint cronometrado, com contagem de saídas da tela e autoavaliação. Checklist de entrega de código e visto do professor.',
+              icon: '⏱️', src: 'atividades/vida-foco-autocontrole-pratica.html', telaCheia: true,
+              progressKey: 'vida_foco_autocontrole_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo. Plano de ensino: Aula 33 (13/10/2026), 1h — teoria
+          // ~20 min + fórum simulado ~35 min (postagem informativa conferida
+          // no portal + moderação de comentários + visto).
+          key: 'vida-cidadania-digital',
+          label: 'Urbanidade e Cidadania Digital',
+          aula: 33, dataAula: '2026-10-13',
+          desc: 'Urbanidade na internet, LGPD e práticas de cidadania digital: crie uma postagem informativa sobre proteção de dados e modere um fórum simulado.',
+          capacidade: 'Identificar normas e valores sociais relevantes à convivência cidadã.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Urbanidade e Cidadania Digital',
+              desc: 'Netiqueta, Marco Civil da Internet, dados pessoais e sensíveis (LGPD), direitos do titular, proteção de dados, cyberbullying (Lei 14.811/2024) e checagem de informações.',
+              icon: '📖', src: 'atividades/vida-cidadania-digital-teoria.html', telaCheia: true,
+              progressKey: 'vida_cidadania_digital_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Fórum de Cidadania Digital',
+              desc: 'Escreva uma postagem informativa (sem dados pessoais, com dicas e fonte) e modere comentários de forma ética num fórum simulado. Na última etapa, o professor dá o visto.',
+              icon: '💬', src: 'atividades/vida-cidadania-digital-pratica.html', telaCheia: true,
+              progressKey: 'vida_cidadania_digital_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
       ]
     },

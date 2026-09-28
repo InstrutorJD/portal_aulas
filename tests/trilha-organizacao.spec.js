@@ -26,9 +26,10 @@ test.describe('Organização das trilhas (em aberto / concluídas)', () => {
 
     const select = page.locator('#trilhaSelect');
     await expect(select.locator('optgroup[label="✅ Concluídas"] option')).toHaveText(['Colaboração e Compromisso em Equipe']);
-    // grupo "aberta" continua com as outras 4 trilhas não concluídas (as 2
-    // trilhas individuais/visibleFor do Engel nem aparecem pra este aluno).
-    await expect(select.locator('optgroup[label="🟢 Em aberto"] option')).toHaveCount(4);
+    // grupo "aberta" continua com as outras 6 trilhas não concluídas (4 próprias
+    // de Jogos + as 2 compartilhadas com Sistemas; as 2 trilhas
+    // individuais/visibleFor do Engel nem aparecem pra este aluno).
+    await expect(select.locator('optgroup[label="🟢 Em aberto"] option')).toHaveCount(6);
 
     await select.selectOption('vida-equipe');
     await expect(page.locator('#moduleSelector_vida-equipe h2')).toContainText('Concluída');

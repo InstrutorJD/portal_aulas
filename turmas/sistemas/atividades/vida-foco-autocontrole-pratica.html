@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto de Vida — Sprint de Foco</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#5ec8ff; --green-dim:#2f7aa8; --yellow:#ffd166; }
+  /* Específico deste exercício: cronômetro do sprint, editor e testes. */
+  .sp-relogio{ font-family:var(--ab-mono); font-size:13px; font-weight:800; padding:4px 12px; border-radius:999px; border:1px solid var(--line); color:var(--ink-dim); }
+  .sp-relogio.ativo{ color:var(--ab-acento); border-color:var(--green-dim); }
+  .sp-editor{ width:100%; min-height:260px; resize:vertical; margin-top:10px; padding:14px 16px; border-radius:12px; font-family:var(--ab-mono); font-size:13.5px; line-height:1.55; tab-size:2; background:var(--panel2); color:var(--ink); border:1px solid var(--line); }
+  .sp-editor:focus{ outline:none; border-color:var(--green); }
+  .sp-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+  .sp-testes{ list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .sp-testes li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-family:var(--ab-mono); font-size:12.5px; word-break:break-word; }
+  .sp-testes li.ok{ border-color:var(--ok); color:var(--ok); } .sp-testes li.falha{ border-color:var(--blood-bright); }
+  .sp-lista{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .sp-lista li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .sp-lista li.ok{ border-color:var(--ok); color:var(--ok); } .sp-lista li.falha{ border-color:var(--blood-bright); } .sp-lista li.falha b{ color:var(--blood-bright); }
+  .sp-lista li.info{ border-color:var(--yellow); }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'vida_foco_autocontrole_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projeto de Vida — Sprint de Foco</div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <span class="sp-relogio" id="spRelogio">⏱ sprint não iniciado</span>
+      <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+    </div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Sprint de foco: dois desafios de lógica resolvidos NESTA tela (sair para
+// outra aba é justamente a distração que a aula trabalha), com testes
+// automáticos rodando num Web Worker (um laço infinito não trava a página).
+// Durante o sprint, o portal conta as saídas da tela (visibilitychange) só
+// como informação para a autoavaliação e para o professor. A "Checklist de
+// entrega de código" do plano de ensino fecha com o visto. Compartilhada
+// pelas turmas Sistemas e Jogos.
+(function () {
+  const LOC = 'vida_foco_autocontrole_pratica';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const md = s => window.RoteiroSlides.mdToHtml(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ler = () => { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } };
+  const estado = Object.assign({ completed: false, codigo: {}, passou: {}, inicio: null, fim: null, saidas: 0, foraMs: 0, auto: {}, lastStepIndex: 0 }, ler());
+  ['codigo', 'passou', 'auto'].forEach(k => { if (!estado[k] || typeof estado[k] !== 'object') estado[k] = {}; });
+  let timer = 0;
+  function salvar(agora) { clearTimeout(timer); const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} }; if (agora) f(); else timer = setTimeout(f, 800); }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+  const SPRINT_MIN = 35;
+
+  const DESAFIOS = [
+    {
+      id: 'senha', funcao: 'validarSenha', titulo: 'Desafio 1 — Validador de senha forte',
+      enunciado: `
+Escreva a função \`validarSenha(senha)\`. Ela devolve uma **lista com os problemas** da senha, **nesta ordem**, ou uma lista vazia \`[]\` se a senha estiver boa:
+
+| Código | Quando entra na lista |
+|---|---|
+| \`"tamanho"\` | menos de 8 caracteres |
+| \`"maiuscula"\` | nenhuma letra maiúscula (A-Z) |
+| \`"minuscula"\` | nenhuma letra minúscula (a-z) |
+| \`"numero"\` | nenhum número (0-9) |
+| \`"especial"\` | nenhum caractere que não seja letra, número ou espaço (ex.: ! @ #) |
+| \`"espaco"\` | tem espaço em algum lugar |
+
+Exemplo: \`validarSenha("abc")\` devolve \`["tamanho", "maiuscula", "numero", "especial"]\`.`,
+      inicial: 'function validarSenha(senha) {\n  const problemas = [];\n  // Dica: teste uma regra de cada vez, na ordem da tabela.\n\n  return problemas;\n}\n',
+      testes: [
+        { args: ['Abc12345!'], esperado: [] },
+        { args: ['abc'], esperado: ['tamanho', 'maiuscula', 'numero', 'especial'] },
+        { args: ['ABCDEFGH1!'], esperado: ['minuscula'] },
+        { args: ['SenhaForte!'], esperado: ['numero'] },
+        { args: ['Senha1234'], esperado: ['especial'] },
+        { args: ['Senha Forte1!'], esperado: ['espaco'] },
+        { args: ['a b'], esperado: ['tamanho', 'maiuscula', 'numero', 'especial', 'espaco'] },
+      ],
+    },
+    {
+      id: 'tabela', funcao: 'classificar', titulo: 'Desafio 2 — Tabela do campeonato',
+      enunciado: `
+Escreva a função \`classificar(partidas)\`. Cada partida é \`{ casa, fora, golsCasa, golsFora }\`. Devolva a **tabela** como uma lista de objetos \`{ time, pontos, saldo, golsPro }\`:
+
+- Vitória vale **3** pontos, empate **1**, derrota **0**
+- \`saldo\` = gols marcados − gols sofridos; \`golsPro\` = gols marcados
+- Ordem: mais **pontos**; empatou, maior **saldo**; empatou, mais **golsPro**; empatou, **nome** em ordem alfabética
+
+Exemplo: \`classificar([{ casa: "Azul", fora: "Verde", golsCasa: 2, golsFora: 1 }])\` devolve
+\`[{ time: "Azul", pontos: 3, saldo: 1, golsPro: 2 }, { time: "Verde", pontos: 0, saldo: -1, golsPro: 1 }]\`.`,
+      inicial: 'function classificar(partidas) {\n  const times = {};\n  // 1) Some pontos, saldo e gols de cada time.\n  // 2) Transforme em lista e ordene pelos critérios.\n\n  return [];\n}\n',
+      testes: [
+        { args: [[{ casa: 'Azul', fora: 'Verde', golsCasa: 2, golsFora: 1 }]], esperado: [{ time: 'Azul', pontos: 3, saldo: 1, golsPro: 2 }, { time: 'Verde', pontos: 0, saldo: -1, golsPro: 1 }] },
+        { args: [[{ casa: 'Azul', fora: 'Verde', golsCasa: 1, golsFora: 1 }]], esperado: [{ time: 'Azul', pontos: 1, saldo: 0, golsPro: 1 }, { time: 'Verde', pontos: 1, saldo: 0, golsPro: 1 }] },
+        { args: [[
+          { casa: 'Azul', fora: 'Verde', golsCasa: 3, golsFora: 0 },
+          { casa: 'Verde', fora: 'Roxo', golsCasa: 2, golsFora: 1 },
+          { casa: 'Roxo', fora: 'Azul', golsCasa: 1, golsFora: 0 },
+        ]], esperado: [
+          { time: 'Azul', pontos: 3, saldo: 2, golsPro: 3 },
+          { time: 'Roxo', pontos: 3, saldo: 0, golsPro: 2 },
+          { time: 'Verde', pontos: 3, saldo: -2, golsPro: 2 },
+        ] },
+        { args: [[
+          { casa: 'Laranja', fora: 'Cinza', golsCasa: 2, golsFora: 2 },
+          { casa: 'Cinza', fora: 'Branco', golsCasa: 1, golsFora: 0 },
+          { casa: 'Branco', fora: 'Laranja', golsCasa: 0, golsFora: 1 },
+        ]], esperado: [
+          { time: 'Cinza', pontos: 4, saldo: 1, golsPro: 3 },
+          { time: 'Laranja', pontos: 4, saldo: 1, golsPro: 3 },
+          { time: 'Branco', pontos: 0, saldo: -2, golsPro: 0 },
+        ] },
+      ],
+    },
+  ];
+
+  // ---------- Execução dos testes num Web Worker ----------
+  const WORKER_SRC = `self.onmessage = function (e) {
+    var d = e.data, out = [];
+    try {
+      var fn = new Function(d.codigo + '\\n;return typeof ' + d.funcao + ' === "function" ? ' + d.funcao + ' : null;')();
+      if (!fn) { self.postMessage({ erro: 'A função ' + d.funcao + ' não foi encontrada. Confira o nome.' }); return; }
+      d.testes.forEach(function (t) {
+        try { var got = fn.apply(null, JSON.parse(JSON.stringify(t.args))); out.push({ ok: JSON.stringify(got) === JSON.stringify(t.esperado), got: JSON.stringify(got) }); }
+        catch (err) { out.push({ ok: false, got: 'erro: ' + err.message }); }
+      });
+      self.postMessage({ resultados: out });
+    } catch (err) { self.postMessage({ erro: 'O código não roda: ' + err.message }); }
+  };`;
+  const workerUrl = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'application/javascript' }));
+  function rodar(ds, codigo) {
+    return new Promise(resolve => {
+      const w = new Worker(workerUrl);
+      const t = setTimeout(() => { w.terminate(); resolve({ erro: 'O código demorou demais (laço infinito?). Confira as condições dos seus laços.' }); }, 3000);
+      w.onmessage = e => { clearTimeout(t); w.terminate(); resolve(e.data); };
+      w.onerror = e => { clearTimeout(t); w.terminate(); resolve({ erro: `O código não roda: ${e.message}` }); e.preventDefault(); };
+      w.postMessage({ codigo, funcao: ds.funcao, testes: ds.testes });
+    });
+  }
+
+  // ---------- Sprint: tempo e saídas da tela ----------
+  let saiuEm = null;
+  const sprintAtivo = () => estado.inicio && !estado.fim;
+  document.addEventListener('visibilitychange', () => {
+    if (!sprintAtivo()) return;
+    if (document.hidden) { estado.saidas++; saiuEm = Date.now(); }
+    else if (saiuEm) { estado.foraMs += Date.now() - saiuEm; saiuEm = null; }
+    salvar(true);
+  });
+  const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  function relogio() {
+    const el = document.getElementById('spRelogio');
+    if (!estado.inicio) { el.textContent = '⏱ sprint não iniciado'; el.classList.remove('ativo'); return; }
+    const fim = estado.fim || Date.now();
+    el.textContent = `⏱ ${mmss(fim - estado.inicio)} · saídas da tela: ${estado.saidas}`;
+    el.classList.toggle('ativo', sprintAtivo());
+  }
+  setInterval(relogio, 1000);
+
+  function checklist() {
+    const min = estado.inicio && estado.fim ? (estado.fim - estado.inicio) / 60000 : null;
+    const semLog = DESAFIOS.every(d => !/console\.log/.test(estado.codigo[d.id] || ''));
+    return [
+      { ok: !!estado.passou.senha, t: 'Desafio 1 passa em todos os testes', d: 'Volte ao desafio 1.' },
+      { ok: !!estado.passou.tabela, t: 'Desafio 2 passa em todos os testes', d: 'Volte ao desafio 2.' },
+      { ok: semLog && DESAFIOS.every(d => (estado.codigo[d.id] || '').includes(`function ${d.funcao}`)), t: 'Código entregue limpo: funções com o nome pedido e sem console.log sobrando', d: 'Apague os console.log de teste antes de entregar.' },
+      { ok: min !== null && min <= SPRINT_MIN, info: true, t: `Entregue dentro do tempo do sprint (${SPRINT_MIN} min)${min !== null ? ` — levou ${Math.round(min)} min` : ''}`, d: 'Informação para o professor.' },
+      { ok: estado.inicio && estado.saidas <= 2, info: true, t: `Foco: no máximo 2 saídas da tela durante o sprint (${estado.saidas})`, d: 'Informação para a sua autoavaliação e para o professor.' },
+      { ok: ['celular', 'notificacoes', 'frustracao', 'ajuda', 'colegas'].every(k => estado.auto[k] !== undefined), t: 'Autoavaliação respondida', d: 'Responda as 5 perguntas da etapa anterior.' },
+    ];
+  }
+  // O visto depende só da entrega do código e da autoavaliação; tempo e saídas são informação.
+  const podeVisto = () => checklist().filter(c => !c.info).every(c => c.ok);
+
+  // ---------- Telas ----------
+  const ETAPAS = ['preparar', 'senha', 'tabela', 'autoavaliacao', 'checklist', 'visto'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.completed ? TOTAL - 1 : (estado.lastStepIndex || 0), TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+  function nav(voltar, avancar, rot) { return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? `<button class="btn" id="btnNext">${rot || 'Próximo →'}</button>` : '<span></span>'}</div>`; }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > estado.lastStepIndex) estado.lastStepIndex = atual; salvar(true); render(); }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.decorar(stepWrap, { chaveChecklist: `${LOC}_check_${user}_${atual}` });
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  const cartao = (t, corpo, extra) => `<article class="ab-cartao ${extra || ''}"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${t}</h2>${corpo}</article>`;
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const cl = checklist().filter(c => !c.info);
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(cl.filter(c => c.ok).length / cl.length * 90)) + '%';
+    relogio();
+    const e = ETAPAS[atual];
+    reportar(`Sprint de foco — ${e}`);
+    if (e === 'preparar') {
+      stepWrap.innerHTML = cartao('Preparar o sprint', `<div class="ab-conteudo">${md(`
+Você vai resolver **dois desafios de lógica** num sprint de até **${SPRINT_MIN} minutos**, **sem distrações**. Tudo acontece **nesta tela**: editor, testes e entrega.
+
+### Antes de começar
+- [ ] Celular guardado (na mochila, com a tela para baixo ou desligado)
+- [ ] Notificações do computador desligadas e outras abas fechadas
+- [ ] Água por perto; papel para anotar ideias que surgirem ("estacionamento de ideias")
+- [ ] Combinado: dúvida = mão levantada, sem chamar em voz alta
+
+> Durante o sprint, o portal conta quantas vezes você **sai desta tela**. Não é punição: é um retrato do seu foco para você comparar depois. Na metade, faça uma **pausa de 2 minutos** (Pomodoro).`)}</div>
+      <div class="sp-acoes">${estado.inicio ? `<span class="ab-msg ok">Sprint iniciado às ${new Date(estado.inicio).toLocaleTimeString('pt-BR')}.</span>` : '<button class="btn" id="btnIniciar">▶ Iniciar o sprint</button>'}</div>`) + nav(false, !!estado.inicio);
+      const bi = document.getElementById('btnIniciar');
+      if (bi) bi.addEventListener('click', () => { estado.inicio = Date.now(); estado.saidas = 0; estado.foraMs = 0; salvar(true); reportar('Sprint de foco — iniciado'); irPara(1); });
+    } else if (e === 'senha' || e === 'tabela') {
+      renderDesafio(DESAFIOS.find(d => d.id === e)); return;
+    } else if (e === 'autoavaliacao') {
+      if (sprintAtivo() && estado.passou.senha && estado.passou.tabela) { estado.fim = Date.now(); salvar(true); relogio(); }
+      const PERG = [
+        ['celular', 'Deixei o celular guardado durante todo o sprint?'],
+        ['notificacoes', 'Evitei abrir outras abas, jogos ou redes sociais?'],
+        ['frustracao', 'Quando o código deu erro, respirei e testei com calma?'],
+        ['ajuda', 'Pedi ajuda do jeito combinado (mão levantada, mostrando o que tentei)?'],
+        ['colegas', 'Respeitei o foco dos colegas (sem conversa, vídeos ou barulho)?'],
+      ];
+      const opc = (k, v, t) => `<label class="ab-check" style="display:inline-flex; margin-right:8px;"><input type="radio" name="auto_${k}" value="${v}" ${estado.auto[k] === v ? 'checked' : ''}> <span>${t}</span></label>`;
+      stepWrap.innerHTML = cartao('Autoavaliação: como foi o meu foco?', `
+        <div class="ab-conteudo"><p>Responda com sinceridade: é para você se conhecer, não para ganhar nota. Tempo do sprint: <b>${estado.inicio ? mmss((estado.fim || Date.now()) - estado.inicio) : '—'}</b> · saídas da tela: <b>${estado.saidas}</b>${estado.foraMs ? ` (${mmss(estado.foraMs)} fora)` : ''}.</p></div>
+        ${PERG.map(([k, t]) => `<div class="cl-caso" style="margin-top:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px;"><p style="margin:0 0 8px;">${t}</p>${opc(k, 'sim', 'Sim')}${opc(k, 'parcial', 'Em parte')}${opc(k, 'nao', 'Não')}</div>`).join('')}
+        <div class="ab-conteudo" style="margin-top:14px;"><label style="display:flex; flex-direction:column; gap:6px; font-weight:700;">O que eu faço diferente no próximo sprint?<textarea id="spMelhoria" class="sp-editor" style="min-height:80px; font-family:inherit;">${esc(estado.auto.melhoria || '')}</textarea></label></div>`) + nav(true, true);
+      stepWrap.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', () => { estado.auto[r.name.slice(5)] = r.value; salvar(); }));
+      document.getElementById('spMelhoria').addEventListener('input', ev => { estado.auto.melhoria = ev.target.value; salvar(); });
+    } else if (e === 'checklist') {
+      const cl2 = checklist();
+      stepWrap.innerHTML = cartao('Checklist de entrega de código', `
+        <ul class="sp-lista">${cl2.map(c => c.ok ? `<li class="ok">✔ ${esc(c.t)}</li>` : `<li class="${c.info ? 'info' : 'falha'}"><b>${c.info ? '•' : '✘'} ${esc(c.t)}</b> — ${esc(c.d)}</li>`).join('')}</ul>
+        <div class="ab-conteudo" style="margin-top:14px;">${md(podeVisto() ? '> Tudo entregue. Chame o professor: a próxima etapa é o visto.' : '> Complete os itens com ✘ antes de pedir o visto.')}</div>`) + nav(true, podeVisto(), 'Pedir visto →');
+    } else {
+      renderVisto(); return;
+    }
+    ligar();
+  }
+
+  function renderDesafio(ds) {
+    const cod = estado.codigo[ds.id] != null ? estado.codigo[ds.id] : ds.inicial;
+    stepWrap.innerHTML = cartao(ds.titulo, `<div class="ab-conteudo">${md(ds.enunciado)}</div>
+      <textarea class="sp-editor" id="spCodigo" spellcheck="false" aria-label="Seu código">${esc(cod)}</textarea>
+      <div class="sp-acoes"><button class="btn" id="btnTestar">▶ Rodar os testes</button><button class="btn btn-secondary" id="btnRecomecar">↺ Recomeçar</button><span class="ab-nav-dica" id="spStatus"></span></div>
+      <ul class="sp-testes" id="spTestes">${estado.passou[ds.id] ? '<li class="ok">✅ Todos os testes passaram.</li>' : ''}</ul>`) + nav(true, true);
+    const ta = document.getElementById('spCodigo');
+    ta.addEventListener('input', () => { estado.codigo[ds.id] = ta.value; salvar(); });
+    ta.addEventListener('keydown', ev => { if (ev.key === 'Tab' && !ev.shiftKey) { ev.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); ta.dispatchEvent(new Event('input')); } });
+    document.getElementById('btnRecomecar').addEventListener('click', () => { ta.value = ds.inicial; ta.dispatchEvent(new Event('input')); });
+    document.getElementById('btnTestar').addEventListener('click', async () => {
+      estado.codigo[ds.id] = ta.value; salvar(true);
+      document.getElementById('spStatus').textContent = 'Rodando...';
+      const r = await rodar(ds, ta.value);
+      document.getElementById('spStatus').textContent = '';
+      const lista = document.getElementById('spTestes');
+      if (r.erro) { lista.innerHTML = `<li class="falha">✘ ${esc(r.erro)}</li>`; estado.passou[ds.id] = false; salvar(true); return; }
+      lista.innerHTML = r.resultados.map((x, i) => x.ok
+        ? `<li class="ok">✔ ${esc(ds.funcao)}(${esc(JSON.stringify(ds.testes[i].args).slice(1, -1).slice(0, 120))})</li>`
+        : `<li class="falha">✘ ${esc(ds.funcao)}(${esc(JSON.stringify(ds.testes[i].args).slice(1, -1).slice(0, 120))})<br>esperado: ${esc(JSON.stringify(ds.testes[i].esperado))}<br>recebido: ${esc(x.got)}</li>`).join('');
+      const tudo = r.resultados.every(x => x.ok);
+      estado.passou[ds.id] = tudo;
+      if (tudo) lista.insertAdjacentHTML('beforeend', '<li class="ok">✅ Todos os testes passaram.</li>');
+      salvar(true);
+      reportar(`Sprint de foco — ${ds.id} (${r.resultados.filter(x => x.ok).length}/${r.resultados.length})`);
+    });
+    ligar();
+  }
+
+  function renderVisto() {
+    if (!estado.completed && !podeVisto()) { atual = ETAPAS.indexOf('checklist'); render(); return; }
+    if (estado.completed) {
+      const quando = estado.vistoEm ? new Date(estado.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = cartao('✅ Sprint entregue', `<p>Visto dado por <b>${esc(estado.vistoPor || '')}</b>${quando ? ' em ' + esc(quando) : ''}.</p>`, 'ab-concluida') + nav(true, false);
+      ligar(); return;
+    }
+    stepWrap.innerHTML = cartao('🧑‍🏫 Visto do professor', `
+      <div class="ab-conteudo"><p>Mostre ao professor o código e a checklist. Quando ele conferir, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo.</p></div>
+      <div class="ab-form"><label>Token do professor <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+        <button class="btn" id="btnDarVisto">Dar visto</button><div class="ab-msg" id="vistoMsg" style="display:none;"></div></div>`) + nav(true, false);
+    ligar();
+    const btn = document.getElementById('btnDarVisto');
+    const m = document.getElementById('vistoMsg');
+    btn.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      m.style.display = 'none';
+      if (!t) { m.className = 'ab-msg erro'; m.textContent = 'Informe o token do professor.'; m.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      try {
+        const r = window.PortalProfessorVisto ? await window.PortalProfessorVisto.verificarToken(t) : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!r.ok) throw new Error(r.erro);
+        if (!estado.fim) estado.fim = Date.now();
+        Object.assign(estado, { completed: true, vistoPor: r.nome, vistoEm: new Date().toISOString() });
+        salvar(true); reportar('Sprint de foco — entregue com visto'); render();
+      } catch (e) {
+        m.className = 'ab-msg erro'; m.textContent = e.message || 'Erro inesperado ao verificar. Tente de novo.'; m.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const sol1 = 'const p = []; if (senha.length < 8) p.push("tamanho"); if (!/[A-Z]/.test(senha)) p.push("maiuscula"); if (!/[a-z]/.test(senha)) p.push("minuscula"); if (!/[0-9]/.test(senha)) p.push("numero"); if (!/[^A-Za-z0-9 ]/.test(senha)) p.push("especial"); if (senha.includes(" ")) p.push("espaco"); return p;';
+    const sol2 = 'Acumular {pontos, saldo, golsPro} por time (vitória 3, empate 1), Object.values(...) e sort por pontos desc, saldo desc, golsPro desc e time.localeCompare.';
+    return window.PortalGabarito.generate({
+      title: 'Projeto de Vida — Sprint de Foco',
+      subtitle: 'Prática · Checklist de entrega de código (O aluno mantém o foco e autocontrole na tarefa?) · Sistemas e Jogos',
+      items: [
+        { number: 1, title: DESAFIOS[0].titulo, prompt: 'validarSenha(senha) → lista de problemas na ordem da tabela.', answer: sol1 },
+        { number: 2, title: DESAFIOS[1].titulo, prompt: 'classificar(partidas) → tabela ordenada.', answer: sol2 },
+        { number: 3, title: 'Observação do professor', prompt: 'Foco e autocontrole durante o sprint.', answer: 'Conferir: tempo do sprint e saídas da tela (mostrados na checklist), celular guardado, reação ao erro, pedido de ajuda do jeito combinado e respeito ao foco dos colegas.' },
+      ],
+      fileName: 'vida-foco-autocontrole-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

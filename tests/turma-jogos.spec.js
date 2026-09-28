@@ -22,6 +22,7 @@ function seedAllModulesComplete(user) {
   const teoriaFlag = [
     'vida_autoconhecimento_teoria', 'vida_cidadania_teoria', 'vida_emocional_teoria', 'vida_equipe_teoria',
     'vida_metas_carreira_teoria',
+        'vida_foco_autocontrole_teoria', 'vida_foco_autocontrole_pratica', 'vida_cidadania_digital_teoria', 'vida_cidadania_digital_pratica',
     'mundo_revolucao_teoria', 'mundo_inovacao_teoria', 'mundo_equipe_teoria', 'mundo_comprometimento_teoria',
     'projetos_metodos_teoria', 'projetos_fases_teoria',
         'projetos_estrutura_banco_teoria', 'projetos_estrutura_banco_pratica', 'projetos_pre_textuais_teoria', 'projetos_pre_textuais_pratica',

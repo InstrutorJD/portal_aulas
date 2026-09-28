@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto de Vida — Fórum de Cidadania Digital</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#7cd992; --green-dim:#46a35d; --yellow:#ffd166; }
+  /* Específico deste exercício: formulário da postagem, prévia e moderação. */
+  .fo-campo{ display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+  .fo-campo > span{ font-size:11.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--ab-acento); }
+  .fo-campo small{ color:var(--ink-dim); font-size:12px; }
+  .fo-campo input, .fo-campo textarea, .fo-campo select{ width:100%; font:inherit; font-size:14px; padding:9px 11px; border-radius:10px; background:var(--panel2); color:var(--ink); border:1px solid var(--line); }
+  .fo-campo textarea{ min-height:120px; resize:vertical; }
+  .fo-post{ margin-top:16px; border:1px solid var(--line); border-radius:16px; background:var(--panel2); padding:16px 18px; }
+  .fo-post-topo{ display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+  .fo-avatar{ width:38px; height:38px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb, var(--green) 25%, transparent); font-weight:800; }
+  .fo-post h3{ margin:0 0 8px; font-size:1.1em; }
+  .fo-post p{ margin:0 0 10px; white-space:pre-wrap; line-height:1.6; }
+  .fo-post ul{ margin:0 0 10px; padding-left:20px; }
+  .fo-post .fo-fonte{ font-size:12.5px; color:var(--ink-dim); } .fo-post .fo-tag{ color:var(--ab-acento); font-weight:700; }
+  .fo-com{ margin-top:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; }
+  .fo-com.ok{ border-color:var(--ok); } .fo-com.erro{ border-color:var(--blood-bright); }
+  .fo-com blockquote{ margin:0 0 8px; }
+  .fo-dica{ margin-top:8px; font-size:13px; } .fo-dica:empty{ display:none; }
+  .fo-lista{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .fo-lista li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .fo-lista li.ok{ border-color:var(--ok); color:var(--ok); } .fo-lista li.falha{ border-color:var(--blood-bright); } .fo-lista li.falha b{ color:var(--blood-bright); }
+  .fo-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  .fo-acoes .ab-msg{ flex:1; min-width:200px; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'vida_cidadania_digital_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projeto de Vida — Fórum de Cidadania Digital</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Fórum SIMULADO: o aluno escreve uma postagem informativa sobre proteção de
+// dados pessoais (conferida aqui: sem dados pessoais, sem "gritar", com dicas e
+// fonte) e modera comentários fictícios. A postagem fica no progresso
+// ({ completed, post, moderacao, ... }), espelhado no Supabase; é a
+// "Postagem informativa (simulada)" do plano de ensino, fechada com o visto.
+// Compartilhada pelas turmas Sistemas e Jogos.
+(function () {
+  const LOC = 'vida_cidadania_digital_pratica';
+  const params = new URLSearchParams(location.search);
+  const user = params.get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ler = () => { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } };
+  const estado = Object.assign({ completed: false, post: {}, moderacao: {}, lastStepIndex: 0 }, ler());
+  if (!estado.post || typeof estado.post !== 'object') estado.post = {};
+  if (!estado.moderacao || typeof estado.moderacao !== 'object') estado.moderacao = {};
+  const P = estado.post;
+  if (!Array.isArray(P.dicas)) P.dicas = ['', '', ''];
+  let timer = 0;
+  function salvar(agora) { clearTimeout(timer); const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} }; if (agora) f(); else timer = setTimeout(f, 800); }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+  const palavras = s => (String(s || '').trim().match(/\S+/g) || []).length;
+
+  const TEMAS = [
+    ['senhas', 'Senhas fortes e verificação em duas etapas'],
+    ['privacidade', 'Configurações de privacidade nas redes sociais'],
+    ['terceiros', 'Fotos e dados de outras pessoas: pedir antes de postar'],
+    ['golpes', 'Golpes, links falsos e phishing'],
+    ['lgpd', 'Seus direitos sobre os seus dados (LGPD)'],
+    ['cyberbullying', 'Cyberbullying: como reconhecer e denunciar'],
+  ];
+  const PUBLICOS = [['colegas', 'Colegas da escola'], ['familia', 'Família'], ['criancas', 'Crianças e adolescentes mais novos']];
+  const FONTES = /(gov\.br|anpd|cert\.br|cartilha|safernet|lgpd|lei\s*13\.?709|marco civil|https?:\/\/)/i;
+
+  // ---------- Conferência da postagem ----------
+  const CPF = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/;
+  const TELEFONE = /\(?\b\d{2}\)?\s?9?\d{4}[-\s]?\d{4}\b/;
+  const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+  const OFENSAS = /\b(idiota|burr[oa]|ot[aá]ri[oa]|imbecil|lixo|retardad[oa]|trouxa)\b/i;
+  function gritando(t) { const letras = String(t || '').replace(/[^A-Za-zÀ-ÿ]/g, ''); if (letras.length < 20) return false; const mai = letras.replace(/[^A-ZÀ-Þ]/g, '').length; return mai / letras.length > 0.4; }
+  function conferirPost() {
+    const tudo = [P.titulo, P.texto, ...(P.dicas || []), P.hashtag].join('\n');
+    const x = (ok, t, d) => ({ ok: !!ok, t, d });
+    return [
+      x(P.tema && P.publico, 'Tema e público escolhidos', 'Volte à etapa 2.'),
+      x(String(P.titulo || '').trim().length >= 5 && String(P.titulo || '').trim().length <= 60, 'Título com 5 a 60 caracteres', 'Um título curto e direto chama mais atenção.'),
+      x(palavras(P.texto) >= 50 && palavras(P.texto) <= 150, `Texto com 50 a 150 palavras (tem ${palavras(P.texto)})`, 'Explique o problema e por que ele importa, em linguagem simples.'),
+      x(/dados?\s+pessoa(l|is)|privacidade|lgpd|proteç[aã]o de dados/i.test(P.texto || ''), 'O texto fala de proteção de dados pessoais', 'Ligue o seu tema à proteção de dados pessoais (os seus e os dos outros).'),
+      x((P.dicas || []).filter(d => palavras(d) >= 4).length === 3, '3 dicas práticas, com pelo menos 4 palavras cada', 'Cada dica diz o que a pessoa deve FAZER.'),
+      x(FONTES.test(P.fonte || ''), 'Fonte confiável citada', 'Cite uma fonte oficial: gov.br/anpd, cartilha.cert.br, SaferNet ou a própria LGPD.'),
+      x(!CPF.test(tudo) && !TELEFONE.test(tudo) && !EMAIL.test(tudo), 'Nenhum dado pessoal exposto na postagem (CPF, telefone, e-mail)', 'Tire da postagem qualquer CPF, telefone ou e-mail, mesmo de exemplo.'),
+      x(!gritando(P.texto) && !gritando(P.titulo) && !OFENSAS.test(tudo), 'Urbanidade: sem "gritar" em maiúsculas e sem ofensas', 'Escreva em letras normais e com respeito, mesmo ao alertar sobre um perigo.'),
+    ];
+  }
+
+  const COMENTARIOS = [
+    { id: 'cpf', autor: 'Carla', texto: 'Meu CPF é 123.456.789-00, alguém sabe se ele está bloqueado?', certa: 'orientar', dica: 'O que a Carla acabou de expor no fórum, sem perceber?' },
+    { id: 'ofensa', autor: 'Diego', texto: 'Que post chato. Quem escreveu isso é um idiota.', certa: 'cortesia', dica: 'Responder na mesma moeda resolve? E se ele continuar?' },
+    { id: 'boato', autor: 'Eva', texto: 'COMPARTILHEM!!! O app X rouba todos os dados do celular, vi num vídeo!', certa: 'checar', dica: 'O que falta nessa mensagem antes de alguém espalhar?' },
+    { id: 'duvida', autor: 'Felipe', texto: 'Muito bom! Como eu ativo a verificação em duas etapas?', certa: 'ajudar', dica: 'É uma pergunta legítima. Como um cidadão digital ativo reage?' },
+  ];
+  const ACOES = [
+    ['expor', 'Fazer um print e expor a pessoa no grupo da turma'],
+    ['orientar', 'Avisar com gentileza para apagar o dado pessoal e procurar o canal oficial'],
+    ['checar', 'Pedir a fonte e lembrar de não compartilhar sem checar'],
+    ['cortesia', 'Responder com calma, sem revidar, e denunciar se continuar'],
+    ['ajudar', 'Responder explicando o passo a passo e indicar uma fonte oficial'],
+  ];
+  const modOk = () => COMENTARIOS.every(c => estado.moderacao[c.id] === c.certa);
+  const podeVisto = () => conferirPost().every(c => c.ok) && modOk();
+
+  // ---------- Telas ----------
+  const ETAPAS = ['intro', 'tema', 'escrever', 'moderar', 'checklist', 'visto'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.completed ? TOTAL - 1 : (estado.lastStepIndex || 0), TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+  function nav(voltar, avancar, rot) { return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? `<button class="btn" id="btnNext">${rot || 'Próximo →'}</button>` : '<span></span>'}</div>`; }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > estado.lastStepIndex) estado.lastStepIndex = atual; salvar(true); render(); }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  const cartao = (t, corpo, extra) => `<article class="ab-cartao ${extra || ''}"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${t}</h2>${corpo}</article>`;
+  const opcoes = (lista, v) => '<option value="">Escolha…</option>' + lista.map(([k, t]) => `<option value="${esc(k)}" ${v === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  const nomeAutor = () => params.get('name') || user;
+  function previa() {
+    const dicas = (P.dicas || []).filter(d => String(d).trim());
+    return `<div class="fo-post" id="foPrevia"><div class="fo-post-topo"><div class="fo-avatar">${esc(nomeAutor().slice(0, 1).toUpperCase())}</div><div><b>${esc(nomeAutor())}</b><br><small style="color:var(--ink-dim);">Fórum de Cidadania Digital · simulado</small></div></div>
+      <h3>${esc(P.titulo || 'Título da postagem')}</h3><p>${esc(P.texto || 'O texto da sua postagem aparece aqui.')}</p>
+      ${dicas.length ? `<ul>${dicas.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
+      ${P.fonte ? `<div class="fo-fonte">Fonte: ${esc(P.fonte)}</div>` : ''}${P.hashtag ? `<div class="fo-tag">${esc(P.hashtag)}</div>` : ''}</div>`;
+  }
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const itens = conferirPost().concat([{ ok: modOk() }]);
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(itens.filter(i => i.ok).length / itens.length * 90)) + '%';
+    const e = ETAPAS[atual];
+    reportar(`Fórum — ${e}`);
+    if (e === 'intro') {
+      stepWrap.innerHTML = cartao('O fórum de cidadania digital', `<div class="ab-conteudo">
+        <p>Você vai criar uma <b>postagem informativa</b> para ajudar outras pessoas a proteger os <b>dados pessoais</b> e a conviver bem na internet. Depois, vai <b>moderar</b> comentários como um cidadão digital ativo e ético. Tempo sugerido: <b>35 minutos</b>.</p>
+        <ol><li>Escolher o tema e o público</li><li>Escrever a postagem (título, texto, 3 dicas, fonte)</li><li>Responder aos comentários do fórum</li><li>Conferir a checklist e pedir o visto</li></ol>
+        <blockquote>O fórum é <b>simulado</b>: nada é publicado na internet. Mesmo assim, escreva como se fosse de verdade: sem dados pessoais e com respeito.</blockquote>
+      </div>${nav(false, true)}`);
+    } else if (e === 'tema') {
+      stepWrap.innerHTML = cartao('Tema e público', `
+        <label class="fo-campo"><span>Tema da postagem</span><select data-k="tema">${opcoes(TEMAS, P.tema)}</select></label>
+        <label class="fo-campo"><span>Para quem você vai escrever?</span><select data-k="publico">${opcoes(PUBLICOS, P.publico)}</select><small>O público muda o jeito de escrever: com a família, explique sem termos técnicos.</small></label>`) + nav(true, true);
+      stepWrap.querySelectorAll('select[data-k]').forEach(s => s.addEventListener('change', () => { P[s.dataset.k] = s.value; salvar(); }));
+    } else if (e === 'escrever') {
+      renderEscrever(); return;
+    } else if (e === 'moderar') {
+      renderModerar(); return;
+    } else if (e === 'checklist') {
+      const cl = conferirPost().concat([{ ok: modOk(), t: 'Os 4 comentários do fórum moderados de forma ética', d: 'Volte à etapa 4.' }]);
+      stepWrap.innerHTML = cartao('Checklist da postagem', `
+        <ul class="fo-lista">${cl.map(c => c.ok ? `<li class="ok">✔ ${esc(c.t)}</li>` : `<li class="falha"><b>✘ ${esc(c.t)}</b> — ${esc(c.d)}</li>`).join('')}</ul>
+        ${previa()}`) + nav(true, podeVisto(), 'Pedir visto →');
+    } else {
+      renderVisto(); return;
+    }
+    ligar();
+  }
+
+  function renderEscrever() {
+    stepWrap.innerHTML = cartao('Escrever a postagem', `
+      <label class="fo-campo"><span>Título</span><input type="text" data-k="titulo" maxlength="80" value="${esc(P.titulo)}" placeholder="Ex.: Sua senha é a chave da sua casa digital"></label>
+      <label class="fo-campo"><span>Texto (50 a 150 palavras)</span><textarea data-k="texto" placeholder="Explique o problema, por que ele importa e como ele se liga à proteção de dados pessoais.">${esc(P.texto)}</textarea><small id="foConta"></small></label>
+      ${[0, 1, 2].map(i => `<label class="fo-campo"><span>Dica prática ${i + 1}</span><input type="text" data-dica="${i}" value="${esc(P.dicas[i])}" placeholder="O que a pessoa deve fazer?"></label>`).join('')}
+      <label class="fo-campo"><span>Fonte</span><input type="text" data-k="fonte" value="${esc(P.fonte)}" placeholder="Ex.: Cartilha de Segurança para Internet (cartilha.cert.br)"></label>
+      <label class="fo-campo"><span>Hashtag (opcional)</span><input type="text" data-k="hashtag" value="${esc(P.hashtag)}" placeholder="#CidadaniaDigital"></label>
+      <div class="fo-acoes"><button class="btn" id="btnConferir">Conferir postagem</button></div>
+      <ul class="fo-lista" id="foLista"></ul>
+      <h3 style="margin-top:18px;">Prévia</h3><div id="foPreviaBox">${previa()}</div>`) + nav(true, true);
+    const conta = () => { document.getElementById('foConta').textContent = `${palavras(P.texto)} palavras`; };
+    conta();
+    const atualizar = () => { document.getElementById('foPreviaBox').innerHTML = previa(); conta(); salvar(); };
+    stepWrap.querySelectorAll('[data-k]').forEach(el => el.addEventListener('input', () => { P[el.dataset.k] = el.value; atualizar(); }));
+    stepWrap.querySelectorAll('[data-dica]').forEach(el => el.addEventListener('input', () => { P.dicas[+el.dataset.dica] = el.value; atualizar(); }));
+    document.getElementById('btnConferir').addEventListener('click', () => {
+      const cl = conferirPost();
+      document.getElementById('foLista').innerHTML = cl.map(c => c.ok ? `<li class="ok">✔ ${esc(c.t)}</li>` : `<li class="falha"><b>✘ ${esc(c.t)}</b> — ${esc(c.d)}</li>`).join('');
+      salvar(true);
+      reportar(`Fórum — postagem (${cl.filter(c => c.ok).length}/${cl.length})`);
+    });
+    ligar();
+  }
+
+  function renderModerar() {
+    stepWrap.innerHTML = cartao('Moderar os comentários', `
+      <div class="ab-conteudo"><p>Sua postagem recebeu estes comentários. Para cada um, escolha a atitude de um <b>cidadão digital ativo e ético</b>.</p></div>
+      ${previa()}
+      ${COMENTARIOS.map(c => `<div class="fo-com" data-com="${c.id}"><blockquote><b>${esc(c.autor)}:</b> ${esc(c.texto)}</blockquote>
+        <label class="fo-campo"><span>O que você faz?</span><select data-mod="${c.id}">${opcoes(ACOES, estado.moderacao[c.id])}</select></label><div class="fo-dica"></div></div>`).join('')}
+      <div class="fo-acoes"><button class="btn" id="btnConferir">Conferir</button><div class="ab-msg" id="foMsg" style="display:none;"></div></div>`) + nav(true, true);
+    stepWrap.querySelectorAll('select[data-mod]').forEach(s => s.addEventListener('change', () => { estado.moderacao[s.dataset.mod] = s.value; salvar(); }));
+    document.getElementById('btnConferir').addEventListener('click', () => {
+      let n = 0;
+      COMENTARIOS.forEach(c => {
+        const box = stepWrap.querySelector(`[data-com="${c.id}"]`);
+        const v = estado.moderacao[c.id];
+        const ok = v === c.certa;
+        box.classList.toggle('ok', ok); box.classList.toggle('erro', !ok);
+        box.querySelector('.fo-dica').textContent = ok ? '✅ Atitude ética.' : (v === 'expor' ? '💡 Expor alguém nunca é a saída: isso também fere a urbanidade e pode ser cyberbullying.' : `💡 ${c.dica}`);
+        if (ok) n++;
+      });
+      const m = document.getElementById('foMsg');
+      m.style.display = 'block'; m.className = `ab-msg ${n === COMENTARIOS.length ? 'ok' : 'erro'}`;
+      m.textContent = n === COMENTARIOS.length ? '✅ Fórum moderado com ética!' : `${n} de ${COMENTARIOS.length} certos.`;
+      salvar(true); reportar(`Fórum — moderação (${n}/${COMENTARIOS.length})`);
+    });
+    ligar();
+  }
+
+  function renderVisto() {
+    if (!estado.completed && !podeVisto()) { atual = ETAPAS.indexOf('checklist'); render(); return; }
+    if (estado.completed) {
+      const quando = estado.vistoEm ? new Date(estado.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = cartao('✅ Postagem entregue', `<p>Visto dado por <b>${esc(estado.vistoPor || '')}</b>${quando ? ' em ' + esc(quando) : ''}.</p>${previa()}`, 'ab-concluida') + nav(true, false);
+      ligar(); return;
+    }
+    stepWrap.innerHTML = cartao('🧑‍🏫 Visto do professor', `
+      <div class="ab-conteudo"><p>Mostre a postagem ao professor. Quando ele conferir, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo.</p></div>
+      <div class="ab-form"><label>Token do professor <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+        <button class="btn" id="btnDarVisto">Dar visto</button><div class="ab-msg" id="vistoMsg" style="display:none;"></div></div>`) + nav(true, false);
+    ligar();
+    const btn = document.getElementById('btnDarVisto');
+    const m = document.getElementById('vistoMsg');
+    btn.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      m.style.display = 'none';
+      if (!t) { m.className = 'ab-msg erro'; m.textContent = 'Informe o token do professor.'; m.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      try {
+        const r = window.PortalProfessorVisto ? await window.PortalProfessorVisto.verificarToken(t) : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!r.ok) throw new Error(r.erro);
+        Object.assign(estado, { completed: true, vistoPor: r.nome, vistoEm: new Date().toISOString() });
+        salvar(true); reportar('Fórum — entregue com visto'); render();
+      } catch (e) {
+        m.className = 'ab-msg erro'; m.textContent = e.message || 'Erro inesperado ao verificar. Tente de novo.'; m.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const nome = k => (ACOES.find(a => a[0] === k) || [])[1];
+    const itens = [
+      ['Postagem informativa', 'Título de 5 a 60 caracteres; texto de 50 a 150 palavras ligado à proteção de dados pessoais; 3 dicas práticas (ações); fonte confiável (gov.br/anpd, cartilha.cert.br, SaferNet, LGPD); sem CPF/telefone/e-mail; sem maiúsculas "gritando" nem ofensas.'],
+    ].concat(COMENTARIOS.map(c => [`Comentário de ${c.autor}: "${c.texto}"`, nome(c.certa)]));
+    return window.PortalGabarito.generate({
+      title: 'Projeto de Vida — Fórum de Cidadania Digital',
+      subtitle: 'Prática · Postagem informativa simulada (O aluno identifica práticas de cidadania digital?) · Sistemas e Jogos',
+      items: itens.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Critério da prática.', answer: a })),
+      fileName: 'vida-cidadania-digital-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
