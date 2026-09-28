@@ -37,9 +37,13 @@ test.describe('Organização das trilhas (em aberto / concluídas)', () => {
   test('matéria com TODAS as trilhas num bimestre ainda não iniciado ganha o selo "Em breve"', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2999-01-01', fim: '2999-03-31' }],
+      // As 4 trilhas da matéria (as 2 próprias de Jogos + as 2 compartilhadas
+      // com Sistemas: projetos-estrutura-banco e projetos-pre-textuais).
       trilha_bimestre: [
         { turma: 'jogos', trilha_key: 'projetos-metodos', bimestre: 1 },
         { turma: 'jogos', trilha_key: 'projetos-fases', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'projetos-estrutura-banco', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'projetos-pre-textuais', bimestre: 1 },
       ],
     });
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
@@ -55,10 +59,16 @@ test.describe('Organização das trilhas (em aberto / concluídas)', () => {
   // Motivo de ser por TRILHA e não por matéria: a mesma matéria pode ter
   // trilhas em bimestres diferentes — uma pode estar num bimestre futuro
   // enquanto outra, sem bimestre atribuído, já fica disponível.
-  test('matéria com só UMA trilha num bimestre futuro continua acessível pelas outras', async ({ page }) => {
+  test('matéria com parte das trilhas num bimestre futuro continua acessível pela que sobrou', async ({ page }) => {
     await stubSupabaseFake(page, {
       bimestre_dates: [{ turma: 'jogos', bimestre: 1, inicio: '2999-01-01', fim: '2999-03-31' }],
-      trilha_bimestre: [{ turma: 'jogos', trilha_key: 'projetos-metodos', bimestre: 1 }],
+      // projetos-fases fica sem bimestre (sempre visível); as outras 3 trilhas
+      // da matéria (incluindo as 2 compartilhadas com Sistemas) vão pro futuro.
+      trilha_bimestre: [
+        { turma: 'jogos', trilha_key: 'projetos-metodos', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'projetos-estrutura-banco', bimestre: 1 },
+        { turma: 'jogos', trilha_key: 'projetos-pre-textuais', bimestre: 1 },
+      ],
     });
     await page.goto('/turmas/jogos/plataforma.html?user=breno.silva80&ip=192.168.1.10&saldo=1234.80&role=aluno&turma=jogos');
 
