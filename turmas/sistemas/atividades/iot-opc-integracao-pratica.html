@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internet das Coisas — Seminário de Integração OPC UA</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#7cd992; --green-dim:#46a35d; --yellow:#ffd166; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'iot_opc_integracao_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Internet das Coisas — Seminário de Integração OPC UA</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">10</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Seminário em equipe (papel/quadro; slides opcionais em ferramenta gratuita
+// no navegador). O professor avalia com a "Ficha de avaliação" do plano de
+// ensino (última etapa) e dá o visto (token).
+const STEPS = [
+  {
+    titulo: 'O seminário de hoje',
+    corpo: `
+Em equipes de **3 ou 4 pessoas**, vocês vão **planejar** a coleta automática de dados de um processo industrial usando **OPC UA** e apresentar o fluxo para a turma em **3 minutos**.
+
+### Tempo
+1. Escolher o cenário (3 min)
+2. Planejar dispositivos, tags, coleta, qualidade e segurança (15 min)
+3. Montar o fluxo e ensaiar (5 min)
+4. Apresentações (cerca de 20 min, a turma toda)
+
+> O que vale é o **planejamento**: quem expõe o dado, quem coleta, como garantir que o dado é confiável e seguro.`,
+  },
+  {
+    titulo: 'Escolher o cenário (3 min)',
+    corpo: `
+O professor sorteia ou a equipe escolhe:
+
+| Cenário | O que medir |
+|---|---|
+| Câmara fria de alimentos | Temperatura, porta aberta, consumo |
+| Envase de bebidas | Garrafas por minuto, nível, paradas |
+| Estufa agrícola | Temperatura, umidade, irrigação |
+| Tratamento de água | Vazão, pH, nível dos tanques |
+| Linha de solda robotizada | Corrente, peças soldadas, alarmes |
+| Fazenda de impressoras 3D | Temperatura do bico, progresso, falhas |
+
+- [ ] Nossa equipe escolheu o cenário e o objetivo da coleta (o que a empresa quer saber)`,
+  },
+  {
+    titulo: 'Dispositivos e servidor (4 min)',
+    corpo: `
+Desenhem no papel:
+
+1. Quais **sensores** e **CLPs** existem no cenário
+2. Onde fica o **servidor OPC UA** (no CLP ou num computador da linha) e o endereço dele (ex.: \`opc.tcp://camara1:4840\`)
+3. Quais **clientes** vão usar os dados (supervisório, MES, app, dashboard)
+
+- [ ] Sensores, CLP, servidor OPC UA e clientes desenhados`,
+  },
+  {
+    titulo: 'As tags (5 min)',
+    corpo: `
+Montem a tabela de **pelo menos 4 tags** que o servidor vai expor:
+
+| NodeId | Descrição | Tipo | Unidade | Faixa válida | Amostragem |
+|---|---|---|---|---|---|
+| ns=2;s=Camara1.Temperatura | Temperatura interna | Double | °C | 0 a 8 | 1 s |
+| ... | | | | | |
+
+> A **faixa válida** e a **unidade** são parte da qualidade: um valor fora da faixa precisa virar alerta, não só um número no gráfico.
+
+- [ ] Pelo menos 4 tags com NodeId, tipo, unidade, faixa e amostragem`,
+  },
+  {
+    titulo: 'Coleta automática (3 min)',
+    corpo: `
+Definam como os dados vão fluir:
+
+1. Qual cliente **assina** quais tags (*Subscription*), e com que intervalo
+2. Onde os valores são **gravados** (histórico em banco de dados)
+3. Quais **alarmes** existem (ex.: temperatura acima de 8 °C por mais de 5 min)
+4. Quem recebe o alarme e o que deve fazer
+
+- [ ] Assinaturas, gravação no histórico e alarmes definidos`,
+  },
+  {
+    titulo: 'Qualidade e segurança (3 min)',
+    corpo: `
+### Qualidade
+- O que fazer com valores **Uncertain** e **Bad** (não gravar como bons, avisar a manutenção)
+- Uso do **timestamp de origem** para rastrear quando foi medido
+- Com que frequência os sensores são **calibrados**, e onde isso é registrado
+
+### Segurança
+- Modo de segurança (**SignAndEncrypt** em produção)
+- Usuários: quem só **lê** e quem pode **escrever** (ex.: mudar o setpoint)
+
+- [ ] Regras de qualidade para Uncertain/Bad, timestamp e calibração
+- [ ] Modo de segurança e permissões de leitura/escrita definidos`,
+  },
+  {
+    titulo: 'Montar o fluxo e ensaiar (5 min)',
+    corpo: `
+Transformem o planejamento num **fluxo** de uma página (cartaz ou quadro). Se quiserem slides, use uma ferramenta gratuita no navegador (**Google Apresentações** ou **Canva**), no máximo 3 slides.
+
+**Sensor → CLP → Servidor OPC UA → Cliente → Histórico → Dashboard/Alarmes**
+
+Roteiro dos **3 minutos**:
+
+| Tempo | O que mostrar |
+|---|---|
+| 0:00 | Cenário e o que a empresa quer saber |
+| 0:30 | Dispositivos, servidor e clientes |
+| 1:15 | As tags e a coleta automática |
+| 2:00 | Qualidade e segurança |
+| 2:40 | Um risco e como vocês o tratam |
+
+- [ ] Fluxo desenhado e roteiro ensaiado em 3 minutos`,
+  },
+  {
+    titulo: 'Apresentações (cerca de 20 min)',
+    corpo: `
+Cada equipe: **3 minutos** de apresentação + **1 minuto** de perguntas.
+
+Enquanto os colegas apresentam, anote para uma equipe:
+
+- Uma tag que você acrescentaria
+- Uma pergunta sobre qualidade ou segurança do dado
+
+- [ ] Nossa equipe apresentou
+- [ ] Fiz uma pergunta ou sugestão a outra equipe`,
+  },
+  {
+    titulo: 'Ficha de avaliação',
+    corpo: `
+É isto que o professor avaliou no planejamento e na apresentação. Marque o que a sua equipe **fez de verdade**:
+
+- [ ] Identificamos os dispositivos, o servidor OPC UA (com endereço) e os clientes
+- [ ] Definimos pelo menos 4 tags com NodeId, tipo, unidade, faixa válida e amostragem
+- [ ] Explicamos a coleta automática por assinatura, com histórico e alarmes
+- [ ] Tratamos a qualidade do dado (StatusCode, timestamp, calibração)
+- [ ] Definimos segurança (modo, certificados/usuários, leitura × escrita)
+- [ ] Apresentamos o fluxo completo, do sensor ao dashboard, em até 3 minutos
+- [ ] Respondemos às perguntas com argumentos técnicos
+
+> Tudo certo? Chame o professor com o fluxo da equipe. A próxima etapa é o visto.`,
+  },
+];
+
+const FICHA = [
+  ['Arquitetura', 'Sensores, CLP, servidor OPC UA com endereço (opc.tcp://...:4840) e clientes identificados.'],
+  ['Tags', 'Pelo menos 4 nós com NodeId (ns=...;s=...), tipo, unidade, faixa válida e intervalo de amostragem.'],
+  ['Coleta automática', 'Cliente assina as tags (Subscription/MonitoredItems), grava no histórico e tem alarmes com responsável.'],
+  ['Qualidade do dado', 'Regra para Uncertain/Bad, uso do timestamp de origem, calibração registrada, rastreabilidade.'],
+  ['Segurança', 'SignAndEncrypt em produção, certificados, usuários com leitura × escrita separados.'],
+  ['Fluxo e apresentação', 'Sensor → CLP → servidor → cliente → histórico → dashboard/alarmes, em até 3 minutos.'],
+  ['Argumentação', 'Responde às perguntas com base técnica e no objetivo da coleta.'],
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'iot_opc_integracao_pratica',
+  tituloTopo: 'Internet das Coisas — Seminário de Integração OPC UA',
+  steps: STEPS,
+  textoVisto: 'Sua equipe apresentou o fluxo de coleta via OPC UA e você marcou a ficha de avaliação?',
+  gabarito: {
+    title: 'Internet das Coisas — Seminário de Integração OPC UA',
+    subtitle: 'Prática · Ficha de avaliação (O aluno planeja integração via OPC?) · Turma Sistemas',
+    items: FICHA.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Critério da ficha de avaliação.', answer: a })),
+    fileName: 'iot-opc-integracao-ficha.txt',
+  },
+});
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desenvolvimento de Sistemas — Dinâmica do Impasse Técnico</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#f2a65a; --green-dim:#b8763a; --yellow:#ffd27a; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'devsis_impasse_tecnico_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Desenvolvimento de Sistemas — Dinâmica do Impasse Técnico</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">12</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Dinâmica presencial (sem ferramenta externa: papel, quadro branco e o
+// próprio projeto da equipe). O professor observa com a "Ficha de
+// observação" do plano de ensino (última etapa) e dá o visto (token).
+const STEPS = [
+  {
+    titulo: 'A dinâmica de hoje',
+    corpo: `
+Sua equipe vai enfrentar um **impasse técnico** de verdade, no projeto que vocês estão desenvolvendo. O desafio **não** é ganhar a discussão: é **mediar** e chegar a uma solução que sirva ao **objetivo do software**.
+
+### Como vai ser
+1. Montar a equipe e os papéis
+2. Escrever o escopo do projeto (o "juiz neutro")
+3. Receber um impasse do professor
+4. Expor os lados, mediar, decidir e registrar
+5. Atualizar o controle de atividades
+6. Repetir com os papéis trocados
+
+> **Regras de ouro:** criticar ideias, nunca pessoas. Ninguém interrompe. O que for decidido fica registrado.
+
+Tempo total: cerca de **90 minutos**. O professor vai circular com a **ficha de observação**.`,
+  },
+  {
+    titulo: 'Equipe e papéis (5 min)',
+    corpo: `
+Formem equipes de **4 ou 5 pessoas** (de preferência, a equipe do projeto). Distribuam os papéis:
+
+| Papel | O que faz |
+|---|---|
+| **Defensor A** | Defende a opção A do impasse, com argumentos técnicos |
+| **Defensor B** | Defende a opção B, com argumentos técnicos |
+| **Mediador** | Conduz a conversa, garante a vez de todos, busca a solução |
+| **Registrador** | Anota opções, critérios e decisão |
+| **Guardião do tempo** | Controla o relógio de cada rodada (se a equipe tiver 5) |
+
+> Na segunda rodada os papéis **trocam**: todo mundo precisa passar pela mediação ou pela defesa.
+
+- [ ] Equipe formada e papéis escolhidos`,
+  },
+  {
+    titulo: 'O escopo do projeto (10 min)',
+    corpo: `
+Antes do impasse, escrevam no papel (ou num canto do quadro) o **escopo** do projeto da equipe:
+
+1. **Objetivo do software** em uma frase: *"Ajudar [quem] a [fazer o quê]"*
+2. **Usuário** principal
+3. **Prazo** da próxima entrega
+4. As **3 funcionalidades obrigatórias** (*Must*)
+5. O que está **fora** do escopo por enquanto
+
+Depois, desenhem um **quadro de atividades** com 4 colunas: **A fazer · Fazendo · Revisão · Feito**, e coloquem as tarefas atuais do projeto (cada cartão com **responsável** e **prazo**).
+
+- [ ] Objetivo, usuário, prazo e funcionalidades obrigatórias escritos
+- [ ] Quadro de atividades desenhado, com dono e prazo em cada cartão`,
+  },
+  {
+    titulo: 'O impasse (o professor sorteia)',
+    corpo: `
+O professor escolhe um impasse para cada equipe. Adaptem ao projeto de vocês:
+
+| Impasse | Opção A | Opção B |
+|---|---|---|
+| **Tecnologia** | Framework novo, "o mercado usa" | HTML e JS puro, "a equipe já sabe" |
+| **Banco de dados** | Relacional (tabelas, SQL) | NoSQL (documentos, esquema livre) |
+| **Prazo × qualidade** | Publicar sexta, mesmo sem testar tudo | Atrasar uma semana e testar |
+| **Escopo crescendo** | Incluir a funcionalidade nova pedida agora | Manter o escopo e deixar para depois |
+| **Código que quebrou** | Quem escreveu por último corrige sozinho | A equipe revisa junto e cria uma regra |
+
+> O defensor pode **não concordar** com o lado que recebeu. Faz parte: argumentar pelo projeto, não por gosto.
+
+- [ ] Nossa equipe sabe qual é o impasse e adaptou ao nosso projeto`,
+  },
+  {
+    titulo: 'Rodada 1: cada lado expõe (10 min)',
+    corpo: `
+1. **Defensor A** fala por **2 minutos**. Ninguém interrompe
+2. O **mediador** repete com as próprias palavras: *"Então você acha que... porque..."*
+3. **Defensor B** fala por **2 minutos**, e o mediador repete de novo
+4. O **registrador** anota os argumentos de cada lado
+
+> Argumento bom cita o **escopo**: prazo, usuário, funcionalidade, o que a equipe sabe fazer. "Porque eu gosto" não conta.
+
+- [ ] Os dois lados falaram sem interrupção
+- [ ] O mediador repetiu o que entendeu de cada lado
+- [ ] Os argumentos foram anotados`,
+  },
+  {
+    titulo: 'Rodada 2: mediação criativa (15 min)',
+    corpo: `
+Agora a equipe inteira procura saídas. O mediador conduz:
+
+1. Gerem **pelo menos 3 alternativas** (A, B e uma terceira criativa: juntar as duas, testar rápido, dividir em etapas...)
+2. Escolham **3 ou 4 critérios** ligados ao escopo
+3. Deem nota de **1 a 3** para cada alternativa em cada critério
+
+| Alternativa | Cabe no prazo? | Serve ao usuário? | A equipe sabe fazer? | Total |
+|---|---|---|---|---|
+| Opção A | | | | |
+| Opção B | | | | |
+| Terceira opção | | | | |
+
+> Tempo esgotou sem acordo? Façam um **teste rápido** (prova de conceito) ou dividam a decisão em partes.
+
+- [ ] Pelo menos 3 alternativas, incluindo uma criativa
+- [ ] Tabela de critérios preenchida`,
+  },
+  {
+    titulo: 'Decisão e registro (10 min)',
+    corpo: `
+O **registrador** escreve o **registro da decisão**:
+
+1. **Contexto**: qual era o impasse
+2. **Opções** consideradas
+3. **Critérios** usados
+4. **Decisão** e o motivo (ligado ao objetivo do software)
+5. **Crédito**: de quem foram as ideias usadas
+6. **Próximos passos**
+
+Todos leem o registro. Quem discordar diz **agora**, com argumento, e o mediador decide se reabre ou segue.
+
+- [ ] Registro da decisão escrito com os 6 itens
+- [ ] Toda a equipe leu e concordou em seguir a decisão`,
+  },
+  {
+    titulo: 'Controle de atividades (10 min)',
+    corpo: `
+A decisão só vale quando vira **tarefa**. No quadro da equipe:
+
+1. Criem os cartões que a decisão gerou
+2. Cada cartão com **responsável** e **prazo**
+3. Movam os cartões que mudaram de situação
+4. Ideias boas que ficaram de fora vão para uma lista **"Depois"**, com o nome de quem sugeriu
+
+> Um quadro atualizado evita que o mesmo impasse volte na semana que vem.
+
+- [ ] Cartões novos no quadro, com dono e prazo
+- [ ] Lista "Depois" criada com as ideias que ficaram de fora`,
+  },
+  {
+    titulo: 'Rodada com papéis trocados (20 min)',
+    corpo: `
+Troquem os papéis: quem foi **defensor** agora é **mediador** ou **registrador**, e vice-versa. O professor entrega **outro impasse** (ou a equipe escolhe um problema real do projeto).
+
+Repitam, mais rápido:
+
+1. Cada lado expõe (1 min cada), e o mediador repete
+2. Três alternativas e critérios (8 min)
+3. Decisão, registro e cartões no quadro (8 min)
+
+- [ ] Todos trocaram de papel
+- [ ] Segundo impasse decidido, registrado e no quadro`,
+  },
+  {
+    titulo: 'Compartilhar com a turma (10 min)',
+    corpo: `
+Cada equipe tem **1 minuto** para contar à turma:
+
+- Qual foi o impasse
+- Qual solução criativa apareceu
+- Qual critério pesou mais na decisão
+
+Depois, respondam para si mesmos:
+
+- Em algum momento a conversa virou crítica à **pessoa**? Como o mediador lidou com isso?
+- O que vocês fariam diferente numa briga de verdade no projeto?
+
+- [ ] Nossa equipe compartilhou a decisão com a turma`,
+  },
+  {
+    titulo: 'Ficha de observação',
+    corpo: `
+É isto que o professor observou durante a dinâmica. Marque o que você **fez de verdade**:
+
+- [ ] Ouvi os colegas sem interromper e respeitei opiniões diferentes
+- [ ] Critiquei ideias, nunca pessoas (sem culpar, ironizar ou excluir)
+- [ ] Usei argumentos técnicos ligados ao escopo e aos objetivos do software
+- [ ] Propus ou ajudei a construir uma alternativa criativa
+- [ ] Fui transparente (não escondi dado, erro ou prazo) e dei crédito às ideias dos colegas
+- [ ] Ajudei a registrar a decisão e a transformá-la em tarefas no quadro
+- [ ] Exerci o papel de mediador (ou defensor) com respeito e foco na solução
+
+> Tudo certo? Chame o professor com o **registro da decisão** e o **quadro** da equipe. A próxima etapa é o visto.`,
+  },
+];
+
+const FICHA = [
+  ['Escuta e respeito', 'Ouve sem interromper; repete o que entendeu; respeita opiniões diferentes.'],
+  ['Separa a pessoa do problema', 'Critica ideias, não colegas; não culpa, não ironiza, não exclui.'],
+  ['Argumenta pelo escopo', 'Usa prazo, usuário, funcionalidades obrigatórias e o que a equipe sabe como critério, não gosto pessoal.'],
+  ['Criatividade na mediação', 'Propõe ou constrói uma terceira opção (juntar, testar rápido, dividir em etapas).'],
+  ['Transparência e crédito', 'Não esconde dado/erro/prazo; reconhece de quem foi a ideia.'],
+  ['Registro e controle de atividades', 'Decisão registrada (contexto, opções, critérios, decisão, próximos passos) e cartões no quadro com responsável e prazo.'],
+  ['Postura no papel', 'Como mediador: garante a vez de todos e conduz à decisão. Como defensor: argumenta com respeito e aceita a decisão do grupo.'],
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'devsis_impasse_tecnico_pratica',
+  tituloTopo: 'Desenvolvimento de Sistemas — Dinâmica do Impasse Técnico',
+  steps: STEPS,
+  textoVisto: 'Sua equipe tem o registro da decisão e o quadro de atividades atualizados, e você marcou a ficha de observação?',
+  gabarito: {
+    title: 'Desenvolvimento de Sistemas — Dinâmica do Impasse Técnico',
+    subtitle: 'Prática · Ficha de observação (O aluno soluciona conflitos de forma ética?) · Turma Sistemas',
+    items: FICHA.map(([titulo, observar], i) => ({ number: i + 1, title: titulo, prompt: 'Critério da ficha de observação.', answer: observar })),
+    fileName: 'devsis-impasse-tecnico-ficha.txt',
+  },
+});
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

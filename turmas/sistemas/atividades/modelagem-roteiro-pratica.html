@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelagem — Roteiro de Trabalho: VetAgenda</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#c9a6ff; --green-dim:#7a58b3; --yellow:#e0b84a; }
+  /* Específico deste exercício: linhas de classificação/ordem e o roteiro. */
+  .mr-linha{ display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; align-items:center; padding:10px 12px; margin-top:8px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); }
+  .mr-linha.ok{ border-color:var(--ok); } .mr-linha.erro{ border-color:var(--blood-bright); }
+  .mr-linha b{ color:var(--ab-acento); }
+  .mr-linha select, .mr-campos input{ width:100%; font:inherit; font-size:13.5px; padding:8px 10px; border-radius:10px; background:var(--panel); color:var(--ink); border:1px solid var(--line); }
+  .mr-dica{ grid-column:1 / -1; font-size:12.5px; } .mr-dica:empty{ display:none; }
+  .mr-etapa{ margin-top:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; }
+  .mr-etapa h3{ margin:0 0 8px; font-size:1em; color:var(--ab-acento); }
+  .mr-campos{ display:grid; grid-template-columns:1fr 1fr 2fr; gap:10px; }
+  .mr-campos label{ display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--ink-dim); }
+  .mr-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  .mr-acoes .ab-msg{ flex:1; min-width:200px; }
+  .mr-lista{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .mr-lista li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .mr-lista li.ok{ border-color:var(--ok); color:var(--ok); } .mr-lista li.falha{ border-color:var(--blood-bright); } .mr-lista li.falha b{ color:var(--blood-bright); }
+  @media (max-width:760px){ .mr-linha, .mr-campos{ grid-template-columns:1fr; } }
+  @media print{ .ab-topo, .ab-progresso, .ab-nav, .mr-acoes, .mr-lista, #btnGenGabaritoFloat{ display:none !important; } .ab-palco{ overflow:visible; } }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'modelagem_roteiro_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="modelagem-vetagenda.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Modelagem — Roteiro de Trabalho: VetAgenda</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Revisão das regras de negócio "interpretadas anteriormente" do estudo de
+// caso VetAgenda + elaboração do roteiro de trabalho para a modelagem. A
+// "Checklist de roteiro" do plano de ensino é calculada na última etapa e
+// conclui o módulo. O roteiro fica salvo no progresso e é reaproveitado no
+// laboratório de revisão da aula seguinte (modelagem-revisao-rn-pratica.html).
+(function () {
+  const V = window.VETAGENDA;
+  const LOC = 'modelagem_roteiro_pratica';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = V.chaveRoteiro(user);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function lerEstado() { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } }
+  const estado = Object.assign({ completed: false, classificacao: {}, ordem: {}, artefato: {}, detalhe: {}, lastStepIndex: 0 }, lerEstado());
+  ['classificacao', 'ordem', 'artefato', 'detalhe'].forEach(k => { if (!estado[k] || typeof estado[k] !== 'object') estado[k] = {}; });
+  let timer = 0;
+  function salvar(agora) { clearTimeout(timer); const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} }; if (agora) f(); else timer = setTimeout(f, 800); }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+  const palavras = s => (String(s || '').trim().match(/\S+/g) || []).length;
+  const DICAS = {
+    ambigua: 'Procure palavras que ninguém consegue medir ou testar.',
+    composta: 'Conte quantos assuntos diferentes a frase trata.',
+    tecnica: 'Essa frase valeria para a clínica mesmo sem sistema? Ou é uma decisão de tecnologia?',
+    conflitante: 'Compare com as outras regras e com a entrevista: há uma exceção que ela ignora?',
+    ok: 'Compare com a entrevista: ela está clara, é uma regra só e é de negócio?',
+  };
+
+  // ---------- Conferências ----------
+  const classOk = () => V.rn.every(r => estado.classificacao[r.id] === r.problema);
+  function ordemOk() {
+    const pos = V.etapas.map(e => parseInt(estado.ordem[e.id], 10));
+    if (pos.some(p => !(p >= 1 && p <= V.etapas.length)) || new Set(pos).size !== V.etapas.length) return false;
+    const p = id => parseInt(estado.ordem[id], 10);
+    return V.antes.every(([a, b]) => p(a) < p(b));
+  }
+  const artefatoOk = () => V.etapas.every(e => estado.artefato[e.id] === e.artefato);
+  const detalheOk = c => V.etapas.every(e => { const d = estado.detalhe[e.id] || {}; return c === 'resp' ? palavras(d.resp) >= 1 && palavras(d.prazo) >= 1 : palavras(d.criterio) >= 4; });
+  function checklist() {
+    return [
+      { ok: classOk(), t: 'As 9 regras de negócio revisadas e classificadas corretamente', d: 'Volte à etapa 2 e confira as marcadas em vermelho.' },
+      { ok: ordemOk(), t: 'Etapas do roteiro em uma sequência lógica', d: 'Nenhum modelo antes de revisar requisitos e regras; validação antes de versionar.' },
+      { ok: artefatoOk(), t: 'Cada etapa com o artefato que ela produz', d: 'Pense no que "prova" que a etapa terminou.' },
+      { ok: detalheOk('resp'), t: 'Cada etapa com responsável e prazo', d: 'Preencha responsável e prazo das 7 etapas.' },
+      { ok: detalheOk('criterio'), t: 'Cada etapa com critério de pronto verificável (4+ palavras)', d: 'Diga o que precisa existir para a etapa estar pronta.' },
+    ];
+  }
+
+  // ---------- Telas ----------
+  const ETAPAS = ['caso', 'regras', 'ordem', 'artefatos', 'detalhar', 'checklist'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.lastStepIndex || 0, TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+  function nav(voltar, avancar) { return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}</div>`; }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > estado.lastStepIndex) estado.lastStepIndex = atual; salvar(true); render(); }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  const cartao = (t, corpo, extra) => `<article class="ab-cartao ${extra || ''}"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${t}</h2>${corpo}</article>`;
+  const opcoes = (lista, v) => '<option value="">Escolha…</option>' + lista.map(([k, t]) => `<option value="${esc(k)}" ${v === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  // Ordem de exibição fixa mas embaralhada (para não entregar a sequência).
+  const MISTURA = ['dados', 'escopo', 'validar', 'regras', 'versionar', 'casos', 'requisitos'].map(id => V.etapas.find(e => e.id === id));
+  const ARTEFATOS = ['versionar', 'casos', 'escopo', 'validar', 'dados', 'regras', 'requisitos'].map(id => { const e = V.etapas.find(x => x.id === id); return [e.artefato, e.artefato]; });
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const cl = checklist();
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(cl.filter(c => c.ok).length / cl.length * 100)) + '%';
+    const e = ETAPAS[atual];
+    reportar(`Roteiro — ${e}`);
+    if (e === 'caso') {
+      stepWrap.innerHTML = cartao('O caso: VetAgenda', `<div class="ab-conteudo">
+        <p>A clínica <b>Patas &amp; Cia</b> quer um sistema de agendamento. Sua equipe vai <b>revisar as regras de negócio</b> que já foram interpretadas e montar o <b>roteiro de trabalho</b> para a modelagem. Tempo sugerido: <b>40 minutos</b>.</p>
+        <h3>Trecho da entrevista com a dona da clínica</h3>
+        <ul>${V.entrevista.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+        <h3>Requisitos funcionais levantados</h3>
+        <table><thead><tr><th>Código</th><th>Requisito</th></tr></thead><tbody>${V.rf.map(([c, t]) => `<tr><td>${c}</td><td>${esc(t)}</td></tr>`).join('')}</tbody></table>
+      </div>${nav(false, true)}`);
+    } else if (e === 'regras') {
+      stepWrap.innerHTML = cartao('Revisar as regras de negócio (10 min)', `
+        <div class="ab-conteudo"><p>Estas são as regras que a equipe interpretou na primeira leitura. Compare cada uma com a entrevista e classifique.</p></div>
+        ${V.rn.map(r => `<div class="mr-linha" data-rn="${r.id}"><div><b>${r.id}</b> — ${esc(r.texto)}</div>
+          <select data-campo="classificacao" data-id="${r.id}" aria-label="Classificação de ${r.id}">${opcoes(V.problemas, estado.classificacao[r.id])}</select><div class="mr-dica"></div></div>`).join('')}
+        <div class="mr-acoes"><button class="btn" id="btnConferir">Conferir</button><div class="ab-msg" id="mrMsg" style="display:none;"></div></div>`) + nav(true, true);
+      ligarSelects();
+      document.getElementById('btnConferir').addEventListener('click', () => conferirLinhas(V.rn, r => estado.classificacao[r.id] === r.problema, r => DICAS[r.problema], 'data-rn', 'regras'));
+    } else if (e === 'ordem') {
+      const posOps = V.etapas.map((_, i) => [String(i + 1), `${i + 1}º`]);
+      stepWrap.innerHTML = cartao('Ordenar as etapas do roteiro (5 min)', `
+        <div class="ab-conteudo"><p>Dê a posição de cada etapa no roteiro (1º a 7º). Mais de uma ordem pode estar certa, desde que faça sentido.</p></div>
+        ${MISTURA.map(et => `<div class="mr-linha" data-et="${et.id}"><div>${esc(et.nome)}</div><select data-campo="ordem" data-id="${et.id}" aria-label="Posição de ${esc(et.nome)}">${opcoes(posOps, estado.ordem[et.id])}</select><div class="mr-dica"></div></div>`).join('')}
+        <div class="mr-acoes"><button class="btn" id="btnConferir">Conferir</button><div class="ab-msg" id="mrMsg" style="display:none;"></div></div>`) + nav(true, true);
+      ligarSelects();
+      document.getElementById('btnConferir').addEventListener('click', () => {
+        const msg = document.getElementById('mrMsg');
+        msg.style.display = 'block';
+        const pos = V.etapas.map(x => parseInt(estado.ordem[x.id], 10));
+        if (pos.some(p => !p) || new Set(pos).size !== pos.length) { msg.className = 'ab-msg erro'; msg.textContent = 'Use cada posição (1º a 7º) uma única vez.'; return; }
+        const quebra = V.antes.find(([a, b]) => parseInt(estado.ordem[a], 10) > parseInt(estado.ordem[b], 10));
+        if (quebra) {
+          const n = id => V.etapas.find(x => x.id === id).nome;
+          msg.className = 'ab-msg erro'; msg.textContent = `💡 "${n(quebra[1])}" depende do que sai de "${n(quebra[0])}". Reveja essa parte da sequência.`;
+        } else { msg.className = 'ab-msg ok'; msg.textContent = '✅ Sequência lógica!'; }
+        reportar(`Roteiro — ordem ${ordemOk() ? 'ok' : 'com erro'}`);
+      });
+    } else if (e === 'artefatos') {
+      const ordenadas = V.etapas.slice().sort((a, b) => (parseInt(estado.ordem[a.id], 10) || 99) - (parseInt(estado.ordem[b.id], 10) || 99));
+      stepWrap.innerHTML = cartao('O artefato de cada etapa (5 min)', `
+        <div class="ab-conteudo"><p>Qual documento ou diagrama cada etapa <b>entrega</b>?</p></div>
+        ${ordenadas.map(et => `<div class="mr-linha" data-art="${et.id}"><div>${estado.ordem[et.id] ? `<b>${estado.ordem[et.id]}º</b> ` : ''}${esc(et.nome)}</div><select data-campo="artefato" data-id="${et.id}" aria-label="Artefato de ${esc(et.nome)}">${opcoes(ARTEFATOS, estado.artefato[et.id])}</select><div class="mr-dica"></div></div>`).join('')}
+        <div class="mr-acoes"><button class="btn" id="btnConferir">Conferir</button><div class="ab-msg" id="mrMsg" style="display:none;"></div></div>`) + nav(true, true);
+      ligarSelects();
+      document.getElementById('btnConferir').addEventListener('click', () => conferirLinhas(V.etapas, et => estado.artefato[et.id] === et.artefato, () => 'Pense no que "prova" que essa etapa terminou.', 'data-art', 'artefatos'));
+    } else if (e === 'detalhar') {
+      const ordenadas = V.etapas.slice().sort((a, b) => (parseInt(estado.ordem[a.id], 10) || 99) - (parseInt(estado.ordem[b.id], 10) || 99));
+      stepWrap.innerHTML = cartao('Responsável, prazo e critério de pronto (15 min)', `
+        <div class="ab-conteudo"><p>Distribua as etapas entre os membros da equipe e diga <b>quando cada uma está pronta</b>, de um jeito que dá para conferir.</p></div>
+        ${ordenadas.map(et => { const d = estado.detalhe[et.id] || {}; return `<div class="mr-etapa"><h3>${estado.ordem[et.id] ? estado.ordem[et.id] + 'º · ' : ''}${esc(et.nome)}</h3>
+          <div class="mr-campos">
+            <label>Responsável<input type="text" data-det="${et.id}" data-k="resp" value="${esc(d.resp)}" placeholder="Nome"></label>
+            <label>Prazo<input type="text" data-det="${et.id}" data-k="prazo" value="${esc(d.prazo)}" placeholder="dd/mm"></label>
+            <label>Critério de pronto<input type="text" data-det="${et.id}" data-k="criterio" value="${esc(d.criterio)}" placeholder="O que precisa existir para terminar"></label>
+          </div></div>`; }).join('')}`) + nav(true, true);
+      stepWrap.querySelectorAll('[data-det]').forEach(inp => inp.addEventListener('input', () => {
+        const id = inp.dataset.det; estado.detalhe[id] = Object.assign({}, estado.detalhe[id], { [inp.dataset.k]: inp.value }); salvar();
+      }));
+    } else {
+      renderChecklist(); return;
+    }
+    ligar();
+  }
+
+  function ligarSelects() {
+    stepWrap.querySelectorAll('select[data-campo]').forEach(s => s.addEventListener('change', () => { estado[s.dataset.campo][s.dataset.id] = s.value; salvar(); }));
+  }
+  function conferirLinhas(lista, certo, dica, attr, rotulo) {
+    let n = 0;
+    lista.forEach(item => {
+      const linha = stepWrap.querySelector(`[${attr}="${item.id}"]`);
+      const ok = certo(item);
+      linha.classList.toggle('ok', ok); linha.classList.toggle('erro', !ok);
+      linha.querySelector('.mr-dica').textContent = ok ? '' : `💡 ${dica(item)}`;
+      if (ok) n++;
+    });
+    const msg = document.getElementById('mrMsg');
+    msg.style.display = 'block';
+    msg.className = `ab-msg ${n === lista.length ? 'ok' : 'erro'}`;
+    msg.textContent = n === lista.length ? '✅ Tudo certo!' : `${n} de ${lista.length} certos. Leia as dicas.`;
+    reportar(`Roteiro — ${rotulo} (${n}/${lista.length})`);
+  }
+
+  function renderChecklist() {
+    const cl = checklist();
+    const tudo = cl.every(c => c.ok);
+    if (tudo && !estado.completed) { estado.completed = true; reportar('Roteiro — checklist completa'); }
+    salvar(true);
+    const ordenadas = V.etapas.slice().sort((a, b) => (parseInt(estado.ordem[a.id], 10) || 99) - (parseInt(estado.ordem[b.id], 10) || 99));
+    stepWrap.innerHTML = cartao(estado.completed ? '✅ Roteiro de trabalho pronto' : 'Checklist de roteiro', `
+      <ul class="mr-lista">${cl.map(c => c.ok ? `<li class="ok">✔ ${c.t}</li>` : `<li class="falha"><b>✘ ${c.t}</b> — ${c.d}</li>`).join('')}</ul>
+      <div class="ab-conteudo" style="margin-top:16px;"><h3>Roteiro de trabalho — VetAgenda</h3>
+        <table><thead><tr><th>#</th><th>Etapa</th><th>Artefato</th><th>Responsável · prazo</th><th>Critério de pronto</th></tr></thead>
+        <tbody>${ordenadas.map(et => { const d = estado.detalhe[et.id] || {}; return `<tr><td>${esc(estado.ordem[et.id] || '—')}</td><td>${esc(et.nome)}</td><td>${esc(estado.artefato[et.id] || '—')}</td><td>${esc(d.resp || '—')} · ${esc(d.prazo || '—')}</td><td>${esc(d.criterio || '—')}</td></tr>`; }).join('')}</tbody></table>
+        ${estado.completed ? '<p>Guarde este roteiro: na próxima aula, você vai revisar as regras de negócio e ajustá-las a ele.</p>' : ''}
+      </div>
+      <div class="mr-acoes"><button class="btn btn-secondary" id="btnImprimir">🖨️ Imprimir / salvar em PDF</button></div>`, estado.completed ? 'ab-concluida' : '') + nav(true, false);
+    document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+    ligar();
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const nome = k => (V.problemas.find(p => p[0] === k) || [])[1];
+    const itens = V.rn.map(r => [`${r.id} — ${r.texto}`, nome(r.problema)])
+      .concat([['Sequência do roteiro', V.etapas.map((e, i) => `${i + 1}. ${e.nome}`).join(' · ') + ' (casos de uso e DER podem trocar de lugar)']])
+      .concat(V.etapas.map(e => [`Artefato: ${e.nome}`, e.artefato]));
+    return window.PortalGabarito.generate({
+      title: 'Modelagem — Roteiro de Trabalho: VetAgenda',
+      subtitle: 'Prática · Checklist de roteiro (O aluno elabora roteiros de trabalho para modelagem?) · Turma Sistemas',
+      items: itens.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Item da prática.', answer: a })),
+      fileName: 'modelagem-roteiro-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

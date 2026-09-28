@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Draft dos Pré-textuais</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#f2a65a; --green-dim:#b8763a; --yellow:#ffd27a; }
+  /* Específico deste exercício: área do draft e a lista de conferência. */
+  .dr-editor{ width:100%; min-height:340px; resize:vertical; margin-top:10px; padding:14px 16px; border-radius:12px; font-family:var(--ab-mono); font-size:13px; line-height:1.55; background:var(--panel2); color:var(--ink); border:1px solid var(--line); }
+  .dr-editor:focus{ outline:none; border-color:var(--green); }
+  .dr-lista{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .dr-lista li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .dr-lista li.ok{ border-color:var(--ok); color:var(--ok); }
+  .dr-lista li.falha{ border-color:var(--blood-bright); }
+  .dr-lista li.falha b{ color:var(--blood-bright); }
+  .dr-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'projetos_pre_textuais_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Draft dos Pré-textuais</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// O aluno escreve os pré-textuais do documento do projeto no VS Code Web
+// (vscode.dev: online, grátis, sem instalar), em Markdown, e cola o draft
+// aqui: o portal confere a estrutura (ordem, resumo, palavras-chave, listas,
+// sumário) e o professor dá o visto — o "Draft do documento técnico" do plano
+// de ensino. O draft fica no progresso ({ completed, draft, ... }), espelhado
+// no Supabase. Compartilhada pelas turmas Sistemas e Jogos.
+(function () {
+  const LOC = 'projetos_pre_textuais_pratica';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const md = s => window.RoteiroSlides.mdToHtml(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function lerEstado() { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } }
+  const estado = Object.assign({ completed: false, draft: '', lastStepIndex: 0 }, lerEstado());
+  let timer = 0;
+  function salvar(agora) { clearTimeout(timer); const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} }; if (agora) f(); else timer = setTimeout(f, 1000); }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+
+  const MODELO = [
+    '# FOLHA DE ROSTO', 'Nome completo de cada autor', 'TÍTULO DO PROJETO: subtítulo',
+    'Documento técnico do projeto final do curso técnico, SENAI.', 'Orientador: nome do professor', 'Cidade', '2026', '',
+    '# RESUMO', 'Este projeto desenvolve ... (objetivo). Para isso, ... (método). Como resultado, ... (resultados). Conclui-se que ... (conclusão).', '',
+    '**Palavras-chave:** termo um; termo dois; termo três.', '',
+    '# ABSTRACT', 'This project develops ...', '', '**Keywords:** term one; term two; term three.', '',
+    '# LISTA DE ILUSTRAÇÕES', 'Figura 1 – Título da primeira figura ........ 8', 'Figura 2 – Título da segunda figura ........ 10', '',
+    '# SUMÁRIO', '1 INTRODUÇÃO ........ 7', '2 DESENVOLVIMENTO ........ 8', '2.1 Requisitos ........ 8', '2.2 Modelagem ........ 10', '3 CONCLUSÃO ........ 15', 'REFERÊNCIAS ........ 16',
+  ].join('\n');
+
+  // ---------- Conferência do draft ----------
+  const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toUpperCase();
+  const palavras = s => (String(s || '').replace(/[#*_>`]/g, ' ').match(/[A-Za-zÀ-ÿ0-9]+(?:[-'][A-Za-zÀ-ÿ0-9]+)*/g) || []).length;
+  function secoes(texto) {
+    const out = [];
+    let cur = null;
+    String(texto || '').replace(/\r\n?/g, '\n').split('\n').forEach(l => {
+      const h = l.match(/^#{1,3}\s+(.+?)\s*#*$/);
+      if (h) { cur = { titulo: norm(h[1]), linhas: [] }; out.push(cur); return; }
+      if (cur) cur.linhas.push(l);
+    });
+    return out;
+  }
+  function chaves(linhas, rotulo) {
+    const l = linhas.find(x => new RegExp(`^\\s*\\**\\s*${rotulo}\\s*:?\\s*\\**\\s*:?`, 'i').test(norm(x).replace(/\*/g, '')));
+    if (!l) return null;
+    const corpo = l.replace(/\*\*/g, '').replace(/^[^:]*:\s*/, '').trim();
+    const termos = corpo.replace(/\.\s*$/, '').split(';').map(t => t.trim()).filter(Boolean);
+    return { corpo, termos, ponto: /\.\s*$/.test(corpo), ponto_e_virgula: corpo.includes(';') };
+  }
+  function conferir(texto) {
+    const r = [];
+    const x = (ok, t, d) => r.push({ ok: !!ok, texto: t, dica: d });
+    const S = secoes(texto);
+    const idx = nome => S.findIndex(s => s.titulo === nome || s.titulo.startsWith(nome));
+    const ordem = ['FOLHA DE ROSTO', 'RESUMO', 'ABSTRACT', 'LISTA DE ILUSTRACOES', 'SUMARIO'];
+    const pos = ordem.map(idx);
+    x(pos.every(p => p >= 0), 'As 5 seções existem: folha de rosto, resumo, abstract, lista de ilustrações e sumário', `Faltando: ${ordem.filter((o, i) => pos[i] < 0).join(', ') || '—'}. Cada seção começa com uma linha "# TÍTULO".`);
+    x(pos.every(p => p >= 0) && pos.every((p, i) => i === 0 || p > pos[i - 1]), 'As seções estão na ordem da NBR 14724', 'Folha de rosto → resumo → abstract → listas → sumário.');
+    const rosto = S[pos[0]] ? S[pos[0]].linhas.filter(l => l.trim()) : [];
+    x(rosto.length >= 5 && rosto.some(l => /\b20\d\d\b/.test(l)), 'Folha de rosto com autores, título, natureza do trabalho, local e ano', 'Pelo menos 5 linhas, incluindo o ano.');
+    const res = S[pos[1]] ? S[pos[1]].linhas : [];
+    const textoRes = res.filter(l => l.trim() && !/palavras-chave/i.test(l)).join('\n');
+    const paragrafos = textoRes.split(/\n\s*\n/).filter(p => p.trim());
+    const nRes = palavras(textoRes);
+    x(paragrafos.length === 1, 'Resumo em um único parágrafo', `Encontrei ${paragrafos.length} parágrafos. Junte tudo num só.`);
+    x(nRes >= 150 && nRes <= 500, `Resumo com 150 a 500 palavras (tem ${nRes})`, 'Diga objetivo, método, resultados e conclusão, sem enrolar.');
+    x(nRes && !/\b(eu|nós|nosso|nossa|nossos|nossas|meu|minha|vou|vamos)\b/i.test(textoRes), 'Resumo em terceira pessoa (sem "eu", "nós", "nosso", "vamos")', 'Troque por "Este projeto desenvolve...", "Foram usados...".');
+    const pc = chaves(res, 'PALAVRAS-CHAVE');
+    x(pc && pc.ponto_e_virgula && pc.ponto && pc.termos.length >= 3 && pc.termos.length <= 5, 'Palavras-chave: 3 a 5 termos, separados por ponto e vírgula, com ponto no final', pc ? `Encontrei ${pc.termos.length} termo(s). Formato: "Palavras-chave: termo; termo; termo."` : 'Falta a linha "Palavras-chave:" logo abaixo do resumo.');
+    const abs = S[pos[2]] ? S[pos[2]].linhas : [];
+    const nAbs = palavras(abs.filter(l => !/keywords/i.test(l)).join(' '));
+    const kw = chaves(abs, 'KEYWORDS');
+    x(nAbs >= 100 && kw && kw.ponto_e_virgula && kw.ponto && kw.termos.length >= 3, `Abstract (${nAbs} palavras) com Keywords no mesmo formato`, 'O abstract é a versão do resumo em inglês, seguido de "Keywords: term; term; term."');
+    const lista = S[pos[3]] ? S[pos[3]].linhas.filter(l => l.trim()) : [];
+    const ilus = lista.map(l => l.replace(/\*\*/g, '').trim().match(/^(Figura|Quadro|Tabela|Gráfico|Grafico)\s+(\d+)\s+[–-]\s+.+?\d+\s*$/i)).filter(Boolean);
+    const seqOk = ['figura', 'quadro', 'tabela', 'gráfico', 'grafico'].every(tipo => { const ns = ilus.filter(m => m[1].toLowerCase() === tipo).map(m => +m[2]); return ns.every((n, i) => n === i + 1); });
+    x(ilus.length >= 2 && ilus.length === lista.length && seqOk, `Lista de ilustrações: pelo menos 2 itens no formato "Figura 1 – Título ... página" (${ilus.length} válidos)`, 'Tipo, número em sequência, travessão, título e a página no fim de cada linha.');
+    const sum = S[pos[4]] ? S[pos[4]].linhas.filter(l => l.trim()) : [];
+    const secNum = sum.map(l => l.replace(/\*\*/g, '').trim().match(/^(\d+(?:\.\d+)*)\s+\S.*?\d+\s*$/)).filter(Boolean);
+    x(secNum.length >= 4 && secNum[0][1] === '1' && secNum.some(m => m[1].includes('.')), `Sumário com numeração progressiva e páginas (${secNum.length} seções numeradas)`, 'Pelo menos 4 seções, começando em "1", com uma subseção (ex.: 2.1), cada uma com a página.');
+    x(sum.length && !sum.some(l => /\b(RESUMO|ABSTRACT|SUMARIO|LISTA DE)\b/.test(norm(l))), 'O sumário não lista os elementos pré-textuais', 'Resumo, abstract, listas e o próprio sumário ficam de fora do sumário.');
+    return r;
+  }
+
+  // ---------- Telas ----------
+  const ETAPAS = ['missao', 'modelo', 'resumo', 'listas', 'conferir', 'visto'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.completed ? TOTAL - 1 : (estado.lastStepIndex || 0), TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+  function nav(voltar, avancar, rot) { return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? `<button class="btn" id="btnNext">${rot || 'Próximo →'}</button>` : '<span></span>'}</div>`; }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > estado.lastStepIndex) estado.lastStepIndex = atual; salvar(true); render(); }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.decorar(stepWrap, { chaveChecklist: `${LOC}_check_${user}_${atual}` });
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  const cartao = (t, corpo, extra) => `<article class="ab-cartao ${extra || ''}"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${t}</h2>${corpo}</article>`;
+  const draftOk = () => conferir(estado.draft).every(i => i.ok);
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const conf = conferir(estado.draft);
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(conf.filter(c => c.ok).length / conf.length * 90)) + '%';
+    const e = ETAPAS[atual];
+    reportar(`Pré-textuais — ${e}`);
+    if (e === 'missao') {
+      stepWrap.innerHTML = cartao('Missão: o draft dos pré-textuais', `<div class="ab-conteudo">${md(`
+Hoje você começa o **documento técnico** do projeto final pelos **elementos pré-textuais**: folha de rosto, resumo, abstract, lista de ilustrações e sumário.
+
+### A ferramenta: VS Code Web
+1. Abra [vscode.dev](https://vscode.dev) (grátis, no navegador, sem instalar)
+2. **Arquivo → Novo arquivo de texto** e salve como \`documento.md\`
+3. Escreva em Markdown; **Ctrl+Shift+V** mostra a versão formatada
+4. No fim, copie o texto inteiro e cole aqui, na etapa **Conferir o draft**
+
+> Tempo sugerido: **40 minutos**. O draft é um rascunho: dá para melhorar depois, mas a **estrutura** já precisa estar certa.`)}</div>${nav(false, true)}`);
+    } else if (e === 'modelo') {
+      stepWrap.innerHTML = cartao('O modelo do documento (5 min)', `<div class="ab-conteudo">${md('Comece o `documento.md` com esta estrutura e troque os textos de exemplo pelos do **seu** projeto:')}</div>
+        <pre><code>${esc(MODELO)}</code></pre>
+        <div class="ab-conteudo">${md('- [ ] Criei o `documento.md` no VS Code Web com as 5 seções\n- [ ] Preenchi a folha de rosto com os dados reais da equipe')}</div>${nav(true, true)}`);
+    } else if (e === 'resumo') {
+      stepWrap.innerHTML = cartao('Resumo, abstract e palavras-chave (15 min)', `<div class="ab-conteudo">${md(`
+Escreva o resumo em **um parágrafo**, de **150 a 500 palavras**, em terceira pessoa, respondendo:
+
+| Parte | Pergunta | Começo sugerido |
+|---|---|---|
+| Objetivo | O que o projeto faz e para quem? | "Este projeto desenvolve..." |
+| Método | Como foi feito? Com quais tecnologias? | "Para isso, foram utilizados..." |
+| Resultados | O que foi obtido? | "Como resultado, ..." |
+| Conclusão | O que isso mostra? | "Conclui-se que..." |
+
+Depois, as **palavras-chave**: 3 a 5 termos, separados por **ponto e vírgula**, com **ponto** no final.
+
+O **abstract** é o mesmo resumo em inglês (pode usar um tradutor online e revisar), seguido de **Keywords:** no mesmo formato.
+
+- [ ] Resumo em um parágrafo, de 150 a 500 palavras
+- [ ] Palavras-chave no formato da norma
+- [ ] Abstract e Keywords`)}</div>${nav(true, true)}`);
+    } else if (e === 'listas') {
+      stepWrap.innerHTML = cartao('Lista de ilustrações e sumário (10 min)', `<div class="ab-conteudo">${md(`
+### Lista de ilustrações
+Liste as figuras e os quadros que o documento **vai ter** (telas, diagramas, modelo do banco), na ordem em que vão aparecer:
+
+\`Figura 1 – Diagrama de casos de uso ........ 9\`
+
+### Sumário
+As seções do texto, com **numeração progressiva** e a página. Os pré-textuais **não** entram:
+
+\`1 INTRODUÇÃO ........ 7\`
+\`2 DESENVOLVIMENTO ........ 8\`
+\`2.1 Requisitos ........ 8\`
+
+> As páginas ainda são uma previsão: o importante agora é a estrutura.
+
+- [ ] Pelo menos 2 ilustrações na lista, numeradas em sequência
+- [ ] Sumário com pelo menos 4 seções e uma subseção`)}</div>${nav(true, true)}`);
+    } else if (e === 'conferir') {
+      renderConferir(); return;
+    } else {
+      renderVisto(); return;
+    }
+    ligar();
+  }
+
+  function listaHtml(itens) {
+    return itens.map(i => i.ok ? `<li class="ok">✔ ${esc(i.texto)}</li>` : `<li class="falha"><b>✘ ${esc(i.texto)}</b> — ${esc(i.dica)}</li>`).join('');
+  }
+  function renderConferir() {
+    stepWrap.innerHTML = cartao('Conferir o draft', `
+      <div class="ab-conteudo">${md('No VS Code Web, selecione todo o texto do `documento.md` (**Ctrl+A**, **Ctrl+C**) e cole abaixo. Clique em **Conferir** quantas vezes quiser.')}</div>
+      <textarea class="dr-editor" id="drTexto" spellcheck="true" aria-label="Draft em Markdown" placeholder="# FOLHA DE ROSTO ...">${esc(estado.draft)}</textarea>
+      <div class="dr-acoes"><button class="btn" id="btnConferir">Conferir</button></div>
+      <ul class="dr-lista" id="drLista">${estado.draft ? listaHtml(conferir(estado.draft)) : ''}</ul>`) + nav(true, draftOk(), 'Pedir visto →');
+    const ta = document.getElementById('drTexto');
+    ta.addEventListener('input', () => { estado.draft = ta.value; salvar(); });
+    document.getElementById('btnConferir').addEventListener('click', () => {
+      estado.draft = ta.value; salvar(true);
+      const itens = conferir(ta.value);
+      reportar(`Pré-textuais — conferência (${itens.filter(i => i.ok).length}/${itens.length})`);
+      renderConferir();
+    });
+    ligar();
+  }
+
+  function renderVisto() {
+    if (!estado.completed && !draftOk()) { atual = ETAPAS.indexOf('conferir'); render(); return; }
+    if (estado.completed) {
+      const quando = estado.vistoEm ? new Date(estado.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = cartao('✅ Draft entregue', `<p>Visto dado por <b>${esc(estado.vistoPor || '')}</b>${quando ? ' em ' + esc(quando) : ''}.</p><div class="ab-conteudo">${md('Continue o documento a partir desse `documento.md`: a introdução é a próxima parte.')}</div>`, 'ab-concluida') + nav(true, false);
+      ligar(); return;
+    }
+    stepWrap.innerHTML = cartao('🧑‍🏫 Visto do professor', `
+      <div class="ab-conteudo"><p>Chame o professor e mostre o draft (no VS Code Web ou na etapa anterior). Quando ele conferir, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo.</p></div>
+      <div class="ab-form"><label>Token do professor <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+        <button class="btn" id="btnDarVisto">Dar visto</button><div class="ab-msg" id="vistoMsg" style="display:none;"></div></div>`) + nav(true, false);
+    ligar();
+    const btn = document.getElementById('btnDarVisto');
+    const msg = document.getElementById('vistoMsg');
+    btn.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      msg.style.display = 'none';
+      if (!t) { msg.className = 'ab-msg erro'; msg.textContent = 'Informe o token do professor.'; msg.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      try {
+        const r = window.PortalProfessorVisto ? await window.PortalProfessorVisto.verificarToken(t) : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!r.ok) throw new Error(r.erro);
+        Object.assign(estado, { completed: true, vistoPor: r.nome, vistoEm: new Date().toISOString() });
+        salvar(true); reportar('Pré-textuais — entregue com visto'); render();
+      } catch (e) {
+        msg.className = 'ab-msg erro'; msg.textContent = e.message || 'Erro inesperado ao verificar. Tente de novo.'; msg.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const itens = [
+      ['Ordem (NBR 14724)', 'Folha de rosto → resumo → abstract → lista de ilustrações → sumário.'],
+      ['Folha de rosto', 'Autores, título e subtítulo, natureza do trabalho, orientador, local e ano.'],
+      ['Resumo (NBR 6028)', 'Um parágrafo, 150 a 500 palavras, terceira pessoa, voz ativa: objetivo, método, resultados, conclusão; sem citações nem figuras.'],
+      ['Palavras-chave', '3 a 5 termos, separados por ponto e vírgula, com ponto no final (NBR 6028:2021).'],
+      ['Abstract', 'Versão do resumo em inglês, com Keywords no mesmo formato.'],
+      ['Lista de ilustrações', '"Figura 1 – Título ........ página", na ordem em que aparecem no texto, numeração em sequência por tipo.'],
+      ['Sumário (NBR 6027)', 'Seções do texto com numeração progressiva (1, 2, 2.1) e páginas; sem os pré-textuais; mesmos títulos do texto.'],
+    ];
+    return window.PortalGabarito.generate({
+      title: 'Projetos — Draft dos Pré-textuais',
+      subtitle: 'Prática · Draft do documento técnico (O aluno estrutura os elementos pré-textuais?) · Sistemas e Jogos',
+      items: itens.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Critério de conferência do draft.', answer: a })),
+      fileName: 'projetos-pre-textuais-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

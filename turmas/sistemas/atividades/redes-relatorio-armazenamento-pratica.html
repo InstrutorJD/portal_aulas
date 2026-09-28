@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redes — Relatório Técnico Final</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#5ec8ff; --green-dim:#2f7aa8; --yellow:#e0b84a; }
+  /* Específico deste exercício: formulário do relatório e versão impressa. */
+  .rt-campo{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+  .rt-campo label{ font-size:12px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--ab-acento); }
+  .rt-campo small{ color:var(--ink-dim); font-size:12px; }
+  .rt-campo input, .rt-campo textarea, .rt-grade textarea{
+    width:100%; font:inherit; font-size:14px; line-height:1.5; padding:10px 12px; border-radius:10px;
+    background:var(--panel2); color:var(--ink); border:1px solid var(--line); resize:vertical;
+  }
+  .rt-campo textarea{ min-height:110px; }
+  .rt-campo input:focus, .rt-campo textarea:focus, .rt-grade textarea:focus{ outline:none; border-color:var(--green); }
+  .rt-conta{ font-size:11.5px; color:var(--ink-dim); text-align:right; }
+  .rt-conta.ok{ color:var(--ok); }
+  .rt-grade{ display:grid; grid-template-columns:150px repeat(3, minmax(0,1fr)); gap:8px; margin-top:14px; align-items:stretch; }
+  .rt-grade .rt-h{ font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--ab-acento); padding:4px 2px; }
+  .rt-grade .rt-crit{ font-size:13px; font-weight:700; padding:8px 4px; }
+  .rt-grade .rt-crit small{ display:block; font-weight:400; color:var(--ink-dim); font-size:11.5px; }
+  .rt-grade textarea{ min-height:74px; font-size:13px; }
+  .rt-pend{ list-style:none; margin:12px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .rt-pend li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .rt-pend li.ok{ border-color:var(--ok); color:var(--ok); }
+  .rt-pend li.falta{ border-color:var(--blood-bright); }
+  .rt-doc{ background:#fff; color:#111; border-radius:12px; padding:28px 32px; margin-top:14px; font-family:Georgia, 'Times New Roman', serif; line-height:1.55; }
+  /* .ab-cartao .rt-doc: vence o estilo claro dos títulos do cartão (aula-base.css). */
+  .ab-cartao .rt-doc h1{ font-family:Georgia, 'Times New Roman', serif; font-size:22px; color:#111; margin:0 0 4px; }
+  .ab-cartao .rt-doc h2{ font-family:Georgia, 'Times New Roman', serif; font-size:16px; font-weight:700; color:#111; margin:18px 0 6px; border-bottom:1px solid #ccc; padding-bottom:3px; }
+  .ab-cartao .rt-doc h2::after{ display:none; }
+  .rt-doc p{ margin:0 0 8px; white-space:pre-wrap; } .rt-doc .rt-meta{ color:#555; font-size:13px; }
+  .rt-doc table{ width:100%; border-collapse:collapse; font-size:12.5px; } .rt-doc th, .rt-doc td{ border:1px solid #bbb; padding:6px 8px; vertical-align:top; text-align:left; white-space:pre-wrap; }
+  .rt-doc th{ background:#eef2f6; }
+  .rt-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  @media (max-width:800px){ .rt-grade{ grid-template-columns:1fr; } .rt-grade .rt-h{ display:none; } .rt-grade textarea::placeholder{ color:var(--ink-dim); } }
+  @media print{
+    body{ background:#fff; } .ab-topo, .ab-progresso, .ab-nav, .rt-acoes, .rt-naoimprime, #btnGenGabaritoFloat{ display:none !important; }
+    .ab-cartao > .ab-cartao-etapa, .ab-cartao > h2, .ab-cartao > p{ display:none !important; }
+    .ab-palco{ overflow:visible; padding:0; } .ab-cartao{ box-shadow:none; border:none; padding:0; background:#fff; } .rt-doc{ padding:0; margin:0; }
+  }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'redes_relatorio_armazenamento_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Redes — Relatório Técnico Final</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">7</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Relatório técnico escrito no próprio portal (sem ferramenta externa). O
+// texto fica no estado de progresso do aluno ({ completed, lastStepIndex,
+// relatorio, vistoPor, vistoEm }), que progress-sync.js já espelha no
+// Supabase (student_activity_state). A versão para imprimir/salvar em PDF
+// sai do navegador (window.print). Conclui com o visto do professor.
+(function () {
+  const LOC = 'redes_relatorio_armazenamento_pratica';
+  const params = new URLSearchParams(location.search);
+  const user = params.get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const TEC = [['local', 'Local'], ['rede', 'Em rede (NAS)'], ['nuvem', 'Em nuvem']];
+  const CRITERIOS = [
+    ['onde', 'Onde os dados ficam', 'Equipamento e lugar físico'],
+    ['acesso', 'Como se acessa', 'Interface/protocolo e camada do modelo'],
+    ['velocidade', 'Velocidade típica', 'Com unidade: MB/s, Mbps, Gbps'],
+    ['custo', 'Custo e escala', 'Como paga e como cresce'],
+    ['seguranca', 'Segurança e backup', 'Riscos, redundância, 3-2-1'],
+    ['quando', 'Quando é a melhor escolha', 'Um uso em que ela vence'],
+  ];
+  const CENARIO = 'Uma escola de idiomas tem 12 computadores, uma secretaria que guarda as fichas dos alunos (dados pessoais) e professores que gravam vídeos de aula (arquivos grandes) e às vezes trabalham de casa. A internet é de 100 Mbps e a rede interna é de 1 Gbps.';
+
+  const palavras = s => (String(s || '').trim().match(/\S+/g) || []).length;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const hoje = () => { const d = new Date(); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`; };
+
+  function lerEstado() { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } }
+  let estado = Object.assign({ completed: false, lastStepIndex: 0, relatorio: {} }, lerEstado());
+  if (!estado.relatorio || typeof estado.relatorio !== 'object') estado.relatorio = {};
+  const R = estado.relatorio;
+  if (!R.titulo) R.titulo = 'Comparação entre armazenamento local, em rede e em nuvem';
+  if (!R.autor) R.autor = params.get('name') || user;
+  if (!R.data) R.data = hoje();
+  let timerSalvar = 0;
+  function salvar(agora) {
+    clearTimeout(timerSalvar);
+    const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} };
+    if (agora) f(); else timerSalvar = setTimeout(f, 1200); // espelho no Supabase sem uma gravação por tecla
+  }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+
+  // Pendências: o que falta para o relatório estar completo.
+  const UNIDADE = /\b\d+([.,]\d+)?\s*(k|m|g|t)?(bps|b\/s|B\/s|bytes?)\b|\b(k|m|g|t)(bps|b\/s)\b|MB\/s|GB\/s|Mbps|Gbps/i;
+  function pendencias() {
+    const p = [];
+    const add = (ok, texto) => p.push({ ok: !!ok, texto });
+    add(R.autor && R.titulo, 'Identificação (título e autor)');
+    add(palavras(R.objetivo) >= 20, 'Objetivo com pelo menos 20 palavras');
+    const celulas = TEC.flatMap(([t]) => CRITERIOS.map(([c]) => (R.tabela || {})[`${t}_${c}`]));
+    add(celulas.every(v => palavras(v) >= 3), 'Tabela comparativa: as 18 células com pelo menos 3 palavras');
+    add(TEC.every(([t]) => UNIDADE.test((R.tabela || {})[`${t}_velocidade`] || '')), 'Velocidade das 3 tecnologias com número e unidade (ex.: 125 MB/s, 100 Mbps)');
+    add(palavras(R.sintese) >= 60 && /local/i.test(R.sintese || '') && /(rede|nas)/i.test(R.sintese || '') && /nuvem/i.test(R.sintese || ''), 'Síntese com pelo menos 60 palavras, citando local, rede (NAS) e nuvem');
+    add(palavras(R.recomendacao) >= 50 && /(backup|3-2-1)/i.test(R.recomendacao || ''), 'Recomendação para o cenário com pelo menos 50 palavras, incluindo o backup');
+    add(palavras(R.tendencias) >= 25, 'Tendências futuras com pelo menos 25 palavras');
+    add(palavras(R.referencias) >= 2, 'Referências (pelo menos uma fonte)');
+    return p;
+  }
+
+  const ETAPAS = ['orientacoes', 'identificacao', 'comparacao', 'sintese', 'recomendacao', 'tendencias', 'revisao'];
+  const TOTAL = ETAPAS.length + 1; // + visto
+  let atual = Math.min(estado.completed ? TOTAL - 1 : (estado.lastStepIndex || 0), TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+
+  function nav(voltar, avancar, rot) {
+    return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? `<button class="btn" id="btnNext">${rot || 'Próximo →'}</button>` : '<span></span>'}</div>`;
+  }
+  function irPara(i) {
+    direcao = i < atual ? -1 : 1;
+    atual = Math.max(0, Math.min(i, TOTAL - 1));
+    if (atual > (estado.lastStepIndex || 0)) estado.lastStepIndex = atual;
+    salvar(true);
+    render();
+  }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+    // Campos: grava no estado a cada digitação.
+    stepWrap.querySelectorAll('[data-campo]').forEach(el => el.addEventListener('input', () => {
+      const campo = el.dataset.campo;
+      if (campo.startsWith('tabela.')) { R.tabela = R.tabela || {}; R.tabela[campo.slice(7)] = el.value; }
+      else R[campo] = el.value;
+      const conta = stepWrap.querySelector(`[data-conta="${campo}"]`);
+      if (conta) atualizarConta(conta, el.value);
+      salvar();
+    }));
+    stepWrap.querySelectorAll('[data-conta]').forEach(c => atualizarConta(c, R[c.dataset.conta]));
+  }
+  function atualizarConta(el, valor) {
+    const min = parseInt(el.dataset.min, 10);
+    const n = palavras(valor);
+    el.textContent = `${n} de ${min} palavras`;
+    el.classList.toggle('ok', n >= min);
+  }
+  const campo = (id, rotulo, dica, min, linhas) => `
+    <div class="rt-campo">
+      <label for="f_${id}">${rotulo}</label>${dica ? `<small>${dica}</small>` : ''}
+      <textarea id="f_${id}" data-campo="${id}" rows="${linhas || 5}">${esc(R[id] || '')}</textarea>
+      ${min ? `<div class="rt-conta" data-conta="${id}" data-min="${min}"></div>` : ''}
+    </div>`;
+  const cartao = (titulo, corpo) => `<article class="ab-cartao"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${titulo}</h2>${corpo}</article>`;
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const feitas = pendencias().filter(p => p.ok).length;
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(feitas / 8 * 90)) + '%';
+    const etapa = ETAPAS[atual];
+    reportar(`Relatório — ${etapa || 'visto'}`);
+    if (atual >= ETAPAS.length) { renderVisto(); return; }
+
+    if (etapa === 'orientacoes') {
+      stepWrap.innerHTML = cartao('Relatório técnico final do bloco', `
+        <div class="ab-conteudo">
+          <p>Você vai escrever um <b>relatório técnico</b> comparando as três tecnologias de armazenamento estudadas: <b>local</b>, <b>em rede (NAS)</b> e <b>em nuvem</b>. Tempo sugerido: <b>40 minutos</b>.</p>
+          <h3>O cenário do relatório</h3>
+          <blockquote>${CENARIO}</blockquote>
+          <ol>
+            <li>Identificação e objetivo</li>
+            <li>Tabela comparativa (6 critérios × 3 tecnologias)</li>
+            <li>Síntese</li>
+            <li>Recomendação para o cenário</li>
+            <li>Tendências futuras e referências</li>
+            <li>Revisão, versão em PDF e visto do professor</li>
+          </ol>
+          <p>Tudo o que você digita fica salvo sozinho. Use a teoria desta trilha, a ficha de correlação da aula passada e a trilha "Armazenamento e Ativos de Rede" como fontes.</p>
+        </div>${nav(false, true)}`);
+    } else if (etapa === 'identificacao') {
+      stepWrap.innerHTML = cartao('Identificação e objetivo', `
+        <div class="rt-campo"><label for="f_titulo">Título</label><input id="f_titulo" data-campo="titulo" value="${esc(R.titulo)}"></div>
+        <div class="rt-campo"><label for="f_autor">Autor</label><input id="f_autor" data-campo="autor" value="${esc(R.autor)}"></div>
+        <div class="rt-campo"><label for="f_data">Data</label><input id="f_data" data-campo="data" value="${esc(R.data)}"></div>
+        ${campo('objetivo', 'Objetivo', 'O que este relatório compara, para quem e por quê. Ex.: "Comparar... para indicar à escola de idiomas..."', 20, 4)}
+        ${nav(true, true)}`);
+    } else if (etapa === 'comparacao') {
+      const tab = R.tabela || {};
+      stepWrap.innerHTML = cartao('Tabela comparativa', `
+        <div class="ab-conteudo"><p>Preencha <b>os mesmos critérios</b> para as três tecnologias. Use dados e unidades corretas (Mbps ≠ MB/s).</p></div>
+        <div class="rt-grade">
+          <div class="rt-h">Critério</div>${TEC.map(([, n]) => `<div class="rt-h">${n}</div>`).join('')}
+          ${CRITERIOS.map(([c, nome, dica]) => `
+            <div class="rt-crit">${nome}<small>${dica}</small></div>
+            ${TEC.map(([t, n]) => `<textarea data-campo="tabela.${t}_${c}" aria-label="${nome}: ${n}" placeholder="${n}">${esc(tab[`${t}_${c}`] || '')}</textarea>`).join('')}
+          `).join('')}
+        </div>
+        ${nav(true, true)}`);
+    } else if (etapa === 'sintese') {
+      stepWrap.innerHTML = cartao('Síntese', `
+        <div class="ab-conteudo"><p>Em um texto seu (não copie a tabela), diga o <b>ponto forte</b> e o <b>ponto fraco</b> de cada tecnologia e o que as <b>diferencia</b>: dependência de internet, velocidade, custo, segurança.</p></div>
+        ${campo('sintese', 'Síntese', 'Cite as três: local, rede (NAS) e nuvem.', 60, 8)}
+        ${nav(true, true)}`);
+    } else if (etapa === 'recomendacao') {
+      stepWrap.innerHTML = cartao('Recomendação para o cenário', `
+        <div class="ab-conteudo"><blockquote>${CENARIO}</blockquote><p>Qual solução você recomenda para essa escola? Pode combinar tecnologias. Justifique com os critérios da tabela e diga como fica o <b>backup</b> (regra 3-2-1).</p></div>
+        ${campo('recomendacao', 'Recomendação', 'Pense também nos dados pessoais da secretaria e nos vídeos grandes.', 50, 8)}
+        ${nav(true, true)}`);
+    } else if (etapa === 'tendencias') {
+      stepWrap.innerHTML = cartao('Tendências futuras e referências', `
+        ${campo('tendencias', 'Tendências futuras', 'Como o armazenamento deve mudar nos próximos anos? (híbrido, SSD NVMe, edge, redes mais rápidas...)', 25, 5)}
+        ${campo('referencias', 'Referências', 'Uma fonte por linha: material da aula, trilhas do portal, sites oficiais.', 2, 3)}
+        ${nav(true, true)}`);
+    } else if (etapa === 'revisao') {
+      renderRevisao(); return;
+    }
+    ligar();
+  }
+
+  function documento() {
+    const tab = R.tabela || {};
+    return `
+      <div class="rt-doc" id="rtDoc">
+        <h1>${esc(R.titulo)}</h1>
+        <p class="rt-meta">Relatório técnico · ${esc(R.autor)} · Turma de Sistemas · ${esc(R.data)}</p>
+        <h2>1. Objetivo</h2><p>${esc(R.objetivo)}</p>
+        <h2>2. Comparação</h2>
+        <table><thead><tr><th>Critério</th>${TEC.map(([, n]) => `<th>${n}</th>`).join('')}</tr></thead>
+          <tbody>${CRITERIOS.map(([c, nome]) => `<tr><th>${nome}</th>${TEC.map(([t]) => `<td>${esc(tab[`${t}_${c}`])}</td>`).join('')}</tr>`).join('')}</tbody></table>
+        <h2>3. Síntese</h2><p>${esc(R.sintese)}</p>
+        <h2>4. Recomendação</h2><p class="rt-meta">Cenário: ${esc(CENARIO)}</p><p>${esc(R.recomendacao)}</p>
+        <h2>5. Tendências futuras</h2><p>${esc(R.tendencias)}</p>
+        <h2>6. Referências</h2><p>${esc(R.referencias)}</p>
+      </div>`;
+  }
+
+  function renderRevisao() {
+    const p = pendencias();
+    const pronto = p.every(x => x.ok);
+    stepWrap.innerHTML = cartao('Revisão do relatório', `
+      <div class="rt-naoimprime">
+        <div class="ab-conteudo"><p>${pronto ? '✅ Relatório completo. Releia, salve em PDF se o professor pedir e siga para o visto.' : 'Ainda falta completar alguns itens. Volte às etapas e ajuste:'}</p></div>
+        <ul class="rt-pend">${p.map(x => `<li class="${x.ok ? 'ok' : 'falta'}">${x.ok ? '✔' : '✘'} ${x.texto}</li>`).join('')}</ul>
+        <div class="rt-acoes"><button class="btn btn-secondary" id="btnImprimir">🖨️ Imprimir / salvar em PDF</button></div>
+      </div>
+      ${documento()}
+      ${nav(true, pronto, 'Pedir visto →')}`);
+    document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+    ligar();
+  }
+
+  function renderVisto() {
+    if (!pendencias().every(x => x.ok) && !estado.completed) { atual = ETAPAS.length - 1; render(); return; }
+    if (estado.completed) {
+      const quando = estado.vistoEm ? new Date(estado.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = `<div class="ab-cartao ab-concluida"><div class="ab-cartao-etapa">Etapa ${TOTAL} de ${TOTAL}</div><h2>✅ Relatório entregue</h2>
+        <p>Visto dado por <b>${esc(estado.vistoPor || '')}</b>${quando ? ' em ' + esc(quando) : ''}.</p>
+        <div class="rt-acoes"><button class="btn btn-secondary" id="btnImprimir">🖨️ Imprimir / salvar em PDF</button></div>${documento()}</div>${nav(true, false)}`;
+      document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+      ligar(); return;
+    }
+    stepWrap.innerHTML = `<div class="ab-cartao"><div class="ab-cartao-etapa">Etapa ${TOTAL} de ${TOTAL}</div><h2>🧑‍🏫 Visto do professor</h2>
+      <div class="ab-conteudo"><p>Chame o professor e mostre o relatório. Quando ele conferir, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo.</p></div>
+      <div class="ab-form"><label>Token do professor <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+        <button class="btn" id="btnDarVisto">Dar visto</button><div class="ab-msg" id="vistoMsg" style="display:none;"></div></div></div>${nav(true, false)}`;
+    ligar();
+    const btn = document.getElementById('btnDarVisto');
+    const msg = document.getElementById('vistoMsg');
+    btn.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      msg.style.display = 'none';
+      if (!t) { msg.className = 'ab-msg erro'; msg.textContent = 'Informe o token do professor.'; msg.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      try {
+        const r = window.PortalProfessorVisto ? await window.PortalProfessorVisto.verificarToken(t) : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!r.ok) throw new Error(r.erro);
+        Object.assign(estado, { completed: true, vistoPor: r.nome, vistoEm: new Date().toISOString(), lastStepIndex: TOTAL - 1 });
+        salvar(true);
+        reportar('Relatório — entregue com visto');
+        render();
+      } catch (e) {
+        msg.className = 'ab-msg erro'; msg.textContent = e.message || 'Erro inesperado ao verificar. Tente de novo.'; msg.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  const RUBRICA = [
+    ['Estrutura completa', 'Identificação, objetivo, comparação, síntese, recomendação, tendências e referências.'],
+    ['Comparação por critérios', 'Os mesmos 6 critérios para local, NAS e nuvem. Referência: local = no próprio PC, acesso direto (SATA/NVMe/USB), fora do modelo de rede; NAS = servidor na rede local, SMB/NFS na camada de aplicação sobre TCP/IP; nuvem = datacenter na internet, HTTPS, depende da internet.'],
+    ['Dados e unidades corretas', 'Velocidades com unidade e conversão certa: rede de 1 Gbps ≈ até 125 MB/s; internet de 100 Mbps ≈ até 12,5 MB/s; SSD local em geral mais rápido.'],
+    ['Síntese', 'Ponto forte e fraco de cada uma, sem copiar a tabela: local rápido e barato mas sem compartilhar e sem cópia fora; NAS compartilha sem internet mas exige manutenção e fica no mesmo local; nuvem acessível de qualquer lugar e fora do local, mas depende da internet e de mensalidade/conta.'],
+    ['Recomendação justificada', 'Para a escola: solução híbrida esperada (NAS na rede de 1 Gbps para o dia a dia e os vídeos, com cópia automática na nuvem; dados pessoais com controle de acesso e criptografia), cumprindo o backup 3-2-1. Aceitar outras escolhas bem justificadas.'],
+    ['Relação com os modelos', 'Explica que o local não passa pela rede e que NAS e nuvem usam protocolos de aplicação sobre TCP/IP (gargalo: rede local × internet).'],
+    ['Linguagem técnica e tendências', 'Frases com dados, sem adjetivos vazios; cita tendências (híbrido, NVMe, edge, Wi-Fi 7/5G) e referências.'],
+  ];
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Redes — Relatório Técnico Final (armazenamento local, em rede e em nuvem)',
+      subtitle: 'Prática · Relatório técnico final de bloco (O aluno sintetiza características de armazenamento?) · Turma Sistemas',
+      items: RUBRICA.map(([t, a], i) => ({ number: i + 1, title: t, prompt: i === 4 ? `Cenário: ${CENARIO}` : 'Critério de correção do relatório.', answer: a })),
+      fileName: 'redes-relatorio-armazenamento-rubrica.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

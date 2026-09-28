@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redes — Ficha de Correlação Técnica</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#5ec8ff; --green-dim:#2f7aa8; --yellow:#e0b84a; }
+  /* Específico deste exercício: linhas da ficha com dois selects. */
+  .fc-linha{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr); gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); }
+  .fc-linha + .fc-linha{ margin-top:8px; }
+  .fc-cab{ background:transparent; border-color:transparent; font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--ab-acento); padding-top:0; padding-bottom:4px; }
+  .fc-item b{ display:block; }
+  .fc-item small{ color:var(--ink-dim); }
+  .fc-linha select{ width:100%; font:inherit; font-size:13px; padding:8px 10px; border-radius:10px; background:var(--panel); color:var(--ink); border:1px solid var(--line); }
+  .fc-linha.ok{ border-color:var(--ok); background:color-mix(in srgb, var(--ok) 8%, transparent); }
+  .fc-linha.erro{ border-color:var(--blood-bright); }
+  .fc-dica{ grid-column:1 / -1; font-size:12.5px; color:var(--ink); }
+  .fc-dica:empty{ display:none; }
+  .fc-acoes{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+  .fc-acoes .ab-msg{ flex:1; min-width:200px; }
+  @media (max-width:700px){ .fc-linha{ grid-template-columns:1fr 1fr; } .fc-item{ grid-column:1 / -1; } .fc-cab{ display:none; } }
+  @media print{ .ab-topo, .ab-progresso, .ab-nav, .fc-acoes, #btnGenGabaritoFloat{ display:none !important; } .ab-palco{ overflow:visible; } }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'redes_modelos_referencia_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Redes — Ficha de Correlação Técnica</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  const LOC = 'redes_modelos_referencia_pratica';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const RESP_KEY = `${LOC}_respostas_${user}`;
+  const STEP_KEY = `${LOC}_step_${user}`;
+
+  const OSI = [['1', '1 Física'], ['2', '2 Enlace'], ['3', '3 Rede'], ['4', '4 Transporte'], ['5', '5 Sessão'], ['6', '6 Apresentação'], ['7', '7 Aplicação'], ['fora', 'Fora do modelo (não passa pela rede)']];
+  const TCP = [['acesso', 'Acesso à rede'], ['internet', 'Internet'], ['transporte', 'Transporte'], ['aplicacao', 'Aplicação'], ['fora', 'Fora do modelo (não passa pela rede)']];
+  const rotulo = (lista, v) => (lista.find(x => x[0] === v) || [, '—'])[1];
+
+  // Cada item: camadas aceitas nos dois modelos e uma dica que aponta o
+  // raciocínio (o que o item "enxerga"), sem dizer a camada.
+  const FICHAS = [
+    {
+      id: 'ativos', titulo: 'Ficha 1 — Ativos de rede',
+      intro: 'Para cada **ativo**, escolha a camada em que ele trabalha. Pense no que ele **lê** para tomar decisões: nada (só o sinal), o **MAC**, o **IP**, a **porta** ou o **conteúdo**.',
+      itens: [
+        { id: 'cabo', nome: 'Cabo UTP (par trançado)', det: 'Leva o sinal elétrico entre os equipamentos', osi: ['1'], tcp: ['acesso'], dica: 'O cabo não lê endereço nenhum: só transporta sinal.' },
+        { id: 'hub', nome: 'Hub', det: 'Repete o que chega numa porta para todas as outras', osi: ['1'], tcp: ['acesso'], dica: 'Repetir para todos significa que ele não lê endereço nenhum.' },
+        { id: 'conversor', nome: 'Conversor de mídia (cobre ↔ fibra)', det: 'Transforma sinal elétrico em luz', osi: ['1'], tcp: ['acesso'], dica: 'Ele só troca o tipo de sinal, sem olhar o conteúdo.' },
+        { id: 'switch', nome: 'Switch (comum)', det: 'Entrega cada quadro só na porta do destino', osi: ['2'], tcp: ['acesso'], dica: 'Para saber a porta do destino, ele consulta uma tabela de endereços físicos.' },
+        { id: 'placa', nome: 'Placa de rede', det: 'Tem um endereço MAC gravado de fábrica', osi: ['2'], tcp: ['acesso'], dica: 'Onde fica o endereço MAC nos modelos?' },
+        { id: 'ap', nome: 'Access point Wi-Fi', det: 'Liga os dispositivos sem fio à rede local', osi: ['2'], tcp: ['acesso'], dica: 'Ele faz com o rádio o que o switch faz com cabo, usando os endereços MAC.' },
+        { id: 'roteador', nome: 'Roteador', det: 'Escolhe o caminho entre redes diferentes', osi: ['3'], tcp: ['internet'], dica: 'Para escolher caminhos entre redes, ele lê o endereço lógico de destino.' },
+        { id: 'firewall', nome: 'Firewall de pacotes', det: 'Bloqueia ou libera por IP e por porta', osi: ['3', '4'], tcp: ['internet', 'transporte'], dica: 'Ele olha dois endereços diferentes: o IP e a porta. Cada um mora numa camada.' },
+        { id: 'proxy', nome: 'Proxy web', det: 'Libera ou bloqueia sites pelo endereço pedido', osi: ['7'], tcp: ['aplicacao'], dica: 'Para saber qual site foi pedido, ele precisa ler o conteúdo da requisição.' },
+      ],
+    },
+    {
+      id: 'unidades', titulo: 'Ficha 2 — Unidades de dados e de medida',
+      intro: 'Cada camada tem a **sua unidade**. Associe cada unidade (ou medida) à camada em que ela aparece.',
+      itens: [
+        { id: 'bit', nome: 'Bit e taxa de 1 Gbps', det: 'A velocidade do link de fibra', osi: ['1'], tcp: ['acesso'], dica: 'bps mede bits transmitidos pelo meio a cada segundo.' },
+        { id: 'quadro', nome: 'Quadro (frame)', det: 'Leva o MAC de origem e de destino', osi: ['2'], tcp: ['acesso'], dica: 'Procure a camada que trabalha com o endereço MAC.' },
+        { id: 'pacote', nome: 'Pacote', det: 'Leva o IP de origem e de destino', osi: ['3'], tcp: ['internet'], dica: 'Procure a camada que trabalha com o endereço IP.' },
+        { id: 'segmento', nome: 'Segmento', det: 'Leva a porta de origem e de destino (TCP)', osi: ['4'], tcp: ['transporte'], dica: 'Portas, TCP e UDP ficam juntos na mesma camada.' },
+        { id: 'dados', nome: 'Dados: um arquivo de 20 MB', det: 'O conteúdo que o usuário enviou', osi: ['5', '6', '7'], tcp: ['aplicacao'], dica: 'O arquivo em si (em MB) é o que a aplicação entrega, antes de ser dividido.' },
+      ],
+    },
+    {
+      id: 'interfaces', titulo: 'Ficha 3 — Interfaces e tecnologias de conexão',
+      intro: 'As **interfaces** definem como o dado sai do equipamento: por cabo, luz ou rádio. Associe cada uma às camadas.',
+      itens: [
+        { id: 'ethernet', nome: 'Ethernet (IEEE 802.3)', det: 'Rede cabeada do laboratório', osi: ['1', '2'], tcp: ['acesso'], dica: 'A Ethernet define o sinal no cabo e o quadro com MAC.' },
+        { id: 'wifi', nome: 'Wi-Fi 7 (IEEE 802.11be)', det: 'Rede sem fio nova da escola', osi: ['1', '2'], tcp: ['acesso'], dica: 'Os padrões Wi-Fi definem o rádio e o acesso ao meio, e não o IP.' },
+        { id: 'fibra', nome: 'Fibra óptica do provedor', det: 'O meio que chega até o prédio', osi: ['1'], tcp: ['acesso'], dica: 'A fibra é um meio físico: transporta luz.' },
+      ],
+    },
+    {
+      id: 'armazenamento', titulo: 'Ficha 4 — Tipos de armazenamento',
+      intro: 'Agora os **tipos de armazenamento** estudados: local, em rede (NAS) e em nuvem. Onde cada um entra nos modelos? Lembre: se o dado **não viaja pela rede**, ele fica **fora** do modelo.',
+      itens: [
+        { id: 'ssd', nome: 'SSD dentro do notebook', det: 'Armazenamento local', osi: ['fora'], tcp: ['fora'], dica: 'O dado sai do SSD e vai direto para o computador, sem passar por rede.' },
+        { id: 'pendrive', nome: 'Pendrive na porta USB', det: 'Armazenamento local e portátil', osi: ['fora'], tcp: ['fora'], dica: 'USB liga o pendrive direto ao computador, não a uma rede.' },
+        { id: 'nas', nome: 'NAS: pasta compartilhada via SMB', det: 'Armazenamento em rede local', osi: ['7'], tcp: ['aplicacao'], dica: 'SMB é o protocolo que a aplicação usa para abrir o arquivo. Em que camada ficam protocolos assim?' },
+        { id: 'nuvem', nome: 'Nuvem: Google Drive via HTTPS', det: 'Armazenamento em nuvem', osi: ['7'], tcp: ['aplicacao'], dica: 'HTTPS é o mesmo protocolo das páginas web.' },
+      ],
+    },
+  ];
+  const TOTAL = FICHAS.length + 2;
+  const stepWrap = document.getElementById('stepWrap');
+  const md = s => String(s).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+
+  const ler = (k, p) => { try { return JSON.parse(localStorage.getItem(k) || 'null') || p; } catch (e) { return p; } };
+  const gravar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  let respostas = ler(RESP_KEY, {});
+  let atual = Math.min(Math.max(parseInt(ler(STEP_KEY, 0), 10) || 0, 0), TOTAL - 1);
+  let direcao = 1;
+  const resolvidas = () => ler(PROGRESS_KEY, []);
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL, resolvidas: resolvidas().length }); }
+
+  function nav(voltar, avancar) {
+    return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}</div>`;
+  }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); gravar(STEP_KEY, atual); render(); }
+  function finalizar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  function barra() { document.getElementById('progressFill').style.width = Math.round(resolvidas().length / FICHAS.length * 100) + '%'; }
+  const opcoes = (lista, v) => `<option value="">Escolha…</option>` + lista.map(([k, t]) => `<option value="${k}" ${v === k ? 'selected' : ''}>${t}</option>`).join('');
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    barra();
+    if (atual === 0) {
+      reportar('Correlação — Abertura');
+      stepWrap.innerHTML = `
+        <article class="ab-cartao">
+          <div class="ab-cartao-etapa">Etapa 1 de ${TOTAL}</div>
+          <h2>Workshop: a ficha de correlação técnica</h2>
+          <div class="ab-conteudo">
+            <p>Você vai preencher <b>4 fichas</b> ligando ativos, unidades, interfaces e tipos de armazenamento às camadas dos modelos <b>OSI</b> e <b>TCP/IP</b>. Tempo sugerido: <b>30 minutos</b>.</p>
+            <table>
+              <thead><tr><th>OSI</th><th>TCP/IP</th><th>Pista</th></tr></thead>
+              <tbody>
+                <tr><td>7 Aplicação · 6 Apresentação · 5 Sessão</td><td>Aplicação</td><td>Conteúdo, protocolos como HTTP e SMB</td></tr>
+                <tr><td>4 Transporte</td><td>Transporte</td><td>Portas, TCP e UDP</td></tr>
+                <tr><td>3 Rede</td><td>Internet</td><td>Endereço IP</td></tr>
+                <tr><td>2 Enlace · 1 Física</td><td>Acesso à rede</td><td>Endereço MAC, sinal no meio</td></tr>
+              </tbody>
+            </table>
+            <blockquote>Escolha as duas camadas de cada item e clique em <b>Conferir</b>. O que estiver errado ganha uma dica. Quando um item funciona em duas camadas, qualquer uma delas vale.</blockquote>
+          </div>
+        </article>${nav(false, true)}`;
+      finalizar(); return;
+    }
+    if (atual === TOTAL - 1) { renderResumo(); return; }
+    renderFicha(FICHAS[atual - 1]);
+  }
+
+  function renderFicha(f) {
+    const feita = resolvidas().includes(f.id);
+    reportar(`Correlação — ${f.titulo}${feita ? ' (concluída)' : ''}`);
+    stepWrap.innerHTML = `
+      <article class="ab-cartao">
+        <div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div>
+        <h2>${f.titulo}</h2>
+        <div class="ab-conteudo"><p>${md(f.intro)}</p></div>
+        <div class="fc-linha fc-cab"><span>Item</span><span>Modelo OSI</span><span>Modelo TCP/IP</span></div>
+        ${f.itens.map(it => {
+          const r = respostas[it.id] || {};
+          return `<div class="fc-linha" data-item="${it.id}">
+            <div class="fc-item"><b>${it.nome}</b><small>${it.det}</small></div>
+            <select data-modelo="osi" aria-label="Camada OSI de ${it.nome}">${opcoes(OSI, r.osi)}</select>
+            <select data-modelo="tcp" aria-label="Camada TCP/IP de ${it.nome}">${opcoes(TCP, r.tcp)}</select>
+            <div class="fc-dica"></div>
+          </div>`;
+        }).join('')}
+        <div class="fc-acoes">
+          <button class="btn" id="btnConferir">Conferir</button>
+          <div class="ab-msg${feita ? ' ok' : ''}" id="fcMsg" style="${feita ? '' : 'display:none;'}">${feita ? '✅ Ficha concluída.' : ''}</div>
+        </div>
+      </article>${nav(true, true)}`;
+    stepWrap.querySelectorAll('select').forEach(sel => sel.addEventListener('change', () => {
+      const id = sel.closest('.fc-linha').dataset.item;
+      respostas[id] = Object.assign({}, respostas[id], { [sel.dataset.modelo]: sel.value });
+      gravar(RESP_KEY, respostas);
+    }));
+    document.getElementById('btnConferir').addEventListener('click', () => conferir(f));
+    finalizar();
+  }
+
+  function conferir(f) {
+    let certos = 0;
+    f.itens.forEach(it => {
+      const linha = stepWrap.querySelector(`.fc-linha[data-item="${it.id}"]`);
+      const r = respostas[it.id] || {};
+      const ok = it.osi.includes(r.osi) && it.tcp.includes(r.tcp);
+      linha.classList.toggle('ok', ok);
+      linha.classList.toggle('erro', !ok);
+      linha.querySelector('.fc-dica').textContent = ok ? '' : (!r.osi || !r.tcp ? 'Escolha as duas camadas.' : `💡 ${it.dica}`);
+      if (ok) certos++;
+    });
+    const msg = document.getElementById('fcMsg');
+    msg.style.display = 'block';
+    if (certos === f.itens.length) {
+      const feitas = resolvidas();
+      if (!feitas.includes(f.id)) { feitas.push(f.id); gravar(PROGRESS_KEY, feitas); }
+      msg.className = 'ab-msg ok';
+      msg.textContent = '✅ Ficha concluída: todos os itens no lugar certo!';
+      barra();
+    } else {
+      msg.className = 'ab-msg erro';
+      msg.textContent = `${certos} de ${f.itens.length} certos. Leia as dicas e confira de novo.`;
+    }
+    reportar(`Correlação — ${f.titulo} (${certos}/${f.itens.length})`);
+  }
+
+  function renderResumo() {
+    const feitas = resolvidas();
+    const pronto = feitas.length >= FICHAS.length;
+    reportar(`Correlação — Resumo (${feitas.length}/${FICHAS.length})`);
+    stepWrap.innerHTML = `
+      <article class="ab-cartao ${pronto ? 'ab-concluida' : ''}">
+        <div class="ab-cartao-etapa">Etapa ${TOTAL} de ${TOTAL}</div>
+        <h2>${pronto ? '✅ Ficha de correlação completa' : 'Sua ficha de correlação'}</h2>
+        <div class="ab-conteudo">
+          <p>${pronto ? 'Todas as fichas conferidas. Esta é a sua ficha de correlação técnica: guarde-a para o relatório da próxima aula.' : `Você concluiu ${feitas.length} de ${FICHAS.length} fichas. Volte às que ainda não estão completas.`}</p>
+          <div class="md-table-wrap"><table>
+            <thead><tr><th>Item</th><th>OSI</th><th>TCP/IP</th></tr></thead>
+            <tbody>${FICHAS.map(f => f.itens.map(it => {
+              const r = respostas[it.id] || {};
+              return `<tr><td>${it.nome}</td><td>${rotulo(OSI, r.osi)}</td><td>${rotulo(TCP, r.tcp)}</td></tr>`;
+            }).join('')).join('')}</tbody>
+          </table></div>
+        </div>
+        <div class="fc-acoes"><button class="btn btn-secondary" id="btnImprimir">🖨️ Imprimir / salvar em PDF</button></div>
+      </article>${nav(true, false)}`;
+    document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+    finalizar();
+  }
+
+  window.generateGabaritoForGestao = function () {
+    let n = 0;
+    return window.PortalGabarito.generate({
+      title: 'Redes — Ficha de Correlação Técnica',
+      subtitle: 'Prática · Workshop Modelos de Referência (O aluno associa ativos às camadas do modelo OSI?) · Turma Sistemas',
+      items: FICHAS.flatMap(f => f.itens.map(it => ({
+        number: ++n, title: `${f.titulo.replace(/^Ficha \d — /, '')}: ${it.nome}`,
+        prompt: it.det,
+        answer: `OSI: ${it.osi.map(v => rotulo(OSI, v)).join(' ou ')} · TCP/IP: ${it.tcp.map(v => rotulo(TCP, v)).join(' ou ')}`,
+      }))),
+      fileName: 'redes-modelos-referencia-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desenvolvimento de Sistemas — Pitch de Inovação</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#8fb8ff; --green-dim:#5b7fc0; --yellow:#ffc76b; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'devsis_pitch_inovacao_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Desenvolvimento de Sistemas — Pitch de Inovação</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">13</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Preparação e apresentação do pitch, sobre o projeto que a equipe estiver
+// desenvolvendo. Ferramentas: papel/quadro; opcionais e gratuitas, só no
+// navegador: Google Apresentações ou Canva (slides) e CodePen (prova de
+// conceito). A "Avaliação de Pitch" do plano de ensino é a última etapa, e o
+// professor dá o visto (token).
+const STEPS = [
+  {
+    titulo: 'O desafio de hoje',
+    corpo: `
+Você vai propor **uma funcionalidade original** para o projeto da sua equipe e defendê-la num **pitch de 2 minutos**, mostrando **comportamento proativo e focado em resultados diferenciados**.
+
+### Como vai ser
+1. Escolher a funcionalidade (8 min)
+2. Desenhar como ela integra as plataformas (8 min)
+3. Definir a meta, as tarefas e os riscos (19 min)
+4. Montar e ensaiar o pitch (15 min)
+5. Apresentar: **2 min de pitch + 1 min de perguntas** (cerca de 45 min, a turma toda)
+
+> A proposta é **sua**, mesmo que o projeto seja da equipe. Os colegas podem ajudar, mas cada um apresenta a própria funcionalidade.`,
+  },
+  {
+    titulo: 'Escolher a funcionalidade (8 min)',
+    corpo: `
+1. Escreva **3 problemas** que o usuário do projeto ainda tem (ex.: esquece, demora, erra, não encontra)
+2. Para cada um, imagine **uma funcionalidade** que resolveria
+3. Escolha **uma**, que passe nas três perguntas:
+
+| Pergunta | Se a resposta for "não"... |
+|---|---|
+| Resolve um problema real do usuário? | Volte para a lista de problemas |
+| É nova no **nosso** projeto? | Pense em como deixá-la diferente |
+| Cabe no prazo e no que a equipe sabe? | Diminua a ideia (uma primeira versão) |
+
+- [ ] Escolhi uma funcionalidade e escrevi o problema que ela resolve`,
+  },
+  {
+    titulo: 'Como ela integra as plataformas (8 min)',
+    corpo: `
+Desenhe no papel o **caminho dos dados** da sua funcionalidade:
+
+1. **Onde** o usuário usa: site, app de celular, os dois?
+2. **Qual API** ela chama: a do projeto (ex.: Supabase) ou uma externa (ex.: CEP, mapas, clima)?
+3. **Onde** os dados ficam guardados
+4. **Um exemplo do JSON** que circula. Exemplo para um lembrete:
+
+§§§json
+{ "usuario": "bia", "treino": "18:30", "avisarAntes": 30, "ativo": true }
+§§§
+
+> Site ⟶ API ⟶ Banco ⟵ API ⟵ App: se as duas telas usam a mesma API, os dados são os mesmos.
+
+- [ ] Desenhei o caminho dos dados (plataformas, API, banco)
+- [ ] Escrevi um exemplo do JSON da funcionalidade`,
+  },
+  {
+    titulo: 'Meta SMART e métrica (7 min)',
+    corpo: `
+Escreva **uma meta** para a funcionalidade:
+
+| | Minha meta |
+|---|---|
+| **S**: o que exatamente? | |
+| **M**: qual número mostra que deu certo? | |
+| **A**: dá para a equipe fazer? | |
+| **R**: por que importa para o usuário? | |
+| **T**: até quando? | |
+
+Depois, escreva o **resultado diferenciado** em uma frase com **antes e depois**. Exemplo: *"Hoje o aluno esquece 2 treinos por mês; com o aviso, a meta é no máximo 1."*
+
+- [ ] Meta com número e data
+- [ ] Frase de resultado com antes e depois`,
+  },
+  {
+    titulo: 'Plano de tarefas (7 min)',
+    corpo: `
+Quebre a funcionalidade em **3 a 5 tarefas** e coloque no **quadro de atividades** da equipe:
+
+| Tarefa | Responsável | Prazo |
+|---|---|---|
+| Tela ... | | |
+| Rota/consulta na API ... | | |
+| Teste com usuários e medição da meta | | |
+
+> Toda tarefa com **dono** e **prazo**. A última tarefa sempre é **medir** se a meta foi atingida.
+
+- [ ] 3 a 5 tarefas com responsável e prazo
+- [ ] Tarefas no quadro de atividades da equipe`,
+  },
+  {
+    titulo: 'Riscos e plano B (5 min)',
+    corpo: `
+Seja **proativo**: antecipe o que pode dar errado **antes** de alguém perguntar.
+
+| Risco | Plano B |
+|---|---|
+| A API externa sai do ar | Guardar o último resultado / digitar à mão |
+| O usuário está sem internet | ... |
+| A tarefa atrasa | ... |
+
+Escolha **2 riscos** da sua funcionalidade e o plano B de cada um.
+
+- [ ] 2 riscos com plano B`,
+  },
+  {
+    titulo: 'Montar o pitch (10 min)',
+    corpo: `
+Organize os **2 minutos** assim:
+
+| Tempo | Bloco | O que dizer |
+|---|---|---|
+| 0:00 | Problema | A dor do usuário, com um exemplo |
+| 0:20 | Solução | A funcionalidade, em uma frase |
+| 0:40 | Como funciona | Plataformas, API e dados (mostre o desenho) |
+| 1:10 | Resultado | Meta SMART e o antes e depois |
+| 1:35 | Plano e pedido | Tarefas, prazo, riscos e o que você precisa |
+
+Material: um **cartaz** ou o **quadro**. Se quiser slides, use uma ferramenta gratuita no navegador (**Google Apresentações** ou **Canva**): no máximo **4 slides**.
+
+- [ ] Roteiro dos 2 minutos pronto
+- [ ] Material de apoio (cartaz, quadro ou até 4 slides)`,
+  },
+  {
+    titulo: 'Desafio extra: prova de conceito (quem terminar antes)',
+    corpo: `
+Mostre a integração **funcionando**. Abra o [CodePen](https://codepen.io/pen/) (gratuito, no navegador, não precisa de conta para testar) e, no painel **JS**, cole o exemplo abaixo. Ele consulta o ViaCEP, um serviço público de CEP:
+
+§§§js
+document.body.innerHTML = '<input id="cep" placeholder="CEP"> <button id="ok">Buscar</button><p id="saida"></p>';
+document.getElementById('ok').onclick = async () => {
+  const cep = document.getElementById('cep').value.replace(/\\D/g, '');
+  const resposta = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+  const dados = await resposta.json();
+  document.getElementById('saida').textContent = dados.erro
+    ? 'CEP não encontrado'
+    : dados.logradouro + ' - ' + dados.localidade + '/' + dados.uf;
+};
+§§§
+
+Depois, adapte a ideia para a **sua** funcionalidade (outra API gratuita, ou um JSON fixo simulando a do projeto) e mostre no pitch.
+
+- [ ] Prova de conceito funcionando (opcional)`,
+  },
+  {
+    titulo: 'Ensaio cronometrado (5 min)',
+    corpo: `
+Em dupla: um apresenta, o outro cronometra e depois troca.
+
+- Passou de **2 minutos**? Corte detalhes do "como funciona"
+- O colega entendeu **qual problema** você resolve? Se não, comece por ele
+- O colega faz **uma pergunta difícil**: você já tem a resposta no seu plano B?
+
+- [ ] Ensaiei cronometrado e ajustei o pitch`,
+  },
+  {
+    titulo: 'Apresentações (cerca de 45 min)',
+    corpo: `
+Cada aluno: **2 minutos de pitch + 1 minuto de perguntas**. O professor chama a ordem.
+
+**Enquanto os colegas apresentam**, anote para cada pitch:
+
+- 1 ponto forte
+- 1 pergunta sobre a meta, o risco ou a integração
+
+> Pergunte com respeito e foco na ideia. Uma boa pergunta ajuda o colega a melhorar a proposta.
+
+- [ ] Apresentei o meu pitch
+- [ ] Fiz pelo menos uma pergunta a um colega`,
+  },
+  {
+    titulo: 'Depois do pitch',
+    corpo: `
+Volte para o quadro da equipe:
+
+1. Ajuste as tarefas com o que apareceu nas perguntas
+2. Confira se a funcionalidade entra agora ou vai para a lista **"Depois"** (decisão da equipe, pelo escopo)
+3. Combine a data para **medir a meta**
+
+- [ ] Quadro da equipe atualizado depois do pitch`,
+  },
+  {
+    titulo: 'Avaliação de Pitch',
+    corpo: `
+É isto que o professor avaliou no seu pitch. Marque o que você **fez de verdade**:
+
+- [ ] Apresentei o problema do usuário e a funcionalidade com clareza, em até 2 minutos
+- [ ] Expliquei como a funcionalidade integra as plataformas (site/app, API e dados em JSON)
+- [ ] Mostrei um resultado diferenciado com número (antes e depois)
+- [ ] Defini uma meta SMART, com métrica e prazo
+- [ ] Mostrei o plano de tarefas, com responsável e prazo, no controle de atividades
+- [ ] Antecipei riscos e apresentei um plano B (proatividade)
+- [ ] Respondi às perguntas com foco na meta e com postura profissional
+
+> Tudo certo? Chame o professor com o seu material do pitch. A próxima etapa é o visto.`,
+  },
+];
+
+const AVALIACAO = [
+  ['Clareza e tempo', 'Começa pelo problema do usuário, apresenta a funcionalidade em uma frase e respeita os 2 minutos.'],
+  ['Integração multiplataforma', 'Explica em quais plataformas a funcionalidade roda, qual API usa e mostra um exemplo dos dados em JSON.'],
+  ['Resultado diferenciado', 'Mostra o ganho com número, comparando antes e depois (tempo, cliques, erros, frequência).'],
+  ['Meta SMART', 'Meta específica, mensurável, atingível, relevante e com data.'],
+  ['Plano e controle de atividades', 'Tarefas com responsável e prazo, incluindo a medição da meta, lançadas no quadro da equipe.'],
+  ['Proatividade', 'Antecipa pelo menos 2 riscos e traz plano B sem esperar ser perguntado.'],
+  ['Postura nas perguntas', 'Responde com foco na meta e no usuário, aceita sugestões e mantém postura profissional.'],
+];
+
+RoteiroSlides.iniciar({
+  activityLocation: 'devsis_pitch_inovacao_pratica',
+  tituloTopo: 'Desenvolvimento de Sistemas — Pitch de Inovação',
+  steps: STEPS,
+  textoVisto: 'Você apresentou o pitch, atualizou o quadro da equipe e marcou a avaliação de pitch?',
+  gabarito: {
+    title: 'Desenvolvimento de Sistemas — Pitch de Inovação',
+    subtitle: 'Prática · Avaliação de Pitch (O aluno orienta o comportamento para metas?) · Turma Sistemas',
+    items: AVALIACAO.map(([titulo, observar], i) => ({ number: i + 1, title: titulo, prompt: 'Critério da avaliação de pitch.', answer: observar })),
+    fileName: 'devsis-pitch-inovacao-avaliacao.txt',
+  },
+});
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -248,6 +248,10 @@ Igual ao de hoje (ver `README.md`, "Hierarquia Matéria → Trilha → Módulo")
   registre o número e a data. Aparecem no cabeçalho da trilha e na Gestão →
   "Liberação por Trilha" (com o botão "Usar DD/MM", que preenche o
   "Liberar em" com essa data).
+- **Trilha compartilhada entre turmas** (mesma aula no plano das duas): crie os
+  arquivos numa turma só (ex.: `turmas/sistemas/`) e, no `config.js` da outra,
+  registre a mesma trilha com `src: '../sistemas/atividades/...'`. Ver
+  `projetos-estrutura-banco` e `projetos-pre-textuais`.
 - `progressKey` = `activityLocation` da casca + `_progress_`.
 - Não use `hasSlides` em trilha nova: o `.pptx` é do padrão antigo; a
   apresentação agora é o botão ▶ Apresentação.

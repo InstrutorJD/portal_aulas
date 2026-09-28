@@ -336,6 +336,56 @@ window.TURMA_CONFIG_JOGOS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        // As duas trilhas abaixo são COMPARTILHADAS com a turma Sistemas
+        // (mesmas aulas 32 e 33 do plano de ensino). Os arquivos ficam em
+        // turmas/sistemas/ — ver o comentário na matéria intro-dev-projetos
+        // de turmas/sistemas/config.js — e aqui só apontam para lá.
+        {
+          key: 'projetos-estrutura-banco',
+          label: 'Estrutura da Base de Dados do Projeto',
+          aula: 32, dataAula: '2026-10-05',
+          desc: 'Padrões de modelagem relacional e resolução de problemas de estrutura: monte e valide o script SQL do banco do projeto final no SQL Fiddle.',
+          capacidade: 'Reconhecer os padrões de estrutura estabelecidos para a elaboração de projetos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Estrutura da Base de Dados',
+              desc: 'Tabela por entidade, PK e FK, snake_case, 1FN/2FN/3FN, relacionamentos 1:N e N:N, restrições e o método para resolver problemas de estrutura.',
+              icon: '📖', src: '../sistemas/atividades/projetos-estrutura-banco-teoria.html', telaCheia: true,
+              progressKey: 'projetos_estrutura_banco_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Base de Dados no SQL Fiddle',
+              desc: 'Clínica de estrutura com 3 casos, modelagem do projeto final, script no SQL Fiddle (SQLite) e validação automática do script no portal.',
+              icon: '🗄️', src: '../sistemas/atividades/projetos-estrutura-banco-pratica.html', telaCheia: true,
+              progressKey: 'projetos_estrutura_banco_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          key: 'projetos-pre-textuais',
+          label: 'Elementos Pré-textuais do Projeto',
+          aula: 33, dataAula: '2026-10-19',
+          desc: 'Escrita técnica: folha de rosto, resumo, abstract, lista de ilustrações e sumário do documento do projeto, no VS Code Web.',
+          capacidade: 'Reconhecer os padrões de estrutura estabelecidos para a elaboração de projetos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Elementos Pré-textuais',
+              desc: 'Ordem da NBR 14724, obrigatórios e opcionais, resumo e palavras-chave (NBR 6028), lista de ilustrações, sumário (NBR 6027) e Markdown no VS Code Web.',
+              icon: '📖', src: '../sistemas/atividades/projetos-pre-textuais-teoria.html', telaCheia: true,
+              progressKey: 'projetos_pre_textuais_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Draft dos Pré-textuais',
+              desc: 'Escreva no VS Code Web a folha de rosto, o resumo, o abstract, a lista de ilustrações e o sumário, confira a estrutura no portal e peça o visto do professor.',
+              icon: '📝', src: '../sistemas/atividades/projetos-pre-textuais-pratica.html', telaCheia: true,
+              progressKey: 'projetos_pre_textuais_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
       ]
     },

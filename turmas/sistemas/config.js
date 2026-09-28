@@ -273,6 +273,60 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // Padrão novo (docs/padrao-trilhas.md). Plano de ensino: Aula 33
+          // (05/10/2026), 2h — teoria ~30 min + dinâmica ~90 min. Sobre o
+          // projeto que a equipe estiver desenvolvendo; sem ferramenta
+          // externa (papel e quadro). Avaliação: ficha de observação + visto.
+          key: 'devsis-impasse-tecnico',
+          label: 'Impasse Técnico na Equipe',
+          aula: 33, dataAula: '2026-10-05',
+          desc: 'Organização do trabalho e controle de atividades: mediar um impasse técnico de forma ética e criativa, com foco nos objetivos do software.',
+          capacidade: 'Aplicar metodologia de desenvolvimento de acordo com o escopo do projeto.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Impasse Técnico na Equipe',
+              desc: 'Escopo e objetivos do software, Scrum e Kanban, quadro de atividades, impasses comuns, mediação ética, MoSCoW e registro de decisão.',
+              icon: '📖', src: 'atividades/devsis-impasse-tecnico-teoria.html', telaCheia: true,
+              progressKey: 'devsis_impasse_tecnico_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Dinâmica do Impasse Técnico',
+              desc: 'Em equipe, com papéis (defensores, mediador, registrador): expor os lados, mediar com critérios, registrar a decisão e atualizar o quadro. Na última etapa, o professor confere a ficha de observação e dá o visto.',
+              icon: '🤝', src: 'atividades/devsis-impasse-tecnico-pratica.html', telaCheia: true,
+              progressKey: 'devsis_impasse_tecnico_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo. Plano de ensino: Aula 34 (19/10/2026), 2h — teoria
+          // ~25 min + preparação e pitches ~95 min. Ferramentas opcionais só
+          // online e gratuitas (Google Apresentações/Canva, CodePen + ViaCEP).
+          // Avaliação: avaliação de pitch + visto.
+          key: 'devsis-pitch-inovacao',
+          label: 'Pitch de Inovação Profissional',
+          aula: 34, dataAula: '2026-10-19',
+          desc: 'Proponha uma funcionalidade original para o projeto da equipe e defenda num pitch, com integração entre plataformas, meta e plano de tarefas.',
+          capacidade: 'Integrar sistemas multiplataformas por meio da linguagem de programação.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Pitch de Inovação Profissional',
+              desc: 'Estrutura do pitch, funcionalidade original, integração por API e JSON, metas SMART, proatividade e resultado diferenciado.',
+              icon: '📖', src: 'atividades/devsis-pitch-inovacao-teoria.html', telaCheia: true,
+              progressKey: 'devsis_pitch_inovacao_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Pitch de Inovação',
+              desc: 'Escolha a funcionalidade, desenhe a integração, defina meta, tarefas e riscos, e apresente um pitch de 2 minutos. Na última etapa, o professor confere a avaliação de pitch e dá o visto.',
+              icon: '🎤', src: 'atividades/devsis-pitch-inovacao-pratica.html', telaCheia: true,
+              progressKey: 'devsis_pitch_inovacao_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
       ]
     },
@@ -367,6 +421,60 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          // Padrão novo (docs/padrao-trilhas.md). Plano de ensino (Fundamentos
+          // de Redes): Aula 33 (05/10/2026), 1h — teoria ~20 min + ficha de
+          // correlação técnica ~35 min, com correção automática no portal.
+          key: 'redes-modelos-referencia',
+          label: 'Workshop Modelos de Referência',
+          aula: 33, dataAula: '2026-10-05',
+          desc: 'Associe ativos, unidades, interfaces e tipos de armazenamento às camadas dos modelos OSI e TCP/IP.',
+          capacidade: 'Reconhecer tipos e características (classificação, estrutura e modelos) / Reconhecer componentes e ativos de redes / Identificar tipos e tecnologias de conexão a redes de computadores.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Modelos de Referência OSI e TCP/IP',
+              desc: 'Camadas OSI × TCP/IP, unidade de cada camada, bits × bytes, ativos e interfaces por camada, armazenamento nos modelos e tendências futuras.',
+              icon: '📖', src: 'atividades/redes-modelos-referencia-teoria.html', telaCheia: true,
+              progressKey: 'redes_modelos_referencia_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Ficha de Correlação Técnica',
+              desc: 'Quatro fichas (ativos, unidades, interfaces e armazenamento): escolha a camada OSI e TCP/IP de cada item, com correção automática e dicas.',
+              icon: '🧭', src: 'atividades/redes-modelos-referencia-pratica.html', telaCheia: true,
+              progressKey: 'redes_modelos_referencia_pratica_progress_', progressTotal: 4,
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo. Plano de ensino: Aula 34 (19/10/2026), 1h — revisão
+          // ~15 min + relatório técnico ~40 min, escrito no próprio portal
+          // (o texto fica no progresso do aluno, espelhado no Supabase) e
+          // concluído com o visto do professor. As 3 tecnologias "estudadas"
+          // são as da trilha redes-armazenamento: local, em rede (NAS), nuvem.
+          key: 'redes-relatorio-armazenamento',
+          label: 'Relatório Técnico: Local, Rede e Nuvem',
+          aula: 34, dataAula: '2026-10-19',
+          desc: 'Consolidação do bloco: compare armazenamento local, em rede e em nuvem e escreva um relatório técnico com recomendação.',
+          capacidade: 'Reconhecer tipos e características (classificação, estrutura e modelos) / Reconhecer componentes e ativos de redes / Identificar tipos e tecnologias de conexão a redes de computadores.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Revisão e Relatório Técnico',
+              desc: 'Local × NAS × nuvem, Mbps × MB/s, custo, RAID × backup 3-2-1, modelos de rede e como escrever um relatório técnico.',
+              icon: '📖', src: 'atividades/redes-relatorio-armazenamento-teoria.html', telaCheia: true,
+              progressKey: 'redes_relatorio_armazenamento_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Relatório Técnico Final',
+              desc: 'Escreva o relatório no portal (tabela comparativa, síntese, recomendação para um cenário, tendências), gere o PDF e peça o visto do professor.',
+              icon: '📝', src: 'atividades/redes-relatorio-armazenamento-pratica.html', telaCheia: true,
+              progressKey: 'redes_relatorio_armazenamento_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
       ]
     },
@@ -395,6 +503,60 @@ window.TURMA_CONFIG_SISTEMAS = {
               requires: 'teoria', hasGabarito: true
             }
           ]
+        },
+        {
+          // Padrão novo (docs/padrao-trilhas.md). Plano de ensino: Aula 34
+          // (06/10/2026), 1h — teoria ~20 min + seminário ~40 min (papel/
+          // quadro; slides opcionais em ferramenta gratuita no navegador).
+          // Avaliação: ficha de avaliação + visto.
+          key: 'iot-opc-integracao',
+          label: 'Integração Industrial com OPC UA',
+          aula: 34, dataAula: '2026-10-06',
+          desc: 'Conectividade de software: planeje a coleta automática de dados de máquinas com OPC UA, com qualidade e segurança, e apresente o fluxo num seminário.',
+          capacidade: 'Integrar dispositivos para coleta automática de dados em sistemas industriais; Integrar os princípios de qualidade às atividades sob sua responsabilidade.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Integração Industrial com OPC UA',
+              desc: 'OPC Classic × OPC UA, cliente e servidor, tags e NodeId, coleta por assinatura, StatusCode e qualidade do dado, modos de segurança.',
+              icon: '📖', src: 'atividades/iot-opc-integracao-teoria.html', telaCheia: true,
+              progressKey: 'iot_opc_integracao_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Seminário de Integração OPC UA',
+              desc: 'Em equipe: cenário industrial, servidor e clientes, tabela de tags, coleta automática, qualidade e segurança, e o fluxo apresentado em 3 minutos. Na última etapa, o professor confere a ficha de avaliação e dá o visto.',
+              icon: '🏭', src: 'atividades/iot-opc-integracao-pratica.html', telaCheia: true,
+              progressKey: 'iot_opc_integracao_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo. Plano de ensino: Aula 35 (13/10/2026), 1h — teoria
+          // ~15 min + laboratório ~40 min. O broker é SIMULADO no portal
+          // (sem instalar Mosquitto nem abrir as portas 1883/8883), e a
+          // checklist de conformidade é calculada pela configuração.
+          key: 'iot-mqtt',
+          label: 'MQTT na Coleta Automática de Dados',
+          aula: 35, dataAula: '2026-10-13',
+          desc: 'Conectividade de software: configure broker, publicação e assinatura MQTT para a coleta automática de uma câmara fria, conforme a especificação.',
+          capacidade: 'Integrar dispositivos para coleta automática de dados em sistemas industriais; Integrar os princípios de qualidade às atividades sob sua responsabilidade.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — MQTT',
+              desc: 'Publicar/assinar e broker, tópicos, curingas + e #, QoS, retain, last will, configuração do broker (porta, usuários, ACL) e MQTT × OPC UA.',
+              icon: '📖', src: 'atividades/iot-mqtt-teoria.html', telaCheia: true,
+              progressKey: 'iot_mqtt_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'laboratorio', title: 'Prática — Laboratório MQTT',
+              desc: 'Broker simulado no portal: configure porta, usuários, ACL, publicador (QoS, retain, last will, payload) e três assinantes, rode a coleta e feche a checklist de conformidade.',
+              icon: '📡', src: 'atividades/iot-mqtt-laboratorio.html', telaCheia: true,
+              progressKey: 'iot_mqtt_laboratorio_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
       ]
     },
@@ -406,7 +568,65 @@ window.TURMA_CONFIG_SISTEMAS = {
       // matéria fica vazia ("Em breve") até receber trilhas próprias. A
       // antiga "Oficina de Comunicação" (CodePen) foi removida do portal;
       // ver sql/remover-visto-oficina-comunicacao.sql.
-      trilhas: []
+      //
+      // As duas trilhas abaixo são COMPARTILHADAS com a turma Jogos (mesmas
+      // aulas 32 e 33 do plano de ensino): os arquivos ficam aqui em
+      // turmas/sistemas/ e o config.js de Jogos aponta para eles com
+      // src: '../sistemas/atividades/...'. Qualquer mudança vale para as duas.
+      trilhas: [
+        {
+          // Padrão novo (docs/padrao-trilhas.md). Aula 32 (05/10/2026), 1h —
+          // teoria ~15 min + prática ~40 min no SQL Fiddle (online, grátis,
+          // SQLite), com o script validado no próprio portal (sql.js).
+          key: 'projetos-estrutura-banco',
+          label: 'Estrutura da Base de Dados do Projeto',
+          aula: 32, dataAula: '2026-10-05',
+          desc: 'Padrões de modelagem relacional e resolução de problemas de estrutura: monte e valide o script SQL do banco do projeto final no SQL Fiddle.',
+          capacidade: 'Reconhecer os padrões de estrutura estabelecidos para a elaboração de projetos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Estrutura da Base de Dados',
+              desc: 'Tabela por entidade, PK e FK, snake_case, 1FN/2FN/3FN, relacionamentos 1:N e N:N, restrições e o método para resolver problemas de estrutura.',
+              icon: '📖', src: 'atividades/projetos-estrutura-banco-teoria.html', telaCheia: true,
+              progressKey: 'projetos_estrutura_banco_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Base de Dados no SQL Fiddle',
+              desc: 'Clínica de estrutura com 3 casos, modelagem do projeto final, script no SQL Fiddle (SQLite) e validação automática do script no portal.',
+              icon: '🗄️', src: 'atividades/projetos-estrutura-banco-pratica.html', telaCheia: true,
+              progressKey: 'projetos_estrutura_banco_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo. Aula 33 (19/10/2026), 1h — teoria ~15 min + escrita
+          // ~40 min no VS Code Web (vscode.dev), com o draft conferido no
+          // portal e o visto do professor.
+          key: 'projetos-pre-textuais',
+          label: 'Elementos Pré-textuais do Projeto',
+          aula: 33, dataAula: '2026-10-19',
+          desc: 'Escrita técnica: folha de rosto, resumo, abstract, lista de ilustrações e sumário do documento do projeto, no VS Code Web.',
+          capacidade: 'Reconhecer os padrões de estrutura estabelecidos para a elaboração de projetos.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Elementos Pré-textuais',
+              desc: 'Ordem da NBR 14724, obrigatórios e opcionais, resumo e palavras-chave (NBR 6028), lista de ilustrações, sumário (NBR 6027) e Markdown no VS Code Web.',
+              icon: '📖', src: 'atividades/projetos-pre-textuais-teoria.html', telaCheia: true,
+              progressKey: 'projetos_pre_textuais_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Draft dos Pré-textuais',
+              desc: 'Escreva no VS Code Web a folha de rosto, o resumo, o abstract, a lista de ilustrações e o sumário, confira a estrutura no portal e peça o visto do professor.',
+              icon: '📝', src: 'atividades/projetos-pre-textuais-pratica.html', telaCheia: true,
+              progressKey: 'projetos_pre_textuais_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        }
+      ]
     },
     {
       key: 'modelagem-sistemas-1', label: 'Modelagem de Sistemas 1',
@@ -448,6 +668,61 @@ window.TURMA_CONFIG_SISTEMAS = {
               icon: '📝', src: 'atividades/modelagem-dados-requisitos-questionario.html',
               progressKey: 'modelagem_dados_requisitos_questionario_progress_', progressMode: 'flag',
               requires: 'trabalho', hasSlides: true, hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo (docs/padrao-trilhas.md). Plano de ensino: Aula 34
+          // (06/10/2026), 1h — teoria ~20 min + prática ~40 min. Estudo de
+          // caso fictício "VetAgenda" (atividades/modelagem-vetagenda.js),
+          // compartilhado com a trilha seguinte. Avaliação: checklist de
+          // roteiro, calculada na prática.
+          key: 'modelagem-roteiro',
+          label: 'Roteiro de Trabalho para Modelagem',
+          aula: 34, dataAula: '2026-10-06',
+          desc: 'Revise as regras de negócio já interpretadas do caso VetAgenda e monte o roteiro de trabalho para a modelagem, com artefatos, responsáveis, prazos e critérios de pronto.',
+          capacidade: 'Interpretar requisitos levantados para desenvolvimento de sistemas.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Roteiro de Trabalho para Modelagem',
+              desc: 'Regra de negócio × requisito, defeitos comuns nas regras, etapas e artefatos de um roteiro de modelagem e critério de pronto.',
+              icon: '📖', src: 'atividades/modelagem-roteiro-teoria.html', telaCheia: true,
+              progressKey: 'modelagem_roteiro_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Roteiro de Trabalho: VetAgenda',
+              desc: 'Classifique as 9 regras de negócio do caso, ordene as etapas do roteiro, escolha os artefatos e defina responsável, prazo e critério de pronto. A checklist de roteiro fecha o módulo.',
+              icon: '🗺️', src: 'atividades/modelagem-roteiro-pratica.html', telaCheia: true,
+              progressKey: 'modelagem_roteiro_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Padrão novo. Plano de ensino: Aula 35 (13/10/2026), 1h — teoria
+          // ~15 min + laboratório ~40 min, sobre o mesmo caso VetAgenda e o
+          // roteiro da aula anterior. Avaliação: ficha de revisão de roteiro
+          // (calculada) + visto do professor.
+          key: 'modelagem-revisao-rn',
+          label: 'Revisão Técnica das Regras de Negócio',
+          aula: 35, dataAula: '2026-10-13',
+          desc: 'Laboratório de revisão: reescreva as regras de negócio da VetAgenda, ligue cada uma a um requisito e ao roteiro de trabalho, e registre a nova versão.',
+          capacidade: 'Interpretar requisitos levantados para desenvolvimento de sistemas.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Revisão Técnica das Regras de Negócio',
+              desc: 'Checklist de revisão, reescrita de regras ambíguas, compostas e conflitantes, RNF, rastreabilidade, integração ao roteiro e histórico de versões.',
+              icon: '📖', src: 'atividades/modelagem-revisao-rn-teoria.html', telaCheia: true,
+              progressKey: 'modelagem_revisao_rn_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Laboratório de Revisão das Regras',
+              desc: 'Reescreva RN02, RN03, RN05 e RN07, mova o que não é regra de negócio, monte a rastreabilidade e atualize o roteiro. Na última etapa, o professor confere a ficha de revisão e dá o visto.',
+              icon: '🔍', src: 'atividades/modelagem-revisao-rn-pratica.html', telaCheia: true,
+              progressKey: 'modelagem_revisao_rn_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
             }
           ]
         }

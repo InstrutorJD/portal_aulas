@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internet das Coisas — Laboratório MQTT</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#7cd992; --green-dim:#46a35d; --yellow:#ffd166; }
+  /* Específico deste laboratório: formulário de configuração e o log da simulação. */
+  .lab-form{ display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:14px; margin-top:14px; }
+  .lab-campo{ display:flex; flex-direction:column; gap:6px; }
+  .lab-campo > span{ font-size:11.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--ab-acento); }
+  .lab-campo small{ color:var(--ink-dim); font-size:12px; }
+  .lab-campo input[type="text"], .lab-campo select, .lab-campo textarea{
+    width:100%; font:inherit; font-size:14px; padding:9px 11px; border-radius:10px; background:var(--panel2); color:var(--ink); border:1px solid var(--line);
+  }
+  .lab-campo textarea{ font-family:var(--ab-mono); font-size:13px; min-height:120px; resize:vertical; }
+  .lab-campo input:focus, .lab-campo select:focus, .lab-campo textarea:focus{ outline:none; border-color:var(--green); }
+  .lab-check{ display:flex; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel2); cursor:pointer; }
+  .lab-check input{ accent-color:var(--green); width:18px; height:18px; }
+  .lab-bloco{ margin-top:18px; padding:14px 16px; border:1px solid var(--line); border-radius:14px; }
+  .lab-bloco h3{ margin:0 0 4px; font-size:1em; color:var(--ab-acento); }
+  .lab-colunas{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px; margin-top:14px; }
+  .lab-caixa{ border:1px solid var(--line); border-radius:12px; background:var(--panel2); padding:10px 12px; min-height:120px; }
+  .lab-caixa h4{ margin:0 0 8px; font-size:13px; } .lab-caixa small{ color:var(--ink-dim); font-family:var(--ab-mono); }
+  .lab-msg{ font-family:var(--ab-mono); font-size:12px; padding:4px 6px; border-radius:6px; margin-top:4px; background:color-mix(in srgb, var(--ink) 5%, transparent); word-break:break-all; }
+  .lab-msg.alerta{ background:color-mix(in srgb, var(--blood-bright) 18%, transparent); }
+  .lab-msg.retida{ outline:1px dashed var(--yellow); }
+  .lab-log{ font-family:var(--ab-mono); font-size:12px; max-height:220px; overflow:auto; background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:14px; }
+  .lab-log div{ padding:2px 0; } .lab-log .erro{ color:var(--blood-bright); } .lab-log .ok{ color:var(--ok); }
+  .lab-conf{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .lab-conf li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .lab-conf li.ok{ border-color:var(--ok); color:var(--ok); }
+  .lab-conf li.falha{ border-color:var(--blood-bright); }
+  .lab-conf li.falha b{ color:var(--blood-bright); }
+  @media (max-width:800px){ .lab-colunas{ grid-template-columns:1fr; } }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'iot_mqtt_laboratorio';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Internet das Coisas — Laboratório MQTT</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Laboratório MQTT SIMULADO: o broker roda aqui mesmo, em JavaScript (sem
+// instalar nada nem abrir porta — ver docs/padrao-trilhas.md, regra 5). O
+// aluno configura broker, ACL, publicador e assinantes; a simulação entrega
+// as mensagens de verdade pelas regras do MQTT (tópicos, curingas + e #, ACL,
+// retain, last will) e a "Checklist de conformidade" do plano de ensino é
+// calculada a partir da configuração. Progresso: { completed, config, execucao }.
+(function () {
+  const LOC = 'iot_mqtt_laboratorio';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const TOPICO = 'fabrica/camara1/temperatura';
+  const STATUS = 'fabrica/camara1/status';
+
+  const PADRAO = {
+    broker: { porta: '1883', anonimo: true, persistencia: false, senhaSensor: '', senhaSupervisorio: '' },
+    acl: { sensor: { acao: 'ambos', filtro: '#' }, supervisorio: { acao: 'ambos', filtro: '#' } },
+    pub: { usuario: 'sensor-camara1', topico: '', qos: '0', retain: false, payload: '{\n  "valor": 4.2\n}', lwtTopico: '', lwtMsg: '' },
+    subs: { painel: '', banco: '', alarme: '' },
+  };
+  const clonar = o => JSON.parse(JSON.stringify(o));
+  function lerEstado() { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } }
+  const estado = Object.assign({ completed: false, lastStepIndex: 0, config: clonar(PADRAO), execucao: null }, lerEstado());
+  const C = estado.config;
+  ['broker', 'acl', 'pub', 'subs'].forEach(k => { C[k] = Object.assign(clonar(PADRAO[k]), C[k] || {}); });
+  C.acl.sensor = Object.assign(clonar(PADRAO.acl.sensor), C.acl.sensor);
+  C.acl.supervisorio = Object.assign(clonar(PADRAO.acl.supervisorio), C.acl.supervisorio);
+  let timer = 0;
+  function salvar(agora) {
+    clearTimeout(timer);
+    const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} };
+    if (agora) f(); else timer = setTimeout(f, 800);
+  }
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ---------- Regras do MQTT ----------
+  function filtroValido(f) {
+    if (!f || /\s/.test(f)) return false;
+    const n = f.split('/');
+    return n.every((p, i) => (p === '#' ? i === n.length - 1 : p === '+' || !/[+#]/.test(p)));
+  }
+  const topicoValido = t => !!t && !/\s/.test(t) && !/[+#]/.test(t);
+  function casa(filtro, topico) {
+    if (!filtroValido(filtro) || !topicoValido(topico)) return false;
+    const f = filtro.split('/'), t = topico.split('/');
+    for (let i = 0; i < f.length; i++) {
+      if (f[i] === '#') return true;
+      if (i >= t.length) return false;
+      if (f[i] !== '+' && f[i] !== t[i]) return false;
+    }
+    return f.length === t.length;
+  }
+  const pode = (regra, acao) => regra.acao === acao || regra.acao === 'ambos';
+  function payloadOk() {
+    try { const p = JSON.parse(C.pub.payload); return p && typeof p.valor === 'number' && typeof p.unidade === 'string' && p.unidade.trim() && typeof p.timestamp === 'string' && p.timestamp.trim(); } catch (e) { return false; }
+  }
+  const assinatura = () => JSON.stringify(C);
+
+  // ---------- Checklist de conformidade ----------
+  function conformidade() {
+    const b = C.broker, s = C.acl.sensor, v = C.acl.supervisorio, p = C.pub, a = C.subs;
+    const x = (ok, texto, dica) => ({ ok: !!ok, texto, dica });
+    const exec = estado.execucao;
+    return [
+      x(b.porta === '8883', 'R1 — Porta do broker com tráfego criptografado', 'A especificação pede criptografia. Qual porta padrão do MQTT usa TLS?'),
+      x(!b.anonimo, 'R2 — Acesso anônimo desligado', 'Nenhum dispositivo pode entrar sem login.'),
+      x(b.senhaSensor.length >= 8 && b.senhaSupervisorio.length >= 8, 'R3 — Senhas dos dois usuários com 8 ou mais caracteres', 'Confira o tamanho das duas senhas.'),
+      x(b.persistencia, 'R11 — Persistência ligada', 'Mensagens retidas não podem sumir quando o broker reinicia.'),
+      x(s.acao === 'publicar' && casa(s.filtro, TOPICO) && casa(s.filtro, STATUS) && !casa(s.filtro, 'fabrica/camara2/temperatura'), 'R4 — ACL do sensor: só publica, e só nos tópicos da câmara 1', 'O sensor não lê nada e não deve alcançar outras câmaras. Pense num filtro que cubra tudo da câmara 1.'),
+      x(v.acao === 'assinar' && casa(v.filtro, TOPICO) && casa(v.filtro, 'fabrica/camara2/temperatura') && casa(v.filtro, STATUS) && !casa(v.filtro, 'escritorio/impressora/status'), 'R4 — ACL do supervisório: só assina, dados da fábrica', 'O supervisório só lê, e só o que está abaixo de "fabrica". Um filtro que cubra todos os níveis depois dele.'),
+      x(p.usuario === 'sensor-camara1' && p.topico === TOPICO, 'Publicador com o usuário do sensor e o tópico da especificação', `Use o usuário do sensor e o tópico ${TOPICO}, exatamente.`),
+      x(p.qos === '1' || p.qos === '2', 'R5 — QoS que não perde leituras', 'Qual QoS garante que a mensagem chega?'),
+      x(p.retain, 'R6 — Retain ligado nas leituras', 'O painel precisa receber o último valor assim que abre.'),
+      x(payloadOk(), 'R8 — Payload JSON com valor (número), unidade e timestamp', 'Três campos: "valor" (número, sem aspas), "unidade" e "timestamp" (textos).'),
+      x(p.lwtTopico === STATUS && /offline/i.test(p.lwtMsg || ''), 'R7 — Last will "offline" no tópico de status', `Se o sensor cair, o broker publica "offline" em ${STATUS}.`),
+      x(filtroValido(a.painel) && casa(a.painel, TOPICO) && casa(a.painel, STATUS) && !casa(a.painel, 'fabrica/camara2/temperatura'), 'R9 — Painel assina tudo da câmara 1', 'Um curinga que pegue todos os tópicos abaixo de fabrica/camara1.'),
+      x(filtroValido(a.banco) && casa(a.banco, TOPICO) && casa(a.banco, 'fabrica/camara2/temperatura') && !casa(a.banco, STATUS), 'R9 — Banco assina a temperatura de todas as câmaras', 'Um curinga que troque só o nível da câmara.'),
+      x(filtroValido(a.alarme) && casa(a.alarme, TOPICO) && !casa(a.alarme, 'fabrica/camara2/temperatura') && !casa(a.alarme, STATUS), 'R9 — Alarme assina só a temperatura da câmara 1', 'Aqui não precisa de curinga.'),
+      x(exec && exec.cfg === assinatura() && exec.alarmeRecebeu && exec.painelRetido && exec.painelOffline, 'R10 — Coleta executada com a configuração atual: alarme disparou, painel recebeu o último valor e o "offline"', 'Rode a coleta de novo depois da última mudança na configuração.'),
+    ];
+  }
+
+  // ---------- Simulação ----------
+  function simular() {
+    const log = [];
+    const recebidos = { painel: [], banco: [], alarme: [] };
+    const L = (t, cls) => log.push({ t, cls });
+    const b = C.broker;
+    const login = (u, senha) => {
+      if (!senha) {
+        if (b.anonimo) { L(`⚠️ ${u} entrou SEM senha (acesso anônimo ligado)`, 'erro'); return true; }
+        L(`✘ ${u}: conexão recusada (sem senha e acesso anônimo desligado)`, 'erro'); return false;
+      }
+      L(`✔ ${u} conectou na porta ${b.porta}${b.porta === '8883' ? ' (TLS)' : ' (sem criptografia)'}`, 'ok'); return true;
+    };
+    L(`Broker iniciado na porta ${b.porta} · persistência ${b.persistencia ? 'ligada' : 'desligada'}`);
+    const senhaDe = u => (u === 'sensor-camara1' ? b.senhaSensor : b.senhaSupervisorio);
+    const regraDe = u => (u === 'sensor-camara1' ? C.acl.sensor : C.acl.supervisorio);
+    const pubOn = login(C.pub.usuario, senhaDe(C.pub.usuario));
+    const supOn = login('supervisorio', b.senhaSupervisorio);
+    // Assinaturas
+    const subs = [];
+    Object.entries(C.subs).forEach(([quem, filtro]) => {
+      if (!supOn) return;
+      if (!filtroValido(filtro)) { L(`✘ ${quem}: filtro inválido "${filtro}"`, 'erro'); return; }
+      if (!pode(C.acl.supervisorio, 'assinar')) { L(`✘ ${quem}: ACL não permite assinar`, 'erro'); return; }
+      subs.push({ quem, filtro });
+      L(`${quem} assinou "${filtro}"`);
+    });
+    const retidas = {};
+    function publicar(de, topico, carga, opts) {
+      if (!topicoValido(topico)) { L(`✘ ${de}: tópico inválido "${topico}" (sem espaços e sem curingas)`, 'erro'); return; }
+      if (opts.checarAcl && !(pode(regraDe(de), 'publicar') && casa(regraDe(de).filtro, topico))) { L(`✘ ${de}: ACL bloqueou publicar em "${topico}"`, 'erro'); return; }
+      if (opts.retain) retidas[topico] = carga;
+      subs.forEach(s => {
+        if (!casa(s.filtro, topico)) return;
+        if (!casa(C.acl.supervisorio.filtro, topico)) { L(`✘ ${s.quem}: ACL do supervisório não cobre "${topico}"`, 'erro'); return; }
+        recebidos[s.quem].push({ topico, carga, alerta: opts.alerta && s.quem === 'alarme' });
+      });
+      L(`→ ${de} publicou em "${topico}" (QoS ${opts.qos || 0}${opts.retain ? ', retain' : ''})`);
+    }
+    let base = {};
+    try { base = JSON.parse(C.pub.payload) || {}; } catch (e) { L('✘ Payload do sensor não é um JSON válido: as leituras vão como texto', 'erro'); }
+    const leituras = [4.2, 4.5, 5.1, 9.3, 4.8];
+    leituras.forEach((valor, i) => {
+      if (pubOn) {
+        const carga = Object.assign({}, base, { valor, timestamp: `2026-10-13T08:15:${String(i * 5).padStart(2, '0')}Z` });
+        publicar(C.pub.usuario, C.pub.topico, JSON.stringify(carga), { checarAcl: true, qos: C.pub.qos, retain: C.pub.retain, alerta: valor > 8 });
+      }
+      if (i === 1) publicar('sensor-camara2', 'fabrica/camara2/temperatura', JSON.stringify({ valor: 3.9, unidade: '°C' }), { qos: 1 });
+      if (i === 2) publicar('porta-camara1', 'fabrica/camara1/porta', '"aberta"', { qos: 1 });
+    });
+    const alarmeRecebeu = recebidos.alarme.some(m => m.alerta);
+    if (alarmeRecebeu) L('🚨 Alarme: 9,3 °C acima da faixa (0 a 8 °C)!', 'erro');
+    // Queda do sensor → last will
+    L('⚡ O sensor perdeu a energia (desconexão sem aviso)');
+    let painelOffline = false;
+    if (pubOn && C.pub.lwtTopico) {
+      publicar('broker (last will)', C.pub.lwtTopico, JSON.stringify(C.pub.lwtMsg), { qos: 1, retain: true });
+      painelOffline = recebidos.painel.some(m => m.topico === C.pub.lwtTopico && /offline/i.test(m.carga));
+    } else L('Nenhum last will configurado: ninguém ficou sabendo da queda', 'erro');
+    // Painel reaberto
+    L('🔄 O painel foi fechado e aberto de novo');
+    recebidos.painel.push({ separador: true });
+    let painelRetido = false;
+    if (supOn && filtroValido(C.subs.painel)) {
+      const rt = Object.entries(retidas).filter(([t]) => casa(C.subs.painel, t) && casa(C.acl.supervisorio.filtro, t));
+      rt.forEach(([t, c]) => recebidos.painel.push({ topico: t, carga: c, retida: true }));
+      painelRetido = rt.some(([t]) => t === TOPICO);
+      L(painelRetido ? '✔ Painel recebeu na hora a última leitura (retida)' : 'Painel reaberto sem valor: vai esperar a próxima leitura', painelRetido ? 'ok' : 'erro');
+    }
+    estado.execucao = { cfg: assinatura(), alarmeRecebeu, painelRetido, painelOffline };
+    return { log, recebidos };
+  }
+
+  // ---------- Telas ----------
+  const ETAPAS = ['spec', 'broker', 'acl', 'pub', 'subs', 'rodar'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.lastStepIndex || 0, TOTAL - 1);
+  let direcao = 1;
+  let ultimaSim = null;
+  const stepWrap = document.getElementById('stepWrap');
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+  function nav(voltar, avancar) {
+    return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}</div>`;
+  }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > (estado.lastStepIndex || 0)) estado.lastStepIndex = atual; salvar(true); render(); }
+  const obter = caminho => caminho.split('.').reduce((o, k) => o[k], C);
+  function definir(caminho, valor) { const ks = caminho.split('.'); const ult = ks.pop(); ks.reduce((o, k) => o[k], C)[ult] = valor; }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+    stepWrap.querySelectorAll('[data-k]').forEach(el => {
+      const ev = el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(ev, () => { definir(el.dataset.k, el.type === 'checkbox' ? el.checked : el.value); salvar(); });
+    });
+  }
+  const txt = (k, rotulo, dica, ph) => `<label class="lab-campo"><span>${rotulo}</span><input type="text" data-k="${k}" value="${esc(obter(k))}" placeholder="${esc(ph || '')}" spellcheck="false" autocomplete="off">${dica ? `<small>${dica}</small>` : ''}</label>`;
+  const sel = (k, rotulo, ops) => `<label class="lab-campo"><span>${rotulo}</span><select data-k="${k}">${ops.map(([v, t]) => `<option value="${v}" ${String(obter(k)) === v ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
+  const chk = (k, rotulo) => `<label class="lab-check"><input type="checkbox" data-k="${k}" ${obter(k) ? 'checked' : ''}> ${rotulo}</label>`;
+  const cartao = (titulo, corpo) => `<article class="ab-cartao"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${titulo}</h2>${corpo}</article>`;
+  const ACOES = [['publicar', 'Só publicar'], ['assinar', 'Só assinar'], ['ambos', 'Publicar e assinar']];
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const conf = conformidade();
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(conf.filter(c => c.ok).length / conf.length * 100)) + '%';
+    const e = ETAPAS[atual];
+    reportar(`Laboratório MQTT — ${e}`);
+    if (e === 'spec') {
+      stepWrap.innerHTML = cartao('A especificação do cliente', `
+        <div class="ab-conteudo">
+          <p>Uma distribuidora de alimentos quer a <b>coleta automática</b> da temperatura da <b>câmara fria 1</b>, na rede local da fábrica. Você vai configurar o <b>broker MQTT</b>, o <b>sensor</b> que publica e três <b>assinantes</b>, rodar a coleta e conferir a <b>checklist de conformidade</b>. Tempo sugerido: <b>40 minutos</b>.</p>
+          <table>
+            <thead><tr><th>Req.</th><th>O cliente pediu</th></tr></thead>
+            <tbody>
+              <tr><td>R1</td><td>O tráfego na rede precisa ser criptografado</td></tr>
+              <tr><td>R2</td><td>Nenhum dispositivo conecta sem login</td></tr>
+              <tr><td>R3</td><td>Dois usuários: <code>sensor-camara1</code> e <code>supervisorio</code>, com senhas de 8+ caracteres</td></tr>
+              <tr><td>R4</td><td>O sensor só envia os dados da câmara 1; o supervisório só lê dados da fábrica</td></tr>
+              <tr><td>R5</td><td>As leituras vão para laudo: nenhuma pode se perder</td></tr>
+              <tr><td>R6</td><td>O painel mostra o último valor assim que é aberto</td></tr>
+              <tr><td>R7</td><td>Se o sensor cair, o painel fica sabendo (status <code>offline</code>)</td></tr>
+              <tr><td>R8</td><td>Cada leitura traz valor, unidade e horário</td></tr>
+              <tr><td>R9</td><td>Painel: tudo da câmara 1 · Banco: temperatura de todas as câmaras · Alarme: só a temperatura da câmara 1</td></tr>
+              <tr><td>R10</td><td>Faixa válida: 0 a 8 °C; acima disso, o alarme dispara</td></tr>
+              <tr><td>R11</td><td>Mensagens retidas não somem se o broker reiniciar</td></tr>
+            </tbody>
+          </table>
+          <blockquote>Tópico das leituras: <code>${TOPICO}</code> · tópico de status: <code>${STATUS}</code>. Este broker é <b>simulado</b> aqui no portal: tudo funciona pelas regras do MQTT, sem instalar nada.</blockquote>
+        </div>${nav(false, true)}`);
+    } else if (e === 'broker') {
+      stepWrap.innerHTML = cartao('Configurar o broker', `
+        <div class="ab-conteudo"><p>Atenda R1, R2, R3 e R11.</p></div>
+        <div class="lab-form">
+          ${sel('broker.porta', 'Porta', [['1883', '1883'], ['8883', '8883'], ['80', '80'], ['4840', '4840']])}
+          ${chk('broker.anonimo', 'Permitir acesso anônimo (sem usuário e senha)')}
+          ${chk('broker.persistencia', 'Persistência (guardar mensagens retidas e sessões)')}
+        </div>
+        <div class="lab-bloco"><h3>Usuários</h3>
+          <div class="lab-form">
+            ${txt('broker.senhaSensor', 'Senha de sensor-camara1', 'Mínimo de 8 caracteres')}
+            ${txt('broker.senhaSupervisorio', 'Senha de supervisorio', 'Mínimo de 8 caracteres')}
+          </div>
+        </div>${nav(true, true)}`);
+    } else if (e === 'acl') {
+      stepWrap.innerHTML = cartao('Permissões por tópico (ACL)', `
+        <div class="ab-conteudo"><p>Atenda R4: cada usuário só faz o <b>mínimo</b> de que precisa. O filtro aceita os curingas <code>+</code> e <code>#</code>.</p></div>
+        <div class="lab-bloco"><h3>sensor-camara1</h3><div class="lab-form">${sel('acl.sensor.acao', 'Pode', ACOES)}${txt('acl.sensor.filtro', 'Em quais tópicos', '', 'ex.: fabrica/...')}</div></div>
+        <div class="lab-bloco"><h3>supervisorio</h3><div class="lab-form">${sel('acl.supervisorio.acao', 'Pode', ACOES)}${txt('acl.supervisorio.filtro', 'Em quais tópicos', '', 'ex.: fabrica/...')}</div></div>
+        ${nav(true, true)}`);
+    } else if (e === 'pub') {
+      stepWrap.innerHTML = cartao('O publicador: sensor da câmara 1', `
+        <div class="ab-conteudo"><p>Atenda R5, R6, R7 e R8. O payload de exemplo está incompleto.</p></div>
+        <div class="lab-form">
+          ${sel('pub.usuario', 'Conecta como', [['sensor-camara1', 'sensor-camara1'], ['supervisorio', 'supervisorio']])}
+          ${txt('pub.topico', 'Tópico das leituras', '', 'nível/nível/nível')}
+          ${sel('pub.qos', 'QoS', [['0', '0 — no máximo uma vez'], ['1', '1 — pelo menos uma vez'], ['2', '2 — exatamente uma vez']])}
+          ${chk('pub.retain', 'Retain (o broker guarda a última leitura)')}
+        </div>
+        <div class="lab-form">
+          <label class="lab-campo"><span>Payload (JSON)</span><textarea data-k="pub.payload" spellcheck="false">${esc(C.pub.payload)}</textarea><small>O valor de cada leitura é trocado na simulação; os outros campos vão como você escrever.</small></label>
+        </div>
+        <div class="lab-bloco"><h3>Last will (último desejo)</h3><div class="lab-form">${txt('pub.lwtTopico', 'Tópico', '', 'nível/nível/nível')}${txt('pub.lwtMsg', 'Mensagem')}</div></div>
+        ${nav(true, true)}`);
+    } else if (e === 'subs') {
+      stepWrap.innerHTML = cartao('Os assinantes', `
+        <div class="ab-conteudo"><p>Atenda R9. Os três entram com o usuário <code>supervisorio</code>. Use curingas quando precisar.</p></div>
+        <div class="lab-form">
+          ${txt('subs.painel', 'Painel da câmara', 'Tudo da câmara 1', 'filtro de assinatura')}
+          ${txt('subs.banco', 'Banco histórico', 'Temperatura de todas as câmaras', 'filtro de assinatura')}
+          ${txt('subs.alarme', 'Alarme', 'Só a temperatura da câmara 1', 'filtro de assinatura')}
+        </div>${nav(true, true)}`);
+    } else {
+      renderRodar(); return;
+    }
+    ligar();
+  }
+
+  function renderRodar() {
+    const conf = conformidade();
+    const tudo = conf.every(c => c.ok);
+    if (tudo && !estado.completed) { estado.completed = true; reportar('Laboratório MQTT — conforme'); }
+    salvar(true);
+    const caixa = quem => `<div class="lab-caixa"><h4>${quem === 'painel' ? '📺 Painel' : quem === 'banco' ? '🗄️ Banco' : '🚨 Alarme'} <small>${esc(C.subs[quem] || '—')}</small></h4>${
+      ultimaSim ? (ultimaSim.recebidos[quem].map(m => m.separador ? '<div class="lab-msg">— painel reaberto —</div>' : `<div class="lab-msg ${m.alerta ? 'alerta' : ''} ${m.retida ? 'retida' : ''}">${esc(m.topico)}: ${esc(m.carga)}</div>`).join('') || '<small>nada recebido</small>') : '<small>rode a coleta</small>'}</div>`;
+    stepWrap.innerHTML = cartao('Rodar a coleta e conferir', `
+      <div class="ab-conteudo"><p>A simulação publica 5 leituras do sensor (uma acima de 8 °C), mensagens de <b>outros</b> dispositivos da fábrica, derruba o sensor e reabre o painel.</p></div>
+      <div class="lab-acoes" style="display:flex; gap:12px; flex-wrap:wrap;"><button class="btn" id="btnRodar">▶ Iniciar coleta</button></div>
+      <div class="lab-colunas">${caixa('painel')}${caixa('banco')}${caixa('alarme')}</div>
+      ${ultimaSim ? `<div class="lab-log">${ultimaSim.log.map(l => `<div class="${l.cls || ''}">${esc(l.t)}</div>`).join('')}</div>` : ''}
+      <h3 style="margin-top:20px;">Checklist de conformidade</h3>
+      <ul class="lab-conf">${conf.map(c => c.ok ? `<li class="ok">✔ ${c.texto}</li>` : `<li class="falha"><b>✘ ${c.texto}</b> — ${c.dica}</li>`).join('')}</ul>
+      ${estado.completed ? '<div class="ab-msg ok" style="margin-top:14px;">✅ Configuração conforme a especificação. Laboratório concluído!</div>' : ''}
+      ${nav(true, false)}`);
+    document.getElementById('btnRodar').addEventListener('click', () => { ultimaSim = simular(); salvar(true); renderRodar(); });
+    ligar();
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const itens = [
+      ['Porta (R1)', '8883 (MQTT com TLS).'],
+      ['Acesso anônimo (R2)', 'Desligado.'],
+      ['Senhas (R3)', 'sensor-camara1 e supervisorio com 8+ caracteres.'],
+      ['Persistência (R11)', 'Ligada.'],
+      ['ACL do sensor (R4)', 'Só publicar em fabrica/camara1/# (ou fabrica/camara1/+).'],
+      ['ACL do supervisório (R4)', 'Só assinar em fabrica/#.'],
+      ['Publicador', `Usuário sensor-camara1, tópico ${TOPICO}.`],
+      ['QoS (R5)', '1 (ou 2).'],
+      ['Retain (R6)', 'Ligado.'],
+      ['Payload (R8)', '{ "valor": 4.2, "unidade": "°C", "timestamp": "2026-10-13T08:15:00Z" } (valor número; unidade e timestamp texto).'],
+      ['Last will (R7)', `Tópico ${STATUS}, mensagem "offline".`],
+      ['Assinaturas (R9)', 'Painel: fabrica/camara1/# · Banco: fabrica/+/temperatura · Alarme: fabrica/camara1/temperatura.'],
+      ['Execução (R10)', 'Coleta rodada com a configuração final: alarme recebe 9,3 °C, painel recebe a leitura retida e o "offline".'],
+    ];
+    return window.PortalGabarito.generate({
+      title: 'Internet das Coisas — Laboratório MQTT (câmara fria)',
+      subtitle: 'Prática · Checklist de conformidade (O aluno configura broker MQTT?) · Turma Sistemas',
+      items: itens.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Item da checklist de conformidade.', answer: a })),
+      fileName: 'iot-mqtt-laboratorio-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projetos — Base de Dados no SQL Fiddle</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#f2a65a; --green-dim:#b8763a; --yellow:#ffd27a; }
+  /* Específico deste exercício: clínica de estrutura e validador do script. */
+  .cl-caso{ margin-top:16px; padding:14px 16px; border:1px solid var(--line); border-radius:14px; }
+  .cl-caso.ok{ border-color:var(--ok); }
+  .cl-caso h3{ margin:0 0 8px; font-size:1em; color:var(--ab-acento); }
+  .cl-op{ display:flex; gap:10px; align-items:flex-start; cursor:pointer; padding:9px 12px; margin-top:8px; border-radius:10px; border:1px solid var(--line); background:var(--panel2); }
+  .cl-op input{ accent-color:var(--green); margin-top:4px; }
+  .cl-op:has(input:checked){ border-color:var(--green); }
+  .cl-dica{ margin-top:8px; font-size:13px; }
+  .vs-editor{ width:100%; min-height:300px; resize:vertical; margin-top:10px; padding:14px 16px; border-radius:12px; font-family:var(--ab-mono); font-size:13px; line-height:1.55; tab-size:2; background:var(--panel2); color:var(--ink); border:1px solid var(--line); }
+  .vs-editor:focus{ outline:none; border-color:var(--green); }
+  .vs-lista{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .vs-lista li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .vs-lista li.ok{ border-color:var(--ok); color:var(--ok); }
+  .vs-lista li.falha{ border-color:var(--blood-bright); }
+  .vs-lista li.falha b{ color:var(--blood-bright); }
+  .vs-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'projetos_estrutura_banco_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Projetos — Base de Dados no SQL Fiddle</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// O aluno estrutura o banco do projeto final no SQL Fiddle (online, grátis,
+// sem login) usando SQLite, e cola o script aqui: o portal roda o MESMO
+// script em SQLite (sql.js, WebAssembly) e confere os padrões de modelagem
+// relacional — é o "Script SQL validado" do plano de ensino. Progresso:
+// { completed, script, clinica: [...], lastStepIndex }. Compartilhada pelas
+// turmas Sistemas e Jogos (a de Jogos aponta para este arquivo).
+(function () {
+  const LOC = 'projetos_estrutura_banco_pratica';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const md = s => window.RoteiroSlides.mdToHtml(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function lerEstado() { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || 'null') || {}; } catch (e) { return {}; } }
+  const estado = Object.assign({ completed: false, script: '', clinica: [], lastStepIndex: 0 }, lerEstado());
+  if (!Array.isArray(estado.clinica)) estado.clinica = [];
+  let timer = 0;
+  function salvar(agora) { clearTimeout(timer); const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} }; if (agora) f(); else timer = setTimeout(f, 1000); }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+
+  const CASOS = [
+    {
+      id: 'repeticao', titulo: 'Caso 1 — Pedidos com dados do cliente repetidos',
+      tabela: '| pedido.id | cliente_nome | cliente_email | total |\n|---|---|---|---|\n| 1 | Ana | ana@x.com | 90 |\n| 2 | Ana | ana@y.com | 45 |',
+      ops: [
+        'Criar a tabela cliente e deixar só o cliente_id no pedido',
+        'Criar mais uma coluna cliente_email2 no pedido',
+        'Deixar como está e corrigir os e-mails à mão',
+      ], certa: 0,
+      dica: 'O nome e o e-mail dependem do cliente, não do pedido. Onde eles deveriam morar?',
+    },
+    {
+      id: 'grupo', titulo: 'Caso 2 — Alunos com cursos numerados',
+      tabela: '| aluno.id | nome | curso1 | curso2 | curso3 |\n|---|---|---|---|---|\n| 1 | Bia | Redes | Banco | |\n| 2 | Caio | Banco | | |',
+      ops: [
+        'Juntar curso1, curso2 e curso3 numa coluna de texto',
+        'Criar a tabela associativa matricula (aluno_id, curso_id)',
+        'Colocar aluno_id na tabela curso',
+      ], certa: 1,
+      dica: 'Um aluno faz vários cursos e um curso tem vários alunos. Que tipo de relacionamento é esse?',
+    },
+    {
+      id: 'chave', titulo: 'Caso 3 — Produtos sem identificação',
+      tabela: '| nome | preco |\n|---|---|\n| Mouse | 49.90 |\n| Mouse | 59.90 |',
+      ops: [
+        'Proibir que dois produtos tenham o mesmo nome',
+        'Usar o preço como identificador do produto',
+        'Criar a coluna id INTEGER PRIMARY KEY',
+      ], certa: 2,
+      dica: 'Dois produtos diferentes podem ter o mesmo nome. O que identifica cada linha sem ambiguidade?',
+    },
+  ];
+
+  const MODELO = `-- Exemplo de OUTRO domínio (biblioteca), só para ver o formato.
+CREATE TABLE autor (
+  id INTEGER PRIMARY KEY,
+  nome TEXT NOT NULL
+);
+CREATE TABLE livro (
+  id INTEGER PRIMARY KEY,
+  titulo TEXT NOT NULL,
+  isbn TEXT UNIQUE,
+  autor_id INTEGER NOT NULL REFERENCES autor(id)
+);
+CREATE TABLE emprestimo (
+  id INTEGER PRIMARY KEY,
+  livro_id INTEGER NOT NULL REFERENCES livro(id),
+  leitor TEXT NOT NULL,
+  data_saida TEXT NOT NULL
+);
+INSERT INTO autor (id, nome) VALUES (1, 'Machado de Assis'), (2, 'Clarice Lispector');
+INSERT INTO livro (id, titulo, isbn, autor_id) VALUES (1, 'Dom Casmurro', '111', 1), (2, 'A Hora da Estrela', '222', 2);
+INSERT INTO emprestimo (id, livro_id, leitor, data_saida) VALUES (1, 1, 'Ana', '2026-10-05'), (2, 2, 'Bia', '2026-10-05');
+SELECT l.titulo, a.nome FROM livro l JOIN autor a ON a.id = l.autor_id;`;
+
+  // ---------- Validação do script (SQLite no navegador) ----------
+  let SQLp = null;
+  function carregarSql() {
+    if (!SQLp) SQLp = typeof window.initSqlJs === 'function'
+      ? window.initSqlJs({ locateFile: f => `https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/${f}` })
+      : Promise.reject(new Error('sql.js não carregou (sem internet?)'));
+    return SQLp;
+  }
+  const SNAKE = /^[a-z][a-z0-9_]*$/;
+  async function validar(script) {
+    const r = [];
+    const x = (ok, texto, dica) => r.push({ ok: !!ok, texto, dica });
+    let SQL;
+    try { SQL = await carregarSql(); } catch (e) { return [{ ok: false, texto: 'Não foi possível carregar o SQLite no navegador', dica: 'Confira a internet e recarregue a página.' }]; }
+    const db = new SQL.Database();
+    try {
+      try { db.exec(script); } catch (e) { x(false, 'O script roda sem erro no SQLite', `O SQLite respondeu: "${e.message}". Rode no SQL Fiddle (banco SQLite) e corrija antes de colar aqui.`); return r; }
+      x(true, 'O script roda sem erro no SQLite');
+      const tabelas = (db.exec("SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")[0] || { values: [] }).values.map(([nome, sql]) => ({ nome, sql: sql || '' }));
+      const cols = {}, fks = {}, linhas = {};
+      tabelas.forEach(t => {
+        cols[t.nome] = (db.exec(`PRAGMA table_info("${t.nome}")`)[0] || { values: [] }).values.map(v => ({ nome: v[1], notnull: v[3], pk: v[5] }));
+        fks[t.nome] = (db.exec(`PRAGMA foreign_key_list("${t.nome}")`)[0] || { values: [] }).values.length;
+        linhas[t.nome] = db.exec(`SELECT COUNT(*) FROM "${t.nome}"`)[0].values[0][0];
+      });
+      x(tabelas.length >= 3, `Pelo menos 3 tabelas (encontradas: ${tabelas.length})`, 'Um projeto tem várias entidades: usuário, itens, registros... Cada uma é uma tabela.');
+      const semPk = tabelas.filter(t => !cols[t.nome].some(c => c.pk));
+      x(tabelas.length && !semPk.length, 'Toda tabela tem chave primária', `Sem chave primária: ${semPk.map(t => t.nome).join(', ')}.`);
+      const totalFk = Object.values(fks).reduce((a, b) => a + b, 0);
+      x(totalFk >= 2, `Pelo menos 2 chaves estrangeiras (encontradas: ${totalFk})`, 'Ligue as tabelas com REFERENCES tabela(id) na coluna do lado "N".');
+      const fkCheck = db.exec('PRAGMA foreign_key_check');
+      x(totalFk >= 1 && !(fkCheck[0] && fkCheck[0].values.length), 'Integridade: nenhuma chave estrangeira aponta para registro inexistente', totalFk ? 'Algum INSERT usa um id que não existe na tabela de origem. Confira a ordem e os valores dos INSERT.' : 'Ainda não há chave estrangeira para conferir: primeiro ligue as tabelas com REFERENCES.');
+      const foraPadrao = [];
+      tabelas.forEach(t => { if (!SNAKE.test(t.nome)) foraPadrao.push(t.nome); cols[t.nome].forEach(c => { if (!SNAKE.test(c.nome)) foraPadrao.push(`${t.nome}.${c.nome}`); }); });
+      x(!foraPadrao.length, 'Nomes em snake_case (minúsculas, sem acento, sem espaço)', `Fora do padrão: ${foraPadrao.slice(0, 5).join(', ')}.`);
+      const grupos = [];
+      tabelas.forEach(t => {
+        const bases = {};
+        cols[t.nome].forEach(c => { const m = c.nome.match(/^(.*?)_?(\d+)$/); if (m) bases[m[1]] = (bases[m[1]] || 0) + 1; });
+        Object.entries(bases).forEach(([b, n]) => { if (n >= 2) grupos.push(`${t.nome}.${b}1, ${b}2...`); });
+      });
+      x(!grupos.length, '1FN: sem grupos repetidos (colunas numeradas em série)', `Colunas em série: ${grupos.join('; ')}. Isso pede uma tabela nova.`);
+      const temNotNull = tabelas.some(t => cols[t.nome].some(c => c.notnull && !c.pk));
+      const temUniqueOuCheck = tabelas.some(t => /\bUNIQUE\b|\bCHECK\s*\(/i.test(t.sql));
+      x(temNotNull && temUniqueOuCheck, 'Restrições: NOT NULL e também UNIQUE ou CHECK', 'Campos obrigatórios com NOT NULL; e um UNIQUE (ex.: e-mail) ou CHECK (ex.: nota entre 0 e 10).');
+      const poucas = tabelas.filter(t => linhas[t.nome] < 2);
+      x(tabelas.length && !poucas.length, 'Dados de exemplo: pelo menos 2 linhas em cada tabela', `Com menos de 2 linhas: ${poucas.map(t => t.nome).join(', ')}.`);
+      const selects = (script.match(/select[\s\S]*?(;|$)/gi) || []).filter(s => /\bjoin\b/i.test(s));
+      let joinOk = false;
+      selects.forEach(s => { try { const res = db.exec(s); if (res[0] && res[0].values.length) joinOk = true; } catch (e) {} });
+      x(joinOk, 'Consulta de validação: um SELECT com JOIN que traz resultados', 'Termine o script com um SELECT ... JOIN ... que responda a uma pergunta do projeto.');
+    } finally { db.close(); }
+    return r;
+  }
+
+  // ---------- Telas ----------
+  const ETAPAS = ['missao', 'clinica', 'modelar', 'fiddle', 'validar', 'fim'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.lastStepIndex || 0, TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+  function nav(voltar, avancar) { return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}</div>`; }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > estado.lastStepIndex) estado.lastStepIndex = atual; salvar(true); render(); }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.decorar(stepWrap, { chaveChecklist: `${LOC}_check_${user}_${atual}` });
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  const cartao = (t, corpo, extra) => `<article class="ab-cartao ${extra || ''}"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${t}</h2>${corpo}</article>`;
+  function barra() { document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round((estado.clinica.length / CASOS.length) * 30 + (atual / TOTAL) * 50)) + '%'; }
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    barra();
+    const e = ETAPAS[atual];
+    reportar(`Estrutura do banco — ${e}`);
+    if (e === 'missao') {
+      stepWrap.innerHTML = cartao('Missão: a base de dados do projeto final', `<div class="ab-conteudo">${md(`
+Hoje você vai **estruturar o banco de dados do projeto final** da sua equipe, seguindo os padrões de modelagem relacional, e entregar um **script SQL validado**.
+
+1. Resolver 3 problemas de estrutura (clínica)
+2. Modelar as tabelas do seu projeto no papel
+3. Escrever e testar o script no **SQL Fiddle**
+4. Colar o script aqui para a **validação automática**
+
+### A ferramenta
+[SQL Fiddle](https://sqlfiddle.com) é gratuito, roda no navegador e não precisa de login. **Escolha o banco SQLite**: é o mesmo que o portal usa para validar.
+
+> Tempo sugerido: **40 minutos**.`)}</div>${nav(false, true)}`);
+    } else if (e === 'clinica') {
+      renderClinica(); return;
+    } else if (e === 'modelar') {
+      stepWrap.innerHTML = cartao('Modelar o seu projeto (10 min)', `<div class="ab-conteudo">${md(`
+No papel, liste as **entidades** do projeto final da equipe e como elas se ligam.
+
+| Projeto de app (exemplo) | Projeto de jogo (exemplo) |
+|---|---|
+| usuario | jogador |
+| categoria | fase |
+| transacao (usuario_id, categoria_id) | partida (jogador_id, fase_id, pontos) |
+| meta (usuario_id) | item e jogador_item (N para N) |
+
+Para cada tabela, anote: **chave primária**, **colunas com tipo**, **chaves estrangeiras** e **restrições** (NOT NULL, UNIQUE, CHECK).
+
+- [ ] Pelo menos 3 entidades do meu projeto
+- [ ] Relacionamentos 1 para N identificados (chave estrangeira no lado N)
+- [ ] Verifiquei se há algum N para N (tabela associativa)`)}</div>${nav(true, true)}`);
+    } else if (e === 'fiddle') {
+      stepWrap.innerHTML = cartao('Escrever e testar no SQL Fiddle (15 min)', `<div class="ab-conteudo">${md(`
+1. Abra o [SQL Fiddle](https://sqlfiddle.com) e escolha **SQLite**
+2. Escreva os \`CREATE TABLE\` do seu projeto, com as restrições
+3. Escreva os \`INSERT\` com pelo menos **2 linhas por tabela**
+4. Termine com um \`SELECT\` com \`JOIN\` que responda a uma pergunta do projeto
+5. Rode, leia os erros e corrija até dar certo
+
+Formato (exemplo de **outro** domínio, uma biblioteca):`)}</div>
+        <pre><code>${esc(MODELO)}</code></pre>
+        <div class="ab-conteudo">${md(`- [ ] Meu script roda sem erro no SQL Fiddle (SQLite)`)}</div>${nav(true, true)}`);
+    } else if (e === 'validar') {
+      renderValidar(); return;
+    } else {
+      stepWrap.innerHTML = cartao(estado.completed ? '✅ Script SQL validado' : 'Ainda falta validar o script', `<div class="ab-conteudo">${estado.completed
+        ? md(`Sua estrutura segue os padrões de modelagem relacional e o script foi validado. Guarde o script: ele é a base de dados do **projeto final**.
+
+> Na próxima aula: os **elementos pré-textuais** do documento do projeto.`)
+        : md('Volte à etapa **Validar o script** e resolva os itens que ainda estão com ✘.')}</div>`, estado.completed ? 'ab-concluida' : '') + nav(true, false);
+    }
+    ligar();
+  }
+
+  function renderClinica() {
+    stepWrap.innerHTML = cartao('Clínica de estrutura (10 min)', `
+      <div class="ab-conteudo">${md('Três tabelas com problema. Para cada uma, escolha a **solução** que segue os padrões. Use o método: **sintoma → causa → hipótese**.')}</div>
+      ${CASOS.map(c => {
+        const feito = estado.clinica.includes(c.id);
+        return `<div class="cl-caso ${feito ? 'ok' : ''}" data-caso="${c.id}"><h3>${c.titulo}</h3><div class="ab-conteudo">${md(c.tabela)}</div>
+          ${c.ops.map((o, i) => `<label class="cl-op"><input type="radio" name="op_${c.id}" value="${i}" ${feito && i === c.certa ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}
+          <div class="cl-dica">${feito ? '✅ Resolvido.' : ''}</div></div>`;
+      }).join('')}
+      <div class="vs-acoes"><button class="btn" id="btnConferir">Conferir</button></div>`) + nav(true, true);
+    document.getElementById('btnConferir').addEventListener('click', () => {
+      CASOS.forEach(c => {
+        const box = stepWrap.querySelector(`[data-caso="${c.id}"]`);
+        const marcada = box.querySelector('input:checked');
+        const dica = box.querySelector('.cl-dica');
+        if (!marcada) { dica.textContent = 'Escolha uma solução.'; return; }
+        if (parseInt(marcada.value, 10) === c.certa) {
+          if (!estado.clinica.includes(c.id)) estado.clinica.push(c.id);
+          box.classList.add('ok'); dica.textContent = '✅ Resolvido.';
+        } else { box.classList.remove('ok'); dica.textContent = `💡 ${c.dica}`; }
+      });
+      salvar(true); barra();
+      reportar(`Estrutura do banco — clínica (${estado.clinica.length}/${CASOS.length})`);
+    });
+    ligar();
+  }
+
+  function renderValidar() {
+    stepWrap.innerHTML = cartao('Validar o script', `
+      <div class="ab-conteudo">${md('Cole aqui o script **completo** que rodou no SQL Fiddle (CREATE TABLE, INSERT e o SELECT com JOIN) e clique em **Validar**.')}</div>
+      <textarea class="vs-editor" id="vsScript" spellcheck="false" aria-label="Script SQL" placeholder="CREATE TABLE ...">${esc(estado.script)}</textarea>
+      <div class="vs-acoes"><button class="btn" id="btnValidar">▶ Validar</button><span id="vsStatus" class="ab-nav-dica"></span></div>
+      <ul class="vs-lista" id="vsLista"></ul>`) + nav(true, true);
+    const ta = document.getElementById('vsScript');
+    ta.addEventListener('input', () => { estado.script = ta.value; salvar(); });
+    ta.addEventListener('keydown', ev => { if (ev.key === 'Tab' && !ev.shiftKey) { ev.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); ta.dispatchEvent(new Event('input')); } });
+    document.getElementById('btnValidar').addEventListener('click', async () => {
+      const st = document.getElementById('vsStatus');
+      st.textContent = 'Validando...';
+      const itens = await validar(ta.value);
+      st.textContent = '';
+      document.getElementById('vsLista').innerHTML = itens.map(i => i.ok ? `<li class="ok">✔ ${esc(i.texto)}</li>` : `<li class="falha"><b>✘ ${esc(i.texto)}</b> — ${esc(i.dica)}</li>`).join('')
+        + (itens.every(i => i.ok) && estado.clinica.length === CASOS.length ? '<li class="ok">✅ Script SQL validado!</li>' : '')
+        + (itens.every(i => i.ok) && estado.clinica.length < CASOS.length ? '<li class="falha"><b>✘ Falta a clínica de estrutura</b> — volte à etapa 2 e resolva os 3 casos.</li>' : '');
+      if (itens.every(i => i.ok) && estado.clinica.length === CASOS.length) estado.completed = true;
+      estado.script = ta.value;
+      salvar(true); barra();
+      reportar(`Estrutura do banco — validação (${itens.filter(i => i.ok).length}/${itens.length})`);
+    });
+    ligar();
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const itens = CASOS.map(c => [c.titulo, `${c.ops[c.certa]}.`]).concat([
+      ['Validação do script', 'Roda sem erro em SQLite; 3+ tabelas, todas com PK; 2+ FKs sem registros órfãos; snake_case; sem colunas numeradas em série (1FN); NOT NULL + UNIQUE ou CHECK; 2+ linhas por tabela; SELECT com JOIN retornando linhas.'],
+    ]);
+    return window.PortalGabarito.generate({
+      title: 'Projetos — Base de Dados no SQL Fiddle',
+      subtitle: 'Prática · Script SQL validado (O aluno resolve problemas de estrutura de dados?) · Sistemas e Jogos',
+      items: itens.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Critério da prática.', answer: a })),
+      fileName: 'projetos-estrutura-banco-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelagem — Laboratório de Revisão das Regras</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  :root{ --green:#c9a6ff; --green-dim:#7a58b3; --yellow:#e0b84a; }
+  /* Específico deste laboratório: reescrita das regras e rastreabilidade. */
+  .rv-bloco{ margin-top:14px; padding:14px 16px; border:1px solid var(--line); border-radius:14px; }
+  .rv-bloco.ok{ border-color:var(--ok); } .rv-bloco.erro{ border-color:var(--blood-bright); }
+  .rv-antes{ font-size:13px; color:var(--ink-dim); margin:0 0 8px; } .rv-antes s{ color:var(--blood-bright); }
+  .rv-bloco label{ display:flex; flex-direction:column; gap:6px; font-size:11.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; color:var(--ab-acento); margin-top:8px; }
+  .rv-bloco textarea, .rv-bloco select, .rv-grade select{ width:100%; font:inherit; font-size:14px; padding:9px 11px; border-radius:10px; background:var(--panel2); color:var(--ink); border:1px solid var(--line); text-transform:none; letter-spacing:0; font-weight:400; }
+  .rv-bloco textarea{ min-height:64px; resize:vertical; }
+  .rv-dica{ margin-top:8px; font-size:13px; } .rv-dica:empty{ display:none; }
+  .rv-grade{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr); gap:10px; align-items:center; margin-top:8px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); }
+  .rv-grade.ok{ border-color:var(--ok); } .rv-grade.erro{ border-color:var(--blood-bright); }
+  .rv-grade .rv-dica{ grid-column:1 / -1; }
+  .rv-acoes{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+  .rv-acoes .ab-msg{ flex:1; min-width:200px; }
+  .rv-lista{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .rv-lista li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:13px; }
+  .rv-lista li.ok{ border-color:var(--ok); color:var(--ok); } .rv-lista li.falha{ border-color:var(--blood-bright); } .rv-lista li.falha b{ color:var(--blood-bright); }
+  @media (max-width:760px){ .rv-grade{ grid-template-columns:1fr; } }
+  @media print{ .ab-topo, .ab-progresso, .ab-nav, .rv-acoes, .rv-lista, .ab-form, #btnGenGabaritoFloat{ display:none !important; } .ab-palco{ overflow:visible; } }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'modelagem_revisao_rn_pratica';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/professor-visto.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="modelagem-vetagenda.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Modelagem — Laboratório de Revisão das Regras</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">8</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+// Laboratório de revisão técnica das regras de negócio do caso VetAgenda,
+// integrando-as ao roteiro de trabalho montado na aula anterior (lido do
+// progresso de modelagem-roteiro-pratica.html, mesmo navegador/aluno; se não
+// existir, usa o roteiro de referência). A "Ficha de revisão de roteiro" do
+// plano de ensino é calculada no fim e o professor dá o visto.
+(function () {
+  const V = window.VETAGENDA;
+  const LOC = 'modelagem_revisao_rn_pratica';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ler = k => { try { return JSON.parse(localStorage.getItem(k) || 'null') || {}; } catch (e) { return {}; } };
+  const estado = Object.assign({ completed: false, rn: {}, resolucao: '', destino: {}, rastro: {}, criterio: '', versao: '', lastStepIndex: 0 }, ler(PROGRESS_KEY));
+  ['rn', 'destino', 'rastro'].forEach(k => { if (!estado[k] || typeof estado[k] !== 'object') estado[k] = {}; });
+  let roteiroAnterior = ler(V.chaveRoteiro(user));
+  // Trocou de computador? O roteiro da aula passada está no Supabase
+  // (student_activity_state, espelhado por progress-sync.js): busca lá, com a
+  // mesma consulta que o progress-sync usa, e redesenha a tela.
+  (async function () {
+    if (roteiroAnterior.ordem || !window.PortalSession) return;
+    try {
+      const u = await window.PortalSession.getUser();
+      const sb = window.PortalSession.client();
+      if (!u || !u.email || !sb) return;
+      const { data } = await sb.from('student_activity_state').select('state')
+        .eq('student_email', u.email).eq('progress_key', 'modelagem_roteiro_pratica').maybeSingle();
+      if (data && data.state && data.state.ordem) { roteiroAnterior = data.state; render(); }
+    } catch (e) { /* sem rede: fica o roteiro de referência */ }
+  })();
+  let timer = 0;
+  function salvar(agora) { clearTimeout(timer); const f = () => { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(estado)); } catch (e) {} }; if (agora) f(); else timer = setTimeout(f, 800); }
+  function reportar(r) { if (typeof window.reportActivity === 'function') window.reportActivity(LOC, r, { step: atual + 1, total: TOTAL }); }
+  const palavras = s => (String(s || '').trim().match(/\S+/g) || []).length;
+  const VAGAS = /\b(razo[aá]vel|adequad[oa]s?|muit[oa]s?|pouc[oa]s?|um tempo|[àa]s vezes|frequentemente|r[aá]pid[oa]|lent[oa]|logo|etc)\b/i;
+  const orig = id => V.rn.find(r => r.id === id).texto;
+
+  // ---------- Regras de conferência da reescrita ----------
+  const REESCRITA = {
+    RN02: { teste: t => /24\s*(h\b|horas)/i.test(t) && /50\s*%/.test(t), dica: 'Use os valores da entrevista: até quantas horas não tem custo, e quanto se cobra depois.' },
+    RN07: { teste: t => /\b(2|duas)\b/i.test(t) && /falta/i.test(t) && /30\s*dias/i.test(t), dica: 'Quantas faltas sem aviso e por quantos dias o agendamento online fica bloqueado?' },
+    RN03a: { teste: t => /agend/i.test(t) && /segunda/i.test(t) && /s[áa]bado/i.test(t) && !/vacina/i.test(t), dica: 'Só o horário do agendamento online (dias e horários), sem falar de vacina.' },
+    RN03b: { teste: t => /vacina/i.test(t) && /7\s*dias/i.test(t) && !/segunda/i.test(t), dica: 'Só o lembrete de vacina: quantos dias antes da dose.' },
+    RN05: { teste: t => /30\s*minutos/i.test(t) && /(exceto|exce[çc][ãa]o|salvo|RN06|10 anos)/i.test(t) && !/sem exce/i.test(t), dica: 'Mantenha os 30 minutos, mas deixe a exceção dos pets com mais de 10 anos escrita na regra.' },
+  };
+  const okTexto = id => { const t = estado.rn[id] || ''; return palavras(t) >= 6 && !VAGAS.test(t) && REESCRITA[id].teste(t); };
+  const FINAIS = ['RN01', 'RN02', 'RN03a', 'RN03b', 'RN05', 'RN06', 'RN07', 'RN08'];
+  const textoFinal = id => estado.rn[id] || (V.rn.find(r => r.id === id) || {}).texto || '';
+  const RF_CERTO = { RN01: ['RF01'], RN02: ['RF04'], RN03a: ['RF03'], RN03b: ['RF05'], RN05: ['RF03'], RN06: ['RF03'], RN07: ['RF07', 'RF03'], RN08: ['RF02'] };
+  const ETAPA_CERTA = { RN01: ['dados', 'ambos'], RN02: ['casos', 'ambos'], RN03a: ['casos', 'ambos'], RN03b: ['casos', 'ambos'], RN05: ['casos', 'ambos'], RN06: ['casos', 'dados', 'ambos'], RN07: ['casos', 'ambos'], RN08: ['dados', 'ambos'] };
+  const ETAPAS_OPC = [['casos', 'Casos de uso'], ['dados', 'Modelo de dados (DER)'], ['ambos', 'Casos de uso e modelo de dados']];
+  const rastroOk = id => { const r = estado.rastro[id] || {}; return RF_CERTO[id].includes(r.rf) && ETAPA_CERTA[id].includes(r.etapa); };
+
+  function ficha() {
+    return [
+      { ok: okTexto('RN02') && okTexto('RN07'), t: 'RN02 e RN07 reescritas com valores mensuráveis, sem termos vagos', d: 'Etapa 2.' },
+      { ok: okTexto('RN03a') && okTexto('RN03b'), t: 'RN03 dividida em duas regras atômicas', d: 'Etapa 3.' },
+      { ok: estado.resolucao === 'excecao' && okTexto('RN05'), t: 'Conflito RN05 × RN06 resolvido com exceção explícita', d: 'Etapa 4.' },
+      { ok: estado.destino.RN04 === 'rnf' && estado.destino.RN09 === 'rnf', t: 'RN04 e RN09 movidas para os requisitos não funcionais', d: 'Etapa 4.' },
+      { ok: FINAIS.every(id => RF_CERTO[id].includes((estado.rastro[id] || {}).rf)), t: 'Toda regra final ligada ao requisito funcional certo', d: 'Etapa 5.' },
+      { ok: FINAIS.every(id => ETAPA_CERTA[id].includes((estado.rastro[id] || {}).etapa)), t: 'Toda regra final ligada à etapa do roteiro em que será modelada', d: 'Etapa 5.' },
+      { ok: palavras(estado.criterio) >= 8 && palavras(estado.versao) >= 20, t: 'Roteiro atualizado: novo critério de pronto da revisão e registro da versão 1.1', d: 'Etapa 6.' },
+    ];
+  }
+
+  // ---------- Telas ----------
+  const ETAPAS = ['intro', 'ambiguas', 'composta', 'conflito', 'rastro', 'roteiro', 'ficha', 'visto'];
+  const TOTAL = ETAPAS.length;
+  let atual = Math.min(estado.completed ? TOTAL - 1 : (estado.lastStepIndex || 0), TOTAL - 1);
+  let direcao = 1;
+  const stepWrap = document.getElementById('stepWrap');
+  function nav(voltar, avancar, rot) { return `<div class="ab-nav">${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}<span class="ab-nav-dica">use ← → do teclado</span>${avancar ? `<button class="btn" id="btnNext">${rot || 'Próximo →'}</button>` : '<span></span>'}</div>`; }
+  function irPara(i) { direcao = i < atual ? -1 : 1; atual = Math.max(0, Math.min(i, TOTAL - 1)); if (atual > estado.lastStepIndex) estado.lastStepIndex = atual; salvar(true); render(); }
+  function ligar() {
+    const b = document.getElementById('btnBack'); if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext'); if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+    stepWrap.querySelectorAll('textarea[data-rn]').forEach(t => t.addEventListener('input', () => { estado.rn[t.dataset.rn] = t.value; salvar(); }));
+    stepWrap.querySelectorAll('[data-livre]').forEach(t => t.addEventListener('input', () => { estado[t.dataset.livre] = t.value; salvar(); }));
+    stepWrap.querySelectorAll('select[data-destino]').forEach(s => s.addEventListener('change', () => { estado.destino[s.dataset.destino] = s.value; salvar(); }));
+    stepWrap.querySelectorAll('select[data-rastro]').forEach(s => s.addEventListener('change', () => { const id = s.dataset.rastro; estado.rastro[id] = Object.assign({}, estado.rastro[id], { [s.dataset.k]: s.value }); salvar(); }));
+    const res = document.getElementById('rvResolucao'); if (res) res.addEventListener('change', () => { estado.resolucao = res.value; salvar(); });
+  }
+  const cartao = (t, corpo, extra) => `<article class="ab-cartao ${extra || ''}"><div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div><h2>${t}</h2>${corpo}</article>`;
+  const opcoes = (lista, v) => '<option value="">Escolha…</option>' + lista.map(([k, t]) => `<option value="${esc(k)}" ${v === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  const blocoRn = (id, rotulo, antes) => `<div class="rv-bloco" data-bloco="${id}">${antes ? `<p class="rv-antes">Antes: <s>${esc(antes)}</s></p>` : ''}<label>${rotulo}<textarea data-rn="${id}" placeholder="${id} — ...">${esc(estado.rn[id] || '')}</textarea></label><div class="rv-dica"></div></div>`;
+  function conferirBlocos(ids, rotulo) {
+    let n = 0;
+    ids.forEach(id => {
+      const box = stepWrap.querySelector(`[data-bloco="${id}"]`);
+      const t = estado.rn[id] || '';
+      const ok = okTexto(id);
+      box.classList.toggle('ok', ok); box.classList.toggle('erro', !ok);
+      box.querySelector('.rv-dica').textContent = ok ? '✅ Passou na revisão.' : (VAGAS.test(t) ? `💡 Ainda há termo vago: "${t.match(VAGAS)[0]}".` : `💡 ${REESCRITA[id].dica}`);
+      if (ok) n++;
+    });
+    reportar(`Revisão — ${rotulo} (${n}/${ids.length})`);
+    return n === ids.length;
+  }
+  const botaoConferir = '<div class="rv-acoes"><button class="btn" id="btnConferir">Conferir</button><div class="ab-msg" id="rvMsg" style="display:none;"></div></div>';
+  function msg(ok, texto) { const m = document.getElementById('rvMsg'); m.style.display = 'block'; m.className = `ab-msg ${ok ? 'ok' : 'erro'}`; m.textContent = texto; }
+  function roteiroAtual() {
+    const ordem = roteiroAnterior.ordem || {};
+    const temRoteiro = V.etapas.every(e => parseInt(ordem[e.id], 10));
+    const lista = V.etapas.slice();
+    if (temRoteiro) lista.sort((a, b) => parseInt(ordem[a.id], 10) - parseInt(ordem[b.id], 10));
+    return { lista, temRoteiro, detalhe: roteiroAnterior.detalhe || {} };
+  }
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    const f = ficha();
+    document.getElementById('progressFill').style.width = (estado.completed ? 100 : Math.round(f.filter(x => x.ok).length / f.length * 90)) + '%';
+    const e = ETAPAS[atual];
+    reportar(`Revisão — ${e}`);
+    if (e === 'intro') {
+      const rt = roteiroAtual();
+      stepWrap.innerHTML = cartao('Laboratório de revisão técnica', `<div class="ab-conteudo">
+        <p>Na aula passada você <b>marcou</b> os defeitos das regras da VetAgenda e montou o <b>roteiro de trabalho</b>. Hoje você vai <b>corrigir</b> as regras, ligá-las aos requisitos e ao roteiro e registrar a nova versão. Tempo sugerido: <b>40 minutos</b>.</p>
+        <table><thead><tr><th>Regra</th><th>Defeito</th></tr></thead><tbody>${V.rn.map(r => `<tr><td><b>${r.id}</b> — ${esc(r.texto)}</td><td>${esc((V.problemas.find(p => p[0] === r.problema) || [])[1])}</td></tr>`).join('')}</tbody></table>
+        <blockquote>${rt.temRoteiro ? '✅ Encontrei o roteiro que você montou na aula passada: ele vai aparecer na etapa 6.' : 'Não encontrei o seu roteiro da aula passada neste navegador: vou usar o roteiro de referência.'}</blockquote>
+      </div>${nav(false, true)}`);
+    } else if (e === 'ambiguas') {
+      stepWrap.innerHTML = cartao('Reescrever as regras ambíguas', `<div class="ab-conteudo"><p>Troque os termos vagos por <b>números e condições</b> tirados da entrevista. Comece com o código da regra.</p></div>
+        ${blocoRn('RN02', 'RN02 revisada', orig('RN02'))}${blocoRn('RN07', 'RN07 revisada', orig('RN07'))}${botaoConferir}`) + nav(true, true);
+      ligar();
+      document.getElementById('btnConferir').addEventListener('click', () => { const ok = conferirBlocos(['RN02', 'RN07'], 'ambíguas'); msg(ok, ok ? '✅ As duas passaram na revisão.' : 'Ajuste as regras marcadas e confira de novo.'); });
+      return;
+    } else if (e === 'composta') {
+      stepWrap.innerHTML = cartao('Dividir a regra composta', `<div class="ab-conteudo"><p class="rv-antes">Antes: <s>${esc(orig('RN03'))}</s></p><p>Separe em <b>duas regras</b>, cada uma tratando de um assunto só.</p></div>
+        ${blocoRn('RN03a', 'RN03a — horário do agendamento online')}${blocoRn('RN03b', 'RN03b — lembrete de vacina')}${botaoConferir}`) + nav(true, true);
+      ligar();
+      document.getElementById('btnConferir').addEventListener('click', () => { const ok = conferirBlocos(['RN03a', 'RN03b'], 'composta'); msg(ok, ok ? '✅ Regra dividida corretamente.' : 'Ajuste as regras marcadas e confira de novo.'); });
+      return;
+    } else if (e === 'conflito') {
+      stepWrap.innerHTML = cartao('Resolver o conflito e mover o que não é regra', `
+        <div class="rv-bloco" data-bloco="RN05">
+          <p class="rv-antes">RN05: <s>${esc(orig('RN05'))}</s><br>RN06: ${esc(orig('RN06'))}</p>
+          <label>Como resolver o conflito?<select id="rvResolucao">${opcoes([['apagar06', 'Apagar a RN06'], ['excecao', 'Reescrever a RN05 com a exceção da RN06'], ['manter', 'Manter as duas como estão']], estado.resolucao)}</select></label>
+          <label>RN05 revisada<textarea data-rn="RN05" placeholder="RN05 — ...">${esc(estado.rn.RN05 || '')}</textarea></label><div class="rv-dica"></div>
+        </div>
+        ${['RN04', 'RN09'].map(id => `<div class="rv-bloco" data-bloco="${id}"><p class="rv-antes">${id}: ${esc(orig(id))}</p>
+          <label>Para onde vai?<select data-destino="${id}">${opcoes([['rn', 'Continua como regra de negócio'], ['rnf', 'Requisitos não funcionais (RNF)'], ['apagar', 'Apagar do documento']], estado.destino[id])}</select></label><div class="rv-dica"></div></div>`).join('')}
+        ${botaoConferir}`) + nav(true, true);
+      ligar();
+      document.getElementById('btnConferir').addEventListener('click', () => {
+        const box = stepWrap.querySelector('[data-bloco="RN05"]');
+        const ok5 = estado.resolucao === 'excecao' && okTexto('RN05');
+        box.classList.toggle('ok', ok5); box.classList.toggle('erro', !ok5);
+        box.querySelector('.rv-dica').textContent = ok5 ? '✅ Conflito resolvido.' : (estado.resolucao !== 'excecao' ? '💡 A entrevista confirma as duas durações. Qual opção mantém as duas verdades?' : `💡 ${REESCRITA.RN05.dica}`);
+        let okD = true;
+        ['RN04', 'RN09'].forEach(id => {
+          const b = stepWrap.querySelector(`[data-bloco="${id}"]`);
+          const ok = estado.destino[id] === 'rnf';
+          okD = okD && ok;
+          b.classList.toggle('ok', ok); b.classList.toggle('erro', !ok);
+          b.querySelector('.rv-dica').textContent = ok ? '✅ Lugar certo.' : '💡 É uma decisão de tecnologia ou de desempenho. Ela some, ou vai para outra lista de requisitos?';
+        });
+        msg(ok5 && okD, ok5 && okD ? '✅ Tudo resolvido.' : 'Veja as dicas nos blocos em vermelho.');
+        reportar('Revisão — conflito e RNF');
+      });
+      return;
+    } else if (e === 'rastro') {
+      const rfOps = V.rf.map(([c, t]) => [c, `${c} — ${t}`]);
+      stepWrap.innerHTML = cartao('Rastreabilidade: regra → requisito → roteiro', `
+        <div class="ab-conteudo"><p>Para cada regra da versão revisada, escolha o <b>requisito funcional</b> que ela afeta e a <b>etapa do roteiro</b> em que ela vai ser modelada.</p></div>
+        ${FINAIS.map(id => { const r = estado.rastro[id] || {}; return `<div class="rv-grade" data-rastrolinha="${id}"><div><b>${id}</b> — ${esc(textoFinal(id))}</div>
+          <select data-rastro="${id}" data-k="rf" aria-label="Requisito de ${id}">${opcoes(rfOps, r.rf)}</select>
+          <select data-rastro="${id}" data-k="etapa" aria-label="Etapa de ${id}">${opcoes(ETAPAS_OPC, r.etapa)}</select><div class="rv-dica"></div></div>`; }).join('')}
+        ${botaoConferir}`) + nav(true, true);
+      ligar();
+      document.getElementById('btnConferir').addEventListener('click', () => {
+        let n = 0;
+        FINAIS.forEach(id => {
+          const l = stepWrap.querySelector(`[data-rastrolinha="${id}"]`);
+          const ok = rastroOk(id);
+          const r = estado.rastro[id] || {};
+          l.classList.toggle('ok', ok); l.classList.toggle('erro', !ok);
+          l.querySelector('.rv-dica').textContent = ok ? '' : (!RF_CERTO[id].includes(r.rf) ? '💡 Qual funcionalidade do sistema precisa obedecer a essa regra?' : '💡 A regra vira comportamento (caso de uso), estrutura (DER), ou os dois?');
+          if (ok) n++;
+        });
+        msg(n === FINAIS.length, n === FINAIS.length ? '✅ Rastreabilidade completa.' : `${n} de ${FINAIS.length} certos.`);
+        reportar(`Revisão — rastreabilidade (${n}/${FINAIS.length})`);
+      });
+      return;
+    } else if (e === 'roteiro') {
+      const rt = roteiroAtual();
+      const porEtapa = { casos: [], dados: [] };
+      FINAIS.forEach(id => { const et = (estado.rastro[id] || {}).etapa; if (et === 'casos' || et === 'ambos') porEtapa.casos.push(id); if (et === 'dados' || et === 'ambos') porEtapa.dados.push(id); });
+      stepWrap.innerHTML = cartao('Integrar ao roteiro e registrar a versão', `<div class="ab-conteudo">
+        <p>${rt.temRoteiro ? 'Este é o <b>seu</b> roteiro da aula passada' : 'Roteiro de referência'}, agora com as regras que entram em cada etapa:</p>
+        <table><thead><tr><th>Etapa</th><th>Responsável</th><th>Regras que entram</th></tr></thead><tbody>${rt.lista.map(et => `<tr><td>${esc(et.nome)}</td><td>${esc((rt.detalhe[et.id] || {}).resp || '—')}</td><td>${et.id === 'regras' ? 'Todas (revisão)' : esc((porEtapa[et.id] || []).join(', ') || '—')}</td></tr>`).join('')}</tbody></table>
+      </div>
+        <div class="rv-bloco"><label>Novo critério de pronto da etapa "Revisar as regras de negócio"<textarea data-livre="criterio" placeholder="Ex.: todas as RN ...">${esc(estado.criterio)}</textarea></label><div class="rv-dica">Use a checklist de revisão: o que precisa ser verdade para a etapa terminar? (8+ palavras)</div></div>
+        <div class="rv-bloco"><label>Registro da versão 1.1 da lista de regras<textarea data-livre="versao" placeholder="Versão 1.1 — 13/10 — ...">${esc(estado.versao)}</textarea></label><div class="rv-dica">O que mudou em cada regra e por quê, e quem fez. (20+ palavras)</div></div>`) + nav(true, true);
+    } else if (e === 'ficha') {
+      const fi = ficha();
+      const tudo = fi.every(x => x.ok);
+      stepWrap.innerHTML = cartao('Ficha de revisão de roteiro', `
+        <ul class="rv-lista">${fi.map(x => x.ok ? `<li class="ok">✔ ${x.t}</li>` : `<li class="falha"><b>✘ ${x.t}</b> — volte à ${x.d}</li>`).join('')}</ul>
+        <div class="ab-conteudo" style="margin-top:16px;"><h3>Lista de regras de negócio — versão 1.1</h3>
+          <table><thead><tr><th>Regra</th><th>Requisito</th><th>Etapa</th></tr></thead><tbody>${FINAIS.map(id => { const r = estado.rastro[id] || {}; return `<tr><td>${esc(textoFinal(id))}</td><td>${esc(r.rf || '—')}</td><td>${esc((ETAPAS_OPC.find(o => o[0] === r.etapa) || [, '—'])[1])}</td></tr>`; }).join('')}</tbody></table>
+          <p><b>Movidas para RNF:</b> ${esc(orig('RN04'))} · ${esc(orig('RN09'))}</p>
+          <p><b>Critério de pronto da revisão:</b> ${esc(estado.criterio || '—')}</p><p><b>Versão 1.1:</b> ${esc(estado.versao || '—')}</p>
+        </div>
+        <div class="rv-acoes"><button class="btn btn-secondary" id="btnImprimir">🖨️ Imprimir / salvar em PDF</button></div>`) + nav(true, tudo, 'Pedir visto →');
+      document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+    } else {
+      renderVisto(); return;
+    }
+    ligar();
+  }
+
+  function renderVisto() {
+    if (!estado.completed && !ficha().every(x => x.ok)) { atual = ETAPAS.indexOf('ficha'); render(); return; }
+    if (estado.completed) {
+      const quando = estado.vistoEm ? new Date(estado.vistoEm).toLocaleString('pt-BR') : '';
+      stepWrap.innerHTML = cartao('✅ Revisão entregue', `<p>Visto dado por <b>${esc(estado.vistoPor || '')}</b>${quando ? ' em ' + esc(quando) : ''}.</p>`, 'ab-concluida') + nav(true, false);
+      ligar(); return;
+    }
+    stepWrap.innerHTML = cartao('🧑‍🏫 Visto do professor', `
+      <div class="ab-conteudo"><p>Chame o professor e mostre a ficha de revisão. Quando ele conferir, peça o token de professor (Gestão → "Token — Dar Visto / Pular Etapa") e digite abaixo.</p></div>
+      <div class="ab-form"><label>Token do professor <input type="text" id="vistoToken" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+        <button class="btn" id="btnDarVisto">Dar visto</button><div class="ab-msg" id="vistoMsg" style="display:none;"></div></div>`) + nav(true, false);
+    ligar();
+    const btn = document.getElementById('btnDarVisto');
+    const m = document.getElementById('vistoMsg');
+    btn.addEventListener('click', async () => {
+      const t = document.getElementById('vistoToken').value;
+      m.style.display = 'none';
+      if (!t) { m.className = 'ab-msg erro'; m.textContent = 'Informe o token do professor.'; m.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      try {
+        const r = window.PortalProfessorVisto ? await window.PortalProfessorVisto.verificarToken(t) : { ok: false, erro: 'Verificação indisponível nesta tela.' };
+        if (!r.ok) throw new Error(r.erro);
+        Object.assign(estado, { completed: true, vistoPor: r.nome, vistoEm: new Date().toISOString() });
+        salvar(true); reportar('Revisão — entregue com visto'); render();
+      } catch (e) {
+        m.className = 'ab-msg erro'; m.textContent = e.message || 'Erro inesperado ao verificar. Tente de novo.'; m.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Dar visto';
+      }
+    });
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const itens = [
+      ['RN02 revisada', 'RN02 — Cancelamento até 24 horas antes da consulta não tem custo; depois disso, cobra-se 50% do valor da consulta.'],
+      ['RN07 revisada', 'RN07 — Após 2 faltas sem aviso, o tutor fica 30 dias sem poder agendar pelo site.'],
+      ['RN03a', 'RN03a — O agendamento online é permitido de segunda a sábado, das 8h às 18h (sábado até 12h).'],
+      ['RN03b', 'RN03b — O tutor recebe um lembrete 7 dias antes da próxima dose de vacina do pet.'],
+      ['RN05 revisada', 'RN05 — Toda consulta dura 30 minutos, exceto a consulta geriátrica da RN06 (pets com mais de 10 anos: 45 minutos).'],
+      ['RN04 e RN09', 'Movidas para os requisitos não funcionais (restrição de tecnologia e desempenho).'],
+      ['Rastreabilidade', 'RN01→RF01 (DER) · RN02→RF04 (casos de uso) · RN03a→RF03 (casos) · RN03b→RF05 (casos) · RN05→RF03 (casos) · RN06→RF03 (casos/DER) · RN07→RF07 ou RF03 (casos) · RN08→RF02 (DER).'],
+      ['Roteiro e versão', 'Critério de pronto da revisão baseado na checklist (claras, atômicas, verificáveis, consistentes, de negócio, rastreáveis) e registro da versão 1.1 com o que mudou e por quê.'],
+    ];
+    return window.PortalGabarito.generate({
+      title: 'Modelagem — Laboratório de Revisão das Regras (VetAgenda)',
+      subtitle: 'Prática · Ficha de revisão de roteiro (O aluno integra regras de negócio ao roteiro?) · Turma Sistemas',
+      items: itens.map(([t, a], i) => ({ number: i + 1, title: t, prompt: 'Item de referência para a correção.', answer: a })),
+      fileName: 'modelagem-revisao-rn-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>
