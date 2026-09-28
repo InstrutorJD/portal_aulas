@@ -388,6 +388,7 @@
     autoRevealed: false, // já revelou esta pergunta sozinho (tempo esgotado OU todo mundo respondeu)? resetado em renderQuestion — evita disparar reveal() em dobro
     questionGeneration: 0, // incrementado toda vez que renderQuestion roda — só pra hostAutoReveal detectar se o host já avançou pra OUTRA pergunta enquanto um reveal() antigo ainda estava em trânsito (comparar isso é mais seguro que reler state.session depois do await, que pode já ter sido mutado por referência pelo próprio update)
     revealTimer: null, // setInterval do contador que avança a revelação sozinha (ver startRevealCountdown)
+    renderToken: 0, // incrementado a cada renderForSession — só a chamada mais recente desenha (ver renderForSession)
     penalizedQuestions: new Set(), // chaves "sessionId:questionIndex" já penalizadas (evita reinserir à toa; a chave primária no banco é a garantia de verdade). Guarda o sessionId junto porque a mesma aba, sem reload, pode entrar numa partida NOVA (subscribeToNewSessions) — sem isso, question_index=0 da partida nova herdaria "já penalizado" da partida anterior.
     clockOffsetMs: 0, // Date.now() + clockOffsetMs ~= relógio do Supabase (ver init/getServerTimeMs)
     countdownTimer: null,
@@ -749,6 +750,7 @@
   async function renderForSession() {
     const s = state.session;
     if (!s || s.status === 'ended') {
+      state.renderToken++; // descarta qualquer renderForSession ainda em trânsito
       // Um cronômetro que ficou correndo de uma pergunta/revelação
       // interrompida (ver onEmergencyEndClick) não pode continuar vivo
       // depois de "ended" — senão, ao zerar, ele chama reveal()/avança a
@@ -760,10 +762,24 @@
       else { showScreen('scrNoSession'); subscribeToNewSessions(); }
       return;
     }
+    // Cronômetro de uma fase que já passou não pode sobreviver à troca de
+    // fase: o da revelação, se sobrasse rodando durante a pergunta seguinte,
+    // chamava onNextOrPodiumClick ao zerar e PULAVA a pergunta em andamento
+    // sem ninguém clicar (ex.: professor com o jogo aberto em duas abas — a
+    // aba que não avançou só recebia a mudança pelo Realtime e mantinha o
+    // cronômetro dela vivo).
+    if (s.status !== 'reveal' && state.revealTimer) { clearInterval(state.revealTimer); state.revealTimer = null; }
+    if (s.status !== 'question' && state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
+
+    // Só a chamada mais recente desenha: duas chegando juntas (ação do host
+    // + evento do Realtime) terminam os awaits em qualquer ordem, e a mais
+    // antiga não pode redesenhar por cima da fase atual.
+    const renderToken = ++state.renderToken;
     state.players = await window.QuizRushEngine.fetchPlayers(s.id);
     state.answers = await window.QuizRushEngine.fetchAnswers(s.id);
     state.powers = await window.QuizRushEngine.fetchPowers(s.id);
     state.penalties = await window.QuizRushEngine.fetchPenalties(s.id);
+    if (renderToken !== state.renderToken) return;
 
     if (!isHost) {
       state.joined = state.players.some(p => p.student_email === username);
@@ -1241,11 +1257,18 @@
   }
 
   async function renderReveal() {
+    const revealIndex = state.session.current_index;
     showScreen('scrReveal');
     if (state.countdownTimer) clearInterval(state.countdownTimer);
     state.answers = await window.QuizRushEngine.fetchAnswers(state.session.id);
     state.powers = await window.QuizRushEngine.fetchPowers(state.session.id);
     state.penalties = await window.QuizRushEngine.fetchPenalties(state.session.id);
+    // A partida andou enquanto as buscas acima estavam em trânsito (ex.:
+    // alguém usou "pegar pontos" no fim da contagem e o host avançou nesse
+    // meio-tempo) — essa revelação ficou velha. Seguir adiante ligaria um
+    // cronômetro de revelação novo DURANTE a pergunta seguinte, que a pularia
+    // sozinho 10s depois.
+    if (state.session.status !== 'reveal' || state.session.current_index !== revealIndex) return;
 
     const q = currentQuestion();
     const isCode = window.QuizRushEngine.isCodeQuestion(q);
