@@ -147,7 +147,9 @@ window.SlidesMD = (function () {
         case 'ul': return `<ul ${anim()}>${b.items.map(it => `<li>${it}</li>`).join('')}</ul>`;
         case 'ol': return `<ol ${anim()}>${b.items.map(it => `<li>${it}</li>`).join('')}</ol>`;
         case 'reveal': return `<ul class="sm-anim sm-reveal" style="--d:${d++}">${b.items.map(it => `<li class="sm-step">${it}</li>`).join('')}</ul>`;
-        case 'quote': return `<blockquote ${anim()}>${b.html}</blockquote>`;
+        // "> Por quê: ..." (explicação de uma pergunta, formato das teorias de
+        // trilha — shared/aula-md.js) fica escondido até revelar a resposta.
+        case 'quote': return `<blockquote class="sm-anim${/^\s*Por qu[eê]:/i.test(b.html) ? ' sm-porque' : ''}" style="--d:${d++}">${b.html}</blockquote>`;
         case 'img': return `<figure ${anim()}><img src="${b.src}" alt="${esc(b.alt)}">${b.alt ? `<figcaption>${esc(b.alt)}</figcaption>` : ''}</figure>`;
         case 'code': return `
           <div class="sm-anim sm-code" style="--d:${d++}">
@@ -723,5 +725,8 @@ window.SlidesMD = (function () {
     return { abrir, sair };
   }
 
-  return { parse, lerMeta, formatarData, rotuloMeta, createPresenter };
+  // splitSlides/parseBlocks/renderBlocks/inline também servem ao motor das
+  // teorias de trilha (shared/aula-md.js), que lê o MESMO formato de .md mas
+  // monta a tela do aluno (com nota) em vez da apresentação.
+  return { parse, lerMeta, formatarData, rotuloMeta, createPresenter, splitSlides, parseBlocks, renderBlocks, inline };
 })();

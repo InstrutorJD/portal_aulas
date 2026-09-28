@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco de Dados — Do Relacional ao Documento</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  /* Específico deste exercício: editor de JSON e lista de verificações. */
+  .md-editor{
+    width:100%; min-height:260px; resize:vertical; margin-top:6px; padding:14px 16px; border-radius:12px;
+    font-family:var(--ab-mono); font-size:13.5px; line-height:1.6; tab-size:2;
+    background:var(--panel2); color:var(--ink); border:1px solid var(--line);
+  }
+  .md-editor:focus{ outline:none; border-color:var(--green); box-shadow:0 0 0 3px color-mix(in srgb, var(--green) 20%, transparent); }
+  .md-acoes{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+  .md-testes{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+  .md-testes li{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); font-size:.93em; }
+  .md-testes li.ok{ border-color:var(--ok); color:var(--ok); }
+  .md-testes li.falha{ border-color:var(--blood-bright); }
+  .md-testes li.falha b{ color:var(--blood-bright); }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'bd_nosql_modelagem';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+<script src="../../../shared/roteiro-slides.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Banco de Dados — Do Relacional ao Documento</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">6</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  const LOC = 'bd_nosql_modelagem';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const STEP_KEY = `${LOC}_step_${user}`;
+  const md = s => window.RoteiroSlides.mdToHtml(s);
+
+  // Helpers das verificações.
+  const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+  const norm = s => String(s == null ? '' : s).trim().toLowerCase();
+  const perto = (a, b) => typeof a === 'number' && Math.abs(a - b) < 0.01;
+  const t = (ok, texto, dica) => ({ ok: !!ok, texto, dica });
+
+  // Cada desafio: enunciado (Markdown), JSON inicial e verificações. A dica
+  // de cada verificação aponta o caminho, sem entregar o JSON pronto.
+  const DESAFIOS = [
+    {
+      id: 'pedido', titulo: 'Desafio 1 — O pedido vira documento',
+      enunciado: `
+No banco relacional da loja, o pedido 1001 está espalhado em **três tabelas**:
+
+| clientes | pedidos | itens_pedido |
+|---|---|---|
+| id 7 · Ana Souza · Recife | id 1001 · cliente_id 7 · 2026-10-05 | Mouse · qtd 2 · R$ 49,90 |
+| | | Teclado · qtd 1 · R$ 129,90 |
+| | | Mousepad · qtd 1 · R$ 19,90 |
+
+Monte **um único documento** para o pedido 1001, do jeito que o MongoDB guardaria:
+
+- \`_id\` e \`data\` do pedido
+- \`cliente\` **embutido** (objeto com \`nome\` e \`cidade\`), não só o id
+- \`itens\`: uma lista com \`produto\`, \`qtd\` e \`preco\` (números, com ponto decimal)
+- \`total\` do pedido`,
+      inicial: '{\n  "_id": 1001,\n  "data": "2026-10-05"\n}',
+      verificar(d) {
+        const itens = isObj(d) && Array.isArray(d.itens) ? d.itens : [];
+        const acha = nome => itens.find(i => isObj(i) && norm(i.produto) === norm(nome));
+        const itemOk = (nome, qtd, preco) => { const i = acha(nome); return i && i.qtd === qtd && perto(i.preco, preco); };
+        return [
+          t(isObj(d), 'O documento é um objeto { }', 'O pedido inteiro é UM objeto JSON, que começa com { e termina com }.'),
+          t(isObj(d) && String(d._id) === '1001', '_id é 1001', 'Use o id do pedido no campo _id.'),
+          t(isObj(d) && isObj(d.cliente) && norm(d.cliente.nome) === 'ana souza' && norm(d.cliente.cidade) === 'recife',
+            'cliente embutido com nome e cidade', 'No documento, o cliente vem DENTRO do pedido: um objeto { } com os dados que antes estavam na tabela clientes.'),
+          t(itens.length === 3, 'itens tem 3 itens', 'itens é uma lista [ ] com um objeto para cada linha de itens_pedido.'),
+          t(itemOk('Mouse', 2, 49.9) && itemOk('Teclado', 1, 129.9) && itemOk('Mousepad', 1, 19.9),
+            'cada item tem produto, qtd e preco corretos', 'Confira os nomes dos campos (produto, qtd, preco) e use números sem aspas, com ponto: 49.9.'),
+          t(isObj(d) && perto(d.total, 249.6), 'total confere com os itens', 'O total é a soma de qtd × preco de cada item.'),
+        ];
+      },
+    },
+    {
+      id: 'catalogo', titulo: 'Desafio 2 — Catálogo com campos variáveis',
+      enunciado: `
+A MegaShop vende produtos muito diferentes. No relacional, uma tabela única teria **colunas vazias (NULL)** para quase tudo. No banco de documentos, cada produto guarda **só os campos que tem**.
+
+Monte uma **lista** \`[ ]\` com 3 documentos, todos com \`nome\` e \`preco\` (número):
+
+- **Camiseta Básica**: R$ 59,90, tamanho M, cor preta
+- **Notebook Pro**: R$ 4.599,00, memória "16 GB", processador "i7"
+- **Banco de Dados na Prática** (livro): R$ 89,00, autora "Maria Lima", 320 páginas
+
+Use os campos \`tamanho\`, \`cor\`, \`memoria\`, \`processador\`, \`autor\` e \`paginas\`, cada um só no produto a que pertence.`,
+      inicial: '[\n  {\n    "nome": "Camiseta Básica",\n    "preco": 59.9\n  }\n]',
+      verificar(d) {
+        const lista = Array.isArray(d) ? d : [];
+        const acha = nome => lista.find(p => isObj(p) && norm(p.nome) === norm(nome)) || null;
+        const cam = acha('Camiseta Básica'), note = acha('Notebook Pro'), livro = acha('Banco de Dados na Prática');
+        const semNulos = lista.every(p => isObj(p) && Object.values(p).every(v => v !== null && v !== ''));
+        const so = (p, proprios, alheios) => p && proprios.every(c => p[c] !== undefined) && alheios.every(c => p[c] === undefined);
+        return [
+          t(Array.isArray(d) && lista.length === 3, 'é uma lista com 3 documentos', 'Uma coleção de documentos aqui é uma lista [ ] com um objeto { } por produto.'),
+          t(cam && note && livro && perto(cam.preco, 59.9) && perto(note.preco, 4599) && perto(livro.preco, 89),
+            'os 3 produtos têm nome e preco corretos', 'Confira a grafia dos nomes e escreva o preço como número: 4599 (sem ponto de milhar).'),
+          t(so(cam, ['tamanho', 'cor'], ['memoria', 'processador', 'autor', 'paginas']), 'camiseta só com tamanho e cor', 'A camiseta não tem memória nem autor: esses campos simplesmente não existem nela.'),
+          t(so(note, ['memoria', 'processador'], ['tamanho', 'cor', 'autor', 'paginas']), 'notebook só com memoria e processador', 'Coloque no notebook apenas os campos que fazem sentido para ele.'),
+          t(so(livro, ['autor', 'paginas'], ['tamanho', 'cor', 'memoria', 'processador']) && typeof livro.paginas === 'number',
+            'livro só com autor e paginas (número)', 'O número de páginas é um número, sem aspas.'),
+          t(semNulos, 'nenhum campo null ou vazio', 'No documento, campo que não se aplica é campo que não existe, em vez de null.'),
+        ];
+      },
+    },
+    {
+      id: 'carrinho', titulo: 'Desafio 3 — Carrinho no banco chave-valor',
+      enunciado: `
+O carrinho da sessão **a9f2** vai para um banco **chave-valor** (como o Redis). Nele há **1 Fone** e **2 Capinha**. Se o visitante sumir por **2 horas**, o carrinho deve expirar sozinho.
+
+Descreva a entrada do banco como um objeto com:
+
+- \`chave\`: no padrão \`carrinho:<id da sessão>\`
+- \`valor\`: um objeto com a lista \`itens\` (\`produto\` e \`qtd\`)
+- \`expiraEmSegundos\`: o tempo de vida da chave, em segundos`,
+      inicial: '{\n  "chave": "",\n  "valor": {},\n  "expiraEmSegundos": 0\n}',
+      verificar(d) {
+        const itens = isObj(d) && isObj(d.valor) && Array.isArray(d.valor.itens) ? d.valor.itens : [];
+        const qtd = nome => { const i = itens.find(x => isObj(x) && norm(x.produto) === norm(nome)); return i ? i.qtd : undefined; };
+        return [
+          t(isObj(d), 'é um objeto { }', 'A entrada inteira é um objeto com chave, valor e expiraEmSegundos.'),
+          t(isObj(d) && d.chave === 'carrinho:a9f2', 'chave no padrão carrinho:<sessão>', 'A chave junta o tipo do dado e o id da sessão, separados por dois-pontos, tudo minúsculo.'),
+          t(itens.length === 2 && qtd('Fone') === 1 && qtd('Capinha') === 2, 'valor.itens com Fone (1) e Capinha (2)', 'Dentro de valor, crie a lista itens com um objeto por produto.'),
+          t(isObj(d) && d.expiraEmSegundos === 7200, 'expira em 2 horas', 'Converta 2 horas para segundos: 60 segundos × 60 minutos × 2.'),
+        ];
+      },
+    },
+    {
+      id: 'grafo', titulo: 'Desafio 4 — Quem seguir? (grafo)',
+      enunciado: `
+Na rede ConectaAí, estas são as relações **SEGUE**:
+
+- Ana segue Bruno e Carla
+- Bruno segue Davi
+- Carla segue Davi e Eva
+- Eva segue Ana
+
+Monte o grafo como um objeto com:
+
+- \`arestas\`: uma lista com **todas** as relações acima, cada uma \`{ "de", "tipo", "para" }\` com tipo \`"SEGUE"\`
+- \`sugestoes\`: quem **as pessoas que a Ana segue** seguem, e que a Ana **ainda não segue** (sem incluir a própria Ana)
+
+> A direção importa: "Eva segue Ana" não é o mesmo que "Ana segue Eva".`,
+      inicial: '{\n  "arestas": [\n    { "de": "Ana", "tipo": "SEGUE", "para": "Bruno" }\n  ],\n  "sugestoes": []\n}',
+      verificar(d) {
+        const esperadas = ['ana>bruno', 'ana>carla', 'bruno>davi', 'carla>davi', 'carla>eva', 'eva>ana'];
+        const arestas = isObj(d) && Array.isArray(d.arestas) ? d.arestas : [];
+        const chaves = arestas.map(a => (isObj(a) ? `${norm(a.de)}>${norm(a.para)}` : '?'));
+        const tiposOk = arestas.length > 0 && arestas.every(a => isObj(a) && a.tipo === 'SEGUE');
+        const sug = isObj(d) && Array.isArray(d.sugestoes) ? d.sugestoes.map(norm).sort() : [];
+        return [
+          t(isObj(d) && Array.isArray(d.arestas), 'arestas é uma lista', 'Crie "arestas": [ ... ] com um objeto por relação.'),
+          t(tiposOk, 'toda aresta tem tipo "SEGUE"', 'Cada aresta precisa do campo tipo com o valor "SEGUE", em maiúsculas.'),
+          t(chaves.length === 6 && esperadas.every(e => chaves.includes(e)), 'as 6 relações, na direção certa', 'Conte as relações do enunciado (são 6) e confira quem é "de" e quem é "para" em cada uma.'),
+          t(sug.length === 2 && sug[0] === 'davi' && sug[1] === 'eva', 'sugestoes corretas para a Ana', 'Primeiro veja quem a Ana segue. Depois, quem essas pessoas seguem. Tire quem a Ana já segue e a própria Ana.'),
+        ];
+      },
+    },
+  ];
+
+  const TOTAL = DESAFIOS.length + 2;
+  const stepWrap = document.getElementById('stepWrap');
+
+  function lerResolvidos() {
+    try { const a = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function salvarResolvidos(a) { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(a)); } catch (e) {} }
+  function lerEtapa() {
+    try { const n = parseInt(localStorage.getItem(STEP_KEY), 10); return n >= 0 && n < TOTAL ? n : 0; } catch (e) { return 0; }
+  }
+  function salvarEtapa(n) { try { localStorage.setItem(STEP_KEY, String(n)); } catch (e) {} }
+  const chaveRascunho = id => `${LOC}_rascunho_${user}_${id}`;
+  function reportar(rotulo) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity(LOC, rotulo, { step: atual + 1, total: TOTAL, resolvidos: lerResolvidos().length });
+    }
+  }
+
+  let atual = lerEtapa();
+  let direcao = 1;
+
+  function nav(voltar, avancar) {
+    return `
+      <div class="ab-nav">
+        ${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        <span class="ab-nav-dica">use ← → do teclado</span>
+        ${avancar ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}
+      </div>`;
+  }
+  function irPara(i) {
+    direcao = i < atual ? -1 : 1;
+    atual = Math.max(0, Math.min(i, TOTAL - 1));
+    salvarEtapa(atual);
+    render();
+  }
+  function finalizarRender() {
+    const b = document.getElementById('btnBack');
+    if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext');
+    if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.decorar(stepWrap, {});
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+  function barra() {
+    document.getElementById('progressFill').style.width = Math.round((lerResolvidos().length / DESAFIOS.length) * 100) + '%';
+  }
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    barra();
+
+    if (atual === 0) {
+      reportar('Modelagem — Abertura');
+      stepWrap.innerHTML = `
+        <article class="ab-cartao">
+          <div class="ab-cartao-etapa">Etapa 1 de ${TOTAL}</div>
+          <h2>Do relacional ao NoSQL, na prática</h2>
+          <div class="ab-conteudo">${md(`
+Na consultoria você **escolheu** a arquitetura. Agora você vai **modelar os dados** em três famílias NoSQL, escrevendo **JSON**.
+
+1. **Documento**: um pedido que hoje está em três tabelas
+2. **Documento**: um catálogo em que cada produto tem campos diferentes
+3. **Chave-valor**: um carrinho que expira sozinho
+4. **Grafo**: relações de uma rede social e sugestões de quem seguir
+
+### Lembretes de JSON
+- Textos entre **aspas duplas**: \`"nome": "Ana"\`
+- Números **sem aspas** e com **ponto** decimal: \`"preco": 49.9\`
+- Objeto \`{ }\` guarda campos; lista \`[ ]\` guarda vários itens
+- **Não** existe vírgula depois do último item
+
+> Clique em **Verificar** quantas vezes quiser: cada item da lista mostra o que já está certo. Tempo sugerido: **25 minutos**.`)}</div>
+        </article>
+        ${nav(false, true)}`;
+      finalizarRender();
+      return;
+    }
+
+    if (atual === TOTAL - 1) {
+      const feitos = lerResolvidos().length;
+      const pronto = feitos >= DESAFIOS.length;
+      reportar(`Modelagem — Fechamento (${feitos}/${DESAFIOS.length})`);
+      stepWrap.innerHTML = `
+        <article class="ab-cartao ${pronto ? 'ab-concluida' : ''}">
+          <div class="ab-cartao-etapa">Etapa ${TOTAL} de ${TOTAL}</div>
+          <h2>${pronto ? '✅ Modelagem concluída!' : 'Ainda faltam desafios'}</h2>
+          <div class="ab-conteudo">${pronto ? md(`
+Você modelou o mesmo tipo de informação de jeitos bem diferentes:
+
+- **Documento**: o que é lido junto ficou junto (pedido + itens + cliente)
+- **Esquema flexível**: cada produto só com os campos que tem, sem NULL
+- **Chave-valor**: acesso direto pela chave e expiração automática
+- **Grafo**: as relações viraram dados, e a sugestão saiu percorrendo as arestas
+
+> Pense: qual desses quatro modelos o sistema do seu projeto integrador poderia usar, e para qual parte?`) : `<p>Você concluiu ${feitos} de ${DESAFIOS.length}. Volte aos desafios que ainda não passaram em todas as verificações.</p>`}</div>
+        </article>
+        ${nav(true, false)}`;
+      finalizarRender();
+      return;
+    }
+
+    renderDesafio(DESAFIOS[atual - 1]);
+  }
+
+  function renderDesafio(ds) {
+    const resolvido = lerResolvidos().includes(ds.id);
+    reportar(`Modelagem — ${ds.titulo}${resolvido ? ' (resolvido)' : ''}`);
+    let rascunho = null;
+    try { rascunho = localStorage.getItem(chaveRascunho(ds.id)); } catch (e) {}
+    stepWrap.innerHTML = `
+      <article class="ab-cartao">
+        <div class="ab-cartao-etapa">Etapa ${atual + 1} de ${TOTAL}</div>
+        <h2>${ds.titulo}</h2>
+        <div class="ab-conteudo">${md(ds.enunciado)}</div>
+        <textarea class="md-editor" id="mdEditor" spellcheck="false" aria-label="Seu JSON"></textarea>
+        <div class="md-acoes">
+          <button class="btn" id="btnVerificar">▶ Verificar</button>
+          <button class="btn btn-secondary" id="btnRecomecar">↺ Recomeçar</button>
+        </div>
+        <ul class="md-testes" id="mdTestes">${resolvido ? '<li class="ok">✅ Desafio concluído. Você pode continuar mexendo no JSON se quiser.</li>' : ''}</ul>
+      </article>
+      ${nav(true, true)}`;
+    finalizarRender();
+
+    const editor = document.getElementById('mdEditor');
+    editor.value = rascunho != null ? rascunho : ds.inicial;
+    editor.addEventListener('input', () => { try { localStorage.setItem(chaveRascunho(ds.id), editor.value); } catch (e) {} });
+    // Tab indenta (2 espaços) em vez de sair do campo.
+    editor.addEventListener('keydown', e => {
+      if (e.key !== 'Tab' || e.shiftKey) return;
+      e.preventDefault();
+      const ini = editor.selectionStart;
+      editor.setRangeText('  ', ini, editor.selectionEnd, 'end');
+      editor.dispatchEvent(new Event('input'));
+    });
+    document.getElementById('btnRecomecar').addEventListener('click', () => {
+      editor.value = ds.inicial;
+      editor.dispatchEvent(new Event('input'));
+      document.getElementById('mdTestes').innerHTML = '';
+    });
+    document.getElementById('btnVerificar').addEventListener('click', () => verificar(ds, editor.value));
+  }
+
+  function verificar(ds, texto) {
+    const lista = document.getElementById('mdTestes');
+    let dado;
+    try {
+      dado = JSON.parse(texto);
+    } catch (e) {
+      lista.innerHTML = `<li class="falha"><b>✘ O JSON não é válido.</b> Procure aspas faltando, vírgula sobrando no último item ou chave/colchete sem fechar. (${e.message.replace(/</g, '&lt;')})</li>`;
+      reportar(`Modelagem — ${ds.titulo} (JSON inválido)`);
+      return;
+    }
+    const resultados = ds.verificar(dado);
+    const todos = resultados.every(r => r.ok);
+    lista.innerHTML = resultados.map(r => r.ok
+      ? `<li class="ok">✔ ${r.texto}</li>`
+      : `<li class="falha"><b>✘ ${r.texto}</b> — ${r.dica}</li>`).join('')
+      + (todos ? '<li class="ok">✅ Desafio concluído!</li>' : '');
+    if (todos) {
+      const feitos = lerResolvidos();
+      if (!feitos.includes(ds.id)) { feitos.push(ds.id); salvarResolvidos(feitos); }
+      barra();
+    }
+    reportar(`Modelagem — ${ds.titulo} (${resultados.filter(r => r.ok).length}/${resultados.length} verificações)`);
+  }
+
+  window.generateGabaritoForGestao = function () {
+    const respostas = {
+      pedido: '{ "_id": 1001, "data": "2026-10-05",\n  "cliente": { "nome": "Ana Souza", "cidade": "Recife" },\n  "itens": [ { "produto": "Mouse", "qtd": 2, "preco": 49.9 },\n             { "produto": "Teclado", "qtd": 1, "preco": 129.9 },\n             { "produto": "Mousepad", "qtd": 1, "preco": 19.9 } ],\n  "total": 249.6 }',
+      catalogo: '[ { "nome": "Camiseta Básica", "preco": 59.9, "tamanho": "M", "cor": "preta" },\n  { "nome": "Notebook Pro", "preco": 4599, "memoria": "16 GB", "processador": "i7" },\n  { "nome": "Banco de Dados na Prática", "preco": 89, "autor": "Maria Lima", "paginas": 320 } ]',
+      carrinho: '{ "chave": "carrinho:a9f2",\n  "valor": { "itens": [ { "produto": "Fone", "qtd": 1 }, { "produto": "Capinha", "qtd": 2 } ] },\n  "expiraEmSegundos": 7200 }',
+      grafo: '{ "arestas": [ Ana→Bruno, Ana→Carla, Bruno→Davi, Carla→Davi, Carla→Eva, Eva→Ana (tipo "SEGUE") ],\n  "sugestoes": [ "Davi", "Eva" ] }',
+    };
+    return window.PortalGabarito.generate({
+      title: 'Banco de Dados — Do Relacional ao Documento',
+      subtitle: 'Prática · Trilha Bancos de Dados Não Relacionais (NoSQL) · Turma Sistemas',
+      items: DESAFIOS.map((ds, i) => ({ number: i + 1, title: ds.titulo, prompt: ds.enunciado.replace(/[`*|>]/g, ''), answer: respostas[ds.id] })),
+      fileName: 'bd-nosql-modelagem-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

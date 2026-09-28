@@ -1,18 +1,23 @@
 # Padrão de trilhas novas — layout de slides
 
-> ⚠️ **STATUS: MOTOR EM CONSTRUÇÃO.** O portal ainda NÃO sabe executar a
-> TEORIA neste formato — o motor (`shared/aula-md.js`) ainda vai ser
-> construído. O **visual base das práticas já existe** (`shared/aula-base.css`
-> + `shared/aula-base.js`, seção 8), com piloto em
-> `turmas/jogos/atividades/cod-phaser-pratica.html`. Enquanto este aviso existir: se pedirem
-> uma trilha nova, **avise o usuário que o motor ainda não está pronto e
-> pergunte como seguir — não caia no padrão antigo**. Este aviso sai quando
-> o motor estiver pronto e testado.
+> ✅ **STATUS: MOTOR PRONTO.** A teoria em `.md` roda pelo motor
+> `shared/aula-md.js` (+ `shared/aula-md.css`) e as práticas usam o visual
+> base (`shared/aula-base.css` + `shared/aula-base.js`, seção 8).
 >
-> **Trilhas piloto** (ainda em andamento, as ÚNICAS já existentes que vão
-> para o layout novo): as trilhas do **FinancApp** em Sistemas
-> (hoje a trilha única `projeto-financapp`, no card "Projetos") e a
-> trilha **Motor Phaser: Construa o Pacman** em Jogos (`cod-phaser`).
+> **Trilha de referência (completa, teoria + 2 práticas):**
+> `bd-nosql` em Sistemas → Banco de Dados
+> (`turmas/sistemas/aulas/bd-nosql-teoria.md`,
+> `turmas/sistemas/atividades/bd-nosql-teoria.html`,
+> `bd-nosql-consultoria.html` e `bd-nosql-modelagem.html`).
+>
+> **Outras trilhas no layout novo:** as do **FinancApp** em Sistemas (trilha
+> única `projeto-financapp`, no card "Projetos") e **Motor Phaser: Construa
+> o Pacman** em Jogos (`cod-phaser`).
+>
+> **Carga horária:** quando o professor manda a linha do plano de ensino
+> ("Aula N - data", com um mínimo de horas), teoria + práticas precisam
+> cobrir esse tempo. Anote a estimativa por módulo num comentário da trilha
+> no `config.js`.
 
 Este documento vale para **toda trilha criada daqui pra frente** nas turmas
 Jogos Digitais (`turmas/jogos/`) e Desenvolvimento de Sistemas
@@ -53,6 +58,11 @@ professor projetar**, e é escrito no mesmo formato do "Criar Material"
    prática travada até a teoria ser concluída (`requires`).
 4. **Não copie** nenhuma atividade de `turmas/*/atividades/` como ponto de
    partida — elas estão no padrão antigo.
+5. **Ferramentas online e gratuitas.** Prática que usa ferramenta de fora do
+   portal usa uma que roda **só no navegador** (HTTPS) e tem plano
+   gratuito. Nada de instalar programa nem de depender de porta (27017,
+   3306...). Se o plano de ensino citar uma ferramenta instalável, use a
+   alternativa online (ex.: MongoDB Compass → Data Explorer do MongoDB Atlas).
 
 ---
 
@@ -148,9 +158,10 @@ escolha (quiz de teoria)":
 
 ## 5. Teoria: a casca HTML
 
-> ⚠️ Modelo definitivo sai junto com o motor. A ideia: um arquivo de poucas
-> linhas, sem CSS próprio, que só carrega o motor compartilhado e diz qual
-> `.md` usar e qual a chave de progresso.
+Um arquivo de poucas linhas, sem CSS próprio, que só carrega o motor
+compartilhado e diz qual `.md` usar e qual a chave de progresso. Copie e
+troque só o título, o `ACTIVITY_LOCATION` (duas vezes) e o caminho do `.md`
+(modelo real: `turmas/sistemas/atividades/bd-nosql-teoria.html`):
 
 ```html
 <!DOCTYPE html>
@@ -160,11 +171,18 @@ escolha (quiz de teoria)":
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fundamentos de Redes — Teoria</title>
 <link rel="stylesheet" href="../../../shared/aula-md.css">
+<script>
+  window.ACTIVITY_LOCATION = 'redes_fundamentos_teoria';
+</script>
 <script src="../../../shared/supabase-config.js"></script>
 <script src="../../../shared/session.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
 <script src="../../../shared/activity-tracker.js"></script>
 <script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/slides-md.js"></script>
+<script src="../../../shared/aula-base.js"></script>
 <script src="../../../shared/aula-md.js"></script>
 </head>
 <body>
@@ -174,13 +192,24 @@ escolha (quiz de teoria)":
     activityLocation: 'redes_fundamentos_teoria',
   });
 </script>
+<script src="../../../shared/vlibras-widget.js"></script>
 </body>
 </html>
 ```
 
+- `window.ACTIVITY_LOCATION` precisa vir **antes** do `progress-sync.js`
+  (é ele que espelha o progresso no Supabase).
+- `slides-md.js` é o parser do Criar Material: a teoria usa o mesmo formato
+  de `.md`. As bibliotecas pesadas da apresentação (realce de código, QR
+  Code) só carregam quando o professor clica em ▶ Apresentação.
+- O motor lê o `.md` de forma síncrona de propósito: a Gestão e o QuizRush
+  abrem a página num `<iframe>` oculto e pedem o gabarito logo no `onload`.
+
 O motor cuida de tudo que hoje cada `*-teoria.html` repetia: visual,
-progresso, nota, embaralhar, gabarito para a Gestão e o botão **▶
-Apresentação** (só para professor).
+progresso, nota, embaralhar, gabarito para a Gestão e o QuizRush, a
+capacidade no slide de abertura (lida do `config.js`) e o botão **▶
+Apresentação** (só para professor: o `.md` vira os slides do Criar Material,
+com o "Por quê" aparecendo só depois de revelar a resposta).
 
 ---
 
@@ -214,6 +243,11 @@ Igual ao de hoje (ver `README.md`, "Hierarquia Matéria → Trilha → Módulo")
 ```
 
 - **`telaCheia: true` em TODO módulo do padrão novo** (teoria e prática): o módulo abre ocupando a tela inteira (sem margem, por cima até da barra do portal), só com a faixa "← Voltar" no topo — as telas dos alunos são pequenas. Módulos do padrão antigo não têm essa marca e continuam abrindo no modal de sempre.
+- **`aula` e `dataAula`** (ex.: `aula: 32, dataAula: '2026-10-05'`): quando a
+  trilha vem de uma linha do plano de ensino ("Aula 32 - 05/10/2026"),
+  registre o número e a data. Aparecem no cabeçalho da trilha e na Gestão →
+  "Liberação por Trilha" (com o botão "Usar DD/MM", que preenche o
+  "Liberar em" com essa data).
 - `progressKey` = `activityLocation` da casca + `_progress_`.
 - Não use `hasSlides` em trilha nova: o `.pptx` é do padrão antigo; a
   apresentação agora é o botão ▶ Apresentação.

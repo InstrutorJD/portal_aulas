@@ -128,6 +128,10 @@
 .sm-quiz.sm-revealed .sm-opt{ opacity:.35; }
 .sm-quiz.sm-revealed .sm-opt[data-ok="1"]{ opacity:1; border-color:#2fbf71; background:rgba(47,191,113,.16); animation:smPulso .8s; }
 .sm-quiz.sm-revealed .sm-opt[data-ok="1"] .sm-letter{ background:#2fbf71; }
+/* "> Por quê: ..." só depois de revelar a resposta (teorias de trilha). */
+.sm-quiz:not(.sm-revealed) ~ .sm-porque{ display:none; }
+.sm-slide blockquote.sm-porque{ font-size:24px; border-left-color:#2fbf71; }
+.sm-slide .sm-capacidade{ font-size:22px; color:var(--sm-dim); max-width:1000px; margin-top:18px; }
 @keyframes smPulso{ 40%{ transform:scale(1.05); } }
 .sm-confete{ position:fixed; z-index:1100; width:10px; height:14px; border-radius:2px; pointer-events:none; }
 

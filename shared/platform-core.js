@@ -954,6 +954,7 @@
       page.innerHTML = `
         <div id="moduleSelector_${trilha.key}" class="card" style="padding:16px;">
           <h2 style="margin:0 0 4px;">Trilha ${trilha.label}${statusBadge}</h2>
+          ${rotuloAulaPlano(trilha) ? `<p style="font-size:12px; color:var(--ink-dim); margin:0 0 4px;">📅 ${rotuloAulaPlano(trilha)}</p>` : ''}
           ${trilha.capacidade ? `<p style="font-size:14px; color:var(--yellow); margin:0 0 4px;"><b>Capacidade:</b> ${trilha.capacidade}</p>` : ''}
           <div class="card-grid" style="margin-top:12px;">${buildModuleCardsHtml(trilha)}</div>
         </div>
@@ -967,7 +968,7 @@
               <button class="btn btn-secondary" onclick="PortalCore.closeModule('${trilha.key}')">← Voltar</button>
             </div>
             <div id="moduleFrameWrapper_${trilha.key}" class="game-frame-wrapper" style="border:1px solid var(--green-dim);">
-              <iframe id="moduleFrame_${trilha.key}" src="about:blank"></iframe>
+              <iframe id="moduleFrame_${trilha.key}" src="about:blank" allow="fullscreen"></iframe>
             </div>
           </div>
         </div>
@@ -1824,8 +1825,22 @@
     return `${d}/${m}`;
   }
 
+  // Nº e data da aula no plano de ensino (campos opcionais `aula` e
+  // `dataAula` da trilha no config.js): "Aula 32 · 05/10/2026". Serve pro
+  // professor saber em que bimestre/"Liberar em" encaixar cada trilha.
+  function rotuloAulaPlano(trilha) {
+    if (!trilha || trilha.aula === undefined || trilha.aula === null) return '';
+    const [a, m, d] = String(trilha.dataAula || '').split('-');
+    return `Aula ${trilha.aula}${a && m && d ? ` · ${d}/${m}/${a}` : ''}`;
+  }
+
   function trilhaBimestreRowHtml({ materiaLabel, trilha }, selected, liberarEm) {
     const status = trilhaBimestreStatusLabel(selected, liberarEm);
+    const aulaPlano = rotuloAulaPlano(trilha);
+    // "Usar DD/MM" preenche o "Liberar em" com a data da aula do plano.
+    const usarData = trilha.dataAula && trilha.dataAula !== liberarEm
+      ? `<button type="button" class="btn btn-secondary trilha-usar-data" data-data="${trilha.dataAula}" style="padding:3px 8px; font-size:10px; margin-left:6px;" title="Preencher com a data da aula no plano de ensino">Usar ${dataCurtaBR(trilha.dataAula)}</button>`
+      : '';
     const options = ['<option value="">Sem bimestre</option>'].concat(
       BIMESTRE_NUMS.map(num => `<option value="${num}" ${String(selected) === String(num) ? 'selected' : ''}>${BIMESTRE_LABELS[num]}</option>`)
     );
@@ -1836,10 +1851,10 @@
     return `
       <tr data-trilha="${trilha.key}">
         <td>${materiaLabel}</td>
-        <td>${trilha.label}</td>
+        <td>${trilha.label}${aulaPlano ? `<div class="trilha-aula-plano" style="color:var(--yellow); font-size:11px; margin-top:2px;">📅 ${aulaPlano}</div>` : ''}</td>
         <td><select class="trilha-bimestre-input">${options.join('')}</select></td>
         <td>
-          <input type="date" class="trilha-liberar-input" value="${liberarEm || ''}" ${minMax}>
+          <input type="date" class="trilha-liberar-input" value="${liberarEm || ''}" ${minMax}>${usarData}
           <span class="trilha-bimestre-status" style="color:${status.color}; margin-left:8px; font-size:11px;">${status.text}</span>
         </td>
       </tr>
@@ -1920,6 +1935,16 @@
         const status = trilhaBimestreStatusLabel(num, inp.value || null);
         const span = tr.querySelector('.trilha-bimestre-status');
         if (span) { span.textContent = status.text; span.style.color = status.color; }
+      });
+    });
+    // "Usar DD/MM": copia a data da aula do plano pro "Liberar em" (ainda
+    // sem salvar — o professor confere e clica em Salvar, como o resto).
+    tbody.querySelectorAll('.trilha-usar-data').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = btn.closest('tr').querySelector('.trilha-liberar-input');
+        if (!inp) return;
+        inp.value = btn.getAttribute('data-data');
+        inp.dispatchEvent(new Event('change'));
       });
     });
   }

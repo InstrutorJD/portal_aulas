@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banco de Dados — Consultoria de Arquitetura</title>
+<link rel="stylesheet" href="../../../shared/aula-base.css">
+<style>
+  /* Específico deste exercício: as escolhas de arquitetura e de motivo. */
+  .cs-cliente{ display:flex; gap:14px; align-items:flex-start; margin-bottom:16px; }
+  .cs-avatar{ font-size:40px; line-height:1; flex-shrink:0; }
+  .cs-grupo{ margin:18px 0 8px; font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--ab-acento); }
+  .cs-opcoes{ display:flex; flex-wrap:wrap; gap:8px; }
+  .cs-opcoes.cs-motivos{ flex-direction:column; }
+  .cs-op{ display:flex; align-items:center; gap:10px; cursor:pointer; padding:10px 14px; border-radius:12px; border:1px solid var(--line); background:var(--panel2); transition:border-color .2s, background .2s; }
+  .cs-op:hover{ border-color:var(--green-dim); }
+  .cs-op input{ accent-color:var(--green); margin:0; }
+  .cs-op:has(input:checked){ border-color:var(--green); background:color-mix(in srgb, var(--green) 10%, transparent); }
+  .cs-acoes{ display:flex; align-items:center; gap:12px; margin-top:18px; flex-wrap:wrap; }
+  .cs-acoes .ab-msg{ flex:1; min-width:220px; }
+  .cs-placar{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .cs-placar span{ font-family:var(--ab-mono); font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid var(--line); color:var(--ink-dim); }
+  .cs-placar span.ok{ border-color:var(--ok); color:var(--ok); }
+</style>
+<script>
+  window.ACTIVITY_LOCATION = 'bd_nosql_consultoria';
+</script>
+<script src="../../../shared/supabase-config.js"></script>
+<script src="../../../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../../../shared/clipboard-guard.js"></script>
+<script src="../../../shared/activity-tracker.js"></script>
+<script src="../../../shared/progress-sync.js"></script>
+<script src="../../../shared/gabarito-generator.js"></script>
+<script src="../../../shared/aula-base.js"></script>
+</head>
+<body>
+
+<div class="ab-app">
+  <header class="ab-topo">
+    <div class="ab-topo-titulo">Banco de Dados — Consultoria de Arquitetura</div>
+    <div class="ab-topo-etapa">Etapa <span id="lblStepNum">1</span> de <span id="lblStepTotal">10</span></div>
+  </header>
+  <div class="ab-progresso"><div class="ab-progresso-fill" id="progressFill"></div></div>
+  <main class="ab-palco" id="palco">
+    <div class="ab-coluna" id="stepWrap"></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  const LOC = 'bd_nosql_consultoria';
+  const user = new URLSearchParams(location.search).get('user') || 'anon';
+  const PROGRESS_KEY = `${LOC}_progress_${user}`;
+  const STEP_KEY = `${LOC}_step_${user}`;
+
+  const ARQUITETURAS = ['Relacional', 'Chave-valor', 'Documento', 'Colunar', 'Grafo'];
+
+  // Cada cliente: arquitetura certa + 3 motivos (1 certo). A dica aponta o
+  // raciocínio, nunca a resposta.
+  const CASOS = [
+    {
+      id: 'sessao', avatar: '🛒', cliente: 'LojaTop — carrinho e sessão',
+      cenario: 'A LojaTop tem 2 milhões de acessos por dia. Cada visitante tem um <b>carrinho</b> e um <b>login</b> que precisam ser lidos em milissegundos, sempre pelo <b>id da sessão</b>. Se o visitante some por 2 horas, o carrinho pode ser <b>apagado sozinho</b>.',
+      certa: 'Chave-valor',
+      motivos: [
+        { t: 'O acesso é sempre pela chave (a sessão) e o dado expira sozinho', ok: true },
+        { t: 'Carrinho precisa de relatórios com JOIN entre clientes e produtos' },
+        { t: 'Bancos NoSQL são sempre mais rápidos que os relacionais em qualquer caso' },
+      ],
+      dica: 'Repare em como o dado é buscado (sempre pelo mesmo identificador) e no que acontece com ele depois de 2 horas.',
+    },
+    {
+      id: 'banco', avatar: '🏦', cliente: 'Banco Pix Já — transferências',
+      cenario: 'O Banco Pix Já faz <b>transferências</b> entre contas. Em cada uma, o débito numa conta e o crédito na outra precisam acontecer <b>juntos ou nenhum</b>, e o saldo mostrado tem que ser <b>sempre o atual</b>.',
+      certa: 'Relacional',
+      motivos: [
+        { t: 'Consistência eventual basta, porque o saldo acerta sozinho depois' },
+        { t: 'Transações ACID garantem que débito e crédito aconteçam juntos', ok: true },
+        { t: 'Cada conta tem campos muito diferentes das outras contas' },
+      ],
+      dica: 'Qual conjunto de garantias da aula trata várias operações como uma unidade só e não aceita saldo desatualizado?',
+    },
+    {
+      id: 'catalogo', avatar: '👕', cliente: 'MegaShop — catálogo de produtos',
+      cenario: 'O catálogo da MegaShop tem camisetas (tamanho, cor), notebooks (memória, processador, tela) e livros (autor, páginas). Toda semana entra um tipo de produto <b>com campos novos</b>, e a página do produto mostra <b>tudo de uma vez</b>.',
+      certa: 'Documento',
+      motivos: [
+        { t: 'Os produtos precisam de uma aresta ligando cada um aos parecidos' },
+        { t: 'Um esquema fixo evita que alguém cadastre campos errados' },
+        { t: 'Cada produto tem seus próprios campos, sem alterar um esquema', ok: true },
+      ],
+      dica: 'O problema aqui é a variedade de campos entre os produtos. Qual família aceita registros com formatos diferentes na mesma coleção?',
+    },
+    {
+      id: 'amigos', avatar: '🤝', cliente: 'ConectaAí — pessoas que você talvez conheça',
+      cenario: 'A rede social ConectaAí quer sugerir <b>amigos de amigos</b> e pessoas que <b>curtem as mesmas páginas</b>, olhando até <b>3 níveis</b> de ligação. Hoje a consulta faz JOIN em cima de JOIN e demora vários segundos.',
+      certa: 'Grafo',
+      motivos: [
+        { t: 'Percorrer relações em vários níveis é a operação principal', ok: true },
+        { t: 'A lista de amigos de cada pessoa cabe numa única chave' },
+        { t: 'As amizades são gravadas em massa, a cada segundo, por sensores' },
+      ],
+      dica: 'O valor da consulta está nas ligações entre as pessoas, não nas pessoas em si. Que modelo guarda a ligação como dado?',
+    },
+    {
+      id: 'sensores', avatar: '🌡️', cliente: 'AgroSensor — leituras de campo',
+      cenario: 'A AgroSensor tem <b>200 mil sensores</b> em fazendas, cada um mandando temperatura e umidade <b>a cada 5 segundos</b>. As consultas são sempre "leituras do sensor X entre as datas A e B". O volume cresce sem parar.',
+      certa: 'Colunar',
+      motivos: [
+        { t: 'Cada leitura tem campos diferentes e é lida como documento inteiro' },
+        { t: 'Escrita massiva distribuída, lida por partição (sensor) e tempo', ok: true },
+        { t: 'As leituras precisam de transações entre vários sensores ao mesmo tempo' },
+      ],
+      dica: 'Pense em quantas gravações por segundo são e em como a consulta sempre começa: por qual campo e com qual ordenação?',
+    },
+    {
+      id: 'rh', avatar: '📋', cliente: 'RH Fácil — folha de pagamento',
+      cenario: 'O RH Fácil gera a folha de pagamento e relatórios que cruzam <b>funcionários, cargos, departamentos e descontos</b>. Os dados têm formato estável há anos e os relatórios mudam toda hora.',
+      certa: 'Relacional',
+      motivos: [
+        { t: 'O volume é tão grande que só cabe distribuído em milhares de servidores' },
+        { t: 'Cada funcionário tem um formato de dados diferente dos outros' },
+        { t: 'Dados estruturados e estáveis, cruzados em relatórios com JOIN', ok: true },
+      ],
+      dica: 'NoSQL não é sempre a resposta. Os dados aqui mudam de formato? E as consultas: cruzam várias entidades?',
+    },
+    {
+      id: 'blog', avatar: '📰', cliente: 'Blog do Dev — posts e comentários',
+      cenario: 'O Blog do Dev mostra cada <b>post</b> com seu texto, tags e os <b>comentários</b> logo abaixo, tudo carregado de uma vez. Um post raramente passa de 100 comentários.',
+      certa: 'Documento',
+      motivos: [
+        { t: 'O post e seus comentários são lidos juntos, num só registro', ok: true },
+        { t: 'Os comentários precisam expirar sozinhos depois de 30 minutos' },
+        { t: 'Os comentários formam uma rede de relações em vários níveis' },
+      ],
+      dica: 'Lembre da regra "o que é lido junto, fica junto". Os comentários crescem sem limite ou ficam num tamanho controlado?',
+    },
+    {
+      id: 'fraude', avatar: '🕵️', cliente: 'PagSeguro+ — detecção de fraude',
+      cenario: 'A PagSeguro+ descobriu que golpistas criam várias contas que <b>compartilham</b> o mesmo celular, cartão ou endereço. Ela quer achar esses <b>anéis de contas ligadas</b> antes de aprovar um pagamento.',
+      certa: 'Grafo',
+      motivos: [
+        { t: 'Cada pagamento é buscado sempre pelo seu número, com expiração' },
+        { t: 'A fraude aparece como um padrão de conexões entre contas', ok: true },
+        { t: 'Os pagamentos têm campos muito diferentes entre si' },
+      ],
+      dica: 'O golpe não está numa conta isolada, e sim no que as contas têm em comum. Qual modelo encontra esse padrão?',
+    },
+  ];
+
+  const TOTAL = CASOS.length + 2; // abertura + casos + fechamento
+  const stepWrap = document.getElementById('stepWrap');
+
+  function lerResolvidos() {
+    try { const a = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function salvarResolvidos(a) { try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(a)); } catch (e) {} }
+  function lerEtapa() {
+    try { const n = parseInt(localStorage.getItem(STEP_KEY), 10); return n >= 0 && n < TOTAL ? n : 0; } catch (e) { return 0; }
+  }
+  function salvarEtapa(n) { try { localStorage.setItem(STEP_KEY, String(n)); } catch (e) {} }
+  function reportar(rotulo) {
+    if (typeof window.reportActivity === 'function') {
+      window.reportActivity(LOC, rotulo, { step: atual + 1, total: TOTAL, resolvidos: lerResolvidos().length });
+    }
+  }
+
+  let atual = lerEtapa();
+  let direcao = 1;
+
+  function nav(voltar, avancar) {
+    return `
+      <div class="ab-nav">
+        ${voltar ? '<button class="btn btn-secondary" id="btnBack">← Voltar</button>' : '<span></span>'}
+        <span class="ab-nav-dica">use ← → do teclado</span>
+        ${avancar ? '<button class="btn" id="btnNext">Próximo →</button>' : '<span></span>'}
+      </div>`;
+  }
+  function irPara(i) {
+    direcao = i < atual ? -1 : 1;
+    atual = Math.max(0, Math.min(i, TOTAL - 1));
+    salvarEtapa(atual);
+    render();
+  }
+  function ligarNav() {
+    const b = document.getElementById('btnBack');
+    if (b) b.addEventListener('click', () => irPara(atual - 1));
+    const n = document.getElementById('btnNext');
+    if (n) n.addEventListener('click', () => irPara(atual + 1));
+    document.getElementById('palco').scrollTop = 0;
+    window.AulaBase.transicao(stepWrap.querySelector('.ab-cartao'), direcao);
+  }
+
+  function placar() {
+    const feitos = lerResolvidos();
+    return `<div class="cs-placar">${CASOS.map((c, i) => `<span class="${feitos.includes(c.id) ? 'ok' : ''}">${feitos.includes(c.id) ? '✔' : i + 1} ${c.avatar}</span>`).join('')}</div>`;
+  }
+
+  function render() {
+    document.getElementById('lblStepNum').textContent = atual + 1;
+    document.getElementById('lblStepTotal').textContent = TOTAL;
+    document.getElementById('progressFill').style.width = Math.round((lerResolvidos().length / CASOS.length) * 100) + '%';
+
+    if (atual === 0) {
+      reportar('Consultoria — Abertura');
+      stepWrap.innerHTML = `
+        <article class="ab-cartao">
+          <div class="ab-cartao-etapa">Etapa 1 de ${TOTAL}</div>
+          <h2>Você é consultor(a) de banco de dados</h2>
+          <div class="ab-conteudo">
+            <p>Oito empresas pediram ajuda para escolher o banco de dados de uma parte do sistema. Para cada cliente, você vai:</p>
+            <ol>
+              <li>Ler o cenário com atenção (os detalhes em <b>negrito</b> importam)</li>
+              <li>Escolher a <b>arquitetura</b>: relacional, chave-valor, documento, colunar ou grafo</li>
+              <li>Escolher o <b>motivo</b> técnico que justifica a escolha</li>
+            </ol>
+            <blockquote>Os dois precisam estar certos. Se errar, você recebe uma dica e pode tentar de novo. Tempo sugerido: <b>20 minutos</b>.</blockquote>
+          </div>
+          ${placar()}
+        </article>
+        ${nav(false, true)}`;
+      ligarNav();
+      return;
+    }
+
+    if (atual === TOTAL - 1) {
+      const feitos = lerResolvidos().length;
+      reportar(`Consultoria — Fechamento (${feitos}/${CASOS.length})`);
+      const pronto = feitos >= CASOS.length;
+      stepWrap.innerHTML = `
+        <article class="ab-cartao ${pronto ? 'ab-concluida' : ''}">
+          <div class="ab-cartao-etapa">Etapa ${TOTAL} de ${TOTAL}</div>
+          <h2>${pronto ? '✅ Consultoria concluída!' : 'Ainda faltam clientes'}</h2>
+          <div class="ab-conteudo">
+            ${pronto
+              ? `<p>Você atendeu os ${CASOS.length} clientes. Repare que <b>dois deles continuaram no relacional</b>: escolher a arquitetura é olhar para a aplicação, não para a moda.</p>
+                 <p>Próximo passo: o módulo <b>"Prática — Do Relacional ao Documento"</b>, onde você vai modelar os dados em JSON.</p>`
+              : `<p>Você resolveu ${feitos} de ${CASOS.length}. Volte aos clientes que ainda não têm ✔.</p>`}
+          </div>
+          ${placar()}
+        </article>
+        ${nav(true, false)}`;
+      ligarNav();
+      return;
+    }
+
+    renderCaso(CASOS[atual - 1]);
+  }
+
+  function renderCaso(caso) {
+    const resolvido = lerResolvidos().includes(caso.id);
+    reportar(`Consultoria — ${caso.cliente}${resolvido ? ' (resolvido)' : ''}`);
+    stepWrap.innerHTML = `
+      <article class="ab-cartao">
+        <div class="ab-cartao-etapa">Cliente ${atual} de ${CASOS.length}</div>
+        <h2>${caso.cliente}</h2>
+        <div class="ab-conteudo">
+          <div class="cs-cliente"><div class="cs-avatar">${caso.avatar}</div><p>${caso.cenario}</p></div>
+        </div>
+        <div class="cs-grupo">1. Qual arquitetura você recomenda?</div>
+        <div class="cs-opcoes" id="csArq">
+          ${ARQUITETURAS.map(a => `<label class="cs-op"><input type="radio" name="arq" value="${a}" ${resolvido && a === caso.certa ? 'checked' : ''}>${a}</label>`).join('')}
+        </div>
+        <div class="cs-grupo">2. Qual é o motivo técnico?</div>
+        <div class="cs-opcoes cs-motivos" id="csMot">
+          ${caso.motivos.map((m, i) => `<label class="cs-op"><input type="radio" name="mot" value="${i}" ${resolvido && m.ok ? 'checked' : ''}>${m.t}</label>`).join('')}
+        </div>
+        <div class="cs-acoes">
+          <button class="btn" id="btnVerificar">${resolvido ? '✔ Resolvido' : 'Enviar recomendação'}</button>
+          <div class="ab-msg" id="csMsg" style="display:none;"></div>
+        </div>
+      </article>
+      ${nav(true, true)}`;
+    ligarNav();
+    const btn = document.getElementById('btnVerificar');
+    const msg = document.getElementById('csMsg');
+    if (resolvido) { btn.disabled = true; return; }
+    btn.addEventListener('click', () => {
+      const arq = (stepWrap.querySelector('input[name="arq"]:checked') || {}).value;
+      const mot = (stepWrap.querySelector('input[name="mot"]:checked') || {}).value;
+      msg.style.display = 'block';
+      if (!arq || mot === undefined) {
+        msg.className = 'ab-msg erro';
+        msg.textContent = 'Escolha a arquitetura e o motivo antes de enviar.';
+        return;
+      }
+      const arqOk = arq === caso.certa;
+      const motOk = !!caso.motivos[parseInt(mot, 10)].ok;
+      if (arqOk && motOk) {
+        const feitos = lerResolvidos();
+        if (!feitos.includes(caso.id)) { feitos.push(caso.id); salvarResolvidos(feitos); }
+        reportar(`Consultoria — ${caso.cliente} (resolvido)`);
+        msg.className = 'ab-msg ok';
+        msg.textContent = '✅ Recomendação aprovada pelo cliente!';
+        btn.disabled = true;
+        btn.textContent = '✔ Resolvido';
+        document.getElementById('progressFill').style.width = Math.round((feitos.length / CASOS.length) * 100) + '%';
+        return;
+      }
+      msg.className = 'ab-msg erro';
+      msg.textContent = arqOk
+        ? '⚠️ A arquitetura está certa, mas esse motivo não se aplica a este cliente. Releia o cenário.'
+        : `❌ Ainda não. Dica: ${caso.dica}`;
+    });
+  }
+
+  window.generateGabaritoForGestao = function () {
+    return window.PortalGabarito.generate({
+      title: 'Banco de Dados — Consultoria de Arquitetura',
+      subtitle: 'Prática · Trilha Bancos de Dados Não Relacionais (NoSQL) · Turma Sistemas',
+      items: CASOS.map((c, i) => ({
+        number: i + 1,
+        title: c.cliente,
+        // Sem options/correctIndex de propósito: são 5 arquiteturas e o
+        // QuizRush só desenha 4 alternativas (ele ignora itens sem options).
+        prompt: `${c.cenario} Qual arquitetura você recomenda, e por quê?`,
+        answer: `${c.certa} — ${c.motivos.find(m => m.ok).t}`,
+      })),
+      fileName: 'bd-nosql-consultoria-gabarito.txt',
+    });
+  };
+
+  window.AulaBase.teclado({
+    proximo: () => { const b = document.getElementById('btnNext'); if (b) b.click(); },
+    anterior: () => { const b = document.getElementById('btnBack'); if (b) b.click(); },
+  });
+
+  render();
+})();
+</script>
+
+<script src="../../../shared/vlibras-widget.js"></script>
+</body>
+</html>

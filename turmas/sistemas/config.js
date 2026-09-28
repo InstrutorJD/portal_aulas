@@ -109,6 +109,69 @@ window.TURMA_CONFIG_SISTEMAS = {
               hasGabarito: true
             }
           ]
+        },
+        {
+          // Padrão novo de trilhas (docs/padrao-trilhas.md): teoria em .md
+          // (turmas/sistemas/aulas/bd-nosql-teoria.md) + práticas com o
+          // visual base. Plano de ensino: Aula 32 (05/10/2026), mínimo 1h —
+          // teoria ~30 min + consultoria ~20 min + modelagem ~25 min.
+          key: 'bd-nosql',
+          label: 'Bancos de Dados Não Relacionais (NoSQL)',
+          aula: 32, dataAula: '2026-10-05',
+          desc: 'Quando o relacional sofre para escalar, as 4 famílias NoSQL, o teorema CAP e como escolher a arquitetura certa para cada aplicação.',
+          capacidade: 'Distinguir arquitetura de banco de dados de acordo com aplicação.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — Bancos de Dados Não Relacionais',
+              desc: 'Limites do relacional, escala vertical × horizontal, chave-valor, documento, colunar, grafo, CAP e ACID × BASE.',
+              icon: '📖', src: 'atividades/bd-nosql-teoria.html', telaCheia: true,
+              progressKey: 'bd_nosql_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'consultoria', title: 'Prática — Consultoria de Arquitetura',
+              desc: 'Oito empresas pedem ajuda: escolha o banco certo (relacional ou uma família NoSQL) e o motivo técnico para cada uma.',
+              icon: '🧭', src: 'atividades/bd-nosql-consultoria.html', telaCheia: true,
+              progressKey: 'bd_nosql_consultoria_progress_', progressTotal: 8,
+              requires: 'teoria', hasGabarito: true
+            },
+            {
+              key: 'modelagem', title: 'Prática — Do Relacional ao Documento',
+              desc: 'Modele em JSON um pedido, um catálogo flexível, um carrinho chave-valor e um grafo de seguidores, com correção automática.',
+              icon: '🧩', src: 'atividades/bd-nosql-modelagem.html', telaCheia: true,
+              progressKey: 'bd_nosql_modelagem_progress_', progressTotal: 4,
+              requires: 'consultoria', hasGabarito: true
+            }
+          ]
+        },
+        {
+          // Plano de ensino: Aula 33 (19/10/2026), 1h, atividade prática no
+          // MongoDB (o plano cita Atlas/Compass; usamos só o Atlas, pelo
+          // navegador — nada de instalar programa nem abrir porta) —
+          // teoria curta ~15 min + roteiro ~45 min.
+          // A prática acontece fora do portal: checklist de desempenho
+          // prático + visto do professor (RoteiroSlides, professor-visto.js).
+          key: 'bd-mongodb',
+          label: 'MongoDB na Prática: Coleções e Documentos',
+          aula: 33, dataAula: '2026-10-19',
+          desc: 'Crie coleções e insira documentos JSON sem esquema fixo num banco MongoDB de verdade, no Atlas (gratuito, pelo navegador).',
+          capacidade: 'Distinguir arquitetura de banco de dados de acordo com aplicação.',
+          modules: [
+            {
+              key: 'teoria', title: 'Teoria — MongoDB na Prática',
+              desc: 'Coleção e documento, JSON × BSON, _id/ObjectId, esquema flexível, insertOne, find e updateOne com $set.',
+              icon: '📖', src: 'atividades/bd-mongodb-teoria.html', telaCheia: true,
+              progressKey: 'bd_mongodb_teoria_progress_', progressMode: 'flag',
+              hasGabarito: true
+            },
+            {
+              key: 'pratica', title: 'Prática — Catálogo da MegaShop no MongoDB',
+              desc: 'Roteiro no MongoDB Atlas, pelo navegador: banco megashop, coleção produtos, documentos com campos diferentes, buscas e atualização. Na última etapa, o professor confere o checklist e dá o visto.',
+              icon: '🍃', src: 'atividades/bd-mongodb-pratica.html', telaCheia: true,
+              progressKey: 'bd_mongodb_pratica_progress_', progressMode: 'flag',
+              requires: 'teoria', hasGabarito: true
+            }
+          ]
         }
         // A peça "FinancApp — Banco de Dados e RLS" ficava aqui; agora está
         // na trilha única do FinancApp, card "Projetos" (fim deste arquivo).
