@@ -260,7 +260,8 @@ window.SlidesMD = (function () {
   }
 
   // ---------- Apresentação ----------
-  const W = 1280, H = 720;
+  const W = 1280, H = 720; // tamanho de referência do desenho (ver fit)
+  const W_MIN_EM_PE = 900;
 
   // remoto (opcional): { client: () => clienteSupabase, url: 'https://…/controle.html' }
   // liga o passador de slides no celular (botão 📱 — ver ligarRemoto).
@@ -301,8 +302,19 @@ window.SlidesMD = (function () {
 
     try { root.dataset.theme = localStorage.getItem('sm_tema') || 'dark'; } catch (e) { root.dataset.theme = 'dark'; }
 
+    // O palco assume o FORMATO da tela: a escala é a que faz 1280×720
+    // caber, e o lado que sobra (tela 16:10, 4:3, ultrawide) vira palco a
+    // mais em vez de faixa vazia — o conteúdo é flex e se espalha sozinho.
+    // Tela em pé (celular): largura mínima de 900 (em vez de 1280), senão a
+    // letra ficaria pequena demais. --sm-h deixa imagem/código crescerem
+    // junto com a altura (ver slides-md.css).
     function fit() {
-      const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const s = vw < vh ? vw / W_MIN_EM_PE : Math.min(vw / W, vh / H);
+      const w = vw / s, h = vh / s;
+      stage.style.width = `${w}px`;
+      stage.style.height = `${h}px`;
+      stage.style.setProperty('--sm-h', `${h}px`);
       stage.style.transform = `translate(-50%, -50%) scale(${s})`;
     }
 
