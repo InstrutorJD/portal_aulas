@@ -159,7 +159,7 @@
   };
   const CURSOR_ORDER = ['default', 'seta', 'mira', 'espada', 'estrela', 'pata', 'caveira', 'fantasma', 'raio', 'pizza', 'foguete', 'varinha', 'cometa', 'sabre', 'carretel'];
 
-  const AVATAR_EMOJIS = ['👤','🧑‍💻','🎮','🐱','🐶','🦊','🐼','🐸','🦄','🤖','👾','🎲','🏆','⭐','🔥','💎','🌟','🎯','🚀','🛸','👽','🧙','🥷','🎃','😎','🤠','🥸','🐧','🦖','🍀'];
+  const AVATAR_EMOJIS = ['👤','🧑‍💻','🎮','🐱','🐶','🦊','🐼','🐸','🦄','🤖','👾','🎲','🏆','⭐','🔥','💎','🌟','🎯','🚀','🛸','👽','🧙','🥷','🎃','😎','🤠','🥸','🐧','🦉','🦖','🍀'];
   const BG_PATTERN_EMOJIS = ['🎮','💻','🕹️','📚','✨','🚀','🎲','🧩','⭐','🔧'];
   let bgEmojiLayoutCache = null; // posições/tamanhos sorteados uma vez por sessão — não recalcula a cada toggle, pra não "piscar"/mudar layout
 
@@ -541,6 +541,13 @@
                     <div class="toggle-row-desc">Pinta de vermelho as notas baixas desta tabela.</div>
                   </div>
                   <button class="toggle-switch" id="toggleNotasBaixas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
+                </div>
+                <div class="toggle-row" style="max-width:420px; border-bottom:none;">
+                  <div>
+                    <div class="toggle-row-label">Destacar notas acima de 8,0</div>
+                    <div class="toggle-row-desc">Pinta de verde as notas altas desta tabela.</div>
+                  </div>
+                  <button class="toggle-switch" id="toggleNotasAltas" role="switch" aria-checked="false"><span class="toggle-switch-knob"></span></button>
                 </div>
                 <div style="overflow-x:auto;">
                   <table class="audit-table" id="notasTabela">
@@ -2571,6 +2578,12 @@
   function destacarNotasBaixasOn() {
     try { return localStorage.getItem(NOTAS_BAIXAS_KEY) !== '0'; } catch (e) { return true; }
   }
+  // "Destacar notas acima de 8,0": o mesmo, do outro lado — pro professor
+  // achar rápido quem está indo bem. Também ligada por padrão.
+  const NOTAS_ALTAS_KEY = 'pf_destacar_notas_altas';
+  function destacarNotasAltasOn() {
+    try { return localStorage.getItem(NOTAS_ALTAS_KEY) !== '0'; } catch (e) { return true; }
+  }
 
   // Pinta (ou despinta) cada nota da tabela: matérias, Prova/Nota 3
   // automáticas e os campos digitáveis. Ignora célula sem nota de verdade
@@ -2578,7 +2591,9 @@
   // vazio) — ali o 0/— não é nota baixa, é falta de nota.
   function pintarNotasBaixas() {
     const on = destacarNotasBaixasOn();
+    const onAltas = destacarNotasAltasOn();
     setToggleState('toggleNotasBaixas', on);
+    setToggleState('toggleNotasAltas', onAltas);
     document.querySelectorAll('#notasBody .materia-grade-cell, #notasBody .prova-cell, #notasBody .nota3-cell, #notasBody .nota-input').forEach(el => {
       let v = NaN;
       if (el.classList.contains('nota-input')) {
@@ -2592,6 +2607,7 @@
         v = parseFloat(el.dataset.nota2 ?? el.dataset.nota3);
       }
       el.classList.toggle('nota-baixa', on && v < 6);
+      el.classList.toggle('nota-alta', onAltas && v > 8);
     });
   }
 
@@ -3972,6 +3988,10 @@
     setToggleState('toggleNotasBaixas', destacarNotasBaixasOn());
     document.getElementById('toggleNotasBaixas').addEventListener('click', () => {
       try { localStorage.setItem(NOTAS_BAIXAS_KEY, destacarNotasBaixasOn() ? '0' : '1'); } catch (e) {}
+      pintarNotasBaixas();
+    });
+    document.getElementById('toggleNotasAltas').addEventListener('click', () => {
+      try { localStorage.setItem(NOTAS_ALTAS_KEY, destacarNotasAltasOn() ? '0' : '1'); } catch (e) {}
       pintarNotasBaixas();
     });
     document.getElementById('toggleNotasManuais').addEventListener('click', () => setEdicaoNotasManuais(!edicaoNotasManuais));

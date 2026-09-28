@@ -329,6 +329,10 @@ button.btn-secondary:hover{
 /* Lançar Notas com "Destacar notas abaixo de 6,0" ligado (pintarNotasBaixas). */
 .nota-baixa, .nota-baixa .materia-grade-value{ color:var(--blood-bright); font-weight:700; }
 input.nota-input.nota-baixa{ border-color:var(--blood-bright); }
+/* Nota acima de 8,0 (chave "Destacar notas acima de 8,0" em Lançar Notas) —
+   verde fixo, não o --green do tema, que em algumas turmas nem é verde. */
+.nota-alta, .nota-alta .materia-grade-value{ color:#2ecc71; font-weight:700; }
+input.nota-input.nota-alta{ border-color:#2ecc71; }
 
 /* Chamada (Gestão): botões de ação, resumo e a pílula "Faltou" — o
    checkbox continua um <input> de verdade (acessível, clicável), só
