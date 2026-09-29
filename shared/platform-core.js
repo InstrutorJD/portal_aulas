@@ -625,7 +625,7 @@
 
                 <div class="so-professor">
                   <h3 class="gestao-subhead">Relatório por Aluno</h3>
-                  <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Tempo no portal nos últimos 15 dias, atividades liberadas que ficaram por fazer e tempo em cada atividade comparado com os colegas.</p>
+                  <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Tempo no portal nos últimos 15 dias e atividades liberadas que ficaram por fazer.</p>
                   <div class="field-row" style="margin-bottom:10px;">
                     <div class="relatorio-aluno-campo">
                       <label class="field-label" for="relatorioAlunoSelect">Aluno</label>
@@ -4028,29 +4028,24 @@
   }
 
   // ---------- Relatório por Aluno (Gestão → Relatórios, só professor) ----------
-  // Três partes, pra UM aluno escolhido no <select>:
+  // Duas partes, pra UM aluno escolhido no <select>:
   //  1. tempo no portal nos últimos 15 dias (total + por dia), com a média
   //     da turma no mesmo período;
   //  2. atividades LIBERADAS que ele não concluiu — só as trilhas do
   //     bimestre atual que já chegaram no "Liberar em" (trilhasAtuaisParaAluno);
-  //     trilha futura não é pendência;
-  //  3. tempo em cada uma dessas atividades × média/mediana dos colegas que
-  //     têm tempo registrado nela.
+  //     trilha futura não é pendência.
+  // (O "tempo em cada atividade × colegas" foi tirado a pedido do professor:
+  // deixava o relatório grande demais. student_time_log continua guardando
+  // o tempo por local, se um dia voltar.)
   // O tempo vem de student_time_log (sql/student-time-log.sql): um gatilho
   // no banco soma, a cada heartbeat de shared/activity-tracker.js, os
   // segundos em que o aluno estava ATIVO em cada local, por dia. Sem
-  // histórico antes desse SQL rodar. O `location` dentro de uma atividade é
-  // o ACTIVITY_LOCATION dela, que é o progressKey do módulo sem o
-  // "_progress_" do final (mesma convenção de shared/progress-sync.js).
+  // histórico antes desse SQL rodar.
   const RELATORIO_ALUNO_DIAS = 15;
   let relatorioAlunoUltimo = null; // { nome, html } — usado pelo botão Imprimir / PDF
 
   function escRelAluno(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  }
-
-  function moduleActivityLocation(mod) {
-    return mod && mod.progressKey ? String(mod.progressKey).replace(/_progress_$/, '') : null;
   }
 
   // 'YYYY-MM-DD' de `offset` dias atrás, no fuso local (igual todayStr).
@@ -4144,13 +4139,7 @@
       const desde15 = diaStrAtras(RELATORIO_ALUNO_DIAS - 1);
       const grupos = atividadesLiberadasParaAluno(email);
 
-      // Pra comparar o tempo por atividade, busca desde o início da trilha
-      // mais antiga do bimestre atual (o tempo numa atividade não cabe em
-      // 15 dias); se alguma trilha não tem janela, busca tudo.
-      const inicios = grupos.map(g => trilhaWindow(g.trilha).inicio);
-      const desde = inicios.some(i => !i) ? null : [desde15, ...inicios].sort()[0];
-
-      const [progressRes, timeRes] = await Promise.all([fetchTurmaProgressRows(), fetchTurmaTimeLog(desde)]);
+      const [progressRes, timeRes] = await Promise.all([fetchTurmaProgressRows(), fetchTurmaTimeLog(desde15)]);
       const progressRows = progressRes.data || [];
       const timeRows = timeRes.data || [];
       const tempoIndisponivel = !!timeRes.error;
@@ -4232,52 +4221,8 @@
         <p class="rel-aluno-nota">${totalPendentes} de ${totalAtividades} atividade(s) já liberadas neste bimestre não foram concluídas. Trilhas que ainda não foram liberadas não entram.</p>
         ${pendenciasHtml}`;
 
-      // ---- 3. Tempo por atividade × colegas ----
-      const segPorAlunoLocal = {}; // location -> { email: segundos }
-      timeRows.forEach(r => {
-        segPorAlunoLocal[r.location] = segPorAlunoLocal[r.location] || {};
-        segPorAlunoLocal[r.location][r.student_email] = (segPorAlunoLocal[r.location][r.student_email] || 0) + (r.seconds || 0);
-      });
-      const turmaEmails = new Set(turmaStudents().map(u => u.email));
-
-      const linhasComparacao = grupos.flatMap(g => g.mods.map(mod => {
-        const loc = moduleActivityLocation(mod);
-        const mapa = (loc && segPorAlunoLocal[loc]) || {};
-        const meu = mapa[email] || 0;
-        const colegas = Object.entries(mapa).filter(([e, s]) => e !== email && turmaEmails.has(e) && s > 0).map(([, s]) => s);
-        const media = colegas.length ? colegas.reduce((a, b) => a + b, 0) / colegas.length : 0;
-        const med = mediana(colegas);
-        let comp, cls;
-        if (!meu && !colegas.length) { comp = 'Sem dados'; cls = 'rel-aluno-dim'; }
-        else if (!meu) { comp = 'Sem tempo registrado'; cls = 'rel-aluno-ruim'; }
-        else if (colegas.length < 2) { comp = 'Poucos colegas p/ comparar'; cls = 'rel-aluno-dim'; }
-        else if (meu >= med * 2) { comp = `⬆️ Muito acima (${(meu / med).toFixed(1)}×)`; cls = 'rel-aluno-meio'; }
-        else if (meu <= med * 0.5) { comp = `⬇️ Muito abaixo (${(meu / med).toFixed(1)}×)`; cls = 'rel-aluno-meio'; }
-        else { comp = '≈ Dentro do normal'; cls = 'rel-aluno-bom'; }
-        const sit = situacaoModulo(rowDe(g.trilha.key, mod.key));
-        return { temDados: !!(meu || colegas.length), html: `<tr>
-          <td class="rel-aluno-ativ">${escRelAluno(mod.title || mod.key)}<div class="rel-aluno-dim">${escRelAluno(g.trilha.label)} · ${sit.feito ? '✅' : '⏳'} ${sit.texto}</div></td>
-          <td data-label="Aluno">${formatTempoLogado(meu)}</td>
-          <td data-label="Média">${colegas.length ? formatTempoLogado(Math.round(media)) : '—'}</td>
-          <td data-label="Mediana">${colegas.length ? formatTempoLogado(Math.round(med)) : '—'}</td>
-          <td data-label="Comparação" class="rel-aluno-comp ${cls}">${comp}${colegas.length ? `<div class="rel-aluno-dim">${colegas.length} colega(s)</div>` : ''}</td>
-        </tr>` };
-      }))
-        // Atividades com tempo registrado (do aluno ou dos colegas) primeiro;
-        // as "Sem dados" vão pro fim, na ordem do config.js.
-        .sort((a, b) => Number(b.temDados) - Number(a.temDados))
-        .map(l => l.html).join('');
-
-      const parte3 = tempoIndisponivel ? '' : `
-        <h4 class="rel-aluno-titulo">📊 Tempo em cada atividade × colegas</h4>
-        <p class="rel-aluno-nota">Compara com os colegas que têm tempo registrado na mesma atividade. "Muito acima/abaixo" = o dobro/metade da mediana ou mais.</p>
-        ${linhasComparacao ? `<div class="rel-aluno-scroll"><table class="audit-table rel-aluno-tabela">
-          <thead><tr><th>Atividade</th><th>Aluno</th><th>Média</th><th>Mediana</th><th>Comparação</th></tr></thead>
-          <tbody>${linhasComparacao}</tbody>
-        </table></div>` : `<p class="rel-aluno-nota">Nenhuma atividade liberada neste bimestre.</p>`}`;
-
       const cabecalho = `<p class="rel-aluno-cabecalho"><strong>${escRelAluno(aluno.nome)}</strong> · ${escRelAluno(cfg.label)} · gerado em ${new Date().toLocaleString('pt-BR')}</p>`;
-      const html = `<div class="rel-aluno">${cabecalho}${parte1}${parte2}${parte3}</div>`;
+      const html = `<div class="rel-aluno">${cabecalho}${parte1}${parte2}</div>`;
       container.innerHTML = html;
       relatorioAlunoUltimo = { nome: aluno.nome, html };
       btnPrint.disabled = false;
@@ -4316,8 +4261,6 @@
   .rel-aluno-lista { margin: 2px 0 4px 8px; }
   .rel-aluno-dim { color: #666; font-size: 10px; }
   .rel-aluno-ruim { color: #b3261e; font-weight: bold; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #999; padding: 3px 4px; text-align: left; vertical-align: top; }
 </style></head>
 <body>${relatorioAlunoUltimo.html}</body></html>`);
     printWin.document.close();
