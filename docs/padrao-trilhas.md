@@ -247,7 +247,8 @@ Igual ao de hoje (ver `README.md`, "Hierarquia Matéria → Trilha → Módulo")
   trilha vem de uma linha do plano de ensino ("Aula 32 - 05/10/2026"),
   registre o número e a data. Aparecem no cabeçalho da trilha e na Gestão →
   "Liberação por Trilha" (com o botão "Usar DD/MM", que preenche o
-  "Liberar em" com essa data).
+  "Liberar em" com essa data). **Trilha com `dataAula` fica escondida do
+  aluno (e fora das contagens) até o professor preencher o "Liberar em".**
 - **Trilha compartilhada entre turmas** (mesma aula no plano das duas): crie os
   arquivos numa turma só (ex.: `turmas/sistemas/`) e, no `config.js` da outra,
   registre a mesma trilha com `src: '../sistemas/atividades/...'`. Ver

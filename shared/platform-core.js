@@ -1043,11 +1043,22 @@
   // "Liberar em" (trilhaLiberarEmCache) adia o INÍCIO pra um dia dentro do
   // bimestre — vale a data mais tarde entre as duas, então a trilha não
   // fica disponível o bimestre inteiro e o aluno não adianta os colegas.
+  //
+  // Trilha vinda do plano de ensino (tem `dataAula` no config.js, ou
+  // `exigeLiberacao: true`) é diferente: ela NÃO nasce visível. Enquanto o
+  // professor não preencher o "Liberar em" dela, a janela começa em
+  // AGUARDANDO_LIBERACAO (um dia que nunca chega) — fica "futura": o aluno
+  // não vê, não conta em %/ranking/Perfil/desbloqueio dos jogos, e o
+  // professor continua vendo para revisar.
+  const AGUARDANDO_LIBERACAO = '9999-12-31';
+  function exigeLiberacao(trilha) {
+    return !!(trilha && (trilha.exigeLiberacao === true || (trilha.dataAula && trilha.exigeLiberacao !== false)));
+  }
   function trilhaWindow(trilha) {
     const bimestreNum = trilhaBimestreCache[trilha.key];
     const b = bimestreNum && bimestreDatesCache[bimestreNum];
     const inicioBimestre = (b && b.inicio) || null;
-    const liberarEm = trilhaLiberarEmCache[trilha.key] || null;
+    const liberarEm = trilhaLiberarEmCache[trilha.key] || (exigeLiberacao(trilha) ? AGUARDANDO_LIBERACAO : null);
     const inicio = [inicioBimestre, liberarEm].filter(Boolean).sort().pop() || null;
     return { inicio, fim: (b && b.fim) || null };
   }
@@ -1807,8 +1818,10 @@
   // aluno; quem vê isso é o trilhaStatus() que cada aluno usa pra si).
   // liberarEm ("Liberar em", opcional) adia o início pra um dia dentro do
   // bimestre — mesma regra de trilhaWindow().
-  function trilhaBimestreStatusLabel(num, liberarEm) {
+  function trilhaBimestreStatusLabel(num, liberarEm, trilha) {
     const hoje = todayStr();
+    // Trilha do plano de ensino sem "Liberar em": escondida do aluno (ver trilhaWindow).
+    if (!liberarEm && exigeLiberacao(trilha)) return { text: '⏸ Aguardando data de liberação (aluno não vê)', color: 'var(--yellow)' };
     if (!num && !liberarEm) return { text: 'Sempre visível', color: 'var(--ink-dim)' };
     const b = (num && bimestreDatesCache[num]) || {};
     if (b.fim && b.fim < hoje) return { text: 'Encerrada — sumiu da Aulas', color: 'var(--blood-bright)' };
@@ -1835,7 +1848,7 @@
   }
 
   function trilhaBimestreRowHtml({ materiaLabel, trilha }, selected, liberarEm) {
-    const status = trilhaBimestreStatusLabel(selected, liberarEm);
+    const status = trilhaBimestreStatusLabel(selected, liberarEm, trilha);
     const aulaPlano = rotuloAulaPlano(trilha);
     // "Usar DD/MM" preenche o "Liberar em" com a data da aula do plano.
     const usarData = trilha.dataAula && trilha.dataAula !== liberarEm
@@ -1932,7 +1945,8 @@
         const tr = inp.closest('tr');
         const sel = tr.querySelector('.trilha-bimestre-input');
         const num = sel && sel.value ? parseInt(sel.value, 10) : null;
-        const status = trilhaBimestreStatusLabel(num, inp.value || null);
+        const trilhaDaLinha = (pares.find(p => p.trilha.key === tr.getAttribute('data-trilha')) || {}).trilha;
+        const status = trilhaBimestreStatusLabel(num, inp.value || null, trilhaDaLinha);
         const span = tr.querySelector('.trilha-bimestre-status');
         if (span) { span.textContent = status.text; span.style.color = status.color; }
       });

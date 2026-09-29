@@ -61,6 +61,10 @@ window.QuizRushEngine = (function () {
   // "Liberar em" ainda no futuro. Trilha
   // sem bimestre atribuído (ou bimestre sem datas) nunca entra aqui. O
   // QuizRush e a Corrida do Bug só oferecem módulos das trilhas atuais.
+  //
+  // `fora.liberadas` guarda as trilhas com "Liberar em" preenchido: trilha
+  // do plano de ensino (dataAula no config.js) sem essa data ainda não foi
+  // liberada pelo professor e também fica de fora (ver foraDoPeriodoTem).
   async function trilhasForaDoPeriodo(turma) {
     const fora = new Set();
     if (!sb || !turma) return fora;
@@ -73,6 +77,7 @@ window.QuizRushEngine = (function () {
       const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const datas = {};
       (datasRes.data || []).forEach(r => { datas[r.bimestre] = r; });
+      fora.liberadas = new Set((atribRes.data || []).filter(r => r.liberar_em).map(r => r.trilha_key));
       (atribRes.data || []).forEach(r => {
         const b = datas[r.bimestre];
         if (b && ((b.inicio && b.inicio > hoje) || (b.fim && b.fim < hoje))) fora.add(r.trilha_key);
@@ -88,11 +93,18 @@ window.QuizRushEngine = (function () {
   // Módulo") numa lista só, mantendo só os módulos com gabarito (só eles
   // expõem window.generateGabaritoForGestao, ver fetchModuleQuestions).
   // foraDoPeriodo (opcional, ver trilhasForaDoPeriodo): trilhas a pular.
+  // Mesma regra de exigeLiberacao() em shared/platform-core.js.
+  function foraDoPeriodoTem(foraDoPeriodo, trilha) {
+    if (!foraDoPeriodo) return false;
+    if (foraDoPeriodo.has(trilha.key)) return true;
+    const exige = trilha.exigeLiberacao === true || (trilha.dataAula && trilha.exigeLiberacao !== false);
+    return !!(exige && foraDoPeriodo.liberadas && !foraDoPeriodo.liberadas.has(trilha.key));
+  }
   function listGabaritoModules(cfgTurma, foraDoPeriodo) {
     const out = [];
     (cfgTurma.materias || []).forEach(materia => {
       (materia.trilhas || []).forEach(trilha => {
-        if (foraDoPeriodo && foraDoPeriodo.has(trilha.key)) return;
+        if (foraDoPeriodoTem(foraDoPeriodo, trilha)) return;
         (trilha.modules || []).forEach(mod => {
           if (mod.hasGabarito) {
             out.push({
