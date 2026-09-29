@@ -577,3 +577,44 @@ html[data-substituto] .so-substituto{ display:block; }
 html[data-substituto] .so-professor{ display:none !important; }
 html[data-substituto] .aluno-nome-link{ pointer-events:none; text-decoration:none; color:inherit; }
 .substituto-aviso{ font-size:12px; line-height:1.6; border-left:4px solid var(--yellow); }
+
+/* Relatório por Aluno (Gestão → Relatórios, gerarRelatorioAluno em platform-core.js).
+   A tabela larga rola dentro do próprio bloco — a página nunca rola na horizontal. */
+.relatorio-aluno-campo{ flex:1 1 220px; min-width:0; }
+.relatorio-aluno-campo select{ width:100%; max-width:360px; }
+.rel-aluno{ font-size:12px; min-width:0; }
+.rel-aluno-cabecalho{ margin:4px 0 6px; font-size:13px; overflow-wrap:anywhere; }
+.rel-aluno-titulo{ margin:16px 0 4px; font-size:13px; color:var(--ink); }
+.rel-aluno-nota{ font-size:11px; color:var(--ink-dim); margin:0 0 8px; }
+.rel-aluno-aviso{ font-size:12px; color:var(--yellow); margin:0 0 8px; }
+.rel-aluno-resumo{ display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; margin:6px 0 10px; }
+.rel-aluno-resumo div{ border:1px solid var(--line); border-radius:var(--radius-sm); padding:8px 10px; background:var(--panel2); }
+.rel-aluno-resumo strong{ display:block; font-size:16px; color:var(--ink); }
+.rel-aluno-resumo span{ font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; }
+.rel-aluno-dias{ display:flex; flex-direction:column; gap:3px; }
+.rel-aluno-dia{ display:grid; grid-template-columns:64px minmax(0, 1fr) 64px; gap:8px; align-items:center; font-size:11px; }
+.rel-aluno-dia-label{ color:var(--ink-dim); }
+.rel-aluno-dia-valor{ text-align:right; color:var(--ink); }
+.rel-aluno-barra{ display:block; height:8px; background:var(--panel2); border-radius:4px; overflow:hidden; }
+.rel-aluno-barra span{ display:block; height:100%; background:var(--green); border-radius:0 4px 4px 0; }
+.rel-aluno-materia{ margin:8px 0; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius-sm); }
+.rel-aluno-materia-nome{ font-weight:700; color:var(--ink); }
+.rel-aluno-trilha{ margin:6px 0 2px; color:var(--yellow); overflow-wrap:anywhere; }
+.rel-aluno-lista{ margin:0 0 4px; padding-left:18px; overflow-wrap:anywhere; }
+.rel-aluno-lista li{ margin:2px 0; }
+.rel-aluno-dim{ color:var(--ink-dim); font-size:10px; }
+.rel-aluno-ruim{ color:var(--blood-bright); font-weight:700; }
+.rel-aluno-meio{ color:var(--yellow); font-weight:700; }
+.rel-aluno-bom{ color:var(--green); }
+.rel-aluno-scroll{ max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.rel-aluno-tabela td{ vertical-align:top; }
+.rel-aluno-ativ{ min-width:140px; overflow-wrap:anywhere; }
+/* Celular: cada atividade vira um cartão (nome em cima, 3 tempos lado a
+   lado, comparação embaixo) em vez de 5 colunas espremidas. */
+@media (max-width: 600px){
+  .rel-aluno-tabela thead{ display:none; }
+  .rel-aluno-tabela tr{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); border-bottom:1px solid var(--line); padding:6px 0; }
+  .rel-aluno-tabela td{ border-bottom:none; padding:3px 6px; min-width:0; }
+  .rel-aluno-tabela td.rel-aluno-ativ, .rel-aluno-tabela td.rel-aluno-comp{ grid-column:1 / -1; min-width:0; }
+  .rel-aluno-tabela td[data-label]::before{ content:attr(data-label); display:block; font-size:9px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; font-weight:400; }
+}

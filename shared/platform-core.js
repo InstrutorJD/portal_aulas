@@ -622,6 +622,20 @@
                 <h3 class="gestao-subhead">Ranking da Turma</h3>
                 <button class="btn btn-secondary" id="btnGerarRankingTurma" style="margin-bottom:10px;">🏆 Gerar Ranking da Turma</button>
                 <div id="rankingTurmaResultado"></div>
+
+                <div class="so-professor">
+                  <h3 class="gestao-subhead">Relatório por Aluno</h3>
+                  <p style="font-size:11px; color:var(--ink-dim); margin:-4px 0 8px;">Tempo no portal nos últimos 15 dias, atividades liberadas que ficaram por fazer e tempo em cada atividade comparado com os colegas.</p>
+                  <div class="field-row" style="margin-bottom:10px;">
+                    <div class="relatorio-aluno-campo">
+                      <label class="field-label" for="relatorioAlunoSelect">Aluno</label>
+                      <select id="relatorioAlunoSelect"><option value="">— escolha o aluno —</option></select>
+                    </div>
+                    <button class="btn btn-secondary" id="btnGerarRelatorioAluno">🔎 Gerar Relatório do Aluno</button>
+                    <button class="btn btn-secondary" id="btnImprimirRelatorioAluno" disabled>🖨️ Imprimir / PDF</button>
+                  </div>
+                  <div id="relatorioAlunoResultado"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -4013,6 +4027,304 @@
     return '< 1min';
   }
 
+  // ---------- Relatório por Aluno (Gestão → Relatórios, só professor) ----------
+  // Três partes, pra UM aluno escolhido no <select>:
+  //  1. tempo no portal nos últimos 15 dias (total + por dia), com a média
+  //     da turma no mesmo período;
+  //  2. atividades LIBERADAS que ele não concluiu — só as trilhas do
+  //     bimestre atual que já chegaram no "Liberar em" (trilhasAtuaisParaAluno);
+  //     trilha futura não é pendência;
+  //  3. tempo em cada uma dessas atividades × média/mediana dos colegas que
+  //     têm tempo registrado nela.
+  // O tempo vem de student_time_log (sql/student-time-log.sql): um gatilho
+  // no banco soma, a cada heartbeat de shared/activity-tracker.js, os
+  // segundos em que o aluno estava ATIVO em cada local, por dia. Sem
+  // histórico antes desse SQL rodar. O `location` dentro de uma atividade é
+  // o ACTIVITY_LOCATION dela, que é o progressKey do módulo sem o
+  // "_progress_" do final (mesma convenção de shared/progress-sync.js).
+  const RELATORIO_ALUNO_DIAS = 15;
+  let relatorioAlunoUltimo = null; // { nome, html } — usado pelo botão Imprimir / PDF
+
+  function escRelAluno(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function moduleActivityLocation(mod) {
+    return mod && mod.progressKey ? String(mod.progressKey).replace(/_progress_$/, '') : null;
+  }
+
+  // 'YYYY-MM-DD' de `offset` dias atrás, no fuso local (igual todayStr).
+  function diaStrAtras(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function mediana(nums) {
+    if (!nums.length) return 0;
+    const s = nums.slice().sort((a, b) => a - b);
+    const meio = Math.floor(s.length / 2);
+    return s.length % 2 ? s[meio] : (s[meio - 1] + s[meio]) / 2;
+  }
+
+  function popularSelectRelatorioAluno() {
+    const sel = document.getElementById('relatorioAlunoSelect');
+    if (!sel) return;
+    const atual = sel.value;
+    sel.innerHTML = `<option value="">— escolha o aluno —</option>` +
+      turmaStudents().map(u => `<option value="${escRelAluno(u.email)}">${escRelAluno(u.nome)}</option>`).join('');
+    if (atual && turmaStudents().some(u => u.email === atual)) sel.value = atual;
+  }
+
+  // Linhas de student_time_log da turma (paginado, igual
+  // fetchTurmaProgressRows). Tabela ausente (SQL ainda não rodado) volta
+  // com `error` — o relatório mostra um aviso em vez de travar.
+  async function fetchTurmaTimeLog(desde) {
+    const PAGE = 1000;
+    const all = [];
+    for (let from = 0; ; from += PAGE) {
+      let q = sbClient.from('student_time_log').select('student_email, dia, location, seconds').eq('turma', cfg.id);
+      if (desde) q = q.gte('dia', desde);
+      const { data, error } = await q.order('student_email').order('dia').order('location').range(from, from + PAGE - 1);
+      if (error) return { data: all, error };
+      all.push(...(data || []));
+      if (!data || data.length < PAGE) return { data: all, error: null };
+    }
+  }
+
+  // Atividades (módulos de entrega) que o aluno já deveria ter disponíveis
+  // agora, agrupadas por matéria → trilha. Recuperação fica de fora (não
+  // está em cfg.materias, mesma regra de notas/ranking).
+  function atividadesLiberadasParaAluno(email) {
+    const grupos = [];
+    (cfg.materias || []).filter(m => isMateriaVisibleToEmail(m, email)).forEach(m => {
+      trilhasAtuaisParaAluno(m.trilhas || [], email).forEach(t => {
+        const mods = modulosDeEntrega(t);
+        if (mods.length) grupos.push({ materia: m, trilha: t, mods });
+      });
+    });
+    return grupos;
+  }
+
+  function situacaoModulo(row) {
+    if (!row) return { feito: false, texto: 'Não começou' };
+    const total = row.progress_total || 1;
+    const atual = row.progress_current || 0;
+    if (row.completed || atual >= total) return { feito: true, texto: 'Concluída' };
+    if (atual > 0) return { feito: false, texto: `Em andamento (${atual}/${total})` };
+    return { feito: false, texto: 'Não começou' };
+  }
+
+  function formatDiaCurto(diaStr) {
+    const [a, mth, d] = diaStr.split('-').map(Number);
+    const semana = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'][new Date(a, mth - 1, d).getDay()];
+    return `${semana} ${String(d).padStart(2, '0')}/${String(mth).padStart(2, '0')}`;
+  }
+
+  async function gerarRelatorioAluno() {
+    const container = document.getElementById('relatorioAlunoResultado');
+    const btn = document.getElementById('btnGerarRelatorioAluno');
+    const btnPrint = document.getElementById('btnImprimirRelatorioAluno');
+    const msg = t => `<p style="color:var(--ink-dim); font-size:12px;">${t}</p>`;
+    if (!sbClient) { container.innerHTML = msg('Configure o Supabase (shared/supabase-config.js) para usar este relatório.'); return; }
+    popularSelectRelatorioAluno();
+    const email = document.getElementById('relatorioAlunoSelect').value;
+    const aluno = turmaStudentByEmail(email);
+    if (!aluno) { container.innerHTML = msg('Escolha um aluno na lista.'); return; }
+
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Gerando...';
+    relatorioAlunoUltimo = null;
+    btnPrint.disabled = true;
+
+    try {
+      await calendarioCarregado;
+      const hoje = todayStr();
+      const desde15 = diaStrAtras(RELATORIO_ALUNO_DIAS - 1);
+      const grupos = atividadesLiberadasParaAluno(email);
+
+      // Pra comparar o tempo por atividade, busca desde o início da trilha
+      // mais antiga do bimestre atual (o tempo numa atividade não cabe em
+      // 15 dias); se alguma trilha não tem janela, busca tudo.
+      const inicios = grupos.map(g => trilhaWindow(g.trilha).inicio);
+      const desde = inicios.some(i => !i) ? null : [desde15, ...inicios].sort()[0];
+
+      const [progressRes, timeRes] = await Promise.all([fetchTurmaProgressRows(), fetchTurmaTimeLog(desde)]);
+      const progressRows = progressRes.data || [];
+      const timeRows = timeRes.data || [];
+      const tempoIndisponivel = !!timeRes.error;
+
+      // ---- 1. Tempo nos últimos 15 dias ----
+      const dias = Array.from({ length: RELATORIO_ALUNO_DIAS }, (_, i) => diaStrAtras(RELATORIO_ALUNO_DIAS - 1 - i));
+      const porDia = Object.fromEntries(dias.map(d => [d, 0]));
+      const total15PorAluno = {};
+      turmaStudents().forEach(u => { total15PorAluno[u.email] = 0; });
+      timeRows.forEach(r => {
+        if (r.dia < desde15 || r.dia > hoje) return;
+        if (r.student_email in total15PorAluno) total15PorAluno[r.student_email] += r.seconds || 0;
+        if (r.student_email === email && r.dia in porDia) porDia[r.dia] += r.seconds || 0;
+      });
+      const total15 = total15PorAluno[email] || 0;
+      const totaisTurma = Object.values(total15PorAluno);
+      const mediaTurma15 = totaisTurma.length ? totaisTurma.reduce((a, b) => a + b, 0) / totaisTurma.length : 0;
+      const diasComAcesso = dias.filter(d => porDia[d] > 0).length;
+      const maxDia = Math.max(1, ...dias.map(d => porDia[d]));
+
+      const diasHtml = dias.slice().reverse().map(d => {
+        const s = porDia[d];
+        const pct = Math.round((s / maxDia) * 100);
+        return `<div class="rel-aluno-dia" title="${formatDiaCurto(d)}: ${formatTempoLogado(s)}">
+          <span class="rel-aluno-dia-label">${formatDiaCurto(d)}</span>
+          <span class="rel-aluno-barra"><span style="width:${s ? Math.max(pct, 2) : 0}%"></span></span>
+          <span class="rel-aluno-dia-valor">${formatTempoLogado(s)}</span>
+        </div>`;
+      }).join('');
+
+      const avisoTempo = tempoIndisponivel
+        ? `<p class="rel-aluno-aviso">⚠️ O registro de tempo ainda não está disponível no Supabase (rode <code>sql/student-time-log.sql</code>). As pendências abaixo continuam valendo.</p>`
+        : `<p class="rel-aluno-nota">Tempo ativo = aba do portal aberta e visível, com o aluno mexendo no mouse/teclado nos últimos 2 minutos. O registro começou quando o recurso foi instalado — antes disso não há histórico.</p>`;
+
+      const parte1 = `
+        <h4 class="rel-aluno-titulo">⏱️ Tempo no portal — últimos ${RELATORIO_ALUNO_DIAS} dias</h4>
+        ${avisoTempo}
+        ${tempoIndisponivel ? '' : `
+        <div class="rel-aluno-resumo">
+          <div><strong>${formatTempoLogado(total15)}</strong><span>total do aluno</span></div>
+          <div><strong>${diasComAcesso}/${RELATORIO_ALUNO_DIAS}</strong><span>dias com acesso</span></div>
+          <div><strong>${formatTempoLogado(Math.round(mediaTurma15))}</strong><span>média da turma</span></div>
+          <div><strong>${formatTempoLogado(Math.round(mediana(totaisTurma)))}</strong><span>mediana da turma</span></div>
+        </div>
+        <div class="rel-aluno-dias">${diasHtml}</div>`}`;
+
+      // ---- 2. Atividades liberadas e não concluídas ----
+      const rowDe = (trilhaKey, modKey) => progressRows.find(r => r.student_email === email && r.trilha_key === trilhaKey && r.module_key === modKey);
+      let totalAtividades = 0, totalPendentes = 0;
+      const porMateria = new Map();
+      grupos.forEach(g => {
+        g.mods.forEach(mod => {
+          totalAtividades++;
+          const sit = situacaoModulo(rowDe(g.trilha.key, mod.key));
+          if (sit.feito) return;
+          totalPendentes++;
+          if (!porMateria.has(g.materia.key)) porMateria.set(g.materia.key, { materia: g.materia, trilhas: new Map() });
+          const pm = porMateria.get(g.materia.key);
+          if (!pm.trilhas.has(g.trilha.key)) pm.trilhas.set(g.trilha.key, { trilha: g.trilha, itens: [] });
+          pm.trilhas.get(g.trilha.key).itens.push({ mod, sit });
+        });
+      });
+
+      const pendenciasHtml = totalPendentes === 0
+        ? `<p style="color:var(--green); font-size:12px;">🎉 Nenhuma pendência: o aluno concluiu todas as ${totalAtividades} atividade(s) liberadas neste bimestre.</p>`
+        : [...porMateria.values()].map(pm => `
+          <div class="rel-aluno-materia">
+            <div class="rel-aluno-materia-nome">${escRelAluno(pm.materia.icon || '📚')} ${escRelAluno(pm.materia.label)}</div>
+            ${[...pm.trilhas.values()].map(pt => {
+              const ini = trilhaWindow(pt.trilha).inicio;
+              const liberada = ini ? ` <span class="rel-aluno-dim">(liberada em ${ini.split('-').reverse().join('/')})</span>` : '';
+              return `<div class="rel-aluno-trilha">${escRelAluno(pt.trilha.label)}${liberada}</div>
+                <ul class="rel-aluno-lista">${pt.itens.map(it => `<li>${escRelAluno(it.mod.title || it.mod.key)} — <span class="${it.sit.texto === 'Não começou' ? 'rel-aluno-ruim' : 'rel-aluno-meio'}">${it.sit.texto}</span></li>`).join('')}</ul>`;
+            }).join('')}
+          </div>`).join('');
+
+      const parte2 = `
+        <h4 class="rel-aluno-titulo">📌 Atividades que ficaram por fazer</h4>
+        <p class="rel-aluno-nota">${totalPendentes} de ${totalAtividades} atividade(s) já liberadas neste bimestre não foram concluídas. Trilhas que ainda não foram liberadas não entram.</p>
+        ${pendenciasHtml}`;
+
+      // ---- 3. Tempo por atividade × colegas ----
+      const segPorAlunoLocal = {}; // location -> { email: segundos }
+      timeRows.forEach(r => {
+        segPorAlunoLocal[r.location] = segPorAlunoLocal[r.location] || {};
+        segPorAlunoLocal[r.location][r.student_email] = (segPorAlunoLocal[r.location][r.student_email] || 0) + (r.seconds || 0);
+      });
+      const turmaEmails = new Set(turmaStudents().map(u => u.email));
+
+      const linhasComparacao = grupos.flatMap(g => g.mods.map(mod => {
+        const loc = moduleActivityLocation(mod);
+        const mapa = (loc && segPorAlunoLocal[loc]) || {};
+        const meu = mapa[email] || 0;
+        const colegas = Object.entries(mapa).filter(([e, s]) => e !== email && turmaEmails.has(e) && s > 0).map(([, s]) => s);
+        const media = colegas.length ? colegas.reduce((a, b) => a + b, 0) / colegas.length : 0;
+        const med = mediana(colegas);
+        let comp, cls;
+        if (!meu && !colegas.length) { comp = 'Sem dados'; cls = 'rel-aluno-dim'; }
+        else if (!meu) { comp = 'Sem tempo registrado'; cls = 'rel-aluno-ruim'; }
+        else if (colegas.length < 2) { comp = 'Poucos colegas p/ comparar'; cls = 'rel-aluno-dim'; }
+        else if (meu >= med * 2) { comp = `⬆️ Muito acima (${(meu / med).toFixed(1)}×)`; cls = 'rel-aluno-meio'; }
+        else if (meu <= med * 0.5) { comp = `⬇️ Muito abaixo (${(meu / med).toFixed(1)}×)`; cls = 'rel-aluno-meio'; }
+        else { comp = '≈ Dentro do normal'; cls = 'rel-aluno-bom'; }
+        const sit = situacaoModulo(rowDe(g.trilha.key, mod.key));
+        return { temDados: !!(meu || colegas.length), html: `<tr>
+          <td class="rel-aluno-ativ">${escRelAluno(mod.title || mod.key)}<div class="rel-aluno-dim">${escRelAluno(g.trilha.label)} · ${sit.feito ? '✅' : '⏳'} ${sit.texto}</div></td>
+          <td data-label="Aluno">${formatTempoLogado(meu)}</td>
+          <td data-label="Média">${colegas.length ? formatTempoLogado(Math.round(media)) : '—'}</td>
+          <td data-label="Mediana">${colegas.length ? formatTempoLogado(Math.round(med)) : '—'}</td>
+          <td data-label="Comparação" class="rel-aluno-comp ${cls}">${comp}${colegas.length ? `<div class="rel-aluno-dim">${colegas.length} colega(s)</div>` : ''}</td>
+        </tr>` };
+      }))
+        // Atividades com tempo registrado (do aluno ou dos colegas) primeiro;
+        // as "Sem dados" vão pro fim, na ordem do config.js.
+        .sort((a, b) => Number(b.temDados) - Number(a.temDados))
+        .map(l => l.html).join('');
+
+      const parte3 = tempoIndisponivel ? '' : `
+        <h4 class="rel-aluno-titulo">📊 Tempo em cada atividade × colegas</h4>
+        <p class="rel-aluno-nota">Compara com os colegas que têm tempo registrado na mesma atividade. "Muito acima/abaixo" = o dobro/metade da mediana ou mais.</p>
+        ${linhasComparacao ? `<div class="rel-aluno-scroll"><table class="audit-table rel-aluno-tabela">
+          <thead><tr><th>Atividade</th><th>Aluno</th><th>Média</th><th>Mediana</th><th>Comparação</th></tr></thead>
+          <tbody>${linhasComparacao}</tbody>
+        </table></div>` : `<p class="rel-aluno-nota">Nenhuma atividade liberada neste bimestre.</p>`}`;
+
+      const cabecalho = `<p class="rel-aluno-cabecalho"><strong>${escRelAluno(aluno.nome)}</strong> · ${escRelAluno(cfg.label)} · gerado em ${new Date().toLocaleString('pt-BR')}</p>`;
+      const html = `<div class="rel-aluno">${cabecalho}${parte1}${parte2}${parte3}</div>`;
+      container.innerHTML = html;
+      relatorioAlunoUltimo = { nome: aluno.nome, html };
+      btnPrint.disabled = false;
+    } catch (err) {
+      console.error('[relatorio-aluno] falha ao gerar:', err);
+      container.innerHTML = msg('Não foi possível gerar o relatório agora. Tente de novo em instantes.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  // Mesmo esquema do PDF da Presença: abre a aba síncrona no clique (senão
+  // o navegador bloqueia o popup) e chama a impressão — "Salvar como PDF".
+  function imprimirRelatorioAluno() {
+    if (!relatorioAlunoUltimo) return;
+    const printWin = window.open('', '_blank');
+    if (!printWin) return;
+    printWin.document.write(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Relatório do Aluno — ${escRelAluno(relatorioAlunoUltimo.nome)}</title>
+<style>
+  @page { size: A4 portrait; margin: 12mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; margin: 0; font-size: 11px; }
+  h4 { font-size: 13px; margin: 16px 0 4px; }
+  .rel-aluno-cabecalho { font-size: 14px; margin: 0 0 8px; }
+  .rel-aluno-nota, .rel-aluno-aviso { color: #555; margin: 0 0 6px; }
+  .rel-aluno-resumo { display: flex; gap: 16px; margin: 6px 0 10px; }
+  .rel-aluno-resumo div { border: 1px solid #999; padding: 4px 8px; }
+  .rel-aluno-resumo strong { display: block; font-size: 13px; }
+  .rel-aluno-dia { display: grid; grid-template-columns: 70px 1fr 60px; gap: 6px; align-items: center; margin: 1px 0; }
+  .rel-aluno-barra { display: block; height: 8px; border: 1px solid #bbb; }
+  .rel-aluno-barra span { display: block; height: 100%; background: #555; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rel-aluno-materia-nome { font-weight: bold; margin-top: 6px; }
+  .rel-aluno-trilha { margin: 2px 0 0 8px; }
+  .rel-aluno-lista { margin: 2px 0 4px 8px; }
+  .rel-aluno-dim { color: #666; font-size: 10px; }
+  .rel-aluno-ruim { color: #b3261e; font-weight: bold; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #999; padding: 3px 4px; text-align: left; vertical-align: top; }
+</style></head>
+<body>${relatorioAlunoUltimo.html}</body></html>`);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 250);
+  }
+
   function toggleGestaoSection(headEl) {
     headEl.closest('.collapsible-card').classList.toggle('expanded');
   }
@@ -4090,6 +4402,7 @@
     loadNotas();
     renderRelatorioNotas();
     renderRelatorioInatividade();
+    popularSelectRelatorioAluno();
 
     if (!sbClient) return;
     // "Atividade e Inatividade" junta os dois relatórios antigos — usa a
@@ -4200,6 +4513,9 @@
     document.getElementById('btnSalvarTrilhaBimestre').addEventListener('click', salvarTrilhaBimestre);
     document.getElementById('btnGerarAtividadeDia').addEventListener('click', gerarRelatorioAtividadeDia);
     document.getElementById('btnGerarRankingTurma').addEventListener('click', gerarRelatorioRanking);
+    document.getElementById('btnGerarRelatorioAluno').addEventListener('click', gerarRelatorioAluno);
+    document.getElementById('btnImprimirRelatorioAluno').addEventListener('click', imprimirRelatorioAluno);
+    document.getElementById('relatorioAlunoSelect').addEventListener('focus', popularSelectRelatorioAluno);
   }
 
   // ---------- Tabs principais ----------
