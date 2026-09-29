@@ -226,6 +226,14 @@ insert into public.classroom_settings (id, clipboard_blocked)
 values ('global', false), ('jogos', false), ('sistemas', false)
 on conflict (id) do nothing;
 
+-- "Horário de Acesso" (Gestão → Bloqueios e Liberações, sql/horario-acesso.sql):
+-- com acesso_restrito ligado, fora de acesso_inicio–acesso_fim o aluno vê o
+-- portal fechado (shared/horario-acesso.js, hora do servidor via
+-- quizrush_server_now). Desligado = livre; os horários ficam gravados.
+alter table public.classroom_settings add column if not exists acesso_restrito boolean not null default false;
+alter table public.classroom_settings add column if not exists acesso_inicio time;
+alter table public.classroom_settings add column if not exists acesso_fim time;
+
 alter table public.classroom_settings enable row level security;
 
 drop policy if exists "classroom_settings_select_all" on public.classroom_settings;

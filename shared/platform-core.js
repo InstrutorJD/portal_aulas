@@ -450,6 +450,19 @@
                   </div>
                   <div class="toggle-row">
                     <div>
+                      <div class="toggle-row-label">Horário de Acesso</div>
+                      <div class="toggle-row-desc" id="toggleHorarioDesc"></div>
+                      <div class="horario-acesso-campos">
+                        <label>das <input type="time" id="horarioAcessoInicio"></label>
+                        <label>às <input type="time" id="horarioAcessoFim"></label>
+                        <button class="btn" id="btnSalvarHorarioAcesso">Salvar horário</button>
+                        <span class="status-msg" id="horarioAcessoStatus"></span>
+                      </div>
+                    </div>
+                    <button class="toggle-switch" id="toggleHorario" role="switch" aria-checked="false" title="Verde = acesso livre a qualquer hora. Vermelho = aluno só entra no horário."><span class="toggle-switch-knob"></span></button>
+                  </div>
+                  <div class="toggle-row">
+                    <div>
                       <div class="toggle-row-label">Jogos</div>
                       <div class="toggle-row-desc" id="toggleJogosDesc"></div>
                     </div>
@@ -1535,6 +1548,7 @@
   // misturando as duas turmas — agora cada turma cuida só dos seus alunos.
   let gestaoOverridesCache = {};
   let gestaoClipboardBlocked = false;
+  let gestaoHorarioAcesso = { restrito: false, inicio: '', fim: '' };
   let gestaoActivityRealtimeStarted = false;
   let gestaoActivityPollStarted = false;
 
@@ -2030,6 +2044,46 @@
     gestaoClipboardBlocked = !!(data && data.clipboard_blocked);
   }
 
+  // "Horário de Acesso" (Gestão → Bloqueios e Liberações): fora do horário
+  // o aluno vê o portal fechado (shared/horario-acesso.js). Busca separada
+  // da do Copiar e Colar: sem as colunas no Supabase (sql/horario-acesso.sql)
+  // o select dá erro, e não pode levar a chave do Copiar e Colar junto.
+  async function fetchHorarioAcessoGestao() {
+    if (!sbClient) return;
+    const { data, error } = await sbClient.from('classroom_settings')
+      .select('acesso_restrito, acesso_inicio, acesso_fim').eq('id', cfg.id).maybeSingle();
+    gestaoHorarioAcesso = error || !data
+      ? { restrito: false, inicio: '', fim: '' }
+      : { restrito: !!data.acesso_restrito, inicio: (data.acesso_inicio || '').slice(0, 5), fim: (data.acesso_fim || '').slice(0, 5) };
+  }
+
+  // restrito: true = aluno só entra no horário; false = livre (os horários
+  // continuam gravados, pra religar depois sem digitar de novo).
+  async function salvarHorarioAcesso(restrito) {
+    const status = document.getElementById('horarioAcessoStatus');
+    const inicio = document.getElementById('horarioAcessoInicio').value;
+    const fim = document.getElementById('horarioAcessoFim').value;
+    if (!sbClient) return false;
+    if (restrito && (!inicio || !fim)) {
+      status.textContent = '⚠️ Preencha o início e o fim antes de restringir.';
+      return false;
+    }
+    if (inicio && fim && inicio === fim) {
+      status.textContent = '⚠️ Início e fim não podem ser iguais.';
+      return false;
+    }
+    const { error } = await sbClient.from('classroom_settings').upsert({
+      id: cfg.id, acesso_restrito: restrito, acesso_inicio: inicio || null, acesso_fim: fim || null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+    if (error) {
+      status.textContent = `Erro ao salvar (rodou o sql/horario-acesso.sql no Supabase?): ${error.message}`;
+      return false;
+    }
+    status.textContent = `Salvo às ${new Date().toLocaleTimeString('pt-BR')}.`;
+    return true;
+  }
+
   // "Mostrar Notas" (Gestão → Bloqueios e Liberações): liga/desliga a
   // visibilidade da NOTA (e do selo Aprovado/Recuperação) pro aluno, só no
   // bimestre ATUAL (currentBimestreNum) — ver notasVisiveis em
@@ -2063,9 +2117,22 @@
   // agregado, bimestre_dates do bimestre atual), mas a UI trata os três do
   // mesmo jeito: uma chave verde (liberado) ou vermelha (bloqueado).
   async function renderGestaoToggles() {
-    await Promise.all([fetchClipboardStateGestao(), fetchGestaoOverrides(), fetchBimestreDates()]);
+    await Promise.all([fetchClipboardStateGestao(), fetchHorarioAcessoGestao(), fetchGestaoOverrides(), fetchBimestreDates()]);
 
     setToggleState('toggleClipboard', !gestaoClipboardBlocked);
+
+    setToggleState('toggleHorario', !gestaoHorarioAcesso.restrito);
+    const inpInicio = document.getElementById('horarioAcessoInicio');
+    const inpFim = document.getElementById('horarioAcessoFim');
+    // Não sobrescreve o que o professor está digitando agora.
+    if (inpInicio && document.activeElement !== inpInicio) inpInicio.value = gestaoHorarioAcesso.inicio;
+    if (inpFim && document.activeElement !== inpFim) inpFim.value = gestaoHorarioAcesso.fim;
+    const horarioDesc = document.getElementById('toggleHorarioDesc');
+    if (horarioDesc) {
+      horarioDesc.textContent = gestaoHorarioAcesso.restrito
+        ? `Restrito — aluno só acessa das ${gestaoHorarioAcesso.inicio} às ${gestaoHorarioAcesso.fim} (fora disso vê o portal fechado).`
+        : 'Livre — aluno acessa a qualquer hora.';
+    }
 
     const students = turmaStudents();
     const jogosLiberados = students.length > 0 && students.every(u => !!gestaoOverridesCache[u.email]);
@@ -4053,6 +4120,14 @@
     document.getElementById('toggleClipboard').addEventListener('click', async () => {
       await toggleClipboardBlock();
       renderGestaoToggles();
+    });
+    // Chave verde (livre) → vermelha (só no horário) e vice-versa; "Salvar
+    // horário" grava os horários mantendo a chave como está.
+    document.getElementById('toggleHorario').addEventListener('click', async () => {
+      if (await salvarHorarioAcesso(!gestaoHorarioAcesso.restrito)) renderGestaoToggles();
+    });
+    document.getElementById('btnSalvarHorarioAcesso').addEventListener('click', async () => {
+      if (await salvarHorarioAcesso(gestaoHorarioAcesso.restrito)) renderGestaoToggles();
     });
     document.getElementById('toggleJogos').addEventListener('click', async () => {
       const ligar = !document.getElementById('toggleJogos').classList.contains('on');

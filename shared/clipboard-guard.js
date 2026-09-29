@@ -26,6 +26,18 @@
 // Roda em toda página que o incluir (plataforma de cada turma + cada jogo/
 // atividade, já que iframes são documentos separados e não herdam listeners
 // do documento pai). Não afeta o professor.
+//
+// Por rodar em toda página, também é quem carrega o shared/horario-acesso.js
+// (portal fechado fora do "Horário de Acesso" da Gestão) — sem precisar pôr
+// mais um <script> em cada atividade.
+(function () {
+  const eu = document.currentScript && document.currentScript.src;
+  if (!eu) return;
+  const s = document.createElement('script');
+  s.src = eu.replace(/clipboard-guard\.js(\?.*)?$/, 'horario-acesso.js');
+  (document.head || document.documentElement).appendChild(s);
+})();
+
 (async function () {
   if (!window.PortalSession) return;
   const user = await window.PortalSession.getUser();

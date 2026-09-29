@@ -325,6 +325,11 @@ button.btn-secondary:hover{
 .toggle-switch.on{ background:var(--green); }
 .toggle-switch.on .toggle-switch-knob{ transform:translateX(14px); }
 .toggle-switch:disabled{ opacity:0.35; cursor:not-allowed; }
+/* Linha "Horário de Acesso": início/fim + salvar embaixo da descrição. */
+.horario-acesso-campos{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px; font-size:11px; color:var(--ink-dim); }
+.horario-acesso-campos label{ display:inline-flex; align-items:center; gap:4px; }
+.horario-acesso-campos input[type="time"]{ padding:4px 6px; font-size:12px; background:var(--panel2); color:var(--ink); border:1px solid var(--line); border-radius:var(--radius-sm); }
+.horario-acesso-campos .btn{ padding:5px 12px; font-size:10.5px; }
 
 /* Lançar Notas com "Destacar notas abaixo de 6,0" ligado (pintarNotasBaixas). */
 .nota-baixa, .nota-baixa .materia-grade-value{ color:var(--blood-bright); font-weight:700; }
