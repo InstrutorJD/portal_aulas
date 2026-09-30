@@ -65,7 +65,6 @@ Fonte: Stanford AI Index 2025. No relatório de 2026, a China já quase empatou 
 ### Jairon
 + Docente do **SENAI** (Serviço Nacional de Aprendizagem Industrial)
 + Professor de 2 cursos técnicos: **Desenvolvimento de Sistemas** e **Jogos Digitais**
-+ Agora, quero conhecer **vocês** 👇
 
 ---
 
