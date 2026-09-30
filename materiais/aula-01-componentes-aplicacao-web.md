@@ -93,6 +93,27 @@ Anote no quadro quantos acertaram cada pergunta.
 
 ---
 
+## Por que web, e não app ou programa?
++ **Tempo**: o curso é curto demais para criar um programa instalado
++ **Tudo já roda no navegador**: WhatsApp Web, Google Docs, Canva, Office
++ **Não depende do aparelho**: Windows, Mac, Linux, Android ou iPhone
++ **Nada para instalar**: abriu o link, já está usando
++ Por isso hoje: web, HTTP e **requisições**
+
+---
+
+## Programa, app ou web?
+| | Programa instalado | App de loja | Web |
+|---|---|---|---|
+| Precisa instalar? | Sim | Sim | Não |
+| Roda em qualquer aparelho? | Não, um por sistema | Não, Android e iPhone à parte | Sim, basta o navegador |
+| Como atualizar | Máquina por máquina | Celular por celular | Uma vez, no servidor |
+| Cabe no nosso curso? | Não | Não | **Sim** ✅ |
+
+Até os apps de celular buscam os dados na web, com pedidos HTTP.
+
+---
+
 ## Nossas ferramentas
 | Ferramenta | Para quê |
 |---|---|
@@ -124,12 +145,12 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 ---
 
 ## Roteiro de hoje (3h)
-1. Boas-vindas, o curso e o binário (35 min)
+1. Boas-vindas, por que web e o binário (38 min)
 2. Linguagens de programação e o algoritmo da inspeção (25 min)
 3. Como uma IA "pensa" (30 min)
 4. ☕ Intervalo (20 min)
 5. 🚨 Jogo Invasão Hacker e tipos de IA (30 min)
-6. O caminho de uma inspeção, na aba Rede, e revisão (40 min)
+6. O caminho de uma inspeção, na aba Rede, e revisão (37 min)
 
 ---
 
