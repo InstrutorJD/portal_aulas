@@ -1,0 +1,14 @@
+{
+  "equipamentos": [
+    { "codigo": "CAM-07", "nome": "Caminhão fora de estrada 07" },
+    { "codigo": "CAM-12", "nome": "Caminhão fora de estrada 12" },
+    { "codigo": "ESC-03", "nome": "Escavadeira 03" }
+  ],
+  "itens": [
+    { "nome": "Pneus", "critico": false },
+    { "nome": "Freios", "critico": true },
+    { "nome": "Luzes e sirene", "critico": false },
+    { "nome": "Cinto de segurança", "critico": true },
+    { "nome": "Nível de óleo", "critico": false }
+  ]
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist Digital de Inspeção</title>
+<!-- Site de EXEMPLO da Aula 01 do Criar Material (materiais/aula-01-*.md):
+     a turma abre esta página no computador, aperta F12 e vê na aba Rede
+     cada pedido que ela faz (HTML, CSS, JS, imagem e os dados em JSON).
+     É só uma prévia do projeto integrador: não grava nada, sem login.
+     Separado em vários arquivos de propósito, pra aparecerem vários pedidos. -->
+<link rel="icon" href="icone.svg">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <img src="icone.svg" alt="" width="44" height="44">
+    <div>
+      <h1>Checklist Digital de Inspeção</h1>
+      <p>Inspeção antes do turno · exemplo da aula</p>
+    </div>
+  </header>
+
+  <main>
+    <label class="campo">Equipamento
+      <select id="equipamento"><option>Carregando…</option></select>
+    </label>
+
+    <ul class="itens" id="itens"></ul>
+
+    <button id="enviar" type="button">Enviar inspeção</button>
+    <div class="resultado" id="resultado" hidden></div>
+  </main>
+
+  <footer>Site de exemplo — nada aqui é gravado.</footer>
+  <script src="app.js"></script>
+</body>
+</html>

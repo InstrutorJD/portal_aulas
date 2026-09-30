@@ -7,7 +7,7 @@ descricao: Boas-vindas, história, binário, linguagens, como a IA pensa, tipos 
 ---
 
 # Do bit à IA
-Aula 1: como a tecnologia conversa, e onde a IA entra nisso
+Aula 1: como a tecnologia conversa, e onde a IA (inteligência artificial) entra nisso
 
 ---
 
@@ -86,10 +86,13 @@ Anote no quadro quantos acertaram cada pergunta.
 ---
 
 ## O que você vai aprender no curso
-+ Como computadores, internet e web funcionam por dentro
-+ Criar páginas com **HTML**, **CSS** e **JavaScript**
-+ Guardar e consultar dados com **SQL**
-+ Programar **com ajuda da IA**, e revisar o que ela faz
+### Desenvolver sistemas **com** a IA como parceira
++ Pedir código à IA com **instruções claras** (os prompts)
++ **Entender e revisar** o que ela entrega: HTML, CSS, JavaScript e SQL
++ **Testar**, achar o erro e corrigir junto com ela
++ Saber como a web funciona por dentro, para **conferir** a IA
+
+> A IA escreve rápido. Quem decide, revisa e responde pelo código é você.
 
 ---
 
@@ -98,7 +101,7 @@ Anote no quadro quantos acertaram cada pergunta.
 + **Tudo já roda no navegador**: WhatsApp Web, Google Docs, Canva, Office
 + **Não depende do aparelho**: Windows, Mac, Linux, Android ou iPhone
 + **Nada para instalar**: abriu o link, já está usando
-+ Por isso hoje: web, HTTP e **requisições**
++ Para conferir o que a IA faz na web: HTTP e **requisições**
 
 ---
 
@@ -130,7 +133,7 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 + A folha **molha, suja e se perde** no caminho até a manutenção
 + A **letra ilegível** esconde um freio reprovado
 + Ninguém vê a **tendência**: qual equipamento falha mais?
-+ Ao longo do curso, **você** vai construir o sistema que resolve isso
++ Ao longo do curso, **você e a IA** vão construir o sistema que resolve isso
 
 ---
 
@@ -145,12 +148,12 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 ---
 
 ## Roteiro de hoje (3h)
-1. Boas-vindas, por que web e o binário (36 min)
+1. Boas-vindas, por que web e o binário (30 min)
 2. Linguagens de programação e o algoritmo da inspeção (23 min)
 3. A IA: de onde veio, onde está e como "pensa" (34 min)
 4. ☕ Intervalo (20 min)
-5. 🚨 Jogo Invasão Hacker, tipos de IA e o futuro (34 min)
-6. O caminho de uma inspeção, na aba Rede, e revisão (33 min)
+5. 🚨 Jogo Invasão Hacker, tipos de IA e o futuro (32 min)
+6. A inspeção na web, criar sem código e segurança (41 min)
 
 ---
 
@@ -166,7 +169,7 @@ Das máquinas de calcular aos computadores
 | 1703 | Leibniz publica a aritmética **binária**: tudo com 0 e 1 |
 | 1837 | Babbage projeta a **máquina analítica**, um computador mecânico |
 | 1843 | Ada Lovelace escreve o **primeiro algoritmo** para essa máquina |
-| 1946 | **ENIAC**: 30 toneladas, 18 mil válvulas, programado por seis mulheres |
+| 1946 | **ENIAC** (Computador e Integrador Numérico Eletrônico): 30 toneladas, 18 mil válvulas, programado por seis mulheres |
 
 ---
 
@@ -174,8 +177,8 @@ Das máquinas de calcular aos computadores
 | Na máquina de Babbage | Hoje | Função |
 |---|---|---|
 | Leitor de cartões | Teclado, mouse, toque | **Entrada** |
-| Moinho (*mill*) | Processador (CPU) | **Processamento** |
-| Armazém (*store*) | Memória RAM e disco | **Memória** |
+| Moinho (*mill*) | Processador (CPU, unidade central de processamento) | **Processamento** |
+| Armazém (*store*) | Memória RAM (de acesso aleatório) e disco | **Memória** |
 | Impressora | Tela, som, impressora | **Saída** |
 
 ---
@@ -237,16 +240,7 @@ Quanto vale o byte `00000101`?
 | I | 9 | 73 | `01001001` |
 | O | 15 | 79 | `01001111` |
 
-Letra maiúscula = **64 + posição no alfabeto**. Esse código se chama **ASCII**.
-
----
-
-## Mão na massa: seu nome em binário
-1. No bloco de notas do celular, escreva 3 letras do seu nome em bytes
-2. Regra: 64 + posição no alfabeto, depois a tabela 128…1
-3. Desafio: quem decifrar primeiro o nome do quadro ganha
-
-[cronômetro 6]
+Letra maiúscula = **64 + posição no alfabeto**. Esse código se chama **ASCII** (Código Padrão Americano para Troca de Informações).
 
 ---
 
@@ -254,10 +248,21 @@ Letra maiúscula = **64 + posição no alfabeto**. Esse código se chama **ASCII
 | Ano | O que aconteceu |
 |---|---|
 | 1947 | **Transistor**: o interruptor minúsculo que substitui a válvula |
-| 1969 | **ARPANET**, avó da internet, conecta os primeiros computadores |
-| 1989 | Tim Berners-Lee propõe a **web** no CERN |
+| 1969 | **ARPANET** (rede da Agência de Projetos de Pesquisa Avançada dos EUA), avó da internet |
+| 1989 | Tim Berners-Lee propõe a **web** no CERN (Organização Europeia para a Pesquisa Nuclear) |
 | 1990 | Nascem **HTML**, **HTTP** e **URL**, e o primeiro servidor |
 | 1995 | **JavaScript** deixa as páginas interativas |
+
+---
+
+## Sopa de letrinhas da web
+| Sigla | Significa | Na prática |
+|---|---|---|
+| HTML | Linguagem de Marcação de Hipertexto | A estrutura da página |
+| CSS | Folhas de Estilo em Cascata | A aparência da página |
+| HTTP | Protocolo de Transferência de Hipertexto | As regras do pedido e da resposta |
+| URL | Localizador Uniforme de Recursos | O endereço de uma página |
+| SQL | Linguagem de Consulta Estruturada | Guardar e buscar dados no banco |
 
 ---
 
@@ -407,7 +412,7 @@ Spoiler: não é do jeito que a gente pensa
 | Ano | O que aconteceu |
 |---|---|
 | 1950 | Alan Turing pergunta: "as máquinas podem pensar?" |
-| 1956 | Nasce o nome **inteligência artificial**, em Dartmouth (EUA) |
+| 1956 | Nasce o nome **inteligência artificial**, em Dartmouth (Estados Unidos) |
 | 1966 | **ELIZA**, o primeiro chatbot, imita um terapeuta |
 | 1997 | **Deep Blue** vence o campeão mundial de xadrez |
 | 2016 | **AlphaGo** vence o campeão de Go, um jogo bem mais difícil |
@@ -420,7 +425,7 @@ Spoiler: não é do jeito que a gente pensa
 + 2017: o Google cria o **Transformer**, a base dos chatbots de hoje
 + 2022: o **ChatGPT** chega a 100 milhões de usuários em 2 meses
 
-> Fonte do número: banco UBS, fevereiro de 2023.
+> Fonte do número: banco suíço UBS, fevereiro de 2023.
 
 ---
 
@@ -428,7 +433,7 @@ Spoiler: não é do jeito que a gente pensa
 + Escreve texto e **código**, cria imagem, vídeo e voz
 + **Agentes** fazem tarefas inteiras: pesquisam, programam e testam
 + Em 2024, dois **Prêmios Nobel** foram para pesquisas com IA
-+ Na mina de Brucutu (MG), da Vale, os caminhões são **autônomos** desde 2019
++ Na mina de Brucutu, em Minas Gerais, da Vale, os caminhões são **autônomos** desde 2019
 + Mas ainda **erra com confiança**: já já você vai ver
 
 ---
@@ -624,8 +629,8 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 
 ---
 
-## Desafio da grade 1 de 3
-```
+## Desafio da grade 1 de 2
+```grade
 0 0 0 1 0 0 0
 0 0 1 1 1 0 0
 0 1 1 1 1 1 0
@@ -634,22 +639,12 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 0 1 1 1 1 1 0
 ```
 
----
-
-## Desafio da grade 2 de 3
-```
-0 1 1 0 1 1 0
-1 1 1 1 1 1 1
-1 1 1 1 1 1 1
-0 1 1 1 1 1 0
-0 0 1 1 1 0 0
-0 0 0 1 0 0 0
-```
+Não achou o desenho? Avance: os **0** somem e só ficam os **1**.
 
 ---
 
-## Desafio da grade 3 de 3
-```
+## Desafio da grade 2 de 2
+```grade
 0 1 1 1 1 1 0
 1 0 0 0 0 0 1
 1 0 1 0 1 0 1
@@ -658,13 +653,14 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 0 1 1 1 1 1 0
 ```
 
+Não achou o desenho? Avance: os **0** somem e só ficam os **1**.
+
 ---
 
 ## Respostas da grade
 + 1. Uma **casa**: telhado em cima, porta embaixo 🏠
-+ 2. Um **coração** ❤️
-+ 3. Um **rosto sorrindo** 🙂
-+ Quem fez 3 pontos?
++ 2. Um **rosto sorrindo** 🙂
++ Quem fez os 2 pontos?
 
 ---
 
@@ -745,7 +741,7 @@ Cliente x Servidor, com HTTP no meio
 | Na web | Na inspeção | Papel |
 |---|---|---|
 | Frontend | Checklist no celular do operador | O que o usuário vê e toca |
-| API | O envio dos dados | Leva pedidos e traz respostas |
+| API (interface de programação de aplicações) | O envio dos dados | Leva pedidos e traz respostas |
 | Backend | Regras de aprovação | Aplica as regras e processa |
 | Banco de dados | Registro histórico | Guarda os dados com segurança |
 
@@ -794,9 +790,18 @@ O operador envia a inspeção do caminhão CAM-99, que não está cadastrado.
 
 ---
 
+## O site de exemplo da aula
+Uma prévia do **Checklist Digital de Inspeção**, o projeto do curso. Abra no computador:
+
+```
+instrutorjd.github.io/portal_aulas/materiais/checklist
+```
+
+---
+
 ## Mão na massa: veja os pedidos
-1. Palpite no celular: quantos pedidos a página do portal faz?
-2. No computador, abra o portal, aperte **F12** e vá na aba **Rede**
+1. Palpite no celular: quantos pedidos o site de exemplo faz?
+2. Abra o site, aperte **F12** e vá na aba **Rede**
 3. Recarregue com **F5**: o palpite mais perto do rodapé ganha
 
 [cronômetro 6]
@@ -804,15 +809,16 @@ O operador envia a inspeção do caminhão CAM-99, que não está cadastrado.
 ---
 
 ## O que vocês encontraram?
-+ Uma página "simples" já faz **vários** pedidos
-+ HTML, CSS, scripts e fontes: cada um é um pedido separado
++ Até uma página simples faz **vários** pedidos
++ Página, estilo (CSS), script, ícone e os dados: um pedido cada
++ Os dados vêm em **JSON** (Notação de Objetos JavaScript), um texto organizado
 + Cada linha da aba Rede é **um pedido HTTP**, com método e status
-+ Lembra do palpite do começo? A mediana é de **71 pedidos**
++ Um site grande faz dezenas: a mediana é de **71 pedidos**
 
 ---
 
 ## Mão na massa: ache um 404
-1. No fim do endereço do portal, digite `/pagina-que-nao-existe`
+1. No fim do endereço, acrescente `/nao-existe.html`
 2. Olhe a coluna **Status** do primeiro pedido
 3. Clique nele e ache o **método**: GET ou POST?
 
@@ -859,27 +865,63 @@ Para pedir código à IA, **você** precisa dizer onde ele entra.
 
 ---
 
-## Checklist de hoje
-Confira você mesmo:
-
-- ✅ Você sabe o tipo de IA de cada cenário da mineração
-- ✅ Você viu os pedidos HTTP na aba Rede
-- ✅ O fluxo da inspeção tem frontend, API, backend e banco
-- ✅ O fluxo foi registrado no quadro, em até 5 passos
-
----
-
-## Revisão 1 de 2
-Quanto vale o byte `00001010`?
-
-- [ ] 8
-- [x] 10
-- [ ] 12
-- [ ] 1010
+## Já dá para criar sem escrever código
+| Tipo | Exemplos | Como funciona |
+|---|---|---|
+| Criador de site | Wix, WordPress, Canva | Arrastar e soltar blocos |
+| App sem código (*no-code*) | Bubble, Glide, FlutterFlow | Monta telas e banco clicando |
+| IA que cria o app inteiro | Lovable, Bolt, v0, Replit | Você descreve, ela gera o código |
 
 ---
 
-## Revisão 2 de 2
+## Por que isso é bom
++ A ideia sai do papel em **horas**, não em meses
++ Qualquer pessoa testa uma ideia sem contratar programador
++ Ótimo para **protótipo**: mostrar, testar e jogar fora
++ Sobra tempo para pensar no **problema**, não na vírgula do código
+
+---
+
+## Vibe coding: programar "na vibe"
++ Termo de Andrej Karpathy (2025): pedir à IA e **nem ler** o código
++ Funciona... até dar erro e ninguém entender o porquê
++ Você fica **preso** à ferramenta e ao que ela decidiu por você
++ Quem sabe um pouco de código **lê, testa e corrige**; quem não sabe, torce 🤞
+
+---
+
+## Os buracos de segurança mais comuns
+| Buraco | O que pode acontecer |
+|---|---|
+| Senha ou chave escrita no código | Qualquer um copia e usa a sua conta |
+| Banco sem regra de acesso | Um estranho lê ou apaga os dados de todos |
+| Regra só no frontend | Basta mandar o pedido HTTP direto para burlar |
+| Não conferir o que o usuário digita | Invasão por injeção de código (SQL ou script) |
+| Pacote que a IA inventou | Um golpista publica um pacote falso com esse nome |
+
+---
+
+## Aconteceu de verdade, em 2025
++ **Mais de 170 apps** feitos no Lovable vazaram dados: banco sem regra de acesso
++ Um agente de IA do Replit **apagou o banco** de uma empresa, mesmo proibido
++ Estudo da Veracode: **45%** do código gerado por IA tinha falha de segurança
++ Vazou dado pessoal? No Brasil, a **LGPD** (Lei Geral de Proteção de Dados Pessoais) cobra
+
+> Fontes: CVE-2025-48757, registro público de falhas de segurança (Lovable); The Register, jul. 2025 (Replit); Veracode, 2025.
+
+---
+
+## Qual é o buraco?
+A IA fez o app de inspeção e pôs a regra "freio reprovado bloqueia" só na tela do celular.
+
+- [ ] O app fica lento no celular do operador
+- [x] Alguém manda o pedido HTTP direto e burla a regra
+- [ ] O banco de dados enche mais rápido
+- [ ] Nenhum, porque a tela já bloqueia o envio
+
+---
+
+## Revisão rápida
 Em qual peça fica guardado o histórico de todas as inspeções?
 
 - [ ] Frontend

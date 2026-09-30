@@ -56,6 +56,7 @@ Use SOMENTE os elementos abaixo. Qualquer outra sintaxe de Markdown (HTML, lista
 | `![legenda](https://...)` | Imagem centralizada com legenda. Só use URL completa de imagem que você tenha certeza que existe; na dúvida, não use imagem. |
 | Tabela com `\|` | Tabela; a 1ª linha é o cabeçalho, a 2ª é `\|---\|---\|`. |
 | `[cronômetro 15]` | Cronômetro grande de 15 minutos (troque o número). Use nos slides de prática. |
+| Bloco de código com a linguagem `grade` (só `0`, `1` e espaços) | Desenho de pixels: ao avançar, os `0` somem e os `1` acendem, revelando a figura. No máximo 8 linhas. |
 | `[qrcode https://link Legenda]` | QR Code grande para os alunos abrirem o link no celular. A legenda é opcional. |
 
 Formatação dentro do texto: `**negrito**`, `*destaque*` (fica colorido), `` `código` ``, `==marca-texto==`, `[texto do link](https://...)`.

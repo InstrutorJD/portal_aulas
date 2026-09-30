@@ -81,6 +81,18 @@ console.log(saudacao("turma"));
 
 ---
 
+## Grade de 0 e 1
+Um bloco de código com a linguagem `grade` vira um desenho de pixels. Avance: os **0** somem e o desenho aparece.
+
+```grade
+0 0 1 0 0
+0 1 1 1 0
+1 1 1 1 1
+0 1 0 1 0
+```
+
+---
+
 ## Tabelas
 | Linguagem  | Onde roda        | Usada para            |
 |------------|------------------|-----------------------|

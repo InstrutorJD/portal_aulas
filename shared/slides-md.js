@@ -151,7 +151,14 @@ window.SlidesMD = (function () {
         // trilha — shared/aula-md.js) fica escondido até revelar a resposta.
         case 'quote': return `<blockquote class="sm-anim${/^\s*Por qu[eê]:/i.test(b.html) ? ' sm-porque' : ''}" style="--d:${d++}">${b.html}</blockquote>`;
         case 'img': return `<figure ${anim()}><img src="${b.src}" alt="${esc(b.alt)}">${b.alt ? `<figcaption>${esc(b.alt)}</figcaption>` : ''}</figure>`;
-        case 'code': return `
+        // ```grade: desenho feito de 0 e 1 (como a IA de visão "vê" uma
+        // imagem). É um passo (.sm-step): o 1º "próximo" apaga os 0 e
+        // acende os 1, e o desenho aparece; o 2º passa de slide.
+        case 'code': if (b.lang === 'grade') return `
+          <div class="sm-anim sm-grade-box" style="--d:${d++}">
+            <pre class="sm-grade sm-step">${b.code.split('').map(c => c === '1' ? '<b>1</b>' : c === '0' ? '<i>0</i>' : esc(c)).join('')}</pre>
+          </div>`;
+          return `
           <div class="sm-anim sm-code" style="--d:${d++}">
             <div class="sm-code-bar"><span class="sm-dots"><i></i><i></i><i></i></span><span class="sm-code-lang">${esc(b.lang)}</span><button type="button" class="sm-copy">Copiar</button></div>
             <pre><code class="${b.lang ? 'language-' + esc(b.lang) : 'nohighlight'}">${esc(b.code)}</code></pre>

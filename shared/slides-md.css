@@ -103,6 +103,16 @@
 .sm-reveal .sm-step{ opacity:0; transform:translateX(-18px); transition:opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1); }
 .sm-reveal .sm-step.sm-on{ opacity:1; transform:none; }
 
+/* ```grade — desenho de 0 e 1; ao avançar (.sm-on) os 0 somem e os 1
+   acendem (ver case 'code' em slides-md.js). */
+.sm-grade-box{ display:flex; justify-content:center; }
+.sm-grade{ margin:0; padding:22px 34px; border-radius:18px; border:1px solid var(--sm-line); background:var(--sm-card);
+  font-family:'JetBrains Mono', monospace; font-size:44px; line-height:1.2; letter-spacing:.12em; }
+.sm-grade i{ font-style:normal; color:var(--sm-dim); transition:opacity .35s; }
+.sm-grade b{ font-weight:800; color:var(--sm-ink); transition:color .35s, text-shadow .35s; }
+.sm-grade.sm-on i{ opacity:0; }
+.sm-grade.sm-on b{ color:var(--sm-accent); text-shadow:0 0 14px var(--sm-accent); }
+
 /* ---------- Código ---------- */
 .sm-code{ border-radius:14px; overflow:hidden; border:1px solid var(--sm-line); background:var(--sm-code-bg); box-shadow:0 20px 50px rgba(0,0,0,.35); }
 .sm-code-bar{ display:flex; align-items:center; gap:14px; padding:10px 16px; background:rgba(127,127,127,.12); border-bottom:1px solid var(--sm-line); }
