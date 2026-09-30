@@ -30,6 +30,17 @@
 
     <button id="enviar" type="button">Enviar inspeção</button>
     <div class="resultado" id="resultado" hidden></div>
+
+    <!-- "Bastidores": faz no celular o papel da aba Rede (F12), que só
+         existe no computador. -->
+    <section class="bastidores">
+      <h2>Bastidores da página (HTTP)</h2>
+      <div class="bastidores-botoes">
+        <button id="verPedidos" type="button">🔍 Ver os pedidos desta página</button>
+        <button id="pedir404" type="button">🧪 Pedir uma página que não existe</button>
+      </div>
+      <div id="bastidoresSaida"></div>
+    </section>
   </main>
 
   <footer>Site de exemplo — nada aqui é gravado.</footer>

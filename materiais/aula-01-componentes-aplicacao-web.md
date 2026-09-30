@@ -793,18 +793,16 @@ O operador envia a inspeção do caminhão CAM-99, que não está cadastrado.
 ---
 
 ## O site de exemplo da aula
-Uma prévia do **Checklist Digital de Inspeção**, o projeto do curso. Abra no computador:
+Uma prévia do **Checklist Digital de Inspeção**, o projeto do curso. Aponte a câmera:
 
-```
-instrutorjd.github.io/portal_aulas/materiais/checklist
-```
+[qrcode https://instrutorjd.github.io/portal_aulas/materiais/checklist/ Site de exemplo]
 
 ---
 
 ## Mão na massa: veja os pedidos
-1. Palpite no celular: quantos pedidos o site de exemplo faz?
-2. Abra o site, aperte **F12** e vá na aba **Rede**
-3. Recarregue com **F5**: o palpite mais perto do rodapé ganha
+1. Palpite: quantos pedidos o site de exemplo faz?
+2. No site, toque em **🔍 Ver os pedidos desta página**
+3. O palpite mais perto do total ganha
 
 [cronômetro 6]
 
@@ -814,21 +812,21 @@ instrutorjd.github.io/portal_aulas/materiais/checklist
 + Até uma página simples faz **vários** pedidos
 + Página, estilo (CSS), script, ícone e os dados: um pedido cada
 + Os dados vêm em **JSON** (Notação de Objetos JavaScript), um texto organizado
-+ Cada linha da aba Rede é **um pedido HTTP**, com método e status
++ Cada linha da lista é **um pedido HTTP**, com método e status
 + Um site grande faz dezenas: a mediana é de **71 pedidos**
 
 ---
 
 ## Mão na massa: ache um 404
-1. No fim do endereço, acrescente `/nao-existe.html`
-2. Olhe a coluna **Status** do primeiro pedido
-3. Clique nele e ache o **método**: GET ou POST?
+1. No site, toque em **🧪 Pedir uma página que não existe**
+2. Qual **status** o servidor respondeu?
+3. E qual foi o **método** do pedido: GET ou POST?
 
 [cronômetro 5]
 
 ---
 
-## O que a aba Rede mostrou?
+## O que o site mostrou?
 Na página que não existe, qual status e qual método apareceram?
 
 - [ ] `200` e `POST`

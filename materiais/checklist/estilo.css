@@ -19,4 +19,14 @@ select{ font:inherit; font-weight:400; padding:10px; border-radius:8px; border:1
 .resultado{ margin-top:14px; padding:14px; border-radius:10px; font-weight:800; text-align:center; font-size:18px; }
 .resultado.liberado{ background:#e3f5e8; color:#1e7a36; }
 .resultado.bloqueado{ background:#fde7e7; color:#a31d1d; }
+.bastidores{ margin-top:28px; padding:16px; border-radius:12px; background:#fff; border:1px dashed #8aa0b8; }
+.bastidores h2{ margin:0 0 10px; font-size:15px; color:#1f3b57; }
+.bastidores-botoes{ display:flex; flex-direction:column; gap:8px; }
+.bastidores-botoes button{ font:inherit; font-size:15px; font-weight:700; padding:12px; border-radius:10px; border:1px solid #1f3b57; background:#f0f4f9; color:#1f3b57; cursor:pointer; }
+.pedidos{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
+.pedidos th, .pedidos td{ text-align:left; padding:6px 4px; border-bottom:1px solid #e1e7ef; }
+.pedidos td.status{ font-weight:800; }
+.status-ok{ color:#1e7a36; }
+.status-erro{ color:#a31d1d; }
+.total{ margin:10px 0 0; font-weight:800; }
 footer{ text-align:center; font-size:12px; color:#6a7788; padding:20px; }

@@ -40,4 +40,33 @@
     r.className = 'resultado ' + (bloqueia ? 'bloqueado' : 'liberado');
     r.textContent = bloqueia ? '⛔ BLOQUEADO — item crítico reprovado' : '✅ LIBERADO para o turno';
   });
+
+  // ---------- Bastidores: a "aba Rede" de quem está no celular ----------
+  // Lista os pedidos que o navegador já fez para montar esta página
+  // (Resource Timing API). O status só aparece nos navegadores que o
+  // informam (Chrome/Edge); nos outros, "—".
+  const arquivo = url => decodeURIComponent(new URL(url).pathname.split('/').pop() || 'checklist (a página)');
+  const TIPO = { navigation: 'página (HTML)', link: 'estilo (CSS)', css: 'estilo (CSS)', script: 'script (JS)', img: 'imagem', fetch: 'dados (JSON)' };
+  const pintaStatus = s => !s ? '<td class="status">—</td>' : `<td class="status ${s >= 400 ? 'status-erro' : 'status-ok'}">${s}</td>`;
+
+  $('verPedidos').addEventListener('click', () => {
+    const lista = [...performance.getEntriesByType('navigation'), ...performance.getEntriesByType('resource')];
+    $('bastidoresSaida').innerHTML = `
+      <table class="pedidos">
+        <thead><tr><th>Arquivo</th><th>Tipo</th><th>Método</th><th>Status</th></tr></thead>
+        <tbody>${lista.map(e => `<tr><td>${arquivo(e.name)}</td><td>${TIPO[e.initiatorType || e.entryType] || e.initiatorType}</td><td>GET</td>${pintaStatus(e.responseStatus)}</tr>`).join('')}</tbody>
+      </table>
+      <p class="total">Total: ${lista.length} pedidos HTTP</p>`;
+  });
+
+  $('pedir404').addEventListener('click', async () => {
+    const saida = $('bastidoresSaida');
+    try {
+      const r = await fetch('nao-existe.html', { cache: 'no-store' });
+      saida.innerHTML = `<p class="total">GET nao-existe.html → <span class="${r.ok ? 'status-ok' : 'status-erro'}">${r.status} ${r.statusText || (r.status === 404 ? 'Not Found' : '')}</span></p>
+        <p>O servidor respondeu que esse arquivo <b>não existe</b>.</p>`;
+    } catch (e) {
+      saida.innerHTML = '<p class="total status-erro">Sem conexão com o servidor.</p>';
+    }
+  });
 })();
