@@ -37,9 +37,9 @@
   let openMateriaKey = null; // matéria atualmente aberta na aba Aulas, pra saber o que re-renderizar quando bimestreDatesCache/trilhaBimestreCache muda ao vivo
   // fontMode saiu daqui — a fonte agora é controlada por prefs.fontFamily
   // (4 opções, ver FONT_PRESETS), persistida no banco junto com o resto da
-  // personalização. fontScale/libras continuam só locais (não têm por quê
+  // personalização. fontScale continua só local (não tem por quê
   // ir pro banco — atalho de acessibilidade rápido, não "identidade visual").
-  let a11y = { fontScale: 1, libras: false };
+  let a11y = { fontScale: 1 };
   let librasLoadFailed = false; // ver setupVLibras — script de terceiro (vlibras.gov.br) pode ser bloqueado pelo navegador
   let currentGameKey = null;
   const openModuleFrame = {}; // trilhaKey -> bool (módulo aberto)
@@ -274,7 +274,7 @@
           <button id="btnFontStyle" title="Alternar estilo da fonte" aria-label="Alternar estilo da fonte">🔤</button>
           <button id="btnFontSmaller" title="Diminuir fonte" aria-label="Diminuir fonte">A−</button>
           <button id="btnFontBigger" title="Aumentar fonte" aria-label="Aumentar fonte">A+</button>
-          <button id="btnLibras" title="Ativar Libras (VLibras)" aria-label="Ativar Libras">🤟</button>
+          <button id="btnLibras" title="Abrir o tradutor de Libras (VLibras)" aria-label="Abrir o tradutor de Libras">🤟</button>
         </div>
         <div id="sessionControl">
           <span class="welcome-msg" id="txtWelcome">Bem-vindo(a), <b id="txtUserNom">--</b></span>
@@ -642,7 +642,7 @@
         </div>
       </div>
 
-      <div vw class="enabled" style="display:none;">
+      <div vw class="enabled">
         <div vw-access-button class="active"></div>
         <div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div>
       </div>
@@ -4750,10 +4750,6 @@
     }
     root.style.setProperty('--user-font-scale', a11y.fontScale);
     applyA11yToOpenIframes();
-
-    const vw = document.querySelector('div[vw]');
-    if (vw) vw.style.display = a11y.libras ? '' : 'none';
-    document.getElementById('btnLibras').classList.toggle('on', a11y.libras);
   }
 
   // ---------- Personalização do portal (cor, tema, avatar, fundo, cursor) ----------
@@ -5329,10 +5325,67 @@
       // o que ele tenta buscar depois é que falha). Sem checar se o widget
       // realmente terminou de se montar, clicar em 🤟 simplesmente não fazia
       // nada, sem nenhuma pista do motivo.
-      setTimeout(() => { if (!document.querySelector('div[vw]')) librasLoadFailed = true; }, 4000);
+      // O plugin 7.x ignora o <div vw> e monta o próprio botão em
+      // #vlibras-access-wrapper (shadow DOM) — é ele que diz se montou.
+      setTimeout(() => { if (!document.getElementById('vlibras-access-wrapper')) librasLoadFailed = true; }, 4000);
     };
     script.onerror = () => { librasLoadFailed = true; };
     document.body.appendChild(script);
+    // Atividade/jogo aberto num <iframe> tem o próprio VLibras (shared/
+    // vlibras-widget.js). O da plataforma não traduz o que está dentro do
+    // iframe (clique lá dentro não chega neste documento) — deixá-lo na
+    // tela só dava dois botões azuis iguais, um deles inútil. Checagem
+    // periódica porque o iframe também some/aparece trocando de aba.
+    atualizarLibrasDaPlataforma();
+    setInterval(atualizarLibrasDaPlataforma, 800);
+  }
+
+  // Iframe de atividade/jogo que está aberto E visível agora (ou null).
+  function frameDeAtividadeVisivel() {
+    const frames = [document.getElementById('gameFrame'), ...document.querySelectorAll('iframe[id^="moduleFrame_"]')];
+    return frames.find(f => f && f.src && f.src !== 'about:blank' && f.getClientRects().length > 0) || null;
+  }
+
+  function atualizarLibrasDaPlataforma() {
+    let style = document.getElementById('pfLibrasOculto');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'pfLibrasOculto';
+      document.head.appendChild(style);
+    }
+    const css = frameDeAtividadeVisivel()
+      ? '#vlibras-access-wrapper, #vlibras-app-root { display: none !important; }'
+      : '';
+    if (style.textContent !== css) style.textContent = css;
+  }
+
+  // 🤟 da barra de acessibilidade: abre o tradutor direto (antes só
+  // mostrava/escondia o <div vw>, que o plugin 7.x nem usa mais — o botão
+  // azul ficava sempre na tela e o 🤟 não fazia nada). Com atividade aberta,
+  // abre o VLibras DE DENTRO do iframe, que é o que traduz o conteúdo dela.
+  function abrirLibras() {
+    const frame = frameDeAtividadeVisivel();
+    let alvo = window;
+    if (frame) {
+      alvo = null;
+      try {
+        const w = frame.contentWindow;
+        if (w && w.VLibrasWidget && typeof w.VLibrasWidget.open === 'function' && w.document.getElementById('vlibras-access-wrapper')) alvo = w;
+      } catch (e) { /* iframe de outra origem */ }
+    } else if (librasLoadFailed || !window.VLibrasWidget || typeof window.VLibrasWidget.open !== 'function' || !document.getElementById('vlibras-access-wrapper')) {
+      alvo = null;
+    }
+    if (!alvo) {
+      showToast('Libras indisponível', 'O tradutor VLibras não carregou nesta tela — pode estar sendo bloqueado pelo navegador (ex: "Rastreamento" no Edge) ou por um bloqueador de anúncios. Tente de novo em alguns segundos, outro navegador, ou libere vlibras.gov.br e cdn.jsdelivr.net nas configurações de privacidade.');
+      return;
+    }
+    alvo.VLibrasWidget.open();
+    // O app do tradutor (avatar) só é baixado agora, ao abrir; se o
+    // navegador bloquear esse download, o plugin não avisa nada.
+    setTimeout(() => {
+      try { if (alvo.document.getElementById('vlibras-app-root')) return; } catch (e) { return; }
+      showToast('Libras não abriu', 'O tradutor VLibras demorou demais para abrir — a internet pode estar lenta ou o navegador está bloqueando vlibras.gov.br / cdn.jsdelivr.net. Tente de novo em alguns segundos.');
+    }, 20000);
   }
 
   // ---------- Bootstrap ----------
@@ -5493,14 +5546,7 @@
       a11y.fontScale = Math.max(0.85, Math.round((a11y.fontScale - 0.1) * 10) / 10);
       applyA11y();
     });
-    document.getElementById('btnLibras').addEventListener('click', () => {
-      if (!a11y.libras && (librasLoadFailed || !document.querySelector('div[vw]'))) {
-        showToast('Libras indisponível', 'O widget VLibras ainda não carregou — pode estar sendo bloqueado pelo navegador (ex: "Rastreamento" no Edge). Tente de novo em alguns segundos, outro navegador, ou libere vlibras.gov.br/jsdelivr.net nas configurações de privacidade.');
-        return;
-      }
-      a11y.libras = !a11y.libras;
-      applyA11y();
-    });
+    document.getElementById('btnLibras').addEventListener('click', abrirLibras);
 
     setupRBAC();
     applyA11y();
