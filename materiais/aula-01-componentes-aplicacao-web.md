@@ -691,8 +691,6 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 0 1 1 1 1 1 0
 ```
 
-Não achou o desenho? Avance: os **0** somem e só ficam os **1**.
-
 ---
 
 ## Desafio da grade 2 de 2
@@ -704,8 +702,6 @@ Não achou o desenho? Avance: os **0** somem e só ficam os **1**.
 1 0 1 1 1 0 1
 0 1 1 1 1 1 0
 ```
-
-Não achou o desenho? Avance: os **0** somem e só ficam os **1**.
 
 ---
 
