@@ -128,8 +128,8 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 2. Linguagens de programação e o algoritmo da inspeção (25 min)
 3. Como uma IA "pensa" (30 min)
 4. ☕ Intervalo (20 min)
-5. Tipos de IA: desafio da grade e rodada relâmpago (25 min)
-6. O caminho de uma inspeção, na aba Rede, e revisão (45 min)
+5. 🚨 Jogo Invasão Hacker e tipos de IA (30 min)
+6. O caminho de uma inspeção, na aba Rede, e revisão (40 min)
 
 ---
 
@@ -510,9 +510,24 @@ A IA respondeu com segurança e o código parece certo. O que você faz?
 ---
 
 ## ☕ Intervalo
-Na volta: que tipo de IA resolve cada problema da mina?
+Na volta: um hacker vai tentar invadir o seu celular. 😈
 
 [cronômetro 20]
+
+---
+
+## 🚨 Alerta: invasão!
+Aponte a câmera e defenda o seu celular antes que o hacker chegue a **100%**.
+
+[qrcode https://instrutorjd.github.io/portal_aulas/games/invasao-hacker.html?p=aula-01 Defenda o seu celular]
+
+---
+
+## Quem se defendeu melhor?
++ Levante a mão quem viu **ACESSO NEGADO** 🛡️
++ Menor tempo vence; empate: quem errou menos
++ Errou alguma? Era conteúdo de hoje: binário, linguagens e IA
++ Na vida real, a melhor defesa também é **saber como funciona**
 
 ---
 

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#030805">
+<title>Invasão Hacker</title>
+
+<!-- "Invasão Hacker": jogo rápido pra usar no meio da aula, no celular do
+     aluno. Aberto pelo QR Code de um slide do Criar Material, SEM login e
+     sem Supabase (a turma pode nem ter conta no portal). Página 100%
+     estática: chuva de 0 e 1 no fundo, 5 s de "seu celular está sendo
+     hackeado", e depois perguntas contra o relógio — errar faz a invasão
+     avançar. Acertou tudo antes dos 100%: o hacker falhou.
+
+     Perguntas por aula em games/invasao-hacker-perguntas.js, escolhidas
+     pelo ?p= da URL (ex.: ?p=aula-01). -->
+<style>
+  :root{
+    --bg:#030805; --verde:#00ff66; --verde2:#00b347; --vermelho:#ff2a3d; --ink:#d9ffe6; --dim:#6fae86;
+    --card:rgba(3, 18, 9, .94); --linha:rgba(0, 255, 102, .28);
+    --cor:var(--verde);
+  }
+  body.perigo{ --cor:var(--vermelho); --linha:rgba(255, 42, 61, .4); --card:rgba(24, 3, 6, .85); --ink:#ffe3e6; --dim:#d98a92; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ margin:0; height:100%; }
+  body{
+    background:var(--bg); color:var(--ink); overflow:hidden;
+    font-family:'Courier New', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    user-select:none; -webkit-user-select:none; touch-action:manipulation; overscroll-behavior:none;
+  }
+  [hidden]{ display:none !important; }
+  /* Chuva forte só no alerta; no resto fica apagada pra não brigar com o
+     texto da pergunta. */
+  #chuva{ position:fixed; inset:0; width:100%; height:100%; z-index:0; opacity:.35; transition:opacity .4s; }
+  body[data-tela="telaAlerta"] #chuva{ opacity:1; }
+  main{ position:relative; z-index:1; height:100%; height:100dvh; display:flex; flex-direction:column; justify-content:center;
+    padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); max-width:560px; margin:0 auto; }
+  .tela{ display:flex; flex-direction:column; gap:16px; }
+  .card{ background:var(--card); border:1px solid var(--linha); border-radius:16px; padding:18px; box-shadow:0 0 30px color-mix(in srgb, var(--cor) 18%, transparent); }
+
+  /* ---------- Alerta de invasão ---------- */
+  .alerta-icone{ font-size:64px; text-align:center; line-height:1; animation:pisca .5s steps(2) infinite; }
+  @keyframes pisca{ 50%{ opacity:.25; } }
+  .glitch{ position:relative; margin:0; text-align:center; font-size:30px; font-weight:900; letter-spacing:2px; color:var(--cor); text-transform:uppercase;
+    text-shadow:0 0 12px var(--cor); animation:treme .25s infinite; }
+  .glitch::before, .glitch::after{ content:attr(data-text); position:absolute; inset:0; overflow:hidden; }
+  .glitch::before{ color:#00e5ff; clip-path:inset(0 0 55% 0); transform:translate(-2px, -1px); opacity:.7; }
+  .glitch::after{ color:#ffe600; clip-path:inset(55% 0 0 0); transform:translate(2px, 1px); opacity:.7; }
+  @keyframes treme{ 0%,100%{ transform:none; } 25%{ transform:translate(1px,-1px); } 50%{ transform:translate(-1px,1px) skewX(2deg); } 75%{ transform:translate(1px,1px); } }
+  .terminal{ min-height:132px; font-size:14px; line-height:1.6; color:var(--ink); white-space:pre-wrap; }
+  .terminal .ok{ color:var(--cor); }
+  .cursor::after{ content:'█'; animation:pisca .8s steps(2) infinite; margin-left:2px; }
+  .barra{ height:14px; border-radius:8px; border:1px solid var(--linha); background:rgba(0,0,0,.5); overflow:hidden; }
+  .barra > div{ height:100%; width:0; background:var(--cor); box-shadow:0 0 14px var(--cor); transition:width .2s linear; }
+  .rotulo{ display:flex; justify-content:space-between; font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--dim); margin-bottom:6px; }
+  .rotulo b{ color:var(--cor); }
+
+  /* ---------- Instruções ---------- */
+  .titulo{ margin:0; font-size:24px; color:var(--cor); text-align:center; text-shadow:0 0 10px var(--cor); }
+  .texto{ margin:0; font-size:16px; line-height:1.6; text-align:center; }
+  .texto b{ color:var(--cor); }
+  .btn{ font:inherit; font-size:20px; font-weight:900; letter-spacing:1px; padding:18px; border-radius:14px; border:2px solid var(--cor); cursor:pointer;
+    background:var(--cor); color:#021006; box-shadow:0 0 22px color-mix(in srgb, var(--cor) 55%, transparent); text-transform:uppercase; }
+  .btn:active{ transform:scale(.97); }
+  .btn-sec{ background:transparent; color:var(--cor); box-shadow:none; font-size:16px; padding:14px; }
+
+  /* ---------- Defesa (perguntas) ---------- */
+  .hud{ display:flex; flex-direction:column; gap:8px; }
+  .pergunta-n{ font-size:13px; font-weight:700; letter-spacing:2px; color:var(--dim); text-transform:uppercase; margin-bottom:8px; }
+  .pergunta{ margin:0; font-size:21px; line-height:1.35; font-weight:700; color:#fff; }
+  .opcoes{ display:grid; gap:10px; }
+  .opcao{ font:inherit; font-size:18px; font-weight:700; text-align:left; padding:16px; border-radius:12px; cursor:pointer; color:var(--ink);
+    background:rgba(2, 10, 5, .94); border:1px solid var(--linha); }
+  .opcao:active{ transform:scale(.98); }
+  .opcao .letra{ color:var(--cor); margin-right:10px; }
+  .numero{ display:flex; gap:10px; }
+  .numero input{ flex:1; min-width:0; font:inherit; font-size:28px; font-weight:900; text-align:center; letter-spacing:4px; padding:12px; border-radius:12px;
+    background:rgba(0,0,0,.6); color:#fff; border:2px solid var(--linha); outline:none; }
+  .numero input:focus{ border-color:var(--cor); }
+  .numero .btn{ font-size:16px; padding:12px 16px; }
+  .erro-flash{ animation:erroTreme .4s; }
+  @keyframes erroTreme{ 20%,60%{ transform:translateX(-10px); } 40%,80%{ transform:translateX(10px); } }
+  .aviso{ min-height:22px; text-align:center; font-size:15px; font-weight:700; }
+  .aviso.certo{ color:var(--verde); }
+  .aviso.errado{ color:var(--vermelho); }
+  body.flash-vermelho::after, body.flash-verde::after{ content:''; position:fixed; inset:0; z-index:5; pointer-events:none; animation:flash .35s forwards; }
+  body.flash-vermelho::after{ background:rgba(255, 42, 61, .35); }
+  body.flash-verde::after{ background:rgba(0, 255, 102, .18); }
+  @keyframes flash{ to{ opacity:0; } }
+
+  /* ---------- Final ---------- */
+  .final-icone{ font-size:84px; text-align:center; line-height:1; }
+  .placar{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .placar div{ text-align:center; padding:12px; border-radius:12px; border:1px solid var(--linha); background:rgba(0,0,0,.85); }
+  .placar strong{ display:block; font-size:28px; color:var(--cor); }
+  .placar span{ font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--dim); }
+  .dica{ font-size:13px; color:var(--dim); text-align:center; margin:0; }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body class="perigo">
+<canvas id="chuva" aria-hidden="true"></canvas>
+
+<main>
+  <!-- 1) Os 5 s de "você está sendo hackeado" -->
+  <section class="tela" id="telaAlerta">
+    <div class="alerta-icone">⚠️</div>
+    <h1 class="glitch" data-text="Alerta de invasão">Alerta de invasão</h1>
+    <div class="card">
+      <div class="terminal cursor" id="terminal"></div>
+      <div class="rotulo" style="margin-top:12px"><span>Invasão</span><b id="pctAlerta">0%</b></div>
+      <div class="barra"><div id="barraAlerta"></div></div>
+    </div>
+  </section>
+
+  <!-- 2) Instruções -->
+  <section class="tela" id="telaInstrucao" hidden>
+    <div class="alerta-icone" style="animation:none">🛡️</div>
+    <h2 class="titulo">Seu celular está sendo hackeado!</h2>
+    <div class="card">
+      <p class="texto">Para bloquear o hacker, responda <b id="lblQtd">6</b> perguntas antes que a invasão chegue a <b>100%</b>.</p>
+      <p class="texto" style="margin-top:10px">Você tem <b id="lblTempo">70</b> segundos. Cada erro faz a invasão avançar <b>5 s</b>.</p>
+    </div>
+    <button class="btn" id="btnDefesa" type="button">🛡️ Ativar defesa</button>
+  </section>
+
+  <!-- 3) Defesa: perguntas contra o relógio -->
+  <section class="tela" id="telaPergunta" hidden>
+    <div class="hud">
+      <div>
+        <div class="rotulo"><span>Invasão</span><b id="pctJogo">0%</b></div>
+        <div class="barra"><div id="barraJogo"></div></div>
+      </div>
+      <div class="rotulo" style="margin:0"><span id="lblAula"></span><b id="lblFirewall">🛡️ 0/6</b></div>
+    </div>
+    <div class="card" id="cardPergunta">
+      <div class="pergunta-n" id="lblNumero">Pergunta 1</div>
+      <p class="pergunta" id="txtPergunta"></p>
+    </div>
+    <div class="opcoes" id="opcoes"></div>
+    <form class="numero" id="formNumero" hidden autocomplete="off">
+      <input id="inpNumero" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="?" aria-label="Sua resposta">
+      <button class="btn" type="submit">Enviar</button>
+    </form>
+    <div class="aviso" id="aviso" aria-live="polite"></div>
+  </section>
+
+  <!-- 4a) Vitória -->
+  <section class="tela" id="telaVitoria" hidden>
+    <div class="final-icone">🛡️</div>
+    <h1 class="glitch" data-text="Acesso negado" style="animation:none">Acesso negado</h1>
+    <p class="texto"><b>O hacker falhou!</b> Seu celular está protegido.</p>
+    <div class="placar">
+      <div><strong id="vitTempo">0s</strong><span>seu tempo</span></div>
+      <div><strong id="vitErros">0</strong><span>erros</span></div>
+    </div>
+    <p class="dica">Mostre esta tela ao professor. Menor tempo vence; empate: menos erros.</p>
+    <button class="btn btn-sec" id="btnDeNovo1" type="button">Jogar de novo</button>
+  </section>
+
+  <!-- 4b) Derrota -->
+  <section class="tela" id="telaDerrota" hidden>
+    <div class="final-icone">💀</div>
+    <h1 class="glitch" data-text="Sistema comprometido">Sistema comprometido</h1>
+    <p class="texto"><b>O hacker conseguiu.</b> A invasão chegou a 100%.</p>
+    <div class="placar">
+      <div><strong id="derAcertos">0/6</strong><span>defesas</span></div>
+      <div><strong id="derErros">0</strong><span>erros</span></div>
+    </div>
+    <button class="btn" id="btnDeNovo2" type="button">Tentar de novo</button>
+  </section>
+</main>
+
+<script src="invasao-hacker-perguntas.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const conjuntos = window.INVASAO_PERGUNTAS || {};
+  const chave = new URLSearchParams(location.search).get('p');
+  const cfg = conjuntos[chave] || conjuntos[Object.keys(conjuntos)[0]];
+  if (!cfg) { document.body.textContent = 'Nenhuma pergunta configurada.'; return; }
+
+  const TEMPO = cfg.tempo || 70;           // segundos até 100%
+  const PENALIDADE = 5;                     // segundos a mais por erro
+  const QTD = Math.min(cfg.sortear || 6, cfg.perguntas.length);
+  $('lblQtd').textContent = QTD;
+  $('lblTempo').textContent = TEMPO;
+  $('lblAula').textContent = cfg.titulo || '';
+
+  // ---------- Chuva de 0 e 1 ----------
+  const canvas = $('chuva'), ctx = canvas.getContext('2d');
+  const FONTE = 16;
+  let colunas = [], ultimoQuadro = 0;
+  function medir() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = Math.ceil(innerWidth / FONTE);
+    colunas = Array.from({ length: n }, () => Math.random() * -innerHeight / FONTE);
+    ctx.fillStyle = '#030805'; ctx.fillRect(0, 0, innerWidth, innerHeight);
+  }
+  function chover(t) {
+    requestAnimationFrame(chover);
+    if (document.hidden || t - ultimoQuadro < 50) return; // ~20 quadros/s: leve no celular
+    ultimoQuadro = t;
+    const perigo = document.body.classList.contains('perigo');
+    ctx.fillStyle = 'rgba(3, 8, 5, 0.14)';
+    ctx.fillRect(0, 0, innerWidth, innerHeight);
+    ctx.font = `bold ${FONTE}px monospace`;
+    for (let i = 0; i < colunas.length; i++) {
+      const y = colunas[i] * FONTE;
+      ctx.fillStyle = Math.random() < 0.06 ? '#eafff0' : (perigo ? '#ff2a3d' : '#00ff66');
+      ctx.fillText(Math.random() < 0.5 ? '0' : '1', i * FONTE, y);
+      if (y > innerHeight && Math.random() > 0.975) colunas[i] = 0;
+      colunas[i] += 1;
+    }
+  }
+  addEventListener('resize', medir);
+  medir(); requestAnimationFrame(chover);
+
+  // ---------- Som e vibração (só funcionam depois de um toque) ----------
+  let audio = null;
+  function bip(freq, dur, tipo) {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = tipo || 'square'; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.06, audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+      o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + dur);
+    } catch (e) { /* sem som, tudo bem */ }
+  }
+  const vibrar = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+
+  function mostrar(id) {
+    ['telaAlerta', 'telaInstrucao', 'telaPergunta', 'telaVitoria', 'telaDerrota'].forEach(t => { $(t).hidden = t !== id; });
+    document.body.dataset.tela = id;
+  }
+  function piscar(cor) {
+    document.body.classList.remove('flash-verde', 'flash-vermelho');
+    void document.body.offsetWidth;
+    document.body.classList.add(cor === 'verde' ? 'flash-verde' : 'flash-vermelho');
+  }
+
+  // ---------- 1) Alerta: 5 segundos ----------
+  const LINHAS = [
+    '> Conexão estranha detectada...',
+    '> Quebrando a senha do celular... ✔',
+    '> Acessando suas fotos...',
+    '> Copiando suas conversas...',
+    '> Assumindo o controle do aparelho...',
+  ];
+  function alerta() {
+    document.body.classList.add('perigo');
+    mostrar('telaAlerta');
+    const term = $('terminal');
+    term.textContent = '';
+    vibrar([300, 100, 300, 100, 600]);
+    const inicio = performance.now(), DUR = 5000;
+    LINHAS.forEach((l, i) => setTimeout(() => { term.textContent += (i ? '\n' : '') + l; }, i * 900));
+    (function subir() {
+      const f = Math.min(1, (performance.now() - inicio) / DUR);
+      const pct = Math.round(f * 37); // para em 37%: dá tempo de se defender
+      $('pctAlerta').textContent = pct + '%';
+      $('barraAlerta').style.width = pct + '%';
+      if (f < 1) requestAnimationFrame(subir);
+      else mostrar('telaInstrucao');
+    })();
+  }
+
+  // ---------- 2) Defesa ----------
+  const embaralhar = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  let fila = [], atual = 0, erros = 0, inicioJogo = 0, penal = 0, rodando = false, travado = false;
+
+  function sortear() {
+    // Garante pelo menos 1 pergunta de digitar número (quando o banco tem).
+    const nums = embaralhar(cfg.perguntas.filter(p => p.numero !== undefined));
+    const resto = embaralhar(cfg.perguntas.filter(p => p.numero === undefined));
+    const escolha = nums.length ? [nums[0]] : [];
+    embaralhar([...nums.slice(1), ...resto]).forEach(p => { if (escolha.length < QTD) escolha.push(p); });
+    return embaralhar(escolha);
+  }
+
+  function segundos() { return (performance.now() - inicioJogo) / 1000 + penal; }
+
+  function relogio() {
+    if (!rodando) return;
+    const pct = Math.min(100, Math.round((segundos() / TEMPO) * 100));
+    $('pctJogo').textContent = pct + '%';
+    $('barraJogo').style.width = pct + '%';
+    // Últimos 30%: fica vermelho de novo, pra dar urgência.
+    document.body.classList.toggle('perigo', pct >= 70);
+    if (pct >= 100) { derrota(); return; }
+    requestAnimationFrame(relogio);
+  }
+
+  function montarPergunta() {
+    const p = fila[atual];
+    travado = false;
+    $('lblNumero').textContent = `Pergunta ${atual + 1} de ${fila.length}`;
+    $('lblFirewall').textContent = `🛡️ ${atual}/${fila.length}`;
+    $('txtPergunta').textContent = p.q;
+    $('aviso').textContent = ''; $('aviso').className = 'aviso';
+    const box = $('opcoes');
+    box.innerHTML = '';
+    if (p.numero !== undefined) {
+      box.hidden = true;
+      $('formNumero').hidden = false;
+      $('inpNumero').value = '';
+      setTimeout(() => $('inpNumero').focus(), 50);
+    } else {
+      box.hidden = false;
+      $('formNumero').hidden = true;
+      const ops = embaralhar(p.opcoes.map((t, i) => ({ t, certa: i === p.certa })));
+      ops.forEach((o, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'opcao';
+        b.innerHTML = `<span class="letra">${'ABCD'[i]}</span>`;
+        b.appendChild(document.createTextNode(o.t));
+        b.addEventListener('click', () => responder(o.certa));
+        box.appendChild(b);
+      });
+    }
+  }
+
+  function responder(certo) {
+    if (!rodando || travado) return;
+    if (certo) {
+      travado = true;
+      bip(880, 0.12); vibrar(40); piscar('verde');
+      $('aviso').textContent = '✔ Ataque bloqueado!'; $('aviso').className = 'aviso certo';
+      atual++;
+      $('lblFirewall').textContent = `🛡️ ${atual}/${fila.length}`;
+      if (atual >= fila.length) { setTimeout(vitoria, 350); return; }
+      setTimeout(montarPergunta, 450);
+    } else {
+      erros++; penal += PENALIDADE;
+      bip(140, 0.3, 'sawtooth'); vibrar([120, 60, 120]); piscar('vermelho');
+      $('aviso').textContent = `✖ Errou! A invasão avançou ${PENALIDADE} s.`; $('aviso').className = 'aviso errado';
+      const card = $('cardPergunta');
+      card.classList.remove('erro-flash'); void card.offsetWidth; card.classList.add('erro-flash');
+      // Mesma pergunta de novo, com as alternativas em outra ordem.
+      if (fila[atual].numero === undefined) travado = true; // até a pergunta voltar embaralhada
+      if (fila[atual].numero === undefined) setTimeout(() => { if (rodando) { const aviso = $('aviso').textContent; montarPergunta(); $('aviso').textContent = aviso; $('aviso').className = 'aviso errado'; } }, 500);
+      else { $('inpNumero').value = ''; $('inpNumero').focus(); }
+    }
+  }
+
+  $('formNumero').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('inpNumero').value.trim();
+    if (!v) return;
+    responder(Number(v) === Number(fila[atual].numero));
+  });
+
+  function comecar() {
+    bip(440, 0.08); // destrava o som no celular (precisa de um toque)
+    fila = sortear(); atual = 0; erros = 0; penal = 0;
+    document.body.classList.remove('perigo');
+    mostrar('telaPergunta');
+    montarPergunta();
+    inicioJogo = performance.now(); rodando = true;
+    requestAnimationFrame(relogio);
+  }
+
+  function vitoria() {
+    rodando = false;
+    document.body.classList.remove('perigo');
+    const t = segundos();
+    $('vitTempo').textContent = t.toFixed(1).replace('.', ',') + 's';
+    $('vitErros').textContent = erros;
+    mostrar('telaVitoria');
+    [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => bip(f, 0.15, 'triangle'), i * 120));
+    vibrar([60, 40, 60, 40, 200]);
+  }
+
+  function derrota() {
+    rodando = false;
+    document.body.classList.add('perigo');
+    $('derAcertos').textContent = `${atual}/${fila.length}`;
+    $('derErros').textContent = erros;
+    mostrar('telaDerrota');
+    bip(110, 0.9, 'sawtooth');
+    vibrar([500, 100, 500]);
+  }
+
+  $('btnDefesa').addEventListener('click', comecar);
+  $('btnDeNovo1').addEventListener('click', alerta);
+  $('btnDeNovo2').addEventListener('click', alerta);
+  alerta();
+})();
+</script>
+</body>
+</html>

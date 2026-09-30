@@ -97,7 +97,10 @@
 .sm-midia p, .sm-midia ul, .sm-midia ol, .sm-midia blockquote{ font-size:26px; }
 
 /* ---------- Lista em etapas (+) ---------- */
-.sm-reveal .sm-step{ opacity:.08; transform:translateX(-18px); transition:opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1); }
+/* Tópico ainda não revelado: invisível de verdade (opacity 0, o espaço
+   continua reservado pra o slide não pular). Com .08 dava pra ler sem
+   revelar — antes um blur(3px) escondia, mas ele pesava na animação. */
+.sm-reveal .sm-step{ opacity:0; transform:translateX(-18px); transition:opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1); }
 .sm-reveal .sm-step.sm-on{ opacity:1; transform:none; }
 
 /* ---------- Código ---------- */
