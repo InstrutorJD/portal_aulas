@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#120b26">
+<title>Rodada Relâmpago</title>
+
+<!-- "Rodada Relâmpago": jogo rápido de sala, no celular do aluno, aberto
+     pelo QR Code de um slide do Criar Material. SEM login e sem Supabase
+     (página 100% estática, nada é gravado). Cada cenário tem poucos
+     segundos: tocar no uso de IA certo vale 100 pontos + bônus por
+     rapidez + bônus de sequência. No fim, a turma compara os pontos.
+
+     Cenários por aula em games/rodada-relampago-perguntas.js, escolhidos
+     pelo ?p= da URL (ex.: ?p=aula-01). -->
+<style>
+  :root{
+    --bg:#120b26; --bg2:#1d1340; --ink:#f3efff; --dim:#a99fd0; --linha:rgba(255,255,255,.14);
+    --raio:#ffd400; --ok:#2fd67a; --erro:#ff4d5e;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ margin:0; height:100%; }
+  body{
+    background:radial-gradient(circle at 50% -10%, #3a1f86 0%, var(--bg) 60%); background-attachment:fixed; color:var(--ink);
+    font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; overflow:hidden;
+    user-select:none; -webkit-user-select:none; touch-action:manipulation; overscroll-behavior:none;
+  }
+  [hidden]{ display:none !important; }
+  main{ height:100%; height:100dvh; display:flex; flex-direction:column; justify-content:center; gap:14px;
+    max-width:560px; margin:0 auto; padding:max(14px, env(safe-area-inset-top)) 16px max(14px, env(safe-area-inset-bottom)); }
+  .tela{ display:flex; flex-direction:column; gap:14px; }
+  .card{ background:var(--bg2); border:1px solid var(--linha); border-radius:18px; padding:18px; }
+  .raio{ font-size:72px; text-align:center; line-height:1; filter:drop-shadow(0 0 18px var(--raio)); animation:pulso 1.2s ease-in-out infinite; }
+  @keyframes pulso{ 50%{ transform:scale(1.08); } }
+  h1{ margin:0; text-align:center; font-size:30px; font-weight:900; letter-spacing:1px; text-transform:uppercase; color:var(--raio); text-shadow:0 0 16px rgba(255,212,0,.5); }
+  .sub{ margin:0; text-align:center; font-size:16px; line-height:1.5; color:var(--dim); }
+  .sub b{ color:var(--ink); }
+  .legenda{ display:grid; gap:6px; font-size:15px; }
+  .legenda span{ display:flex; align-items:center; gap:10px; }
+  .btn{ font:inherit; font-size:20px; font-weight:900; letter-spacing:1px; text-transform:uppercase; padding:18px; border-radius:16px; border:none; cursor:pointer;
+    background:var(--raio); color:#1a1200; box-shadow:0 0 24px rgba(255,212,0,.45); }
+  .btn:active{ transform:scale(.97); }
+  .btn-sec{ background:transparent; color:var(--raio); border:2px solid var(--raio); box-shadow:none; font-size:16px; padding:14px; }
+
+  /* Jogo */
+  .hud{ display:flex; justify-content:space-between; align-items:center; font-size:14px; font-weight:800; color:var(--dim); }
+  .hud b{ color:var(--raio); font-size:20px; }
+  .fogo{ color:#ff9a3c !important; }
+  .tempo{ height:10px; border-radius:6px; background:rgba(255,255,255,.12); overflow:hidden; }
+  .tempo > div{ height:100%; width:100%; background:var(--raio); box-shadow:0 0 12px var(--raio); }
+  .tempo.acabando > div{ background:var(--erro); box-shadow:0 0 12px var(--erro); }
+  .n{ font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--dim); margin-bottom:8px; }
+  .cenario{ margin:0; font-size:22px; line-height:1.35; font-weight:800; }
+  .opcoes{ display:grid; gap:8px; }
+  .opcao{ display:flex; align-items:center; gap:12px; font:inherit; font-size:18px; font-weight:800; text-align:left; padding:14px 16px; border-radius:14px; cursor:pointer;
+    color:var(--ink); background:var(--bg2); border:2px solid var(--linha); transition:transform .1s, background .2s, border-color .2s, opacity .2s; }
+  .opcao:active{ transform:scale(.98); }
+  .opcao .em{ font-size:24px; width:30px; text-align:center; }
+  .opcao.certa{ background:rgba(47,214,122,.2); border-color:var(--ok); }
+  .opcao.errada{ background:rgba(255,77,94,.2); border-color:var(--erro); }
+  .opcoes.respondido .opcao:not(.certa):not(.errada){ opacity:.35; }
+  .feedback{ min-height:48px; text-align:center; font-size:16px; line-height:1.4; }
+  .feedback b{ font-size:18px; }
+  .feedback.bom b{ color:var(--ok); }
+  .feedback.ruim b{ color:var(--erro); }
+  .pontos-voam{ position:fixed; left:50%; top:40%; transform:translate(-50%,0); font-size:40px; font-weight:900; color:var(--raio); text-shadow:0 0 16px var(--raio);
+    pointer-events:none; animation:voa .9s ease-out forwards; }
+  @keyframes voa{ to{ transform:translate(-50%,-90px); opacity:0; } }
+
+  /* Final */
+  .placar{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .placar div{ text-align:center; padding:14px 8px; border-radius:14px; background:var(--bg2); border:1px solid var(--linha); }
+  .placar strong{ display:block; font-size:34px; color:var(--raio); }
+  .placar span{ font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--dim); }
+  .titulo-final{ text-align:center; font-size:22px; font-weight:900; margin:0; }
+  .dica{ margin:0; text-align:center; font-size:13px; color:var(--dim); }
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <section class="tela" id="telaInicio">
+    <div class="raio">⚡</div>
+    <h1>Rodada Relâmpago</h1>
+    <p class="sub" id="lblTitulo"></p>
+    <div class="card">
+      <p class="sub" style="margin-bottom:12px">Para cada problema da mina, toque no <b>uso da IA</b> que resolve. Você tem <b id="lblSeg">10</b> s por cenário.</p>
+      <div class="legenda" id="legenda"></div>
+    </div>
+    <p class="sub">Mais rápido = <b>mais pontos</b>. Acertos seguidos = <b>🔥 bônus</b>.</p>
+    <button class="btn" id="btnComecar" type="button">⚡ Começar</button>
+  </section>
+
+  <section class="tela" id="telaJogo" hidden>
+    <div class="hud"><span>Pontos <b id="lblPontos">0</b></span><span id="lblFogo"></span><span id="lblN"></span></div>
+    <div class="tempo" id="tempo"><div id="barraTempo"></div></div>
+    <div class="card">
+      <div class="n" id="lblCenario">Cenário 1</div>
+      <p class="cenario" id="txtCenario"></p>
+    </div>
+    <div class="opcoes" id="opcoes"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+  </section>
+
+  <section class="tela" id="telaFim" hidden>
+    <div class="raio" id="fimEmoji">🏆</div>
+    <p class="titulo-final" id="fimTitulo"></p>
+    <div class="placar">
+      <div><strong id="fimPontos">0</strong><span>pontos</span></div>
+      <div><strong id="fimAcertos">0/6</strong><span>acertos</span></div>
+    </div>
+    <p class="dica">Mostre esta tela ao professor: quem fizer mais pontos vence.</p>
+    <button class="btn btn-sec" id="btnDeNovo" type="button">Jogar de novo</button>
+  </section>
+</main>
+
+<script src="rodada-relampago-perguntas.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const conjuntos = window.RODADA_RELAMPAGO || {};
+  const cfg = conjuntos[new URLSearchParams(location.search).get('p')] || conjuntos[Object.keys(conjuntos)[0]];
+  if (!cfg) { document.body.textContent = 'Nenhum cenário configurado.'; return; }
+  const SEG = cfg.segundos || 10;
+  const QTD = Math.min(cfg.sortear || 6, cfg.cenarios.length);
+  const opcao = id => cfg.opcoes.find(o => o.id === id);
+
+  $('lblTitulo').textContent = cfg.titulo || '';
+  $('lblSeg').textContent = SEG;
+  $('legenda').innerHTML = cfg.opcoes.map(o => `<span>${o.emoji} ${o.rotulo}</span>`).join('');
+
+  // Som e vibração: só depois do primeiro toque (regra dos navegadores).
+  let audio = null;
+  function bip(f, d, tipo) {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = tipo || 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.07, audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+      o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + d);
+    } catch (e) {}
+  }
+  const vibrar = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+  const embaralhar = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  function mostrar(id) { ['telaInicio', 'telaJogo', 'telaFim'].forEach(t => { $(t).hidden = t !== id; }); }
+
+  // Pelo menos 1 cenário de cada opção; o resto sorteado entre os que sobraram.
+  function sortear() {
+    const escolha = [];
+    embaralhar(cfg.opcoes).forEach(o => {
+      const c = embaralhar(cfg.cenarios.filter(x => x.certa === o.id))[0];
+      if (c && escolha.length < QTD) escolha.push(c);
+    });
+    embaralhar(cfg.cenarios.filter(c => !escolha.includes(c))).forEach(c => { if (escolha.length < QTD) escolha.push(c); });
+    return embaralhar(escolha);
+  }
+
+  let fila = [], i = 0, pontos = 0, acertos = 0, seq = 0, inicio = 0, raf = 0, respondido = false;
+
+  function hud() {
+    $('lblPontos').textContent = pontos;
+    $('lblN').textContent = `${Math.min(i + 1, fila.length)}/${fila.length}`;
+    const f = $('lblFogo');
+    f.textContent = seq >= 2 ? `🔥 ${seq} seguidas` : '';
+    f.className = 'fogo';
+  }
+
+  function montar() {
+    const c = fila[i];
+    respondido = false;
+    $('lblCenario').textContent = `Cenário ${i + 1} de ${fila.length}`;
+    $('txtCenario').textContent = c.texto;
+    $('feedback').textContent = ''; $('feedback').className = 'feedback';
+    const box = $('opcoes');
+    box.className = 'opcoes';
+    box.innerHTML = '';
+    cfg.opcoes.forEach(o => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'opcao'; b.dataset.id = o.id;
+      b.innerHTML = `<span class="em">${o.emoji}</span>`;
+      b.appendChild(document.createTextNode(o.rotulo));
+      b.addEventListener('click', () => responder(o.id));
+      box.appendChild(b);
+    });
+    hud();
+    inicio = performance.now();
+    cancelAnimationFrame(raf);
+    (function relogio() {
+      const resta = Math.max(0, SEG - (performance.now() - inicio) / 1000);
+      $('barraTempo').style.width = (resta / SEG * 100) + '%';
+      $('tempo').classList.toggle('acabando', resta <= 3);
+      if (respondido) return;
+      if (resta <= 0) { responder(null); return; }
+      raf = requestAnimationFrame(relogio);
+    })();
+  }
+
+  function responder(id) {
+    if (respondido) return;
+    respondido = true;
+    cancelAnimationFrame(raf);
+    const c = fila[i];
+    const resta = Math.max(0, SEG - (performance.now() - inicio) / 1000);
+    const box = $('opcoes');
+    box.classList.add('respondido');
+    box.querySelector(`[data-id="${c.certa}"]`).classList.add('certa');
+    const fb = $('feedback');
+    if (id === c.certa) {
+      seq++; acertos++;
+      const ganho = 100 + Math.round((resta / SEG) * 100) + (seq >= 2 ? (seq - 1) * 25 : 0);
+      pontos += ganho;
+      fb.className = 'feedback bom';
+      fb.innerHTML = `<b>✔ +${ganho}</b><br>${c.porque}`;
+      const voa = document.createElement('div');
+      voa.className = 'pontos-voam'; voa.textContent = `+${ganho}`;
+      document.body.appendChild(voa); setTimeout(() => voa.remove(), 900);
+      bip(880, 0.12); vibrar(40);
+    } else {
+      seq = 0;
+      if (id) box.querySelector(`[data-id="${id}"]`).classList.add('errada');
+      fb.className = 'feedback ruim';
+      fb.innerHTML = `<b>${id ? '✖ Não foi' : '⏱ Tempo esgotado'}</b><br>Era <b style="color:var(--ok)">${opcao(c.certa).rotulo}</b>. ${c.porque}`;
+      bip(160, 0.3, 'sawtooth'); vibrar([100, 50, 100]);
+    }
+    hud();
+    setTimeout(() => { i++; if (i < fila.length) montar(); else fim(); }, 2200);
+  }
+
+  function fim() {
+    const total = fila.length;
+    $('fimPontos').textContent = pontos;
+    $('fimAcertos').textContent = `${acertos}/${total}`;
+    const nota = acertos / total;
+    $('fimEmoji').textContent = nota === 1 ? '🏆' : nota >= 0.66 ? '⚡' : '🔋';
+    $('fimTitulo').textContent = nota === 1 ? 'Mestre da IA! Acertou todos.' : nota >= 0.66 ? 'Mandou bem, quase lá!' : 'Recarregue e tente de novo!';
+    mostrar('telaFim');
+    [523, 659, 784].forEach((f, k) => setTimeout(() => bip(f, 0.15), k * 120));
+  }
+
+  function comecar() {
+    bip(660, 0.08);
+    fila = sortear(); i = 0; pontos = 0; acertos = 0; seq = 0;
+    mostrar('telaJogo');
+    montar();
+  }
+
+  $('btnComecar').addEventListener('click', comecar);
+  $('btnDeNovo').addEventListener('click', comecar);
+})();
+</script>
+</body>
+</html>

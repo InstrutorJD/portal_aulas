@@ -3,7 +3,7 @@ aula: 1
 data: 2026-09-30
 titulo: Do bit à IA: como uma aplicação web funciona
 turma: IA
-descricao: Boas-vindas, história, binário, linguagens, como a IA pensa, tipos de IA na mineração e o caminho de uma inspeção
+descricao: Boas-vindas, história, binário, linguagens, como a IA pensa, usos da IA na mineração e o caminho de uma inspeção
 ---
 
 # Do bit à IA
@@ -41,7 +41,7 @@ O que você já sabe? Sem nota, só para a gente se conhecer
 
 + Binário (bit e byte)
 + Linguagem de programação
-+ Tipos de IA (preditiva, generativa...)
++ Usos da IA (preditiva, generativa...)
 + Frontend e backend
 + API
 + HTTP
@@ -152,7 +152,7 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 2. Linguagens de programação e o algoritmo da inspeção (23 min)
 3. A IA: de onde veio, onde está e como "pensa" (34 min)
 4. ☕ Intervalo (20 min)
-5. 🚨 Jogo Invasão Hacker, tipos de IA e o futuro (32 min)
+5. 🚨 Jogos Invasão Hacker e Rodada Relâmpago, usos da IA e o futuro (32 min)
 6. A inspeção na web, criar sem código e segurança (41 min)
 
 ---
@@ -587,13 +587,26 @@ Aponte a câmera e defenda o seu celular antes que o hacker chegue a **100%**.
 
 ---
 
-# Tipos de IA
+# Usos da IA
 Cada problema pede uma ferramenta
 
 ---
 
-## Cinco tipos de IA
-| Tipo | O que faz | Exemplo na mina |
+## Como a IA é classificada
+Pelo que ela **consegue** fazer, a IA se divide em três grupos:
+
+| Grupo | O que é | Já existe? |
+|---|---|---|
+| IA estreita (ou fraca) | Faz muito bem **uma** tarefa específica | Sim: é toda IA de hoje |
+| IA geral (ou forte) | Faria qualquer tarefa, como uma pessoa | Ainda não |
+| Superinteligência | Iria além da inteligência humana | Só em teoria |
+
+---
+
+## Os 5 usos da IA estreita hoje
+Todos são **IA estreita**. Assistente e agente são IA generativa aplicada ao código.
+
+| Uso | O que faz | Exemplo na mina |
 |---|---|---|
 | Preditiva | Prevê o futuro a partir do histórico | Prever a falha de um equipamento |
 | Visão computacional | Enxerga e analisa imagens | Achar desgaste na foto de um pneu |
@@ -610,6 +623,7 @@ Cada problema pede uma ferramenta
 + Nos dois casos: **você revisa** antes de aceitar
 
 ---
+
 
 ## Aquecimento
 A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca de óleo.
@@ -672,32 +686,20 @@ Não achou o desenho? Avance: os **0** somem e só ficam os **1**.
 
 ---
 
-## Rodada relâmpago: qual tipo de IA?
-**1** preditiva · **2** visão · **3** generativa · **4** assistente · **5** agente
+## ⚡ Rodada relâmpago
+Qual uso da IA resolve cada problema da mina? 10 segundos por cenário: rápido vale mais!
 
-1. No próximo slide, o professor lê um cenário por vez
-2. Você mostra o número nos dedos, todos ao mesmo tempo
-3. Cada acerto vale 1 ponto: anote o seu placar no celular
+[qrcode https://instrutorjd.github.io/portal_aulas/games/rodada-relampago.html?p=aula-01 Rodada relâmpago]
 
 ---
 
-## Cenários da mineração
-1. Avisar a manutenção antes de a bomba da mina quebrar, pela vibração
-2. Conferir, por foto, se a correia transportadora está rasgada
-3. Escrever o resumo do turno a partir das inspeções do dia
-4. Completar a função que confere se todos os itens foram marcados
-5. Criar a tela inteira do dashboard a partir de uma descrição
-6. Ler pela câmera a placa de identificação do equipamento
-
----
-
-## Gabarito: some os seus pontos
-+ 1. Bomba da mina → **preditiva**
-+ 2. Correia rasgada na foto → **visão computacional**
-+ 3. Resumo do turno → **generativa**
-+ 4. Completar a função → **assistente de código**
-+ 5. Dashboard inteiro → **agente de desenvolvimento**
-+ 6. Placa do equipamento → **visão computacional**
+## Como acertar sempre
++ Vai **prever** o que vai acontecer? → **preditiva**
++ Precisa **olhar** uma foto ou câmera? → **visão computacional**
++ Vai **criar** um texto ou imagem novo? → **generativa**
++ **Sugere** enquanto você digita? → **assistente de código**
++ Faz a **tarefa inteira** sozinho? → **agente**
++ Quem fez mais pontos? 🏆
 
 ---
 
@@ -936,7 +938,7 @@ Levante os dedos outra vez e compare com o placar do começo.
 
 + Binário (bit e byte)
 + Linguagem de programação
-+ Tipos de IA (preditiva, generativa...)
++ Usos da IA (preditiva, generativa...)
 + Frontend e backend
 + API
 + HTTP
@@ -948,7 +950,7 @@ Levante os dedos outra vez e compare com o placar do começo.
 + Todo computador tem entrada, processamento, memória e saída
 + Código-fonte vira linguagem de máquina: **compilação ou interpretação**
 + A IA **prevê tokens** e pode alucinar: revise sempre
-+ Cada problema pede um **tipo de IA**: preditiva, visão, generativa, assistente, agente
++ Cada problema pede um **uso da IA**: preditiva, visão, generativa, assistente, agente
 + Frontend, API, backend e banco: o **caminho de uma inspeção**
 
 ---
