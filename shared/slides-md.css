@@ -19,14 +19,17 @@
 }
 .sm-presenter[hidden]{ display:none; }
 
-/* Fundo vivo: três manchas de cor desfocadas flutuando devagar. */
+/* Fundo: três manchas de cor suaves, PARADAS. Eram círculos com
+   filter:blur(90px) flutuando sem parar — o navegador redesenhava isso a
+   cada quadro e, em PC de sala/projetor, a troca de slide engasgava. Um
+   radial-gradient dá o mesmo esfumado sem custo nenhum. */
 .sm-bg{ position:absolute; inset:0; pointer-events:none; }
-.sm-bg span{ position:absolute; width:46vmax; height:46vmax; border-radius:50%; filter:blur(90px); opacity:.22; animation:smFlutua 22s ease-in-out infinite alternate; }
-.sm-bg span:nth-child(1){ background:var(--sm-accent); top:-18vmax; left:-12vmax; }
-.sm-bg span:nth-child(2){ background:var(--sm-accent3); bottom:-22vmax; right:-14vmax; animation-duration:28s; }
-.sm-bg span:nth-child(3){ background:var(--sm-accent2); top:30%; left:45%; width:30vmax; height:30vmax; opacity:.12; animation-duration:34s; }
+.sm-bg span{ position:absolute; width:60vmax; height:60vmax; border-radius:50%; opacity:.22;
+  background:radial-gradient(circle, var(--sm-c) 0%, transparent 65%); }
+.sm-bg span:nth-child(1){ --sm-c:var(--sm-accent); top:-26vmax; left:-20vmax; }
+.sm-bg span:nth-child(2){ --sm-c:var(--sm-accent3); bottom:-30vmax; right:-22vmax; }
+.sm-bg span:nth-child(3){ --sm-c:var(--sm-accent2); top:25%; left:40%; width:40vmax; height:40vmax; opacity:.12; }
 .sm-presenter[data-theme="light"] .sm-bg span{ opacity:.14; }
-@keyframes smFlutua{ to{ transform:translate(6vmax, 4vmax) scale(1.12); } }
 
 .sm-stage-wrap{ position:absolute; inset:0; overflow:clip; }
 .sm-stage{ position:absolute; left:50%; top:50%; width:1280px; height:720px; transform-origin:center; }
@@ -37,29 +40,29 @@
 /* Troca de slide suave: esmaecimento cruzado com um deslize curto, sem
    escala nem desfoque. O antigo some um pouco mais rápido que o novo
    aparece, pra os dois não "brigarem" na tela. O JS remove o antigo
-   depois de 650ms — a saída tem que caber nisso. */
-.sm-in-next{ animation:smInNext .7s cubic-bezier(.25,.1,.25,1) both; }
-.sm-in-prev{ animation:smInPrev .7s cubic-bezier(.25,.1,.25,1) both; }
-.sm-out-next{ animation:smOutNext .45s cubic-bezier(.4,0,.6,1) both; }
-.sm-out-prev{ animation:smOutPrev .45s cubic-bezier(.4,0,.6,1) both; }
+   depois de 300ms — a saída tem que caber nisso. Curta de propósito:
+   com 0,7s a troca parecia travar. */
+.sm-in-next{ animation:smInNext .3s cubic-bezier(.2,.8,.2,1) both; }
+.sm-in-prev{ animation:smInPrev .3s cubic-bezier(.2,.8,.2,1) both; }
+.sm-out-next{ animation:smOutNext .2s ease-in both; }
+.sm-out-prev{ animation:smOutPrev .2s ease-in both; }
 @keyframes smInNext{ from{ opacity:0; transform:translateX(24px); } to{ opacity:1; transform:none; } }
 @keyframes smInPrev{ from{ opacity:0; transform:translateX(-24px); } to{ opacity:1; transform:none; } }
 @keyframes smOutNext{ to{ opacity:0; transform:translateX(-16px); } }
 @keyframes smOutPrev{ to{ opacity:0; transform:translateX(16px); } }
 
 /* Entrada escalonada dos elementos (--d = ordem no slide). */
-.sm-anim{ animation:smSobe .8s cubic-bezier(.25,.1,.25,1) both; animation-delay:calc(.15s + var(--d, 0) * .08s); }
+.sm-anim{ animation:smSobe .35s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(.03s + var(--d, 0) * .03s); }
 @keyframes smSobe{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
 .sm-estatico .sm-anim, .sm-estatico{ animation:none !important; }
 
 /* ---------- Tipografia ---------- */
 .sm-slide h1{ font-size:84px; line-height:1.05; margin:0; font-weight:800; letter-spacing:-2px;
   background:linear-gradient(100deg, var(--sm-accent), var(--sm-accent3) 55%, var(--sm-accent2)); background-size:200% auto;
-  -webkit-background-clip:text; background-clip:text; color:transparent; animation:smSobe .7s both, smBrilho 6s linear infinite; }
-@keyframes smBrilho{ to{ background-position:200% center; } }
+  -webkit-background-clip:text; background-clip:text; color:transparent; animation:smSobe .35s both; }
 .sm-slide h2{ font-size:52px; line-height:1.1; margin:0 0 6px; font-weight:800; letter-spacing:-1px; position:relative; padding-bottom:14px; }
-.sm-slide h2::after{ content:''; position:absolute; left:0; bottom:0; height:5px; width:84px; border-radius:3px; background:linear-gradient(90deg, var(--sm-accent), var(--sm-accent3)); animation:smRisco .9s .3s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes smRisco{ from{ width:0; } }
+.sm-slide h2::after{ content:''; position:absolute; left:0; bottom:0; height:5px; width:84px; border-radius:3px; background:linear-gradient(90deg, var(--sm-accent), var(--sm-accent3)); transform-origin:left; animation:smRisco .4s .1s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes smRisco{ from{ transform:scaleX(0); } }
 .sm-slide h3{ font-size:34px; margin:0; color:var(--sm-accent); font-weight:700; }
 .sm-slide p{ font-size:30px; line-height:1.45; margin:0; color:var(--sm-ink); }
 .sm-slide ul, .sm-slide ol{ font-size:30px; line-height:1.4; margin:0; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:14px; }
@@ -94,8 +97,8 @@
 .sm-midia p, .sm-midia ul, .sm-midia ol, .sm-midia blockquote{ font-size:26px; }
 
 /* ---------- Lista em etapas (+) ---------- */
-.sm-reveal .sm-step{ opacity:.08; transform:translateX(-18px); filter:blur(3px); transition:opacity .45s, transform .45s cubic-bezier(.2,.8,.2,1), filter .45s; }
-.sm-reveal .sm-step.sm-on{ opacity:1; transform:none; filter:none; }
+.sm-reveal .sm-step{ opacity:.08; transform:translateX(-18px); transition:opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1); }
+.sm-reveal .sm-step.sm-on{ opacity:1; transform:none; }
 
 /* ---------- Código ---------- */
 .sm-code{ border-radius:14px; overflow:hidden; border:1px solid var(--sm-line); background:var(--sm-code-bg); box-shadow:0 20px 50px rgba(0,0,0,.35); }
@@ -174,7 +177,7 @@
 .sm-progress{ position:absolute; left:0; right:0; top:0; height:5px; background:var(--sm-line); }
 .sm-progress > div{ height:100%; width:0; background:linear-gradient(90deg, var(--sm-accent), var(--sm-accent3), var(--sm-accent2)); transition:width .5s cubic-bezier(.2,.8,.2,1); }
 .sm-hud{ position:absolute; left:50%; bottom:18px; transform:translate(-50%, 20px); display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px;
-  background:color-mix(in srgb, var(--sm-bg2) 85%, transparent); border:1px solid var(--sm-line); backdrop-filter:blur(10px); opacity:0; transition:opacity .3s, transform .3s; }
+  background:color-mix(in srgb, var(--sm-bg2) 96%, transparent); border:1px solid var(--sm-line); opacity:0; transition:opacity .2s, transform .2s; }
 /* Só o mouse se mexendo (sm-hud-on) ou o foco pelo TECLADO (Tab) mostram a
    barra — sem :hover/:focus-within: depois de clicar em ⛶ o mouse fica
    parado em cima do botão, com foco nele, e a barra nunca sumia. */

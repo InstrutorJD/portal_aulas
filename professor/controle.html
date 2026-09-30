@@ -12,7 +12,8 @@
      portal (shared/passador-remoto.js). O código da sala vem no #hash
      da URL (ou é digitado aqui, se a câmera não ler o QR); os dois lados se falam por um canal de broadcast do Supabase
      Realtime ('slides_remoto_<sala>'), sem tabela: daqui sai 'cmd'
-     (next/prev/revelar/ola), de lá vem 'estado' (slide atual). -->
+     (next/prev/revelar/ola, e timer-play/timer-reset pro cronômetro do
+     slide), de lá vem 'estado' (slide atual e o cronômetro, se houver). -->
 <style>
   :root{
     --bg:#0b0f17; --bg2:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,0.12);
@@ -50,6 +51,14 @@
   .ct-next{ flex:3; font-size:28px; border-color:color-mix(in srgb, var(--accent) 55%, transparent) !important; }
   .ct-linha{ flex:1; display:flex; gap:12px; }
   .ct-linha button{ flex:1; font-size:18px; }
+  /* Cronômetro do slide (só aparece quando o slide tem um). */
+  .ct-timer{ display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:22px; border:1px solid color-mix(in srgb, var(--accent) 45%, transparent); background:var(--bg2); }
+  .ct-timer-tempo{ font-family:'JetBrains Mono', Consolas, monospace; font-size:30px; font-weight:800; min-width:5ch; text-align:center; color:var(--accent); }
+  .ct-timer.ct-rodando .ct-timer-tempo{ color:var(--ink); }
+  .ct-timer.ct-fim .ct-timer-tempo{ color:var(--erro); }
+  .ct-timer button{ flex:1; min-width:0; white-space:nowrap; font:inherit; font-size:16px; font-weight:800; padding:14px 6px; border-radius:16px; cursor:pointer; color:var(--ink); border:1px solid var(--line); background:var(--bg); }
+  .ct-timer button:active{ transform:scale(.97); }
+  .ct-timer .ct-timer-play{ background:var(--accent); color:var(--bg); border:none; }
 
   .ct-login{ margin:auto 0; display:flex; flex-direction:column; gap:12px; }
   .ct-login h1{ font-size:22px; margin:0 0 4px; }
@@ -89,6 +98,11 @@
     <div class="ct-titulo" id="ctTitulo"></div>
     <div class="ct-num" id="ctNum"></div>
     <div class="ct-barra"><div id="ctBarra"></div></div>
+  </div>
+  <div class="ct-timer" id="ctTimer" hidden>
+    <span class="ct-timer-tempo" id="ctTimerTempo">00:00</span>
+    <button type="button" class="ct-timer-play" id="ctTimerPlay" data-cmd="timer-play">▶ Iniciar</button>
+    <button type="button" data-cmd="timer-reset">↺ Zerar</button>
   </div>
   <div class="ct-botoes">
     <button type="button" class="ct-next" data-cmd="next">Próximo ⟶</button>
@@ -159,6 +173,7 @@
       $('ctNum').textContent = '';
       $('ctBarra').style.width = '0';
       botoes.forEach(b => { b.disabled = true; });
+      mostrarTimer(null);
       return;
     }
     // Atividades do portal (shared/passador-remoto.js) mandam tipo
@@ -170,7 +185,35 @@
     $('ctNum').textContent = `${estado.i + 1} / ${estado.total}`;
     $('ctBarra').style.width = `${((estado.i + 1) / estado.total) * 100}%`;
     botoes.forEach(b => { b.disabled = false; });
+    mostrarTimer(estado.timer);
   }
+
+  // Cronômetro do slide: a apresentação manda o estado a cada play/pausa/
+  // zerar/fim (e a cada "ola", de 4 em 4s); entre um e outro o celular
+  // conta sozinho, a partir do `rest` recebido.
+  let timer = null, timerRecebidoEm = 0;
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  function restanteAgora() {
+    if (!timer) return 0;
+    return timer.rodando ? timer.rest - (Date.now() - timerRecebidoEm) / 1000 : timer.rest;
+  }
+  function pintarTimer() {
+    if (!timer) return;
+    const rest = restanteAgora();
+    $('ctTimerTempo').textContent = fmt(rest);
+    const box = $('ctTimer');
+    box.classList.toggle('ct-rodando', timer.rodando && rest > 0);
+    box.classList.toggle('ct-fim', timer.fim || (timer.rodando && rest <= 0));
+    $('ctTimerPlay').textContent = timer.rodando && rest > 0 ? '⏸ Pausar'
+      : (rest > 0 && rest < timer.seg && !timer.fim ? '▶ Continuar' : '▶ Iniciar');
+  }
+  function mostrarTimer(t) {
+    timer = t || null;
+    timerRecebidoEm = Date.now();
+    $('ctTimer').hidden = !timer;
+    pintarTimer();
+  }
+  setInterval(pintarTimer, 250);
 
   const sb = window.PortalSession.client();
   const canal = sb.channel('slides_remoto_' + sala, { config: { broadcast: { self: false } } });

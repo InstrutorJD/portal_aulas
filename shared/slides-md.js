@@ -369,7 +369,7 @@ window.SlidesMD = (function () {
       stage.appendChild(atual);
       if (antigo) {
         antigo.classList.add(dir < 0 ? 'sm-out-prev' : 'sm-out-next');
-        setTimeout(() => antigo.remove(), 650);
+        setTimeout(() => antigo.remove(), 300);
       }
       if (finalizar && i === deck.slides.length - 1) atual.appendChild(botaoFinalizar());
       root.querySelector('.sm-count').textContent = `${i + 1} / ${deck.slides.length}`;
@@ -382,8 +382,8 @@ window.SlidesMD = (function () {
     // O botão 📱 mostra um QR Code que abre professor/controle.html no
     // celular. Os dois se falam por um canal de broadcast do Supabase
     // Realtime (sem tabela, nada fica gravado): o celular manda 'cmd'
-    // (next/prev/revelar/ola) e a apresentação responde com 'estado'
-    // (slide atual). O nome do canal leva um código aleatório de 8
+    // (next/prev/revelar/ola, timer-play/timer-reset) e a apresentação
+    // responde com 'estado' (slide atual + cronômetro do slide, se houver). O nome do canal leva um código aleatório de 8
     // caracteres (sem 0/O/1/I, pra dar pra digitar no celular se a câmera
     // não ler o QR). O código fica no sessionStorage, então recarregar a
     // página mantém o celular pareado; o canal continua aberto ao sair da
@@ -416,6 +416,12 @@ window.SlidesMD = (function () {
         if (acao === 'next') next();
         else if (acao === 'prev') prev();
         else if (acao === 'revelar') { const q = atual && atual.querySelector('.sm-quiz:not(.sm-revealed)'); if (q) revelarQuiz(q); }
+        // Cronômetro do slide pelo celular: timer-play inicia/pausa/continua
+        // (igual ao botão da tela), timer-reset zera.
+        else if (acao === 'timer-play' || acao === 'timer-reset') {
+          const box = atual && atual.querySelector('.sm-timer');
+          if (box) acaoTimer(box, acao === 'timer-play' ? 'play' : 'reset');
+        }
         enviarEstado();
       }).subscribe(status => {
         canalPronto = status === 'SUBSCRIBED';
@@ -426,10 +432,20 @@ window.SlidesMD = (function () {
       if (!canal || !canalPronto) return;
       const aberta = !root.hidden && !!deck;
       const h = aberta && atual ? atual.querySelector('h1, h2, h3') : null;
+      // Cronômetro do slide (se tiver): o celular conta o tempo sozinho a
+      // partir de `rest` enquanto `rodando`; cada play/pausa/zerar/fim
+      // manda o estado de novo, então os dois lados não se perdem.
+      const tbox = aberta && atual ? atual.querySelector('.sm-timer') : null;
+      let timer = null;
+      if (tbox) {
+        const seg = parseInt(tbox.dataset.seg, 10);
+        const rest = tbox._rest === undefined ? seg : Math.max(0, tbox._rest);
+        timer = { seg, rest, rodando: !!tbox._t, fim: tbox.classList.contains('sm-fim') };
+      }
       canal.send({
         type: 'broadcast', event: 'estado',
         payload: aberta
-          ? { aberta, i: idx, total: deck.slides.length, titulo: h ? h.textContent.trim() : '', aula: deck.titulo || '' }
+          ? { aberta, i: idx, total: deck.slides.length, titulo: h ? h.textContent.trim() : '', aula: deck.titulo || '', timer }
           : { aberta },
       }).catch(() => {});
     }
@@ -558,12 +574,14 @@ window.SlidesMD = (function () {
         box._rest = total; box.classList.remove('sm-rodando', 'sm-fim');
         btn.textContent = '▶ Iniciar';
         pintar(total);
+        enviarEstado();
         return;
       }
       if (box._t) { // pausar
         clearInterval(box._t); timers.delete(box._t); box._t = 0;
         box.classList.remove('sm-rodando');
         btn.textContent = '▶ Continuar';
+        enviarEstado();
         return;
       }
       if (box._rest === undefined || box._rest <= 0) box._rest = total;
@@ -580,9 +598,11 @@ window.SlidesMD = (function () {
           box.classList.add('sm-fim');
           btn.textContent = '▶ Iniciar';
           bip();
+          enviarEstado();
         }
       }, 200);
       timers.add(box._t);
+      enviarEstado();
     }
 
     function abrirOverview() {
