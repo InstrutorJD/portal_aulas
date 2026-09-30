@@ -123,13 +123,13 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 
 ---
 
-## Roteiro de hoje
-1. Boas-vindas e o curso (15 min)
-2. Como tudo começou: binário e computador (15 min)
-3. Linguagens de programação (20 min)
-4. Como uma IA "pensa" (25 min)
-5. Em grupo: tipos de IA na mineração (25 min)
-6. O caminho de uma inspeção na web (20 min)
+## Roteiro de hoje (3h)
+1. Boas-vindas, o curso e o binário (35 min)
+2. Linguagens de programação e o algoritmo da inspeção (25 min)
+3. Como uma IA "pensa" (30 min)
+4. ☕ Intervalo (20 min)
+5. Tipos de IA: desafio da grade e rodada relâmpago (25 min)
+6. O caminho de uma inspeção, na aba Rede, e revisão (45 min)
 
 ---
 
@@ -209,6 +209,26 @@ Quanto vale o byte `00000101`?
 
 ---
 
+## Letras viram números
+| Letra | Posição no alfabeto | Número | Byte |
+|---|---|---|---|
+| A | 1 | 65 | `01000001` |
+| I | 9 | 73 | `01001001` |
+| O | 15 | 79 | `01001111` |
+
+Letra maiúscula = **64 + posição no alfabeto**. Esse código se chama **ASCII**.
+
+---
+
+## Mão na massa: seu nome em binário
+1. No bloco de notas do celular, escreva 3 letras do seu nome em bytes
+2. Regra: 64 + posição no alfabeto, depois a tabela 128…1
+3. Desafio: quem decifrar primeiro o nome do quadro ganha
+
+[cronômetro 8]
+
+---
+
 ## Do transistor à web
 | Ano | O que aconteceu |
 |---|---|
@@ -239,9 +259,9 @@ Qual foi a primeira mensagem enviada pela ARPANET, em 1969?
 ---
 
 ## O primeiro site ainda está no ar
-Aponte a câmera e visite o endereço do primeiro servidor web da história.
-
-[qrcode https://info.cern.ch info.cern.ch]
++ O primeiro servidor web da história ficava no **CERN**
++ O endereço `info.cern.ch` funciona até hoje
++ É só texto e links: sem imagem, sem vídeo, sem login
 
 ---
 
@@ -268,6 +288,23 @@ Qual destes **não** serve como passo de um algoritmo?
 - [ ] Espere 3 minutos
 - [x] Cozinhe até ficar bom
 - [ ] Desligue o fogo
+
+---
+
+## Mão na massa: o algoritmo da inspeção
+1. No bloco de notas do celular, escreva os passos da inspeção
+2. No máximo 8 passos, em ordem, sem passo vago
+3. Voluntários leem os seus; a turma caça o passo ambíguo
+
+[cronômetro 8]
+
+---
+
+## O que vocês acharam?
++ "Confira o caminhão" é vago: conferir **o quê**?
++ "Verifique se os 4 pneus estão calibrados" é claro
++ Se um passo confunde uma pessoa, confunde o computador
++ Programar é escrever passos **sem ambiguidade**
 
 ---
 
@@ -319,9 +356,7 @@ Contar os itens reprovados da inspeção, em JavaScript:
 const itens = [
   { nome: "Pneus", ok: true },
   { nome: "Freios", ok: false },
-  { nome: "Luzes", ok: true },
 ];
-
 let reprovados = 0;
 for (const item of itens) {
   if (!item.ok) reprovados = reprovados + 1;
@@ -390,6 +425,23 @@ Chances ilustrativas. A IA escolhe um dos mais prováveis e repete, token por to
 
 ---
 
+## Mão na massa: o seu teclado também prevê
+1. No bloco de notas, digite: *Antes de ligar o caminhão, o operador*
+2. Toque 10 vezes na sugestão do meio, em cima do teclado
+3. Leia a frase: faz sentido? O teclado "sabe" o que escreveu?
+
+[cronômetro 5]
+
+---
+
+## A frase mais estranha ganha
++ Leia a sua frase em voz alta: a turma vota na mais estranha
++ Cada celular escreveu uma frase diferente: aprendeu com **o seu** jeito de digitar
++ O teclado só junta palavras **prováveis**, sem entender nada
++ Um modelo de linguagem faz o mesmo, em escala gigante
+
+---
+
 ## Como a IA monta a resposta?
 Como um modelo de linguagem gera o texto de uma resposta?
 
@@ -428,6 +480,25 @@ Parece certo, mas `contarReprovados()` **não existe** no JavaScript. O código 
 
 ---
 
+## Caça à alucinação
+Use o que você viu hoje: quais destas respostas de uma IA estão **erradas**?
+
+1. "O ENIAC, de 1946, pesava 3 toneladas."
+2. "Tim Berners-Lee propôs a web no CERN, em 1989."
+3. "Ada Lovelace programou o ENIAC."
+4. "Em JavaScript, `itens.length()` conta os itens da lista."
+
+---
+
+## Gabarito da caça
++ 1. **Errada**: o ENIAC pesava **30** toneladas
++ 2. **Certa**: foi em 1989, no CERN
++ 3. **Errada**: Ada morreu em 1852; o ENIAC teve **seis programadoras**
++ 4. **Errada**: é `itens.length`, sem parênteses
++ Todas soavam confiantes. Só a conferência separa o certo do errado
+
+---
+
 ## E agora?
 A IA respondeu com segurança e o código parece certo. O que você faz?
 
@@ -435,6 +506,13 @@ A IA respondeu com segurança e o código parece certo. O que você faz?
 - [ ] Pergunta para a própria IA se está certo
 - [x] Testa e confere antes de usar
 - [ ] Desiste de usar IA
+
+---
+
+## ☕ Intervalo
+Na volta: que tipo de IA resolve cada problema da mina?
+
+[cronômetro 20]
 
 ---
 
@@ -472,6 +550,75 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 
 ---
 
+## Jogo: enxergue como a IA
++ Para a IA de **visão**, uma imagem é uma grade de **pixels**
++ Cada pixel vira número: **1** aceso, **0** apagado
++ Nos próximos slides, ache o desenho escondido nos números
++ Quem falar primeiro e acertar ganha **1 ponto**
+
+---
+
+## Desafio da grade 1 de 3
+```
+0 0 0 1 0 0 0
+0 0 1 1 1 0 0
+0 1 1 1 1 1 0
+1 1 1 1 1 1 1
+0 1 0 0 0 1 0
+0 1 1 1 1 1 0
+```
+
+---
+
+## Desafio da grade 2 de 3
+```
+0 1 1 0 1 1 0
+1 1 1 1 1 1 1
+1 1 1 1 1 1 1
+0 1 1 1 1 1 0
+0 0 1 1 1 0 0
+0 0 0 1 0 0 0
+```
+
+---
+
+## Desafio da grade 3 de 3
+```
+0 1 1 1 1 1 0
+1 0 0 0 0 0 1
+1 0 1 0 1 0 1
+1 0 0 0 0 0 1
+1 0 1 1 1 0 1
+0 1 1 1 1 1 0
+```
+
+---
+
+## Respostas da grade
++ 1. Uma **casa**: telhado em cima, porta embaixo 🏠
++ 2. Um **coração** ❤️
++ 3. Um **rosto sorrindo** 🙂
++ Quem fez 3 pontos?
+
+---
+
+## Como a IA enxerga?
++ Você achou **padrões**: telhado, curvas, olhos
++ A IA faz o mesmo, depois de ver **milhões de exemplos**
++ Uma foto de verdade tem **milhões** de pixels, não 42
++ Imagem muito diferente dos exemplos? A IA erra
+
+---
+
+## Rodada relâmpago: qual tipo de IA?
+**1** preditiva · **2** visão · **3** generativa · **4** assistente · **5** agente
+
+1. No próximo slide, o professor lê um cenário por vez
+2. Você mostra o número nos dedos, todos ao mesmo tempo
+3. Cada acerto vale 1 ponto: anote o seu placar no celular
+
+---
+
 ## Cenários da mineração
 1. Avisar a manutenção antes de a bomba da mina quebrar, pela vibração
 2. Conferir, por foto, se a correia transportadora está rasgada
@@ -482,17 +629,7 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 
 ---
 
-## Mão na massa: em grupo
-1. Formem grupos de 4
-2. Para cada cenário, escolham o **tipo de IA**
-3. Justifiquem cada escolha em **uma frase**
-4. Cada grupo apresenta **um** cenário para a turma
-
-[cronômetro 20]
-
----
-
-## Gabarito
+## Gabarito: some os seus pontos
 + 1. Bomba da mina → **preditiva**
 + 2. Correia rasgada na foto → **visão computacional**
 + 3. Resumo do turno → **generativa**
@@ -568,6 +705,42 @@ O operador envia a inspeção do caminhão CAM-99, que não está cadastrado.
 
 ---
 
+## Mão na massa: veja os pedidos
+1. Palpite no celular: quantos pedidos a página do portal faz?
+2. No computador, abra o portal, aperte **F12** e vá na aba **Rede**
+3. Recarregue com **F5**: o palpite mais perto do rodapé ganha
+
+[cronômetro 8]
+
+---
+
+## O que vocês encontraram?
++ Uma página "simples" já faz **vários** pedidos
++ HTML, CSS, scripts e fontes: cada um é um pedido separado
++ Cada linha da aba Rede é **um pedido HTTP**, com método e status
++ Lembra do palpite do começo? A mediana é de **71 pedidos**
+
+---
+
+## Mão na massa: ache um 404
+1. No fim do endereço do portal, digite `/pagina-que-nao-existe`
+2. Olhe a coluna **Status** do primeiro pedido
+3. Clique nele e ache o **método**: GET ou POST?
+
+[cronômetro 5]
+
+---
+
+## O que a aba Rede mostrou?
+Na página que não existe, qual status e qual método apareceram?
+
+- [ ] `200` e `POST`
+- [ ] `500` e `GET`
+- [x] `404` e `GET`
+- [ ] `404` e `POST`
+
+---
+
 ## No quadro: o fluxo de uma inspeção
 1. O operador preenche o checklist no celular (**frontend**)
 2. O app envia `POST /api/inspecoes` pela **API**
@@ -598,12 +771,32 @@ Para pedir código à IA, **você** precisa dizer onde ele entra.
 ---
 
 ## Checklist de hoje
-Confira com o seu grupo:
+Confira você mesmo:
 
-- ✅ Cada cenário da mineração tem um tipo de IA
-- ✅ Cada escolha tem uma justificativa
+- ✅ Você sabe o tipo de IA de cada cenário da mineração
+- ✅ Você viu os pedidos HTTP na aba Rede
 - ✅ O fluxo da inspeção tem frontend, API, backend e banco
 - ✅ O fluxo foi registrado no quadro, em até 5 passos
+
+---
+
+## Revisão 1 de 2
+Quanto vale o byte `00001010`?
+
+- [ ] 8
+- [x] 10
+- [ ] 12
+- [ ] 1010
+
+---
+
+## Revisão 2 de 2
+Em qual peça fica guardado o histórico de todas as inspeções?
+
+- [ ] Frontend
+- [ ] API
+- [ ] Backend
+- [x] Banco de dados
 
 ---
 
