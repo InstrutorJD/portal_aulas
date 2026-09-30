@@ -145,12 +145,12 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 ---
 
 ## Roteiro de hoje (3h)
-1. Boas-vindas, por que web e o binário (38 min)
-2. Linguagens de programação e o algoritmo da inspeção (25 min)
-3. Como uma IA "pensa" (30 min)
+1. Boas-vindas, por que web e o binário (36 min)
+2. Linguagens de programação e o algoritmo da inspeção (23 min)
+3. A IA: de onde veio, onde está e como "pensa" (34 min)
 4. ☕ Intervalo (20 min)
-5. 🚨 Jogo Invasão Hacker e tipos de IA (30 min)
-6. O caminho de uma inspeção, na aba Rede, e revisão (37 min)
+5. 🚨 Jogo Invasão Hacker, tipos de IA e o futuro (34 min)
+6. O caminho de uma inspeção, na aba Rede, e revisão (33 min)
 
 ---
 
@@ -246,7 +246,7 @@ Letra maiúscula = **64 + posição no alfabeto**. Esse código se chama **ASCII
 2. Regra: 64 + posição no alfabeto, depois a tabela 128…1
 3. Desafio: quem decifrar primeiro o nome do quadro ganha
 
-[cronômetro 8]
+[cronômetro 6]
 
 ---
 
@@ -317,7 +317,7 @@ Qual destes **não** serve como passo de um algoritmo?
 2. No máximo 8 passos, em ordem, sem passo vago
 3. Voluntários leem os seus; a turma caça o passo ambíguo
 
-[cronômetro 8]
+[cronômetro 6]
 
 ---
 
@@ -400,6 +400,36 @@ O navegador lê o seu JavaScript e executa na hora. Isso é...
 
 # Como uma IA "pensa"
 Spoiler: não é do jeito que a gente pensa
+
+---
+
+## A IA não nasceu ontem
+| Ano | O que aconteceu |
+|---|---|
+| 1950 | Alan Turing pergunta: "as máquinas podem pensar?" |
+| 1956 | Nasce o nome **inteligência artificial**, em Dartmouth (EUA) |
+| 1966 | **ELIZA**, o primeiro chatbot, imita um terapeuta |
+| 1997 | **Deep Blue** vence o campeão mundial de xadrez |
+| 2016 | **AlphaGo** vence o campeão de Go, um jogo bem mais difícil |
+
+---
+
+## A virada: das regras aos exemplos
++ Antes: pessoas escreviam **as regras**, uma por uma
++ De 2012 em diante: redes neurais aprendem com **milhões de exemplos**
++ 2017: o Google cria o **Transformer**, a base dos chatbots de hoje
++ 2022: o **ChatGPT** chega a 100 milhões de usuários em 2 meses
+
+> Fonte do número: banco UBS, fevereiro de 2023.
+
+---
+
+## Onde a IA está hoje
++ Escreve texto e **código**, cria imagem, vídeo e voz
++ **Agentes** fazem tarefas inteiras: pesquisam, programam e testam
++ Em 2024, dois **Prêmios Nobel** foram para pesquisas com IA
++ Na mina de Brucutu (MG), da Vale, os caminhões são **autônomos** desde 2019
++ Mas ainda **erra com confiança**: já já você vai ver
 
 ---
 
@@ -675,6 +705,29 @@ A mina quer saber quantas horas o caminhão ainda roda antes da próxima troca d
 
 ---
 
+## Para onde a IA pode ir?
++ Agentes mais **independentes**, trabalhando junto com as pessoas
++ IA dentro de **tudo**: celular, carro, máquina da mina
++ Robôs que enxergam e **agem** no mundo físico
++ Ninguém sabe o limite: nem os especialistas concordam
+
+---
+
+## Os desafios do caminho
++ **Empregos** mudam: tarefas repetitivas passam para a máquina
++ **Deepfakes** e desinformação ficam mais fáceis de fazer
++ Muita **energia** e água para treinar e rodar os modelos
++ As **leis** sobre IA ainda estão sendo escritas
+
+---
+
+## Debate rápido
+Levante a mão: a IA vai **tirar** ou **mudar** o seu futuro emprego? Por quê?
+
+[cronômetro 3]
+
+---
+
 # O caminho de uma inspeção
 Cliente x Servidor, com HTTP no meio
 
@@ -746,7 +799,7 @@ O operador envia a inspeção do caminhão CAM-99, que não está cadastrado.
 2. No computador, abra o portal, aperte **F12** e vá na aba **Rede**
 3. Recarregue com **F5**: o palpite mais perto do rodapé ganha
 
-[cronômetro 8]
+[cronômetro 6]
 
 ---
 

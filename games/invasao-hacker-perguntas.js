@@ -12,7 +12,8 @@
 // Só pergunte o que a turma JÁ viu até o momento do jogo na aula.
 window.INVASAO_PERGUNTAS = {
   // Aula 01 — "Do bit à IA" (jogo logo depois do intervalo: binário,
-  // linguagens e "como a IA pensa" já foram vistos; tipos de IA e HTTP não).
+  // linguagens, história da IA e "como a IA pensa" já foram vistos; tipos
+  // de IA e HTTP não).
   'aula-01': {
     titulo: 'Aula 01 · Do bit à IA',
     tempo: 70,
@@ -30,6 +31,8 @@ window.INVASAO_PERGUNTAS = {
       { q: 'A IA lê o texto em pedaços chamados...', opcoes: ['Tokens', 'Bytes', 'Pixels', 'Linhas'], certa: 0 },
       { q: 'Qual foi a primeira mensagem da ARPANET, em 1969?', opcoes: ['"LO"', '"OI"', '"HELLO"', '"LOGIN"'], certa: 0 },
       { q: 'Qual destes NÃO serve como passo de um algoritmo?', opcoes: ['Confira até ficar bom', 'Ferva 500 ml de água', 'Espere 3 minutos', 'Desligue o fogo'], certa: 0 },
+      { q: 'Em que ano o ChatGPT foi lançado?', numero: 2022 },
+      { q: 'Em 1997, o Deep Blue venceu o campeão mundial de...', opcoes: ['Xadrez', 'Go', 'Futebol de robôs', 'Pôquer'], certa: 0 },
     ],
   },
 };
