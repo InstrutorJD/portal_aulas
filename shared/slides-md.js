@@ -659,6 +659,9 @@ window.SlidesMD = (function () {
     root.addEventListener('click', e => {
       const acao = e.target.closest('[data-acao]');
       if (acao) {
+        // Tira o foco do botão clicado: senão ⎵/Enter (avançar slide)
+        // "clicariam" nele de novo em vez de passar o slide.
+        if (acao.blur) acao.blur();
         ({ prev, next, overview: abrirOverview, theme: alternarTema, fullscreen: telaCheia, exit: sair, remoto: abrirRemoto, fecharRemoto })[acao.dataset.acao]();
         return;
       }
@@ -697,12 +700,20 @@ window.SlidesMD = (function () {
       toqueX = null;
     });
 
-    // Barra de controles some sozinha com o mouse parado (pra projetar limpo).
+    // Barra de controles E cursor somem sozinhos com o mouse parado (pra
+    // projetar limpo — ver .sm-hud-on no CSS); mexeu o mouse, voltam.
+    function esconderHud() {
+      clearTimeout(hudTimer);
+      root.classList.remove('sm-hud-on');
+    }
     root.addEventListener('mousemove', () => {
       root.classList.add('sm-hud-on');
       clearTimeout(hudTimer);
-      hudTimer = setTimeout(() => root.classList.remove('sm-hud-on'), 2500);
+      hudTimer = setTimeout(esconderHud, 2500);
     });
+    root.addEventListener('mouseleave', esconderHud);
+    // Entrou/saiu da tela cheia: já começa limpo, sem esperar os 2,5s.
+    document.addEventListener('fullscreenchange', () => { if (!root.hidden) esconderHud(); });
 
     // opcoes.onFinalizar: mostra "Finalizar aula" no último slide e é
     // chamado no clique; opcoes.finalizada: a aula já estava concluída.

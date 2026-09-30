@@ -175,7 +175,15 @@
 .sm-progress > div{ height:100%; width:0; background:linear-gradient(90deg, var(--sm-accent), var(--sm-accent3), var(--sm-accent2)); transition:width .5s cubic-bezier(.2,.8,.2,1); }
 .sm-hud{ position:absolute; left:50%; bottom:18px; transform:translate(-50%, 20px); display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px;
   background:color-mix(in srgb, var(--sm-bg2) 85%, transparent); border:1px solid var(--sm-line); backdrop-filter:blur(10px); opacity:0; transition:opacity .3s, transform .3s; }
-.sm-presenter.sm-hud-on .sm-hud, .sm-hud:hover, .sm-hud:focus-within{ opacity:1; transform:translate(-50%, 0); }
+/* Só o mouse se mexendo (sm-hud-on) ou o foco pelo TECLADO (Tab) mostram a
+   barra — sem :hover/:focus-within: depois de clicar em ⛶ o mouse fica
+   parado em cima do botão, com foco nele, e a barra nunca sumia. */
+.sm-presenter.sm-hud-on .sm-hud, .sm-hud:has(:focus-visible){ opacity:1; transform:translate(-50%, 0); }
+.sm-presenter:not(.sm-hud-on) .sm-hud{ pointer-events:none; }
+/* Cursor some junto com a barra (mouse parado = projetando). Com a visão
+   geral ou o painel do celular abertos, o cursor fica. */
+.sm-presenter:not(.sm-hud-on):not(:has(.sm-overview:not([hidden]))):not(:has(.sm-remoto:not([hidden]))),
+.sm-presenter:not(.sm-hud-on):not(:has(.sm-overview:not([hidden]))):not(:has(.sm-remoto:not([hidden]))) *{ cursor:none !important; }
 .sm-hud button{ font:inherit; font-size:18px; width:40px; height:40px; border-radius:50%; border:none; cursor:pointer; background:transparent; color:var(--sm-ink); }
 .sm-hud button:hover{ background:var(--sm-card); color:var(--sm-accent); }
 .sm-count{ font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--sm-dim); min-width:64px; text-align:center; }
