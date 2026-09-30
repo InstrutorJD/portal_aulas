@@ -3,7 +3,7 @@ aula: 1
 data: 2026-09-30
 titulo: Do bit à IA: como uma aplicação web funciona
 turma: IA
-descricao: Boas-vindas, história, binário, linguagens, como a IA pensa, usos da IA na mineração e o caminho de uma inspeção
+descricao: Boas-vindas, curiosidades do mercado, história, binário, linguagens, como a IA pensa, usos da IA na mineração e o caminho de uma inspeção
 ---
 
 # Do bit à IA
@@ -11,23 +11,61 @@ Aula 1: como a tecnologia conversa, e onde a IA (inteligência artificial) entra
 
 ---
 
-## Um palpite antes de tudo
-Para abrir **uma** página comum, quantos pedidos o seu navegador faz?
+## Você sabia? A loja de apps encolheu
+| Ano | Apps na Google Play |
+|---|---|
+| 2020 | cerca de **3 milhões** |
+| 2026 | cerca de **1,7 milhão** |
 
-- [ ] 1: a página vem inteira de uma vez
-- [ ] Uns 5
-- [x] Cerca de 70
-- [ ] Mais de 10 mil
+Caiu! O Google passou a tirar da loja os apps de baixa qualidade. Não basta publicar: **tem que ser bom**.
 
 ---
 
-## Cerca de 70 pedidos. Por página.
-+ Cada imagem, fonte e script é um **pedido** separado
-+ Na mediana, uma página no computador faz **71 pedidos**
-+ Você não vê nenhum deles, mas eles estão lá
-+ Até o fim da aula, você vai saber **quem atende** cada um
+## A IA já escreve código de verdade
++ No Google, em 2024: mais de **25%** do código novo era gerado com IA
++ Em abril de 2025: mais de **30%**
++ Em abril de 2026: **75%** do código novo
++ E quem revisa tudo isso? **Pessoas** que sabem programar
 
-> Fonte: Web Almanac 2024 (HTTP Archive), páginas no computador.
+> Fonte: Sundar Pichai, presidente do Google (2024, 2025 e 2026).
+
+---
+
+## E os programadores, confiam?
++ **84%** usam ou vão usar IA para programar
++ Mas **46%** não confiam na precisão do que ela entrega
++ Motivo: a IA erra, e quem responde pelo código é o programador
+
+> Fonte: pesquisa Stack Overflow com desenvolvedores, 2025.
+
+---
+
+## Onde estão as vagas
++ Até 2030: **170 milhões** de empregos novos e **92 milhões** que somem no mundo
++ Crescem mais: especialistas em **IA**, **dados** e **desenvolvedores de software**
++ No Brasil, o mercado pede **159 mil** pessoas de TI (tecnologia da informação) por ano
++ E o país forma só **53 mil** por ano
+
+> Fontes: Fórum Econômico Mundial, 2025; Brasscom (associação das empresas de tecnologia do Brasil).
+
+---
+
+## Quem lidera a corrida da IA
+| País | Modelos de IA de destaque em 2024 |
+|---|---|
+| Estados Unidos | **40** |
+| China | **15** |
+| Europa (todos da França) | **3** |
+
+Fonte: Stanford AI Index 2025. No relatório de 2026, a China já quase empatou com os Estados Unidos em desempenho.
+
+---
+
+## Quem sou eu
+### Jairon
++ Docente do **SENAI** (Serviço Nacional de Aprendizagem Industrial)
++ Professor de 2 cursos técnicos: **Desenvolvimento de Sistemas** e **Jogos Digitais**
++ Agora, quero conhecer **vocês** 👇
 
 ---
 
@@ -148,12 +186,12 @@ Antes de cada turno, o operador inspeciona o equipamento numa folha de papel.
 ---
 
 ## Roteiro de hoje (3h)
-1. Boas-vindas, por que web e o binário (30 min)
+1. Boas-vindas, curiosidades, por que web e o binário (36 min)
 2. Linguagens de programação e o algoritmo da inspeção (23 min)
 3. A IA: de onde veio, onde está e como "pensa" (34 min)
 4. ☕ Intervalo (20 min)
 5. 🚨 Jogos Invasão Hacker e Rodada Relâmpago, usos da IA e o futuro (32 min)
-6. A inspeção na web, criar sem código e segurança (41 min)
+6. A inspeção na web, criar sem código e segurança (35 min)
 
 ---
 
@@ -813,7 +851,7 @@ Uma prévia do **Checklist Digital de Inspeção**, o projeto do curso. Aponte a
 + Página, estilo (CSS), script, ícone e os dados: um pedido cada
 + Os dados vêm em **JSON** (Notação de Objetos JavaScript), um texto organizado
 + Cada linha da lista é **um pedido HTTP**, com método e status
-+ Um site grande faz dezenas: a mediana é de **71 pedidos**
++ Um site grande faz dezenas: a mediana é de **71 pedidos** (Web Almanac 2024)
 
 ---
 
