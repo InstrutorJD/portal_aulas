@@ -1198,7 +1198,7 @@ window.TURMA_CONFIG_JOGOS = {
             },
             {
               key: 'material-professor', title: 'Material do professor — Fichas para imprimir',
-              desc: 'Só para o professor: gera 30 fichas fictícias (nome, e-mail e nome da mãe inventados) e 30 códigos únicos do brinde, com botão de imprimir.',
+              desc: 'Só para o professor: gera 40 fichas fictícias (20 meninas e 20 meninos; nome, e-mail, CPF e nome da mãe inventados) e 40 códigos únicos do brinde, com impressão em paisagem.',
               icon: '🖨️', src: 'atividades/cyberseg-material-professor.html', telaCheia: true,
               progressKey: 'cyberseg_material_professor_progress_', progressMode: 'flag',
               semEntrega: true

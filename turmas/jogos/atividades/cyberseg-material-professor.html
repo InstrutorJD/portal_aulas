@@ -17,16 +17,21 @@
   .ficha .codigo{ font-family:var(--ab-mono); font-size:16px; letter-spacing:2px; color:var(--ink); font-weight:700; }
   .so-professor{ text-align:center; padding:40px 16px; color:var(--ink-dim); }
 
+  /* Impressão em PAISAGEM, 4 fichas por linha: as 40 fichas cabem em 2
+     folhas A4 (em retrato, 2 por linha, gastava o dobro de papel). */
+  @page{ size:A4 landscape; margin:8mm; }
   @media print{
     /* Ao imprimir, some tudo menos as fichas: papel limpo pra recortar. */
-    body{ background:#fff; color:#000; }
+    html, body, .ab-app, .ab-palco, .ab-coluna, .ab-cartao{ background:#fff !important; color:#000; }
     .ab-topo, .ab-progresso, .mat-topo-acoes, .mat-aviso, .ab-cartao-etapa, h2.mat-titulo{ display:none !important; }
     .ab-palco{ padding:0; overflow:visible; }
+    .ab-coluna{ max-width:none; }
     .ab-cartao{ border:none; box-shadow:none; padding:0; }
-    .fichas-grid{ grid-template-columns:repeat(2, 1fr); gap:8px; }
-    .ficha{ border:1px solid #999; background:#fff; color:#000; }
-    .ficha h4{ color:#000; }
-    .ficha .codigo{ color:#000; }
+    .fichas-grid{ grid-template-columns:repeat(4, 1fr); gap:6px; }
+    .ficha{ border:1px dashed #777; border-radius:6px; background:#fff; color:#000; padding:6px 8px; }
+    .ficha h4{ color:#000; font-size:11px; margin:0 0 3px; }
+    .ficha .linha{ font-size:10.5px; margin:1px 0; }
+    .ficha .codigo{ color:#000; font-size:13px; }
   }
 </style>
 <script>
@@ -74,19 +79,49 @@
   // Dados 100% FICTÍCIOS: nada aqui é de um aluno real. Servem só como
   // "identidade de papel" que cada participante recebe na simulação — assim
   // ninguém precisa entregar nome, e-mail ou qualquer dado verdadeiro.
-  const NOMES = ['Ana Prado', 'Bruno Vale', 'Carla Nunes', 'Davi Rocha', 'Elis Faro', 'Felipe Sá',
-    'Gabi Melo', 'Hugo Reis', 'Íris Lima', 'João Teles', 'Kaue Brito', 'Lara Pires',
-    'Marina Cruz', 'Nicolas Aru', 'Olga Serra', 'Pedro Vargas', 'Rita Bastos', 'Saulo Dantas',
-    'Tainá Couto', 'Uriel Matos', 'Vera Lira', 'Yuri Campos', 'Zeca Farias', 'Alice Bueno',
-    'Caio Peixoto', 'Duda Freire', 'Enzo Galvão', 'Fabi Rios', 'Léo Quintana', 'Mila Tavora'];
-  const MAES = ['Sônia Prado', 'Célia Vale', 'Dora Nunes', 'Neide Rocha', 'Rosa Faro', 'Marta Sá',
-    'Lúcia Melo', 'Vânia Reis', 'Alda Lima', 'Bruna Teles', 'Cida Brito', 'Elza Pires',
-    'Fátima Cruz', 'Gina Aru', 'Ivone Serra', 'Jussara Vargas', 'Katia Bastos', 'Lena Dantas',
-    'Marli Couto', 'Nara Matos', 'Odete Lira', 'Paula Campos', 'Regina Farias', 'Selma Bueno',
-    'Tereza Peixoto', 'Ubiratã Freire', 'Vilma Galvão', 'Zilda Rios', 'Bela Quintana', 'Cléo Tavora'];
+  // 20 meninas e 20 meninos, intercalados (menina, menino, ...); a mãe de
+  // cada um tem o mesmo sobrenome, na mesma posição da lista.
+  const MENINAS = ['Ana Prado', 'Carla Nunes', 'Elis Faro', 'Gabi Melo', 'Íris Lima', 'Lara Pires',
+    'Marina Cruz', 'Olga Serra', 'Rita Bastos', 'Tainá Couto', 'Vera Lira', 'Alice Bueno',
+    'Duda Freire', 'Fabi Rios', 'Mila Tavora', 'Bia Monteiro', 'Clara Siqueira', 'Júlia Barros',
+    'Nina Castro', 'Sofia Ramos'];
+  const MENINOS = ['Bruno Vale', 'Davi Rocha', 'Felipe Sá', 'Hugo Reis', 'João Teles', 'Kauê Brito',
+    'Nicolas Aru', 'Pedro Vargas', 'Saulo Dantas', 'Uriel Matos', 'Yuri Campos', 'Zeca Farias',
+    'Caio Peixoto', 'Enzo Galvão', 'Léo Quintana', 'Otávio Leal', 'Rafael Moura', 'Samuel Toledo',
+    'Tiago Cunha', 'Vítor Sales'];
+  const MAES_MENINAS = ['Sônia Prado', 'Dora Nunes', 'Rosa Faro', 'Lúcia Melo', 'Alda Lima', 'Elza Pires',
+    'Fátima Cruz', 'Ivone Serra', 'Katia Bastos', 'Marli Couto', 'Odete Lira', 'Selma Bueno',
+    'Ubiratã Freire', 'Zilda Rios', 'Cléo Tavora', 'Denise Monteiro', 'Heloísa Siqueira', 'Rute Barros',
+    'Sandra Castro', 'Telma Ramos'];
+  const MAES_MENINOS = ['Célia Vale', 'Neide Rocha', 'Marta Sá', 'Vânia Reis', 'Bruna Teles', 'Cida Brito',
+    'Gina Aru', 'Jussara Vargas', 'Lena Dantas', 'Nara Matos', 'Paula Campos', 'Regina Farias',
+    'Tereza Peixoto', 'Vilma Galvão', 'Bela Quintana', 'Irene Leal', 'Joana Moura', 'Laura Toledo',
+    'Mirian Cunha', 'Noêmia Sales'];
+  const PESSOAS = MENINAS.flatMap((m, i) => [
+    { nome: m, mae: MAES_MENINAS[i] },
+    { nome: MENINOS[i], mae: MAES_MENINOS[i] },
+  ]);
+  const TOTAL = PESSOAS.length; // 40
 
   function slugEmail(nome) {
     return nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z]+/g, '.').replace(/^\.|\.$/g, '');
+  }
+  // CPF com CARA de verdadeiro (000.000.000-00), mas com o último dígito
+  // verificador trocado DE PROPÓSITO: nenhum destes números passa na
+  // validação da Receita, então não pode ser o CPF de uma pessoa real.
+  function cpfFicticio() {
+    let d;
+    do { d = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10)); } while (d.every(x => x === d[0]));
+    const dv = base => {
+      const soma = base.reduce((s, x, i) => s + x * (base.length + 1 - i), 0);
+      const r = (soma * 10) % 11;
+      return r === 10 ? 0 : r;
+    };
+    const dv1 = dv(d);
+    const dv2Certo = dv([...d, dv1]);
+    const dv2 = (dv2Certo + 1 + Math.floor(Math.random() * 9)) % 10; // nunca o certo
+    const s = [...d, dv1, dv2].join('');
+    return `${s.slice(0, 3)}.${s.slice(3, 6)}.${s.slice(6, 9)}-${s.slice(9)}`;
   }
   // Código único e aleatório, sem caracteres que confundem (0/O, 1/I).
   function codigo() {
@@ -102,19 +137,21 @@
       let cod;
       do { cod = codigo(); } while (usados.has(cod));
       usados.add(cod);
-      const nome = NOMES[i % NOMES.length];
-      fichas.push({ nome, email: slugEmail(nome) + '@exemplo.test', mae: MAES[i % MAES.length], codigo: cod });
+      const p = PESSOAS[i % TOTAL];
+      fichas.push({ nome: p.nome, email: slugEmail(p.nome) + '@mail.com.jd', cpf: cpfFicticio(), mae: p.mae, codigo: cod });
     }
     return fichas;
   }
 
-  const CHAVE = 'cyberseg_fichas_v1';
+  // v2: fichas com CPF, 40 pessoas e e-mail @mail.com.jd — as salvas no
+  // formato antigo (v1, 30 sem CPF) são descartadas e geradas de novo.
+  const CHAVE = 'cyberseg_fichas_v2';
   function carregar() { try { return JSON.parse(localStorage.getItem(CHAVE) || 'null'); } catch (e) { return null; } }
   function salvar(f) { try { localStorage.setItem(CHAVE, JSON.stringify(f)); } catch (e) {} }
 
   function render(fichas) {
     conteudo.innerHTML = `
-      <p class="mat-aviso">Todos os dados abaixo são <b>fictícios</b> — nomes, e-mails e "nome da mãe" foram inventados só para a simulação. Cada participante recebe UMA ficha e UM código. Depois da atividade, recolha e descarte os papéis.</p>
+      <p class="mat-aviso">Todos os dados abaixo são <b>fictícios</b> — nomes, e-mails, CPF e "nome da mãe" foram inventados só para a simulação (os CPFs têm o dígito verificador errado de propósito, então não existem de verdade). São ${fichas.length} fichas: 20 meninas e 20 meninos. Cada participante recebe UMA ficha e UM código. A impressão sai em paisagem, 4 fichas por linha. Depois da atividade, recolha e descarte os papéis.</p>
       <div class="mat-topo-acoes">
         <button class="btn" id="btnImprimir">🖨️ Imprimir as fichas</button>
         <button class="btn btn-secondary" id="btnNovas">🎲 Gerar novas fichas</button>
@@ -125,14 +162,15 @@
             <h4>Ficha ${i + 1}</h4>
             <div class="linha"><span class="rotulo">Nome:</span> ${f.nome}</div>
             <div class="linha"><span class="rotulo">E-mail:</span> ${f.email}</div>
+            <div class="linha"><span class="rotulo">CPF:</span> ${f.cpf}</div>
             <div class="linha"><span class="rotulo">Nome da mãe:</span> ${f.mae}</div>
             <div class="linha"><span class="rotulo">Código do brinde:</span> <span class="codigo">${f.codigo}</span></div>
           </div>`).join('')}
       </div>`;
     document.getElementById('btnImprimir').addEventListener('click', () => window.print());
     document.getElementById('btnNovas').addEventListener('click', () => {
-      if (!window.confirm('Gerar 30 fichas novas? As atuais serão substituídas.')) return;
-      const novas = gerarFichas(30);
+      if (!window.confirm(`Gerar ${TOTAL} fichas novas? As atuais serão substituídas.`)) return;
+      const novas = gerarFichas(TOTAL);
       salvar(novas);
       render(novas);
     });
@@ -144,7 +182,7 @@
       return;
     }
     let fichas = carregar();
-    if (!fichas || fichas.length !== 30) { fichas = gerarFichas(30); salvar(fichas); }
+    if (!fichas || fichas.length !== TOTAL) { fichas = gerarFichas(TOTAL); salvar(fichas); }
     render(fichas);
   })();
 })();
