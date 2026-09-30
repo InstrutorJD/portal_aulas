@@ -11,19 +11,14 @@
 //
 // Só pergunte o que a turma JÁ viu até o momento do jogo na aula.
 window.INVASAO_PERGUNTAS = {
-  // Aula 01 — "Do bit à IA" (jogo logo depois do intervalo: binário,
-  // linguagens, história da IA e "como a IA pensa" já foram vistos; tipos
-  // de IA e HTTP não).
+  // Aula 01 — "Do bit à IA" (jogo logo depois do intervalo: linguagens,
+  // história da IA e "como a IA pensa" já foram vistos; usos da IA e HTTP
+  // não). Sem perguntas de binário, a pedido do professor.
   'aula-01': {
     titulo: 'Aula 01 · Do bit à IA',
     tempo: 70,
     sortear: 6,
     perguntas: [
-      { q: 'Quanto vale o byte 00000110?', numero: 6 },
-      { q: 'Quanto vale o byte 00001001?', numero: 9 },
-      { q: 'Quanto vale o byte 00000011?', numero: 3 },
-      { q: 'Em ASCII, qual letra maiúscula vale 65?', opcoes: ['A', 'B', 'Z', 'O'], certa: 0 },
-      { q: 'Quantos bits formam 1 byte?', opcoes: ['8', '2', '10', '16'], certa: 0 },
       { q: 'Tocar na tela do celular é uma ação de...', opcoes: ['Entrada', 'Saída', 'Memória', 'Processamento'], certa: 0 },
       { q: 'Qual parte do computador faz as contas?', opcoes: ['Processador (CPU)', 'Memória RAM', 'Tela', 'Teclado'], certa: 0 },
       { q: 'O navegador lê o JavaScript e executa na hora. Isso é...', opcoes: ['Interpretação', 'Compilação', 'Linguagem de máquina', 'Assembly'], certa: 0 },

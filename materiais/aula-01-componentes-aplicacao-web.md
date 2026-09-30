@@ -619,7 +619,7 @@ Aponte a câmera e defenda o seu celular antes que o hacker chegue a **100%**.
 ## Quem se defendeu melhor?
 + Levante a mão quem viu **ACESSO NEGADO** 🛡️
 + Menor tempo vence; empate: quem errou menos
-+ Errou alguma? Era conteúdo de hoje: binário, linguagens e IA
++ Errou alguma? Era conteúdo de hoje: linguagens e IA
 + Na vida real, a melhor defesa também é **saber como funciona**
 
 ---
