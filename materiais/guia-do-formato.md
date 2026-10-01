@@ -137,6 +137,7 @@ turma: 2º DS
 
 - Vira o card da aula, com número e data
 - E a etiqueta no slide de abertura
+- Opcional: `fonte: grande` deixa tudo ~15% maior
 
 ---
 

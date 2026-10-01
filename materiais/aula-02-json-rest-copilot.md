@@ -3,7 +3,8 @@ aula: 2
 data: 2026-10-01
 titulo: JSON, REST e a primeira IA no código
 turma: IA
-descricao: DevTools, requisitos, GitHub Codespaces, a inspeção em JSON, rotas REST e Copilot
+descricao: DevTools, requisitos, GitHub e git no terminal, testando uma API pública, a inspeção em JSON e Copilot
+fonte: grande
 ---
 
 # A inspeção vira dado
@@ -36,11 +37,10 @@ Olhe com calma. Você consegue dizer o que aconteceu com o caminhão?
 **0** nunca ouvi · **1** já ouvi · **2** sei explicar · **3** já usei
 
 + JSON
-+ REST
-+ Webhook
-+ Upload de arquivos
-+ Streaming
-+ GitHub e terminal
++ REST e métodos HTTP
++ GitHub
++ Terminal e git (commit, push, pull)
++ Webhook, upload e streaming
 
 ---
 
@@ -65,12 +65,13 @@ Uma resposta com status `404` quer dizer...
 ---
 
 ## Roteiro de hoje (4h)
-1. DevTools: HTTP de verdade (25 min)
-2. Design Thinking: requisitos (30 min)
-3. GitHub, Codespace e README (35 min)
-4. A inspeção em JSON e as rotas REST (35 min)
-5. Webhooks, upload e streaming (20 min)
-6. Mão na massa com o Copilot (95 min)
+1. DevTools: HTTP de verdade (20 min)
+2. Design Thinking: requisitos (25 min)
+3. Explorando o GitHub (15 min)
+4. Repositório, Codespace e git (45 min)
+5. Testando uma API de verdade e criando o JSON (45 min)
+6. Webhooks, upload e streaming (10 min)
+7. Mão na massa com o Copilot (55 min)
 
 ---
 
@@ -93,11 +94,11 @@ Espiando as requisições de um site conhecido
 | Coluna | O que mostra |
 |---|---|
 | Nome | O recurso pedido (página, imagem, dados) |
-| Método | `GET`, `POST`... (botão direito no cabeçalho → Método) |
-| Status | O código da resposta (`200`, `304`, `404`...) |
+| Método | `GET`, `POST`... |
+| Status | O código da resposta (`200`, `404`...) |
 | Tipo | Documento, script, imagem, fetch... |
 
-Clique numa linha e abra **Cabeçalhos**: lá estão a URL e o endereço do servidor.
+Clique numa linha e abra **Cabeçalhos**: lá estão a URL e o servidor.
 
 ---
 
@@ -106,8 +107,6 @@ Clique numa linha e abra **Cabeçalhos**: lá estão a URL e o endereço do serv
 2. Escolha 3 requisições: 1 documento, 1 Fetch/XHR, 1 imagem
 3. Anote de cada uma: **método, endereço e status**
 4. Diga quem é o **cliente** e quem é o **servidor**
-
-[cronômetro 15]
 
 ---
 
@@ -133,26 +132,24 @@ O problema do checklist em papel
 4. **Prototipar**: construir uma versão simples
 5. **Testar**: colocar na mão do usuário e aprender
 
-> Hoje o foco é **empatizar** e **definir**: sem entender o problema, a solução erra o alvo.
-
 ---
 
 ## Quem sofre com o checklist em papel?
 | Pessoa | Dor | Necessidade |
 |---|---|---|
-| Operador | Folha molha, suja e se perde em campo | Marcar os itens rápido, no celular |
-| Supervisor | Letra ilegível; equipamento com falha liberado | Ver na hora o que foi reprovado |
-| Manutenção | Descobre a avaria tarde; dados que ninguém analisa | Ser avisada e ver o histórico |
+| Operador | Folha molha, suja e se perde | Marcar os itens no celular |
+| Supervisor | Letra ilegível; falha liberada | Ver na hora o que reprovou |
+| Manutenção | Descobre a avaria tarde | Ser avisada e ver o histórico |
 
 ---
 
 ## RF x RNF
-| | Requisito funcional (RF) | Requisito não funcional (RNF) |
+| | Funcional (RF) | Não funcional (RNF) |
 |---|---|---|
 | Responde | **O que** o sistema faz | **Como** o sistema deve ser |
-| Exemplo 1 | Registrar a inspeção de um equipamento | Funcionar no celular, em campo |
-| Exemplo 2 | Bloquear o equipamento com item crítico reprovado | Usar HTTPS |
-| Exemplo 3 | Listar o histórico de inspeções | Ter custo zero de hospedagem |
+| Exemplo 1 | Registrar a inspeção | Funcionar no celular, em campo |
+| Exemplo 2 | Bloquear equipamento reprovado | Usar HTTPS |
+| Exemplo 3 | Listar o histórico | Custo zero de hospedagem |
 
 Dica: comece cada requisito com **"O sistema deve..."**.
 
@@ -173,20 +170,65 @@ Dica: comece cada requisito com **"O sistema deve..."**.
 3. Escreva **5 RF** começando com "O sistema deve..."
 4. Escreva **3 RNF** (celular em campo, HTTPS, custo zero...)
 
-[cronômetro 20]
+> Guarde no caderno: daqui a pouco eles vão para o GitHub.
 
 ---
 
-# Parte 3 — Nosso ambiente
-GitHub, Codespace e terminal
+# Parte 3 — Explorando o GitHub
+Antes de criar a conta, conheça o lugar
 
 ---
 
-## As três peças
-+ **GitHub**: guarda o seu projeto na nuvem, com todo o histórico
-+ **Repositório**: a "pasta" do projeto dentro do GitHub
-+ **Codespace**: um computador na nuvem, com editor e terminal, aberto no navegador
-+ Grátis para contas pessoais: **120 horas-núcleo por mês**, ou seja, **60 horas** numa máquina de 2 núcleos
+## O que é o GitHub?
++ Um site que **guarda projetos de código** na nuvem
++ Cada projeto é um **repositório**: a "pasta" do projeto
++ Guarda também **todo o histórico**: quem mudou, o quê e quando
++ Milhões de projetos são **públicos**: dá para ver sem ter conta
+
+---
+
+## Mão na massa: explorar
+Sem fazer login, abra **github.com/typicode/jsonplaceholder**
+
+1. Leia o **README**: o que esse projeto oferece?
+2. Clique em **commits**: qual a mensagem do último? Quando foi?
+3. Abra **Issues**: escolha um problema que alguém relatou
+4. Ache as **estrelas** (*stars*) e a **linguagem** principal
+
+> Esse é o projeto da API que vamos testar na Parte 5.
+
+---
+
+## Mão na massa: o que está em alta
+1. Abra **github.com/trending**
+2. Qual **linguagem** aparece mais nos projetos de hoje?
+3. Escolha um projeto e descubra **para que ele serve**
+4. Conte para a turma: o que achou mais curioso?
+
+---
+
+## O que você encontrou?
+Onde você descobre **quem mudou o quê** num projeto, e quando?
+
+- [ ] No README
+- [x] No histórico de commits
+- [ ] Nas estrelas
+- [ ] Na aba Issues
+
+---
+
+## O que você encontrou?
+Um usuário achou um erro no projeto e quer avisar os autores. Onde ele registra?
+
+- [ ] No README
+- [ ] Num commit
+- [x] Em Issues
+- [ ] Nas estrelas
+
+---
+
+# Parte 4 — O nosso repositório
+Conta, Codespace, terminal e git
 
 ---
 
@@ -204,19 +246,50 @@ GitHub, Codespace e terminal
 3. Clique em **Create codespace on main**
 4. Espere: um editor completo abre no navegador
 
-> Ele desliga sozinho depois de **30 min** parado. Seus arquivos ficam salvos.
+> Grátis: até **60 horas por mês**. Ele desliga sozinho após **30 min** parado.
 
 ---
 
-## Terminal: comandos essenciais
+## Terminal: andando pelas pastas
 ```bash
-ls               # lista os arquivos da pasta
-cd pasta         # entra numa pasta
-cd ..            # volta uma pasta
-pwd              # mostra em qual pasta você está
+pwd          # em qual pasta estou?
+ls           # o que tem aqui?
+mkdir docs   # cria a pasta docs
+cd docs      # entra nela
+cd ..        # volta uma pasta
 ```
 
-No Codespace, o terminal fica na parte de baixo da tela.
+O terminal fica na parte de baixo do Codespace.
+
+---
+
+## Mão na massa: terminal
+1. Descubra em qual pasta você está com `pwd`
+2. Liste os arquivos com `ls`: o `README.md` está aí?
+3. Crie a pasta `docs`, entre nela e volte
+4. Use `ls` de novo: a pasta nova aparece?
+
+> Dica: a tecla **↑** repete o último comando. **Tab** completa o nome.
+
+---
+
+## Git: a máquina do tempo
++ **commit**: tira uma "foto" do projeto, com uma mensagem
++ **push**: envia as suas fotos para o GitHub
++ **pull**: traz do GitHub o que mudou lá
++ Cada commit fica no histórico, igual ao que você viu na Parte 3
+
+---
+
+## Os comandos do dia a dia
+```bash
+git status                 # o que mudou?
+git add README.md          # escolhe o que vai
+git commit -m "Requisitos" # tira a foto
+git push                   # envia para o GitHub
+```
+
+Sem `git add`, o arquivo **não entra** no commit.
 
 ---
 
@@ -224,67 +297,154 @@ No Codespace, o terminal fica na parte de baixo da tela.
 ```markdown
 # Checklist de Inspeção
 ## Requisitos funcionais
-- RF01 - O sistema deve registrar a inspeção de um equipamento
+- RF01 - O sistema deve registrar...
 **negrito** e `código`
 ```
 
-O **README.md** é a vitrine do projeto: é o que aparece primeiro no GitHub.
+O **README.md** é a vitrine: é o que aparece primeiro no GitHub.
 
 ---
 
-## Modelo do README.md
-```markdown
-# Checklist de Inspeção
+## Mão na massa: primeiro commit
+1. No `README.md`, escreva o **mapa do sistema** e os **5 RF e 3 RNF**
+2. Salve com `Ctrl + S` e rode `git status`
+3. `git add README.md` e `git commit -m "Requisitos"`
+4. `git push` e atualize a página do repositório no GitHub
 
-## Mapa do sistema
-Frontend → API → Backend → Banco de dados
-
-## Requisitos funcionais
-- RF01 - O sistema deve ...
-
-## Requisitos não funcionais
-- RNF01 - O sistema deve ...
-```
+> Apareceu lá? Abra os **commits** e ache a sua foto.
 
 ---
 
-## Mão na massa: ambiente
-1. Crie a conta, o repositório `checklist-inspecao` e o Codespace
-2. No terminal, use `ls` e `cd`
-3. Abra o `README.md` e escreva o **mapa** e os **5 RF e 3 RNF**
-4. Salve com `Ctrl + S`
-
-[cronômetro 25]
+## Mão na massa: o caminho de volta
+1. No **site** do GitHub, abra o `README.md` e clique no **lápis** ✏️
+2. Acrescente a linha `Equipe: <seu nome>` e clique em **Commit changes**
+3. Volte ao Codespace: o README ainda **não** mudou
+4. Rode `git pull`: agora mudou!
 
 ---
 
-# Parte 4 — A inspeção em JSON
-Dados organizados em chave e valor
+## Push recusado?
+Se o GitHub tem algo que o Codespace ainda não tem, o `git push` é **recusado**.
+
+1. Rode `git pull --rebase` para trazer o que falta
+2. Rode `git push` de novo
+
+> Regra de ouro: **pull antes de push**.
 
 ---
 
-## A inspeção em JSON
-```json
-{
-  "id": 7,
-  "equipamento": "CAM-07",
-  "operador": "Ana",
-  "turno": "A",
-  "itens": [
-    { "nome": "Freios", "status": "ok" },
-    { "nome": "Pneus", "status": "reprovado" },
-    { "nome": "Luzes", "status": "ok" }
-  ]
-}
-```
+## Qual comando?
+Você mudou o README no Codespace e quer que a mudança apareça no GitHub.
+
+- [ ] `git pull`
+- [ ] `git status`
+- [x] `git add`, `git commit` e `git push`
+- [ ] `ls`
+
+---
+
+# Parte 5 — Testando uma API de verdade
+JSON, métodos HTTP e o que a API responde
 
 ---
 
 ## Chave, valor e lista
 + **Chave**: o nome do dado, sempre entre aspas duplas: `"turno"`
 + **Valor**: texto `"Ana"`, número `7`, `true`/`false` ou `null`
-+ **Objeto** `{ }`: um grupo de chaves e valores (uma inspeção, um item)
-+ **Lista** `[ ]`: vários valores em ordem (os itens)
++ **Objeto** `{ }`: um grupo de chaves e valores
++ **Lista** `[ ]`: vários valores em ordem
+
+---
+
+## CRUD: as 4 ações com dados
+| CRUD | Método HTTP | Na inspeção |
+|---|---|---|
+| **C**reate (criar) | `POST` | Registrar uma inspeção |
+| **R**ead (ler) | `GET` | Listar as inspeções |
+| **U**pdate (atualizar) | `PATCH` | Mudar o status de um item |
+| **D**elete (apagar) | `DELETE` | Cancelar a inspeção |
+
+---
+
+## A API que vamos testar
++ **JSONPlaceholder**: uma API pública e gratuita, feita para treinar
++ Endereço: `jsonplaceholder.typicode.com`
++ O recurso `/todos` é uma lista de tarefas: **cada uma é um item de checklist**
++ `title` é o nome do item, `completed` diz se foi feito (`true`/`false`)
+
+---
+
+## Primeiro teste: GET
+Cole no **navegador** o endereço `jsonplaceholder.typicode.com/todos/1`
+
+Agora troque o `1` por `999`. O que aconteceu?
+
+---
+
+## O mesmo GET no terminal
+```bash
+curl -i https://jsonplaceholder.typicode.com/todos/1
+```
+
++ `curl` faz requisições pelo terminal
++ `-i` mostra também o cabeçalho da resposta
++ Olhe a **primeira linha**: ali está o **status** (`200`)
+
+---
+
+## POST: criando um item
+```bash
+curl -i -X POST \
+  https://jsonplaceholder.typicode.com/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Freios", "completed": false}'
+```
+
+`-X` escolhe o método e `-d` leva o JSON que você envia.
+
+---
+
+## PATCH e DELETE
+```bash
+curl -i -X PATCH \
+  https://jsonplaceholder.typicode.com/todos/1 \
+  -H "Content-Type: application/json" \
+  -d '{"completed": true}'
+
+curl -i -X DELETE \
+  https://jsonplaceholder.typicode.com/todos/1
+```
+
+---
+
+## Mão na massa: investigue a API
+Teste e anote o **status** e a **resposta** de cada um:
+
+1. `GET` do item 1 e do item 999
+2. `POST` de um item seu: qual `id` voltou?
+3. Agora faça `GET` desse `id` novo
+4. `PATCH` e `DELETE` no item 1, depois `GET` no item 1
+
+---
+
+## Deu certo... ou não?
++ O `POST` respondeu `201 Created`, com o `id` 201
++ Mas o `GET` do 201 responde `404`: **nada foi salvo**
++ Depois do `DELETE`, o item 1 **continua lá**
++ É uma API de **treino**: ela finge que salvou
++ Lição: o status diz o que a API **respondeu**, não o que **aconteceu**
+
+---
+
+## E se o JSON vier quebrado?
+```bash
+curl -i -X POST \
+  https://jsonplaceholder.typicode.com/todos \
+  -H "Content-Type: application/json" \
+  -d '{title: "Freios",}'
+```
+
+Teste! Que status voltou? Por que ela não aceitou?
 
 ---
 
@@ -294,7 +454,7 @@ Dados organizados em chave e valor
 - **Comentários** não existem em JSON ✗
 - Número **entre aspas** vira texto: `"7"` não é `7`
 
-> Um único caractere errado e o JSON inteiro é recusado.
+> A API respondeu `500`: erro no servidor. Uma API bem feita responderia `400`, "você mandou errado".
 
 ---
 
@@ -308,13 +468,45 @@ Três destes têm erro. Qual está certo?
 
 ---
 
-## CRUD: as 4 ações com dados
-| CRUD | Significa | Na inspeção |
-|---|---|---|
-| **C**reate | Criar | Registrar uma inspeção |
-| **R**ead | Ler | Listar as inspeções |
-| **U**pdate | Atualizar | Mudar o status de um item |
-| **D**elete | Apagar | Cancelar a inspeção |
+## Qual método?
+O operador marcou "Luzes: ok" por engano na inspeção 7 e precisa corrigir para reprovado.
+
+- [ ] `GET /inspecoes/7`
+- [ ] `POST /inspecoes`
+- [x] `PATCH /inspecoes/7`
+- [ ] `DELETE /inspecoes/7`
+
+---
+
+## Agora é a sua vez: a inspeção
+```json
+{
+  "equipamento": "CAM-07",
+  "operador": "Ana",
+  "itens": [
+    { "nome": "Freios", "status": "ok" },
+    { "nome": "Pneus", "status": "reprovado" }
+  ]
+}
+```
+
+---
+
+## Validando no terminal
+```bash
+python3 -m json.tool inspecao.json
+```
+
+Se estiver certo, o JSON aparece organizado. Se tiver erro, ele mostra a **linha**.
+
+---
+
+## Mão na massa: inspecao.json
+1. No Codespace, crie o arquivo `inspecao.json` **à mão**
+2. Coloque um equipamento seu e pelo menos **4 itens**
+3. **Valide** no terminal e corrija o que estiver errado
+4. Quebre de propósito (tire uma aspa) e valide de novo: que linha ele aponta?
+5. Tudo certo? `git add`, `git commit` e `git push`
 
 ---
 
@@ -326,68 +518,20 @@ Três destes têm erro. Qual está certo?
 | Atualizar item | `PATCH` | `/inspecoes/7` |
 | Cancelar inspeção | `DELETE` | `/inspecoes/7` |
 
-REST: o **recurso** fica no endereço, a **ação** fica no método.
+O **recurso** fica no endereço, a **ação** fica no método. Igual ao `/todos`!
 
 ---
 
-## Registrando uma inspeção
-```http
-POST /inspecoes HTTP/1.1
-Content-Type: application/json
-
-{ "equipamento": "CAM-07", "operador": "Ana", "turno": "A" }
-```
-
-A resposta `201 Created` devolve a inspeção nova, já com o seu `id`.
-
----
-
-## Qual método?
-O operador marcou "Luzes: ok" por engano na inspeção 7 e precisa corrigir para reprovado.
-
-- [ ] `GET /inspecoes/7`
-- [ ] `POST /inspecoes`
-- [x] `PATCH /inspecoes/7`
-- [ ] `DELETE /inspecoes/7`
-
----
-
-## Qual método?
-A inspeção 7 foi aberta para o equipamento errado e precisa ser descartada.
-
-- [ ] `PATCH /inspecoes/7`
-- [x] `DELETE /inspecoes/7`
-- [ ] `GET /inspecoes`
-- [ ] `POST /inspecoes/7`
-
----
-
-# Parte 5 — Recursos da web
+# Parte 6 — Recursos da web
 Webhooks, upload e streaming na mineração
 
 ---
 
-## Webhook: o aviso automático
-+ Sem webhook, a manutenção abre o sistema toda hora: "tem freio reprovado?"
-+ Isso se chama **polling**: muito pedido à toa, e o aviso chega atrasado
-+ Com webhook, o sistema **avisa sozinho** quando um item crítico é reprovado
-+ A manutenção só se cadastra **uma vez** para receber os avisos
-
----
-
-## Upload: a foto da avaria
-+ O operador fotografa o **pneu cortado** ou o **vazamento de óleo**
-+ O celular envia o arquivo com um `POST`
-+ O formulário usa o formato `multipart/form-data`
-+ O servidor guarda a imagem e devolve o **endereço** dela, que vai junto com a inspeção
-
----
-
-## Streaming: aos poucos
-+ Em vez de esperar tudo pronto, a resposta chega **em pedaços**
-+ Vídeos e músicas tocam enquanto ainda estão baixando
-+ No chat de uma IA, o texto aparece **palavra por palavra**
-+ Você lê o começo do relatório enquanto o resto ainda está sendo gerado
+## Três recursos em um slide
++ **Webhook**: o sistema **avisa sozinho** a manutenção quando um freio reprova
++ Sem ele, a manutenção pergunta toda hora (*polling*) e o aviso chega atrasado
++ **Upload**: o operador envia a **foto da avaria** com um `POST`
++ **Streaming**: a resposta chega **em pedaços**, como o texto de um chat de IA
 
 ---
 
@@ -411,7 +555,7 @@ O operador quer anexar à inspeção a foto de uma mangueira rachada.
 
 ---
 
-# Parte 6 — A IA entra no código
+# Parte 7 — A IA entra no código
 GitHub Copilot no Codespace
 
 ---
@@ -430,84 +574,58 @@ GitHub Copilot no Codespace
 3. Entre com a sua conta do GitHub quando ele pedir
 4. Abra o **chat do Copilot** pelo ícone dele no topo
 
-[cronômetro 10]
-
 ---
 
 ## Prompt claro: 3 partes
 | Parte | Pergunta | Exemplo |
 |---|---|---|
-| **Contexto** | Onde estou? | Estou criando um checklist de inspeção de equipamentos |
-| **Tarefa** | O que eu quero? | Crie uma inspeção de exemplo |
+| **Contexto** | Onde estou? | Checklist de inspeção de equipamentos |
+| **Tarefa** | O que eu quero? | Crie 3 inspeções de exemplo |
 | **Formato** | Como quero? | Só JSON válido, sem comentários |
 
 ---
 
 ## Prompt vago x prompt claro
 - Vago: *"faz um json de inspeção"*
-- Claro: *"Estou criando um checklist de inspeção de equipamentos de mineração. Crie o arquivo `inspecao.json` com uma inspeção de exemplo: id, equipamento, operador, turno e uma lista de itens com nome e status (ok ou reprovado). Responda só com JSON válido."*
+- Claro: *"Estou criando um checklist de inspeção de equipamentos de mineração. Use o meu `inspecao.json` como modelo e crie `inspecoes.json` com uma lista de 3 inspeções. Responda só com JSON válido."*
 
 > O prompt claro gasta **uma** mensagem. O vago costuma gastar três.
 
 ---
 
-## Validando o JSON
-A IA pode errar. Confira no terminal:
-
-```bash
-python3 -m json.tool inspecao.json
-```
-
-Se estiver certo, o JSON aparece organizado. Se tiver erro, ele mostra a linha.
-
----
-
-## Mão na massa: inspecao.json
+## Mão na massa: inspecoes.json
 1. Escreva o prompt com **contexto, tarefa e formato**
-2. Crie o arquivo `inspecao.json` com o que a IA gerou
-3. **Valide** no terminal e corrija o que estiver errado
-4. Confira: tem equipamento, operador e turno? Todo item tem nome e status **ok** ou **reprovado**?
-
-[cronômetro 30]
+2. Salve o que a IA gerou em `inspecoes.json`
+3. **Valide** com `python3 -m json.tool` e corrija o que estiver errado
+4. Confira: todo item tem nome e status **ok** ou **reprovado**?
+5. `git add`, `git commit` e `git push`
 
 ---
 
 ## Mão na massa: tabela de rotas
-No `README.md`, crie a seção **Rotas REST**:
+No `README.md`, crie a seção **Rotas REST** com as **4 ações**:
 
 ```markdown
 ## Rotas REST
 | Ação | Método | Rota |
 |---|---|---|
 | Registrar inspeção | POST | /inspecoes |
-| Listar inspeções | GET | /inspecoes |
 ```
 
-Complete com **atualizar item** e **cancelar inspeção**.
-
----
-
-## Mão na massa: rotas
-1. Monte a tabela no `README.md` com as **4 ações**
-2. Peça ao Copilot para **revisar** a sua tabela
-3. Compare com o slide de REST: ele acertou?
-
-[cronômetro 25]
+Peça ao Copilot para **revisar**: ele acertou? Depois, commit e push.
 
 ---
 
 ## Observando o streaming
-1. Faça uma pergunta ao chat: *"Explique o que é PATCH"*
+1. Pergunte ao chat: *"Explique o que é PATCH"*
 2. Repare: a resposta aparece **aos poucos**
-3. Isso é **streaming**, o mesmo recurso da Parte 5
+3. Isso é **streaming**, o mesmo recurso da Parte 6
 4. Anote no README: onde mais você já viu streaming?
-
-[cronômetro 15]
 
 ---
 
 ## Revise tudo o que a IA fez
-- ✅ O `inspecao.json` passa no `json.tool`
+- ✅ O `inspecoes.json` passa no `json.tool`
 - ✅ Os nomes das chaves fazem sentido para a inspeção
 - ✅ Todo item tem um status válido: ok ou reprovado
 - ✅ Cada rota tem o método certo
@@ -517,14 +635,11 @@ Complete com **atualizar item** e **cancelar inspeção**.
 ---
 
 ## Antes de entregar
-Confira no seu repositório:
+Abra o seu repositório **no site do GitHub** e confira:
 
-- ✅ `README.md` com o mapa do sistema
-- ✅ 5 RF e 3 RNF em Markdown
-- ✅ `inspecao.json` válido
-- ✅ Tabela de rotas REST com as 4 ações
-
-[cronômetro 10]
+- ✅ `README.md` com o mapa, 5 RF, 3 RNF e as rotas
+- ✅ `inspecao.json` (à mão) e `inspecoes.json` (com IA)
+- ✅ Pelo menos **3 commits** no histórico
 
 ---
 
@@ -538,24 +653,33 @@ Qual rota lista todas as inspeções registradas?
 
 ---
 
+## Revisão
+O seu colega mudou o README pelo site. O que você roda no Codespace para receber a mudança?
+
+- [ ] `git push`
+- [x] `git pull`
+- [ ] `git commit`
+- [ ] `git status`
+
+---
+
 ## Termômetro de novo
 Levante os dedos outra vez e compare com o começo.
 
 + JSON
-+ REST
-+ Webhook
-+ Upload de arquivos
-+ Streaming
-+ GitHub e terminal
++ REST e métodos HTTP
++ GitHub
++ Terminal e git (commit, push, pull)
++ Webhook, upload e streaming
 
 ---
 
 ## O que vimos hoje
-+ No DevTools, as APIs respondem em **JSON**
-+ Requisitos: **RF** diz o que faz, **RNF** diz como deve ser
-+ GitHub guarda, Codespace roda, README apresenta
-+ CRUD vira **REST**: o método diz a ação, a rota diz o recurso
-+ Webhook avisa, upload envia arquivo, streaming entrega aos poucos
++ No DevTools e no `curl`, as APIs respondem em **JSON**
++ RF diz o que o sistema faz; RNF diz como ele deve ser
++ GitHub guarda, Codespace roda, **git** leva e traz
++ O método diz a ação, a rota diz o recurso
++ O status diz o que a API respondeu: **confira** o que aconteceu
 
 ---
 

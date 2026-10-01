@@ -271,6 +271,10 @@ window.SlidesMD = (function () {
   // ---------- Apresentação ----------
   const W = 1280, H = 720; // tamanho de referência do desenho (ver fit)
   const W_MIN_EM_PE = 900;
+  // "fonte: grande" no cabeçalho do .md: tudo um pouco maior (o palco de
+  // referência encolhe e a escala aumenta — letra, código e tabela juntos).
+  // Em troca, cabe um pouco menos em cada slide.
+  const ZOOM_FONTE = { grande: 1.15 };
 
   // remoto (opcional): { client: () => clienteSupabase, url: 'https://…/controle.html' }
   // liga o passador de slides no celular (botão 📱 — ver ligarRemoto).
@@ -319,7 +323,8 @@ window.SlidesMD = (function () {
     // junto com a altura (ver slides-md.css).
     function fit() {
       const vw = window.innerWidth, vh = window.innerHeight;
-      const s = vw < vh ? vw / W_MIN_EM_PE : Math.min(vw / W, vh / H);
+      const z = (deck && deck.meta && ZOOM_FONTE[normChave(deck.meta.fonte || '')]) || 1;
+      const s = (vw < vh ? vw / W_MIN_EM_PE : Math.min(vw / W, vh / H)) * z;
       const w = vw / s, h = vh / s;
       stage.style.width = `${w}px`;
       stage.style.height = `${h}px`;
