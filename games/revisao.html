@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f17">
+<title>Responde Aí!</title>
+<!-- "Responde Aí!" no celular do aluno: a revisão ao vivo do começo da aula.
+     Aberto pelo QR Code do telão (professor/revisao.html): o código da sala
+     vem no #hash (ou é digitado aqui). SEM login, de propósito: a turma não
+     precisa de conta. Cliente Supabase próprio, sem sessão.
+     Canal de broadcast do Supabase Realtime 'revisao_<sala>': daqui saem
+     'ola' ({ id }) a cada 4 s e 'resp' ({ id, rodada, n, o }), reenviada até
+     o telão confirmar (o id volta na lista 'ok' do estado); de lá vem
+     'estado'. O id fica no localStorage do celular: fechar e abrir de novo
+     a página não deixa responder a mesma pergunta duas vezes (vale a
+     primeira resposta). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap">
+<style>
+  :root{
+    --bg:#0b0f17; --bg2:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,.12); --card:rgba(255,255,255,.05);
+    --accent:#4fd1c5; --accent2:#ff9466; --accent3:#7c9cff;
+    --op0:#4fd1c5; --op1:#7c9cff; --op2:#ff9466; --op3:#f5c451;
+    --certo:#4ade80; --erro:#ff5c5c;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ min-height:100%; margin:0; }
+  body{ background:radial-gradient(ellipse at 50% 120%, #1b2440, var(--bg) 70%) fixed; color:var(--ink);
+    font-family:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; user-select:none; -webkit-user-select:none; }
+  [hidden]{ display:none !important; }
+  .c-wrap{ min-height:100vh; min-height:100dvh; max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
+    padding:max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+
+  .c-codigo{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:12px; }
+  .c-codigo h1{ font-size:26px; margin:0; }
+  .c-codigo p{ color:var(--dim); font-size:15px; margin:0; line-height:1.5; }
+  .c-codigo input{ font:inherit; font-family:'JetBrains Mono', Consolas, monospace; font-size:28px; font-weight:800; letter-spacing:4px; text-align:center; text-transform:uppercase;
+    padding:14px; border-radius:14px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); user-select:text; -webkit-user-select:text; }
+  .c-codigo button{ font:inherit; font-weight:800; font-size:18px; padding:16px; border-radius:14px; border:none; background:var(--accent); color:var(--bg); }
+  .c-erro{ color:var(--erro); font-size:14px; min-height:1em; }
+
+  .c-topo{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--dim); min-height:28px; }
+  .c-bolinha{ width:10px; height:10px; border-radius:50%; background:var(--erro); flex-shrink:0; }
+  .c-on .c-bolinha{ background:var(--accent); box-shadow:0 0 10px var(--accent); }
+  .c-marca{ margin-left:auto; font-weight:800; color:var(--accent); }
+
+  .c-tela{ flex:1; display:flex; flex-direction:column; gap:14px; }
+  .c-centro{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:14px; }
+  .c-centro h2{ font-size:30px; margin:0; line-height:1.2; }
+  .c-centro p{ font-size:17px; color:var(--dim); margin:0; line-height:1.5; }
+  .c-icone{ font-size:72px; line-height:1; }
+  .c-anim{ animation:cSobe .3s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes cSobe{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+
+  .c-cab{ display:flex; align-items:center; gap:10px; }
+  .c-pill{ font-size:14px; font-weight:800; color:var(--bg); background:var(--accent); border-radius:999px; padding:4px 12px; }
+  .c-relogio{ margin-left:auto; font-size:24px; font-weight:800; font-variant-numeric:tabular-nums; min-width:56px; text-align:right; }
+  .c-relogio.c-fim{ color:var(--erro); }
+  .c-tempo{ height:6px; border-radius:3px; background:var(--card); overflow:hidden; }
+  .c-tempo div{ height:100%; background:linear-gradient(90deg, var(--accent), var(--accent3)); transition:width .25s linear; }
+  .c-q{ font-size:21px; font-weight:700; line-height:1.35; margin:0; }
+  .c-ops{ flex:1; display:flex; flex-direction:column; gap:12px; justify-content:center; }
+  .c-op{ --c:var(--op0); font:inherit; display:flex; align-items:center; gap:14px; width:100%; min-height:72px; padding:12px 16px; text-align:left;
+    border-radius:16px; border:2px solid var(--c); background:color-mix(in srgb, var(--c) 16%, var(--bg)); color:var(--ink); font-size:19px; font-weight:700;
+    box-shadow:0 5px 0 color-mix(in srgb, var(--c) 45%, #000); transition:transform .06s, opacity .25s; touch-action:manipulation; }
+  .c-op:active{ transform:translateY(3px); box-shadow:0 2px 0 color-mix(in srgb, var(--c) 45%, #000); }
+  .c-op1{ --c:var(--op1); } .c-op2{ --c:var(--op2); } .c-op3{ --c:var(--op3); }
+  .c-letra{ flex:0 0 44px; height:44px; border-radius:11px; background:var(--c); color:var(--bg); font-size:22px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .c-ops.c-travado .c-op{ opacity:.3; box-shadow:none; }
+  .c-ops.c-travado .c-op.c-minha{ opacity:1; background:color-mix(in srgb, var(--c) 40%, var(--bg)); box-shadow:0 0 0 3px var(--c); }
+  .c-aviso{ text-align:center; font-size:16px; color:var(--dim); min-height:1.4em; }
+  .c-aviso b{ color:var(--accent); }
+
+  .c-res{ width:150px; height:150px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:84px; font-weight:800; color:var(--bg); }
+  .c-res.c-certo{ background:var(--certo); box-shadow:0 0 60px color-mix(in srgb, var(--certo) 50%, transparent); animation:cPula .5s; }
+  .c-res.c-errado{ background:var(--erro); box-shadow:0 0 60px color-mix(in srgb, var(--erro) 45%, transparent); animation:cTreme .45s; }
+  .c-res.c-nada{ background:var(--bg2); color:var(--dim); border:2px solid var(--line); }
+  @keyframes cPula{ 0%{ transform:scale(.4); } 60%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
+  @keyframes cTreme{ 20%,60%{ transform:translateX(-10px); } 40%,80%{ transform:translateX(10px); } }
+  .c-certa{ display:flex; align-items:center; gap:12px; text-align:left; padding:12px 16px; border-radius:14px; border:2px solid var(--certo); background:color-mix(in srgb, var(--certo) 14%, var(--bg)); font-size:18px; font-weight:700; }
+  .c-certa .c-letra{ background:var(--certo); }
+  .c-placar{ font-size:56px; font-weight:800; color:var(--accent); line-height:1; }
+</style>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="c-wrap">
+  <form class="c-codigo" id="cCodigo" hidden>
+    <h1>⚡ Responde Aí!</h1>
+    <p>Digite o código que aparece no telão, embaixo do QR Code.</p>
+    <input id="cCodigoInput" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="ABCD-2345">
+    <button type="submit">Entrar</button>
+    <div class="c-erro" id="cCodigoErro"></div>
+  </form>
+
+  <div class="c-topo" id="cTopo" hidden><i class="c-bolinha"></i><span id="cStatus">Conectando…</span><span class="c-marca">⚡ Responde Aí!</span></div>
+  <div class="c-tela" id="cTela" hidden></div>
+</div>
+
+<script>
+(async function () {
+  const $ = id => document.getElementById(id);
+  const tela = $('cTela');
+  const LETRA_OP = ['A', 'B', 'C', 'D'];
+  // Monta elemento com texto SEMPRE como textContent (o texto vem do canal).
+  function el(tag, cls, texto) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (texto != null) e.textContent = texto;
+    return e;
+  }
+
+  // ---------- Código da sala ----------
+  const limpar = t => (t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  let sala = limpar(location.hash.slice(1));
+  if (sala.length !== 8) {
+    $('cCodigo').hidden = false;
+    sala = await new Promise(resolve => {
+      $('cCodigo').addEventListener('submit', e => {
+        e.preventDefault();
+        const s = limpar($('cCodigoInput').value);
+        if (s.length === 8) { resolve(s); return; }
+        $('cCodigoErro').textContent = 'O código tem 8 letras/números (ex.: ABCD-2345).';
+      });
+    });
+    $('cCodigo').hidden = true;
+    try { history.replaceState(null, '', '#' + sala); } catch (e) {}
+  }
+  $('cTopo').hidden = false;
+  tela.hidden = false;
+
+  // ---------- Id deste celular ----------
+  let meuId = '';
+  try { meuId = localStorage.getItem('revisao_cel_id') || ''; } catch (e) {}
+  if (!/^[a-z0-9]{6,24}$/.test(meuId)) {
+    meuId = Array.from(crypto.getRandomValues(new Uint8Array(6)), n => n.toString(16).padStart(2, '0')).join('');
+    try { localStorage.setItem('revisao_cel_id', meuId); } catch (e) {}
+  }
+
+  // ---------- Canal ----------
+  let canal = null, pronto = false;
+  try {
+    const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    canal = sb.channel('revisao_' + sala, { config: { broadcast: { self: false } } });
+  } catch (e) {}
+  const enviar = (evento, payload) => {
+    if (canal && pronto) canal.send({ type: 'broadcast', event: evento, payload: Object.assign({ id: meuId }, payload) }).catch(() => {});
+  };
+
+  // ---------- Estado ----------
+  let est = null, recebeuEm = 0, desenhado = '';
+  let escolha = { chave: '', o: -1 };     // o que ESTE celular tocou (chave = rodada:n)
+  let fimLocal = 0, tempoTotal = 20;       // relógio local da pergunta
+  const chaveAtual = () => (est ? `${est.rodada}:${est.n}` : '');
+  const restaLocal = () => Math.max(0, Math.ceil((fimLocal - Date.now()) / 1000));
+  const confirmado = () => !!(est && Array.isArray(est.ok) && est.ok.includes(meuId));
+
+  function status(on, txt) {
+    $('cTopo').classList.toggle('c-on', on);
+    $('cStatus').textContent = txt;
+  }
+
+  function receber(e) {
+    if (!e || typeof e !== 'object') return;
+    est = e; recebeuEm = Date.now();
+    status(true, 'Conectado ao telão');
+    if (e.fase === 'pergunta') {
+      const k = chaveAtual();
+      if (escolha.chave !== k) escolha = { chave: k, o: -1 };
+      tempoTotal = Number(e.tempo) || 20;
+      // Acerta o relógio local quando ele se afastar mais de 1,5 s do telão.
+      const fimTelao = Date.now() + (Number(e.resta) || 0) * 1000;
+      if (Math.abs(fimTelao - fimLocal) > 1500) fimLocal = fimTelao;
+    }
+    desenhar();
+  }
+
+  function desenhar() {
+    if (!est) return;
+    const k = chaveAtual();
+    const chave = `${est.fase}|${k}|${escolha.o}|${confirmado()}`;
+    if (chave === desenhado) { relogio(); return; }
+    const mesmaPergunta = desenhado.startsWith(`${est.fase}|${k}|`);
+    desenhado = chave;
+    tela.innerHTML = '';
+
+    if (est.fase === 'espera') {
+      const c = el('div', 'c-centro c-anim');
+      c.append(el('div', 'c-icone', '🙌'), el('h2', '', 'Você está dentro!'),
+        el('p', '', 'Olhe para o telão: a primeira pergunta aparece aqui assim que o professor começar.'));
+      if (est.titulo) c.append(el('p', '', est.titulo));
+      tela.append(c);
+      return;
+    }
+
+    if (est.fase === 'pergunta') {
+      const cab = el('div', 'c-cab');
+      cab.append(el('span', 'c-pill', `Pergunta ${est.n + 1} de ${est.total}`), el('span', 'c-relogio', ''));
+      const barra = el('div', 'c-tempo'); barra.append(el('div'));
+      const ops = el('div', 'c-ops' + (escolha.o >= 0 || restaLocal() <= 0 ? ' c-travado' : ''));
+      (est.opcoes || []).forEach((o, i) => {
+        const b = el('button', `c-op c-op${i}` + (escolha.o === i ? ' c-minha' : ''));
+        b.type = 'button';
+        b.append(el('span', 'c-letra', LETRA_OP[i] || '?'), el('span', '', o));
+        b.addEventListener('click', () => tocar(i));
+        ops.append(b);
+      });
+      const aviso = el('div', 'c-aviso');
+      if (escolha.o >= 0) aviso.innerHTML = confirmado() ? '<b>✔ Resposta recebida!</b> Aguarde o tempo acabar.' : 'Enviando a resposta…';
+      else aviso.textContent = 'Toque na resposta certa.';
+      tela.append(cab, barra, el('p', 'c-q' + (mesmaPergunta ? '' : ' c-anim'), est.q || ''), ops, aviso);
+      relogio();
+      return;
+    }
+
+    if (est.fase === 'revelado') {
+      const resp = est.resp && typeof est.resp === 'object' ? est.resp : {};
+      const minha = Object.prototype.hasOwnProperty.call(resp, meuId) ? resp[meuId] : null;
+      const certa = est.certa;
+      const c = el('div', 'c-centro c-anim');
+      if (minha === null) {
+        c.append(el('div', 'c-res c-nada', '–'), el('h2', '', escolha.o >= 0 && escolha.chave === k ? 'Sua resposta não chegou a tempo' : 'Você não respondeu'));
+      } else if (minha === certa) {
+        c.append(el('div', 'c-res c-certo', '✔'), el('h2', '', 'Acertou!'));
+        if (navigator.vibrate) navigator.vibrate(80);
+      } else {
+        c.append(el('div', 'c-res c-errado', '✖'), el('h2', '', 'Errou!'));
+        if (navigator.vibrate) navigator.vibrate([60, 60, 60]);
+      }
+      if (minha !== certa && est.opcoes && est.opcoes[certa] != null) {
+        c.append(el('p', '', 'A resposta certa era:'));
+        const ca = el('div', 'c-certa');
+        ca.append(el('span', 'c-letra', LETRA_OP[certa] || '?'), el('span', '', est.opcoes[certa]));
+        c.append(ca);
+      }
+      c.append(el('p', '', 'Olhe o telão: o professor passa para a próxima.'));
+      tela.append(c);
+      return;
+    }
+
+    if (est.fase === 'fim') {
+      const certas = Array.isArray(est.certas) ? est.certas : [];
+      const todas = Array.isArray(est.todas) ? est.todas : [];
+      const meus = certas.filter((cr, i) => todas[i] && Object.prototype.hasOwnProperty.call(todas[i], meuId) && todas[i][meuId] === cr).length;
+      const c = el('div', 'c-centro c-anim');
+      c.append(el('div', 'c-icone', meus === certas.length && certas.length ? '🏆' : '🏁'), el('h2', '', 'Fim da revisão!'),
+        el('p', '', 'Você acertou'), el('div', 'c-placar', `${meus} de ${certas.length}`),
+        el('p', '', 'O resumo da turma está no telão.'));
+      tela.append(c);
+    }
+  }
+
+  function relogio() {
+    if (!est || est.fase !== 'pergunta') return;
+    const r = restaLocal();
+    const rel = tela.querySelector('.c-relogio');
+    if (rel) { rel.textContent = `⏱ ${r}`; rel.classList.toggle('c-fim', r <= 5); }
+    const barra = tela.querySelector('.c-tempo div');
+    if (barra) barra.style.width = `${Math.max(0, Math.min(100, ((fimLocal - Date.now()) / (tempoTotal * 1000)) * 100))}%`;
+    // Acabou o tempo e o aluno não tocou: trava os botões.
+    if (r <= 0 && escolha.o < 0) {
+      const ops = tela.querySelector('.c-ops');
+      if (ops && !ops.classList.contains('c-travado')) {
+        ops.classList.add('c-travado');
+        tela.querySelector('.c-aviso').textContent = '⏱ Tempo esgotado!';
+      }
+    }
+  }
+
+  function tocar(o) {
+    if (!est || est.fase !== 'pergunta' || escolha.o >= 0 || restaLocal() <= 0) return;
+    escolha = { chave: chaveAtual(), o };
+    if (navigator.vibrate) navigator.vibrate(25);
+    enviarResposta();
+    desenhar();
+  }
+  function enviarResposta() {
+    if (!est || est.fase !== 'pergunta' || escolha.chave !== chaveAtual() || escolha.o < 0) return;
+    enviar('resp', { rodada: est.rodada, n: est.n, o: escolha.o });
+  }
+
+  if (canal) {
+    canal
+      .on('broadcast', { event: 'estado' }, ({ payload }) => receber(payload))
+      .subscribe(st => {
+        pronto = st === 'SUBSCRIBED';
+        if (pronto) { if (!est) status(false, 'Procurando o telão…'); enviar('ola', {}); enviarResposta(); }
+        else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') status(false, 'Sem conexão — tentando de novo…');
+      });
+  } else status(false, 'Não deu para conectar ao servidor.');
+
+  if (!est) {
+    const c = el('div', 'c-centro');
+    c.append(el('div', 'c-icone', '📡'), el('h2', '', 'Conectando ao telão…'), el('p', '', 'Se demorar, confira a internet do celular.'));
+    tela.append(c);
+  }
+
+  // Relógio na tela; reenvia a resposta até o telão confirmar.
+  setInterval(relogio, 250);
+  setInterval(() => { if (escolha.o >= 0 && !confirmado()) enviarResposta(); }, 1500);
+  // 'ola' mantém este celular na contagem de conectados do telão.
+  setInterval(() => {
+    if (recebeuEm && Date.now() - recebeuEm > 9000) status(false, 'Procurando o telão…');
+    enviar('ola', {});
+  }, 4000);
+
+  // Tela acesa (quando o navegador deixa).
+  async function telaAcesa() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {} }
+  telaAcesa();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { telaAcesa(); enviar('ola', {}); } });
+})();
+</script>
+</body>
+</html>

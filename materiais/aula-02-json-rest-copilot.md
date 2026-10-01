@@ -44,23 +44,14 @@ Olhe com calma. Você consegue dizer o que aconteceu com o caminhão?
 
 ---
 
-## Retomada da Aula 1
-Os dados da inspeção saem do celular do operador e chegam ao servidor. Quem faz esse transporte?
+## ⚡ Responde Aí: revisão da Aula 1
+4 perguntas rápidas, ao vivo, respondidas no **celular**. Sem login.
 
-- [ ] O frontend
-- [x] A API
-- [ ] O backend
-- [ ] O banco de dados
+- Leia o QR Code do telão com a câmera
+- Toque na resposta antes do tempo acabar
+- No fim, o telão mostra quanto a turma acertou
 
----
-
-## Retomada da Aula 1
-Uma resposta com status `404` quer dizer...
-
-- [ ] Deu tudo certo
-- [ ] O servidor quebrou
-- [x] O que foi pedido não existe
-- [ ] A inspeção foi registrada
+[Abrir o telão da revisão](https://instrutorjd.github.io/portal_aulas/professor/revisao.html?p=aula-02)
 
 ---
 

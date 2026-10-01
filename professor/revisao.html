@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Responde Aí! — revisão ao vivo</title>
+<!-- "Responde Aí!": revisão ao vivo no começo da aula, estilo quiz de sala.
+     Este é o TELÃO (só o professor abre, mesmo login do painel). Os alunos
+     respondem pelo celular em games/revisao.html, aberto pelo QR Code daqui,
+     SEM login. Perguntas por aula em games/revisao-perguntas.js, escolhidas
+     pelo ?p= da URL (ex.: revisao.html?p=aula-02).
+     Canal de broadcast do Supabase Realtime 'revisao_<sala>', sem tabela e
+     sem SQL: o celular manda 'ola' ({ id }) e 'resp' ({ id, rodada, n, o });
+     o telão responde 'estado' (fase, pergunta, tempo, contagens...). Vale a
+     PRIMEIRA resposta de cada celular em cada pergunta. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap">
+<style>
+  /* Mesma paleta dos slides do Criar Material (shared/slides-md.css). */
+  :root{
+    --sm-bg:#0b0f17; --sm-bg2:#121a28; --sm-ink:#eef2f8; --sm-dim:#9aa6ba;
+    --sm-accent:#4fd1c5; --sm-accent2:#ff9466; --sm-accent3:#7c9cff;
+    --sm-card:rgba(255,255,255,0.05); --sm-line:rgba(255,255,255,0.12);
+    --op0:#4fd1c5; --op1:#7c9cff; --op2:#ff9466; --op3:#f5c451;
+    --certo:#4ade80; --erro:#ff5c5c;
+  }
+  html, body{ margin:0; height:100%; overflow:hidden; background:var(--sm-bg); color:var(--sm-ink);
+    font-family:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+  [hidden]{ display:none !important; }
+  .r-bg{ position:fixed; inset:0; pointer-events:none; }
+  .r-bg span{ position:absolute; width:60vmax; height:60vmax; border-radius:50%; opacity:.22; background:radial-gradient(circle, var(--c) 0%, transparent 65%); }
+  .r-bg span:nth-child(1){ --c:var(--sm-accent); top:-26vmax; left:-20vmax; }
+  .r-bg span:nth-child(2){ --c:var(--sm-accent3); bottom:-30vmax; right:-22vmax; }
+  .r-bg span:nth-child(3){ --c:var(--sm-accent2); top:25%; left:40%; width:40vmax; height:40vmax; opacity:.12; }
+
+  /* Palco de 1280×720 escalado para a tela (igual aos slides). */
+  .r-stage{ position:absolute; left:50%; top:50%; width:1280px; height:720px; transform-origin:center;
+    box-sizing:border-box; padding:44px 64px; display:flex; flex-direction:column; gap:18px; }
+  .r-anim{ animation:rSobe .35s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes rSobe{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+
+  h1{ font-size:84px; line-height:1.05; margin:0; font-weight:800; letter-spacing:-2px;
+    background:linear-gradient(100deg, var(--sm-accent), var(--sm-accent3) 55%, var(--sm-accent2));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  h2{ font-size:52px; line-height:1.1; margin:0; font-weight:800; letter-spacing:-1px; position:relative; padding-bottom:14px; }
+  h2::after{ content:''; position:absolute; left:0; bottom:0; height:5px; width:84px; border-radius:3px; background:linear-gradient(90deg, var(--sm-accent), var(--sm-accent3)); }
+  .r-tag{ align-self:flex-start; font-size:20px; font-weight:700; color:var(--sm-accent); background:var(--sm-card); border:1px solid var(--sm-line); border-radius:999px; padding:6px 16px; }
+
+  .r-btn{ font:inherit; font-size:24px; font-weight:800; padding:14px 30px; border-radius:999px; border:none; cursor:pointer;
+    background:var(--sm-accent); color:var(--sm-bg); box-shadow:0 6px 24px rgba(79,209,197,.25); }
+  .r-btn:hover{ filter:brightness(1.1); }
+  .r-btn small{ font-size:15px; font-weight:600; opacity:.7; margin-left:6px; }
+  .r-btn2{ background:var(--sm-card); color:var(--sm-ink); border:1px solid var(--sm-line); box-shadow:none; }
+
+  /* Espera: instruções + QR grande */
+  .r-espera{ flex:1; display:flex; align-items:center; gap:56px; }
+  .r-col{ flex:1; display:flex; flex-direction:column; gap:20px; }
+  .r-sub{ font-size:28px; color:var(--sm-dim); margin:0; }
+  .r-passos{ font-size:28px; line-height:1.4; margin:0; padding:0; list-style:none; counter-reset:p; display:flex; flex-direction:column; gap:10px; }
+  .r-passos li{ counter-increment:p; position:relative; padding-left:46px; }
+  .r-passos li::before{ content:counter(p); position:absolute; left:0; top:.1em; width:34px; height:34px; border-radius:50%; background:var(--sm-accent); color:var(--sm-bg); font-size:20px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .r-col .r-btn{ align-self:flex-start; }
+  .r-qrbox{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .r-qr{ width:400px; height:400px; background:#fff; border-radius:18px; display:flex; align-items:center; justify-content:center; }
+  .r-qr svg{ width:100%; height:100%; }
+  .r-codigo{ font-family:'JetBrains Mono', Consolas, monospace; font-size:44px; font-weight:800; letter-spacing:6px; }
+  .r-link{ font-family:Consolas, monospace; font-size:16px; color:var(--sm-accent3); }
+
+  .r-vivo{ font-size:28px; color:var(--sm-dim); display:flex; align-items:center; gap:10px; }
+  .r-vivo b{ color:var(--sm-ink); font-size:40px; font-weight:800; display:inline-block; min-width:1ch; text-align:center; }
+  .r-vivo b.r-pop{ animation:rPop .35s; }
+  @keyframes rPop{ 40%{ transform:scale(1.35); color:var(--sm-accent); } }
+  .r-pulso{ width:14px; height:14px; border-radius:50%; background:var(--sm-accent); box-shadow:0 0 0 0 var(--sm-accent); animation:rPulso 1.6s infinite; }
+  @keyframes rPulso{ 70%{ box-shadow:0 0 0 14px transparent; } 100%{ box-shadow:0 0 0 0 transparent; } }
+
+  /* Pergunta */
+  .r-topo{ display:flex; align-items:center; gap:16px; }
+  .r-pill{ font-size:22px; font-weight:800; color:var(--sm-bg); background:var(--sm-accent); border-radius:999px; padding:6px 18px; }
+  .r-titulo{ font-size:20px; color:var(--sm-dim); }
+  .r-entrar{ margin-left:auto; display:flex; align-items:center; gap:10px; font-size:18px; color:var(--sm-dim); }
+  .r-entrar b{ font-family:'JetBrains Mono', Consolas, monospace; color:var(--sm-ink); letter-spacing:2px; font-size:22px; }
+  .r-miniqr{ width:76px; height:76px; background:#fff; border-radius:8px; }
+  .r-miniqr svg{ width:100%; height:100%; display:block; }
+  .r-relogio{ width:76px; height:76px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:34px; font-weight:800;
+    border:5px solid var(--sm-accent); font-variant-numeric:tabular-nums; }
+  .r-relogio.r-fim{ border-color:var(--erro); color:var(--erro); animation:rPop .5s infinite; }
+  .r-tempo{ height:8px; border-radius:4px; background:var(--sm-card); overflow:hidden; }
+  .r-tempo div{ height:100%; background:linear-gradient(90deg, var(--sm-accent), var(--sm-accent3)); transition:width .25s linear; }
+  .r-q{ font-size:44px; line-height:1.2; margin:6px 0 4px; font-weight:800; }
+  .r-ops{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .r-op{ --c:var(--op0); position:relative; overflow:hidden; display:flex; align-items:center; gap:16px; min-height:104px; padding:14px 20px; box-sizing:border-box;
+    border-radius:16px; border:2px solid var(--c); background:color-mix(in srgb, var(--c) 14%, transparent); font-size:30px; font-weight:700; transition:opacity .3s; }
+  .r-op1{ --c:var(--op1); } .r-op2{ --c:var(--op2); } .r-op3{ --c:var(--op3); }
+  .r-letra{ position:relative; flex:0 0 52px; height:52px; border-radius:12px; background:var(--c); color:var(--sm-bg); font-size:28px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .r-txt{ position:relative; flex:1; }
+  .r-num{ position:relative; font-size:36px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .r-fill{ position:absolute; left:0; top:0; bottom:0; background:color-mix(in srgb, var(--c) 38%, transparent); width:0; transition:width .8s cubic-bezier(.2,.8,.2,1); }
+  .r-op.r-errada{ opacity:.42; }
+  .r-op.r-certa{ --c:var(--certo); box-shadow:0 0 0 4px color-mix(in srgb, var(--certo) 35%, transparent), 0 0 40px color-mix(in srgb, var(--certo) 30%, transparent); }
+  .r-rodape{ margin-top:auto; display:flex; align-items:center; gap:20px; }
+  .r-rodape .r-btn{ margin-left:auto; }
+  .r-placar{ font-size:30px; font-weight:700; }
+  .r-placar b{ color:var(--certo); }
+
+  /* Resumo */
+  .r-resumo{ display:flex; flex-direction:column; gap:14px; }
+  .r-linha{ display:grid; grid-template-columns:44px 1fr 340px 96px 80px; align-items:center; gap:16px; font-size:22px; }
+  .r-ln{ width:40px; height:40px; border-radius:50%; background:var(--sm-accent); color:var(--sm-bg); font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .r-lq{ line-height:1.3; }
+  .r-lbar{ height:22px; border-radius:11px; background:var(--sm-card); border:1px solid var(--sm-line); overflow:hidden; }
+  .r-lbar div{ height:100%; border-radius:11px; background:linear-gradient(90deg, var(--sm-accent), var(--certo)); width:0; transition:width .9s cubic-bezier(.2,.8,.2,1); }
+  .r-lp{ font-size:32px; font-weight:800; text-align:right; }
+  .r-lx{ color:var(--sm-dim); }
+  .r-media{ font-size:30px; }
+  .r-media b{ color:var(--sm-accent); font-size:44px; }
+
+  .r-aviso{ flex:1; display:flex; flex-direction:column; justify-content:center; gap:20px; }
+  .r-aviso p{ font-size:28px; color:var(--sm-dim); margin:0; line-height:1.45; }
+  .r-aviso code{ font-family:'JetBrains Mono', Consolas, monospace; color:var(--sm-accent); }
+  .r-rede{ position:fixed; left:12px; bottom:10px; font-size:13px; color:var(--erro); }
+  .r-dica{ position:fixed; right:14px; bottom:10px; font-size:13px; color:var(--sm-dim); opacity:.7; }
+</style>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="../games/revisao-perguntas.js"></script>
+</head>
+<body>
+<div class="r-bg"><span></span><span></span><span></span></div>
+<div class="r-stage" id="palco"></div>
+<div class="r-rede" id="rede" hidden>Sem conexão com o servidor: os celulares não vão receber as perguntas. Confira a internet.</div>
+<div class="r-dica">Espaço / → avança · F tela cheia</div>
+<script>
+(async function () {
+  // Só o professor abre (mesma regra do painel e do Punho Lendário).
+  const user = await window.PortalSession.requireUser('../index.html');
+  if (!user) return;
+  if (user.role !== 'professor') { window.location.href = '../index.html'; return; }
+
+  const $ = id => document.getElementById(id);
+  const palco = $('palco');
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const LETRA_OP = ['A', 'B', 'C', 'D'];
+
+  // Palco 1280×720 escalado para caber na janela.
+  function fit() {
+    const s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    palco.style.transform = `translate(-50%, -50%) scale(${s})`;
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  // ---------- Perguntas da aula (?p=) ----------
+  const chave = (new URLSearchParams(location.search).get('p') || '').trim();
+  const banco = window.REVISAO_PERGUNTAS || {};
+  const conj = banco[chave];
+  if (!conj || !Array.isArray(conj.perguntas) || !conj.perguntas.length) {
+    const chaves = Object.keys(banco);
+    palco.innerHTML = `<div class="r-aviso r-anim"><h2>Revisão não encontrada</h2>
+      <p>Abra esta página com a aula no endereço, por exemplo <code>revisao.html?p=${esc(chaves[0] || 'aula-02')}</code>.</p>
+      <p>Aulas com revisão: ${chaves.length ? chaves.map(c => `<a href="?p=${esc(c)}" style="color:var(--sm-accent3)">${esc(c)}</a>`).join(' · ') : 'nenhuma'}</p></div>`;
+    return;
+  }
+  const perguntas = conj.perguntas;
+  const total = perguntas.length;
+  const TEMPO = Math.max(5, Number(conj.tempo) || 20);
+
+  // ---------- Sala (código do QR) ----------
+  const LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function gerar(n) {
+    const r = new Uint8Array(n); crypto.getRandomValues(r);
+    return Array.from(r, x => LETRAS[x % LETRAS.length]).join('');
+  }
+  let SALA = '';
+  try { SALA = sessionStorage.getItem('revisao_sala') || ''; } catch (e) {}
+  if (!/^[A-HJ-NP-Z2-9]{8}$/.test(SALA)) {
+    SALA = gerar(8);
+    try { sessionStorage.setItem('revisao_sala', SALA); } catch (e) {}
+  }
+  const CODIGO = `${SALA.slice(0, 4)}-${SALA.slice(4)}`;
+  const urlCel = new URL('../games/revisao.html', location.href).href;
+  let qrSvg = '';
+  if (window.qrcode) {
+    try {
+      const qr = window.qrcode(0, 'M');
+      qr.addData(`${urlCel}#${SALA}`);
+      qr.make();
+      qrSvg = qr.createSvgTag({ cellSize: 8, margin: 32, scalable: true });
+    } catch (e) {}
+  }
+
+  // ---------- Estado da partida ----------
+  // fase: 'espera' → 'pergunta' → 'revelado' → (próxima pergunta...) → 'fim'.
+  // resp[n] = { idDoCelular: opção }. Guardado na aba (sessionStorage), então
+  // um F5 no telão não perde as respostas nem o tempo da pergunta.
+  const CHAVE_ESTADO = 'revisao_estado_' + chave;
+  const novo = () => ({ fase: 'espera', n: -1, rodada: '', fim: 0, resp: perguntas.map(() => ({})) });
+  let S = null;
+  try {
+    const s = JSON.parse(sessionStorage.getItem(CHAVE_ESTADO) || 'null');
+    if (s && Array.isArray(s.resp) && s.resp.length === total && ['espera', 'pergunta', 'revelado', 'fim'].includes(s.fase)) S = s;
+  } catch (e) {}
+  if (!S) S = novo();
+  const salvar = () => { try { sessionStorage.setItem(CHAVE_ESTADO, JSON.stringify(S)); } catch (e) {} };
+
+  const tem = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  const resta = () => Math.max(0, Math.ceil((S.fim - Date.now()) / 1000));
+  function contagem(n) {
+    const c = perguntas[n].opcoes.map(() => 0);
+    Object.values(S.resp[n]).forEach(o => { if (c[o] != null) c[o]++; });
+    return c;
+  }
+  function acertos(n) {
+    const r = Object.values(S.resp[n]);
+    return { r: r.length, c: r.filter(o => o === perguntas[n].certa).length };
+  }
+  const pct = (c, r) => (r ? Math.round((c / r) * 100) : 0);
+
+  // Celulares conectados: quem mandou 'ola' (a cada 4 s) ou respondeu nos últimos 12 s.
+  const vistos = new Map();
+  function ver(id) {
+    id = String(id || '');
+    if (!/^[a-z0-9]{6,24}$/i.test(id)) return '';
+    vistos.set(id, Date.now());
+    return id;
+  }
+  function conectados() {
+    const agora = Date.now();
+    let c = 0;
+    vistos.forEach((t, id) => { if (agora - t < 12000) c++; else if (agora - t > 60000) vistos.delete(id); });
+    return c;
+  }
+
+  // ---------- Canal ao vivo ----------
+  let canal = null, pronto = false, ultimoEnvio = 0, envioPendente = 0;
+  function estadoPublico() {
+    const e = { fase: S.fase, rodada: S.rodada, titulo: conj.titulo || '', n: S.n, total, conectados: conectados() };
+    if (S.fase === 'pergunta' || S.fase === 'revelado') {
+      const p = perguntas[S.n];
+      e.q = p.q; e.opcoes = p.opcoes; e.tempo = TEMPO;
+    }
+    if (S.fase === 'pergunta') { e.resta = resta(); e.ok = Object.keys(S.resp[S.n]); }
+    // A certa só sai do telão quando o tempo acaba. Junto vai o mapa
+    // id → opção, para cada celular saber se acertou mesmo depois de um F5.
+    if (S.fase === 'revelado') { e.certa = perguntas[S.n].certa; e.cont = contagem(S.n); e.resp = S.resp[S.n]; }
+    if (S.fase === 'fim') { e.certas = perguntas.map(p => p.certa); e.todas = S.resp; }
+    return e;
+  }
+  function enviarEstado() {
+    clearTimeout(envioPendente); envioPendente = 0;
+    if (!canal || !pronto) return;
+    ultimoEnvio = Date.now();
+    canal.send({ type: 'broadcast', event: 'estado', payload: estadoPublico() }).catch(() => {});
+  }
+  // Junta vários pedidos seguidos (30 celulares dizendo 'ola') num envio só.
+  function pedirEstado() { if (!envioPendente) envioPendente = setTimeout(enviarEstado, 300); }
+
+  function receber(p) {
+    const id = ver(p.id);
+    if (!id) return;
+    if (S.fase !== 'pergunta' || p.rodada !== S.rodada || p.n !== S.n || resta() <= 0) { pedirEstado(); return; }
+    const o = Number(p.o);
+    if (!Number.isInteger(o) || o < 0 || o >= perguntas[S.n].opcoes.length) return;
+    const r = S.resp[S.n];
+    if (!tem(r, id)) { // vale a PRIMEIRA resposta; repetições (reenvio) só confirmam
+      r[id] = o;
+      salvar();
+      atualizarAoVivo();
+    }
+    pedirEstado();
+  }
+
+  try {
+    const sb = window.PortalSession.client();
+    canal = sb.channel('revisao_' + SALA, { config: { broadcast: { self: false } } });
+    canal
+      .on('broadcast', { event: 'ola' }, ({ payload }) => { ver(payload && payload.id); atualizarAoVivo(); pedirEstado(); })
+      .on('broadcast', { event: 'resp' }, ({ payload }) => receber(payload || {}))
+      .subscribe(st => {
+        pronto = st === 'SUBSCRIBED';
+        $('rede').hidden = pronto || st === 'SUBSCRIBING';
+        if (pronto) enviarEstado();
+      });
+  } catch (e) { canal = null; $('rede').hidden = false; }
+
+  // ---------- Telas ----------
+  const entrar = () => `<div class="r-entrar"><span>Entrar:<br><b>${CODIGO}</b></span>${qrSvg ? `<div class="r-miniqr">${qrSvg}</div>` : ''}</div>`;
+  const topo = () => `<div class="r-topo r-anim"><span class="r-pill">Pergunta ${S.n + 1} de ${total}</span><span class="r-titulo">${esc(conj.titulo || '')}</span>${entrar()}
+    ${S.fase === 'pergunta' ? '<div class="r-relogio" id="rRelogio"></div>' : ''}</div>`;
+
+  function render() {
+    if (S.fase === 'espera') {
+      palco.innerHTML = `<div class="r-espera">
+        <div class="r-col r-anim">
+          <span class="r-tag">${esc(conj.titulo || 'Revisão')}</span>
+          <h1>⚡ Responde Aí!</h1>
+          <p class="r-sub">${total} perguntas · ${TEMPO} s cada · sem login</p>
+          <ol class="r-passos"><li>Aponte a câmera do celular para o QR Code</li><li>Espere a pergunta aparecer</li><li>Toque na resposta antes do tempo acabar</li></ol>
+          <div class="r-vivo"><span class="r-pulso"></span><b id="rCon">0</b> <span>conectados</span></div>
+          <button type="button" class="r-btn" data-acao="avancar">Começar ▶<small>espaço</small></button>
+        </div>
+        <div class="r-qrbox r-anim">
+          <div class="r-qr">${qrSvg || '<span style="color:#000">QR indisponível</span>'}</div>
+          <div class="r-codigo">${CODIGO}</div>
+          <div class="r-link">${esc(urlCel.replace(/^https?:\/\//, ''))}</div>
+        </div>
+      </div>`;
+    } else if (S.fase === 'pergunta' || S.fase === 'revelado') {
+      const p = perguntas[S.n];
+      const rev = S.fase === 'revelado';
+      const cont = rev ? contagem(S.n) : [];
+      const soma = cont.reduce((a, b) => a + b, 0);
+      const ops = p.opcoes.map((o, i) => {
+        const cls = !rev ? '' : i === p.certa ? ' r-certa' : ' r-errada';
+        return `<div class="r-op r-op${i}${cls}">${rev ? `<div class="r-fill" data-w="${pct(cont[i], soma)}"></div>` : ''}
+          <span class="r-letra">${rev && i === p.certa ? '✔' : LETRA_OP[i]}</span><span class="r-txt">${esc(o)}</span>${rev ? `<span class="r-num">${cont[i]}</span>` : ''}</div>`;
+      }).join('');
+      let rodape;
+      if (!rev) {
+        rodape = `<div class="r-vivo"><span class="r-pulso"></span><b id="rResp">0</b> respostas · <b id="rCon">0</b> conectados</div>
+          <button type="button" class="r-btn r-btn2" data-acao="avancar">Revelar agora ▶</button>`;
+      } else {
+        const a = acertos(S.n);
+        const ultima = S.n + 1 >= total;
+        rodape = `<div class="r-placar">${a.r ? `✔ <b>${a.c}</b> de ${a.r} acertaram (${pct(a.c, a.r)}%)` : 'Ninguém respondeu esta.'}</div>
+          <button type="button" class="r-btn" data-acao="avancar">${ultima ? 'Ver resumo ▶' : 'Próxima ▶'}<small>espaço</small></button>`;
+      }
+      palco.innerHTML = `${topo()}
+        <div class="r-tempo"><div id="rTempo" style="width:${rev ? 0 : 100}%"></div></div>
+        <div class="r-q r-anim">${esc(p.q)}</div>
+        <div class="r-ops r-anim">${ops}</div>
+        <div class="r-rodape r-anim">${rodape}</div>`;
+      // As barras crescem depois de aparecer na tela.
+      if (rev) requestAnimationFrame(() => requestAnimationFrame(() => {
+        palco.querySelectorAll('.r-fill').forEach(f => { f.style.width = f.dataset.w + '%'; });
+      }));
+    } else {
+      let tr = 0, tc = 0;
+      const linhas = perguntas.map((p, i) => {
+        const a = acertos(i);
+        tr += a.r; tc += a.c;
+        return `<div class="r-linha"><span class="r-ln">${i + 1}</span><span class="r-lq">${esc(p.q)}</span>
+          <div class="r-lbar"><div data-w="${pct(a.c, a.r)}"></div></div><span class="r-lp">${pct(a.c, a.r)}%</span><span class="r-lx">${a.c}/${a.r}</span></div>`;
+      }).join('');
+      palco.innerHTML = `<span class="r-tag r-anim">${esc(conj.titulo || 'Revisão')}</span>
+        <h2 class="r-anim">Resumo da turma: acertos por pergunta</h2>
+        <div class="r-resumo r-anim">${linhas}</div>
+        <div class="r-rodape r-anim"><div class="r-media">Média da turma: <b>${pct(tc, tr)}%</b> de acertos</div>
+          <button type="button" class="r-btn r-btn2" data-acao="recomecar">↺ Recomeçar</button></div>`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        palco.querySelectorAll('.r-lbar div').forEach(f => { f.style.width = f.dataset.w + '%'; });
+      }));
+    }
+    atualizarAoVivo();
+    atualizarRelogio();
+  }
+
+  // Números ao vivo: só troca o texto (e dá um "pulo" quando muda).
+  function trocar(id, v) {
+    const el = $(id);
+    if (!el || el.textContent === String(v)) return;
+    el.textContent = v;
+    el.classList.remove('r-pop'); void el.offsetWidth; el.classList.add('r-pop');
+  }
+  function atualizarAoVivo() {
+    trocar('rCon', conectados());
+    if (S.fase === 'pergunta') trocar('rResp', Object.keys(S.resp[S.n]).length);
+  }
+  function atualizarRelogio() {
+    if (S.fase !== 'pergunta') return;
+    const r = resta();
+    const rel = $('rRelogio');
+    if (rel) { rel.textContent = r; rel.classList.toggle('r-fim', r <= 5); }
+    const barra = $('rTempo');
+    if (barra) barra.style.width = `${Math.max(0, Math.min(100, ((S.fim - Date.now()) / (TEMPO * 1000)) * 100))}%`;
+  }
+
+  // ---------- Fluxo ----------
+  function abrirPergunta(n) {
+    S.fase = 'pergunta'; S.n = n; S.fim = Date.now() + TEMPO * 1000;
+    salvar(); render(); enviarEstado();
+  }
+  function revelar() {
+    S.fase = 'revelado'; S.fim = 0;
+    salvar(); render(); enviarEstado();
+  }
+  function avancar() {
+    if (S.fase === 'espera') { S = novo(); S.rodada = gerar(6); abrirPergunta(0); }
+    else if (S.fase === 'pergunta') revelar();
+    else if (S.fase === 'revelado') {
+      if (S.n + 1 < total) abrirPergunta(S.n + 1);
+      else { S.fase = 'fim'; salvar(); render(); enviarEstado(); }
+    }
+  }
+  function recomecar() { S = novo(); salvar(); render(); enviarEstado(); }
+
+  let ultimoSeg = -1;
+  setInterval(() => {
+    if (S.fase === 'pergunta') {
+      const r = resta();
+      if (r <= 0) { revelar(); return; }
+      // Todos os conectados já responderam: o tempo acaba em 2 s.
+      const c = conectados(), n = Object.keys(S.resp[S.n]).length;
+      if (c > 0 && n >= c && S.fim - Date.now() > 2000) { S.fim = Date.now() + 2000; salvar(); }
+      atualizarRelogio();
+      if (r !== ultimoSeg) { ultimoSeg = r; enviarEstado(); }
+    }
+    atualizarAoVivo();
+    // Batida a cada 3 s: quem entrou atrasado ou perdeu uma mensagem se acerta.
+    if (Date.now() - ultimoEnvio > 3000) enviarEstado();
+  }, 250);
+
+  palco.addEventListener('click', e => {
+    const b = e.target.closest('[data-acao]');
+    if (!b) return;
+    b.blur();
+    if (b.dataset.acao === 'avancar') avancar();
+    else if (b.dataset.acao === 'recomecar') recomecar();
+  });
+  // Teclado e passador de slides (que manda → / PageDown).
+  document.addEventListener('keydown', e => {
+    if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+    if ([' ', 'ArrowRight', 'Enter', 'PageDown'].includes(e.key)) { e.preventDefault(); avancar(); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
