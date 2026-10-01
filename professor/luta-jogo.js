@@ -84,59 +84,6 @@ window.LutaJogo = (function () {
       s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.03);
     }
 
-    // Voz: dente-de-serra passando por filtros nas frequências de uma
-    // vogal (formantes) — "rá!" para atacar, "uh!" para apanhar.
-    const VOGAL_A = [[760, 6, 1], [1180, 8, 0.6], [2600, 10, 0.18]];
-    const VOGAL_U = [[340, 6, 1], [780, 8, 0.35], [2400, 10, 0.08]];
-    let vozEm = 0;
-    function voz(f0, dur, vogal, vol, cai) {
-      if (!pronto()) return;
-      const agora = performance.now();
-      if (agora - vozEm < 160) return; // um grito de cada vez
-      vozEm = agora;
-      const t = ac.currentTime;
-      const osc = ac.createOscillator(), g = ac.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(f0, t);
-      osc.frequency.exponentialRampToValueAtTime(f0 * (cai || 0.72), t + dur);
-      const vib = ac.createOscillator(), vibG = ac.createGain();
-      vib.frequency.value = 28; vibG.gain.value = f0 * 0.05;
-      vib.connect(vibG).connect(osc.frequency);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(vol, t + 0.025);
-      g.gain.setValueAtTime(vol, t + dur * 0.45);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      vogal.forEach(([fq, q, v]) => {
-        const bp = ac.createBiquadFilter(), gv = ac.createGain();
-        bp.type = 'bandpass'; bp.frequency.value = fq * (f0 < 110 ? 0.85 : 1); bp.Q.value = q; gv.gain.value = v * 3;
-        osc.connect(bp).connect(gv).connect(g);
-      });
-      saida(g, { eco: true });
-      osc.start(t); vib.start(t); osc.stop(t + dur + 0.03); vib.stop(t + dur + 0.03);
-      ruido(0.07, { filtro: 'highpass', freq: 2200, vol: vol * 0.35 }); // o "h" do começo
-    }
-
-    // Narrador: voz do sistema (speechSynthesis), em português se houver.
-    let vozNarrador = null;
-    function escolherVoz() {
-      try {
-        const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
-        vozNarrador = vs.find(v => /pt-BR/i.test(v.lang) && /male|masculin|daniel|antonio|ricardo/i.test(v.name))
-          || vs.find(v => /pt-BR/i.test(v.lang)) || vs.find(v => /^pt/i.test(v.lang)) || null;
-      } catch (e) {}
-    }
-    if (window.speechSynthesis) { escolherVoz(); try { speechSynthesis.onvoiceschanged = escolherVoz; } catch (e) {} }
-    function narrar(frase, o = {}) {
-      if (!pronto() || !window.speechSynthesis) return;
-      try {
-        const u = new SpeechSynthesisUtterance(frase);
-        if (vozNarrador) u.voice = vozNarrador;
-        u.lang = 'pt-BR'; u.rate = o.rate || 1; u.pitch = o.pitch || 0.4; u.volume = 1;
-        speechSynthesis.cancel();
-        speechSynthesis.speak(u);
-      } catch (e) {}
-    }
-
     // ---------- Música: bateria + baixo + melodia em loop ----------
     // Cada faixa tem 32 semicolcheias (2 compassos). baixo/mel: 16 notas em
     // colcheias, em semitons acima da raiz (null = pausa).
@@ -177,11 +124,9 @@ window.LutaJogo = (function () {
       ligado: () => ligado,
       alternar() {
         ligado = !ligado;
-        if (!ligado && window.speechSynthesis) speechSynthesis.cancel();
         return ligado;
       },
       musica(n) { const nova = n === null || n === undefined ? null : FAIXAS[n]; if (nova !== faixa) { faixa = nova; passoMus = 0; proxNota = 0; } },
-      narrar,
       vento() { ruido(0.14, { filtro: 'bandpass', freq: 500, ate: 2600, q: 1.2, vol: 0.18 }); },
       passo() { ruido(0.05, { freq: 380, vol: 0.12 }); },
       soco() {
@@ -211,9 +156,6 @@ window.LutaJogo = (function () {
       ko() { tom(110, 0.8, { ate: 28, vol: 0.95, eco: true }); ruido(0.7, { freq: 650, vol: 0.55, eco: true }); },
       menu() { tom(880, 0.08, { tipo: 'square', vol: 0.07 }); tom(1320, 0.12, { tipo: 'square', vol: 0.07, atraso: 0.07 }); },
       fase() { [523, 659, 784, 1047].forEach((f, i) => tom(f, 0.16, { tipo: 'square', vol: 0.08, atraso: i * 0.11, eco: true })); },
-      // Gritos: f0 = tom da voz (Kaito ~170, inimigos ~125, chefe ~85).
-      grito(f0, forte) { voz(f0 * rnd(0.95, 1.08), forte ? 0.32 : 0.2, VOGAL_A, forte ? 0.5 : 0.35, 0.75); },
-      dor(f0, longo) { voz(f0 * rnd(0.92, 1.05), longo ? 0.6 : 0.24, VOGAL_U, longo ? 0.5 : 0.38, longo ? 0.5 : 0.65); },
     };
   })();
 
@@ -244,17 +186,17 @@ window.LutaJogo = (function () {
 
   // ---------- Personagens ----------
   const TIPOS = {
-    jogador: { nome: 'KAITO', hp: 130, esc: 1, cores: { pele: '#e8b48a', roupa: '#2f5fd0', calca: '#2f5fd0', faixa: '#141414', cabelo: '#1c1410', bandana: '#d62839', luva: '#c1121f', pes: '#e8b48a', manga: 'curta', gola: true, calcaLarga: true, cabeloTipo: 'espetado' } },
+    jogador: { nome: 'KAITO', hp: 130, esc: 1, cores: { pele: '#e8b48a', roupa: '#2f5fd0', calca: '#2f5fd0', faixa: '#141414', cabelo: '#1c1410', bandana: '#d62839', luva: '#c1121f', pes: '#e8b48a', manga: 'curta', gola: true, calcaLarga: true, cabeloTipo: 'espetado', pontasFaixa: true } },
     capanga: { nome: 'Capanga', hp: 28, vel: 1.7, alcance: 62, cd: [70, 120], bloq: 0, pontos: 100, golpes: ['eSoco'],
-      cores: { pele: '#c68642', roupa: '#6b4f3a', calca: '#2b3a67', faixa: '#2a2a2a', cabelo: '#111111', luva: '#c68642', pes: '#1f1f1f', manga: 'longa', cabeloTipo: 'curto', barba: 'rgba(40,25,15,.45)' } },
+      cores: { pele: '#f3d3bd', roupa: '#6b4f3a', calca: '#2b3a67', faixa: '#2a2a2a', cabelo: '#111111', luva: '#f3d3bd', pes: '#1f1f1f', manga: 'longa', cabeloTipo: 'curto', barba: 'rgba(40,25,15,.45)' } },
     brigao: { nome: 'Brigão', hp: 42, vel: 2.0, alcance: 78, cd: [55, 95], bloq: 0.25, pontos: 150, golpes: ['eSoco', 'eChute'],
-      cores: { pele: '#8d5524', roupa: '#2a9d8f', calca: '#333333', faixa: '#222222', cabelo: '#000000', bandana: '#f4a261', luva: '#f4a261', pes: '#222222', manga: 'nenhuma', cabeloTipo: 'curto' } },
+      cores: { pele: '#f0cdb2', roupa: '#2a9d8f', calca: '#333333', faixa: '#222222', cabelo: '#000000', bandana: '#f4a261', luva: '#f4a261', pes: '#222222', manga: 'nenhuma', cabeloTipo: 'curto' } },
     ninja: { nome: 'Ninja', hp: 32, vel: 3.0, alcance: 78, cd: [50, 90], bloq: 0.15, pontos: 200, golpes: ['eChute', 'eVoadora'], atira: true,
-      cores: { pele: '#f1c27d', roupa: '#1b1b2f', calca: '#1b1b2f', faixa: '#7b2cbf', cabelo: '#1b1b2f', bandana: '#7b2cbf', luva: '#2a2a40', pes: '#111111', manga: 'longa', mascara: true } },
+      cores: { pele: '#f6dcc8', roupa: '#1b1b2f', calca: '#1b1b2f', faixa: '#7b2cbf', cabelo: '#1b1b2f', bandana: '#7b2cbf', luva: '#2a2a40', pes: '#111111', manga: 'longa', mascara: true } },
     brutamontes: { nome: 'Brutamontes', hp: 85, vel: 1.25, esc: 1.25, alcance: 74, cd: [70, 110], bloq: 0, pontos: 300, golpes: ['socoForte'], armadura: 2,
-      cores: { pele: '#e0ac69', roupa: '#e76f51', calca: '#264653', faixa: '#1d3557', cabelo: '#e0ac69', luva: '#444444', pes: '#222222', manga: 'nenhuma', colete: true, barba: '#5a3b1e' } },
+      cores: { pele: '#f4d2bc', roupa: '#e76f51', calca: '#264653', faixa: '#1d3557', cabelo: '#f4d2bc', luva: '#444444', pes: '#222222', manga: 'nenhuma', colete: true, barba: '#5a3b1e' } },
     chefe: { nome: 'IMPERADOR VULCANO', hp: 440, vel: 2.0, esc: 1.35, alcance: 82, cd: [38, 72], bloq: 0.35, pontos: 5000, chefe: true,
-      cores: { pele: '#d9a066', roupa: '#7a0f1f', calca: '#2b0a10', faixa: '#e9b949', cabelo: '#ededed', luva: '#d9a066', capa: '#3d0a12', pes: '#2b1a0a', manga: 'longa', gola: true, calcaLarga: true, cabeloTipo: 'longo', barba: '#ededed', ouro: '#e9b949' } },
+      cores: { pele: '#f1d4c0', roupa: '#7a0f1f', calca: '#2b0a10', faixa: '#e9b949', cabelo: '#ededed', luva: '#f1d4c0', capa: '#3d0a12', pes: '#2b1a0a', manga: 'longa', gola: true, calcaLarga: true, cabeloTipo: 'longo', barba: '#ededed', ouro: '#e9b949' } },
   };
 
   // Golpes: quadros de preparação (ini), ativos e de recuperação (rec);
@@ -329,7 +271,6 @@ window.LutaJogo = (function () {
     J.aviso = { txt: `FASE ${n + 1}`, sub: FASES[n].nome, t: 150, lute: true };
     Som.fase();
     Som.musica(n);
-    Som.narrar(`Fase ${n + 1}`);
   }
   function reiniciarFase() {
     const p = J.jog;
@@ -341,23 +282,21 @@ window.LutaJogo = (function () {
   // ---------- Combate ----------
   const livre = f => ['parado', 'andar', 'agachar', 'guarda'].includes(f.estado);
   const noChao = f => f.z <= 0 && f.vz <= 0;
+  // Agachar só deixa os INIMIGOS mais baixos: o Kaito agachado continua
+  // apanhando (para escapar, só defendendo ou pulando).
   function altura(f) {
     if (f.estado === 'caido' || f.estado === 'ko') return 25;
-    if (f.estado === 'agachar' || f.estado === 'levantar' || (f.golpe && (f.golpe.pose === 'rasteira' || f.golpe.pose === 'socoBaixo'))) return 88 * f.s;
+    if (f !== J.jog && (f.estado === 'agachar' || f.estado === 'levantar' || (f.golpe && (f.golpe.pose === 'rasteira' || f.golpe.pose === 'socoBaixo')))) return 88 * f.s;
     return 148 * f.s;
   }
   const intocavel = f => f.invul > 0 || ['caido', 'levantar', 'ko'].includes(f.estado);
 
-  // Tom da voz de cada um (gritos sintetizados).
-  const vozDe = f => f === J.jog ? 170 : f.T.chefe ? 82 : f.tipo === 'brutamontes' ? 98 : f.tipo === 'ninja' ? 150 : 125;
-  const GRITA = { soco3: 1, chute: 0.5, rasteira: 0.7, voadora: 1, hadouken: 1, socoForte: 1, eVoadora: 1, investida: 1, pisao: 1, bCombo2: 1, bolaFogo: 1, bolaFogo3: 1, eChute: 0.4 };
 
   function iniciarGolpe(f, nome) {
     const g = GOLPES[nome];
     f.estado = 'golpe'; f.golpe = g; f.gt = 0; f.acertou = new Set(); f.encadear = null;
     if (!g.aereo) f.vx = 0;
     if (g.som || g.disparo) Som.vento();
-    if (GRITA[nome] && Math.random() < GRITA[nome]) Som.grito(vozDe(f), nome === 'hadouken' || f.T.chefe);
     if (g.superGolpe) { J.superT = g.ini; f.invul = g.ini + g.rec + 10; Som.super(); }
   }
 
@@ -426,7 +365,6 @@ window.LutaJogo = (function () {
       return;
     }
     alvo.hp -= g.dano;
-    if (alvo.hp > 0 && Math.random() < 0.55) Som.dor(vozDe(alvo));
     alvo.branco = 5;
     alvo.semApanhar = 0;
     faiscas(alvo.x - dir * 14 * alvo.s, yFx, g.pesado ? '#ffd166' : '#fff3b0', g.pesado ? 14 : 9);
@@ -456,21 +394,20 @@ window.LutaJogo = (function () {
   }
 
   function derrubar(f, dir, kb) {
-    f.estado = 'caido'; f.et = 0; f.golpe = null;
+    f.estado = 'caido'; f.et = 0; f.golpe = null; f.giro = 0;
     f.vz = 7; f.z = Math.max(f.z, 1); f.vx = dir * Math.max(kb, 4);
   }
 
   function nocaute(f, dir) {
     f.hp = 0;
-    f.estado = 'ko'; f.et = 0; f.golpe = null;
+    f.estado = 'ko'; f.et = 0; f.golpe = null; f.giro = 0;
     f.vz = 9; f.z = Math.max(f.z, 1); f.vx = dir * 6.5;
     J.congelar = 10; J.tremor = 10;
     Som.ko();
-    Som.dor(vozDe(f), true);
-    if (f === J.jog) { J.lento = 50; Rede.vibrar(400); Som.narrar('K.O.!', { rate: 0.8 }); return; }
+    if (f === J.jog) { J.lento = 50; Rede.vibrar(400); return; }
     J.pontos += f.T.pontos;
     texto(f.x, CHAO - 160 * f.s, `+${f.T.pontos}`, '#ffd166', 26);
-    if (f.T.chefe) { J.lento = 120; J.flash = 1; Som.musica(null); Som.narrar('K.O.!', { rate: 0.8 }); }
+    if (f.T.chefe) { J.lento = 120; J.flash = 1; Som.musica(null); }
   }
 
   function disparar(f, d) {
@@ -491,7 +428,7 @@ window.LutaJogo = (function () {
   }
 
   function especial(p) {
-    if (p.en >= 100) { p.en = 0; iniciarGolpe(p, 'super'); texto(p.x, CHAO - 190, 'TEMPESTADE DO DRAGÃO!', '#7dd3fc', 30); Som.narrar('Tempestade do Dragão!', { rate: 1.15, pitch: 0.7 }); return; }
+    if (p.en >= 100) { p.en = 0; iniciarGolpe(p, 'super'); texto(p.x, CHAO - 190, 'TEMPESTADE DO DRAGÃO!', '#7dd3fc', 30); return; }
     if (p.en >= 25) { p.en -= 25; iniciarGolpe(p, 'hadouken'); return; }
     texto(p.x, CHAO - 170, 'Sem energia!', '#9aa6ba', 18);
   }
@@ -559,8 +496,16 @@ window.LutaJogo = (function () {
     p.x = clamp(p.x, 30, W - 30);
     if (p.estado === 'golpe' && p.golpe.prox && !p.golpe.sempre && Entrada.pegar('soco')) p.encadear = p.golpe.prox;
     if (J.travado > 0) { if (livre(p)) { p.estado = 'parado'; p.vx = 0; } return; }
+    if (p.giro > 0) p.giro--;
     if (p.estado === 'pulo') {
-      if (!p.puloGolpe && Entrada.pegar('soco', 'chute')) { p.puloGolpe = true; iniciarGolpe(p, 'voadora'); }
+      // Pulo duplo: apertar pular de novo no ar (uma vez), com cambalhota.
+      if (!p.puloDuplo && (Entrada.pegar('pulo') || puloBorda)) {
+        p.puloDuplo = true; p.vz = 12; p.vx = dx * 3.8; p.giro = 24;
+        faiscas(p.x, CHAO - p.z, 'rgba(255,255,255,.8)', 8);
+        Som.vento();
+        return;
+      }
+      if (!p.puloGolpe && Entrada.pegar('soco', 'chute')) { p.puloGolpe = true; p.giro = 0; iniciarGolpe(p, 'voadora'); }
       return;
     }
     if (!livre(p) || !noChao(p)) return;
@@ -570,7 +515,7 @@ window.LutaJogo = (function () {
     p.guarda = dx * p.face < -0.3;
     const b = Entrada.pegar('soco', 'chute', 'esp', 'pulo');
     if (b === 'pulo' || puloBorda) {
-      p.estado = 'pulo'; p.vz = 13.5; p.z = 1; p.vx = dx * 3.8; p.puloGolpe = false; Som.vento(); return;
+      p.estado = 'pulo'; p.vz = 13.5; p.z = 1; p.vx = dx * 3.8; p.puloGolpe = false; p.puloDuplo = false; Som.vento(); return;
     }
     if (b === 'esp') { especial(p); return; }
     if (b === 'soco') { iniciarGolpe(p, dy > 0.5 ? 'socoBaixo' : 'soco1'); return; }
@@ -609,7 +554,6 @@ window.LutaJogo = (function () {
       J.aviso = { txt: 'CHEFÃO', sub: e.T.nome, t: 170, chefe: true };
       Som.fase();
       Som.musica(3);
-      Som.narrar('Chefão! Imperador Vulcano!', { rate: 0.9 });
     }
   }
 
@@ -760,7 +704,6 @@ window.LutaJogo = (function () {
     if (J.tremor > 0.3) J.tremor *= 0.85; else J.tremor = 0;
     if (J.flash > 0) J.flash = Math.max(0, J.flash - 0.05);
     if (J.superT > 0) J.superT--;
-    if (J.aviso && J.aviso.lute && J.aviso.t === 50) Som.narrar('Lute!', { rate: 1.1 });
     if (J.aviso && --J.aviso.t <= 0) J.aviso = null;
     [J.jog, ...J.inis].forEach(f => { if (f) f.hpVisto += (f.hp - f.hpVisto) * 0.06; });
   }
@@ -834,7 +777,6 @@ window.LutaJogo = (function () {
       Som.musica(null);
       if (J.mortes >= 2) {
         J.voltaFase1 = true; J.tt = 300;
-        Som.narrar('Duas derrotas seguidas. De volta à fase um.');
       } else J.tt = 600;
       return;
     }
@@ -862,7 +804,6 @@ window.LutaJogo = (function () {
         p.estado = 'vitoria'; p.vx = 0;
         J.mortes = 0;
         Som.fase();
-        Som.narrar('Fase concluída!');
       } else {
         J.trans = 160;
         J.aviso = { txt: 'K.O.!', sub: 'O Imperador caiu!', t: 160 };
@@ -877,7 +818,6 @@ window.LutaJogo = (function () {
     if (J.pontos > J.recorde) { J.recorde = J.pontos; J.novoRecorde = true; try { localStorage.setItem('luta_recorde', String(J.recorde)); } catch (e) {} }
     else J.novoRecorde = false;
     Som.fase();
-    Som.narrar('Você venceu!');
   }
 
   // ---------- Desenho dos lutadores ----------
@@ -1004,6 +944,11 @@ window.LutaJogo = (function () {
     if (f.invul > 0 && f.estado !== 'golpe' && J.tick % 6 < 3) ctx.globalAlpha = 0.45;
     if (f.estado === 'ko' && f.et > 30 && f !== J.jog && J.tick % 4 < 2) ctx.globalAlpha = 0.3;
     ctx.translate(f.x, CHAO - f.z);
+    if (f.giro > 0) { // cambalhota do pulo duplo, girando em volta da cintura
+      ctx.translate(0, -70 * s);
+      ctx.rotate(fc * Math.PI * 2 * (1 - f.giro / 24));
+      ctx.translate(0, 70 * s);
+    }
     if (deitado) {
       // Gira o corpo para trás até deitar (cai de costas).
       const prog = noChao(f) ? 1 : clamp(1 - f.vz / 9, 0.2, 1);
@@ -1119,12 +1064,12 @@ window.LutaJogo = (function () {
     ctx.beginPath(); ctx.ellipse(brilho.x, brilho.y, 6 * s, 10 * s, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
-    // faixa na cintura, com nó e pontas balançando
+    // faixa na cintura; nó e pontas balançando só no Kaito (pontasFaixa)
     const f1 = em(0.07, 13 * s), f2 = em(0.07, -13 * s), no = em(0.07, 10 * s);
     ctx.lineCap = 'round';
     ctx.strokeStyle = CONTORNO; ctx.lineWidth = 8.6 * s; ctx.beginPath(); ctx.moveTo(f1.x, f1.y); ctx.lineTo(f2.x, f2.y); ctx.stroke();
     ctx.strokeStyle = c.faixa; ctx.lineWidth = 5.2 * s; ctx.beginPath(); ctx.moveTo(f1.x, f1.y); ctx.lineTo(f2.x, f2.y); ctx.stroke();
-    if (c.gola) {
+    if (c.pontasFaixa) {
       const bal = Math.sin(J.tick * 0.15 + f.id) * 3 * s - f.vx * 1.5 * fc * s;
       [[4, 17], [8, 15]].forEach(([dx, dy]) => {
         ctx.strokeStyle = CONTORNO; ctx.lineWidth = 5.6 * s;
@@ -1470,7 +1415,7 @@ window.LutaJogo = (function () {
     txt('3 fases · ondas de inimigos · um chefão', W / 2, 262, 20, '#fff', 'center');
     if (J.tick % 60 < 40) txt('APERTE SOCO (CELULAR) OU ENTER', W / 2, 318, 26, '#7dd3fc', 'center');
     const linhas = [
-      '⌨ Setas: mover · ↑ ou ESPAÇO: pular · ↓: agachar',
+      '⌨ Setas: mover · ↑ ou ESPAÇO: pular (2x = pulo duplo) · ↓: agachar',
       'Z: soco (3x = combo) · X: chute · ↓ + X: rasteira',
       'C: especial (bola de energia) · energia cheia = SUPER',
       'Andar para TRÁS defende · P: pausa · R: reiniciar · M: som · F: tela cheia',
