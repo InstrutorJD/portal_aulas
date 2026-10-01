@@ -55,14 +55,22 @@ Olhe com calma. Você consegue dizer o que aconteceu com o caminhão?
 
 ---
 
-## Roteiro de hoje (4h)
-- **Parte 1**: DevTools, aba Rede e Console (35 min)
-- **Parte 2**: requisitos com um agente de IA (45 min)
-- **Partes 3 e 4**: GitHub, Codespace e git (15 + 40 min)
-- **Parte 5**: API de verdade e o JSON da inspeção (40 min)
-- **Partes 6 e 7**: recursos da web e Copilot (5 + 35 min)
+## Roteiro de hoje (1/2)
+- **Abertura**: revisão da Aula 1 no celular (15 min)
+- **Parte 1**: HTTP no F12 e no Console (35 min)
+- **Parte 2**: requisitos com um agente de IA (40 min)
+- **Partes 3 e 4**: GitHub, Codespace e git (10 + 30 min)
+- ☕ **Intervalo** (20 min)
 
-Mais mão na massa do que slide. Abertura e fechamento: 25 min.
+---
+
+## Roteiro de hoje (2/2)
+- **Parte 5**: dados e métodos: JSON, POST, PATCH, DELETE (25 min)
+- **Parte 6**: além do pedido e resposta: webhook, upload, streaming (20 min)
+- **Parte 7**: a sua página no ar, com o ChatGPT (25 min)
+- **Parte 8**: o Copilot evolui a página, e fechamento (20 min)
+
+O fio da aula: a inspeção sai do **papel**, vira **requisito**, vira **dado** e vira **página no ar**.
 
 ---
 
@@ -302,6 +310,14 @@ O problema do checklist em papel
 
 ---
 
+## Do "como" para o "o quê"
++ Na Parte 1 você viu **como** um sistema conversa: pedidos e respostas
++ Agora a pergunta é: **o que** o nosso sistema precisa fazer?
++ Antes de programar, entendemos **quem** sofre com o papel
++ Cada dor vira uma **necessidade**, e cada necessidade, um **requisito**
+
+---
+
 ## Design Thinking em 5 etapas
 1. **Empatizar**: entender quem sofre com o problema
 2. **Definir**: escrever o problema com clareza
@@ -535,6 +551,14 @@ Antes de criar a conta, conheça o lugar
 
 ---
 
+## Os requisitos precisam de uma casa
++ A sua tabela de RF e RNF está no ChatGPT: e se o chat sumir?
++ Projetos de verdade guardam tudo num **repositório**, com histórico
++ O lugar mais usado do mundo para isso é o **GitHub**
++ Primeiro, conheça o lugar; na Parte 4, crie o **seu**
+
+---
+
 ## O que é o GitHub?
 + Um site que **guarda projetos de código** na nuvem
 + Cada projeto é um **repositório**: a "pasta" do projeto
@@ -565,13 +589,6 @@ Mais de **300 mil** pessoas seguem o Linus no GitHub; mais de **200 mil**, o Kar
 
 ---
 
-## Seu GitHub é o seu currículo
-+ Linux, Python, VS Code: os maiores projetos do mundo estão lá, **abertos**
-+ Empresas olham o GitHub de quem vão **contratar**
-+ Cada commit fica no **histórico**, com o **seu nome**
-+ Hoje você cria o **seu** primeiro repositório
-
----
 
 ## Mão na massa: explorar
 Sem fazer login, abra **github.com/typicode/jsonplaceholder**
@@ -613,6 +630,14 @@ Um usuário achou um erro no projeto e quer avisar os autores. Onde ele registra
 
 ---
 
+## Seu GitHub é o seu currículo
++ Linux, Python, VS Code: os maiores projetos do mundo estão lá, **abertos**
++ Empresas olham o GitHub de quem vão **contratar**
++ Cada commit fica no **histórico**, com o **seu nome**
++ Hoje você cria o **seu** primeiro repositório
+
+---
+
 # Parte 4 — O nosso repositório
 Conta, Codespace, terminal e git
 
@@ -626,6 +651,37 @@ Conta, Codespace, terminal e git
 
 ---
 
+## O que é o Codespace?
++ Um **computador Linux na nuvem**, criado a partir do seu repositório
++ Abre no **navegador**: editor (o VS Code), terminal e arquivos
++ Nada é instalado no seu PC: ele só **mostra a tela** do computador lá longe
++ Os arquivos ficam na nuvem; quem leva para o GitHub é o **push**
++ Desligou? Ele **dorme** e guarda os arquivos até você voltar
+
+---
+
+## Vantagens x desvantagens
+| Vantagens | Desvantagens |
+|---|---|
+| Zero instalação: qualquer PC com navegador | Precisa de **internet** o tempo todo |
+| Mesmo ambiente para a turma toda | Grátis tem **limite**: 60 h por mês |
+| Abre de qualquer lugar, até de casa | Parado **30 dias** sem uso, é apagado |
+| Já vem com git, Python e Node | Sem **push**, o trabalho fica só nele |
+
+---
+
+## Quando usar (e quando não)
+| Cenário | Codespace? |
+|---|---|
+| Laboratório onde não dá para instalar nada | ✅ Ideal |
+| Estudar em casa, num PC fraco ou emprestado | ✅ Sim |
+| Projeto grande, usado o dia inteiro | ⚠️ Gasta as horas grátis rápido |
+| Sem internet, ou internet muito ruim | ❌ Instale o VS Code no PC |
+
+Na mina: o técnico corrige o sistema de **qualquer** computador, sem instalar nada.
+
+---
+
 ## Abrindo o Codespace
 1. No repositório, clique no botão verde **Code**
 2. Abra a aba **Codespaces**
@@ -633,6 +689,16 @@ Conta, Codespace, terminal e git
 4. Espere: um editor completo abre no navegador
 
 > Grátis: até **60 horas por mês**. Ele desliga sozinho após **30 min** parado.
+
+---
+
+## Economizando as horas grátis
+1. Terminou? **commit** e **push** antes de tudo
+2. Depois, em **github.com/codespaces**: **⋯** → **Stop codespace**
+3. Esqueceu? Ele para sozinho depois de **30 min** sem uso
+4. Para voltar: **Code** → **Codespaces** → clique no seu codespace
+
+> Parado, ele **não gasta horas**, só um pouco do espaço grátis (15 GB por mês).
 
 ---
 
@@ -748,8 +814,22 @@ Você mudou o README no Codespace e quer que a mudança apareça no GitHub.
 
 ---
 
-# Parte 5 — Testando uma API de verdade
-JSON, métodos HTTP e o que a API responde
+# ☕ Intervalo: 20 min
+Na volta: os **dados** da inspeção
+
+---
+
+# Parte 5 — Dados e métodos
+A inspeção em JSON e as 4 ações com dados
+
+---
+
+## Do README para os dados
++ O README guarda o **texto** do projeto: o mapa e os requisitos
++ Mas o sistema troca **dados**: o equipamento, os itens, o status
++ Esses dados viajam em **JSON**, nos pedidos que você viu na Parte 1
++ Na API de treino, cada `todo` é um **item de checklist**
++ `title` é o nome do item; `completed` diz se ele está ok
 
 ---
 
@@ -771,34 +851,6 @@ JSON, métodos HTTP e o que a API responde
 
 ---
 
-## A API que vamos testar
-+ **JSONPlaceholder**: uma API pública e gratuita, feita para treinar
-+ Endereço: `jsonplaceholder.typicode.com`
-+ O recurso `/todos` é uma lista de tarefas: **cada uma é um item de checklist**
-+ `title` é o nome do item, `completed` diz se foi feito (`true`/`false`)
-
----
-
-## Primeiro teste: GET
-Cole no **navegador** o endereço `jsonplaceholder.typicode.com/todos/1`
-
-Agora troque o `1` por `999`. O que aconteceu?
-
----
-
-## O mesmo GET no terminal do Codespace
-```bash
-curl -i https://jsonplaceholder.typicode.com/todos/1
-```
-
-+ `curl` faz requisições pelo terminal
-+ `-i` mostra também o cabeçalho da resposta
-+ Olhe a **primeira linha**: ali está o **status** (`200`)
-
-> Rode no terminal do **Codespace** (Linux). No PowerShell do Windows as aspas do JSON se perdem e o `POST` falha.
-
----
-
 ## POST: criando um item
 ```bash
 curl -i -X POST \
@@ -807,7 +859,7 @@ curl -i -X POST \
   -d '{"title": "Freios", "completed": false}'
 ```
 
-`-X` escolhe o método e `-d` leva o JSON que você envia.
+`-X` = método, `-H` = cabeçalho, `-d` = o JSON enviado. Rode no terminal do **Codespace**: no PowerShell do Windows as aspas se perdem.
 
 ---
 
@@ -824,41 +876,13 @@ curl -i -X DELETE \
 
 ---
 
-## Plano B: o POST pelo Console
-```js
-const item = { title: 'Freios', completed: false }
-const r = await fetch('/todos', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(item)
-})
-r.status
-await r.json()
-```
-
-Sem Codespace? Rode no **Console**, na aba do JSONPlaceholder: é o mesmo `POST`.
-
----
-
-## Entendendo o plano B
-| Trecho | O que faz |
-|---|---|
-| `method: 'POST'` | Escolhe o método (sem isso, o `fetch` faz `GET`) |
-| `headers: {...}` | Avisa ao servidor: "estou mandando **JSON**" |
-| `JSON.stringify(item)` | Transforma o objeto em **texto JSON** para enviar |
-| `r.status` | Deve mostrar `201`: **criado** |
-
-É o mesmo que o `-X`, o `-H` e o `-d` do `curl` fazem.
-
----
-
 ## Mão na massa: investigue a API
-Teste e anote o **status** e a **resposta** de cada um:
+Anote o **status** e a **resposta** de cada um:
 
-1. `GET` do item 1 e do item 999
-2. `POST` de um item seu: qual `id` voltou?
-3. Agora faça `GET` desse `id` novo
-4. `PATCH` e `DELETE` no item 1, depois `GET` no item 1
+1. `POST` de um item seu: qual `id` voltou?
+2. Abra esse `id` no navegador (`/todos/201`): ele existe?
+3. `PATCH` e `DELETE` no item 1
+4. Abra `/todos/1` no navegador: ele mudou? Sumiu?
 
 ---
 
@@ -957,16 +981,87 @@ O **recurso** fica no endereço, a **ação** fica no método. Igual ao `/todos`
 
 ---
 
-# Parte 6 — Recursos da web
-Webhooks, upload e streaming na mineração
+# Parte 6 — Além do pedido e resposta
+Webhook, upload e streaming
 
 ---
 
-## Três recursos em um slide
-+ **Webhook**: o sistema **avisa sozinho** a manutenção quando um freio reprova
-+ Sem ele, a manutenção pergunta toda hora (*polling*) e o aviso chega atrasado
-+ **Upload**: o operador envia a **foto da avaria** com um `POST`
-+ **Streaming**: a resposta chega **em pedaços**, como no ChatGPT da Parte 2
+## Quando o servidor precisa avisar
++ Até agora, **você** sempre perguntou e o servidor respondeu
++ Mas e quando um freio é reprovado às 3h da manhã?
++ A manutenção precisa saber **na hora**, sem ficar perguntando
++ Dois jeitos de resolver: **polling** ou **webhook**
+
+---
+
+## Polling x webhook
+| | Polling | Webhook |
+|---|---|---|
+| Quem pergunta? | A manutenção, toda hora | Ninguém: o sistema avisa |
+| Pedidos | Muitos, quase todos "nada novo" | Um só, quando acontece |
+| Atraso | Até a próxima pergunta | Na hora |
+| No dia a dia | Ligar toda hora: "chegou?" | O entregador toca a campainha |
+
+---
+
+## Por dentro de um webhook
++ É só um **POST**, igual ao da Parte 5
++ Quem **envia**: o sistema onde algo aconteceu (o checklist)
++ Quem **recebe**: o sistema que precisa saber (o da manutenção)
++ A manutenção cadastra o endereço dela **uma vez** no checklist
++ O corpo é um **JSON** contando o que aconteceu
+
+---
+
+## O aviso do freio reprovado
+```json
+{
+  "evento": "item_reprovado",
+  "equipamento": "CAM-07",
+  "item": "Freios",
+  "operador": "Ana",
+  "hora": "2026-10-01T03:12:00"
+}
+```
+
+O checklist faz um **POST** com isso para o endereço da manutenção.
+
+---
+
+## webhook.site: um recebedor de teste
++ Site grátis que cria um **endereço** que recebe qualquer pedido
++ Mostra tudo o que chegou: **método**, **cabeçalhos** e **corpo**
++ Sem login: abra **webhook.site** e copie *Your unique URL*
++ Ele faz o papel do sistema da **manutenção**
+
+---
+
+## Mão na massa: seja o checklist
+```bash
+curl -X POST https://webhook.site/SEU-CODIGO \
+  -H "Content-Type: application/json" \
+  -d '{"evento": "item_reprovado",
+       "equipamento": "CAM-07", "item": "Freios"}'
+```
+
+No terminal do **Codespace**, troque `SEU-CODIGO` pelo seu endereço. No webhook.site: o aviso chegou?
+
+---
+
+## Mão na massa: o GitHub avisa você
+1. No seu repositório: **Settings** → **Webhooks** → **Add webhook**
+2. **Payload URL**: o seu endereço do webhook.site
+3. **Content type**: `application/json` → **Add webhook**
+4. No webhook.site: o GitHub mandou um **ping** na hora?
+5. Faça um commit e `git push`: chegou um aviso **sozinho**?
+
+---
+
+## O que chegou do GitHub?
++ O método: `POST`, com o corpo em **JSON**
++ O cabeçalho `X-GitHub-Event` diz o evento: `ping` ou `push`
++ No corpo: o **repositório**, quem fez o push e os **commits**
++ É assim que robôs de teste e de publicação sabem que o código mudou
 
 ---
 
@@ -980,6 +1075,25 @@ A manutenção precisa ser avisada na hora em que um freio é reprovado.
 
 ---
 
+## Upload: enviando um arquivo
++ Foto de avaria não é texto: vai como **arquivo**
++ O formato muda: `multipart/form-data`, os dados em **partes**
++ Na página, é o `<input type="file">`; no `curl`, a opção `-F`
++ O servidor guarda a foto e devolve o **endereço** dela
+
+---
+
+## Mão na massa: mande a "foto"
+```bash
+curl -L -o pneu.jpg https://picsum.photos/300
+curl -F "foto=@pneu.jpg" -F "item=Pneus" \
+  https://webhook.site/SEU-CODIGO
+```
+
+A 1ª linha baixa uma imagem qualquer; a 2ª envia. No webhook.site, ache o arquivo e o `multipart/form-data`.
+
+---
+
 ## Qual recurso?
 O operador quer anexar à inspeção a foto de uma mangueira rachada.
 
@@ -990,8 +1104,168 @@ O operador quer anexar à inspeção a foto de uma mangueira rachada.
 
 ---
 
-# Parte 7 — A IA entra no código
-GitHub Copilot no Codespace
+## Streaming: a resposta em pedaços
++ Normal: o servidor **monta tudo** e só depois envia
++ Streaming: ele envia **aos poucos**, enquanto ainda está gerando
++ Vídeo e música tocam enquanto ainda estão baixando
++ O ChatGPT da Parte 2 escreve palavra por palavra: é streaming
+
+---
+
+## Mão na massa: veja chegando
+```bash
+curl -N "https://httpbin.org/drip?duration=5&numbytes=5"
+```
+
+O `-N` mostra cada pedaço assim que chega: os `*` aparecem **um a um**, em 5 segundos.
+
+---
+
+## Qual recurso?
+O relatório de turno aparece palavra por palavra enquanto a IA escreve.
+
+- [ ] Upload de arquivo
+- [ ] Webhook
+- [x] Streaming
+- [ ] Polling
+
+---
+
+# Parte 7 — A sua página no ar
+O que você fez à mão, agora num app
+
+---
+
+## Agora, uma página de verdade
++ Até aqui, você fez os pedidos **à mão**: navegador, Console, `curl`
++ Um app faz isso **sozinho**: botão → `fetch` → resposta na tela
++ Você vai criar essa página **com IA**, em duas rodadas
++ Agora com o **ChatGPT** (fora do editor); na Parte 8, com o **Copilot** (dentro)
++ No fim, ela vai estar **no ar**, com endereço próprio
+
+---
+
+## Arquivos: onde o código mora
++ Todo código fica num **arquivo**; o fim do nome diz o **tipo** (a extensão)
++ `.html` página · `.css` visual · `.js` lógica · `.json` dados · `.md` texto
++ O navegador lê o `.html` e monta a página na tela
++ `index.html` é um nome **especial**: é a página que abre primeiro
++ A IA escreve o código, mas quem **cria e salva o arquivo** é você
+
+---
+
+## Criando o index.html
+```bash
+touch index.html   # cria o arquivo vazio
+ls                 # ele apareceu?
+```
+
+Ou na barra lateral do Codespace: **Novo arquivo** (📄+) → `index.html`. Ele fica na **raiz**, junto do `README.md`.
+
+---
+
+## O pedido para o ChatGPT
+```text
+Crie um index.html completo (HTML, CSS e JS juntos)
+que use a API jsonplaceholder.typicode.com.
+Tenha um campo de número e um botão Buscar que faz
+GET /todos/{número} e mostra o status e o JSON.
+Mostre mensagens de erro em português: 404 (não
+encontrado), 500 (erro no servidor) e sem conexão.
+No fim, explique o código em até 5 linhas.
+```
+
+Use o ChatGPT num chat **novo**, fora do projeto de requisitos.
+
+---
+
+## Copie o pedido
+[qrcode https://instrutorjd.github.io/portal_aulas/materiais/agente-requisitos/#pagina instrutorjd.github.io/portal_aulas/materiais/agente-requisitos]
+
+Na mesma página das instruções do agente: role até **O pedido da página**.
+
+---
+
+## Mão na massa: do ChatGPT para o arquivo
+1. Cole o pedido num chat **novo** do ChatGPT
+2. Copie **todo** o código, do `<!DOCTYPE html>` até o `</html>`
+3. Cole no seu `index.html` e salve com `Ctrl + S`
+4. Leia a explicação: onde está o `fetch`? E as mensagens de erro?
+5. Faltou um pedaço na cópia? A página quebra: confira o fim do código
+
+---
+
+## Rodando o código: 3 jeitos
+| Jeito | Como | Para quê |
+|---|---|---|
+| No Codespace | `python3 -m http.server 8000` | Testar rápido enquanto mexe |
+| No seu computador | **Download** do arquivo e 2 cliques | Ver fora do Codespace |
+| No GitHub Pages | `git push` e abrir o endereço | Mostrar para o mundo |
+
+Código parado no arquivo não faz nada: alguém precisa **abrir** a página.
+
+---
+
+## Rodando no Codespace
+```bash
+python3 -m http.server 8000
+```
+
++ Aparece um aviso: clique em **Abrir no navegador** (*Open in Browser*)
++ Perdeu o aviso? Aba **Portas** (*Ports*), porta `8000`, ícone 🌐
++ Mudou o código? Salve e dê **F5** na página
++ **Ctrl + C** no terminal desliga o servidor
+
+---
+
+## Rodando no seu computador
+1. Na barra lateral do Codespace, botão direito no `index.html`
+2. Clique em **Download** e salve no computador
+3. Dê **2 cliques** no arquivo: ele abre no navegador
+4. Mudou o código no Codespace? Baixe **de novo**
+
+> O endereço começa com `file://`: a página está só no **seu** computador, ninguém mais vê.
+
+---
+
+## GitHub Pages: seu site no ar
++ O GitHub **publica de graça** os arquivos de um repositório público
++ Ele abre o `index.html` da raiz: por isso o nome importa
++ Endereço: `seu-usuario.github.io/checklist-inspecao`
++ Cada `git push` **atualiza** o site em cerca de 1 minuto
+
+---
+
+## Ativando o Pages
+1. No site do GitHub, abra o repositório e clique em **Settings**
+2. No menu da esquerda, clique em **Pages**
+3. Em **Source**, escolha **Deploy from a branch**
+4. Em **Branch**, escolha `main` e a pasta `/ (root)` → **Save**
+5. Espere ~1 min e atualize: o endereço aparece no topo (**Visit site**)
+
+---
+
+## Mão na massa: no ar e testando
+1. `git add index.html`, `git commit -m "Página da API"` e `git push`
+2. Ative o **Pages** e abra o endereço do seu site
+3. Busque o item **1** e o item **999**: a mensagem de 404 apareceu?
+4. F12 → **Rede** → troque *Sem limitação* por **Offline** e busque de novo
+5. Mande o link para um colega testar no celular
+
+---
+
+## Qual arquivo?
+O GitHub Pages abre sozinho qual arquivo da raiz do repositório?
+
+- [ ] `README.md`
+- [ ] `inspecao.json`
+- [x] `index.html`
+- [ ] `pagina.html`
+
+---
+
+# Parte 8 — A IA dentro do editor
+A mesma página, agora com o Copilot
 
 ---
 
@@ -1014,26 +1288,26 @@ GitHub Copilot no Codespace
 ## Prompt claro: 3 partes
 | Parte | Pergunta | Exemplo |
 |---|---|---|
-| **Contexto** | Onde estou? | Checklist de inspeção de equipamentos |
-| **Tarefa** | O que eu quero? | Crie 3 inspeções de exemplo |
-| **Formato** | Como quero? | Só JSON válido, sem comentários |
+| **Contexto** | Onde estou? | Meu `index.html` busca itens na API |
+| **Tarefa** | O que eu quero? | Um formulário que cria item (`POST`) |
+| **Formato** | Como quero? | Altere só o necessário e explique |
 
 ---
 
 ## Prompt vago x prompt claro
-- Vago: *"faz um json de inspeção"*
-- Claro: *"Estou criando um checklist de inspeção de equipamentos de mineração. Use o meu `inspecao.json` como modelo e crie `inspecoes.json` com uma lista de 3 inspeções. Responda só com JSON válido."*
+- Vago: *"melhora a página"*
+- Claro: *"No meu index.html, acrescente um formulário com um título que faz POST /todos e mostra o status e o JSON da resposta. Mantenha as mensagens de erro. Altere só o necessário."*
 
 > O prompt claro gasta **uma** mensagem. O vago costuma gastar três.
 
 ---
 
-## Mão na massa: inspecoes.json
-1. Escreva o prompt com **contexto, tarefa e formato**
-2. Salve o que a IA gerou em `inspecoes.json`
-3. **Valide** com `python3 -m json.tool` e corrija o que estiver errado
-4. Confira: todo item tem nome e status **ok** ou **reprovado**?
-5. `git add`, `git commit` e `git push`
+## Mão na massa: o Copilot evolui a página
+1. Abra o `index.html` e mande o **prompt claro** no chat do Copilot
+2. Veja o que ele **mudou** antes de aceitar (**Manter** ou **Desfazer**)
+3. Rode no Codespace: criar um item devolve `201`?
+4. Peça botões de **PATCH** e **DELETE** para o item buscado
+5. Tudo certo? Commit, push e confira no **Pages**
 
 ---
 
@@ -1059,11 +1333,23 @@ Peça ao Copilot para **revisar**: ele acertou? Depois, commit e push.
 
 ---
 
+## ChatGPT x Copilot: o que vocês sentiram?
+| | ChatGPT | Copilot |
+|---|---|---|
+| Vê o seu projeto? | Não: só o que você cola | Sim: os arquivos abertos |
+| Como o código chega | Você copia e cola | Ele altera o arquivo |
+| Erro mais comum | Colar pela metade | Mudar mais do que você pediu |
+| Plano grátis | Mais folgado, mas tem limite | 50 mensagens de chat por mês |
+
+Qual foi mais rápido? Com qual você **entendeu** mais o código?
+
+---
+
 ## Revise tudo o que a IA fez
-- ✅ O `inspecoes.json` passa no `json.tool`
-- ✅ Os nomes das chaves fazem sentido para a inspeção
-- ✅ Todo item tem um status válido: ok ou reprovado
-- ✅ Cada rota tem o método certo
+- ✅ A página abre no **Pages** e busca o item 1
+- ✅ O item 999 mostra a mensagem de **404**
+- ✅ Criar um item devolve `201`
+- ✅ Você sabe apontar onde está cada `fetch`
 
 > A IA é assistente. Quem assina o trabalho é você.
 
@@ -1073,7 +1359,8 @@ Peça ao Copilot para **revisar**: ele acertou? Depois, commit e push.
 Abra o seu repositório **no site do GitHub** e confira:
 
 - ✅ `README.md` com o mapa, a tabela de RF e RNF e as rotas
-- ✅ `inspecao.json` (à mão) e `inspecoes.json` (com IA)
+- ✅ `inspecao.json` (à mão) válido
+- ✅ `index.html` no ar pelo **GitHub Pages**
 - ✅ Pelo menos **3 commits** no histórico
 
 ---
@@ -1112,8 +1399,8 @@ Levante os dedos outra vez e compare com o começo.
 ## O que vimos hoje
 + Na aba Rede, no Console e no `curl`, as APIs respondem em **JSON**
 + RF diz o que o sistema faz; RNF diz como, **com número**
-+ GitHub guarda, Codespace roda, **git** leva e traz
-+ O método diz a ação, a rota diz o recurso
++ GitHub guarda, Codespace roda, git leva e o **Pages** publica
++ Método é a ação, rota é o recurso; **webhook** é um POST que avisa sozinho
 + O status diz o que a API respondeu: **confira** o que aconteceu
 
 ---
