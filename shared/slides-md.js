@@ -137,19 +137,24 @@ window.SlidesMD = (function () {
 
   // Cada bloco de topo ganha .sm-anim com um atraso crescente (--d): os
   // elementos entram um depois do outro quando o slide aparece.
+  // Parágrafo ou caixa (>) que vem DEPOIS de uma lista em etapas (+) é o
+  // "rodapé" dela (.sm-rodape): fica borrado até o último tópico aparecer
+  // (ver slides-md.css), para não entregar a conclusão antes da hora.
   function renderBlocks(blocks) {
-    let d = 0;
+    let d = 0, depoisReveal = false;
     const anim = () => `class="sm-anim" style="--d:${d++}"`;
     return blocks.map(b => {
+      const rodape = depoisReveal ? ' sm-rodape' : '';
+      if (b.t === 'reveal') depoisReveal = true;
       switch (b.t) {
         case 'h': return `<h${b.level} ${anim()}>${b.html}</h${b.level}>`;
-        case 'p': return `<p ${anim()}>${b.html}</p>`;
+        case 'p': return `<p class="sm-anim${rodape}" style="--d:${d++}">${b.html}</p>`;
         case 'ul': return `<ul ${anim()}>${b.items.map(it => `<li>${it}</li>`).join('')}</ul>`;
         case 'ol': return `<ol ${anim()}>${b.items.map(it => `<li>${it}</li>`).join('')}</ol>`;
         case 'reveal': return `<ul class="sm-anim sm-reveal" style="--d:${d++}">${b.items.map(it => `<li class="sm-step">${it}</li>`).join('')}</ul>`;
         // "> Por quê: ..." (explicação de uma pergunta, formato das teorias de
         // trilha — shared/aula-md.js) fica escondido até revelar a resposta.
-        case 'quote': return `<blockquote class="sm-anim${/^\s*Por qu[eê]:/i.test(b.html) ? ' sm-porque' : ''}" style="--d:${d++}">${b.html}</blockquote>`;
+        case 'quote': return `<blockquote class="sm-anim${/^\s*Por qu[eê]:/i.test(b.html) ? ' sm-porque' : rodape}" style="--d:${d++}">${b.html}</blockquote>`;
         case 'img': return `<figure ${anim()}><img src="${b.src}" alt="${esc(b.alt)}">${b.alt ? `<figcaption>${esc(b.alt)}</figcaption>` : ''}</figure>`;
         // ```grade: desenho feito de 0 e 1 (como a IA de visão "vê" uma
         // imagem). É um passo (.sm-step): o 1º "próximo" apaga os 0 e

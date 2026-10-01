@@ -29,7 +29,7 @@ body:has(.sm-presenter:not([hidden])) #btnGenGabaritoFloat{ display:none; }
 .am-capacidade span{ display:block; font-size:11px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--ab-acento); margin-bottom:4px; }
 
 /* ---------- Conteúdo vindo do slides-md (renderBlocks) ---------- */
-.ab-conteudo .sm-step{ opacity:1; filter:none; }
+.ab-conteudo .sm-step, .ab-conteudo .sm-rodape{ opacity:1 !important; filter:none !important; }
 .ab-conteudo figure{ margin:0 0 14px; text-align:center; }
 .ab-conteudo figure img, .ab-conteudo .sm-inline-img{ max-width:100%; border-radius:12px; }
 .ab-conteudo figcaption{ font-size:.85em; color:var(--ink-dim); margin-top:6px; }

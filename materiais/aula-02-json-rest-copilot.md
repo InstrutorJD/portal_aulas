@@ -260,11 +260,11 @@ Um dá **erro vermelho**, o outro funciona. Por quê?
 ---
 
 ## Por que o navegador bloqueou?
-+ Sem regra, um site malicioso pediria dados a outro site **em seu nome**
-+ Por isso, o navegador só entrega a resposta se o **outro servidor autorizar**
-+ Essa autorização é o **CORS**: o cabeçalho `access-control-allow-origin`
-+ O JSONPlaceholder autoriza qualquer site; o example.com não autoriza
-+ O `curl` não tem essa trava: ela é do **navegador**, para proteger você
+- Sem regra, um site malicioso pediria dados a outro site **em seu nome**
+- Por isso, o navegador só entrega a resposta se o **outro servidor autorizar**
+- Essa autorização é o **CORS**: o cabeçalho `access-control-allow-origin`
+- O JSONPlaceholder autoriza qualquer site; o example.com não autoriza
+- O `curl` não tem essa trava: ela é do **navegador**, para proteger você
 
 ---
 
@@ -338,6 +338,19 @@ O problema do checklist em papel
 | Exemplo 3 | Listar o histórico | Custo zero de hospedagem |
 
 Dica: comece cada requisito com **"O sistema deve..."**.
+
+---
+
+## Tipos comuns de RF
+| Tipo | Pergunta | Exemplo na inspeção |
+|---|---|---|
+| Cadastro | O que guardar? | Cadastrar equipamentos e operadores |
+| Registro | Que ação o usuário faz? | Registrar uma inspeção com os itens |
+| Consulta | O que dá para ver? | Listar o histórico de um equipamento |
+| Regra de negócio | Que regra aplicar? | Bloquear se um item crítico reprovar |
+| Aviso | Quem avisar? | Avisar a manutenção quando um freio reprova |
+
+**Login** também é RF (a ação de entrar). O **quão protegido** ele é já é RNF.
 
 ---
 
@@ -454,6 +467,38 @@ A página carregou em 2,4 s no **Fast 4G**. Isso confere qual requisito?
 + Peça que **eu escreva primeiro**; depois critique: é RF ou RNF? É medível?
 + Ajude com **prioridade** e **critério de aceite**
 + Quando eu escrever **FIM**, devolva a tabela em **Markdown**
+
+---
+
+## As instruções do agente (1/2)
+```text
+Você é meu parceiro de análise de requisitos.
+Projeto: trocar o checklist de inspeção em papel
+de equipamentos de mineração por um sistema.
+Me ajude a listar RF e RNF, mas NÃO entregue pronto:
+1. Faça UMA pergunta por vez sobre o operador,
+o supervisor e a manutenção.
+2. Peça que eu escreva cada requisito primeiro.
+3. Critique: começa com "O sistema deve"? É medível?
+```
+
+Este é o texto que vocês vão copiar pelo QR, daqui a pouco.
+
+---
+
+## As instruções do agente (2/2)
+```text
+4. Diga se é RF ou RNF e por quê; aponte o que falta.
+5. Ajude a definir prioridade e critério de aceite.
+Quando eu escrever FIM, devolva num bloco markdown:
+## Requisitos
+| ID | Requisito | Prioridade | Critério de aceite |
+|---|---|---|---|
+IDs: RF01, RF02... e RNF01, RNF02...
+Responda em português, curto e direto.
+```
+
+Repare: ele **pergunta e critica**, mas quem escreve é **você**.
 
 ---
 
@@ -591,24 +636,27 @@ Conta, Codespace, terminal e git
 
 ---
 
-## Terminal: andando pelas pastas
+## Terminal: pastas e arquivos
 ```bash
-pwd          # em qual pasta estou?
-ls           # o que tem aqui?
-mkdir docs   # cria a pasta docs
-cd docs      # entra nela
-cd ..        # volta uma pasta
+pwd              # em qual pasta estou?
+ls               # o que tem aqui?
+mkdir docs       # cria a pasta docs
+cd docs          # entra nela / cd .. volta uma
+touch teste.txt  # cria um arquivo vazio
+rm teste.txt     # apaga o arquivo
+rm -r docs       # apaga a pasta e tudo que tem nela
 ```
 
-O terminal fica na parte de baixo do Codespace.
+O terminal fica embaixo, no Codespace. **Cuidado:** `rm` não tem lixeira, apagou, sumiu.
 
 ---
 
 ## Mão na massa: terminal
 1. Descubra em qual pasta você está com `pwd`
 2. Liste os arquivos com `ls`: o `README.md` está aí?
-3. Crie a pasta `docs`, entre nela e volte
-4. Use `ls` de novo: a pasta nova aparece?
+3. Crie a pasta `docs`, entre nela e volte com `cd ..`
+4. Crie `teste.txt` com `touch`, veja com `ls` e apague com `rm`
+5. Apague a pasta com `rm -r docs`: o `ls` ainda mostra ela?
 
 > Dica: a tecla **↑** repete o último comando. **Tab** completa o nome.
 

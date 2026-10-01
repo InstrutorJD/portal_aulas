@@ -103,6 +103,10 @@
    de uma vez e só a opacidade e o deslize são animados. */
 .sm-reveal .sm-step{ opacity:.45; filter:blur(10px); transform:translateX(-18px); transition:opacity .25s, transform .25s cubic-bezier(.2,.8,.2,1); }
 .sm-reveal .sm-step.sm-on{ opacity:1; filter:none; transform:none; }
+/* Rodapé da lista (texto ou caixa logo abaixo dela): borrado enquanto
+   ainda houver tópico escondido; aparece junto com o último. */
+.sm-rodape{ transition:opacity .25s; }
+.sm-slide:has(.sm-reveal > .sm-step:not(.sm-on)) .sm-rodape{ opacity:.45; filter:blur(10px); }
 
 /* ```grade — desenho de 0 e 1; ao avançar (.sm-on) os 0 somem e os 1
    acendem (ver case 'code' em slides-md.js). */
