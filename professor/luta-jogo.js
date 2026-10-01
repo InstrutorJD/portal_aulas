@@ -225,8 +225,15 @@ window.LutaJogo = (function () {
   // Golpes: quadros de preparação (ini), ativos e de recuperação (rec);
   // alcance horizontal (alc) e faixa de altura (y0..y1, a partir dos pés).
   const GOLPES = {
-    soco1: { ini: 3, ativo: 3, rec: 8, dano: 5, alc: 64, y0: 95, y1: 132, kb: 2.5, pose: 'soco', prox: 'soco2', som: 'soco' },
-    soco2: { ini: 3, ativo: 3, rec: 9, dano: 6, alc: 64, y0: 95, y1: 132, kb: 2.5, pose: 'soco2', prox: 'soco3', som: 'soco' },
+    // prox: golpe que sai se apertar SOCO de novo acertando; proxChute: idem com CHUTE.
+    soco1: { ini: 3, ativo: 3, rec: 8, dano: 5, alc: 64, y0: 95, y1: 132, kb: 2.5, pose: 'soco', prox: 'soco2', proxChute: 'chute', som: 'soco' },
+    soco2: { ini: 3, ativo: 3, rec: 9, dano: 6, alc: 64, y0: 95, y1: 132, kb: 2.5, pose: 'soco2', prox: 'soco3', proxChute: 'chuteGiro', som: 'soco' },
+    chuteGiro: { ini: 6, ativo: 5, rec: 18, dano: 12, alc: 94, y0: 60, y1: 135, kb: 8, derruba: true, pesado: true, pose: 'chuteGiro', som: 'chute', nomeTela: 'CHUTE GIRATÓRIO!' },
+    // Especiais por comando (ver COMANDOS):
+    dragao: { ini: 3, ativo: 12, rec: 0, dano: 15, alc: 62, y0: 60, y1: 180, kb: 5, derruba: true, pesado: true, aereo: true, salto: [12.5, 2], invul: 9, pouso: 'pousoCurto', pose: 'dragao', som: 'chute', nomeTela: 'PUNHO DO DRAGÃO!' },
+    furacao: { ini: 5, ativo: 36, rec: 0, dano: 6, alc: 70, y0: 40, y1: 120, kb: 3, aereo: true, flutua: 5.5, multi: 12, pouso: 'pousoCurto', pose: 'furacao', som: 'chute', nomeTela: 'FURACÃO!' },
+    bolaComando: { ini: 10, ativo: 1, rec: 20, pose: 'hadouken', disparo: { z: 105, vel: 8.5, raio: 18, dano: 12, kb: 6, tipo: 'fogo' }, nomeTela: 'BOLA DE ENERGIA!' },
+    pousoCurto: { ini: 0, ativo: 0, rec: 14, pose: 'agachado' },
     soco3: { ini: 5, ativo: 4, rec: 16, dano: 10, alc: 66, y0: 90, y1: 155, kb: 6, derruba: true, pesado: true, pose: 'gancho', som: 'chute' },
     socoBaixo: { ini: 3, ativo: 3, rec: 8, dano: 4, alc: 62, y0: 55, y1: 90, kb: 2, pose: 'socoBaixo', som: 'soco' },
     chute: { ini: 6, ativo: 4, rec: 14, dano: 9, alc: 88, y0: 70, y1: 122, kb: 5.5, pose: 'chute', som: 'chute' },
@@ -325,12 +332,20 @@ window.LutaJogo = (function () {
     if (!g.aereo) f.vx = 0;
     if (g.som || g.disparo) Som.vento();
     if (g.superGolpe) { J.superT = g.ini; f.invul = g.ini + g.rec + 10; Som.super(); }
+    if (g.invul) f.invul = Math.max(f.invul, g.invul);
+    if (g.nomeTela && f.controle) texto(f.x, CHAO - 175, g.nomeTela, f.controle === 2 ? '#ff8f8f' : '#7dd3fc', 22);
   }
 
   function atualizarGolpe(f) {
     const g = f.golpe; f.gt++;
     const fimAtivo = g.ini + g.ativo;
     if (g.salto && f.gt === g.ini) { f.vz = g.salto[0]; f.z = 1; f.vx = f.face * g.salto[1]; }
+    if (g.flutua) { // Furacão: gira no ar, avançando, e depois cai
+      if (f.gt === g.ini) { f.z = Math.max(f.z, 1); f.vz = 6; }
+      if (f.gt > g.ini && f.gt <= fimAtivo) { f.vx = f.face * g.flutua; if (f.z >= 26 || f.vz <= 0.75) { f.z = Math.min(f.z, 26); f.vz = 0.75; } } // 0,75 anula a gravidade: paira
+      if (f.gt === fimAtivo) f.vx *= 0.4;
+      if (g.multi && f.gt > g.ini && (f.gt - g.ini) % g.multi === 0) f.acertou = new Set();
+    }
     if (g.pisao && f.gt === g.ini) {
       // Salta para cair em cima de onde o jogador está agora.
       f.vz = 15; f.z = 1;
@@ -485,6 +500,7 @@ window.LutaJogo = (function () {
     if (f.estado === 'pulo') { f.estado = 'parado'; f.vx = 0; poeira(f.x, CHAO, 3); return; }
     if (f.estado === 'golpe' && f.golpe && f.golpe.aereo) {
       if (f.golpe.pisao) impactoPisao(f);
+      else if (f.golpe.pouso) { f.vx = 0; poeira(f.x, CHAO, 4); iniciarGolpe(f, f.golpe.pouso); }
       else { f.estado = 'parado'; f.golpe = null; f.vx = 0; }
       return;
     }
@@ -515,15 +531,62 @@ window.LutaJogo = (function () {
     return melhor;
   }
 
+  // ---------- Comandos (combinação de direções + botão) ----------
+  // Direções em "teclado numérico", sempre relativas a para onde o lutador
+  // olha: 6 = para a frente, 4 = para trás, 2 = baixo, 3 = baixo-frente,
+  // 1 = baixo-trás, 5 = parado. Guarda as últimas mudanças de direção e,
+  // quando um botão é apertado, procura a sequência nos últimos ~0,4 s.
+  const COMANDOS = [
+    { seq: [6, 2, 3], botao: 'soco', golpe: 'dragao' },  // → ↓ ↘ + Soco: Punho do Dragão
+    { seq: [2, 6], botao: 'soco', golpe: 'bolaComando' }, // ↓ ↘ → + Soco: Bola de Energia (o ↘ é opcional)
+    { seq: [2, 4], botao: 'chute', golpe: 'furacao' },    // ↓ ↙ ← + Chute: Furacão
+  ];
+  function direcaoNum(p, dx, dy) {
+    const x = Math.abs(dx) > 0.4 ? Math.sign(dx) * p.face : 0;
+    const y = dy > 0.5 ? -1 : dy < -0.5 ? 1 : 0;
+    return 5 + x + y * 3;
+  }
+  function registrarDirecao(p, dx, dy) {
+    const n = direcaoNum(p, dx, dy);
+    p.hist = p.hist || [];
+    const ult = p.hist[p.hist.length - 1];
+    if (!ult || ult.n !== n) { p.hist.push({ n, t: J.tick }); if (p.hist.length > 12) p.hist.shift(); }
+  }
+  // A sequência precisa aparecer em ordem (pode ter direções no meio), a
+  // primeira há no máximo 26 quadros e a última há no máximo 10.
+  function fezComando(p, seq) {
+    const h = p.hist || [];
+    let k = seq.length - 1, ultimaT = null;
+    for (let i = h.length - 1; i >= 0 && k >= 0; i--) {
+      if (J.tick - h[i].t > 26) break;
+      if (h[i].n === seq[k]) { if (ultimaT === null) ultimaT = h[i].t; k--; }
+    }
+    return k < 0 && J.tick - ultimaT <= 10;
+  }
+  function comandoDe(p, botao) {
+    for (const c of COMANDOS) {
+      if (c.botao !== botao || !fezComando(p, c.seq)) continue;
+      // Uma bola de energia de cada vez na tela.
+      if (c.golpe === 'bolaComando' && J.proj.some(pr => pr.dono === p && pr.tipo === 'fogo')) continue;
+      p.hist = [];
+      return c.golpe;
+    }
+    return null;
+  }
+
   // p = lutador controlado (Kaito, ou Raiju no X1); en = a entrada dele.
   function atualizarJogador(p, en) {
     if (p.comboT > 0 && --p.comboT === 0) p.combo = 0;
     const dx = en.x, dy = en.y;
     const cima = dy < -0.5, puloBorda = cima && !p.cimaAntes;
     p.cimaAntes = cima;
+    registrarDirecao(p, dx, dy);
     atualizarCorpo(p);
     p.x = clamp(p.x, 30, W - 30);
-    if (p.estado === 'golpe' && p.golpe.prox && !p.golpe.sempre && en.pegar('soco')) p.encadear = p.golpe.prox;
+    if (p.estado === 'golpe' && !p.golpe.sempre) {
+      if (p.golpe.prox && en.pegar('soco')) p.encadear = p.golpe.prox;
+      else if (p.golpe.proxChute && en.pegar('chute')) p.encadear = p.golpe.proxChute;
+    }
     if (J.travado > 0) { if (livre(p)) { p.estado = 'parado'; p.vx = 0; } return; }
     if (p.giro > 0) p.giro--;
     if (p.estado === 'pulo') {
@@ -547,6 +610,8 @@ window.LutaJogo = (function () {
       p.estado = 'pulo'; p.vz = 13.5; p.z = 1; p.vx = dx * 3.8; p.puloGolpe = false; p.puloDuplo = false; Som.vento(); return;
     }
     if (b === 'esp') { especial(p); return; }
+    const cmd = (b === 'soco' || b === 'chute') && comandoDe(p, b);
+    if (cmd) { iniciarGolpe(p, cmd); return; }
     if (b === 'soco') { iniciarGolpe(p, dy > 0.5 ? 'socoBaixo' : 'soco1'); return; }
     if (b === 'chute') { iniciarGolpe(p, dy > 0.5 ? 'rasteira' : 'chute'); return; }
     if (dy > 0.5) { p.estado = 'agachar'; p.vx = 0; return; }
@@ -956,6 +1021,9 @@ window.LutaJogo = (function () {
     },
     pisao: (f, P, l) => { if (f === 'prep' || noChao(l)) Object.assign(P, AGACHADO()); else { P.pF = [60, -110]; P.pT = [30, -120]; P.bF = [160, 10]; P.bT = [150, 20]; } },
     agachado: (f, P) => Object.assign(P, AGACHADO()),
+    chuteGiro: (f, P) => { P.bF = [70, 120]; P.bT = [-40, 90]; if (f === 'prep') { P.pF = [40, -110]; P.lean = 15; } else { P.pF = [92, 4]; P.pT = [-18, -4]; P.lean = -28; } },
+    dragao: (f, P) => { if (f === 'prep') { Object.assign(P, AGACHADO()); P.bF = [20, 40]; } else { P.bF = [176, -4]; P.bT = [20, 100]; P.lean = -6; P.pF = [70, -100]; P.pT = [-6, -6]; } },
+    furacao: (f, P) => { P.pF = [92, -2]; P.pT = [-30, -50]; P.bF = [100, 0]; P.bT = [-100, 0]; P.lean = 0; },
   };
   function AGACHADO() { return { pF: [75, -115], pT: [-8, -122], lean: 10, bF: [55, 115], bT: [40, 120] }; }
 
@@ -1037,7 +1105,8 @@ window.LutaJogo = (function () {
   }
 
   function desenharLutador(f) {
-    const s = f.s, fc = f.face, P = suavizar(f, poseDe(f));
+    const girando = f.estado === 'golpe' && f.golpe && f.golpe.flutua && f.gt > f.golpe.ini;
+    const s = f.s, fc = girando && Math.floor(f.gt / 4) % 2 ? -f.face : f.face, P = suavizar(f, poseDe(f));
     let c = f.T.cores;
     if (f.branco > 0) c = Object.assign({}, c, { pele: '#ffffff', roupa: '#ffffff', calca: '#ffffff', faixa: '#ffffff', cabelo: '#ffffff', bandana: '#ffffff', luva: '#ffffff', capa: '#ffffff', ouro: '#ffffff', pes: '#ffffff', barba: '#ffffff' });
     const L1 = 33 * s, L2 = 33 * s, TR = 48 * s, A1 = 25 * s, A2 = 25 * s, CAB = 13 * s;
@@ -1565,8 +1634,8 @@ window.LutaJogo = (function () {
     if (J.tick % 60 < 40) txt('Escolha com o analógico ou as setas (ou 1 / 2) · SOCO ou ENTER começa', W / 2, 352, 15, '#ffd166', 'center');
     const linhas = [
       '⌨ Setas: mover · ↑ ou ESPAÇO: pular (2x = pulo duplo) · ↓: agachar',
-      'Z: soco (3x = combo) · X: chute · ↓ + X: rasteira · C: especial',
-      'Energia cheia = SUPER · andar para TRÁS defende',
+      'Z soco (3x = combo) · X chute · ↓ + X rasteira · C especial · energia cheia = SUPER · trás defende',
+      'Combos: ↓↘→ + Soco = bola · →↓↘ + Soco = Punho do Dragão · ↓↙← + Chute = Furacão · Soco, Soco, Chute',
       'X1 no teclado: J1 = WASD + Z/X/C/espaço · J2 = setas + K/L/Ç/0',
       'X1 no celular: os dois leem o mesmo QR (📱) · P: pausa · R: reiniciar · M: som · F: tela cheia',
     ];
@@ -1606,9 +1675,12 @@ window.LutaJogo = (function () {
     }
     if (J.tela === 'pausa') {
       ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
-      txt('PAUSA', W / 2, H / 2 - 20, 72, '#fff', 'center');
-      txt('Aperte P (ou ⏸ no celular) para continuar', W / 2, H / 2 + 40, 20, '#cbd5e1', 'center');
+      txt('PAUSA', W / 2, H / 2 - 90, 72, '#fff', 'center');
+      txt('Aperte P (ou ⏸ no celular) para continuar', W / 2, H / 2 + 30, 20, '#cbd5e1', 'center');
       txt('R (ou ↺ no celular) reinicia o jogo', W / 2, H / 2 + 72, 16, '#9aa6ba', 'center');
+      ['COMBINAÇÕES (de frente para o adversário)', '↓ ↘ → + Soco: Bola de Energia (de graça, 1 por vez)', '→ ↓ ↘ + Soco: Punho do Dragão',
+        '↓ ↙ ← + Chute: Furacão (até 3 acertos)', 'Soco, Soco, Chute: Chute Giratório · Soco, Soco, Soco: Gancho']
+        .forEach((l, i) => txt(l, W / 2, H / 2 + 116 + i * 22, i ? 15 : 16, i ? '#e2e8f0' : '#ffd166', 'center'));
     }
     if (J.tela === 'derrota') {
       ctx.fillStyle = 'rgba(40,0,0,.6)'; ctx.fillRect(0, 0, W, H);
