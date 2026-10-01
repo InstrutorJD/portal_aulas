@@ -45,7 +45,7 @@ Olhe com calma. Você consegue dizer o que aconteceu com o caminhão?
 ---
 
 ## ⚡ Responde Aí: revisão da Aula 1
-4 perguntas rápidas, ao vivo, respondidas no **celular**. Sem login.
+8 perguntas rápidas sobre **tipos de IA**, **métodos HTTP** e **algoritmo**, respondidas no **celular**. Sem login.
 
 - Leia o QR Code do telão com a câmera
 - Toque na resposta antes do tempo acabar
@@ -58,21 +58,40 @@ Olhe com calma. Você consegue dizer o que aconteceu com o caminhão?
 ## Roteiro de hoje (4h)
 - **Parte 1**: DevTools, aba Rede e Console (35 min)
 - **Parte 2**: requisitos com um agente de IA (45 min)
-- **Partes 3 e 4**: GitHub, Codespace e git (10 + 40 min)
+- **Partes 3 e 4**: GitHub, Codespace e git (15 + 40 min)
 - **Parte 5**: API de verdade e o JSON da inspeção (40 min)
-- **Partes 6 e 7**: recursos da web e Copilot (5 + 40 min)
+- **Partes 6 e 7**: recursos da web e Copilot (5 + 35 min)
 
 Mais mão na massa do que slide. Abertura e fechamento: 25 min.
 
 ---
 
 # Parte 1 — HTTP de verdade
-Espiando e fazendo requisições no navegador
+Primeiro à mão, no F12. Depois, com código
+
+---
+
+## O que é uma requisição?
++ O site precisa de algo? O navegador faz um **pedido** (a requisição)
++ O servidor devolve uma **resposta**: página, imagem ou **dados**
++ Uma página comum faz **dezenas** de pedidos só para abrir
++ Os pedidos de **dados** costumam voltar em **JSON**
+
+---
+
+## Por dentro de um pedido
+| Parte | O que é | Exemplo |
+|---|---|---|
+| Método | A ação | `GET` = buscar |
+| Endereço (URL) | Onde está o que foi pedido | `/todos/1` |
+| Status | Como foi | `200` = deu certo, `404` = não existe |
+| Cabeçalhos | Informações extras | O tipo do conteúdo |
+| Corpo | O conteúdo em si | O JSON com os dados |
 
 ---
 
 ## Abrindo a aba Rede
-1. Abra um site que você usa no dia a dia
+1. Abra **g1.globo.com** (ou **apple.com/br**)
 2. Aperte **F12** (ou `Ctrl + Shift + I`)
 3. Clique na aba **Rede** (*Network*)
 4. Recarregue a página com **F5**
@@ -89,20 +108,30 @@ Espiando e fazendo requisições no navegador
 | Status | O código da resposta (`200`, `404`...) |
 | Tipo | Documento, script, imagem, fetch... |
 
-Clique numa linha e abra **Cabeçalhos**: lá estão a URL e o servidor.
+Clique numa linha: **Cabeçalhos** mostra método e status; **Resposta** mostra o corpo.
 
 ---
 
-## Mão na massa: observar
-1. Filtre por **Fetch/XHR**: são as chamadas de API
-2. Escolha 3 requisições: 1 documento, 1 Fetch/XHR, 1 imagem
-3. Anote de cada uma: **método, endereço e status**
-4. Diga quem é o **cliente** e quem é o **servidor**
+## Mão na massa: pesquisa no g1
+1. No **g1.globo.com**, conte: **quantos** pedidos a página fez? (rodapé da Rede)
+2. Filtre por **Fetch/XHR**: são os pedidos de **dados**
+3. Escolha 3 pedidos: 1 documento, 1 Fetch/XHR, 1 imagem
+4. Anote de cada um: **método, endereço e status**
+5. Diga quem é o **cliente** e quem é o **servidor**
+
+---
+
+## Mão na massa: caçando os dados
+1. Abra **jsonplaceholder.typicode.com** com a **Rede** aberta e dê **F5**
+2. Filtre por **Fetch/XHR**: que pedido de dados a página fez? A qual site?
+3. Na barra de endereço, abra `jsonplaceholder.typicode.com/todos/1`
+4. Clique no pedido `1`: veja o **status** e, em **Resposta**, o JSON
+5. Agora abra `/todos/999`: que **status** voltou? Por quê?
 
 ---
 
 ## O que você encontrou?
-Numa requisição Fetch/XHR, a resposta geralmente vem em qual formato?
+Num pedido Fetch/XHR, a resposta geralmente vem em qual formato?
 
 - [ ] HTML
 - [ ] Imagem PNG
@@ -111,17 +140,27 @@ Numa requisição Fetch/XHR, a resposta geralmente vem em qual formato?
 
 ---
 
-## Console: conversando com o navegador
+## E se der para fazer isso com código?
++ Até agora você **procurou à mão** os pedidos que o site fez
 + A aba **Console** do F12 executa **JavaScript** na hora
-+ Digite um comando e aperte **Enter**: o resultado aparece embaixo
-+ **Shift + Enter** quebra a linha sem executar; **↑** repete o último
-+ É o mesmo JavaScript que os sites usam para pedir dados
++ Com ela, você mesmo vai **listar** e **fazer** pedidos
++ É o seu primeiro contato com **programação**
 
-> 1ª vez colando? O navegador trava e pede para digitar **permitir colar** (*allow pasting*). É proteção contra golpe: nunca cole código de estranhos.
+> 1ª vez colando código? O navegador pede para digitar **permitir colar** (*allow pasting*). É proteção contra golpe: nunca cole código de estranhos.
 
 ---
 
-## Quem a página chamou?
+## Aquecimento no Console
+1. Volte para a página inicial: **jsonplaceholder.typicode.com**
+2. **F12** → aba **Console**
+3. Digite `2 + 2` e aperte **Enter**
+4. Digite `document.title` e aperte **Enter**: o que apareceu?
+
+**Enter** executa · **Shift + Enter** pula linha · **↑** repete o último comando
+
+---
+
+## 1º código: quem a página chamou?
 ```js
 const tipos = ['fetch', 'xmlhttprequest']
 performance.getEntriesByType('resource')
@@ -129,11 +168,11 @@ performance.getEntriesByType('resource')
   .map(e => e.name)
 ```
 
-Lista os endereços que a página pediu **por código**: dados, não imagens.
+Cole no **Console** e aperte **Enter**. Que endereço apareceu?
 
 ---
 
-## Entendendo o código
+## Entendendo o 1º código
 | Trecho | O que faz |
 |---|---|
 | `const tipos = [...]` | Tipos que interessam: pedidos feitos por código |
@@ -141,7 +180,7 @@ Lista os endereços que a página pediu **por código**: dados, não imagens.
 | `.filter(...)` | Fica só com os pedidos fetch e xhr |
 | `.map(e => e.name)` | De cada pedido, mostra só o **endereço** |
 
-**Pra que serve:** descobrir de quais APIs um site busca os dados dele.
+**Pra que serve:** faz por código o que você fez à mão no filtro **Fetch/XHR**.
 
 ---
 
@@ -156,38 +195,38 @@ Lista os endereços que a página pediu **por código**: dados, não imagens.
 
 ---
 
-## O seu primeiro fetch
+## 2º código: o seu primeiro fetch
 ```js
 const r = await fetch('/todos/1')
 r.status
 await r.json()
 ```
 
-Digite **uma linha por vez**. `fetch` faz um `GET`; `/todos/1` é no próprio site.
+Digite **uma linha por vez** no Console, apertando **Enter** em cada uma.
 
 ---
 
-## Entendendo o código
+## Entendendo o 2º código
 | Linha | O que faz |
 |---|---|
 | `const r = await fetch('/todos/1')` | Pede o item 1; a **resposta** fica em `r` |
 | `r.status` | Mostra o **código** da resposta: `200` = deu certo |
 | `await r.json()` | Lê o **corpo** e transforma o JSON em objeto |
 
-**Pra que serve:** é o mesmo caminho que um app faz para buscar dados numa API.
+**Pra que serve:** é o que você fez à mão ao abrir `/todos/1`, agora por código.
 
 ---
 
-## Mão na massa: Console
-1. Abra **jsonplaceholder.typicode.com**, **F12** e a aba **Console**
-2. Aquecimento: digite `2 + 2` e depois `document.title`
-3. Rode **Quem a página chamou?**: a qual site ela pediu dados?
-4. Faça o seu **fetch**: que status e que JSON voltaram?
-5. Rode a lista de novo e olhe a aba **Rede**: o seu pedido aparece?
+## Mão na massa: pedidos pelo Console
+1. Rode o **2º código**: que **status** e que **JSON** voltaram?
+2. Troque `/todos/1` por `/todos/5` e rode de novo: o que mudou?
+3. Agora peça `/todos/999`: que **status** voltou? Igual ao da mão?
+4. Olhe a aba **Rede**: os seus pedidos aparecem lá?
+5. Rode o **1º código** de novo: a lista cresceu?
 
 ---
 
-## O que o navegador NÃO deixa
+## 3º código: o que o navegador NÃO deixa
 ```js
 // 1) na aba do JSONPlaceholder:
 await fetch('https://example.com')
@@ -201,7 +240,7 @@ Um dá **erro vermelho**, o outro funciona. Por quê?
 
 ---
 
-## Entendendo o código
+## Entendendo o 3º código
 - `fetch('https://example.com')`: pede **outro site** a partir do JSONPlaceholder
 - `const url = '...'`: guarda o endereço numa **variável**, para a linha não ficar longa
 - `url + '/todos/1'`: **junta** os textos e forma o endereço completo
@@ -212,9 +251,9 @@ Um dá **erro vermelho**, o outro funciona. Por quê?
 ---
 
 ## Mão na massa: o bloqueio
-1. Rode o comando **1**: copie a frase do erro que fala em **CORS**
+1. Rode a parte **1** do 3º código: copie a frase do erro que fala em **CORS**
 2. Na aba **Rede**, que status aparece nesse pedido?
-3. Abra **example.com** numa aba nova, **F12 → Console**, rode o **2**
+3. Abra **example.com** numa aba nova, **F12 → Console** e rode a parte **2**
 4. Na **Rede**, clique no pedido `1` → **Cabeçalhos**
 5. Ache na resposta o `access-control-allow-origin`: que site ele autoriza?
 
@@ -246,6 +285,15 @@ No Console, qual destes faz uma **requisição HTTP** de verdade?
 - [x] `fetch('/todos/1')`
 - [ ] `2 + 2`
 - [ ] `performance.getEntriesByType('resource')`
+
+---
+
+## Por que estudar requisições?
++ O nosso checklist **vive** de requisições: `GET` busca equipamentos, `POST` envia a inspeção
++ Quando o app der erro, é no **F12** que você descobre se o problema foi o pedido ou a resposta
++ ChatGPT e Copilot também conversam com você por **requisições** HTTP
++ O Copilot vai escrever `fetch` para você: entender o que ele fez é o seu trabalho
++ Saber o que o navegador bloqueia (CORS) evita horas de erro sem explicação
 
 ---
 
@@ -393,43 +441,31 @@ A página carregou em 2,4 s no **Fast 4G**. Isso confere qual requisito?
 1. Entre em **chatgpt.com** com uma conta gratuita
 2. Na barra lateral, clique em **Novo projeto**: `Requisitos inspeção`
 3. No projeto, **⋯ → Configurações do projeto** → **Instruções**
-4. Cole as instruções dos **2 próximos slides** e salve
+4. Cole lá as **instruções do agente** (o próximo slide mostra onde pegar) e salve
 5. Abra um chat **dentro do projeto** e diga: *Vamos começar*
 
 > Sem a opção de projeto? Cole as instruções como **1ª mensagem** de um chat novo.
 
 ---
 
-## Instruções do agente (1/2)
-```text
-Você é meu parceiro de análise de requisitos.
-Projeto: trocar o checklist de inspeção em papel
-de equipamentos de mineração por um sistema.
-Me ajude a listar RF e RNF, mas NÃO entregue pronto:
-1. Faça UMA pergunta por vez sobre o operador,
-o supervisor e a manutenção.
-2. Peça que eu escreva cada requisito primeiro.
-3. Critique: começa com "O sistema deve"? É medível?
-```
+## O que as instruções dizem
++ Você é meu **parceiro** de requisitos do checklist de inspeção
++ Faça **uma pergunta por vez** sobre operador, supervisor e manutenção
++ Peça que **eu escreva primeiro**; depois critique: é RF ou RNF? É medível?
++ Ajude com **prioridade** e **critério de aceite**
++ Quando eu escrever **FIM**, devolva a tabela em **Markdown**
 
 ---
 
-## Instruções do agente (2/2)
-```text
-4. Diga se é RF ou RNF e por quê; aponte o que falta.
-5. Ajude a definir prioridade e critério de aceite.
-Quando eu escrever FIM, devolva num bloco markdown:
-## Requisitos
-| ID | Requisito | Prioridade | Critério de aceite |
-|---|---|---|---|
-IDs: RF01, RF02... e RNF01, RNF02...
-Responda em português, curto e direto.
-```
+## Copie as instruções do agente
+[qrcode https://instrutorjd.github.io/portal_aulas/materiais/agente-requisitos/ instrutorjd.github.io/portal_aulas/materiais/agente-requisitos]
+
+Leia o QR ou digite o endereço: toque em **Copiar instruções** e cole no projeto.
 
 ---
 
 ## Mão na massa: imersão
-1. Em grupo, responda às perguntas do agente sobre as **3 pessoas**
+1. **Individual**: no seu ChatGPT, responda às perguntas do agente sobre as **3 pessoas**
 2. Escreva cada requisito **antes** e deixe o agente criticar
 3. Chegue a pelo menos **5 RF e 3 RNF**, com prioridade e aceite
 4. Use os RNF que você **mediu** no F12
@@ -459,6 +495,36 @@ Antes de criar a conta, conheça o lugar
 + Cada projeto é um **repositório**: a "pasta" do projeto
 + Guarda também **todo o histórico**: quem mudou, o quê e quando
 + Milhões de projetos são **públicos**: dá para ver sem ter conta
+
+---
+
+## Quem está no GitHub
+| Perfil | Quem é | O que fez |
+|---|---|---|
+| `github.com/torvalds` | Linus Torvalds | Criou o **Linux** e o próprio **Git** |
+| `github.com/gvanrossum` | Guido van Rossum | Criou o **Python** |
+| `github.com/karpathy` | Andrej Karpathy | Cofundador da OpenAI, ex-chefe de IA da Tesla |
+| `github.com/josevalim` | José Valim | Brasileiro, criou a linguagem **Elixir** |
+| `github.com/filipedeschamps` | Filipe Deschamps | Brasileiro, criou o **TabNews** |
+
+Mais de **300 mil** pessoas seguem o Linus no GitHub; mais de **200 mil**, o Karpathy.
+
+---
+
+## Mão na massa: perfis de quem faz
+1. Abra **github.com/torvalds** e entre no repositório **linux**
+2. Quantas **estrelas** ele tem? E quantos **commits**?
+3. Abra **github.com/karpathy**: qual projeto dele tem mais estrelas?
+4. Veja o **quadro verde** de contribuições: ele programou esta semana?
+5. Escolha outro perfil da lista: o que o GitHub conta sobre a pessoa?
+
+---
+
+## Seu GitHub é o seu currículo
++ Linux, Python, VS Code: os maiores projetos do mundo estão lá, **abertos**
++ Empresas olham o GitHub de quem vão **contratar**
++ Cada commit fica no **histórico**, com o **seu nome**
++ Hoje você cria o **seu** primeiro repositório
 
 ---
 
@@ -582,9 +648,22 @@ O **README.md** é a vitrine: é o que aparece primeiro no GitHub.
 
 ---
 
+## Modelo do README.md
+```markdown
+# Checklist de Inspeção
+## Mapa do sistema
+Celular (frontend) → API → Backend → Banco de dados
+## Requisitos
+(cole aqui a tabela que o ChatGPT devolveu)
+```
+
+O **mapa** são as 4 peças da Aula 1, na ordem em que a inspeção passa.
+
+---
+
 ## Mão na massa: primeiro commit
 1. No ChatGPT, abra o projeto e **copie** a tabela de requisitos
-2. Cole no `README.md`, junto com o **mapa do sistema**
+2. Monte o `README.md` como no **modelo**: o mapa e, embaixo, a tabela
 3. Salve com `Ctrl + S` e rode `git status`
 4. `git add README.md` e `git commit -m "Requisitos"`
 5. `git push` e veja a **tabela** pronta no GitHub
@@ -659,7 +738,7 @@ Agora troque o `1` por `999`. O que aconteceu?
 
 ---
 
-## O mesmo GET no terminal
+## O mesmo GET no terminal do Codespace
 ```bash
 curl -i https://jsonplaceholder.typicode.com/todos/1
 ```
@@ -667,6 +746,8 @@ curl -i https://jsonplaceholder.typicode.com/todos/1
 + `curl` faz requisições pelo terminal
 + `-i` mostra também o cabeçalho da resposta
 + Olhe a **primeira linha**: ali está o **status** (`200`)
+
+> Rode no terminal do **Codespace** (Linux). No PowerShell do Windows as aspas do JSON se perdem e o `POST` falha.
 
 ---
 
@@ -692,6 +773,34 @@ curl -i -X PATCH \
 curl -i -X DELETE \
   https://jsonplaceholder.typicode.com/todos/1
 ```
+
+---
+
+## Plano B: o POST pelo Console
+```js
+const item = { title: 'Freios', completed: false }
+const r = await fetch('/todos', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(item)
+})
+r.status
+await r.json()
+```
+
+Sem Codespace? Rode no **Console**, na aba do JSONPlaceholder: é o mesmo `POST`.
+
+---
+
+## Entendendo o plano B
+| Trecho | O que faz |
+|---|---|
+| `method: 'POST'` | Escolhe o método (sem isso, o `fetch` faz `GET`) |
+| `headers: {...}` | Avisa ao servidor: "estou mandando **JSON**" |
+| `JSON.stringify(item)` | Transforma o objeto em **texto JSON** para enviar |
+| `r.status` | Deve mostrar `201`: **criado** |
+
+É o mesmo que o `-X`, o `-H` e o `-d` do `curl` fazem.
 
 ---
 
