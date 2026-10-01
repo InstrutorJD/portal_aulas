@@ -65,18 +65,18 @@ Uma resposta com status `404` quer dizer...
 ---
 
 ## Roteiro de hoje (4h)
-1. DevTools: HTTP de verdade (20 min)
-2. Design Thinking: requisitos (25 min)
-3. Explorando o GitHub (15 min)
-4. Repositório, Codespace e git (45 min)
-5. Testando uma API de verdade e criando o JSON (45 min)
-6. Webhooks, upload e streaming (10 min)
-7. Mão na massa com o Copilot (55 min)
+- **Parte 1**: DevTools, aba Rede e Console (35 min)
+- **Parte 2**: requisitos com um agente de IA (45 min)
+- **Partes 3 e 4**: GitHub, Codespace e git (10 + 40 min)
+- **Parte 5**: API de verdade e o JSON da inspeção (40 min)
+- **Partes 6 e 7**: recursos da web e Copilot (5 + 40 min)
+
+Mais mão na massa do que slide. Abertura e fechamento: 25 min.
 
 ---
 
 # Parte 1 — HTTP de verdade
-Espiando as requisições de um site conhecido
+Espiando e fazendo requisições no navegador
 
 ---
 
@@ -120,6 +120,100 @@ Numa requisição Fetch/XHR, a resposta geralmente vem em qual formato?
 
 ---
 
+## Console: conversando com o navegador
++ A aba **Console** do F12 executa **JavaScript** na hora
++ Digite um comando e aperte **Enter**: o resultado aparece embaixo
++ **Shift + Enter** quebra a linha sem executar; **↑** repete o último
++ É o mesmo JavaScript que os sites usam para pedir dados
+
+> 1ª vez colando? O navegador trava e pede para digitar **permitir colar** (*allow pasting*). É proteção contra golpe: nunca cole código de estranhos.
+
+---
+
+## Quem a página chamou?
+```js
+const tipos = ['fetch', 'xmlhttprequest']
+performance.getEntriesByType('resource')
+  .filter(e => tipos.includes(e.initiatorType))
+  .map(e => e.name)
+```
+
+Lista os endereços que a página pediu **por código**: dados, não imagens.
+
+---
+
+## O seu primeiro fetch
+```js
+const r = await fetch('/todos/1')
+r.status
+await r.json()
+```
+
+Digite **uma linha por vez**. `fetch` faz um `GET`; `/todos/1` é no próprio site.
+
+---
+
+## Mão na massa: Console
+1. Abra **jsonplaceholder.typicode.com**, **F12** e a aba **Console**
+2. Aquecimento: digite `2 + 2` e depois `document.title`
+3. Rode **Quem a página chamou?**: a qual site ela pediu dados?
+4. Faça o seu **fetch**: que status e que JSON voltaram?
+5. Rode a lista de novo e olhe a aba **Rede**: o seu pedido aparece?
+
+---
+
+## O que o navegador NÃO deixa
+```js
+// 1) na aba do JSONPlaceholder:
+await fetch('https://example.com')
+
+// 2) numa aba nova, em example.com:
+const url = 'https://jsonplaceholder.typicode.com'
+await fetch(url + '/todos/1')
+```
+
+Um dá **erro vermelho**, o outro funciona. Por quê?
+
+---
+
+## Mão na massa: o bloqueio
+1. Rode o comando **1**: copie a frase do erro que fala em **CORS**
+2. Na aba **Rede**, que status aparece nesse pedido?
+3. Abra **example.com** numa aba nova, **F12 → Console**, rode o **2**
+4. Na **Rede**, clique no pedido `1` → **Cabeçalhos**
+5. Ache na resposta o `access-control-allow-origin`: que site ele autoriza?
+
+---
+
+## Por que o navegador bloqueou?
++ Sem regra, um site malicioso pediria dados a outro site **em seu nome**
++ Por isso, o navegador só entrega a resposta se o **outro servidor autorizar**
++ Essa autorização é o **CORS**: o cabeçalho `access-control-allow-origin`
++ O JSONPlaceholder autoriza qualquer site; o example.com não autoriza
++ O `curl` não tem essa trava: ela é do **navegador**, para proteger você
+
+---
+
+## Quem bloqueou?
+O seu `fetch` para outro site deu erro de **CORS**. Quem barrou a resposta?
+
+- [ ] O outro servidor caiu
+- [x] O navegador: o outro site não autorizou
+- [ ] O antivírus do computador
+- [ ] Um erro de digitação no Console
+
+---
+
+## Qual comando?
+No Console, qual destes faz uma **requisição HTTP** de verdade?
+
+- [ ] `document.title`
+- [x] `fetch('/todos/1')`
+- [ ] `2 + 2`
+- [ ] `performance.getEntriesByType('resource')`
+
+---
+
 # Parte 2 — Design Thinking
 O problema do checklist em papel
 
@@ -143,6 +237,15 @@ O problema do checklist em papel
 
 ---
 
+## O que é um requisito?
++ É algo que o sistema **precisa** cumprir para resolver uma dor
++ Nasce de uma **necessidade**, como as da tabela anterior
++ **RF** (funcional): uma **ação** que o sistema faz
++ **RNF** (não funcional): **como** o sistema deve ser ao fazer
++ Se não dá para **testar**, ainda não é um bom requisito
+
+---
+
 ## RF x RNF
 | | Funcional (RF) | Não funcional (RNF) |
 |---|---|---|
@@ -155,22 +258,159 @@ Dica: comece cada requisito com **"O sistema deve..."**.
 
 ---
 
-## RF ou RNF?
-"O sistema deve abrir em menos de 3 segundos no celular do operador."
+## Tipos comuns de RNF
+| Tipo | Pergunta | Exemplo na inspeção |
+|---|---|---|
+| Desempenho | É rápido? | Abrir em até 3 s no 4G |
+| Usabilidade | É fácil? | Registrar uma inspeção em até 2 min |
+| Segurança | É protegido? | Só usuário com login vê os dados |
+| Compatibilidade | Funciona onde? | Chrome e Edge no celular, sem sinal |
 
-- [ ] RF: é algo que o sistema faz
-- [x] RNF: é uma qualidade do sistema
+---
+
+## Escrevendo bem
+- Comece com **"O sistema deve..."** + um **verbo**
+- **Uma coisa** por requisito: se tem "e", talvez sejam dois
+- RNF **mensurável**: tempo, quantidade, navegadores
+- ✗ *"O sistema deve ser rápido"*
+- ✓ *"O sistema deve abrir em até 3 s no 4G"*
+
+---
+
+## Como documentar
+| ID | Requisito | Prioridade | Critério de aceite |
+|---|---|---|---|
+| RF01 | O sistema deve registrar a inspeção | Alta | Ela aparece no histórico |
+| RF02 | O sistema deve bloquear equipamento reprovado | Alta | Não dá para liberá-lo |
+| RNF01 | O sistema deve abrir em até 3 s no 4G | Média | *Load* ≤ 3 s no F12 |
+
+**Critério de aceite**: o teste que prova que o requisito foi cumprido.
+
+---
+
+## RF ou RNF?
+"O sistema deve avisar a manutenção quando um freio for reprovado."
+
+- [x] RF: é algo que o sistema faz
+- [ ] RNF: é uma qualidade do sistema
 - [ ] Nenhum dos dois: é só uma opinião
 
 ---
 
-## Mão na massa: imersão
-1. Em grupo, liste as dores do **operador**, do **supervisor** e da **manutenção**
-2. Transforme cada dor em uma **necessidade**
-3. Escreva **5 RF** começando com "O sistema deve..."
-4. Escreva **3 RNF** (celular em campo, HTTPS, custo zero...)
+## Qual está bem escrito?
+Só um destes é um bom requisito. Qual?
 
-> Guarde no caderno: daqui a pouco eles vão para o GitHub.
+- [ ] O sistema deve ser fácil e rápido
+- [ ] Login
+- [ ] O sistema deve registrar e imprimir a inspeção
+- [x] O sistema deve gerar o relatório em até 5 s
+
+---
+
+## Caçando requisitos com o F12
+| O que você vê | Onde | Tipo |
+|---|---|---|
+| Buscar, filtrar, carrinho | Na própria página | RF |
+| Cadeado e `https://` | Barra de endereço | RNF: segurança |
+| Tempo de **Load** | Rodapé da aba **Rede** | RNF: desempenho |
+| Layout no celular | **Ctrl + Shift + M** | RNF: compatibilidade |
+
+---
+
+## Mão na massa: caçando RF
+1. Abra uma loja online que você conhece (ex.: Mercado Livre)
+2. Use o site **sem comprar**: busque, filtre, abra um produto
+3. Anote **3 RF** do site, começando com "O sistema deve..."
+4. Clique em **Adicionar ao carrinho**: o que ele exige antes?
+5. O endereço começa com `https://`? Isso é RF ou RNF?
+
+---
+
+## Mão na massa: medindo RNF
+1. **F12 → Rede**, recarregue: anote o **Load** no rodapé
+2. Troque *Sem limitação* (*No throttling*) por **Slow 4G** e recarregue
+3. **Ctrl + Shift + M**: escolha um celular. O layout se adapta?
+4. Escreva **2 RNF com número**, usando o que você mediu
+
+> No fim, volte para *Sem limitação* e feche o modo celular.
+
+---
+
+## O que você mediu?
+A página carregou em 2,4 s no **Fast 4G**. Isso confere qual requisito?
+
+- [ ] Um RF de busca
+- [x] Um RNF de desempenho
+- [ ] Um RNF de segurança
+- [ ] Um RF de carrinho
+
+---
+
+## Seu parceiro de requisitos
++ Um **agente** é a IA com um **papel** e **regras** fixas
++ O nosso não entrega pronto: **pergunta, sugere e critica**
++ Quem escreve primeiro é **você**; ele revisa como um colega exigente
++ No fim, ele devolve tudo em **Markdown**, pronto para o GitHub
+
+---
+
+## Criando o agente (conta grátis)
+1. Entre em **chatgpt.com** com uma conta gratuita
+2. Na barra lateral, clique em **Novo projeto**: `Requisitos inspeção`
+3. No projeto, **⋯ → Configurações do projeto** → **Instruções**
+4. Cole as instruções dos **2 próximos slides** e salve
+5. Abra um chat **dentro do projeto** e diga: *Vamos começar*
+
+> Sem a opção de projeto? Cole as instruções como **1ª mensagem** de um chat novo.
+
+---
+
+## Instruções do agente (1/2)
+```text
+Você é meu parceiro de análise de requisitos.
+Projeto: trocar o checklist de inspeção em papel
+de equipamentos de mineração por um sistema.
+Me ajude a listar RF e RNF, mas NÃO entregue pronto:
+1. Faça UMA pergunta por vez sobre o operador,
+o supervisor e a manutenção.
+2. Peça que eu escreva cada requisito primeiro.
+3. Critique: começa com "O sistema deve"? É medível?
+```
+
+---
+
+## Instruções do agente (2/2)
+```text
+4. Diga se é RF ou RNF e por quê; aponte o que falta.
+5. Ajude a definir prioridade e critério de aceite.
+Quando eu escrever FIM, devolva num bloco markdown:
+## Requisitos
+| ID | Requisito | Prioridade | Critério de aceite |
+|---|---|---|---|
+IDs: RF01, RF02... e RNF01, RNF02...
+Responda em português, curto e direto.
+```
+
+---
+
+## Mão na massa: imersão
+1. Em grupo, responda às perguntas do agente sobre as **3 pessoas**
+2. Escreva cada requisito **antes** e deixe o agente criticar
+3. Chegue a pelo menos **5 RF e 3 RNF**, com prioridade e aceite
+4. Use os RNF que você **mediu** no F12
+5. Escreva **FIM** e confira a tabela em Markdown
+
+> Não precisa de caderno: o chat fica salvo no projeto. Na Parte 4, a tabela vai para o README.
+
+---
+
+## Parceiro ou atalho?
+Logo na 1ª mensagem, o agente entregou 10 requisitos prontos. O que você faz?
+
+- [ ] Copia tudo: economiza tempo
+- [ ] Pede mais 10 para garantir
+- [x] Lembra a regra: eu escrevo primeiro, ele critica
+- [ ] Apaga o projeto e anota no caderno
 
 ---
 
@@ -296,8 +536,10 @@ Sem `git add`, o arquivo **não entra** no commit.
 ## Markdown em 1 minuto
 ```markdown
 # Checklist de Inspeção
-## Requisitos funcionais
-- RF01 - O sistema deve registrar...
+## Requisitos
+| ID | Requisito | Prioridade |
+|---|---|---|
+| RF01 | O sistema deve registrar... | Alta |
 **negrito** e `código`
 ```
 
@@ -306,10 +548,11 @@ O **README.md** é a vitrine: é o que aparece primeiro no GitHub.
 ---
 
 ## Mão na massa: primeiro commit
-1. No `README.md`, escreva o **mapa do sistema** e os **5 RF e 3 RNF**
-2. Salve com `Ctrl + S` e rode `git status`
-3. `git add README.md` e `git commit -m "Requisitos"`
-4. `git push` e atualize a página do repositório no GitHub
+1. No ChatGPT, abra o projeto e **copie** a tabela de requisitos
+2. Cole no `README.md`, junto com o **mapa do sistema**
+3. Salve com `Ctrl + S` e rode `git status`
+4. `git add README.md` e `git commit -m "Requisitos"`
+5. `git push` e veja a **tabela** pronta no GitHub
 
 > Apareceu lá? Abra os **commits** e ache a sua foto.
 
@@ -531,7 +774,7 @@ Webhooks, upload e streaming na mineração
 + **Webhook**: o sistema **avisa sozinho** a manutenção quando um freio reprova
 + Sem ele, a manutenção pergunta toda hora (*polling*) e o aviso chega atrasado
 + **Upload**: o operador envia a **foto da avaria** com um `POST`
-+ **Streaming**: a resposta chega **em pedaços**, como o texto de um chat de IA
++ **Streaming**: a resposta chega **em pedaços**, como no ChatGPT da Parte 2
 
 ---
 
@@ -637,7 +880,7 @@ Peça ao Copilot para **revisar**: ele acertou? Depois, commit e push.
 ## Antes de entregar
 Abra o seu repositório **no site do GitHub** e confira:
 
-- ✅ `README.md` com o mapa, 5 RF, 3 RNF e as rotas
+- ✅ `README.md` com o mapa, a tabela de RF e RNF e as rotas
 - ✅ `inspecao.json` (à mão) e `inspecoes.json` (com IA)
 - ✅ Pelo menos **3 commits** no histórico
 
@@ -675,8 +918,8 @@ Levante os dedos outra vez e compare com o começo.
 ---
 
 ## O que vimos hoje
-+ No DevTools e no `curl`, as APIs respondem em **JSON**
-+ RF diz o que o sistema faz; RNF diz como ele deve ser
++ Na aba Rede, no Console e no `curl`, as APIs respondem em **JSON**
++ RF diz o que o sistema faz; RNF diz como, **com número**
 + GitHub guarda, Codespace roda, **git** leva e traz
 + O método diz a ação, a rota diz o recurso
 + O status diz o que a API respondeu: **confira** o que aconteceu
