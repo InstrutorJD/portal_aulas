@@ -10,7 +10,8 @@
      aqui). Sem login, de propósito: o professor pode passar o celular para
      um aluno jogar — o controle só move o lutador, não acessa nada.
      Canal de broadcast do Supabase Realtime 'luta_<sala>': daqui saem 'j'
-     ({ x, y } de -1 a 1, só quando muda), 'b' (botão apertado) e 'ola';
+     ({ x, y } de -1 a 1, só quando muda), 'b' (botão apertado, inclusive
+     'reiniciar') e 'ola';
      de lá vem 'estado' (vida, energia, fase) e 'vib' (vibrar). -->
 <style>
   :root{ --bg:#0b0f17; --bg2:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,.12); --accent:#4fd1c5; --erro:#ff5c5c; }
@@ -42,6 +43,7 @@
   .j-en div{ background:#38bdf8; }
   .j-fase{ font-weight:800; color:var(--ink); white-space:nowrap; }
   .j-topo button{ font:inherit; font-size:18px; width:42px; height:38px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); }
+  .j-topo .j-reiniciar.confirmar{ width:auto; padding:0 12px; font-size:13px; font-weight:800; background:#b91c1c; border-color:#b91c1c; }
 
   .j-area{ flex:1; display:flex; min-height:0; }
   .j-zona{ position:relative; flex:1; }
@@ -86,6 +88,7 @@
       <div class="j-barra j-hp"><div id="jHp"></div></div>
       <div class="j-barra j-en"><div id="jEn"></div></div>
     </div>
+    <button type="button" id="jReiniciar" class="j-reiniciar" title="Reiniciar o jogo">↺</button>
     <button type="button" id="jPausa" title="Pausa">⏸</button>
   </div>
   <div class="j-area">
@@ -220,6 +223,17 @@
     btn.addEventListener('pointerleave', solta);
   });
   $('jPausa').addEventListener('click', () => enviar('b', { b: 'pausa' }));
+  // Reiniciar (aluno desistiu): o jogo pede confirmação, então o botão
+  // avisa "toque de novo" por 3 s.
+  let confirmaEm = 0;
+  $('jReiniciar').addEventListener('click', () => {
+    const btn = $('jReiniciar');
+    enviar('b', { b: 'reiniciar' });
+    if (Date.now() - confirmaEm < 3000) { confirmaEm = 0; btn.classList.remove('confirmar'); btn.textContent = '↺'; return; }
+    confirmaEm = Date.now();
+    btn.classList.add('confirmar'); btn.textContent = 'Toque de novo';
+    setTimeout(() => { if (Date.now() - confirmaEm >= 2900) { btn.classList.remove('confirmar'); btn.textContent = '↺'; } }, 3000);
+  });
   document.addEventListener('contextmenu', e => e.preventDefault());
 
   // Repete a direção de vez em quando (se uma mensagem se perder, o

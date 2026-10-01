@@ -22,46 +22,198 @@ window.LutaJogo = (function () {
   const hash = i => { const s = Math.sin(i * 12.9898) * 43758.5453; return s - Math.floor(s); };
 
   // ---------- Som (sintetizado, sem arquivos) ----------
+  // O navegador só libera o áudio depois de um clique ou tecla NESTE
+  // computador — comando que chega do celular não conta. Por isso iniciar()
+  // destrava o som em qualquer clique/tecla (o botão "Jogar" do QR já serve)
+  // e o HUD avisa enquanto ele estiver mudo.
   const Som = (function () {
-    let ac = null, ligado = true;
+    let ac = null, efeitos = null, eco = null, musVol = null, ligado = true, ruidoBuf = null;
     function a() {
-      if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+      if (!ac) {
+        try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; }
+        const comp = ac.createDynamicsCompressor();
+        comp.connect(ac.destination);
+        const mestre = ac.createGain(); mestre.gain.value = 0.9; mestre.connect(comp);
+        efeitos = ac.createGain(); efeitos.connect(mestre);
+        musVol = ac.createGain(); musVol.gain.value = 0.55; musVol.connect(mestre);
+        // Reverberação curta (ruído que decai): dá "corpo" de sala aos golpes.
+        eco = ac.createConvolver();
+        const n = Math.floor(ac.sampleRate * 0.9), ir = ac.createBuffer(2, n, ac.sampleRate);
+        for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); }
+        eco.buffer = ir;
+        const ecoVol = ac.createGain(); ecoVol.gain.value = 0.22;
+        eco.connect(ecoVol).connect(mestre);
+        ruidoBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+        const d = ruidoBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
       if (ac.state === 'suspended') ac.resume();
       return ac;
     }
-    function tom(freq, dur, tipo, vol, desliza) {
-      const c = ligado && a(); if (!c) return;
-      const o = c.createOscillator(), g = c.createGain(), t = c.currentTime;
-      o.type = tipo || 'square';
-      o.frequency.setValueAtTime(freq, t);
-      if (desliza) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + desliza), t + dur);
-      g.gain.setValueAtTime(vol || 0.1, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      o.connect(g).connect(c.destination);
-      o.start(t); o.stop(t + dur);
+    const pronto = () => ligado && ac && ac.state === 'running';
+    function saida(no, o) { no.connect(o.musica ? musVol : efeitos); if (o.eco) no.connect(eco); }
+    function envelope(g, t, vol, ataque, dur) {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + ataque);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     }
-    function ruido(dur, vol, corte) {
-      const c = ligado && a(); if (!c) return;
-      const n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
-      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
-      const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-      s.buffer = buf; f.type = 'lowpass'; f.frequency.value = corte || 1500; g.gain.value = vol || 0.3;
-      s.connect(f).connect(g).connect(c.destination);
-      s.start();
+    // o: { tipo, ate (freq. final), vol, ataque, eco, musica, em (hora exata), atraso, corte (passa-baixa) }
+    function tom(freq, dur, o = {}) {
+      if (!pronto()) return;
+      const t = o.em || ac.currentTime + (o.atraso || 0);
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = o.tipo || 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      if (o.ate) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.ate), t + dur);
+      envelope(g, t, o.vol || 0.2, o.ataque || 0.004, dur);
+      if (o.corte) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.corte; osc.connect(f).connect(g); } else osc.connect(g);
+      saida(g, o);
+      osc.start(t); osc.stop(t + dur + 0.03);
     }
+    // o: { filtro, freq, ate (varre o filtro), q, vol, ataque, eco, musica, em, atraso }
+    function ruido(dur, o = {}) {
+      if (!pronto()) return;
+      const t = o.em || ac.currentTime + (o.atraso || 0);
+      const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      s.buffer = ruidoBuf; s.loop = true;
+      f.type = o.filtro || 'lowpass'; f.Q.value = o.q || 0.7;
+      f.frequency.setValueAtTime(o.freq || 1500, t);
+      if (o.ate) f.frequency.exponentialRampToValueAtTime(o.ate, t + dur);
+      envelope(g, t, o.vol || 0.3, o.ataque || 0.003, dur);
+      s.connect(f).connect(g); saida(g, o);
+      s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.03);
+    }
+
+    // Voz: dente-de-serra passando por filtros nas frequências de uma
+    // vogal (formantes) — "rá!" para atacar, "uh!" para apanhar.
+    const VOGAL_A = [[760, 6, 1], [1180, 8, 0.6], [2600, 10, 0.18]];
+    const VOGAL_U = [[340, 6, 1], [780, 8, 0.35], [2400, 10, 0.08]];
+    let vozEm = 0;
+    function voz(f0, dur, vogal, vol, cai) {
+      if (!pronto()) return;
+      const agora = performance.now();
+      if (agora - vozEm < 160) return; // um grito de cada vez
+      vozEm = agora;
+      const t = ac.currentTime;
+      const osc = ac.createOscillator(), g = ac.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(f0, t);
+      osc.frequency.exponentialRampToValueAtTime(f0 * (cai || 0.72), t + dur);
+      const vib = ac.createOscillator(), vibG = ac.createGain();
+      vib.frequency.value = 28; vibG.gain.value = f0 * 0.05;
+      vib.connect(vibG).connect(osc.frequency);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.025);
+      g.gain.setValueAtTime(vol, t + dur * 0.45);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      vogal.forEach(([fq, q, v]) => {
+        const bp = ac.createBiquadFilter(), gv = ac.createGain();
+        bp.type = 'bandpass'; bp.frequency.value = fq * (f0 < 110 ? 0.85 : 1); bp.Q.value = q; gv.gain.value = v * 3;
+        osc.connect(bp).connect(gv).connect(g);
+      });
+      saida(g, { eco: true });
+      osc.start(t); vib.start(t); osc.stop(t + dur + 0.03); vib.stop(t + dur + 0.03);
+      ruido(0.07, { filtro: 'highpass', freq: 2200, vol: vol * 0.35 }); // o "h" do começo
+    }
+
+    // Narrador: voz do sistema (speechSynthesis), em português se houver.
+    let vozNarrador = null;
+    function escolherVoz() {
+      try {
+        const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+        vozNarrador = vs.find(v => /pt-BR/i.test(v.lang) && /male|masculin|daniel|antonio|ricardo/i.test(v.name))
+          || vs.find(v => /pt-BR/i.test(v.lang)) || vs.find(v => /^pt/i.test(v.lang)) || null;
+      } catch (e) {}
+    }
+    if (window.speechSynthesis) { escolherVoz(); try { speechSynthesis.onvoiceschanged = escolherVoz; } catch (e) {} }
+    function narrar(frase, o = {}) {
+      if (!pronto() || !window.speechSynthesis) return;
+      try {
+        const u = new SpeechSynthesisUtterance(frase);
+        if (vozNarrador) u.voice = vozNarrador;
+        u.lang = 'pt-BR'; u.rate = o.rate || 1; u.pitch = o.pitch || 0.4; u.volume = 1;
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      } catch (e) {}
+    }
+
+    // ---------- Música: bateria + baixo + melodia em loop ----------
+    // Cada faixa tem 32 semicolcheias (2 compassos). baixo/mel: 16 notas em
+    // colcheias, em semitons acima da raiz (null = pausa).
+    const FAIXAS = [
+      { bpm: 128, raiz: 45, baixo: [0, 0, 12, 0, 0, 0, 10, 12, 5, 5, 17, 5, 7, 7, 19, 7], mel: [12, null, 15, 17, null, 19, 17, 15, 12, null, 10, null, 7, 10, 12, null], bumbo: [0, 6, 8, 16, 22, 24] },
+      { bpm: 136, raiz: 43, baixo: [0, 12, 0, 12, 3, 15, 3, 15, 5, 17, 5, 17, 7, 19, 10, 22], mel: [19, 17, 15, null, 15, 17, 19, 22, 24, null, 22, 19, 17, null, 15, null], bumbo: [0, 8, 10, 16, 24, 26] },
+      { bpm: 144, raiz: 40, baixo: [0, 0, 0, 12, 1, 1, 1, 13, 0, 0, 0, 12, 3, 3, 5, 7], mel: [12, 13, 12, null, 15, null, 13, 12, 10, null, 12, 13, 15, 17, 15, null], bumbo: [0, 4, 8, 12, 16, 20, 24, 28] },
+      { bpm: 160, raiz: 38, baixo: [0, 0, 12, 0, 1, 1, 13, 1, 0, 0, 12, 0, 6, 6, 7, 7], mel: [24, null, 25, 24, 22, null, 19, 18, 19, null, 22, 24, 25, null, 30, 31], bumbo: [0, 3, 6, 8, 11, 14, 16, 19, 22, 24, 27, 30] },
+    ];
+    const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+    let faixa = null, passoMus = 0, proxNota = 0, relogio = 0;
+    function agendar() {
+      if (!faixa || !pronto()) return;
+      const semi = 60 / faixa.bpm / 4;
+      if (proxNota < ac.currentTime) proxNota = ac.currentTime + 0.05;
+      while (proxNota < ac.currentTime + 0.15) {
+        const p = passoMus % 32, em = proxNota, M = { musica: true, em };
+        if (faixa.bumbo.includes(p)) tom(140, 0.16, Object.assign({ ate: 42, vol: 0.55 }, M));
+        if (p % 8 === 4) { ruido(0.14, Object.assign({ filtro: 'highpass', freq: 1600, vol: 0.22 }, M)); tom(190, 0.08, Object.assign({ tipo: 'triangle', vol: 0.1 }, M)); }
+        if (p % 2 === 0) ruido(0.035, Object.assign({ filtro: 'highpass', freq: 7500, vol: p % 4 === 2 ? 0.07 : 0.04 }, M));
+        if (p % 2 === 0) {
+          const b = faixa.baixo[(p / 2) % 16];
+          if (b !== null) tom(hz(faixa.raiz + b - 12), semi * 1.8, Object.assign({ tipo: 'sawtooth', corte: 520, vol: 0.2 }, M));
+          const n = faixa.mel[(p / 2) % 16];
+          if (n !== null) {
+            tom(hz(faixa.raiz + n), semi * 1.7, Object.assign({ tipo: 'square', corte: 2600, vol: 0.05, eco: true }, M));
+            tom(hz(faixa.raiz + n) * 1.005, semi * 1.7, Object.assign({ tipo: 'sawtooth', corte: 1800, vol: 0.03 }, M));
+          }
+        }
+        passoMus++;
+        proxNota += semi;
+      }
+    }
+
     return {
-      destravar: a,
-      alternar() { ligado = !ligado; return ligado; },
-      vento() { ruido(0.08, 0.06, 3500); },
-      soco() { ruido(0.07, 0.4, 1800); tom(160, 0.07, 'square', 0.08, -80); },
-      chute() { ruido(0.12, 0.45, 900); tom(110, 0.1, 'square', 0.1, -50); },
-      defesa() { tom(1100, 0.05, 'triangle', 0.1); tom(700, 0.06, 'triangle', 0.06); },
-      queda() { ruido(0.18, 0.35, 400); },
-      fogo() { tom(180, 0.35, 'sawtooth', 0.08, 500); ruido(0.3, 0.1, 2500); },
-      super() { tom(90, 0.9, 'sawtooth', 0.12, 900); ruido(0.8, 0.2, 1200); },
-      ko() { tom(300, 0.6, 'square', 0.12, -250); ruido(0.5, 0.3, 700); },
-      fase() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tom(f, 0.15, 'square', 0.08), i * 110)); },
-      menu() { tom(660, 0.08, 'square', 0.07); },
+      destravar() { a(); if (!relogio) relogio = setInterval(agendar, 25); },
+      ativo: () => !!(ac && ac.state === 'running'),
+      ligado: () => ligado,
+      alternar() {
+        ligado = !ligado;
+        if (!ligado && window.speechSynthesis) speechSynthesis.cancel();
+        return ligado;
+      },
+      musica(n) { const nova = n === null || n === undefined ? null : FAIXAS[n]; if (nova !== faixa) { faixa = nova; passoMus = 0; proxNota = 0; } },
+      narrar,
+      vento() { ruido(0.14, { filtro: 'bandpass', freq: 500, ate: 2600, q: 1.2, vol: 0.18 }); },
+      passo() { ruido(0.05, { freq: 380, vol: 0.12 }); },
+      soco() {
+        tom(170, 0.1, { ate: 55, vol: 0.7 });
+        ruido(0.05, { filtro: 'bandpass', freq: 2600, q: 1.2, vol: 0.5 });
+        ruido(0.12, { freq: 900, vol: 0.28, eco: true });
+      },
+      chute() {
+        tom(125, 0.18, { ate: 38, vol: 0.85 });
+        ruido(0.07, { filtro: 'bandpass', freq: 1700, q: 1, vol: 0.5 });
+        ruido(0.22, { freq: 550, vol: 0.35, eco: true });
+      },
+      defesa() {
+        tom(1650, 0.09, { tipo: 'square', vol: 0.05 });
+        tom(2470, 0.12, { tipo: 'triangle', vol: 0.09, eco: true });
+        ruido(0.06, { filtro: 'highpass', freq: 3800, vol: 0.18 });
+        tom(150, 0.06, { ate: 80, vol: 0.3 });
+      },
+      queda() { tom(95, 0.3, { ate: 32, vol: 0.8, eco: true }); ruido(0.32, { freq: 320, vol: 0.45, eco: true }); },
+      fogo() { ruido(0.55, { filtro: 'bandpass', freq: 350, ate: 3200, q: 2, vol: 0.4, eco: true }); tom(110, 0.45, { tipo: 'sawtooth', ate: 520, vol: 0.12, corte: 1400 }); },
+      super() {
+        tom(55, 1.0, { tipo: 'sawtooth', ate: 880, vol: 0.14, corte: 2200, eco: true });
+        ruido(1.0, { filtro: 'bandpass', freq: 200, ate: 4500, q: 1.5, vol: 0.35 });
+        tom(90, 0.8, { ate: 28, vol: 0.9, atraso: 0.55, eco: true });
+        ruido(0.6, { freq: 700, vol: 0.5, atraso: 0.55, eco: true });
+      },
+      ko() { tom(110, 0.8, { ate: 28, vol: 0.95, eco: true }); ruido(0.7, { freq: 650, vol: 0.55, eco: true }); },
+      menu() { tom(880, 0.08, { tipo: 'square', vol: 0.07 }); tom(1320, 0.12, { tipo: 'square', vol: 0.07, atraso: 0.07 }); },
+      fase() { [523, 659, 784, 1047].forEach((f, i) => tom(f, 0.16, { tipo: 'square', vol: 0.08, atraso: i * 0.11, eco: true })); },
+      // Gritos: f0 = tom da voz (Kaito ~170, inimigos ~125, chefe ~85).
+      grito(f0, forte) { voz(f0 * rnd(0.95, 1.08), forte ? 0.32 : 0.2, VOGAL_A, forte ? 0.5 : 0.35, 0.75); },
+      dor(f0, longo) { voz(f0 * rnd(0.92, 1.05), longo ? 0.6 : 0.24, VOGAL_U, longo ? 0.5 : 0.38, longo ? 0.5 : 0.65); },
     };
   })();
 
@@ -88,21 +240,21 @@ window.LutaJogo = (function () {
     },
     limpar() { this.fila = this.fila.filter(e => e.t >= J.tick - 8); },
   };
-  const TECLAS = { KeyZ: 'soco', KeyJ: 'soco', KeyX: 'chute', KeyK: 'chute', KeyC: 'esp', KeyL: 'esp', Space: 'pulo', Enter: 'start', KeyP: 'pausa', Escape: 'pausa' };
+  const TECLAS = { KeyR: 'reiniciar', KeyZ: 'soco', KeyJ: 'soco', KeyX: 'chute', KeyK: 'chute', KeyC: 'esp', KeyL: 'esp', Space: 'pulo', Enter: 'start', KeyP: 'pausa', Escape: 'pausa' };
 
   // ---------- Personagens ----------
   const TIPOS = {
-    jogador: { nome: 'KAITO', hp: 130, esc: 1, cores: { pele: '#f1c27d', roupa: '#2563eb', calca: '#1d4ed8', faixa: '#111827', cabelo: '#1f1f1f', bandana: '#e63946', luva: '#e63946' } },
+    jogador: { nome: 'KAITO', hp: 130, esc: 1, cores: { pele: '#e8b48a', roupa: '#2f5fd0', calca: '#2f5fd0', faixa: '#141414', cabelo: '#1c1410', bandana: '#d62839', luva: '#c1121f', pes: '#e8b48a', manga: 'curta', gola: true, calcaLarga: true, cabeloTipo: 'espetado' } },
     capanga: { nome: 'Capanga', hp: 28, vel: 1.7, alcance: 62, cd: [70, 120], bloq: 0, pontos: 100, golpes: ['eSoco'],
-      cores: { pele: '#c68642', roupa: '#6b4f3a', calca: '#2b3a67', faixa: '#2a2a2a', cabelo: '#111', luva: '#c68642' } },
+      cores: { pele: '#c68642', roupa: '#6b4f3a', calca: '#2b3a67', faixa: '#2a2a2a', cabelo: '#111111', luva: '#c68642', pes: '#1f1f1f', manga: 'longa', cabeloTipo: 'curto', barba: 'rgba(40,25,15,.45)' } },
     brigao: { nome: 'Brigão', hp: 42, vel: 2.0, alcance: 78, cd: [55, 95], bloq: 0.25, pontos: 150, golpes: ['eSoco', 'eChute'],
-      cores: { pele: '#8d5524', roupa: '#2a9d8f', calca: '#333', faixa: '#222', cabelo: '#000', bandana: '#f4a261', luva: '#f4a261' } },
+      cores: { pele: '#8d5524', roupa: '#2a9d8f', calca: '#333333', faixa: '#222222', cabelo: '#000000', bandana: '#f4a261', luva: '#f4a261', pes: '#222222', manga: 'nenhuma', cabeloTipo: 'curto' } },
     ninja: { nome: 'Ninja', hp: 32, vel: 3.0, alcance: 78, cd: [50, 90], bloq: 0.15, pontos: 200, golpes: ['eChute', 'eVoadora'], atira: true,
-      cores: { pele: '#f1c27d', roupa: '#1b1b2f', calca: '#1b1b2f', faixa: '#7b2cbf', cabelo: '#1b1b2f', bandana: '#7b2cbf', luva: '#1b1b2f', mascara: true } },
+      cores: { pele: '#f1c27d', roupa: '#1b1b2f', calca: '#1b1b2f', faixa: '#7b2cbf', cabelo: '#1b1b2f', bandana: '#7b2cbf', luva: '#2a2a40', pes: '#111111', manga: 'longa', mascara: true } },
     brutamontes: { nome: 'Brutamontes', hp: 85, vel: 1.25, esc: 1.25, alcance: 74, cd: [70, 110], bloq: 0, pontos: 300, golpes: ['socoForte'], armadura: 2,
-      cores: { pele: '#e0ac69', roupa: '#e76f51', calca: '#264653', faixa: '#1d3557', cabelo: '#e0ac69', luva: '#444', careca: true } },
+      cores: { pele: '#e0ac69', roupa: '#e76f51', calca: '#264653', faixa: '#1d3557', cabelo: '#e0ac69', luva: '#444444', pes: '#222222', manga: 'nenhuma', colete: true, barba: '#5a3b1e' } },
     chefe: { nome: 'IMPERADOR VULCANO', hp: 440, vel: 2.0, esc: 1.35, alcance: 82, cd: [38, 72], bloq: 0.35, pontos: 5000, chefe: true,
-      cores: { pele: '#d9a066', roupa: '#7a0f1f', calca: '#2b0a10', faixa: '#ffd166', cabelo: '#f1f1f1', luva: '#ffd166', capa: '#3d0a12', cabeloLongo: true } },
+      cores: { pele: '#d9a066', roupa: '#7a0f1f', calca: '#2b0a10', faixa: '#e9b949', cabelo: '#ededed', luva: '#d9a066', capa: '#3d0a12', pes: '#2b1a0a', manga: 'longa', gola: true, calcaLarga: true, cabeloTipo: 'longo', barba: '#ededed', ouro: '#e9b949' } },
   };
 
   // Golpes: quadros de preparação (ini), ativos e de recuperação (rec);
@@ -145,6 +297,7 @@ window.LutaJogo = (function () {
     tela: 'titulo', tick: 0, tt: 0, fase: 0, onda: 0, fila: [], inis: [], proj: [], parts: [], textos: [],
     jog: null, pontos: 0, pontosFase: 0, congelar: 0, tremor: 0, lento: 0, flash: 0, superT: 0,
     aviso: null, travado: 0, trans: 0, chefe: null, recorde: 0, seq: 0, raio: 0,
+    mortes: 0, voltaFase1: false, confirma: -999,
   };
   try { J.recorde = Number(localStorage.getItem('luta_recorde')) || 0; } catch (e) {}
 
@@ -161,6 +314,7 @@ window.LutaJogo = (function () {
 
   function novoJogo() {
     J.pontos = 0;
+    J.mortes = 0;
     J.jog = novoLutador('jogador', 200, 1);
     comecarFase(0);
   }
@@ -174,6 +328,8 @@ window.LutaJogo = (function () {
     J.travado = 150;
     J.aviso = { txt: `FASE ${n + 1}`, sub: FASES[n].nome, t: 150, lute: true };
     Som.fase();
+    Som.musica(n);
+    Som.narrar(`Fase ${n + 1}`);
   }
   function reiniciarFase() {
     const p = J.jog;
@@ -192,11 +348,16 @@ window.LutaJogo = (function () {
   }
   const intocavel = f => f.invul > 0 || ['caido', 'levantar', 'ko'].includes(f.estado);
 
+  // Tom da voz de cada um (gritos sintetizados).
+  const vozDe = f => f === J.jog ? 170 : f.T.chefe ? 82 : f.tipo === 'brutamontes' ? 98 : f.tipo === 'ninja' ? 150 : 125;
+  const GRITA = { soco3: 1, chute: 0.5, rasteira: 0.7, voadora: 1, hadouken: 1, socoForte: 1, eVoadora: 1, investida: 1, pisao: 1, bCombo2: 1, bolaFogo: 1, bolaFogo3: 1, eChute: 0.4 };
+
   function iniciarGolpe(f, nome) {
     const g = GOLPES[nome];
     f.estado = 'golpe'; f.golpe = g; f.gt = 0; f.acertou = new Set(); f.encadear = null;
     if (!g.aereo) f.vx = 0;
     if (g.som || g.disparo) Som.vento();
+    if (GRITA[nome] && Math.random() < GRITA[nome]) Som.grito(vozDe(f), nome === 'hadouken' || f.T.chefe);
     if (g.superGolpe) { J.superT = g.ini; f.invul = g.ini + g.rec + 10; Som.super(); }
   }
 
@@ -265,6 +426,7 @@ window.LutaJogo = (function () {
       return;
     }
     alvo.hp -= g.dano;
+    if (alvo.hp > 0 && Math.random() < 0.55) Som.dor(vozDe(alvo));
     alvo.branco = 5;
     alvo.semApanhar = 0;
     faiscas(alvo.x - dir * 14 * alvo.s, yFx, g.pesado ? '#ffd166' : '#fff3b0', g.pesado ? 14 : 9);
@@ -304,10 +466,11 @@ window.LutaJogo = (function () {
     f.vz = 9; f.z = Math.max(f.z, 1); f.vx = dir * 6.5;
     J.congelar = 10; J.tremor = 10;
     Som.ko();
-    if (f === J.jog) { J.lento = 50; Rede.vibrar(400); return; }
+    Som.dor(vozDe(f), true);
+    if (f === J.jog) { J.lento = 50; Rede.vibrar(400); Som.narrar('K.O.!', { rate: 0.8 }); return; }
     J.pontos += f.T.pontos;
     texto(f.x, CHAO - 160 * f.s, `+${f.T.pontos}`, '#ffd166', 26);
-    if (f.T.chefe) { J.lento = 120; J.flash = 1; }
+    if (f.T.chefe) { J.lento = 120; J.flash = 1; Som.musica(null); Som.narrar('K.O.!', { rate: 0.8 }); }
   }
 
   function disparar(f, d) {
@@ -328,7 +491,7 @@ window.LutaJogo = (function () {
   }
 
   function especial(p) {
-    if (p.en >= 100) { p.en = 0; iniciarGolpe(p, 'super'); texto(p.x, CHAO - 190, 'TEMPESTADE DO DRAGÃO!', '#7dd3fc', 30); return; }
+    if (p.en >= 100) { p.en = 0; iniciarGolpe(p, 'super'); texto(p.x, CHAO - 190, 'TEMPESTADE DO DRAGÃO!', '#7dd3fc', 30); Som.narrar('Tempestade do Dragão!', { rate: 1.15, pitch: 0.7 }); return; }
     if (p.en >= 25) { p.en -= 25; iniciarGolpe(p, 'hadouken'); return; }
     texto(p.x, CHAO - 170, 'Sem energia!', '#9aa6ba', 18);
   }
@@ -416,7 +579,9 @@ window.LutaJogo = (function () {
     if (Math.abs(dx) > 0.2) {
       p.estado = 'andar';
       p.vx = dx * (p.guarda ? 2.3 : 3.5);
+      const antes = Math.floor(p.passo / Math.PI);
       p.passo += Math.abs(p.vx) * 0.09;
+      if (Math.floor(p.passo / Math.PI) !== antes) Som.passo();
     } else { p.estado = 'parado'; p.vx = 0; }
   }
 
@@ -443,6 +608,8 @@ window.LutaJogo = (function () {
       e.x = W + 80; e.face = -1; e.cd = 150;
       J.aviso = { txt: 'CHEFÃO', sub: e.T.nome, t: 170, chefe: true };
       Som.fase();
+      Som.musica(3);
+      Som.narrar('Chefão! Imperador Vulcano!', { rate: 0.9 });
     }
   }
 
@@ -593,14 +760,28 @@ window.LutaJogo = (function () {
     if (J.tremor > 0.3) J.tremor *= 0.85; else J.tremor = 0;
     if (J.flash > 0) J.flash = Math.max(0, J.flash - 0.05);
     if (J.superT > 0) J.superT--;
+    if (J.aviso && J.aviso.lute && J.aviso.t === 50) Som.narrar('Lute!', { rate: 1.1 });
     if (J.aviso && --J.aviso.t <= 0) J.aviso = null;
     [J.jog, ...J.inis].forEach(f => { if (f) f.hpVisto += (f.hp - f.hpVisto) * 0.06; });
   }
 
   // ---------- Passo do jogo (60 por segundo) ----------
+  // Reiniciar (tecla R ou botão ↺ do celular): pede confirmação — apertar
+  // de novo em até 3 s volta para a tela inicial, pronta para outro aluno.
+  function voltarAoTitulo() {
+    J.tela = 'titulo'; J.confirma = -999; J.mortes = 0; J.voltaFase1 = false;
+    J.inis = []; J.proj = []; J.chefe = null;
+    Som.musica(null);
+    Som.menu();
+  }
+
   function passo() {
     J.tick++;
     Rede.enviarEstado(false);
+    if (Entrada.pegar('reiniciar') && J.tela !== 'titulo') {
+      if (J.tick - J.confirma < 180) voltarAoTitulo();
+      else { J.confirma = J.tick; Som.menu(); }
+    }
     switch (J.tela) {
       case 'titulo':
         if (Entrada.pegar('soco', 'start', 'chute', 'esp')) { Som.menu(); novoJogo(); }
@@ -610,13 +791,15 @@ window.LutaJogo = (function () {
         break;
       case 'derrota':
         atualizarEfeitos();
-        if (--J.tt <= 0) J.tela = 'titulo';
+        // 2ª derrota seguida: volta sozinho para a fase 1.
+        if (J.voltaFase1) { if (--J.tt <= 0) { J.voltaFase1 = false; novoJogo(); } break; }
+        if (--J.tt <= 0) voltarAoTitulo();
         else if (J.tt < 560 && Entrada.pegar('soco', 'start')) { Som.menu(); reiniciarFase(); }
         break;
       case 'vitoria':
         atualizarEfeitos();
         if (J.tt > 0) J.tt--;
-        else if (Entrada.pegar('soco', 'start')) { Som.menu(); J.tela = 'titulo'; }
+        else if (Entrada.pegar('soco', 'start')) voltarAoTitulo();
         if (J.tick % 20 === 0) faiscas(rnd(100, W - 100), rnd(80, 260), ['#ffd166', '#7dd3fc', '#ff8fa3'][J.tick % 3], 16);
         break;
       default: atualizarJogo();
@@ -645,7 +828,16 @@ window.LutaJogo = (function () {
     J.inis = J.inis.filter(e => !(e.estado === 'ko' && e.et > 60));
 
     const p = J.jog;
-    if (p.estado === 'ko' && p.et > 70) { J.tela = 'derrota'; J.tt = 600; return; }
+    if (p.estado === 'ko' && p.et > 70) {
+      J.tela = 'derrota';
+      J.mortes++;
+      Som.musica(null);
+      if (J.mortes >= 2) {
+        J.voltaFase1 = true; J.tt = 300;
+        Som.narrar('Duas derrotas seguidas. De volta à fase um.');
+      } else J.tt = 600;
+      return;
+    }
     if (p.estado === 'ko') return;
 
     if (J.trans > 0) {
@@ -668,7 +860,9 @@ window.LutaJogo = (function () {
         J.pontos += p.hp * 10;
         J.aviso = { txt: 'FASE CONCLUÍDA!', sub: `Bônus de vida: ${p.hp * 10} · +45 de vida`, t: 170 };
         p.estado = 'vitoria'; p.vx = 0;
+        J.mortes = 0;
         Som.fase();
+        Som.narrar('Fase concluída!');
       } else {
         J.trans = 160;
         J.aviso = { txt: 'K.O.!', sub: 'O Imperador caiu!', t: 160 };
@@ -683,6 +877,7 @@ window.LutaJogo = (function () {
     if (J.pontos > J.recorde) { J.recorde = J.pontos; J.novoRecorde = true; try { localStorage.setItem('luta_recorde', String(J.recorde)); } catch (e) {} }
     else J.novoRecorde = false;
     Som.fase();
+    Som.narrar('Você venceu!');
   }
 
   // ---------- Desenho dos lutadores ----------
@@ -743,21 +938,64 @@ window.LutaJogo = (function () {
     return P;
   }
 
+  // Movimento suave: a pose desenhada persegue a pose-alvo em vez de pular
+  // direto para ela (golpe e dor perseguem mais rápido).
+  function suavizar(f, P) {
+    if (!f.pv) { f.pv = { lean: P.lean, cab: P.cab, bF: P.bF.slice(), bT: P.bT.slice(), pF: P.pF.slice(), pT: P.pT.slice() }; return f.pv; }
+    const k = f.estado === 'golpe' || f.estado === 'dor' ? 0.6 : 0.3, v = f.pv;
+    v.lean += (P.lean - v.lean) * k; v.cab += (P.cab - v.cab) * k;
+    ['bF', 'bT', 'pF', 'pT'].forEach(n => { v[n][0] += (P[n][0] - v[n][0]) * k; v[n][1] += (P[n][1] - v[n][1]) * k; });
+    return v;
+  }
+
+  const CONTORNO = '#15100d';
+  function escurecer(hex, k) {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgb(${Math.round(((n >> 16) & 255) * k)},${Math.round(((n >> 8) & 255) * k)},${Math.round((n & 255) * k)})`;
+  }
+  // Cápsula afunilada de a (raio ra) até b (raio rb); entra no caminho atual.
+  function capsula(a, b, ra, rb) {
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.001, nx = -dy / d, ny = dx / d;
+    ctx.moveTo(a.x + nx * ra, a.y + ny * ra); ctx.lineTo(b.x + nx * rb, b.y + ny * rb);
+    ctx.lineTo(b.x - nx * rb, b.y - ny * rb); ctx.lineTo(a.x - nx * ra, a.y - ny * ra); ctx.closePath();
+    ctx.moveTo(a.x + ra, a.y); ctx.arc(a.x, a.y, ra, 0, Math.PI * 2);
+    ctx.moveTo(b.x + rb, b.y); ctx.arc(b.x, b.y, rb, 0, Math.PI * 2);
+  }
+  // Parte do corpo: contorno escuro, cor, sombra embaixo/direita e brilho
+  // em cima/esquerda (luz vindo de cima).
+  function parte(a, b, ra, rb, cor, s) {
+    const o = 1.8 * s;
+    ctx.fillStyle = CONTORNO; ctx.beginPath(); capsula(a, b, ra + o, rb + o); ctx.fill();
+    ctx.fillStyle = cor; ctx.beginPath(); capsula(a, b, ra, rb); ctx.fill();
+    ctx.save();
+    ctx.beginPath(); capsula(a, b, ra, rb); ctx.clip();
+    ctx.fillStyle = 'rgba(0,0,0,.24)';
+    ctx.beginPath(); capsula({ x: a.x + ra * 0.6, y: a.y + ra * 0.6 }, { x: b.x + rb * 0.6, y: b.y + rb * 0.6 }, ra, rb); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.17)';
+    ctx.beginPath(); capsula({ x: a.x - ra * 0.45, y: a.y - ra * 0.45 }, { x: b.x - rb * 0.45, y: b.y - rb * 0.45 }, ra * 0.35, rb * 0.35); ctx.fill();
+    ctx.restore();
+  }
+  function circulo(p, r, cor, s) {
+    ctx.fillStyle = CONTORNO; ctx.beginPath(); ctx.arc(p.x, p.y, r + 1.8 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.beginPath(); ctx.arc(p.x - r * 0.35, p.y - r * 0.35, r * 0.4, 0, Math.PI * 2); ctx.fill();
+  }
+
   function desenharLutador(f) {
-    const s = f.s, fc = f.face, P = poseDe(f);
+    const s = f.s, fc = f.face, P = suavizar(f, poseDe(f));
     let c = f.T.cores;
-    if (f.branco > 0) c = { pele: '#fff', roupa: '#fff', calca: '#fff', faixa: '#fff', cabelo: '#fff', bandana: '#fff', luva: '#fff', capa: '#fff', mascara: c.mascara, careca: c.careca, cabeloLongo: c.cabeloLongo };
+    if (f.branco > 0) c = Object.assign({}, c, { pele: '#ffffff', roupa: '#ffffff', calca: '#ffffff', faixa: '#ffffff', cabelo: '#ffffff', bandana: '#ffffff', luva: '#ffffff', capa: '#ffffff', ouro: '#ffffff', pes: '#ffffff', barba: '#ffffff' });
     const L1 = 33 * s, L2 = 33 * s, TR = 48 * s, A1 = 25 * s, A2 = 25 * s, CAB = 13 * s;
     const pt = (o, ang, len) => ({ x: o.x + Math.sin(ang * RAD) * len * fc, y: o.y + Math.cos(ang * RAD) * len });
     const H0 = { x: 0, y: 0 };
     const jF = pt(H0, P.pF[0], L1), peF = pt(jF, P.pF[0] + P.pF[1], L2);
     const jT = pt(H0, P.pT[0], L1), peT = pt(jT, P.pT[0] + P.pT[1], L2);
-    const baixo = Math.max(jF.y, peF.y, jT.y, peT.y);
+    const baixo = Math.max(jF.y, peF.y, jT.y, peT.y) + 3 * s;
     const deitado = f.estado === 'caido' || f.estado === 'ko';
 
-    // sombra
+    // sombra no chão
     ctx.save();
-    ctx.globalAlpha = clamp(0.35 - f.z / 600, 0.1, 0.35);
+    ctx.globalAlpha = clamp(0.4 - f.z / 600, 0.1, 0.4);
     ctx.fillStyle = '#000';
     ctx.beginPath(); ctx.ellipse(f.x, CHAO + 4, (deitado ? 70 : 34) * s, 8 * s, 0, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
@@ -782,83 +1020,227 @@ window.LutaJogo = (function () {
       ctx.restore();
     }
 
-    const S = { x: Math.sin(P.lean * RAD) * TR * fc, y: -Math.cos(P.lean * RAD) * TR };
-    const C = { x: S.x + Math.sin((P.lean + P.cab) * RAD) * (CAB + 7 * s) * fc, y: S.y - Math.cos((P.lean + P.cab) * RAD) * (CAB + 7 * s) };
-    const ST = { x: S.x - 5 * s * fc, y: S.y + 2 * s };
-    const cT = pt(ST, P.bT[0], A1), mT = pt(cT, P.bT[0] + P.bT[1], A2);
-    const cF = pt(S, P.bF[0], A1), mF = pt(cF, P.bF[0] + P.bF[1], A2);
+    // Eixo do tronco (u, para cima) e a "frente" do corpo (nf).
+    const u = { x: Math.sin(P.lean * RAD) * fc, y: -Math.cos(P.lean * RAD) };
+    const nf = { x: Math.cos(P.lean * RAD) * fc, y: Math.sin(P.lean * RAD) };
+    const em = (t, k) => ({ x: u.x * TR * t + nf.x * k, y: u.y * TR * t + nf.y * k });
+    const S = em(1, 0);
+    const ac = P.lean + P.cab;
+    const C = { x: S.x + Math.sin(ac * RAD) * (CAB + 9 * s) * fc, y: S.y - Math.cos(ac * RAD) * (CAB + 9 * s) };
+    const cab = (fx, fy) => ({ x: C.x + fx * s * fc, y: C.y + fy * s }); // ponto no rosto (fx > 0 = para a frente)
+    const oF = em(0.93, 2 * s), oT = em(0.93, -5 * s);
+    const cT = pt(oT, P.bT[0], A1), mT = pt(cT, P.bT[0] + P.bT[1], A2);
+    const cF = pt(oF, P.bF[0], A1), mF = pt(cF, P.bF[0] + P.bF[1], A2);
 
-    const linha = (a, b, w, cor) => { ctx.strokeStyle = cor; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
-    const bola = (p, r, cor) => { ctx.fillStyle = cor; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill(); };
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    function braco(o, cot, mao) {
+      const sup = c.manga === 'nenhuma' ? c.pele : c.roupa;
+      const ant = c.manga === 'longa' ? c.roupa : c.pele;
+      parte(o, cot, 7.2 * s, 5.8 * s, sup, s);
+      parte(cot, mao, 6.2 * s, 4.6 * s, ant, s);
+      if (c.ouro) { ctx.strokeStyle = c.ouro; ctx.lineWidth = 3 * s; ctx.beginPath(); ctx.arc(mao.x + (cot.x - mao.x) * 0.25, mao.y + (cot.y - mao.y) * 0.25, 5.5 * s, 0, Math.PI * 2); ctx.stroke(); }
+      circulo(mao, 7 * s, c.luva, s);
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.2 * s;
+      ctx.beginPath(); ctx.moveTo(mao.x - 3 * s, mao.y - 1 * s); ctx.lineTo(mao.x + 3 * s, mao.y - 1 * s); ctx.stroke();
+    }
+    function perna(joelho, pe) {
+      const larga = c.calcaLarga;
+      const dedo = { x: pe.x + fc * 12 * s, y: pe.y + 2 * s };
+      parte(pe, dedo, 4.8 * s, 3.6 * s, c.pes, s);
+      parte(H0, joelho, 10.5 * s, 8 * s, c.calca, s);
+      parte(joelho, pe, larga ? 8 * s : 7.2 * s, larga ? 8.6 * s : 5 * s, c.calca, s);
+    }
 
     // capa do chefe (atrás de tudo)
     if (c.capa) {
-      const balanco = Math.sin(J.tick * 0.08) * 8 * s;
+      const bal = Math.sin(J.tick * 0.08) * 8 * s;
+      ctx.fillStyle = CONTORNO;
+      ctx.beginPath();
+      ctx.moveTo(S.x + 6 * s * fc, S.y - 2 * s);
+      ctx.lineTo(S.x - 18 * s * fc, S.y - 2 * s);
+      ctx.quadraticCurveTo(-46 * s * fc + bal, 20 * s, -40 * s * fc + bal, 62 * s);
+      ctx.lineTo(4 * s * fc, 40 * s);
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = c.capa;
       ctx.beginPath();
-      ctx.moveTo(S.x + 8 * s * fc, S.y);
-      ctx.lineTo(S.x - 14 * s * fc, S.y);
-      ctx.quadraticCurveTo(-40 * s * fc + balanco, 10 * s, -36 * s * fc + balanco, 40 * s);
-      ctx.lineTo(4 * s * fc, 30 * s);
+      ctx.moveTo(S.x + 4 * s * fc, S.y);
+      ctx.lineTo(S.x - 16 * s * fc, S.y);
+      ctx.quadraticCurveTo(-43 * s * fc + bal, 20 * s, -37 * s * fc + bal, 58 * s);
+      ctx.lineTo(4 * s * fc, 38 * s);
       ctx.closePath(); ctx.fill();
     }
-    // braço e perna de trás
-    linha(ST, cT, 11 * s, c.roupa); linha(cT, mT, 10 * s, c.pele); bola(mT, 7 * s, c.luva);
-    linha(H0, jT, 15 * s, c.calca); linha(jT, peT, 12 * s, c.calca);
-    bola(peT, 6.5 * s, '#222');
+
+    // rastro do golpe (mão ou pé que está batendo)
+    const g = f.estado === 'golpe' && f.golpe;
+    const ativo = g && g.dano && f.gt > g.ini && f.gt <= g.ini + g.ativo + 2;
+    const ponta = !ativo ? null : ['chute', 'rasteira', 'voadora'].includes(g.pose) ? peF : g.pose === 'soco2' ? mT : mF;
+    if (ponta) { f.rastro = f.rastro || []; f.rastro.push({ x: ponta.x, y: ponta.y }); if (f.rastro.length > 6) f.rastro.shift(); } else f.rastro = [];
+
+    braco(oT, cT, mT);
+    if (c.ouro) circulo(oT, 8 * s, c.ouro, s);
+    perna(jT, peT);
+
     // tronco
-    ctx.fillStyle = c.roupa;
-    ctx.beginPath();
-    const nx = Math.cos(P.lean * RAD), ny = Math.sin(P.lean * RAD);
-    ctx.moveTo(-11 * s * nx * fc, -11 * s * ny);
-    ctx.lineTo(11 * s * nx * fc, 11 * s * ny);
-    ctx.lineTo(S.x + 15 * s * nx * fc, S.y + 15 * s * ny);
-    ctx.lineTo(S.x - 15 * s * nx * fc, S.y - 15 * s * ny);
-    ctx.closePath(); ctx.fill();
-    if (c.careca) { // regata: braços de fora
-      ctx.fillStyle = c.pele;
-      ctx.beginPath(); ctx.arc(S.x, S.y + 6 * s, 9 * s, 0, Math.PI * 2); ctx.fill();
+    const fr = [em(0, 12 * s), em(0.45, 10.5 * s), em(0.8, 16 * s), em(1, 11 * s)];
+    const tr = [em(1, -15 * s), em(0.8, -13 * s), em(0.45, -10 * s), em(0, -12 * s)];
+    const meio = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 });
+    const caminhoTronco = () => {
+      ctx.beginPath();
+      ctx.moveTo(fr[0].x, fr[0].y);
+      ctx.quadraticCurveTo(fr[1].x, fr[1].y, meio(fr[1], fr[2]).x, meio(fr[1], fr[2]).y);
+      ctx.quadraticCurveTo(fr[2].x, fr[2].y, fr[3].x, fr[3].y);
+      ctx.lineTo(tr[0].x, tr[0].y);
+      ctx.quadraticCurveTo(tr[1].x, tr[1].y, meio(tr[1], tr[2]).x, meio(tr[1], tr[2]).y);
+      ctx.quadraticCurveTo(tr[2].x, tr[2].y, tr[3].x, tr[3].y);
+      ctx.closePath();
+    };
+    caminhoTronco();
+    ctx.lineWidth = 3.6 * s; ctx.strokeStyle = CONTORNO; ctx.stroke();
+    ctx.fillStyle = c.colete ? c.pele : c.roupa; ctx.fill();
+    ctx.save();
+    caminhoTronco(); ctx.clip();
+    const poli = (pts, cor) => { ctx.fillStyle = cor; ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.closePath(); ctx.fill(); };
+    if (c.colete) { // colete aberto: músculos à mostra
+      poli([em(0, -14 * s), em(1.1, -16 * s), em(1.1, -2 * s), em(0, -4 * s)], c.roupa);
+      poli([em(0, 14 * s), em(1.1, 17 * s), em(1.1, 12 * s), em(0, 9 * s)], c.roupa);
+      ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1.6 * s;
+      const pe1 = em(0.72, 2 * s), pe2 = em(0.72, 13 * s);
+      ctx.beginPath(); ctx.moveTo(pe1.x, pe1.y); ctx.quadraticCurveTo(em(0.62, 8 * s).x, em(0.62, 8 * s).y, pe2.x, pe2.y); ctx.stroke();
+      [0.3, 0.45].forEach(t => { const a1 = em(t, 2 * s), a2 = em(t, 10 * s); ctx.beginPath(); ctx.moveTo(a1.x, a1.y); ctx.lineTo(a2.x, a2.y); ctx.stroke(); });
     }
-    linha({ x: -12 * s * nx * fc, y: -12 * s * ny - 2 * s }, { x: 12 * s * nx * fc, y: 12 * s * ny - 2 * s }, 6 * s, c.faixa);
-    // perna da frente
-    linha(H0, jF, 15 * s, c.calca); linha(jF, peF, 12 * s, c.calca);
-    bola(peF, 6.5 * s, '#222');
-    // cabeça
-    linha(S, C, 8 * s, c.pele);
-    if (c.cabeloLongo) {
-      ctx.fillStyle = c.cabelo;
-      ctx.beginPath(); ctx.ellipse(C.x - 8 * s * fc, C.y + 10 * s, 9 * s, 20 * s, 0, 0, Math.PI * 2); ctx.fill();
+    if (c.gola) { // kimono: abertura em V no peito
+      poli([em(1.05, 9 * s), em(1.05, -3 * s), em(0.5, 6 * s)], c.pele);
+      ctx.strokeStyle = escurecer(c.roupa === '#ffffff' ? '#ffffff' : c.roupa, 0.6); ctx.lineWidth = 2.4 * s;
+      const g1 = em(1.05, -3 * s), g2 = em(0.5, 6 * s), g3 = em(1.05, 10 * s);
+      ctx.beginPath(); ctx.moveTo(g1.x, g1.y); ctx.lineTo(g2.x, g2.y); ctx.lineTo(g3.x, g3.y); ctx.stroke();
     }
-    bola(C, CAB, c.mascara ? c.roupa : c.pele);
-    if (!c.careca && !c.mascara) {
-      ctx.fillStyle = c.cabelo;
-      ctx.beginPath(); ctx.arc(C.x - 1 * s * fc, C.y - 2 * s, CAB + 1, Math.PI, Math.PI * 2); ctx.fill();
+    poli([em(-0.1, -20 * s), em(1.1, -20 * s), em(1.1, -8 * s), em(-0.1, -6 * s)], 'rgba(0,0,0,.22)');
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    const brilho = em(0.72, 6 * s);
+    ctx.beginPath(); ctx.ellipse(brilho.x, brilho.y, 6 * s, 10 * s, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // faixa na cintura, com nó e pontas balançando
+    const f1 = em(0.07, 13 * s), f2 = em(0.07, -13 * s), no = em(0.07, 10 * s);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = CONTORNO; ctx.lineWidth = 8.6 * s; ctx.beginPath(); ctx.moveTo(f1.x, f1.y); ctx.lineTo(f2.x, f2.y); ctx.stroke();
+    ctx.strokeStyle = c.faixa; ctx.lineWidth = 5.2 * s; ctx.beginPath(); ctx.moveTo(f1.x, f1.y); ctx.lineTo(f2.x, f2.y); ctx.stroke();
+    if (c.gola) {
+      const bal = Math.sin(J.tick * 0.15 + f.id) * 3 * s - f.vx * 1.5 * fc * s;
+      [[4, 17], [8, 15]].forEach(([dx, dy]) => {
+        ctx.strokeStyle = CONTORNO; ctx.lineWidth = 5.6 * s;
+        ctx.beginPath(); ctx.moveTo(no.x, no.y); ctx.quadraticCurveTo(no.x + dx * s * fc, no.y + dy * 0.5 * s, no.x + dx * s * fc + bal, no.y + dy * s); ctx.stroke();
+        ctx.strokeStyle = c.faixa; ctx.lineWidth = 3 * s; ctx.stroke();
+      });
+      circulo(no, 3.4 * s, c.faixa, s);
     }
-    if (c.mascara) { // fresta dos olhos
-      ctx.fillStyle = c.pele;
-      ctx.fillRect(C.x + (fc > 0 ? -2 : -12) * s, C.y - 4 * s, 14 * s, 6 * s);
+
+    perna(jF, peF);
+
+    // pescoço e cabeça
+    parte(S, { x: S.x + (C.x - S.x) * 0.55, y: S.y + (C.y - S.y) * 0.55 }, 6.2 * s, 5.8 * s, c.pele, s);
+    if (c.cabeloTipo === 'longo') {
+      const bal = Math.sin(J.tick * 0.07 + f.id) * 4 * s;
+      parte(cab(-6, -6), { x: C.x - 20 * s * fc + bal, y: C.y + 26 * s }, 10 * s, 5 * s, c.cabelo, s);
     }
-    // olho
-    ctx.fillStyle = '#111';
-    ctx.fillRect(C.x + 5 * s * fc - 1.5 * s, C.y - 2 * s, 3 * s, 3 * s);
-    if (c.bandana) {
-      linha({ x: C.x - CAB * fc, y: C.y - 5 * s }, { x: C.x + CAB * fc, y: C.y - 7 * s }, 4 * s, c.bandana);
-      const onda = Math.sin(J.tick * 0.25 + f.id) * 5 * s;
-      linha({ x: C.x - CAB * fc, y: C.y - 5 * s }, { x: C.x - (CAB + 16 * s) * fc, y: C.y + onda }, 3 * s, c.bandana);
-      linha({ x: C.x - CAB * fc, y: C.y - 5 * s }, { x: C.x - (CAB + 13 * s) * fc, y: C.y + 6 * s + onda }, 3 * s, c.bandana);
+    const queixo = cab(4.5, 9.5);
+    const caminhoCabeca = extra => {
+      ctx.beginPath();
+      ctx.ellipse(C.x, C.y, 11.5 * s + extra, 13.2 * s + extra, 0, 0, Math.PI * 2);
+      capsula({ x: C.x + 1 * s * fc, y: C.y + 2 * s }, queixo, 9 * s + extra, 6 * s + extra);
+    };
+    caminhoCabeca(1.8 * s); ctx.fillStyle = CONTORNO; ctx.fill();
+    caminhoCabeca(0); ctx.fillStyle = c.mascara ? c.roupa : c.pele; ctx.fill();
+    ctx.save(); caminhoCabeca(0); ctx.clip();
+    ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(C.x - 6 * s * fc, C.y + 4 * s, 9 * s, 14 * s, 0, 0, Math.PI * 2); ctx.fill();
+    if (c.mascara) { ctx.fillStyle = c.pele; const m = cab(6, -1); ctx.fillRect(m.x - 7 * s, m.y - 4 * s, 14 * s, 7 * s); }
+    ctx.restore();
+    circulo(cab(-2.5, 1.5), 3.2 * s, c.mascara ? c.roupa : escurecer(c.pele, 0.88), s); // orelha
+
+    // cabelo
+    const cor = c.cabelo;
+    if (c.cabeloTipo === 'espetado') {
+      ctx.beginPath();
+      for (let i = 0; i <= 10; i++) {
+        const ang = (150 + i * 17) * RAD, r = (i % 2 ? 19 : 12.5) * s, atras = i % 2 ? -4 * s : 0;
+        const p = { x: C.x + (Math.cos(ang) * r + atras) * fc, y: C.y + Math.sin(ang) * r - 1 * s };
+        if (i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
+      }
+      ctx.lineTo(C.x + 6 * s * fc, C.y - 3 * s); ctx.lineTo(C.x - 8 * s * fc, C.y + 6 * s);
+      ctx.closePath();
+      ctx.lineWidth = 3 * s; ctx.strokeStyle = CONTORNO; ctx.stroke();
+      ctx.fillStyle = cor; ctx.fill();
+    } else if (c.cabeloTipo === 'curto' || c.cabeloTipo === 'longo') {
+      ctx.beginPath();
+      ctx.moveTo(C.x - 12 * s * fc, C.y + 5 * s);
+      ctx.quadraticCurveTo(C.x - 14 * s * fc, C.y - 15 * s, C.x + 2 * s * fc, C.y - 15 * s);
+      ctx.quadraticCurveTo(C.x + 12 * s * fc, C.y - 13 * s, C.x + 11 * s * fc, C.y - 5 * s);
+      ctx.lineTo(C.x - 4 * s * fc, C.y - 7 * s);
+      ctx.lineTo(C.x - 6 * s * fc, C.y + 5 * s);
+      ctx.closePath();
+      ctx.lineWidth = 3 * s; ctx.strokeStyle = CONTORNO; ctx.stroke();
+      ctx.fillStyle = cor; ctx.fill();
     }
-    if (f.tipo === 'brutamontes') { // barba
-      ctx.fillStyle = '#5a3b1e';
-      ctx.beginPath(); ctx.arc(C.x + 3 * s * fc, C.y + 6 * s, 8 * s, 0, Math.PI); ctx.fill();
+    if (c.barba) {
+      ctx.fillStyle = c.barba;
+      ctx.beginPath(); capsula(cab(0, 7), cab(5, 12 + (c.cabeloTipo === 'longo' ? 6 : 0)), 7 * s, 4.5 * s); ctx.fill();
     }
-    // braço da frente
-    linha(S, cF, 11 * s, c.careca ? c.pele : c.roupa); linha(cF, mF, 10 * s, c.pele); bola(mF, 7.5 * s, c.luva);
+
+    // rosto: olho, sobrancelha, nariz, boca
+    const olho = cab(6.2, -1.5);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(olho.x, olho.y, 2.7 * s, 2 * s, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(olho.x + 0.9 * s * fc, olho.y, 1.3 * s, 0, Math.PI * 2); ctx.fill();
+    const bravo = f !== J.jog || f.estado === 'golpe';
+    const sb1 = cab(2.5, bravo ? -6.5 : -5.5), sb2 = cab(9.5, bravo ? -4 : -5.5);
+    ctx.strokeStyle = c.mascara ? c.roupa : CONTORNO; ctx.lineWidth = (f.T.chefe || f.tipo === 'brutamontes' ? 2.6 : 2) * s;
+    ctx.beginPath(); ctx.moveTo(sb1.x, sb1.y); ctx.lineTo(sb2.x, sb2.y); ctx.stroke();
+    if (!c.mascara) {
+      const n1 = cab(10.5, -1), n2 = cab(13, 3.5), n3 = cab(10, 4.5);
+      ctx.strokeStyle = escurecer(c.pele === '#ffffff' ? '#ffffff' : c.pele, 0.7); ctx.lineWidth = 1.4 * s;
+      ctx.beginPath(); ctx.moveTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y); ctx.lineTo(n3.x, n3.y); ctx.stroke();
+      const grita = f.estado === 'dor' || deitado || (g && f.gt > g.ini - 3 && f.gt <= g.ini + g.ativo + 4);
+      const boca = cab(8, 8.5);
+      if (grita) { ctx.fillStyle = '#3a0d0d'; ctx.beginPath(); ctx.ellipse(boca.x, boca.y, 2.4 * s, 2.8 * s, 0, 0, Math.PI * 2); ctx.fill(); }
+      else { const b2 = cab(11, 8); ctx.strokeStyle = CONTORNO; ctx.lineWidth = 1.4 * s; ctx.beginPath(); ctx.moveTo(boca.x - 2 * s * fc, boca.y); ctx.lineTo(b2.x, b2.y); ctx.stroke(); }
+    }
+    if (f.tipo === 'brutamontes') { // cicatriz
+      const k1 = cab(3, -9), k2 = cab(8, 2);
+      ctx.strokeStyle = '#a0522d'; ctx.lineWidth = 1.4 * s; ctx.beginPath(); ctx.moveTo(k1.x, k1.y); ctx.lineTo(k2.x, k2.y); ctx.stroke();
+    }
+
+    // bandana / diadema
+    if (c.bandana || c.ouro) {
+      const b1 = cab(-12, -4), b2 = cab(11.5, -7.5), corB = c.ouro || c.bandana;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = CONTORNO; ctx.lineWidth = 7.4 * s; ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke();
+      ctx.strokeStyle = corB; ctx.lineWidth = 4.4 * s; ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.stroke();
+      if (c.ouro) {
+        poli([cab(6, -8), cab(9, -17), cab(12, -8)], c.ouro);
+      } else {
+        const onda = Math.sin(J.tick * 0.25 + f.id) * 5 * s - f.vx * 2 * s;
+        [[18, 0], [15, 7]].forEach(([dx, dy]) => {
+          ctx.strokeStyle = CONTORNO; ctx.lineWidth = 5.4 * s;
+          ctx.beginPath(); ctx.moveTo(b1.x, b1.y); ctx.quadraticCurveTo(b1.x - dx * 0.5 * s * fc, b1.y + dy * 0.5 * s, b1.x - dx * s * fc, b1.y + dy * s + onda); ctx.stroke();
+          ctx.strokeStyle = corB; ctx.lineWidth = 3 * s; ctx.stroke();
+        });
+      }
+    }
+
+    braco(oF, cF, mF);
+    if (c.ouro) circulo(oF, 8.5 * s, c.ouro, s);
+
+    if (f.rastro && f.rastro.length > 1) {
+      ctx.lineCap = 'round';
+      for (let i = 1; i < f.rastro.length; i++) {
+        const k = i / f.rastro.length;
+        ctx.strokeStyle = `rgba(255,255,255,${k * 0.5})`; ctx.lineWidth = k * 14 * s;
+        ctx.beginPath(); ctx.moveTo(f.rastro[i - 1].x, f.rastro[i - 1].y); ctx.lineTo(f.rastro[i].x, f.rastro[i].y); ctx.stroke();
+      }
+    }
     ctx.restore();
 
     // vida dos inimigos comuns (o chefe tem a barra grande)
     if (f !== J.jog && !f.T.chefe && f.estado !== 'ko' && f.hp < f.T.hp) {
-      const w = 46, y = CHAO - f.z - 170 * s;
+      const w = 46, y = CHAO - f.z - 172 * s;
       ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(f.x - w / 2 - 1, y - 1, w + 2, 6);
       ctx.fillStyle = '#ff5c5c'; ctx.fillRect(f.x - w / 2, y, w * f.hp / f.T.hp, 4);
     }
@@ -1091,10 +1473,17 @@ window.LutaJogo = (function () {
       '⌨ Setas: mover · ↑ ou ESPAÇO: pular · ↓: agachar',
       'Z: soco (3x = combo) · X: chute · ↓ + X: rasteira',
       'C: especial (bola de energia) · energia cheia = SUPER',
-      'Andar para TRÁS defende · P: pausa · M: som · F: tela cheia',
+      'Andar para TRÁS defende · P: pausa · R: reiniciar · M: som · F: tela cheia',
     ];
     linhas.forEach((l, i) => txt(l, W / 2, 372 + i * 26, 15, '#cbd5e1', 'center'));
     if (J.recorde) txt(`RECORDE: ${J.recorde}`, W / 2, 486, 18, '#ffd166', 'center');
+    avisoSom(520);
+  }
+
+  // O navegador deixa o jogo mudo até alguém clicar NESTE computador.
+  function avisoSom(y) {
+    if (Som.ativo() || !Som.ligado()) return;
+    txt('🔇 Clique na tela do computador para ligar o som', W / 2, y, 15, J.tick % 60 < 40 ? '#ffd166' : '#9aa6ba', 'center');
   }
 
   function desenhar() {
@@ -1114,17 +1503,28 @@ window.LutaJogo = (function () {
     if (J.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${J.flash})`; ctx.fillRect(0, 0, W, H); }
     desenharHud();
     desenharAviso();
+    avisoSom(H - 70);
+    if (J.tick - J.confirma < 180) {
+      ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fillRect(0, H / 2 - 50, W, 100);
+      txt('REINICIAR O JOGO?', W / 2, H / 2 - 14, 40, '#ffd166', 'center');
+      txt('Aperte ↺ (celular) ou R de novo para voltar à tela inicial', W / 2, H / 2 + 26, 18, '#fff', 'center');
+    }
     if (J.tela === 'pausa') {
       ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, W, H);
       txt('PAUSA', W / 2, H / 2 - 20, 72, '#fff', 'center');
       txt('Aperte P (ou ⏸ no celular) para continuar', W / 2, H / 2 + 40, 20, '#cbd5e1', 'center');
+      txt('R (ou ↺ no celular) reinicia o jogo', W / 2, H / 2 + 72, 16, '#9aa6ba', 'center');
     }
     if (J.tela === 'derrota') {
       ctx.fillStyle = 'rgba(40,0,0,.6)'; ctx.fillRect(0, 0, W, H);
       txt('K.O.', W / 2, H / 2 - 70, 110, '#ff3b3b', 'center', 12);
-      if (J.tt < 560) {
+      if (J.voltaFase1) {
+        txt('DUAS DERROTAS SEGUIDAS', W / 2, H / 2 + 30, 38, '#ffd166', 'center');
+        txt(`Voltando para a FASE 1 em ${Math.ceil(J.tt / 60)}…`, W / 2, H / 2 + 80, 22, '#fff', 'center');
+      } else if (J.tt < 560) {
         txt(`CONTINUAR? ${Math.ceil(J.tt / 60)}`, W / 2, H / 2 + 30, 44, '#ffd166', 'center');
         txt('Aperte SOCO ou ENTER para tentar a fase de novo', W / 2, H / 2 + 80, 20, '#fff', 'center');
+        txt('Atenção: perder de novo volta para a FASE 1', W / 2, H / 2 + 112, 16, '#ff8fa3', 'center');
       }
     }
     if (J.tela === 'vitoria') {
@@ -1176,7 +1576,7 @@ window.LutaJogo = (function () {
         .on('broadcast', { event: 'b' }, ({ payload }) => {
           marcar();
           const b = payload && payload.b;
-          if (['soco', 'chute', 'esp', 'pulo', 'pausa'].includes(b)) Entrada.apertar(b);
+          if (['soco', 'chute', 'esp', 'pulo', 'pausa', 'reiniciar'].includes(b)) Entrada.apertar(b);
         })
         .on('broadcast', { event: 'ola' }, () => { marcar(); enviarEstado(true); })
         .subscribe(st => { pronto = st === 'SUBSCRIBED'; });
@@ -1209,6 +1609,7 @@ window.LutaJogo = (function () {
     cv = canvas; ctx = cv.getContext('2d');
     ajustar();
     window.addEventListener('resize', ajustar);
+    ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => Som.destravar(), true));
     document.addEventListener('keydown', e => {
       if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
       if (e.code === 'KeyM') { const on = Som.alternar(); texto(W / 2, 120, on ? 'Som ligado' : 'Som desligado', '#fff', 20); return; }
