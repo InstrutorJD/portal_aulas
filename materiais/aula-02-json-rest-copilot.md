@@ -66,9 +66,9 @@ Olhe com calma. Você consegue dizer o que aconteceu com o caminhão?
 
 ## Roteiro de hoje (2/2)
 - **Parte 5**: dados e métodos: JSON, POST, PATCH, DELETE (25 min)
-- **Parte 6**: além do pedido e resposta: webhook, upload, streaming (20 min)
-- **Parte 7**: a sua página no ar, com o ChatGPT (25 min)
-- **Parte 8**: o Copilot evolui a página, e fechamento (20 min)
+- **Parte 6**: além do pedido e resposta: webhook, upload, streaming (10 min)
+- **Parte 7**: a sua página no ar, com o ChatGPT (30 min)
+- **Parte 8**: o Copilot evolui a página, e fechamento (25 min)
 
 O fio da aula: a inspeção sai do **papel**, vira **requisito**, vira **dado** e vira **página no ar**.
 
@@ -255,15 +255,6 @@ Um dá **erro vermelho**, o outro funciona. Por quê?
 - Nos dois, um site pede dados a **outro**; só muda quem responde
 
 **Pra que serve:** ver na prática a regra de segurança que protege você.
-
----
-
-## Mão na massa: o bloqueio
-1. Rode a parte **1** do 3º código: copie a frase do erro que fala em **CORS**
-2. Na aba **Rede**, que status aparece nesse pedido?
-3. Abra **example.com** numa aba nova, **F12 → Console** e rode a parte **2**
-4. Na **Rede**, clique no pedido `1` → **Cabeçalhos**
-5. Ache na resposta o `access-control-allow-origin`: que site ele autoriza?
 
 ---
 
@@ -570,13 +561,13 @@ Antes de criar a conta, conheça o lugar
 ## Quem está no GitHub
 | Perfil | Quem é | O que fez |
 |---|---|---|
-| `github.com/torvalds` | Linus Torvalds | Criou o **Linux** e o próprio **Git** |
-| `github.com/gvanrossum` | Guido van Rossum | Criou o **Python** |
-| `github.com/karpathy` | Andrej Karpathy | Cofundador da OpenAI, ex-chefe de IA da Tesla |
-| `github.com/josevalim` | José Valim | Brasileiro, criou a linguagem **Elixir** |
-| `github.com/filipedeschamps` | Filipe Deschamps | Brasileiro, criou o **TabNews** |
+| `torvalds` | Linus Torvalds | Criou o **Linux** e o **Git** |
+| `gvanrossum` | Guido van Rossum | Criou o **Python** |
+| `karpathy` | Andrej Karpathy | Cofundou a **OpenAI** |
+| `josevalim` | José Valim | Brasileiro, criou o **Elixir** |
+| `filipedeschamps` | Filipe Deschamps | Brasileiro, criou o **TabNews** |
 
-Mais de **300 mil** pessoas seguem o Linus no GitHub; mais de **200 mil**, o Karpathy.
+Endereço: **github.com/** + o perfil. O Linus tem mais de **300 mil** seguidores.
 
 ---
 
@@ -591,14 +582,11 @@ Mais de **300 mil** pessoas seguem o Linus no GitHub; mais de **200 mil**, o Kar
 
 
 ## Mão na massa: explorar
-Sem fazer login, abra **github.com/typicode/jsonplaceholder**
-
-1. Leia o **README**: o que esse projeto oferece?
-2. Clique em **commits**: qual a mensagem do último? Quando foi?
-3. Abra **Issues**: escolha um problema que alguém relatou
-4. Ache as **estrelas** (*stars*) e a **linguagem** principal
-
-> Esse é o projeto da API que vamos testar na Parte 5.
+1. Sem login, abra **github.com/typicode/jsonplaceholder** (a API da Parte 5)
+2. Leia o **README**: o que esse projeto oferece?
+3. Clique em **commits**: qual a mensagem do último? Quando foi?
+4. Abra **Issues**: escolha um problema que alguém relatou
+5. Ache as **estrelas** (*stars*) e a **linguagem** principal
 
 ---
 
@@ -1028,39 +1016,11 @@ O checklist faz um **POST** com isso para o endereço da manutenção.
 
 ---
 
-## webhook.site: um recebedor de teste
-+ Site grátis que cria um **endereço** que recebe qualquer pedido
-+ Mostra tudo o que chegou: **método**, **cabeçalhos** e **corpo**
-+ Sem login: abra **webhook.site** e copie *Your unique URL*
-+ Ele faz o papel do sistema da **manutenção**
-
----
-
-## Mão na massa: seja o checklist
-```bash
-curl -X POST https://webhook.site/SEU-CODIGO \
-  -H "Content-Type: application/json" \
-  -d '{"evento": "item_reprovado",
-       "equipamento": "CAM-07", "item": "Freios"}'
-```
-
-No terminal do **Codespace**, troque `SEU-CODIGO` pelo seu endereço. No webhook.site: o aviso chegou?
-
----
-
-## Mão na massa: o GitHub avisa você
-1. No seu repositório: **Settings** → **Webhooks** → **Add webhook**
-2. **Payload URL**: o seu endereço do webhook.site
-3. **Content type**: `application/json` → **Add webhook**
-4. No webhook.site: o GitHub mandou um **ping** na hora?
-5. Faça um commit e `git push`: chegou um aviso **sozinho**?
-
----
-
-## O que chegou do GitHub?
-+ O método: `POST`, com o corpo em **JSON**
-+ O cabeçalho `X-GitHub-Event` diz o evento: `ping` ou `push`
-+ No corpo: o **repositório**, quem fez o push e os **commits**
+## Webhook de verdade: o GitHub
++ Todo repositório pode cadastrar webhooks em **Settings → Webhooks**
++ A cada `git push`, o GitHub faz um **POST** para o endereço cadastrado
++ O cabeçalho `X-GitHub-Event` diz o que aconteceu: `push`, `ping`...
++ O corpo em **JSON** traz o repositório, quem fez o push e os commits
 + É assim que robôs de teste e de publicação sabem que o código mudou
 
 ---
@@ -1083,17 +1043,6 @@ A manutenção precisa ser avisada na hora em que um freio é reprovado.
 
 ---
 
-## Mão na massa: mande a "foto"
-```bash
-curl -L -o pneu.jpg https://picsum.photos/300
-curl -F "foto=@pneu.jpg" -F "item=Pneus" \
-  https://webhook.site/SEU-CODIGO
-```
-
-A 1ª linha baixa uma imagem qualquer; a 2ª envia. No webhook.site, ache o arquivo e o `multipart/form-data`.
-
----
-
 ## Qual recurso?
 O operador quer anexar à inspeção a foto de uma mangueira rachada.
 
@@ -1109,15 +1058,6 @@ O operador quer anexar à inspeção a foto de uma mangueira rachada.
 + Streaming: ele envia **aos poucos**, enquanto ainda está gerando
 + Vídeo e música tocam enquanto ainda estão baixando
 + O ChatGPT da Parte 2 escreve palavra por palavra: é streaming
-
----
-
-## Mão na massa: veja chegando
-```bash
-curl -N "https://httpbin.org/drip?duration=5&numbytes=5"
-```
-
-O `-N` mostra cada pedaço assim que chega: os `*` aparecem **um a um**, em 5 segundos.
 
 ---
 
