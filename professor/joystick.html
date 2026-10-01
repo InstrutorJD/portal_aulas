@@ -53,16 +53,18 @@
     background:radial-gradient(circle at 35% 30%, #7de3d8, #2f8f86); box-shadow:0 6px 18px rgba(0,0,0,.5); }
   .j-dica{ position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:12px; color:var(--dim); pointer-events:none; }
 
-  .j-botoes{ position:relative; flex:1; }
-  .jb{ position:absolute; width:min(92px, 22vh); height:min(92px, 22vh); margin:calc(min(92px, 22vh) / -2) 0 0 calc(min(92px, 22vh) / -2); border-radius:50%;
+  /* Botões juntinhos em losango (o polegar alcança todos sem esticar),
+     encostados à direita; o resto da tela fica para o analógico. */
+  .j-botoes{ --b:min(84px, 24vh); position:relative; flex:0 0 auto; align-self:center; width:calc(var(--b) * 2.9); height:calc(var(--b) * 2.9); margin-right:2vw; }
+  .jb{ position:absolute; width:var(--b); height:var(--b); margin:calc(var(--b) / -2) 0 0 calc(var(--b) / -2); border-radius:50%;
     font:inherit; font-size:28px; line-height:1; color:#fff; border:3px solid rgba(255,255,255,.25); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
     box-shadow:0 6px 0 rgba(0,0,0,.45); transition:transform .05s; touch-action:none; }
   .jb small{ font-size:10px; font-weight:800; letter-spacing:1px; }
   .jb.on{ transform:translateY(4px) scale(.95); box-shadow:0 2px 0 rgba(0,0,0,.45); filter:brightness(1.25); }
-  .jb-pulo{ left:62%; top:20%; background:#3b82f6; }
-  .jb-soco{ left:36%; top:50%; background:#e63946; }
-  .jb-esp{ left:88%; top:50%; background:#f59e0b; }
-  .jb-chute{ left:62%; top:80%; background:#16a34a; }
+  .jb-pulo{ left:50%; top:17%; background:#3b82f6; }
+  .jb-soco{ left:17%; top:50%; background:#e63946; }
+  .jb-esp{ left:83%; top:50%; background:#f59e0b; }
+  .jb-chute{ left:50%; top:83%; background:#16a34a; }
   .jb-esp.cheio{ animation:pulsar .5s infinite alternate; }
   @keyframes pulsar{ to{ box-shadow:0 0 30px #7dd3fc, 0 6px 0 rgba(0,0,0,.45); } }
   .j-girar{ position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); background:var(--bg2); border:1px solid var(--line); border-radius:16px; padding:14px 18px; font-size:15px; text-align:center; pointer-events:none; }
