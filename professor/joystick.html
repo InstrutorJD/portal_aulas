@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f17">
+<title>Controle — Punho Lendário</title>
+<!-- Joystick no celular para o Punho Lendário (professor/luta.html). Aberto
+     pelo QR Code do jogo: o código da sala vem no #hash (ou é digitado
+     aqui). Sem login, de propósito: o professor pode passar o celular para
+     um aluno jogar — o controle só move o lutador, não acessa nada.
+     Canal de broadcast do Supabase Realtime 'luta_<sala>': daqui saem 'j'
+     ({ x, y } de -1 a 1, só quando muda), 'b' (botão apertado) e 'ola';
+     de lá vem 'estado' (vida, energia, fase) e 'vib' (vibrar). -->
+<style>
+  :root{ --bg:#0b0f17; --bg2:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,.12); --accent:#4fd1c5; --erro:#ff5c5c; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ height:100%; margin:0; overflow:hidden; }
+  body{
+    background:radial-gradient(ellipse at 50% 120%, #1b2440, var(--bg) 70%); color:var(--ink);
+    font-family:system-ui, -apple-system, 'Segoe UI', sans-serif;
+    user-select:none; -webkit-user-select:none; touch-action:none; overscroll-behavior:none;
+  }
+  [hidden]{ display:none !important; }
+  .j-codigo{ height:100%; display:flex; flex-direction:column; justify-content:center; gap:12px; padding:20px; max-width:420px; margin:0 auto; }
+  .j-codigo h1{ font-size:22px; margin:0; }
+  .j-codigo p{ color:var(--dim); font-size:14px; margin:0; line-height:1.5; }
+  .j-codigo input{ font:inherit; font-family:Consolas, monospace; font-size:26px; font-weight:800; letter-spacing:4px; text-align:center; text-transform:uppercase; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); }
+  .j-codigo button{ font:inherit; font-weight:800; font-size:16px; padding:13px; border-radius:12px; border:none; background:var(--accent); color:var(--bg); }
+  .j-erro{ color:var(--erro); font-size:14px; min-height:1em; }
+
+  .j-controle{ position:fixed; inset:0; display:flex; flex-direction:column;
+    padding:max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  .j-topo{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--dim); min-height:40px; }
+  .j-bolinha{ width:10px; height:10px; border-radius:50%; background:var(--erro); flex-shrink:0; }
+  .j-on .j-bolinha{ background:var(--accent); box-shadow:0 0 10px var(--accent); }
+  .j-status{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:30vw; }
+  .j-barras{ flex:1; display:flex; flex-direction:column; gap:4px; max-width:320px; margin-left:auto; }
+  .j-barra{ height:8px; border-radius:4px; background:rgba(255,255,255,.1); overflow:hidden; }
+  .j-barra div{ height:100%; width:0; transition:width .2s; }
+  .j-hp div{ background:linear-gradient(90deg, #ff5c5c, #ffe14d); }
+  .j-en div{ background:#38bdf8; }
+  .j-fase{ font-weight:800; color:var(--ink); white-space:nowrap; }
+  .j-topo button{ font:inherit; font-size:18px; width:42px; height:38px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); }
+
+  .j-area{ flex:1; display:flex; min-height:0; }
+  .j-zona{ position:relative; flex:1; }
+  .j-base{ position:absolute; width:150px; height:150px; margin:-75px 0 0 -75px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.06), rgba(255,255,255,.12)); border:2px solid rgba(255,255,255,.18); }
+  .j-knob{ position:absolute; left:50%; top:50%; width:70px; height:70px; margin:-35px 0 0 -35px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #7de3d8, #2f8f86); box-shadow:0 6px 18px rgba(0,0,0,.5); }
+  .j-dica{ position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:12px; color:var(--dim); pointer-events:none; }
+
+  .j-botoes{ position:relative; flex:1; }
+  .jb{ position:absolute; width:min(92px, 22vh); height:min(92px, 22vh); margin:calc(min(92px, 22vh) / -2) 0 0 calc(min(92px, 22vh) / -2); border-radius:50%;
+    font:inherit; font-size:28px; line-height:1; color:#fff; border:3px solid rgba(255,255,255,.25); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    box-shadow:0 6px 0 rgba(0,0,0,.45); transition:transform .05s; touch-action:none; }
+  .jb small{ font-size:10px; font-weight:800; letter-spacing:1px; }
+  .jb.on{ transform:translateY(4px) scale(.95); box-shadow:0 2px 0 rgba(0,0,0,.45); filter:brightness(1.25); }
+  .jb-pulo{ left:62%; top:20%; background:#3b82f6; }
+  .jb-soco{ left:36%; top:50%; background:#e63946; }
+  .jb-esp{ left:88%; top:50%; background:#f59e0b; }
+  .jb-chute{ left:62%; top:80%; background:#16a34a; }
+  .jb-esp.cheio{ animation:pulsar .5s infinite alternate; }
+  @keyframes pulsar{ to{ box-shadow:0 0 30px #7dd3fc, 0 6px 0 rgba(0,0,0,.45); } }
+  .j-girar{ position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); background:var(--bg2); border:1px solid var(--line); border-radius:16px; padding:14px 18px; font-size:15px; text-align:center; pointer-events:none; }
+  @media (orientation:landscape){ .j-girar{ display:none; } }
+</style>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<form class="j-codigo" id="jCodigo" hidden>
+  <h1>🎮 Controle do Punho Lendário</h1>
+  <p>Digite o código que aparece no computador, embaixo do QR Code.</p>
+  <input id="jCodigoInput" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="9" placeholder="ABCD-2345">
+  <button type="submit">Conectar</button>
+  <div class="j-erro" id="jCodigoErro"></div>
+</form>
+
+<div class="j-controle" id="jControle" hidden>
+  <div class="j-topo" id="jTopo">
+    <i class="j-bolinha"></i><span class="j-status" id="jStatus">Conectando…</span>
+    <span class="j-fase" id="jFase"></span>
+    <div class="j-barras">
+      <div class="j-barra j-hp"><div id="jHp"></div></div>
+      <div class="j-barra j-en"><div id="jEn"></div></div>
+    </div>
+    <button type="button" id="jPausa" title="Pausa">⏸</button>
+  </div>
+  <div class="j-area">
+    <div class="j-zona" id="jZona">
+      <div class="j-base" id="jBase"><div class="j-knob" id="jKnob"></div></div>
+      <span class="j-dica">Arraste para andar · para cima pula · para baixo agacha · para trás defende</span>
+    </div>
+    <div class="j-botoes">
+      <button type="button" class="jb jb-pulo" data-b="pulo">⬆<small>PULO</small></button>
+      <button type="button" class="jb jb-soco" data-b="soco">👊<small>SOCO</small></button>
+      <button type="button" class="jb jb-esp" data-b="esp" id="jEsp">🔥<small>ESPECIAL</small></button>
+      <button type="button" class="jb jb-chute" data-b="chute">🦶<small>CHUTE</small></button>
+    </div>
+  </div>
+  <div class="j-girar">🔄 Gire o celular para jogar deitado</div>
+</div>
+
+<script>
+(async function () {
+  const $ = id => document.getElementById(id);
+  const limpar = t => (t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  let sala = limpar(location.hash.slice(1));
+  if (sala.length !== 8) {
+    $('jCodigo').hidden = false;
+    sala = await new Promise(resolve => {
+      $('jCodigo').addEventListener('submit', e => {
+        e.preventDefault();
+        const s = limpar($('jCodigoInput').value);
+        if (s.length === 8) { resolve(s); return; }
+        $('jCodigoErro').textContent = 'O código tem 8 letras/números (ex.: ABCD-2345).';
+      });
+    });
+    $('jCodigo').hidden = true;
+    try { history.replaceState(null, '', '#' + sala); } catch (e) {}
+  }
+  $('jControle').hidden = false;
+
+  // Cliente próprio, sem login e sem guardar sessão; eventsPerSecond maior
+  // que o padrão (10) porque o analógico manda vários movimentos seguidos.
+  let canal = null, pronto = false;
+  try {
+    const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { params: { eventsPerSecond: 40 } },
+    });
+    canal = sb.channel('luta_' + sala, { config: { broadcast: { self: false } } });
+  } catch (e) {}
+  const enviar = (evento, payload) => { if (canal && pronto) canal.send({ type: 'broadcast', event: evento, payload }).catch(() => {}); };
+
+  let recebeu = false, ultimoEstado = 0;
+  function mostrar(e) {
+    recebeu = true; ultimoEstado = Date.now();
+    $('jTopo').classList.add('j-on');
+    $('jStatus').textContent = 'Conectado';
+    $('jFase').textContent = e.tela === 'titulo' ? 'Aperte SOCO para começar' : e.tela === 'vitoria' ? 'Você venceu! 🏆' : `Fase ${e.fase}`;
+    $('jHp').style.width = `${Math.max(0, Math.min(100, (e.hp / (e.hpMax || 1)) * 100))}%`;
+    $('jEn').style.width = `${Math.max(0, Math.min(100, e.en || 0))}%`;
+    $('jEsp').classList.toggle('cheio', (e.en || 0) >= 100);
+  }
+  if (canal) {
+    canal
+      .on('broadcast', { event: 'estado' }, ({ payload }) => mostrar(payload || {}))
+      .on('broadcast', { event: 'vib' }, ({ payload }) => { if (navigator.vibrate) navigator.vibrate(Math.min(500, Number(payload && payload.ms) || 60)); })
+      .subscribe(st => {
+        pronto = st === 'SUBSCRIBED';
+        if (pronto) { $('jStatus').textContent = 'Procurando o jogo…'; enviar('ola', {}); }
+        else if (st === 'CHANNEL_ERROR' || st === 'TIMED_OUT' || st === 'CLOSED') {
+          $('jTopo').classList.remove('j-on');
+          $('jStatus').textContent = 'Sem conexão — tentando de novo…';
+        }
+      });
+  } else $('jStatus').textContent = 'Não deu para conectar ao servidor.';
+
+  // ---------- Analógico ----------
+  // Base flutuante: aparece onde o polegar encosta. Manda a direção
+  // arredondada (-1, 0 ou 1 em cada eixo) e só quando ela muda.
+  const zona = $('jZona'), base = $('jBase'), knob = $('jKnob');
+  const R = 60;
+  let toque = null, cx = 0, cy = 0, dir = { x: 0, y: 0 }, enviadoEm = 0;
+  function centralizar() {
+    const r = zona.getBoundingClientRect();
+    base.style.left = `${r.width / 2}px`; base.style.top = `${r.height / 2}px`;
+  }
+  centralizar();
+  window.addEventListener('resize', centralizar);
+  function mandarDirecao(x, y, forcar) {
+    if (!forcar && x === dir.x && y === dir.y) return;
+    dir = { x, y };
+    enviadoEm = Date.now();
+    enviar('j', dir);
+    if (navigator.vibrate && (x || y)) navigator.vibrate(8);
+  }
+  function mover(px, py) {
+    let dx = px - cx, dy = py - cy;
+    const d = Math.hypot(dx, dy);
+    if (d > R) { dx = dx / d * R; dy = dy / d * R; }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    const nx = dx / R, ny = dy / R;
+    mandarDirecao(Math.abs(nx) > 0.4 ? Math.sign(nx) : 0, ny < -0.55 ? -1 : ny > 0.55 ? 1 : 0);
+  }
+  zona.addEventListener('pointerdown', e => {
+    if (toque !== null) return;
+    toque = e.pointerId;
+    zona.setPointerCapture(e.pointerId);
+    const r = zona.getBoundingClientRect();
+    cx = e.clientX; cy = e.clientY;
+    base.style.left = `${cx - r.left}px`; base.style.top = `${cy - r.top}px`;
+    mover(e.clientX, e.clientY);
+  });
+  zona.addEventListener('pointermove', e => { if (e.pointerId === toque) mover(e.clientX, e.clientY); });
+  const soltar = e => {
+    if (e.pointerId !== toque) return;
+    toque = null;
+    knob.style.transform = '';
+    centralizar();
+    mandarDirecao(0, 0);
+  };
+  zona.addEventListener('pointerup', soltar);
+  zona.addEventListener('pointercancel', soltar);
+
+  // ---------- Botões ----------
+  document.querySelectorAll('.jb').forEach(btn => {
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      btn.classList.add('on');
+      enviar('b', { b: btn.dataset.b });
+      if (navigator.vibrate) navigator.vibrate(15);
+    });
+    const solta = () => btn.classList.remove('on');
+    btn.addEventListener('pointerup', solta);
+    btn.addEventListener('pointercancel', solta);
+    btn.addEventListener('pointerleave', solta);
+  });
+  $('jPausa').addEventListener('click', () => enviar('b', { b: 'pausa' }));
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // Repete a direção de vez em quando (se uma mensagem se perder, o
+  // lutador não fica andando sozinho) e manda "ola" para manter o
+  // pareamento vivo e reencontrar o jogo se ele for recarregado.
+  setInterval(() => { if (Date.now() - enviadoEm > 1000) mandarDirecao(dir.x, dir.y, true); }, 500);
+  setInterval(() => {
+    if (recebeu && Date.now() - ultimoEstado > 9000) {
+      $('jTopo').classList.remove('j-on');
+      $('jStatus').textContent = 'Procurando o jogo…';
+    }
+    enviar('ola', {});
+  }, 3000);
+
+  // Tela cheia e tela acesa (quando o navegador deixa).
+  document.addEventListener('pointerdown', () => {
+    const el = document.documentElement;
+    if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }, { once: true });
+  async function telaAcesa() { try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch (e) {} }
+  telaAcesa();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { telaAcesa(); enviar('ola', {}); } });
+})();
+</script>
+</body>
+</html>

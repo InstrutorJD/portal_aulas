@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Punho Lendário</title>
+<!-- Jogo de luta do professor (card "Punho Lendário" em professor/painel.html).
+     O motor fica em luta-jogo.js; o celular vira joystick em joystick.html,
+     pareado pelo QR Code deste painel (canal 'luta_<sala>' do Supabase
+     Realtime, sem tabela e sem SQL). -->
+<style>
+  :root{ --bg:#05060d; --card:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --accent:#4fd1c5; --line:rgba(255,255,255,.14); }
+  html, body{ margin:0; height:100%; background:var(--bg); overflow:hidden; }
+  body{ display:flex; align-items:center; justify-content:center; font-family:system-ui, -apple-system, 'Segoe UI', sans-serif; color:var(--ink); }
+  canvas{ display:block; image-rendering:auto; box-shadow:0 0 60px rgba(0,0,0,.8); }
+  [hidden]{ display:none !important; }
+  .cel-btn{ position:fixed; top:12px; right:12px; z-index:5; font-size:22px; width:48px; height:48px; border-radius:50%; border:1px solid var(--line); background:rgba(18,26,40,.85); color:var(--ink); cursor:pointer; }
+  .cel{ position:fixed; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.6); }
+  .cel-card{ width:min(360px, 92vw); background:var(--card); border:1px solid var(--line); border-radius:20px; padding:22px; text-align:center; }
+  .cel-card h3{ margin:0 0 12px; font-size:20px; }
+  .cel-card p{ font-size:14px; color:var(--dim); line-height:1.5; margin:12px 0 6px; }
+  .cel-qr{ background:#fff; border-radius:12px; padding:6px; width:240px; height:240px; margin:0 auto; display:flex; align-items:center; justify-content:center; }
+  .cel-qr svg{ width:100%; height:100%; }
+  .cel-codigo{ font-family:'JetBrains Mono', Consolas, monospace; font-size:32px; font-weight:800; letter-spacing:4px; }
+  .cel-link{ font-family:Consolas, monospace; font-size:12px; color:var(--accent); word-break:break-all; }
+  .cel-status{ font-weight:700; color:var(--ink) !important; }
+  .cel-ok .cel-status{ color:var(--accent) !important; }
+  .cel-card button{ margin-top:10px; font:inherit; font-weight:800; padding:10px 26px; border-radius:999px; border:none; background:var(--accent); color:#05060d; cursor:pointer; }
+</style>
+<script src="../shared/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../shared/session.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="luta-jogo.js"></script>
+</head>
+<body>
+<canvas id="tela" width="960" height="540"></canvas>
+<button type="button" class="cel-btn" id="celBtn" title="Usar o celular como controle">📱</button>
+<div class="cel" id="cel" hidden>
+  <div class="cel-card" role="dialog" aria-label="Celular como controle">
+    <h3>📱 Celular como controle</h3>
+    <div class="cel-qr" id="celQr"></div>
+    <p>Aponte a câmera do celular para o QR Code e jogue com o celular deitado.</p>
+    <p>Se a câmera não ler, abra <a class="cel-link" id="celLink" target="_blank" rel="noopener"></a> e digite:</p>
+    <div class="cel-codigo" id="celCodigo"></div>
+    <p class="cel-status" id="celStatus">Aguardando o celular…</p>
+    <button type="button" id="celFechar">Jogar</button>
+  </div>
+</div>
+<script>
+(async function () {
+  // Só o professor abre (mesma regra do painel).
+  const user = await window.PortalSession.requireUser('../index.html');
+  if (!user) return;
+  if (user.role !== 'professor') { window.location.href = '../index.html'; return; }
+
+  const painel = document.getElementById('cel');
+  const status = document.getElementById('celStatus');
+  const jogo = window.LutaJogo.iniciar({
+    canvas: document.getElementById('tela'),
+    aoConectarCelular() {
+      if (painel.hidden) return;
+      status.textContent = '✔ Celular conectado!';
+      painel.classList.add('cel-ok');
+      setTimeout(() => { painel.hidden = true; }, 1200);
+    },
+  });
+
+  const url = new URL('joystick.html', location.href).href;
+  document.getElementById('celCodigo').textContent = `${jogo.sala.slice(0, 4)}-${jogo.sala.slice(4)}`;
+  const link = document.getElementById('celLink');
+  link.href = url;
+  link.textContent = url.replace(/^https?:\/\//, '');
+  if (window.qrcode) {
+    try {
+      const qr = window.qrcode(0, 'L');
+      qr.addData(`${url}#${jogo.sala}`);
+      qr.make();
+      document.getElementById('celQr').innerHTML = qr.createSvgTag({ cellSize: 8, margin: 16, scalable: true });
+    } catch (e) {}
+  }
+
+  function abrir() {
+    painel.classList.toggle('cel-ok', jogo.conectado());
+    status.textContent = !jogo.ligou ? 'Não deu para conectar ao servidor. Use o teclado.'
+      : jogo.conectado() ? '✔ Celular conectado!' : 'Aguardando o celular…';
+    painel.hidden = false;
+  }
+  document.getElementById('celBtn').addEventListener('click', abrir);
+  document.getElementById('celFechar').addEventListener('click', () => { painel.hidden = true; });
+  painel.addEventListener('click', e => { if (e.target === painel) painel.hidden = true; });
+  // Abre já com o QR na tela: o normal é jogar pelo celular.
+  abrir();
+})();
+</script>
+</body>
+</html>
