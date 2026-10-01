@@ -133,6 +133,29 @@ Lista os endereços que a página pediu **por código**: dados, não imagens.
 
 ---
 
+## Entendendo o código
+| Trecho | O que faz |
+|---|---|
+| `const tipos = [...]` | Tipos que interessam: pedidos feitos por código |
+| `performance.getEntriesByType(...)` | Lista **tudo** que a página baixou |
+| `.filter(...)` | Fica só com os pedidos fetch e xhr |
+| `.map(e => e.name)` | De cada pedido, mostra só o **endereço** |
+
+**Pra que serve:** descobrir de quais APIs um site busca os dados dele.
+
+---
+
+## O que é `fetch`?
++ É a função do JavaScript que **faz uma requisição HTTP** (*fetch* = buscar)
++ Você passa o **endereço**; ela pede ao servidor e traz a resposta
++ Sem dizer nada, faz um `GET`; também faz `POST`, `PATCH` e `DELETE`
++ É assim que um site busca **dados** sem recarregar a página
++ Na Parte 5, o `curl` faz o mesmo pelo terminal
+
+> `await` = "espere a resposta chegar antes de seguir".
+
+---
+
 ## O seu primeiro fetch
 ```js
 const r = await fetch('/todos/1')
@@ -141,6 +164,17 @@ await r.json()
 ```
 
 Digite **uma linha por vez**. `fetch` faz um `GET`; `/todos/1` é no próprio site.
+
+---
+
+## Entendendo o código
+| Linha | O que faz |
+|---|---|
+| `const r = await fetch('/todos/1')` | Pede o item 1; a **resposta** fica em `r` |
+| `r.status` | Mostra o **código** da resposta: `200` = deu certo |
+| `await r.json()` | Lê o **corpo** e transforma o JSON em objeto |
+
+**Pra que serve:** é o mesmo caminho que um app faz para buscar dados numa API.
 
 ---
 
@@ -164,6 +198,16 @@ await fetch(url + '/todos/1')
 ```
 
 Um dá **erro vermelho**, o outro funciona. Por quê?
+
+---
+
+## Entendendo o código
+- `fetch('https://example.com')`: pede **outro site** a partir do JSONPlaceholder
+- `const url = '...'`: guarda o endereço numa **variável**, para a linha não ficar longa
+- `url + '/todos/1'`: **junta** os textos e forma o endereço completo
+- Nos dois, um site pede dados a **outro**; só muda quem responde
+
+**Pra que serve:** ver na prática a regra de segurança que protege você.
 
 ---
 
