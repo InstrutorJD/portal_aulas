@@ -11,7 +11,14 @@
 //     'chute' | 'esp' | 'pulo' | 'pausa' }) e 'ola'; o jogo responde
 //     'estado' (vida, energia, fase) e 'vib' (vibrar quando apanha).
 //   - teclado: setas/WASD, Z soco, X chute, C especial, espaço pulo,
-//     Enter começa, P pausa, M som, F tela cheia.
+//     Enter começa, P pausa, R reinicia, M som, F tela cheia.
+//
+// Modo X1 (um aluno contra o outro): melhor de 3 rounds de 99 s, Kaito
+// (jogador 1, azul) contra Raiju (jogador 2, vermelho). Cada celular manda
+// um id próprio; o 1º celular a falar vira o jogador 1 e o 2º, o jogador 2
+// (no modo de 1 jogador, qualquer celular controla o Kaito). No teclado:
+// jogador 1 = WASD + Z/X/C/espaço, jogador 2 = setas + K/L/Ç/0 (ou 1/2/3/0
+// do teclado numérico).
 window.LutaJogo = (function () {
   'use strict';
   const W = 960, H = 540, CHAO = 478, GRAV = 0.75, RAD = Math.PI / 180;
@@ -160,33 +167,49 @@ window.LutaJogo = (function () {
   })();
 
   // ---------- Entrada: teclado + celular ----------
-  const Entrada = {
-    tecla: {}, cel: { x: 0, y: 0, visto: 0 }, fila: [],
-    get x() {
-      const t = this.tecla;
-      const k = (t.ArrowRight || t.KeyD ? 1 : 0) - (t.ArrowLeft || t.KeyA ? 1 : 0);
-      return clamp(k + (performance.now() - this.cel.visto < 3500 ? this.cel.x : 0), -1, 1);
-    },
-    get y() {
-      const t = this.tecla;
-      const k = (t.ArrowDown || t.KeyS ? 1 : 0) - (t.ArrowUp || t.KeyW ? 1 : 0);
-      return clamp(k + (performance.now() - this.cel.visto < 3500 ? this.cel.y : 0), -1, 1);
-    },
-    apertar(b) { Som.destravar(); this.fila.push({ b, t: J.tick }); },
-    // Consome o primeiro botão da lista apertado nos últimos 8 quadros
-    // (um "buffer": apertar um pouco antes da hora ainda vale).
-    pegar(...bs) {
-      const i = this.fila.findIndex(e => bs.includes(e.b) && e.t >= J.tick - 8);
-      if (i < 0) return null;
-      return this.fila.splice(i, 1)[0].b;
-    },
-    limpar() { this.fila = this.fila.filter(e => e.t >= J.tick - 8); },
-  };
-  const TECLAS = { KeyR: 'reiniciar', KeyZ: 'soco', KeyJ: 'soco', KeyX: 'chute', KeyK: 'chute', KeyC: 'esp', KeyL: 'esp', Space: 'pulo', Enter: 'start', KeyP: 'pausa', Escape: 'pausa' };
+  // Uma entrada por jogador (E[0] = jogador 1, E[1] = jogador 2 do X1). O
+  // mapa do teclado muda com o modo: sozinho, setas OU WASD movem o Kaito;
+  // no X1 cada jogador tem a sua metade do teclado.
+  const Tecla = {};
+  const MAPA_SOLO = { esq: ['ArrowLeft', 'KeyA'], dir: ['ArrowRight', 'KeyD'], cima: ['ArrowUp', 'KeyW'], baixo: ['ArrowDown', 'KeyS'],
+    botoes: { KeyZ: 'soco', KeyJ: 'soco', KeyX: 'chute', KeyK: 'chute', KeyC: 'esp', KeyL: 'esp', Space: 'pulo' } };
+  const MAPAS_X1 = [
+    { esq: ['KeyA'], dir: ['KeyD'], cima: ['KeyW'], baixo: ['KeyS'], botoes: { KeyZ: 'soco', KeyX: 'chute', KeyC: 'esp', Space: 'pulo' } },
+    { esq: ['ArrowLeft'], dir: ['ArrowRight'], cima: ['ArrowUp'], baixo: ['ArrowDown'],
+      botoes: { KeyK: 'soco', Numpad1: 'soco', KeyL: 'chute', Numpad2: 'chute', Semicolon: 'esp', Numpad3: 'esp', Numpad0: 'pulo' } },
+  ];
+  const TECLAS_GERAIS = { KeyR: 'reiniciar', Enter: 'start', NumpadEnter: 'start', KeyP: 'pausa', Escape: 'pausa', Digit1: 'modo1', Digit2: 'modo2' };
+  const algum = cods => cods.some(c => Tecla[c]);
+  function novaEntrada(n) {
+    return {
+      cel: { x: 0, y: 0, visto: 0 }, fila: [],
+      get mapa() { return J.modo === 'x1' ? MAPAS_X1[n] : (n === 0 ? MAPA_SOLO : null); },
+      eixo(menos, mais, c) {
+        const m = this.mapa;
+        const k = m ? (algum(m[mais]) ? 1 : 0) - (algum(m[menos]) ? 1 : 0) : 0;
+        return clamp(k + (performance.now() - this.cel.visto < 3500 ? this.cel[c] : 0), -1, 1);
+      },
+      get x() { return this.eixo('esq', 'dir', 'x'); },
+      get y() { return this.eixo('cima', 'baixo', 'y'); },
+      apertar(b) { Som.destravar(); this.fila.push({ b, t: J.tick }); },
+      // Consome o primeiro botão da lista apertado nos últimos 8 quadros
+      // (um "buffer": apertar um pouco antes da hora ainda vale).
+      pegar(...bs) {
+        const i = this.fila.findIndex(e => bs.includes(e.b) && e.t >= J.tick - 8);
+        if (i < 0) return null;
+        return this.fila.splice(i, 1)[0].b;
+      },
+      limpar() { this.fila = this.fila.filter(e => e.t >= J.tick - 8); },
+    };
+  }
+  const E = [novaEntrada(0), novaEntrada(1)];
+  // Botões que valem para qualquer jogador (começar, pausar, reiniciar, menu).
+  const pegarGeral = (...bs) => E[0].pegar(...bs) || E[1].pegar(...bs);
 
   // ---------- Personagens ----------
   const TIPOS = {
     jogador: { nome: 'KAITO', hp: 130, esc: 1, cores: { pele: '#e8b48a', roupa: '#2f5fd0', calca: '#2f5fd0', faixa: '#141414', cabelo: '#1c1410', bandana: '#d62839', luva: '#c1121f', pes: '#e8b48a', manga: 'curta', gola: true, calcaLarga: true, cabeloTipo: 'espetado', pontasFaixa: true } },
+    jogador2: { nome: 'RAIJU', hp: 130, esc: 1, cores: { pele: '#f3d3bd', roupa: '#c62828', calca: '#c62828', faixa: '#141414', cabelo: '#5a2d0c', bandana: '#f5f5f5', luva: '#f5f5f5', pes: '#f3d3bd', manga: 'curta', gola: true, calcaLarga: true, cabeloTipo: 'espetado', pontasFaixa: true } },
     capanga: { nome: 'Capanga', hp: 28, vel: 1.7, alcance: 62, cd: [70, 120], bloq: 0, pontos: 100, golpes: ['eSoco'],
       cores: { pele: '#f3d3bd', roupa: '#6b4f3a', calca: '#2b3a67', faixa: '#2a2a2a', cabelo: '#111111', luva: '#f3d3bd', pes: '#1f1f1f', manga: 'longa', cabeloTipo: 'curto', barba: 'rgba(40,25,15,.45)' } },
     brigao: { nome: 'Brigão', hp: 42, vel: 2.0, alcance: 78, cd: [55, 95], bloq: 0.25, pontos: 150, golpes: ['eSoco', 'eChute'],
@@ -240,6 +263,7 @@ window.LutaJogo = (function () {
     jog: null, pontos: 0, pontosFase: 0, congelar: 0, tremor: 0, lento: 0, flash: 0, superT: 0,
     aviso: null, travado: 0, trans: 0, chefe: null, recorde: 0, seq: 0, raio: 0,
     mortes: 0, voltaFase1: false, confirma: -999,
+    modo: 'solo', menu: 0, menuDir: 0, p2: null, vit: [0, 0], round: 0, tempo: 0, campeao: 0,
   };
   try { J.recorde = Number(localStorage.getItem('luta_recorde')) || 0; } catch (e) {}
 
@@ -250,14 +274,17 @@ window.LutaJogo = (function () {
       estado: 'parado', et: 0, atord: 0, golpe: null, gt: 0, acertou: new Set(), encadear: null,
       passo: 0, guarda: false, invul: 0, branco: 0, cd: T.cd ? rnd(T.cd[0], T.cd[1]) : 0,
       armadura: T.armadura || 0, semApanhar: 0, combo: 0, comboT: 0, en: 0, id: ++J.seq,
-      entrando: false, engajado: false, slot: 0, guardaT: 0, decidiu: false, cimaAntes: false, puloGolpe: false,
+      controle: 0, entrando: false, engajado: false, slot: 0, guardaT: 0, decidiu: false, cimaAntes: false, puloGolpe: false,
     };
   }
 
   function novoJogo() {
+    J.modo = 'solo';
     J.pontos = 0;
     J.mortes = 0;
     J.jog = novoLutador('jogador', 200, 1);
+    J.jog.controle = 1;
+    J.p2 = null;
     comecarFase(0);
   }
   function comecarFase(n) {
@@ -286,7 +313,7 @@ window.LutaJogo = (function () {
   // apanhando (para escapar, só defendendo ou pulando).
   function altura(f) {
     if (f.estado === 'caido' || f.estado === 'ko') return 25;
-    if (f !== J.jog && (f.estado === 'agachar' || f.estado === 'levantar' || (f.golpe && (f.golpe.pose === 'rasteira' || f.golpe.pose === 'socoBaixo')))) return 88 * f.s;
+    if (!f.controle && (f.estado === 'agachar' || f.estado === 'levantar' || (f.golpe && (f.golpe.pose === 'rasteira' || f.golpe.pose === 'socoBaixo')))) return 88 * f.s;
     return 148 * f.s;
   }
   const intocavel = f => f.invul > 0 || ['caido', 'levantar', 'ko'].includes(f.estado);
@@ -341,18 +368,18 @@ window.LutaJogo = (function () {
       const lo = f.z + g.y0 * f.s, hi = f.z + g.y1 * f.s;
       if (hi < t.z || lo > t.z + altura(t)) continue;
       f.acertou.add(t.id);
-      acertar(t, { x: f.x, ehJog: f === J.jog, g, altura: (lo + hi) / 2 });
+      acertar(t, { x: f.x, atk: f, g, altura: (lo + hi) / 2 });
     }
   }
 
-  // fonte: { x, ehJog, g (dano, kb, derruba, baixo, pesado), altura }
+  // fonte: { x, atk (quem bateu), g (dano, kb, derruba, baixo, pesado), altura }
   function acertar(alvo, fonte) {
     const g = fonte.g;
     const dir = Math.sign(alvo.x - fonte.x) || 1;
     const daFrente = (fonte.x - alvo.x) * alvo.face > 0;
-    const jogDefende = alvo === J.jog && alvo.guarda && noChao(alvo) && ['parado', 'andar', 'agachar'].includes(alvo.estado)
+    const jogDefende = alvo.controle && alvo.guarda && noChao(alvo) && ['parado', 'andar', 'agachar'].includes(alvo.estado)
       && (!g.baixo || alvo.estado === 'agachar');
-    const iniDefende = alvo !== J.jog && alvo.estado === 'guarda' && !g.baixo;
+    const iniDefende = !alvo.controle && alvo.estado === 'guarda' && !g.baixo;
     const yFx = CHAO - (fonte.altura || 100);
     if (daFrente && !g.ignoraDefesa && (jogDefende || iniDefende)) {
       const lasca = g.tipo ? 1 : 0;
@@ -361,7 +388,7 @@ window.LutaJogo = (function () {
       faiscas(alvo.x - dir * 16 * alvo.s, yFx, '#7dd3fc', 6);
       J.congelar = 3;
       Som.defesa();
-      if (alvo === J.jog) J.jog.en = Math.min(100, J.jog.en + 2);
+      if (alvo.controle) alvo.en = Math.min(100, alvo.en + 2);
       return;
     }
     alvo.hp -= g.dano;
@@ -371,14 +398,16 @@ window.LutaJogo = (function () {
     J.congelar = g.pesado ? 7 : 4;
     J.tremor = Math.max(J.tremor, g.pesado ? 7 : 3);
     (g.pesado ? Som.chute : Som.soco)();
-    if (fonte.ehJog) {
-      J.jog.en = Math.min(100, J.jog.en + 5);
-      J.pontos += g.dano * 10;
-      J.jog.combo++; J.jog.comboT = 70;
-    } else if (alvo === J.jog) {
-      J.jog.en = Math.min(100, J.jog.en + 3);
-      J.jog.combo = 0;
-      Rede.vibrar(g.pesado ? 160 : 70);
+    const atk = fonte.atk;
+    if (atk && atk.controle) {
+      atk.en = Math.min(100, atk.en + 5);
+      if (J.modo !== 'x1') J.pontos += g.dano * 10;
+      atk.combo++; atk.comboT = 70;
+    }
+    if (alvo.controle) {
+      alvo.en = Math.min(100, alvo.en + 3);
+      alvo.combo = 0;
+      Rede.vibrar(alvo.controle, g.pesado ? 160 : 70);
     }
     if (alvo.hp <= 0) { nocaute(alvo, dir); return; }
     // Armadura: o Brutamontes aguenta 2 golpes sem se abalar; o chefe não
@@ -404,7 +433,7 @@ window.LutaJogo = (function () {
     f.vz = 9; f.z = Math.max(f.z, 1); f.vx = dir * 6.5;
     J.congelar = 10; J.tremor = 10;
     Som.ko();
-    if (f === J.jog) { J.lento = 50; Rede.vibrar(400); return; }
+    if (f.controle) { J.lento = 50; Rede.vibrar(f.controle, 400); return; }
     J.pontos += f.T.pontos;
     texto(f.x, CHAO - 160 * f.s, `+${f.T.pontos}`, '#ffd166', 26);
     if (f.T.chefe) { J.lento = 120; J.flash = 1; Som.musica(null); }
@@ -413,16 +442,16 @@ window.LutaJogo = (function () {
   function disparar(f, d) {
     J.proj.push({
       x: f.x + f.face * 50 * f.s, z: d.z * (f.T.chefe ? 1 : f.s), vx: f.face * d.vel, raio: d.raio, dano: d.dano, kb: d.kb,
-      tipo: d.tipo, derruba: !!d.derruba, ehJog: f === J.jog, vida: d.vida || 170, t: 0,
+      tipo: d.tipo, derruba: !!d.derruba, dono: f, vida: d.vida || 170, t: 0,
     });
     if (d.tipo !== 'shuriken') Som.fogo(); else Som.vento();
   }
 
   function soltarSuper(f) {
     J.flash = 1; J.tremor = 16; J.congelar = 8;
-    J.inis.forEach(e => {
+    alvosDe(f).forEach(e => {
       if (intocavel(e) || e.entrando) return;
-      acertar(e, { x: f.x, ehJog: true, altura: 110, g: { dano: e.T.chefe ? 48 : 34, kb: 8, derruba: true, pesado: true, ignoraDefesa: true } });
+      acertar(e, { x: f.x, atk: f, altura: 110, g: { dano: e.T.chefe ? 48 : 34, kb: 8, derruba: true, pesado: true, ignoraDefesa: true } });
       for (let i = 0; i < 18; i++) J.parts.push({ x: e.x, y: CHAO - 80 * e.s, vx: rnd(-7, 7), vy: rnd(-9, 3), vida: 40, cor: i % 2 ? '#7dd3fc' : '#fff', tam: rnd(3, 7) });
     });
   }
@@ -446,7 +475,7 @@ window.LutaJogo = (function () {
     switch (f.estado) {
       case 'dor': f.vx *= 0.8; if (++f.et >= f.atord) f.estado = 'parado'; break;
       case 'caido': if (noChao(f)) { f.vx *= 0.75; if (++f.et >= 45) { f.estado = 'levantar'; f.et = 0; } } break;
-      case 'levantar': f.vx = 0; if (++f.et >= 18) { f.estado = 'parado'; f.invul = f === J.jog ? 45 : 10; } break;
+      case 'levantar': f.vx = 0; if (++f.et >= 18) { f.estado = 'parado'; f.invul = f.controle ? 45 : 10; } break;
       case 'ko': if (noChao(f)) { f.vx *= 0.8; f.et++; } break;
       case 'golpe': atualizarGolpe(f); break;
     }
@@ -469,16 +498,16 @@ window.LutaJogo = (function () {
     Som.queda(); Som.chute();
     const p = J.jog;
     if (!intocavel(p) && Math.abs(p.x - f.x) < 75 && p.z < 40) {
-      acertar(p, { x: f.x, ehJog: false, altura: 60, g: { dano: 18, kb: 8, derruba: true, pesado: true } });
+      acertar(p, { x: f.x, atk: f, altura: 60, g: { dano: 18, kb: 8, derruba: true, pesado: true } });
     }
-    [-1, 1].forEach(d => J.proj.push({ x: f.x + d * 40, z: 12, vx: d * 7, raio: 16, dano: 12, kb: 6, tipo: 'onda', derruba: true, ehJog: false, vida: 80, t: 0 }));
+    [-1, 1].forEach(d => J.proj.push({ x: f.x + d * 40, z: 12, vx: d * 7, raio: 16, dano: 12, kb: 6, tipo: 'onda', derruba: true, dono: f, vida: 80, t: 0 }));
     iniciarGolpe(f, 'pouso');
   }
 
   // ---------- Jogador ----------
   function maisProximo(p) {
     let melhor = null, dm = Infinity;
-    J.inis.forEach(e => {
+    alvosDe(p).forEach(e => {
       if (e.estado === 'ko') return;
       const d = Math.abs(e.x - p.x);
       if (d < dm) { dm = d; melhor = e; }
@@ -486,26 +515,26 @@ window.LutaJogo = (function () {
     return melhor;
   }
 
-  function atualizarJogador() {
-    const p = J.jog;
+  // p = lutador controlado (Kaito, ou Raiju no X1); en = a entrada dele.
+  function atualizarJogador(p, en) {
     if (p.comboT > 0 && --p.comboT === 0) p.combo = 0;
-    const dx = Entrada.x, dy = Entrada.y;
+    const dx = en.x, dy = en.y;
     const cima = dy < -0.5, puloBorda = cima && !p.cimaAntes;
     p.cimaAntes = cima;
     atualizarCorpo(p);
     p.x = clamp(p.x, 30, W - 30);
-    if (p.estado === 'golpe' && p.golpe.prox && !p.golpe.sempre && Entrada.pegar('soco')) p.encadear = p.golpe.prox;
+    if (p.estado === 'golpe' && p.golpe.prox && !p.golpe.sempre && en.pegar('soco')) p.encadear = p.golpe.prox;
     if (J.travado > 0) { if (livre(p)) { p.estado = 'parado'; p.vx = 0; } return; }
     if (p.giro > 0) p.giro--;
     if (p.estado === 'pulo') {
       // Pulo duplo: apertar pular de novo no ar (uma vez), com cambalhota.
-      if (!p.puloDuplo && (Entrada.pegar('pulo') || puloBorda)) {
+      if (!p.puloDuplo && (en.pegar('pulo') || puloBorda)) {
         p.puloDuplo = true; p.vz = 12; p.vx = dx * 3.8; p.giro = 24;
         faiscas(p.x, CHAO - p.z, 'rgba(255,255,255,.8)', 8);
         Som.vento();
         return;
       }
-      if (!p.puloGolpe && Entrada.pegar('soco', 'chute')) { p.puloGolpe = true; p.giro = 0; iniciarGolpe(p, 'voadora'); }
+      if (!p.puloGolpe && en.pegar('soco', 'chute')) { p.puloGolpe = true; p.giro = 0; iniciarGolpe(p, 'voadora'); }
       return;
     }
     if (!livre(p) || !noChao(p)) return;
@@ -513,7 +542,7 @@ window.LutaJogo = (function () {
     if (alvo) p.face = alvo.x >= p.x ? 1 : -1;
     else if (Math.abs(dx) > 0.2) p.face = Math.sign(dx);
     p.guarda = dx * p.face < -0.3;
-    const b = Entrada.pegar('soco', 'chute', 'esp', 'pulo');
+    const b = en.pegar('soco', 'chute', 'esp', 'pulo');
     if (b === 'pulo' || puloBorda) {
       p.estado = 'pulo'; p.vz = 13.5; p.z = 1; p.vx = dx * 3.8; p.puloGolpe = false; p.puloDuplo = false; Som.vento(); return;
     }
@@ -667,18 +696,18 @@ window.LutaJogo = (function () {
       if (pr.tipo === 'fogo' || pr.tipo === 'bola') {
         J.parts.push({ x: pr.x - Math.sign(pr.vx) * pr.raio, y: CHAO - pr.z + rnd(-6, 6), vx: -pr.vx * 0.2, vy: rnd(-1, 1), vida: 14, cor: pr.tipo === 'fogo' ? '#7dd3fc' : '#ff7b3b', tam: rnd(3, 6) });
       }
-      const alvos = pr.ehJog ? J.inis : [J.jog];
+      const alvos = alvosDe(pr.dono);
       for (const t of alvos) {
         if (pr.vida <= 0 || intocavel(t) || t.entrando) continue;
         if (Math.abs(t.x - pr.x) > 22 * t.s + pr.raio) continue;
         if (pr.z + pr.raio < t.z || pr.z - pr.raio > t.z + altura(t)) continue;
-        acertar(t, { x: pr.x - pr.vx, ehJog: pr.ehJog, altura: pr.z, g: { dano: pr.dano, kb: pr.kb, derruba: pr.derruba, tipo: pr.tipo, pesado: pr.tipo !== 'shuriken' } });
+        acertar(t, { x: pr.x - pr.vx, atk: pr.dono, altura: pr.z, g: { dano: pr.dano, kb: pr.kb, derruba: pr.derruba, tipo: pr.tipo, pesado: pr.tipo !== 'shuriken' } });
         pr.vida = 0;
       }
     });
-    // Bola de energia do jogador anula a do inimigo.
+    // Bola de energia de um lutador com controle anula a do adversário.
     J.proj.forEach(a => J.proj.forEach(b => {
-      if (a.vida > 0 && b.vida > 0 && a.ehJog && !b.ehJog && b.tipo !== 'onda' && Math.abs(a.x - b.x) < a.raio + b.raio && Math.abs(a.z - b.z) < a.raio + b.raio) {
+      if (a.vida > 0 && b.vida > 0 && a.dono !== b.dono && a.dono.controle && b.tipo !== 'onda' && Math.abs(a.x - b.x) < a.raio + b.raio && Math.abs(a.z - b.z) < a.raio + b.raio) {
         a.vida = 0; b.vida = 0; faiscas(a.x, CHAO - a.z, '#fff', 14); Som.defesa();
       }
     }));
@@ -713,7 +742,7 @@ window.LutaJogo = (function () {
   // de novo em até 3 s volta para a tela inicial, pronta para outro aluno.
   function voltarAoTitulo() {
     J.tela = 'titulo'; J.confirma = -999; J.mortes = 0; J.voltaFase1 = false;
-    J.inis = []; J.proj = []; J.chefe = null;
+    J.inis = []; J.proj = []; J.chefe = null; J.p2 = null;
     Som.musica(null);
     Som.menu();
   }
@@ -721,40 +750,56 @@ window.LutaJogo = (function () {
   function passo() {
     J.tick++;
     Rede.enviarEstado(false);
-    if (Entrada.pegar('reiniciar') && J.tela !== 'titulo') {
+    if (pegarGeral('reiniciar') && J.tela !== 'titulo') {
       if (J.tick - J.confirma < 180) voltarAoTitulo();
       else { J.confirma = J.tick; Som.menu(); }
     }
     switch (J.tela) {
-      case 'titulo':
-        if (Entrada.pegar('soco', 'start', 'chute', 'esp')) { Som.menu(); novoJogo(); }
+      case 'titulo': {
+        // Menu: para cima/esquerda = 1 jogador, para baixo/direita = X1
+        // (ou teclas 1 e 2); soco/Enter começa.
+        const mx = E[0].x + E[1].x, my = E[0].y + E[1].y;
+        const d = Math.abs(my) > 0.5 ? Math.sign(my) : Math.abs(mx) > 0.5 ? Math.sign(mx) : 0;
+        if (d && d !== J.menuDir) { J.menu = d > 0 ? 1 : 0; Som.menu(); }
+        J.menuDir = d;
+        const atalho = pegarGeral('modo1', 'modo2');
+        if (atalho) J.menu = atalho === 'modo1' ? 0 : 1;
+        if (atalho || pegarGeral('soco', 'start', 'chute', 'esp')) { Som.menu(); if (J.menu === 1) novoX1(); else novoJogo(); }
         break;
+      }
       case 'pausa':
-        if (Entrada.pegar('pausa', 'start')) J.tela = 'jogo';
+        if (pegarGeral('pausa', 'start')) J.tela = 'jogo';
         break;
       case 'derrota':
         atualizarEfeitos();
         // 2ª derrota seguida: volta sozinho para a fase 1.
         if (J.voltaFase1) { if (--J.tt <= 0) { J.voltaFase1 = false; novoJogo(); } break; }
         if (--J.tt <= 0) voltarAoTitulo();
-        else if (J.tt < 560 && Entrada.pegar('soco', 'start')) { Som.menu(); reiniciarFase(); }
+        else if (J.tt < 560 && pegarGeral('soco', 'start')) { Som.menu(); reiniciarFase(); }
         break;
       case 'vitoria':
         atualizarEfeitos();
         if (J.tt > 0) J.tt--;
-        else if (Entrada.pegar('soco', 'start')) voltarAoTitulo();
+        else if (pegarGeral('soco', 'start')) voltarAoTitulo();
         if (J.tick % 20 === 0) faiscas(rnd(100, W - 100), rnd(80, 260), ['#ffd166', '#7dd3fc', '#ff8fa3'][J.tick % 3], 16);
         break;
-      default: atualizarJogo();
+      case 'vitoriaX1':
+        atualizarEfeitos();
+        if (J.tt > 0) J.tt--;
+        else if (pegarGeral('soco', 'start')) { Som.menu(); novoX1(); }
+        else if (pegarGeral('esp', 'chute')) voltarAoTitulo();
+        if (J.tick % 20 === 0) faiscas(rnd(100, W - 100), rnd(80, 260), ['#ffd166', '#7dd3fc', '#ff8fa3'][J.tick % 3], 16);
+        break;
+      default: if (J.modo === 'x1') atualizarX1(); else atualizarJogo();
     }
-    Entrada.limpar();
+    E.forEach(en => en.limpar());
   }
 
   function atualizarJogo() {
-    if (Entrada.pegar('pausa')) { J.tela = 'pausa'; return; }
+    if (pegarGeral('pausa')) { J.tela = 'pausa'; return; }
     if (J.congelar > 0) { J.congelar--; atualizarEfeitos(); return; }
     // Super: o tempo para (só o Kaito carrega o golpe).
-    if (J.superT > 0) { atualizarEfeitos(); if (J.jog.estado === 'golpe') atualizarGolpe(J.jog); return; }
+    if (J.superT > 0) { atualizarSuper(); return; }
     if (J.lento > 0) { J.lento--; if (J.tick % 3) { atualizarEfeitos(); return; } }
     if (J.travado > 0) J.travado--;
 
@@ -763,7 +808,7 @@ window.LutaJogo = (function () {
     if (J.fila.length && vivos < 3 && J.travado < 60 && J.tick % 40 === 0) surgir(J.fila.shift());
 
     engajar();
-    atualizarJogador();
+    atualizarJogador(J.jog, E[0]);
     J.inis.forEach(atualizarInimigo);
     atualizarProjeteis();
     empurrar();
@@ -810,6 +855,76 @@ window.LutaJogo = (function () {
         p.estado = 'vitoria'; p.vx = 0;
       }
     }
+  }
+
+  // Super: o tempo para (só quem soltou o golpe se mexe).
+  function atualizarSuper() {
+    atualizarEfeitos();
+    [J.jog, J.p2].forEach(p => { if (p && p.estado === 'golpe' && p.golpe.superGolpe) atualizarGolpe(p); });
+  }
+
+  // ---------- X1: um aluno contra o outro ----------
+  let aoPedirCelular = null;
+  function novoX1() {
+    J.modo = 'x1';
+    J.pontos = 0; J.vit = [0, 0]; J.round = 0; J.mortes = 0;
+    J.jog = novoLutador('jogador', 260, 1); J.jog.controle = 1;
+    J.p2 = novoLutador('jogador2', 700, -1); J.p2.controle = 2;
+    comecarRound();
+    if (!Rede.conectado(2) && aoPedirCelular) aoPedirCelular();
+  }
+  function comecarRound() {
+    J.round++;
+    J.fase = (J.round - 1) % FASES.length;
+    J.inis = [J.p2]; J.proj = []; J.parts = []; J.textos = []; J.chefe = null; J.fila = [];
+    [J.jog, J.p2].forEach((p, i) => Object.assign(p, {
+      x: i ? 700 : 260, z: 0, vx: 0, vz: 0, face: i ? -1 : 1, estado: 'parado', golpe: null,
+      invul: 0, combo: 0, comboT: 0, hp: p.T.hp, hpVisto: p.T.hp, giro: 0, pv: null,
+    }));
+    J.tela = 'jogo'; J.travado = 150; J.trans = 0; J.tempo = 99 * 60;
+    const decisivo = J.vit[0] === 1 && J.vit[1] === 1;
+    J.aviso = { txt: `ROUND ${J.round}`, sub: decisivo ? 'ROUND DECISIVO!' : FASES[J.fase].nome, t: 150, lute: true };
+    Som.fase();
+    Som.musica(decisivo ? 3 : J.fase);
+  }
+  function atualizarX1() {
+    if (pegarGeral('pausa')) { J.tela = 'pausa'; return; }
+    if (J.congelar > 0) { J.congelar--; atualizarEfeitos(); return; }
+    if (J.superT > 0) { atualizarSuper(); return; }
+    if (J.lento > 0) { J.lento--; if (J.tick % 3) { atualizarEfeitos(); return; } }
+    if (J.travado > 0) J.travado--;
+    atualizarJogador(J.jog, E[0]);
+    atualizarJogador(J.p2, E[1]);
+    atualizarProjeteis();
+    empurrar();
+    atualizarEfeitos();
+    if (J.trans > 0) { if (--J.trans === 0) fimDoRound(); return; }
+    if (J.travado <= 0 && J.tempo > 0) J.tempo--;
+    const ko1 = J.jog.estado === 'ko', ko2 = J.p2.estado === 'ko';
+    if (!ko1 && !ko2 && J.tempo > 0) return;
+    // Fim do round: K.O. ou tempo esgotado (vence quem tem mais vida).
+    let venc = -1;
+    if (ko1 !== ko2) venc = ko1 ? 1 : 0;
+    else if (!ko1) {
+      const a = J.jog.hp / J.jog.T.hp, b = J.p2.hp / J.p2.T.hp;
+      venc = a > b ? 0 : b > a ? 1 : -1;
+    }
+    if (venc >= 0) {
+      J.vit[venc]++;
+      const w = venc ? J.p2 : J.jog;
+      if (w.estado !== 'ko') { w.estado = 'vitoria'; w.vx = 0; w.golpe = null; }
+    }
+    J.aviso = { txt: !ko1 && !ko2 ? 'TEMPO!' : 'K.O.!', sub: venc < 0 ? 'Empate!' : `${(venc ? J.p2 : J.jog).T.nome} venceu o round`, t: 170 };
+    J.trans = 180; J.travado = 200;
+  }
+  function fimDoRound() {
+    if (J.vit[0] >= 2 || J.vit[1] >= 2) {
+      J.campeao = J.vit[0] >= 2 ? 0 : 1;
+      J.tela = 'vitoriaX1'; J.tt = 90;
+      Som.musica(null); Som.fase();
+      return;
+    }
+    comecarRound();
   }
 
   function vencer() {
@@ -942,7 +1057,7 @@ window.LutaJogo = (function () {
 
     ctx.save();
     if (f.invul > 0 && f.estado !== 'golpe' && J.tick % 6 < 3) ctx.globalAlpha = 0.45;
-    if (f.estado === 'ko' && f.et > 30 && f !== J.jog && J.tick % 4 < 2) ctx.globalAlpha = 0.3;
+    if (f.estado === 'ko' && f.et > 30 && !f.controle && J.tick % 4 < 2) ctx.globalAlpha = 0.3;
     ctx.translate(f.x, CHAO - f.z);
     if (f.giro > 0) { // cambalhota do pulo duplo, girando em volta da cintura
       ctx.translate(0, -70 * s);
@@ -1134,7 +1249,7 @@ window.LutaJogo = (function () {
     const olho = cab(6.2, -1.5);
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(olho.x, olho.y, 2.7 * s, 2 * s, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(olho.x + 0.9 * s * fc, olho.y, 1.3 * s, 0, Math.PI * 2); ctx.fill();
-    const bravo = f !== J.jog || f.estado === 'golpe';
+    const bravo = !f.controle || f.estado === 'golpe';
     const sb1 = cab(2.5, bravo ? -6.5 : -5.5), sb2 = cab(9.5, bravo ? -4 : -5.5);
     ctx.strokeStyle = c.mascara ? c.roupa : CONTORNO; ctx.lineWidth = (f.T.chefe || f.tipo === 'brutamontes' ? 2.6 : 2) * s;
     ctx.beginPath(); ctx.moveTo(sb1.x, sb1.y); ctx.lineTo(sb2.x, sb2.y); ctx.stroke();
@@ -1184,7 +1299,7 @@ window.LutaJogo = (function () {
     ctx.restore();
 
     // vida dos inimigos comuns (o chefe tem a barra grande)
-    if (f !== J.jog && !f.T.chefe && f.estado !== 'ko' && f.hp < f.T.hp) {
+    if (!f.controle && !f.T.chefe && f.estado !== 'ko' && f.hp < f.T.hp) {
       const w = 46, y = CHAO - f.z - 172 * s;
       ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(f.x - w / 2 - 1, y - 1, w + 2, 6);
       ctx.fillStyle = '#ff5c5c'; ctx.fillRect(f.x - w / 2, y, w * f.hp / f.T.hp, 4);
@@ -1359,18 +1474,22 @@ window.LutaJogo = (function () {
     ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillRect(x, y, w, h / 3);
   }
 
+  // Energia em 4 partes (25 cada); cheia = super. x0 = canto esquerdo.
+  function energia(p, x0, y) {
+    for (let i = 0; i < 4; i++) {
+      const x = x0 + i * 62, cheio = clamp((p.en - i * 25) / 25, 0, 1);
+      ctx.fillStyle = '#000'; ctx.fillRect(x - 2, y - 2, 60, 14);
+      ctx.fillStyle = '#123'; ctx.fillRect(x, y, 56, 10);
+      ctx.fillStyle = p.en >= 100 ? (J.tick % 10 < 5 ? '#fff' : '#7dd3fc') : '#38bdf8';
+      ctx.fillRect(x, y, 56 * cheio, 10);
+    }
+  }
+
   function desenharHud() {
     const p = J.jog;
     txt(p.T.nome, 24, 22, 20, '#ffd166');
     barra(24, 38, 360, 22, p.hp / p.T.hp, p.hpVisto / p.T.hp, p.hp / p.T.hp < 0.3 ? '#ff3b3b' : '#ffe14d');
-    // energia em 4 partes (25 cada); cheia = super
-    for (let i = 0; i < 4; i++) {
-      const x = 24 + i * 62, cheio = clamp((p.en - i * 25) / 25, 0, 1);
-      ctx.fillStyle = '#000'; ctx.fillRect(x - 2, 68, 60, 14);
-      ctx.fillStyle = '#123'; ctx.fillRect(x, 70, 56, 10);
-      ctx.fillStyle = p.en >= 100 ? (J.tick % 10 < 5 ? '#fff' : '#7dd3fc') : '#38bdf8';
-      ctx.fillRect(x, 70, 56 * cheio, 10);
-    }
+    energia(p, 24, 70);
     txt(p.en >= 100 ? 'SUPER PRONTO! (ESPECIAL)' : 'ESPECIAL', 280, 76, 13, p.en >= 100 ? '#7dd3fc' : '#9fb3c8');
     txt(`FASE ${J.fase + 1} · ONDA ${J.onda + 1}/${FASES[J.fase].ondas.length}`, W / 2, 22, 18, '#fff', 'center');
     txt(String(J.pontos).padStart(7, '0'), W - 24, 26, 26, '#fff', 'right');
@@ -1382,6 +1501,32 @@ window.LutaJogo = (function () {
       txt(ch.T.nome, W / 2, H - 52, 18, '#ff8fa3', 'center');
       barra(W / 2 - 300, H - 36, 600, 18, ch.hp / ch.T.hp, ch.hpVisto / ch.T.hp, ch.furia ? '#ff2d2d' : '#c81d4e', true);
     }
+  }
+
+  // HUD do X1: barras espelhadas (esvaziam para fora, como no fliperama),
+  // relógio no meio e as vitórias de cada um.
+  function desenharHudX1() {
+    const a = J.jog, b = J.p2, w = 370;
+    barra(24, 30, w, 22, a.hp / a.T.hp, a.hpVisto / a.T.hp, a.hp / a.T.hp < 0.3 ? '#ff3b3b' : '#ffe14d', true);
+    barra(W - 24 - w, 30, w, 22, b.hp / b.T.hp, b.hpVisto / b.T.hp, b.hp / b.T.hp < 0.3 ? '#ff3b3b' : '#ffe14d');
+    txt(`J1 · ${a.T.nome}`, 24, 70, 20, '#7db4ff');
+    txt(`${b.T.nome} · J2`, W - 24, 70, 20, '#ff8f8f', 'right');
+    const t = Math.ceil(J.tempo / 60);
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(W / 2 - 46, 14, 92, 56);
+    txt(String(t).padStart(2, '0'), W / 2, 44, 44, t <= 10 && J.tick % 30 < 15 ? '#ff5c5c' : '#fff', 'center');
+    for (let i = 0; i < 2; i++) {
+      [[W / 2 - 64 - i * 22, J.vit[0] > i], [W / 2 + 64 + i * 22, J.vit[1] > i]].forEach(([x, ok]) => {
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, 82, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = ok ? '#ffd166' : '#333'; ctx.beginPath(); ctx.arc(x, 82, 7, 0, Math.PI * 2); ctx.fill();
+      });
+    }
+    energia(a, 24, 92);
+    energia(b, W - 24 - 246, 92);
+    if (a.combo >= 2) txt(`${a.combo} GOLPES!`, 24, 132, 26, '#7db4ff');
+    if (b.combo >= 2) txt(`${b.combo} GOLPES!`, W - 24, 132, 26, '#ff8f8f', 'right');
+    const c1 = Rede.conectado(1), c2 = Rede.conectado(2);
+    txt(`${c1 ? '📱' : '⌨ WASD + Z/X/C'}`, 24, H - 18, 13, c1 ? '#4fd1c5' : '#9fb3c8');
+    txt(`${c2 ? '📱' : '⌨ setas + K/L/Ç'}`, W - 24, H - 18, 13, c2 ? '#4fd1c5' : '#9fb3c8', 'right');
   }
 
   function desenharAviso() {
@@ -1412,17 +1557,22 @@ window.LutaJogo = (function () {
     txt('PUNHO', W / 2, 110, 92, '#ffd166', 'center', 12);
     txt('LENDÁRIO', W / 2, 200, 92, '#ff6b3d', 'center', 12);
     ctx.restore();
-    txt('3 fases · ondas de inimigos · um chefão', W / 2, 262, 20, '#fff', 'center');
-    if (J.tick % 60 < 40) txt('APERTE SOCO (CELULAR) OU ENTER', W / 2, 318, 26, '#7dd3fc', 'center');
+    ['1 JOGADOR · 3 fases e o chefão', 'X1 · um aluno contra o outro'].forEach((o, i) => {
+      const sel = J.menu === i, y = 270 + i * 44;
+      if (sel) { ctx.fillStyle = 'rgba(125,211,252,.16)'; ctx.fillRect(W / 2 - 230, y - 19, 460, 38); }
+      txt((sel ? '▶ ' : '') + o, W / 2, y, sel ? 26 : 20, sel ? '#7dd3fc' : '#cbd5e1', 'center');
+    });
+    if (J.tick % 60 < 40) txt('Escolha com o analógico ou as setas (ou 1 / 2) · SOCO ou ENTER começa', W / 2, 352, 15, '#ffd166', 'center');
     const linhas = [
       '⌨ Setas: mover · ↑ ou ESPAÇO: pular (2x = pulo duplo) · ↓: agachar',
-      'Z: soco (3x = combo) · X: chute · ↓ + X: rasteira',
-      'C: especial (bola de energia) · energia cheia = SUPER',
-      'Andar para TRÁS defende · P: pausa · R: reiniciar · M: som · F: tela cheia',
+      'Z: soco (3x = combo) · X: chute · ↓ + X: rasteira · C: especial',
+      'Energia cheia = SUPER · andar para TRÁS defende',
+      'X1 no teclado: J1 = WASD + Z/X/C/espaço · J2 = setas + K/L/Ç/0',
+      'X1 no celular: os dois leem o mesmo QR (📱) · P: pausa · R: reiniciar · M: som · F: tela cheia',
     ];
-    linhas.forEach((l, i) => txt(l, W / 2, 372 + i * 26, 15, '#cbd5e1', 'center'));
-    if (J.recorde) txt(`RECORDE: ${J.recorde}`, W / 2, 486, 18, '#ffd166', 'center');
-    avisoSom(520);
+    linhas.forEach((l, i) => txt(l, W / 2, 396 + i * 24, 14, '#cbd5e1', 'center'));
+    if (J.recorde) txt(`RECORDE ${J.recorde}`, W - 20, 24, 14, '#ffd166', 'right');
+    avisoSom(522);
   }
 
   // O navegador deixa o jogo mudo até alguém clicar NESTE computador.
@@ -1439,14 +1589,14 @@ window.LutaJogo = (function () {
     if (J.tremor) ctx.translate(rnd(-J.tremor, J.tremor), rnd(-J.tremor, J.tremor));
     cenario(J.fase);
     if (J.superT > 0) { ctx.fillStyle = 'rgba(0,0,30,.65)'; ctx.fillRect(-20, -20, W + 40, H + 40); }
-    const ordem = [...J.inis, J.jog].sort((a, b) => (a === J.jog) - (b === J.jog));
+    const ordem = [...J.inis, J.jog].sort((a, b) => (a.controle ? 1 : 0) - (b.controle ? 1 : 0));
     ordem.forEach(desenharLutador);
     desenharProjeteis();
     desenharParticulas();
     ctx.restore();
     if (J.raio > 0) { ctx.fillStyle = `rgba(230,230,255,${J.raio * 0.6})`; ctx.fillRect(0, 0, W, H); J.raio = Math.max(0, J.raio - 0.08); }
     if (J.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${J.flash})`; ctx.fillRect(0, 0, W, H); }
-    desenharHud();
+    if (J.modo === 'x1') desenharHudX1(); else desenharHud();
     desenharAviso();
     avisoSom(H - 70);
     if (J.tick - J.confirma < 180) {
@@ -1480,12 +1630,25 @@ window.LutaJogo = (function () {
       if (J.novoRecorde) txt('NOVO RECORDE!', W / 2, 340, 30, '#ff8fa3', 'center');
       if (!J.tt) txt('Aperte SOCO ou ENTER', W / 2, 410, 22, '#cbd5e1', 'center');
     }
+    if (J.tela === 'vitoriaX1') {
+      const w = J.campeao ? J.p2 : J.jog;
+      ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(0, 0, W, H);
+      txt(`${w.T.nome} VENCEU!`, W / 2, 160, 80, J.campeao ? '#ff8f8f' : '#7db4ff', 'center', 10);
+      txt(`JOGADOR ${J.campeao + 1} · ${J.vit[0]} x ${J.vit[1]}`, W / 2, 235, 32, '#fff', 'center');
+      if (!J.tt) {
+        txt('SOCO ou ENTER: revanche', W / 2, 320, 26, '#ffd166', 'center');
+        txt('ESPECIAL ou CHUTE: voltar ao menu', W / 2, 360, 20, '#cbd5e1', 'center');
+      }
+    }
   }
 
   // ---------- Celular (Supabase Realtime) ----------
   const Rede = (function () {
     const LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', CHAVE = 'luta_sala';
-    let canal = null, pronto = false, visto = 0, ultimo = '', enviadoEm = 0, aoConectar = null;
+    let canal = null, pronto = false, ultimo = '', enviadoEm = 0, aoConectar = null;
+    // id do celular → { slot (1 ou 2), visto }. O 1º celular a falar vira o
+    // jogador 1, o 2º vira o jogador 2; vaga sem sinal há 10 s é liberada.
+    const slots = new Map();
     function sala() {
       let s = '';
       try { s = sessionStorage.getItem(CHAVE) || ''; } catch (e) {}
@@ -1496,12 +1659,29 @@ window.LutaJogo = (function () {
       }
       return s;
     }
-    function marcar() {
-      const novo = !conectado();
-      visto = performance.now();
-      if (novo && aoConectar) aoConectar();
+    function slotDe(id) {
+      id = String(id || 'sem-id').slice(0, 24);
+      const agora = performance.now();
+      let s = slots.get(id);
+      if (!s) {
+        const ocupados = [...slots.values()].filter(v => agora - v.visto < 10000).map(v => v.slot);
+        const vaga = [1, 2].find(n => !ocupados.includes(n));
+        if (!vaga) return 0; // já há 2 celulares: o 3º fica de fora
+        for (const [k, v] of slots) if (v.slot === vaga) slots.delete(k);
+        s = { slot: vaga, visto: 0 };
+        slots.set(id, s);
+      }
+      const novo = agora - s.visto > 7000;
+      s.visto = agora;
+      if (novo && aoConectar) aoConectar(s.slot);
+      return s.slot;
     }
-    function conectado() { return performance.now() - visto < 7000; }
+    // No modo de 1 jogador, qualquer celular controla o Kaito.
+    const entradaDe = slot => (J.modo === 'x1' ? E[slot - 1] : E[0]);
+    function conectado(slot) {
+      const agora = performance.now();
+      return [...slots.values()].some(v => (!slot || v.slot === slot) && agora - v.visto < 7000);
+    }
     function enviar(evento, payload) {
       if (canal && pronto) canal.send({ type: 'broadcast', event: evento, payload }).catch(() => {});
     }
@@ -1513,30 +1693,36 @@ window.LutaJogo = (function () {
       canal = sb.channel('luta_' + sala(), { config: { broadcast: { self: false } } });
       canal
         .on('broadcast', { event: 'j' }, ({ payload }) => {
-          marcar();
-          Entrada.cel.x = clamp(Number(payload && payload.x) || 0, -1, 1);
-          Entrada.cel.y = clamp(Number(payload && payload.y) || 0, -1, 1);
-          Entrada.cel.visto = performance.now();
+          const slot = slotDe(payload && payload.id);
+          if (!slot) return;
+          const cel = entradaDe(slot).cel;
+          cel.x = clamp(Number(payload.x) || 0, -1, 1);
+          cel.y = clamp(Number(payload.y) || 0, -1, 1);
+          cel.visto = performance.now();
         })
         .on('broadcast', { event: 'b' }, ({ payload }) => {
-          marcar();
+          const slot = slotDe(payload && payload.id);
           const b = payload && payload.b;
-          if (['soco', 'chute', 'esp', 'pulo', 'pausa', 'reiniciar'].includes(b)) Entrada.apertar(b);
+          if (slot && ['soco', 'chute', 'esp', 'pulo', 'pausa', 'reiniciar'].includes(b)) entradaDe(slot).apertar(b);
         })
-        .on('broadcast', { event: 'ola' }, () => { marcar(); enviarEstado(true); })
+        .on('broadcast', { event: 'ola' }, ({ payload }) => { slotDe(payload && payload.id); enviarEstado(true); })
         .subscribe(st => { pronto = st === 'SUBSCRIBED'; });
       return true;
     }
     function enviarEstado(forcar) {
       if (!canal || !pronto) return;
-      const p = J.jog;
-      const e = { tela: J.tela, fase: J.fase + 1, hp: p ? Math.max(0, Math.round(p.hp)) : 0, hpMax: TIPOS.jogador.hp, en: p ? Math.floor(p.en) : 0, pontos: J.pontos };
+      const jg = p => (p ? { hp: Math.max(0, Math.round(p.hp)), hpMax: p.T.hp, en: Math.floor(p.en), nome: p.T.nome } : null);
+      const ids = {};
+      slots.forEach((v, k) => { ids[k] = v.slot; });
+      const e = { tela: J.tela, modo: J.modo, fase: J.fase + 1, round: J.round, j: [jg(J.jog), J.modo === 'x1' ? jg(J.p2) : null], ids, pontos: J.pontos };
       const t = JSON.stringify(e), agora = performance.now();
       if (!forcar && (t === ultimo || agora - enviadoEm < 250)) return;
       ultimo = t; enviadoEm = agora;
       enviar('estado', e);
     }
-    return { sala, ligar, conectado, enviarEstado, vibrar: ms => enviar('vib', { ms }), get ligado() { return !!canal; } };
+    // vibrar(1 ou 2, ms): no modo de 1 jogador vibra qualquer celular (slot 0).
+    const vibrar = (slot, ms) => enviar('vib', { ms, slot: J.modo === 'x1' ? slot : 0 });
+    return { sala, ligar, conectado, enviarEstado, vibrar, get ligado() { return !!canal; } };
   })();
 
   // ---------- Início ----------
@@ -1550,7 +1736,10 @@ window.LutaJogo = (function () {
     escalaBase = cv.width / W;
   }
 
-  function iniciar({ canvas, aoConectarCelular }) {
+  // aoConectarCelular(slot): um celular começou a falar; aoPedirCelular():
+  // o X1 começou e o jogador 2 ainda não tem celular (a página mostra o QR).
+  function iniciar({ canvas, aoConectarCelular, aoPedirCelular: pedir }) {
+    aoPedirCelular = pedir || null;
     cv = canvas; ctx = cv.getContext('2d');
     ajustar();
     window.addEventListener('resize', ajustar);
@@ -1560,11 +1749,14 @@ window.LutaJogo = (function () {
       if (e.code === 'KeyM') { const on = Som.alternar(); texto(W / 2, 120, on ? 'Som ligado' : 'Som desligado', '#fff', 20); return; }
       if (e.code === 'KeyF') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); return; }
       if (/^Arrow|^Space$/.test(e.code)) e.preventDefault();
-      if (!e.repeat && TECLAS[e.code]) Entrada.apertar(TECLAS[e.code]);
-      Entrada.tecla[e.code] = true;
+      if (!e.repeat) {
+        if (TECLAS_GERAIS[e.code]) E[0].apertar(TECLAS_GERAIS[e.code]);
+        E.forEach(en => { const m = en.mapa; if (m && m.botoes[e.code]) en.apertar(m.botoes[e.code]); });
+      }
+      Tecla[e.code] = true;
     });
-    document.addEventListener('keyup', e => { Entrada.tecla[e.code] = false; });
-    window.addEventListener('blur', () => { Entrada.tecla = {}; if (J.tela === 'jogo') J.tela = 'pausa'; });
+    document.addEventListener('keyup', e => { Tecla[e.code] = false; });
+    window.addEventListener('blur', () => { Object.keys(Tecla).forEach(k => { Tecla[k] = false; }); if (J.tela === 'jogo') J.tela = 'pausa'; });
     const ligou = Rede.ligar(aoConectarCelular);
     let acc = 0, ult = performance.now();
     (function loop(agora) {
@@ -1573,7 +1765,7 @@ window.LutaJogo = (function () {
       desenhar();
       requestAnimationFrame(loop);
     })(ult);
-    return { sala: Rede.sala(), ligou, conectado: Rede.conectado };
+    return { sala: Rede.sala(), ligou, conectado: Rede.conectado, modo: () => J.modo };
   }
 
   return { iniciar };

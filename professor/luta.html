@@ -41,6 +41,7 @@
     <h3>📱 Celular como controle</h3>
     <div class="cel-qr" id="celQr"></div>
     <p>Aponte a câmera do celular para o QR Code e jogue com o celular deitado.</p>
+    <p><strong>X1:</strong> os dois alunos leem o mesmo QR. O 1º celular é o Jogador 1 (azul) e o 2º, o Jogador 2 (vermelho).</p>
     <p>Se a câmera não ler, abra <a class="cel-link" id="celLink" target="_blank" rel="noopener"></a> e digite:</p>
     <div class="cel-codigo" id="celCodigo"></div>
     <p class="cel-status" id="celStatus">Aguardando o celular…</p>
@@ -60,11 +61,22 @@
     canvas: document.getElementById('tela'),
     aoConectarCelular() {
       if (painel.hidden) return;
-      status.textContent = '✔ Celular conectado!';
-      painel.classList.add('cel-ok');
-      setTimeout(() => { painel.hidden = true; }, 1200);
+      atualizarStatus();
+      // No X1 o QR só sai da tela quando os dois celulares estão conectados.
+      const x1 = jogo.modo() === 'x1';
+      if (!x1 || (jogo.conectado(1) && jogo.conectado(2))) setTimeout(() => { painel.hidden = true; }, 1400);
     },
+    // X1 começou e o jogador 2 ainda está sem celular: mostra o QR.
+    aoPedirCelular() { abrir(); },
   });
+
+  function atualizarStatus() {
+    const c1 = jogo.conectado(1), c2 = jogo.conectado(2);
+    painel.classList.toggle('cel-ok', c1 || c2);
+    if (!jogo.ligou) status.textContent = 'Não deu para conectar ao servidor. Use o teclado.';
+    else if (jogo.modo() === 'x1') status.textContent = `Jogador 1: ${c1 ? '✔ conectado' : 'aguardando…'} · Jogador 2: ${c2 ? '✔ conectado' : 'aguardando…'}`;
+    else status.textContent = c1 || c2 ? '✔ Celular conectado!' : 'Aguardando o celular…';
+  }
 
   const url = new URL('joystick.html', location.href).href;
   document.getElementById('celCodigo').textContent = `${jogo.sala.slice(0, 4)}-${jogo.sala.slice(4)}`;
@@ -81,9 +93,7 @@
   }
 
   function abrir() {
-    painel.classList.toggle('cel-ok', jogo.conectado());
-    status.textContent = !jogo.ligou ? 'Não deu para conectar ao servidor. Use o teclado.'
-      : jogo.conectado() ? '✔ Celular conectado!' : 'Aguardando o celular…';
+    atualizarStatus();
     painel.hidden = false;
   }
   document.getElementById('celBtn').addEventListener('click', abrir);

@@ -10,7 +10,8 @@
      aqui). Sem login, de propósito: o professor pode passar o celular para
      um aluno jogar — o controle só move o lutador, não acessa nada.
      Canal de broadcast do Supabase Realtime 'luta_<sala>': daqui saem 'j'
-     ({ x, y } de -1 a 1, só quando muda), 'b' (botão apertado, inclusive
+     ({ x, y } de -1 a 1, só quando muda; toda mensagem leva o id do
+     celular, que no X1 define quem é o jogador 1 e o 2), 'b' (botão apertado, inclusive
      'reiniciar') e 'ola';
      de lá vem 'estado' (vida, energia, fase) e 'vib' (vibrar). -->
 <style>
@@ -49,6 +50,7 @@
   .j-zona{ position:relative; flex:1; }
   .j-base{ position:absolute; width:150px; height:150px; margin:-75px 0 0 -75px; border-radius:50%;
     background:radial-gradient(circle, rgba(255,255,255,.06), rgba(255,255,255,.12)); border:2px solid rgba(255,255,255,.18); }
+  body[data-slot="2"] .j-knob{ background:radial-gradient(circle at 35% 30%, #ff9f9f, #b91c1c) !important; }
   .j-knob{ position:absolute; left:50%; top:50%; width:70px; height:70px; margin:-35px 0 0 -35px; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #7de3d8, #2f8f86); box-shadow:0 6px 18px rgba(0,0,0,.5); }
   .j-dica{ position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:12px; color:var(--dim); pointer-events:none; }
@@ -138,22 +140,41 @@
     });
     canal = sb.channel('luta_' + sala, { config: { broadcast: { self: false } } });
   } catch (e) {}
-  const enviar = (evento, payload) => { if (canal && pronto) canal.send({ type: 'broadcast', event: evento, payload }).catch(() => {}); };
+  // Id deste celular (fica na aba): o jogo usa para saber quem é o jogador 1
+  // e quem é o jogador 2 no X1.
+  let meuId = '', meuSlot = 0;
+  try { meuId = sessionStorage.getItem('luta_cel_id') || ''; } catch (e) {}
+  if (!meuId) {
+    meuId = Array.from(crypto.getRandomValues(new Uint8Array(6)), n => n.toString(16).padStart(2, '0')).join('');
+    try { sessionStorage.setItem('luta_cel_id', meuId); } catch (e) {}
+  }
+  const enviar = (evento, payload) => {
+    if (canal && pronto) canal.send({ type: 'broadcast', event: evento, payload: Object.assign({ id: meuId }, payload) }).catch(() => {});
+  };
 
   let recebeu = false, ultimoEstado = 0;
   function mostrar(e) {
     recebeu = true; ultimoEstado = Date.now();
     $('jTopo').classList.add('j-on');
     $('jStatus').textContent = 'Conectado';
-    $('jFase').textContent = e.tela === 'titulo' ? 'Aperte SOCO para começar' : e.tela === 'vitoria' ? 'Você venceu! 🏆' : `Fase ${e.fase}`;
-    $('jHp').style.width = `${Math.max(0, Math.min(100, (e.hp / (e.hpMax || 1)) * 100))}%`;
-    $('jEn').style.width = `${Math.max(0, Math.min(100, e.en || 0))}%`;
-    $('jEsp').classList.toggle('cheio', (e.en || 0) >= 100);
+    const x1 = e.modo === 'x1';
+    meuSlot = (e.ids && e.ids[meuId]) || 0;
+    document.body.dataset.slot = x1 ? String(meuSlot) : '';
+    const eu = (e.j && e.j[x1 && meuSlot === 2 ? 1 : 0]) || { hp: 0, hpMax: 1, en: 0 };
+    const quem = !x1 ? '' : meuSlot === 1 ? 'J1 🔵 ' : meuSlot === 2 ? 'J2 🔴 ' : 'Assistindo · ';
+    const onde = e.tela === 'titulo' ? 'Escolha o modo e aperte SOCO' : e.tela === 'vitoria' ? 'Você venceu! 🏆'
+      : e.tela === 'vitoriaX1' ? 'Fim do X1' : x1 ? `Round ${e.round}` : `Fase ${e.fase}`;
+    $('jFase').textContent = quem + onde;
+    $('jHp').style.width = `${Math.max(0, Math.min(100, (eu.hp / (eu.hpMax || 1)) * 100))}%`;
+    $('jEn').style.width = `${Math.max(0, Math.min(100, eu.en || 0))}%`;
+    $('jEsp').classList.toggle('cheio', (eu.en || 0) >= 100);
   }
   if (canal) {
     canal
       .on('broadcast', { event: 'estado' }, ({ payload }) => mostrar(payload || {}))
-      .on('broadcast', { event: 'vib' }, ({ payload }) => { if (navigator.vibrate) navigator.vibrate(Math.min(500, Number(payload && payload.ms) || 60)); })
+      .on('broadcast', { event: 'vib' }, ({ payload }) => {
+        if (payload && payload.slot && payload.slot !== meuSlot) return; // no X1, só vibra o celular de quem apanhou
+        if (navigator.vibrate) navigator.vibrate(Math.min(500, Number(payload && payload.ms) || 60)); })
       .subscribe(st => {
         pronto = st === 'SUBSCRIBED';
         if (pronto) { $('jStatus').textContent = 'Procurando o jogo…'; enviar('ola', {}); }
