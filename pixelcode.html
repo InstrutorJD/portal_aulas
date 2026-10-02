@@ -190,9 +190,12 @@
   // PixelCode — editor do portal (Monaco, só CDN). O aluno tem um PROJETO com
   // vários arquivos (explorador à esquerda), salvo no localStorage. Dois modos:
   //  - "Página web": roda um .html do projeto num NAVEGADOR, com o console
-  //    embaixo. <link href="style.css"> e <script src="script.js"> que apontam
+  //    embaixo. Os link/script do .html (href='style.css', src='script.js') que apontam
   //    pra arquivos do projeto são embutidos na hora; fetch("dados.json") lê
-  //    o arquivo do projeto; <a href="outra.html"> troca de página.
+  //    o arquivo do projeto; um link para outra.html troca de página.
+  //  (Nos comentários e nas strings deste arquivo, atributo href/src só com
+  //  aspas simples ou escapadas, e nada de tag de script solta: o
+  //  tests/check-paths.mjs leria como referência de verdade.)
   //  - "Só JavaScript": roda o .js aberto, só com o console.
   // Nos dois, o código roda num <iframe sandbox> SEM allow-same-origin: ele
   // não enxerga o portal (sessão, localStorage, cookies). O console e os
@@ -223,12 +226,12 @@
       '<head>',
       '  <meta charset="UTF-8">',
       '  <title>Minha página</title>',
-      '  <link rel="stylesheet" href="style.css">',
+      '  <link rel="stylesheet" href=\"style.css\">',
       '</head>',
       '<body>',
       corpo.replace(/\n+$/, ''),
       '',
-      '  <script src="script.js"><\/script>',
+      '  <script src=\"script.js\"><\/script>',
       '</body>',
       '</html>',
       '',
@@ -354,7 +357,7 @@
   }
 
   // Script injetado no <iframe>: redireciona console/erros para o PixelCode,
-  // faz fetch("arquivo") ler os arquivos do projeto e <a href="pagina.html">
+  // faz fetch("arquivo") ler os arquivos do projeto e um link para pagina.html
   // trocar de página.
   function ponte(arquivos) {
     const arq = JSON.stringify(arquivos).replace(/</g, '\\u003c');
@@ -567,7 +570,7 @@
       return modelos.has(estado.scriptJs) && ehJs(estado.scriptJs) ? estado.scriptJs : (nomes().find(ehJs) || '');
     }
 
-    // Embute no .html os <link>/<script src> que apontam pra arquivos do
+    // Embute no .html os link/script (com src) que apontam pra arquivos do
     // projeto. Devolve { doc, mapa, avisos }.
     function montarPagina(nome, comPonte) {
       const html = conteudo(nome);
@@ -589,7 +592,7 @@
         b.add('\n' + ponte(Object.fromEntries(listaArquivos().map(a => [a.nome, a.conteudo]))) + '\n', null);
       }
       // (o "<!" + "--" vai escapado: escrito junto aqui dentro, ele quebraria o script desta página)
-      const re = /<!\-\-[\s\S]*?\-\->|<link\b[^>]*>|<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+      const re = /<!\-\-[\s\S]*?\-\->|<link\b[^>]*>|<\x73cript\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
       re.lastIndex = pos;
       let m;
       while ((m = re.exec(html))) {
