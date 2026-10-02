@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0f17">
+<title>Prompts do checklist — Aula 03</title>
+<!-- Prompts do Copilot da Aula 03 (Parte 5, a tela do checklist). Aberta
+     pelo QR Code do slide "Copie os prompts": o aluno não copia nada do slide
+     projetado, copia daqui (botão Copiar) e cola no chat do Copilot, dentro
+     do Codespace. Um arquivo por vez: #html, #css, #js e, se der erro, #erro.
+     Página estática, sem login. O texto precisa bater com o dos slides. -->
+<style>
+  :root{ --bg:#0b0f17; --card:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,.14); --accent:#4fd1c5; }
+  @media (prefers-color-scheme: light){ :root{ --bg:#f4f6fa; --card:#ffffff; --ink:#111827; --dim:#4b5563; --line:rgba(0,0,0,.12); --accent:#0f8f86; } }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:system-ui, -apple-system, 'Segoe UI', sans-serif; line-height:1.5; }
+  main{ max-width:720px; margin:0 auto; padding:24px 16px 48px; }
+  h1{ font-size:24px; margin:0 0 6px; }
+  h2{ font-size:20px; margin:36px 0 8px; }
+  .sub{ color:var(--dim); margin:0 0 20px; }
+  ol{ padding-left:20px; margin:0 0 20px; }
+  ol li{ margin-bottom:6px; }
+  .caixa{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+  .barra{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; border-bottom:1px solid var(--line); }
+  .barra span{ font-weight:700; }
+  button{ font:inherit; font-weight:800; font-size:16px; padding:10px 20px; border-radius:999px; border:none; background:var(--accent); color:#05060d; cursor:pointer; }
+  button.ok{ background:#22c55e; }
+  pre{ margin:0; padding:16px; white-space:pre-wrap; word-break:break-word; font-family:'JetBrains Mono', Consolas, monospace; font-size:14px; }
+  code{ font-family:'JetBrains Mono', Consolas, monospace; }
+  .dica{ color:var(--dim); font-size:14px; margin-top:16px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🧰 Prompts da tela do checklist</h1>
+  <p class="sub">Aula 03 · Copilot no Codespace · <strong>um arquivo por vez</strong></p>
+  <ol>
+    <li>Abra este endereço <strong>no computador</strong>, numa aba ao lado do Codespace.</li>
+    <li>Toque em <strong>Copiar</strong> e cole no chat do Copilot.</li>
+    <li>Leia o que ele fez antes de clicar em <strong>Manter</strong> (<em>Keep</em>).</li>
+    <li>Rode a página, teste e só depois passe para o próximo arquivo.</li>
+  </ol>
+
+  <h2 id="html">1️⃣ index.html: a estrutura</h2>
+  <div class="caixa">
+    <div class="barra"><span>Prompt do HTML</span><button type="button" data-copiar="txtHtml">📋 Copiar</button></div>
+    <pre id="txtHtml">Estou criando a tela de um checklist de inspeção de equipamentos de mineração, para usar no celular.
+Crie SÓ o arquivo index.html, sem CSS e sem JavaScript dentro dele.
+A tela deve ter:
+- um select com id equipamento: "Escolha o equipamento", CAM-07 Caminhão, ESC-02 Escavadeira e PC-03 Pá carregadeira;
+- 5 itens, cada um com dois botões de rádio, Conforme e Não conforme: Freios, Pneus, Cinto de segurança, Limpeza da cabine e Nível de combustível;
+- o rádio de cada item com o name igual ao nome do item, sem acento e minúsculo (freios, pneus, cinto, limpeza, combustivel);
+- um botão Finalizar com id finalizar e um parágrafo vazio com id resultado;
+- o link para style.css no head e o script.js no fim do body.
+Não coloque comentários: eu mesmo vou comentar.</pre>
+  </div>
+
+  <h2 id="css">2️⃣ style.css: a aparência</h2>
+  <div class="caixa">
+    <div class="barra"><span>Prompt do CSS</span><button type="button" data-copiar="txtCss">📋 Copiar</button></div>
+    <pre id="txtCss">No meu checklist (#index.html), crie SÓ o arquivo style.css.
+Pense primeiro no celular: letra grande, um item embaixo do outro, botões e opções fáceis de tocar com luva.
+Em telas a partir de 700px, centralize o conteúdo com largura máxima de 600px.
+Destaque o resultado: verde para a classe apto e vermelho para a classe inapto.
+Não mude o index.html. Não coloque comentários: eu mesmo vou comentar.</pre>
+  </div>
+
+  <h2 id="js">3️⃣ script.js: o comportamento</h2>
+  <div class="caixa">
+    <div class="barra"><span>Prompt do JavaScript</span><button type="button" data-copiar="txtJs">📋 Copiar</button></div>
+    <pre id="txtJs">No meu checklist (#index.html), crie SÓ o arquivo script.js, em JavaScript simples, para iniciante.
+Use:
+- uma lista itens com o name de cada item e se ele é crítico (freios, pneus e cinto são críticos);
+- uma função avaliarInspecao() que confere cada item e devolve o resultado;
+- a regra: se um item crítico estiver Não conforme, o equipamento fica INAPTO; senão, fica APTO;
+- se faltar escolher o equipamento ou marcar algum item, mostre um aviso em vez do resultado;
+- o evento de clique no botão finalizar, que mostra o resultado no parágrafo resultado, com a classe apto ou inapto.
+Não mude os outros arquivos. Não coloque comentários: eu mesmo vou comentar.</pre>
+  </div>
+
+  <h2 id="erro">🩺 Deu erro? Peça a correção assim</h2>
+  <p class="sub">Antes, leia o erro no <strong>Console</strong> (F12) e tente achar a linha. Troque o que está entre &lt; &gt;.</p>
+  <div class="caixa">
+    <div class="barra"><span>Prompt de correção</span><button type="button" data-copiar="txtErro">📋 Copiar</button></div>
+    <pre id="txtErro">No meu checklist, o Console mostra este erro:
+&lt;cole aqui a frase vermelha do Console&gt;
+Ele aparece quando eu &lt;o que você fez: abri a página, cliquei em Finalizar...&gt;.
+Explique a causa em até 2 linhas e corrija só o necessário.</pre>
+  </div>
+  <p class="dica">O Copilot Free tem <strong>50 mensagens de chat por mês</strong>. Estes 3 prompts gastam 3: guarde o resto para as correções.</p>
+</main>
+<script>
+(function () {
+  document.querySelectorAll('[data-copiar]').forEach(btn => {
+    const rotulo = btn.textContent;
+    const texto = document.getElementById(btn.dataset.copiar);
+    btn.addEventListener('click', async () => {
+      let ok = false;
+      try { await navigator.clipboard.writeText(texto.textContent); ok = true; } catch (e) {
+        // Sem permissão de área de transferência: seleciona o texto para copiar à mão.
+        const sel = window.getSelection(), r = document.createRange();
+        r.selectNodeContents(texto); sel.removeAllRanges(); sel.addRange(r);
+        try { ok = document.execCommand('copy'); } catch (e2) {}
+      }
+      btn.textContent = ok ? '✔ Copiado!' : 'Texto selecionado: copie';
+      btn.classList.toggle('ok', ok);
+      setTimeout(() => { btn.textContent = rotulo; btn.classList.remove('ok'); }, 2500);
+    });
+  });
+})();
+</script>
+</body>
+</html>
