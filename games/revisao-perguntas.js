@@ -34,24 +34,4 @@ window.REVISAO_PERGUNTAS = {
       { q: 'Qual destes NÃO serve como passo de um algoritmo?', opcoes: ['Verifique se os 4 pneus estão calibrados', 'Confira o caminhão', 'Anote a hora da inspeção', 'Desligue o motor'], certa: 1 },
     ],
   },
-  // Aula 03 — revisa as Partes 1 a 3 da Aula 02 (as que deu tempo de dar):
-  // requisição e status no F12, fetch e CORS no Console, Design Thinking,
-  // RF x RNF e o que se encontra no GitHub (histórico de commits, Issues).
-  'aula-03': {
-    titulo: 'Revisão da Aula 2',
-    tempo: 20,
-    perguntas: [
-      // Requisições (F12 e Console)
-      { q: 'Você pediu /todos/999 e o item não existe. Qual status volta?', opcoes: ['200', '500', '404', '201'], certa: 2 },
-      { q: 'Na aba Rede, os pedidos de DADOS aparecem no filtro...', opcoes: ['Fetch/XHR', 'Imagem', 'CSS', 'Fonte'], certa: 0 },
-      { q: 'No Console, qual comando faz uma requisição HTTP?', opcoes: ['document.title', '2 + 2', 'console.log()', 'fetch()'], certa: 3 },
-      { q: 'O fetch para outro site deu erro de CORS. Quem bloqueou?', opcoes: ['O servidor caiu', 'O navegador', 'O antivírus', 'O GitHub'], certa: 1 },
-      // Requisitos
-      { q: '"O sistema deve abrir em até 3 s no 4G" é um...', opcoes: ['RF', 'RNF', 'Critério de aceite', 'Commit'], certa: 1 },
-      { q: '"O sistema deve registrar a inspeção" é um...', opcoes: ['RF', 'RNF', 'Webhook', 'Status'], certa: 0 },
-      { q: 'No Design Thinking, entender quem sofre com o problema é...', opcoes: ['Prototipar', 'Testar', 'Empatizar', 'Idear'], certa: 2 },
-      // GitHub
-      { q: 'Onde você vê quem mudou o quê num projeto do GitHub?', opcoes: ['Nas estrelas', 'Na aba Issues', 'No README', 'No histórico de commits'], certa: 3 },
-    ],
-  },
 };

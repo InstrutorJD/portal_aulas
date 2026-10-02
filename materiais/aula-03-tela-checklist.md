@@ -40,19 +40,8 @@ Aula 3: o checklist ganha estrutura, aparência e comportamento
 
 ---
 
-## ⚡ Responde Aí: revisão da Aula 2
-8 perguntas rápidas sobre **requisições**, **requisitos** e **GitHub**, respondidas no **celular**. Sem login.
-
-- Leia o QR Code do telão com a câmera
-- Toque na resposta antes do tempo acabar
-- No fim, o telão mostra quanto a turma acertou
-
-[Abrir o telão da revisão](https://instrutorjd.github.io/portal_aulas/professor/revisao.html?p=aula-03)
-
----
-
 ## Roteiro de hoje (1/2)
-- **Abertura**: revisão da Aula 2 no celular (15 min)
+- **Abertura**: a tela do checklist e o termômetro (5 min)
 - **Parte 1**: o nosso repositório: Codespace, terminal e git (30 min)
 - **Parte 2**: dados e métodos: JSON, POST, PATCH, DELETE (25 min)
 - **Parte 3**: além do pedido e resposta: webhook, upload, streaming (10 min)
@@ -64,7 +53,7 @@ As Partes 1 a 3 são o que ficou da **Aula 2**.
 
 ## Roteiro de hoje (2/2)
 - **Parte 4**: JavaScript: a lógica da inspeção, com desafios (75 min)
-- **Parte 5**: a tela do checklist com o Copilot (55 min)
+- **Parte 5**: a tela do checklist com o Copilot (65 min)
 - **Fechamento**: revisão e termômetro (10 min)
 
 Tudo **dentro do Codespace**: editor, terminal, Copilot e a página rodando.
@@ -1147,7 +1136,7 @@ Errou algum? Ainda não está pronto.
 
 ---
 
-## Se sobrar tempo: no celular de verdade
+## GitHub Pages: no celular de verdade
 + O GitHub **publica de graça** os arquivos de um repositório público
 + Ele abre o `index.html` da raiz: por isso o nome importa
 + Endereço: `seu-usuario.github.io/checklist-inspecao`
