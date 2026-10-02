@@ -200,6 +200,7 @@ window.SlidesMD = (function () {
   //   titulo: Introdução a Redes
   //   turma: 2º DS
   //   descricao: IP, máscara e gateway
+  //   instrutor: Jairon       (rodapé da abertura; padrão Jairon)
   //   ---
   // Só vale se for a PRIMEIRA coisa do arquivo e todas as linhas forem
   // "chave: valor" — senão é só um "---" de separar slide, como sempre.
@@ -267,7 +268,9 @@ window.SlidesMD = (function () {
       const temMidia = blocks.some(b => ['code', 'img', 'table', 'qr'].includes(b.t));
       // A abertura ganha a etiqueta "Aula 03 · data" acima do título.
       const chip = i === 0 && kind === 'title' && rotulo ? `<div class="sm-anim sm-meta-chip" style="--d:0">${esc(rotulo)}</div>` : '';
-      return { kind, html: chip + renderBlocks(blocks), temMidia };
+      // E o nome do instrutor no rodapé (troca com "instrutor: Fulano" no cabeçalho).
+      const autor = i === 0 && kind === 'title' ? `<div class="sm-anim sm-autor" style="--d:4">Inst.: ${esc(meta.instrutor || 'Jairon')}</div>` : '';
+      return { kind, html: chip + renderBlocks(blocks) + autor, temMidia };
     });
     const h1 = corpo.match(/^#\s+(.+)$/m);
     return { titulo: meta.titulo || (h1 ? h1[1].trim() : ''), meta, rotulo, slides };

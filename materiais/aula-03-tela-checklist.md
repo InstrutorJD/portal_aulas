@@ -3,7 +3,7 @@ aula: 3
 data: 2026-10-02
 titulo: Do papel para a tela: HTML, CSS e JavaScript
 turma: IA
-descricao: Fim da Aula 2 (git e webhook), o primeiro contato com JavaScript e a tela do checklist com o Copilot
+descricao: Fim da Aula 2 (git e webhook), o primeiro contato com JavaScript no PixelCode e a tela do checklist com o Copilot
 fonte: grande
 ---
 
@@ -45,7 +45,7 @@ As Partes 1 e 2 são o que ficou da **Aula 2**.
 - **Parte 4**: a tela do checklist com o Copilot (75 min)
 - **Fechamento**: revisão (10 min)
 
-Tudo **dentro do Codespace**: editor, terminal, Copilot e a página rodando.
+JavaScript no **PixelCode** (só o navegador); depois, tudo vai para o **Codespace**.
 
 ---
 
@@ -390,20 +390,33 @@ O `index.html` chama os outros dois. O script fica no **fim**: só roda depois q
 ## O que é programar?
 + Lembra do **algoritmo** da Aula 1? Passos claros, em ordem
 + Programar é escrever esses passos numa **linguagem** que o computador entende
-+ O JavaScript roda no **navegador** e também **direto no Codespace**
-+ Hoje: a regra da inspeção, **passo a passo**, no Codespace
++ O JavaScript roda no **navegador**, sem instalar nada
++ Hoje: a regra da inspeção, **passo a passo**, no PixelCode
 + Errar faz parte: o computador **avisa** onde errou
 
 ---
 
-## Seu laboratório: treino.js
-1. Na barra lateral do Codespace: **Novo arquivo** (📄+) → `treino.js`
-2. Escreva o código e salve com `Ctrl + S`
-3. Barra lateral: **Executar e Depurar** (▶ com um inseto) → botão **Executar e Depurar**
-4. Se ele perguntar, escolha **Node.js**
-5. O resultado aparece embaixo, no **Console de Depuração**
+## Seu laboratório: o PixelCode
+[qrcode https://tinyurl.com/pixelcode-jd tinyurl.com/pixelcode-jd]
 
-> Em inglês: **Run and Debug** e **Debug Console**. Para rodar de novo: o ▶ verde no topo.
+---
+
+## Criando o treino.js
+1. No topo, clique em **Só JavaScript**
+2. Em **Arquivos**, clique no **＋**, digite `treino` e **Enter**
+3. Escreva o código: as **sugestões** ajudam
+4. **Ctrl + Enter** (ou **▶ Executar**) roda o código
+5. O resultado aparece no **Console**, à direita
+
+> Salva **sozinho**, neste navegador.
+
+---
+
+## Um arquivo, vários desafios
++ Cada desafio vai **embaixo** do anterior, no mesmo `treino.js`
++ Repetiu um nome? `Identifier 'itens' has already been declared`
++ Selecione o desafio anterior e aperte **Ctrl + /** (ou **Ctrl + ;**)
++ As linhas viram **comentário** (`//`): ficam lá, mas **não rodam**
 
 ---
 
@@ -414,17 +427,17 @@ console.log('CAM-07')
 console.log(3 + 2)
 ```
 
-`console.log` mostra no **Console de Depuração** o que está entre parênteses. **Texto** vai entre aspas; **número**, não.
+`console.log` mostra no **Console** o que está entre parênteses. **Texto** vai entre aspas; **número**, não.
 
 ---
 
 ## 🎯 Desafio: o cabeçalho da inspeção
 Contexto: toda folha de inspeção começa com um cabeçalho.
 
-1. Crie o `treino.js` e mostre: `Checklist de Inspeção`
+1. No `treino.js`, mostre: `Checklist de Inspeção`
 2. Na linha de baixo, mostre a data de hoje
 3. Mostre o total de itens: 3 críticos **mais** 2 comuns, calculado pelo JS
-4. Rode com o ▶: saíram as 3 linhas no Console de Depuração?
+4. Rode com **Ctrl + Enter**: saíram as 3 linhas no Console?
 
 ---
 
@@ -470,7 +483,7 @@ Contexto: o supervisor quer ver quem inspecionou o quê.
 1. Crie variáveis para o operador, o equipamento e o turno
 2. Mostre a frase: `Ana inspecionou o CAM-07 no turno A`
 3. Crie `let horimetro = 1250` e some as **8 horas** do turno
-4. Tente mudar uma `const`: o que o Console de Depuração diz?
+4. Tente mudar uma `const`: o que o Console diz? Em qual linha?
 
 ---
 
@@ -734,7 +747,29 @@ botao.addEventListener('click', () => {
 + `addEventListener('click', ...)`: "**quando clicar**, faça isto"
 + `saida.textContent = ...`: escreve o resultado no parágrafo
 + Sem clique, **nada** acontece: o código fica esperando
-+ O evento só existe no **navegador**: você vai vê-lo na Parte 4
++ O evento só existe no **navegador**: no PixelCode, é o modo **Página web**
+
+---
+
+## A mini tela: index.html
+```html
+<h1>Inspeção do CAM-07</h1>
+<button id="finalizar">Finalizar</button>
+<p id="resultado"></p>
+```
+
+Vai **dentro** do `<body>`. O `<script src="script.js">` do fim continua lá: é ele que liga o JS.
+
+---
+
+## 🎯 Desafio: o botão Finalizar
+Contexto: a primeira versão da tela, ainda **sem roupa**.
+
+1. Clique em **Página web** e abra o `index.html`
+2. No `<body>`, troque o exemplo pela mini tela
+3. No `script.js`: apague tudo e digite lista, função e evento
+4. Freios `conforme: false` → **Finalizar**: deu INAPTO?
+5. Troque para `true` e clique de novo: deu APTO?
 
 ---
 
@@ -749,13 +784,15 @@ O que faz a função `avaliarInspecao()` rodar na tela do operador?
 ---
 
 ## Quando dá erro
-| O Console de Depuração diz | O que aconteceu |
+| O Console diz | O que aconteceu |
 |---|---|
 | `resultdo is not defined` | Nome escrito **diferente** |
 | `Assignment to constant variable` | Tentou mudar uma `const` |
-| `SyntaxError: Unexpected token` | Faltou `)`, `}` ou aspa |
+| `Unexpected end of input` | Faltou fechar uma `}` ou `)` |
+| `Invalid or unexpected token` | Faltou uma aspa |
+| `Cannot read properties of null` | O `id` não existe no HTML |
 
-O erro mostra **arquivo:linha**: comece a procurar por ali.
+O erro mostra **(arquivo, linha)**: clique nele e o PixelCode leva até lá.
 
 ---
 
@@ -765,7 +802,7 @@ Contexto: na mina, quem conserta precisa saber **ler** o defeito.
 1. Na função, escreva `itns` em vez de `itens`: que erro? Qual linha?
 2. Conserte. Agora apague uma `}`: o que o Console diz?
 3. Conserte. Tire uma aspa de um texto
-4. Tudo consertado? `git add treino.js`, commit e push
+4. Na mini tela, troque `#finalizar` por `#finalizr`: que erro?
 
 ---
 
@@ -808,6 +845,17 @@ Contexto: amanhã outro técnico vai abrir o seu `treino.js`.
 1. Escreva um comentário acima de **cada desafio** dizendo o que ele faz
 2. Na função, comente o `for`, o `if` e os dois `return`
 3. Leia para um colega: ele entendeu **sem** ver o código?
+
+---
+
+## Do PixelCode para o Codespace
+1. No PixelCode, no `treino.js`: **Ctrl + A** e **Ctrl + C**
+2. No Codespace: **Novo arquivo** (📄+) → `treino.js`
+3. Cole com **Ctrl + V** e salve com **Ctrl + S**
+4. No terminal: `node treino.js`. Mesma saída?
+5. `git add treino.js`, commit e push
+
+> O PixelCode guarda só **neste navegador**; o GitHub guarda de verdade.
 
 ---
 

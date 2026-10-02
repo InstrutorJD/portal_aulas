@@ -42,12 +42,46 @@
   .auto{ font-size:11px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; cursor:pointer; }
   .auto input{ accent-color:var(--accent); }
 
+  .salvo{ font-size:10px; color:var(--ink-dim); min-width:70px; text-align:right; }
+  .salvo.pendente{ color:var(--warn); }
+
   .workspace{ flex:1; min-height:0; display:flex; }
-  .editor-pane{ flex:1 1 55%; min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
-  .abas{ height:32px; flex-shrink:0; display:flex; background:var(--panel2); border-bottom:1px solid var(--line); }
-  .abas button{ font-family:inherit; font-size:11px; font-weight:800; letter-spacing:1px; padding:0 16px; border:none; border-right:1px solid var(--line); cursor:pointer; background:transparent; color:var(--ink-dim); }
+  .editor-pane{ flex:1 1 55%; min-width:0; min-height:0; overflow:hidden; display:flex; }
+  .editor-col{ flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
+
+  /* ---------- Explorador de arquivos ---------- */
+  .explorador{ flex:0 0 190px; min-height:0; display:flex; flex-direction:column; background:var(--panel2); border-right:1px solid var(--line); }
+  .explorador[hidden]{ display:none; }
+  .exp-topo{ height:32px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 6px 0 12px; border-bottom:1px solid var(--line);
+    font-size:10px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; }
+  .exp-topo button{ font-family:inherit; font-size:14px; line-height:1; width:24px; height:24px; border:none; border-radius:3px; background:transparent; color:var(--ink-dim); cursor:pointer; }
+  .exp-topo button:hover{ background:rgba(58,160,255,0.12); color:var(--accent); }
+  .exp-lista{ flex:1; overflow-y:auto; list-style:none; margin:0; padding:4px 0; }
+  .arq{ display:flex; align-items:center; gap:7px; padding:4px 6px 4px 12px; font-size:12px; cursor:pointer; color:var(--ink); white-space:nowrap; }
+  .arq:hover{ background:rgba(255,255,255,0.04); }
+  .arq.ativo{ background:rgba(58,160,255,0.14); color:#fff; }
+  .arq .nome{ flex:1; overflow:hidden; text-overflow:ellipsis; }
+  .arq .roda{ font-size:9px; color:var(--ok); }
+  .arq .acoes{ display:none; gap:1px; }
+  .arq:hover .acoes, .arq.ativo .acoes{ display:flex; }
+  .arq .acoes button{ font-family:inherit; font-size:11px; border:none; background:transparent; color:var(--ink-dim); cursor:pointer; padding:1px 4px; border-radius:3px; }
+  .arq .acoes button:hover{ color:var(--accent); background:rgba(58,160,255,0.12); }
+  .arq .acoes button[data-acao="apagar"]:hover{ color:var(--err); }
+  .arq input{ flex:1; min-width:0; font-family:inherit; font-size:12px; background:var(--bg); color:var(--ink); border:1px solid var(--accent); border-radius:2px; padding:2px 4px; outline:none; }
+  .arq input.invalido{ border-color:var(--err); }
+  .arq-erro{ font-size:10px; color:var(--err); padding:0 10px 4px 12px; white-space:normal; }
+  .ico{ flex:0 0 22px; font-size:9px; font-weight:800; text-align:center; }
+  .ico-html{ color:#ff8a4c; } .ico-css{ color:#4ca8ff; } .ico-js{ color:#f0d050; } .ico-json{ color:#c58af9; } .ico-md{ color:#8fd0a8; } .ico-outro{ color:var(--ink-dim); }
+  .exp-rodape{ flex-shrink:0; padding:6px 12px; font-size:10px; color:var(--ink-dim); border-top:1px solid var(--line); line-height:1.4; }
+
+  /* ---------- Abas dos arquivos abertos ---------- */
+  .abas{ height:32px; flex-shrink:0; display:flex; background:var(--panel2); border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:thin; }
+  .abas button{ font-family:inherit; font-size:11px; font-weight:600; padding:0 10px 0 14px; border:none; border-right:1px solid var(--line); cursor:pointer; background:transparent; color:var(--ink-dim);
+    display:flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0; }
   .abas button.ativa{ background:var(--bg); color:var(--accent); box-shadow:inset 0 2px 0 var(--accent); }
-  .abas[hidden]{ display:none; }
+  .abas .fechar{ font-size:13px; line-height:1; padding:0 3px; border-radius:3px; opacity:.6; }
+  .abas .fechar:hover{ opacity:1; background:rgba(255,255,255,0.1); }
+  .abas .toggle-exp{ padding:0 12px; font-size:14px; }
   #editor{ flex:1; min-height:0; overflow:hidden; }
 
   .lado{ flex:1 1 45%; min-width:280px; min-height:0; overflow:hidden; display:flex; flex-direction:column; border-left:1px solid var(--line); }
@@ -80,11 +114,14 @@
   .console-body .line.error{ color:var(--err); }
   .console-body .line.info{ color:var(--ink-dim); font-style:italic; }
   .console-body .empty{ color:var(--ink-dim); font-style:italic; }
+  .console-body .line.ir{ cursor:pointer; }
+  .console-body .line.ir:hover{ text-decoration:underline; }
 
   @media (max-width: 800px) {
     .workspace{ flex-direction:column; }
     .editor-pane{ flex:1 1 50%; }
     .lado{ min-width:0; border-left:none; border-top:1px solid var(--line); flex:1 1 50%; }
+    .explorador{ flex-basis:150px; }
   }
 </style>
 </head>
@@ -93,30 +130,41 @@
 <div class="topbar">
   <div class="brand">PixelCode <small id="subtitulo">editor + navegador</small></div>
   <div class="actions">
+    <span class="salvo" id="statusSalvo" title="Seus arquivos ficam salvos neste navegador">✓ salvo</span>
     <div class="modo" role="tablist" aria-label="Modo do editor">
       <button type="button" data-modo="web" id="modoWeb">Página web</button>
       <button type="button" data-modo="js" id="modoJs">Só JavaScript</button>
     </div>
     <label class="auto" id="autoWrap" title="Atualiza o navegador sozinho, meio segundo depois de você parar de digitar"><input type="checkbox" id="chkAuto"> Atualizar sozinho</label>
-    <button class="btn-secondary btn" id="btnBaixar" title="Baixar a página como index.html">⬇ Baixar</button>
+    <button class="btn-secondary btn" id="btnBaixar" title="Baixar a página (com CSS e JS juntos num arquivo só)">⬇ Baixar</button>
     <button class="btn" id="btnRun">▶ Executar (Ctrl+Enter)</button>
   </div>
 </div>
 
 <div class="workspace">
   <div class="editor-pane">
-    <div class="abas" id="abas" role="tablist" aria-label="Arquivos">
-      <button type="button" data-aba="html">HTML</button>
-      <button type="button" data-aba="css">CSS</button>
-      <button type="button" data-aba="js">JS</button>
+    <aside class="explorador" id="explorador" aria-label="Arquivos do projeto">
+      <div class="exp-topo">
+        <span>Arquivos</span>
+        <span>
+          <button type="button" id="btnNovoArq" title="Novo arquivo">＋</button>
+          <button type="button" id="btnImportar" title="Importar arquivos do computador">⤒</button>
+        </span>
+      </div>
+      <ul class="exp-lista" id="expLista"></ul>
+      <div class="exp-rodape">Salvo neste navegador.<br>Duplo clique renomeia.</div>
+    </aside>
+    <input type="file" id="inputImportar" multiple hidden accept=".html,.htm,.css,.js,.mjs,.json,.md,.txt,.csv,.svg,.xml">
+    <div class="editor-col">
+      <div class="abas" id="abas" role="tablist" aria-label="Arquivos abertos"></div>
+      <div id="editor"></div>
     </div>
-    <div id="editor"></div>
   </div>
   <div class="lado" id="lado">
     <div class="navegador" id="navegador">
       <div class="nav-barra">
         <button type="button" id="btnAtualizar" title="Recarregar a página">↻</button>
-        <div class="nav-url" id="navUrl">pixelcode://minha-pagina</div>
+        <div class="nav-url" id="navUrl">pixelcode://index.html</div>
         <button type="button" id="btnNovaAba" title="Abrir a página numa aba nova, em tela cheia">⧉ Nova aba</button>
       </div>
       <iframe id="preview" title="Navegador do PixelCode" sandbox="allow-scripts allow-modals allow-forms allow-popups"></iframe>
@@ -135,18 +183,24 @@
 <iframe id="runner" title="Execução do JavaScript" sandbox="allow-scripts allow-modals"></iframe>
 
 <script src="shared/pixelcode-docs.js"></script>
+<script src="shared/pixelcode-autocomplete.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/emmet-monaco-es@5.7.0/dist/emmet-monaco.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
 <script>
-  // PixelCode — editor do portal (Monaco, só CDN). Dois modos:
-  //  - "Página web": abas HTML, CSS e JS e um NAVEGADOR que mostra a página
-  //    funcionando, com o console embaixo;
-  //  - "Só JavaScript": o editor + console de sempre.
+  // PixelCode — editor do portal (Monaco, só CDN). O aluno tem um PROJETO com
+  // vários arquivos (explorador à esquerda), salvo no localStorage. Dois modos:
+  //  - "Página web": roda um .html do projeto num NAVEGADOR, com o console
+  //    embaixo. <link href="style.css"> e <script src="script.js"> que apontam
+  //    pra arquivos do projeto são embutidos na hora; fetch("dados.json") lê
+  //    o arquivo do projeto; <a href="outra.html"> troca de página.
+  //  - "Só JavaScript": roda o .js aberto, só com o console.
   // Nos dois, o código roda num <iframe sandbox> SEM allow-same-origin: ele
   // não enxerga o portal (sessão, localStorage, cookies). O console e os
   // erros chegam por postMessage. Os laços do JS ganham uma checagem de
   // tempo (como o CodePen faz) para um laço infinito não congelar a aba.
   const MONACO_BASE = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs';
-  const CHAVE = 'pixelcode_v2';
+  const CHAVE = 'pixelcode_v3';
+  const CHAVE_ANTIGA = 'pixelcode_v2'; // abas fixas HTML/CSS/JS — migrado uma vez
 
   // Monaco usa Web Workers pra recursos como diagnóstico de sintaxe. Como
   // aqui a página é servida sem bundler (só CDN), o worker é montado num
@@ -161,14 +215,33 @@
     }
   };
 
-  const INICIAL = {
-    html: [
-      '<h1>Olá, PixelCode!</h1>',
-      '<p>Você clicou <strong id="contador">0</strong> vezes.</p>',
-      '<button id="botao">Clique aqui</button>',
+  // Página completa a partir do miolo do <body>, já ligada ao style.css e ao script.js.
+  function paginaCom(corpo) {
+    return [
+      '<!DOCTYPE html>',
+      '<html lang="pt-BR">',
+      '<head>',
+      '  <meta charset="UTF-8">',
+      '  <title>Minha página</title>',
+      '  <link rel="stylesheet" href="style.css">',
+      '</head>',
+      '<body>',
+      corpo.replace(/\n+$/, ''),
       '',
-    ].join('\n'),
-    css: [
+      '  <script src="script.js"><\/script>',
+      '</body>',
+      '</html>',
+      '',
+    ].join('\n');
+  }
+
+  const EXEMPLO = {
+    'index.html': paginaCom([
+      '  <h1>Olá, PixelCode!</h1>',
+      '  <p>Você clicou <strong id="contador">0</strong> vezes.</p>',
+      '  <button id="botao">Clique aqui</button>',
+    ].join('\n')),
+    'style.css': [
       'body {',
       '  font-family: system-ui, sans-serif;',
       '  text-align: center;',
@@ -182,7 +255,7 @@
       '}',
       '',
     ].join('\n'),
-    js: [
+    'script.js': [
       'let cliques = 0;',
       'const botao = document.getElementById("botao");',
       'const contador = document.getElementById("contador");',
@@ -194,8 +267,8 @@
       '});',
       '',
     ].join('\n'),
-    jsSolo: [
-      '// Escreva JavaScript e clique em "Executar".',
+    'teste.js': [
+      '// Modo "Só JavaScript": escreva e clique em "Executar".',
       'function somar(a, b) {',
       '  return a + b;',
       '}',
@@ -205,19 +278,49 @@
     ].join('\n'),
   };
 
-  function lerSalvo() { try { return JSON.parse(localStorage.getItem(CHAVE) || 'null') || {}; } catch (e) { return {}; } }
-  const salvo = lerSalvo();
+  // Projeto salvo: { modo, auto, ativo, abertos, pagina, scriptJs, explorador, arquivos: { nome: conteudo } }.
+  // Na primeira vez, aproveita o que o aluno tinha nas abas antigas (pixelcode_v2).
+  function carregarProjeto() {
+    try {
+      const p = JSON.parse(localStorage.getItem(CHAVE) || 'null');
+      if (p && p.arquivos && Object.keys(p.arquivos).length) return p;
+    } catch (e) {}
+    let v2 = null;
+    try { v2 = JSON.parse(localStorage.getItem(CHAVE_ANTIGA) || 'null'); } catch (e) {}
+    const arquivos = Object.assign({}, EXEMPLO);
+    if (v2) {
+      if (v2.html != null) arquivos['index.html'] = paginaCom(v2.html);
+      if (v2.css != null) arquivos['style.css'] = v2.css;
+      if (v2.js != null) arquivos['script.js'] = v2.js;
+      if (v2.jsSolo != null) arquivos['teste.js'] = v2.jsSolo;
+    }
+    const js = v2 && v2.modo === 'js';
+    return {
+      modo: js ? 'js' : 'web', auto: !v2 || v2.auto !== false, arquivos,
+      abertos: js ? ['teste.js'] : ['index.html', 'style.css', 'script.js'], ativo: js ? 'teste.js' : 'index.html',
+    };
+  }
+  const salvo = carregarProjeto();
   const estado = {
     modo: salvo.modo === 'js' ? 'js' : 'web',
-    aba: ['html', 'css', 'js'].includes(salvo.aba) ? salvo.aba : 'html',
     auto: salvo.auto !== false,
+    pagina: salvo.pagina || '',     // .html que o navegador mostra
+    scriptJs: salvo.scriptJs || '', // .js que o modo "Só JavaScript" roda
+    explorador: typeof salvo.explorador === 'boolean' ? salvo.explorador : window.innerWidth > 800,
   };
+
+  const extensao = nome => (String(nome).match(/\.([^.]+)$/) || [, ''])[1].toLowerCase();
+  const ehHtml = nome => ['html', 'htm'].includes(extensao(nome));
+  const ehJs = nome => ['js', 'mjs'].includes(extensao(nome));
+  const LINGUAGEM = { html: 'html', htm: 'html', css: 'css', js: 'javascript', mjs: 'javascript', json: 'json', md: 'markdown', svg: 'xml', xml: 'xml' };
+  const ICONE = { html: ['&lt;&gt;', 'html'], htm: ['&lt;&gt;', 'html'], css: ['#', 'css'], js: ['JS', 'js'], mjs: ['JS', 'js'], json: ['{}', 'json'], md: ['M↓', 'md'] };
+  const TIPO_MIME = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', json: 'application/json', svg: 'image/svg+xml', xml: 'application/xml', csv: 'text/csv', md: 'text/markdown' };
 
   // ---------- Proteção contra laço infinito ----------
   // Acha cada "for (...) {", "while (...) {" e "do {" fora de strings e
   // comentários e põe, logo depois da chave, uma chamada a __pcLaco(id): se o
   // mesmo laço rodar sem parar por mais de 2 s, ela lança um erro. Laço sem
-  // chaves (ex.: for (...) x++;) não é protegido.
+  // chaves (ex.: for (...) x++;) não é protegido. Não muda o número de linhas.
   function protegerLacos(src) {
     let out = '', i = 0, id = 0;
     const n = src.length;
@@ -250,9 +353,14 @@
     return out;
   }
 
-  // Script injetado no <iframe>: redireciona console/erros para o PixelCode.
-  const PONTE = `<script>(function(){
-    var P = parent, inicio = {}, ultimo = {};
+  // Script injetado no <iframe>: redireciona console/erros para o PixelCode,
+  // faz fetch("arquivo") ler os arquivos do projeto e <a href="pagina.html">
+  // trocar de página.
+  function ponte(arquivos) {
+    const arq = JSON.stringify(arquivos).replace(/</g, '\\u003c');
+    const mimes = JSON.stringify(TIPO_MIME);
+    return `<script>(function(){
+    var P = parent, inicio = {}, ultimo = {}, ARQ = ${arq}, MIME = ${mimes};
     function fmt(a){ if (typeof a === 'string') return a; if (a instanceof Error) return a.name + ': ' + a.message;
       if (a && a.nodeType === 1) return a.outerHTML.slice(0, 300);
       try { var s = JSON.stringify(a, null, 2); return s === undefined ? String(a) : s; } catch (e) { return String(a); } }
@@ -264,38 +372,112 @@
       if (t - inicio[id] > 2000) { inicio[id] = 0; throw new RangeError('Laço infinito? Um laço rodou por mais de 2 segundos e foi interrompido.'); } };
     window.addEventListener('error', function(e){ P.postMessage({ pixelcode: true, tipo: 'erro', texto: e.message, linha: e.lineno || 0 }, '*'); });
     window.addEventListener('unhandledrejection', function(e){ P.postMessage({ pixelcode: true, tipo: 'erro', texto: 'Promise rejeitada: ' + fmt(e.reason), linha: 0 }, '*'); });
+    function externo(u){ return /^[a-z][\\w+.-]*:|^\\/\\//i.test(u); }
+    function limpa(u){ u = String(u).split(/[?#]/)[0].replace(/^\\.?\\//, ''); try { u = decodeURIComponent(u); } catch (e) {} return u; }
+    var f0 = window.fetch;
+    window.fetch = function(u, o){
+      var s = typeof u === 'string' ? u : (u instanceof URL ? u.href : null);
+      if (s === null || externo(s)) return f0.apply(window, arguments);
+      var n = limpa(s);
+      if (Object.prototype.hasOwnProperty.call(ARQ, n)) {
+        var ext = (n.match(/\\.([^.]+)$/) || [,''])[1].toLowerCase();
+        return Promise.resolve(new Response(ARQ[n], { status: 200, headers: { 'Content-Type': (MIME[ext] || 'text/plain') + ';charset=utf-8' } }));
+      }
+      console.warn('fetch("' + s + '"): esse arquivo não existe no projeto.');
+      return Promise.resolve(new Response('Arquivo não encontrado', { status: 404, statusText: 'Not Found' }));
+    };
+    document.addEventListener('click', function(e){
+      var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+      if (!a || e.defaultPrevented) return;
+      var h = a.getAttribute('href');
+      if (!h || externo(h) || h.charAt(0) === '#') return;
+      var n = limpa(h);
+      if (/\\.html?$/i.test(n)) { e.preventDefault(); P.postMessage({ pixelcode: true, tipo: 'navegar', arquivo: n }, '*'); }
+    });
   })();<\/script>`;
+  }
 
-  // Monta o documento. Devolve também a linha em que o JS começa, para
-  // traduzir o número da linha dos erros para a linha da aba JS.
+  // Monta o documento guardando, pra cada trecho, de que arquivo e linha ele
+  // veio — assim o erro "linha 57" do iframe vira "script.js, linha 3".
+  function construtor() {
+    let doc = '', linha = 1;
+    const mapa = [];
+    return {
+      add(texto, arquivo, origem) {
+        if (!texto) return;
+        const quebras = (texto.match(/\n/g) || []).length;
+        // Trecho nosso que começa com "\n": a linha em que ele começa ainda é
+        // a última do arquivo anterior — senão um erro nela ficaria sem dono.
+        const ini = !arquivo && texto[0] === '\n' ? linha + 1 : linha;
+        mapa.push({ ini, arquivo: arquivo || null, origem: origem || 1, linhas: quebras + 1 });
+        doc += texto;
+        linha += quebras;
+      },
+      fim: () => ({ doc, mapa }),
+    };
+  }
+  function traduzirLinha(mapa, n) {
+    let seg = null, ultimoArq = null;
+    for (const s of mapa) {
+      if (s.ini > n) break;
+      seg = s;
+      if (s.arquivo) ultimoArq = s;
+    }
+    if (seg && seg.arquivo) return { arquivo: seg.arquivo, linha: seg.origem + n - seg.ini };
+    // Erro logo depois do fim de um arquivo (ex.: "Unexpected end of input",
+    // faltou uma "}"): aponta a última linha dele.
+    const fim = ultimoArq && ultimoArq.ini + ultimoArq.linhas - 1;
+    if (ultimoArq && n - fim <= 2) return { arquivo: ultimoArq.arquivo, linha: ultimoArq.origem + ultimoArq.linhas - 1 };
+    return null;
+  }
+  const linhaEm = (texto, idx) => texto.slice(0, idx).split('\n').length;
   const fecharScript = s => s.replace(/<\/script/gi, '<\\/script');
-  function montarDocumento(html, css, js, comPonte) {
-    const cabeca = `<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n${comPonte ? PONTE + '\n' : ''}<style>\n${css}\n</style>\n</head>\n<body>\n${html}\n<script>\n`;
-    return { doc: `${cabeca}${fecharScript(comPonte ? protegerLacos(js) : js)}\n<\/script>\n</body>\n</html>\n`, linhaJs: cabeca.split('\n').length };
+  const externo = u => /^[a-z][\w+.-]*:|^\/\//i.test(u);
+  const limparUrl = u => { u = String(u).split(/[?#]/)[0].replace(/^\.?\//, ''); try { u = decodeURIComponent(u); } catch (e) {} return u; };
+  function lerAttr(tag, nome) {
+    const m = tag.match(new RegExp('\\s' + nome + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\'|([^\\s>]+))', 'i'));
+    return m ? (m[1] ?? m[2] ?? m[3]) : null;
   }
 
   require.config({ paths: { vs: MONACO_BASE } });
 
   require(['vs/editor/editor.main'], function () {
-    const modelos = {
-      html: monaco.editor.createModel(salvo.html != null ? salvo.html : INICIAL.html, 'html'),
-      css: monaco.editor.createModel(salvo.css != null ? salvo.css : INICIAL.css, 'css'),
-      js: monaco.editor.createModel(salvo.js != null ? salvo.js : INICIAL.js, 'javascript'),
-      jsSolo: monaco.editor.createModel(salvo.jsSolo != null ? salvo.jsSolo : INICIAL.jsSolo, 'javascript'),
-    };
-    const vistas = {};
+    const modelos = new Map(); // nome → modelo do Monaco
+    const vistas = {};         // nome → posição do cursor/rolagem
+    const conteudo = nome => (modelos.get(nome) ? modelos.get(nome).getValue() : '');
+    const nomes = () => [...modelos.keys()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+    const listaArquivos = () => nomes().map(nome => ({ nome, conteudo: conteudo(nome) }));
+    function criarModelo(nome, texto) {
+      const m = monaco.editor.createModel(texto, LINGUAGEM[extensao(nome)] || 'plaintext', monaco.Uri.file('/' + nome));
+      modelos.set(nome, m);
+      return m;
+    }
+    Object.keys(salvo.arquivos).forEach(nome => criarModelo(nome, String(salvo.arquivos[nome] ?? '')));
+    let abertos = (salvo.abertos || []).filter(n => modelos.has(n));
+    let ativo = modelos.has(salvo.ativo) ? salvo.ativo : (abertos[0] || nomes()[0]);
+    if (!abertos.includes(ativo)) abertos.push(ativo);
+
+    // ---------- Autocomplete e documentação ----------
+    // O TypeScript do Monaco enxerga TODOS os .js do projeto (como no
+    // navegador, onde os scripts dividem as variáveis globais): uma função
+    // criada em funcoes.js aparece no autocomplete do script.js.
+    const ts = monaco.languages.typescript;
+    if (ts) ts.javascriptDefaults.setEagerModelSync(true);
+    if (window.PixelCodeAutocomplete) window.PixelCodeAutocomplete.registrar(monaco, { arquivos: listaArquivos });
+    // Emmet no HTML: "ul>li*3" + Tab, "!" + Tab (página completa), etc.
+    try { if (window.emmetMonaco) window.emmetMonaco.emmetHTML(monaco, ['html']); } catch (e) {}
     // Documentação em português ao passar o mouse (shared/pixelcode-docs.js).
     // Registrada DEPOIS dos provedores do Monaco (que só entram quando cada
     // linguagem termina de carregar), para aparecer em cima da explicação em
     // inglês: espera o worker de JavaScript ficar pronto e dá uma folga para
     // HTML e CSS.
     if (window.PixelCodeDocs) {
-      const js = monaco.languages.typescript && monaco.languages.typescript.getJavaScriptWorker
-        ? monaco.languages.typescript.getJavaScriptWorker().catch(() => null) : Promise.resolve();
+      const js = ts && ts.getJavaScriptWorker ? ts.getJavaScriptWorker().catch(() => null) : Promise.resolve();
       Promise.all([js, new Promise(r => setTimeout(r, 1500))]).then(() => window.PixelCodeDocs.registrar(monaco));
     }
+
     const editor = monaco.editor.create(document.getElementById('editor'), {
-      model: modelos.html,
+      model: modelos.get(ativo),
       theme: 'vs-dark',
       fontFamily: "'JetBrains Mono', monospace",
       fontSize: 13,
@@ -303,49 +485,161 @@
       automaticLayout: true,
       scrollBeyondLastLine: false,
       tabSize: 2,
+      // Sugestões aparecem sozinhas, inclusive dentro de aspas (ids, classes, arquivos).
+      quickSuggestions: { other: true, comments: false, strings: true },
+      quickSuggestionsDelay: 10,
+      suggestOnTriggerCharacters: true,
+      acceptSuggestionOnEnter: 'on',
+      tabCompletion: 'on',
+      suggestSelection: 'recentlyUsedByPrefix',
+      wordBasedSuggestions: 'allDocuments',
+      suggest: { preview: true, localityBonus: true, shareSuggestSelections: true, showStatusBar: true },
+      parameterHints: { enabled: true, cycle: true },
+      linkedEditing: true,
+      bracketPairColorization: { enabled: true },
+      guides: { bracketPairs: 'active' },
     });
 
     const consoleBody = document.getElementById('consoleBody');
     const preview = document.getElementById('preview');
     const runner = document.getElementById('runner');
-    let linhaJs = 0, timerAuto = 0, timerSalvar = 0;
+    const expLista = document.getElementById('expLista');
+    const abasEl = document.getElementById('abas');
+    const statusSalvo = document.getElementById('statusSalvo');
+    let mapaLinhas = [], timerAuto = 0, timerSalvar = 0, avisouCheio = false;
     // O contentWindow de um <iframe> continua o mesmo entre recarregamentos:
     // só aceita mensagens do quadro do modo ativo.
     const quadroAtivo = () => (estado.modo === 'web' ? preview : runner).contentWindow;
 
-    function salvar() {
+    function gravar() {
       clearTimeout(timerSalvar);
-      timerSalvar = setTimeout(() => {
-        try {
-          localStorage.setItem(CHAVE, JSON.stringify({
-            modo: estado.modo, aba: estado.aba, auto: estado.auto,
-            html: modelos.html.getValue(), css: modelos.css.getValue(), js: modelos.js.getValue(), jsSolo: modelos.jsSolo.getValue(),
-          }));
-        } catch (e) {}
-      }, 400);
+      const arquivos = {};
+      nomes().forEach(n => { arquivos[n] = conteudo(n); });
+      try {
+        localStorage.setItem(CHAVE, JSON.stringify({
+          modo: estado.modo, auto: estado.auto, pagina: estado.pagina, scriptJs: estado.scriptJs,
+          explorador: estado.explorador, ativo, abertos, arquivos,
+        }));
+        statusSalvo.textContent = '✓ salvo';
+        statusSalvo.classList.remove('pendente');
+      } catch (e) {
+        statusSalvo.textContent = '⚠ não salvou';
+        if (!avisouCheio) { avisouCheio = true; logLine('Não foi possível salvar: o espaço do navegador acabou. Apague ou diminua algum arquivo grande.', 'warn'); }
+      }
+    }
+    function salvar() {
+      statusSalvo.textContent = 'salvando…';
+      statusSalvo.classList.add('pendente');
+      clearTimeout(timerSalvar);
+      timerSalvar = setTimeout(gravar, 400);
     }
 
-    function logLine(text, type) {
+    function logLine(text, type, destino) {
       const empty = consoleBody.querySelector('.empty');
       if (empty) empty.remove();
       const line = document.createElement('div');
       line.className = 'line ' + (type || 'log');
       line.textContent = text;
+      if (destino && modelos.has(destino.arquivo)) {
+        line.classList.add('ir');
+        line.title = 'Clique para ir até a linha';
+        line.addEventListener('click', () => irPara(destino.arquivo, destino.linha));
+      }
       consoleBody.appendChild(line);
       consoleBody.scrollTop = consoleBody.scrollHeight;
     }
     function clearConsole() {
       consoleBody.innerHTML = '<div class="empty">Nada executado ainda. Escreva um código e clique em "Executar".</div>';
     }
+    function irPara(arquivo, linha) {
+      abrir(arquivo);
+      editor.revealLineInCenter(linha);
+      editor.setPosition({ lineNumber: linha, column: 1 });
+      editor.focus();
+    }
+
+    // ---------- Montagem da página ----------
+    function paginaAtual() {
+      return modelos.has(estado.pagina) && ehHtml(estado.pagina) ? estado.pagina : (nomes().find(ehHtml) || '');
+    }
+    function scriptAtual() {
+      if (ehJs(ativo)) return ativo;
+      return modelos.has(estado.scriptJs) && ehJs(estado.scriptJs) ? estado.scriptJs : (nomes().find(ehJs) || '');
+    }
+
+    // Embute no .html os <link>/<script src> que apontam pra arquivos do
+    // projeto. Devolve { doc, mapa, avisos }.
+    function montarPagina(nome, comPonte) {
+      const html = conteudo(nome);
+      const b = construtor();
+      const avisos = [];
+      const deProjeto = url => {
+        if (!url || externo(url)) return null;
+        const n = limparUrl(url);
+        if (modelos.has(n)) return n;
+        avisos.push(`"${url}" não existe no projeto (${nome}).`);
+        return null;
+      };
+      let pos = 0;
+      if (comPonte) {
+        // A ponte precisa rodar antes de qualquer outro script.
+        const m = html.match(/<head\b[^>]*>/i) || html.match(/<html\b[^>]*>/i) || html.match(/<!doctype[^>]*>/i);
+        pos = m ? m.index + m[0].length : 0;
+        b.add(html.slice(0, pos), nome, 1);
+        b.add('\n' + ponte(Object.fromEntries(listaArquivos().map(a => [a.nome, a.conteudo]))) + '\n', null);
+      }
+      // (o "<!" + "--" vai escapado: escrito junto aqui dentro, ele quebraria o script desta página)
+      const re = /<!\-\-[\s\S]*?\-\->|<link\b[^>]*>|<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+      re.lastIndex = pos;
+      let m;
+      while ((m = re.exec(html))) {
+        b.add(html.slice(pos, m.index), nome, linhaEm(html, pos));
+        const tag = m[0], aqui = linhaEm(html, m.index);
+        pos = re.lastIndex;
+        if (tag.startsWith('<!\-\-')) { b.add(tag, nome, aqui); continue; }
+        if (/^<link/i.test(tag)) {
+          const css = /stylesheet/i.test(lerAttr(tag, 'rel') || '') && deProjeto(lerAttr(tag, 'href'));
+          if (css) b.add(`<style data-arquivo="${css}">\n${conteudo(css)}\n</style>`, null);
+          else b.add(tag, nome, aqui);
+          continue;
+        }
+        const abre = '<script' + m[1] + '>';
+        const tipo = (lerAttr(abre, 'type') || '').toLowerCase();
+        const codigoJs = !tipo || /javascript|module/.test(tipo);
+        const src = lerAttr(abre, 'src');
+        if (src) {
+          const js = deProjeto(src);
+          if (!js) { b.add(tag, nome, aqui); continue; }
+          const resto = m[1].replace(/\s+src\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, '');
+          b.add(`<script${resto} data-arquivo="${js}">\n`, null);
+          b.add(fecharScript(comPonte && codigoJs ? protegerLacos(conteudo(js)) : conteudo(js)), js, 1);
+          b.add('\n<\/script>', null);
+        } else {
+          b.add(comPonte && codigoJs ? abre + protegerLacos(m[2]) + '<\/script>' : tag, nome, aqui);
+        }
+      }
+      b.add(html.slice(pos), nome, linhaEm(html, pos));
+      return Object.assign(b.fim(), { avisos });
+    }
+
+    function montarScript(nome) {
+      const b = construtor();
+      b.add(`<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n<meta charset="UTF-8">\n${ponte(Object.fromEntries(listaArquivos().map(a => [a.nome, a.conteudo])))}\n</head>\n<body>\n<script>\n`, null);
+      b.add(fecharScript(protegerLacos(conteudo(nome))), nome, 1);
+      b.add('\n<\/script>\n</body>\n</html>\n', null);
+      return b.fim();
+    }
 
     // Mensagens do <iframe> (só aceita as do quadro que está rodando agora).
     window.addEventListener('message', ev => {
       const d = ev.data;
       if (!d || !d.pixelcode || ev.source !== quadroAtivo()) return;
-      if (d.tipo === 'erro') {
-        const l = d.linha ? d.linha - linhaJs + 1 : 0;
-        const onde = l > 0 ? ` (${estado.modo === 'web' ? 'JS, ' : ''}linha ${l})` : (d.linha ? ' (num script do HTML)' : '');
-        logLine(`${d.texto}${onde}`, 'error');
+      if (d.tipo === 'navegar') {
+        if (modelos.has(d.arquivo)) { estado.pagina = d.arquivo; salvar(); executar(); }
+        else logLine(`O link aponta para "${d.arquivo}", que não existe no projeto.`, 'warn');
+      } else if (d.tipo === 'erro') {
+        const onde = d.linha ? traduzirLinha(mapaLinhas, d.linha) : null;
+        logLine(`${d.texto}${onde ? ` (${onde.arquivo}, linha ${onde.linha})` : ''}`, 'error', onde);
       } else {
         logLine(d.texto, d.tipo === 'warn' ? 'warn' : d.tipo === 'error' ? 'error' : d.tipo === 'info' ? 'info' : 'log');
       }
@@ -355,77 +649,283 @@
       clearConsole();
       consoleBody.innerHTML = '';
       if (estado.modo === 'web') {
-        const m = montarDocumento(modelos.html.getValue(), modelos.css.getValue(), modelos.js.getValue(), true);
-        linhaJs = m.linhaJs;
+        const pag = paginaAtual();
+        document.getElementById('navUrl').textContent = 'pixelcode://' + (pag || '');
+        if (!pag) { preview.srcdoc = ''; logLine('Crie um arquivo .html (ex.: index.html) para ver a página no navegador.', 'warn'); return; }
+        const m = montarPagina(pag, true);
+        mapaLinhas = m.mapa;
+        m.avisos.forEach(a => logLine(a, 'warn'));
         preview.srcdoc = m.doc;
+        renderExplorador();
       } else {
-        const m = montarDocumento('', '', modelos.jsSolo.getValue(), true);
-        linhaJs = m.linhaJs;
+        const js = scriptAtual();
+        if (!js) { logLine('Crie um arquivo .js para rodar no modo "Só JavaScript".', 'warn'); return; }
+        estado.scriptJs = js;
+        const m = montarScript(js);
+        mapaLinhas = m.mapa;
         runner.onload = () => setTimeout(() => {
-          if (!consoleBody.children.length) logLine('Código executado sem erros — nada foi exibido (use console.log(...)).', 'info');
+          if (!consoleBody.children.length) logLine(`${js} executado sem erros — nada foi exibido (use console.log(...)).`, 'info');
         }, 80);
         runner.srcdoc = m.doc;
+        renderExplorador();
       }
     }
+    function autoExecutar() {
+      if (estado.modo === 'web' && estado.auto) { clearTimeout(timerAuto); timerAuto = setTimeout(executar, 600); }
+    }
 
-    function trocarAba(aba) {
-      if (estado.modo !== 'web') return;
-      vistas[estado.aba] = editor.saveViewState();
-      estado.aba = aba;
-      editor.setModel(modelos[aba]);
-      if (vistas[aba]) editor.restoreViewState(vistas[aba]);
-      document.querySelectorAll('#abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === aba));
-      editor.focus();
+    // ---------- Explorador e abas ----------
+    function icone(nome) {
+      const [txt, cls] = ICONE[extensao(nome)] || ['•', 'outro'];
+      return `<span class="ico ico-${cls}">${txt}</span>`;
+    }
+    const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    function renderExplorador() {
+      const roda = estado.modo === 'web' ? paginaAtual() : scriptAtual();
+      expLista.innerHTML = nomes().map(n => `
+        <li class="arq${n === ativo ? ' ativo' : ''}" data-nome="${escHtml(n)}" title="${escHtml(n)}">
+          ${icone(n)}<span class="nome">${escHtml(n)}</span>${n === roda ? '<span class="roda" title="É este arquivo que roda">▶</span>' : ''}
+          <span class="acoes">
+            <button type="button" data-acao="renomear" title="Renomear">✎</button>
+            <button type="button" data-acao="baixar" title="Baixar este arquivo">⬇</button>
+            <button type="button" data-acao="apagar" title="Apagar">✕</button>
+          </span>
+        </li>`).join('');
+    }
+    function renderAbas() {
+      abasEl.innerHTML = `<button type="button" class="toggle-exp" data-acao="explorador" title="Mostrar/esconder os arquivos">☰</button>` +
+        abertos.map(n => `<button type="button" role="tab" class="${n === ativo ? 'ativa' : ''}" data-nome="${escHtml(n)}">${icone(n)}${escHtml(n)}${abertos.length > 1 ? '<span class="fechar" data-acao="fechar" title="Fechar">×</span>' : ''}</button>`).join('');
+      const a = abasEl.querySelector('.ativa');
+      if (a) a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+    function render() { renderExplorador(); renderAbas(); }
+
+    function abrir(nome) {
+      if (!modelos.has(nome)) return;
+      if (modelos.has(ativo)) vistas[ativo] = editor.saveViewState();
+      if (!abertos.includes(nome)) abertos.push(nome);
+      ativo = nome;
+      editor.setModel(modelos.get(nome));
+      if (vistas[nome]) editor.restoreViewState(vistas[nome]);
+      const trocouPagina = ehHtml(nome) && estado.pagina !== nome;
+      if (ehHtml(nome)) estado.pagina = nome;
+      if (ehJs(nome)) estado.scriptJs = nome;
+      render();
       salvar();
+      if (estado.modo === 'web' && trocouPagina) executar();
+      editor.focus();
+    }
+    function fecharAba(nome) {
+      if (abertos.length <= 1) return;
+      const i = abertos.indexOf(nome);
+      abertos = abertos.filter(n => n !== nome);
+      if (nome === ativo) abrir(abertos[Math.min(i, abertos.length - 1)]);
+      else { renderAbas(); salvar(); }
+    }
+
+    function validarNome(nome, atual) {
+      if (!nome) return 'Digite um nome.';
+      if (!/^[\p{L}\p{N}_\-.]+$/u.test(nome)) return 'Use só letras, números, "-", "_" e "." (sem espaços nem barras).';
+      if (nome.startsWith('.')) return 'O nome não pode começar com ponto.';
+      if (nome.length > 60) return 'Nome muito comprido.';
+      if (nomes().some(n => n.toLowerCase() === nome.toLowerCase() && n !== atual)) return 'Já existe um arquivo com esse nome.';
+      return '';
+    }
+    const comExtensao = nome => (/\.[^.]+$/.test(nome) ? nome : nome + '.js');
+
+    // Campo de nome dentro da lista (novo arquivo ou renomear).
+    function pedirNome(li, inicial, aoConfirmar) {
+      li.innerHTML = `${icone(inicial || 'x.js')}<input type="text" spellcheck="false" autocomplete="off" placeholder="nome.js">`;
+      const input = li.querySelector('input');
+      let erroEl = null, feito = false;
+      input.value = inicial;
+      li.after(erroEl = Object.assign(document.createElement('div'), { className: 'arq-erro' }));
+      const fim = () => { feito = true; erroEl.remove(); };
+      const confirmar = () => {
+        const nome = comExtensao(input.value.trim());
+        const erro = input.value.trim() ? aoConfirmar.validar(nome) : '';
+        if (!input.value.trim()) { fim(); renderExplorador(); return true; }
+        if (erro) { input.classList.add('invalido'); erroEl.textContent = erro; return false; }
+        fim(); aoConfirmar.ok(nome); return true;
+      };
+      input.addEventListener('input', () => { input.classList.remove('invalido'); erroEl.textContent = ''; li.querySelector('.ico').outerHTML = icone(comExtensao(input.value || 'x')); });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); confirmar(); }
+        else if (e.key === 'Escape') { fim(); renderExplorador(); editor.focus(); }
+      });
+      input.addEventListener('blur', () => { if (!feito && !confirmar()) { fim(); renderExplorador(); } });
+      input.focus();
+      // Seleciona só o nome, sem a extensão (como no VS Code).
+      const ponto = inicial.lastIndexOf('.');
+      input.setSelectionRange(0, ponto > 0 ? ponto : inicial.length);
+    }
+
+    function novoArquivo() {
+      if (!estado.explorador) { estado.explorador = true; aplicarExplorador(); }
+      const li = document.createElement('li');
+      li.className = 'arq';
+      expLista.prepend(li);
+      pedirNome(li, '', {
+        validar: n => validarNome(n),
+        ok: nome => {
+          criarModelo(nome, ehHtml(nome) ? paginaCom('  ') : '');
+          abrir(nome);
+          if (ehHtml(nome)) editor.setPosition({ lineNumber: 9, column: 3 });
+        },
+      });
+    }
+
+    function renomear(antigo) {
+      const li = [...expLista.children].find(el => el.dataset.nome === antigo);
+      if (!li) return;
+      pedirNome(li, antigo, {
+        validar: n => validarNome(n, antigo),
+        ok: novo => {
+          if (novo === antigo) { renderExplorador(); return; }
+          const velho = modelos.get(antigo);
+          const m = monaco.editor.createModel(velho.getValue(), LINGUAGEM[extensao(novo)] || 'plaintext', monaco.Uri.file('/' + novo));
+          // Mantém a ordem do mapa (e assim a do arquivo salvo).
+          const entradas = [...modelos].map(([n, mod]) => (n === antigo ? [novo, m] : [n, mod]));
+          modelos.clear(); entradas.forEach(([n, mod]) => modelos.set(n, mod));
+          abertos = abertos.map(n => (n === antigo ? novo : n));
+          if (estado.pagina === antigo) estado.pagina = novo;
+          if (estado.scriptJs === antigo) estado.scriptJs = novo;
+          if (vistas[antigo]) { vistas[novo] = vistas[antigo]; delete vistas[antigo]; }
+          if (ativo === antigo) { ativo = novo; editor.setModel(m); if (vistas[novo]) editor.restoreViewState(vistas[novo]); }
+          velho.dispose();
+          render(); salvar(); autoExecutar();
+          // Avisa se outro arquivo ainda aponta para o nome antigo.
+          const usam = nomes().filter(n => n !== novo && conteudo(n).includes(antigo));
+          if (usam.length) logLine(`Renomeado para ${novo}. Atenção: ${usam.join(', ')} ainda cita "${antigo}" — troque lá também.`, 'warn');
+        },
+      });
+    }
+
+    function apagar(nome) {
+      if (modelos.size <= 1) { logLine('O projeto precisa ter pelo menos um arquivo.', 'warn'); return; }
+      if (!confirm(`Apagar "${nome}"? Não dá para desfazer.`)) return;
+      const m = modelos.get(nome);
+      modelos.delete(nome);
+      abertos = abertos.filter(n => n !== nome);
+      delete vistas[nome];
+      if (ativo === nome) {
+        const prox = abertos[0] || nomes()[0];
+        if (!abertos.length) abertos.push(prox);
+        ativo = '';
+        abrir(prox);
+      } else render();
+      m.dispose();
+      salvar(); autoExecutar();
+    }
+
+    function baixarTexto(texto, nome) {
+      const blob = new Blob([texto], { type: (TIPO_MIME[extensao(nome)] || 'text/plain') + ';charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = nome;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+
+    function importar(arquivos) {
+      const lista = [...arquivos];
+      let ultimo = '';
+      Promise.all(lista.map(f => new Promise(ok => {
+        const nome = f.name.replace(/\s+/g, '-');
+        if (validarNome(nome, nome)) { logLine(`"${f.name}" não foi importado: ${validarNome(nome, nome)}`, 'warn'); return ok(); }
+        if (f.size > 1024 * 1024) { logLine(`"${f.name}" é grande demais (máx. 1 MB).`, 'warn'); return ok(); }
+        const leitor = new FileReader();
+        leitor.onload = () => {
+          const existente = nomes().find(n => n.toLowerCase() === nome.toLowerCase());
+          if (existente) {
+            if (!confirm(`Já existe "${existente}". Substituir pelo arquivo importado?`)) return ok();
+            modelos.get(existente).setValue(String(leitor.result));
+            ultimo = existente;
+          } else { criarModelo(nome, String(leitor.result)); ultimo = nome; }
+          ok();
+        };
+        leitor.onerror = () => { logLine(`Não foi possível ler "${f.name}".`, 'warn'); ok(); };
+        leitor.readAsText(f);
+      }))).then(() => { if (ultimo) abrir(ultimo); render(); salvar(); autoExecutar(); });
+    }
+
+    function aplicarExplorador() {
+      document.getElementById('explorador').hidden = !estado.explorador;
     }
 
     function trocarModo(modo) {
-      const chaveAtual = estado.modo === 'web' ? estado.aba : 'jsSolo';
-      vistas[chaveAtual] = editor.saveViewState();
       estado.modo = modo;
       document.getElementById('modoWeb').classList.toggle('ativo', modo === 'web');
       document.getElementById('modoJs').classList.toggle('ativo', modo === 'js');
-      document.getElementById('abas').hidden = modo !== 'web';
       document.getElementById('navegador').hidden = modo !== 'web';
       document.getElementById('autoWrap').style.display = modo === 'web' ? '' : 'none';
       document.getElementById('lado').classList.toggle('so-js', modo !== 'web');
       document.getElementById('subtitulo').textContent = modo === 'web' ? 'editor + navegador (HTML, CSS e JS)' : 'editor + console de JavaScript';
-      const chave = modo === 'web' ? estado.aba : 'jsSolo';
-      editor.setModel(modelos[chave]);
-      if (vistas[chave]) editor.restoreViewState(vistas[chave]);
-      document.querySelectorAll('#abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === estado.aba));
+      // No modo JS, deixa aberto o .js que vai rodar.
+      if (modo === 'js' && !ehJs(ativo)) { const js = scriptAtual(); if (js) abrir(js); }
+      render();
       salvar();
       if (modo === 'web') executar(); else clearConsole();
     }
 
     function baixar() {
-      const doc = estado.modo === 'web'
-        ? montarDocumento(modelos.html.getValue(), modelos.css.getValue(), modelos.js.getValue(), false).doc
-        : modelos.jsSolo.getValue();
-      const blob = new Blob([doc], { type: estado.modo === 'web' ? 'text/html' : 'text/javascript' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = estado.modo === 'web' ? 'index.html' : 'script.js';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      if (estado.modo === 'web') {
+        const pag = paginaAtual();
+        if (pag) baixarTexto(montarPagina(pag, false).doc, pag);
+      } else if (scriptAtual()) baixarTexto(conteudo(scriptAtual()), scriptAtual());
     }
 
     // Nova aba: a página continua dentro de um <iframe sandbox>, em tela
     // cheia — assim ela também não enxerga o portal.
     function novaAba() {
-      const m = montarDocumento(modelos.html.getValue(), modelos.css.getValue(), modelos.js.getValue(), true);
+      const pag = paginaAtual();
+      if (!pag) return;
+      const m = montarPagina(pag, true);
       const w = window.open('', '_blank');
       if (!w) { logLine('O navegador bloqueou a nova aba. Permita pop-ups para este site.', 'warn'); return; }
       const attr = m.doc.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-      w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>PixelCode — minha página</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="${attr}"></iframe></body></html>`);
+      w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>PixelCode — ${escHtml(pag)}</title><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="${attr}"></iframe></body></html>`);
       w.document.close();
     }
 
-    editor.onDidChangeModelContent(() => {
-      salvar();
-      if (estado.modo === 'web' && estado.auto) { clearTimeout(timerAuto); timerAuto = setTimeout(executar, 600); }
+    // ---------- Eventos ----------
+    editor.onDidChangeModelContent(() => { salvar(); autoExecutar(); });
+
+    expLista.addEventListener('click', e => {
+      const li = e.target.closest('.arq[data-nome]');
+      if (!li || e.target.closest('input')) return;
+      const nome = li.dataset.nome, acao = e.target.closest('[data-acao]');
+      if (!acao) return abrir(nome);
+      e.stopPropagation();
+      if (acao.dataset.acao === 'renomear') renomear(nome);
+      else if (acao.dataset.acao === 'apagar') apagar(nome);
+      else if (acao.dataset.acao === 'baixar') baixarTexto(conteudo(nome), nome);
     });
-    document.querySelectorAll('#abas button').forEach(b => b.addEventListener('click', () => trocarAba(b.dataset.aba)));
+    expLista.addEventListener('dblclick', e => {
+      const li = e.target.closest('.arq[data-nome]');
+      if (li && !e.target.closest('[data-acao], input')) renomear(li.dataset.nome);
+    });
+    abasEl.addEventListener('click', e => {
+      const acao = e.target.closest('[data-acao]');
+      if (acao && acao.dataset.acao === 'explorador') { estado.explorador = !estado.explorador; aplicarExplorador(); salvar(); return; }
+      const aba = e.target.closest('[data-nome]');
+      if (!aba) return;
+      if (acao && acao.dataset.acao === 'fechar') fecharAba(aba.dataset.nome);
+      else abrir(aba.dataset.nome);
+    });
+    // Botão do meio fecha a aba (como nos navegadores).
+    abasEl.addEventListener('auxclick', e => { const aba = e.target.closest('[data-nome]'); if (aba && e.button === 1) fecharAba(aba.dataset.nome); });
+
+    document.getElementById('btnNovoArq').addEventListener('click', novoArquivo);
+    const inputImportar = document.getElementById('inputImportar');
+    document.getElementById('btnImportar').addEventListener('click', () => inputImportar.click());
+    inputImportar.addEventListener('change', () => { if (inputImportar.files.length) importar(inputImportar.files); inputImportar.value = ''; });
+    // Arrastar arquivos do computador para cima do explorador também importa.
+    const exp = document.getElementById('explorador');
+    exp.addEventListener('dragover', e => { e.preventDefault(); });
+    exp.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files.length) importar(e.dataTransfer.files); });
+
     document.querySelectorAll('.modo button').forEach(b => b.addEventListener('click', () => trocarModo(b.dataset.modo)));
     const chkAuto = document.getElementById('chkAuto');
     chkAuto.checked = estado.auto;
@@ -436,9 +936,22 @@
     document.getElementById('btnBaixar').addEventListener('click', baixar);
     document.getElementById('btnClear').addEventListener('click', clearConsole);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executar);
+    // Ctrl+S: salva na hora (e não abre o "Salvar página" do navegador).
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, gravar);
+    window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); gravar(); } });
+    // Comentar linhas: Ctrl+/ do Monaco, mais as teclas do teclado brasileiro
+    // (ABNT2: a tecla "/" ao lado do Shift direito chega como ABNT_C1) e Ctrl+;.
+    const comentar = () => editor.trigger('teclado', 'editor.action.commentLine', null);
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.ABNT_C1, comentar);
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Semicolon, comentar);
+    // Alt+N: novo arquivo.
+    editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.KeyN, novoArquivo);
+    window.addEventListener('beforeunload', gravar);
 
+    aplicarExplorador();
     trocarModo(estado.modo);
-    window.__pixelcode = { editor, modelos, executar, trocarModo, trocarAba }; // usado só para testes manuais
+    editor.focus();
+    window.__pixelcode = { editor, modelos, executar, trocarModo, abrir, montarPagina }; // usado só para testes manuais
   });
 </script>
 
