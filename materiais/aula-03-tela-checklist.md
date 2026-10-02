@@ -3,7 +3,7 @@ aula: 3
 data: 2026-10-02
 titulo: Do papel para a tela: HTML, CSS e JavaScript
 turma: IA
-descricao: Fim da Aula 2 (git, JSON e métodos, webhook), o primeiro contato com JavaScript e a tela do checklist com o Copilot
+descricao: Fim da Aula 2 (git e webhook), o primeiro contato com JavaScript e a tela do checklist com o Copilot
 fonte: grande
 ---
 
@@ -29,32 +29,21 @@ Aula 3: o checklist ganha estrutura, aparência e comportamento
 
 ---
 
-## Termômetro: levante os dedos
-**0** nunca ouvi · **1** já ouvi · **2** sei explicar · **3** já usei
-
-+ Terminal e git (commit, push, pull)
-+ JSON e métodos HTTP
-+ HTML e CSS
-+ Variável e condição (if)
-+ Lista, laço (for) e função
-
----
-
 ## Roteiro de hoje (1/2)
-- **Abertura**: a tela do checklist e o termômetro (5 min)
+- **Abertura**: a tela do checklist (5 min)
 - **Parte 1**: o nosso repositório: Codespace, terminal e git (30 min)
-- **Parte 2**: dados e métodos: JSON, POST, PATCH, DELETE (25 min)
-- **Parte 3**: além do pedido e resposta: webhook, upload, streaming (10 min)
+- **Parte 2**: além do pedido e resposta: webhook, upload, streaming (10 min)
+- **Parte 3**: JavaScript, 1ª metade: variável e condição (45 min)
 - ☕ **Intervalo** (20 min)
 
-As Partes 1 a 3 são o que ficou da **Aula 2**.
+As Partes 1 e 2 são o que ficou da **Aula 2**.
 
 ---
 
 ## Roteiro de hoje (2/2)
-- **Parte 4**: JavaScript: a lógica da inspeção, com desafios (75 min)
-- **Parte 5**: a tela do checklist com o Copilot (65 min)
-- **Fechamento**: revisão e termômetro (10 min)
+- **Parte 3**: JavaScript, 2ª metade: lista, laço, função e evento (45 min)
+- **Parte 4**: a tela do checklist com o Copilot (75 min)
+- **Fechamento**: revisão (10 min)
 
 Tudo **dentro do Codespace**: editor, terminal, Copilot e a página rodando.
 
@@ -236,185 +225,7 @@ Você mudou o README no Codespace e quer que a mudança apareça no GitHub.
 
 ---
 
-# Parte 2 — Dados e métodos
-A inspeção em JSON e as 4 ações com dados
-
----
-
-## Do README para os dados
-+ O README guarda o **texto** do projeto: o mapa e os requisitos
-+ Mas o sistema troca **dados**: o equipamento, os itens, o status
-+ Esses dados viajam em **JSON**, nos pedidos que você viu na Aula 2
-+ Na API de treino, cada `todo` é um **item de checklist**
-+ `title` é o nome do item; `completed` diz se ele está ok
-
----
-
-## Chave, valor e lista
-+ **Chave**: o nome do dado, sempre entre aspas duplas: `"turno"`
-+ **Valor**: texto `"Ana"`, número `7`, `true`/`false` ou `null`
-+ **Objeto** `{ }`: um grupo de chaves e valores
-+ **Lista** `[ ]`: vários valores em ordem
-
----
-
-## CRUD: as 4 ações com dados
-| CRUD | Método HTTP | Na inspeção |
-|---|---|---|
-| **C**reate (criar) | `POST` | Registrar uma inspeção |
-| **R**ead (ler) | `GET` | Listar as inspeções |
-| **U**pdate (atualizar) | `PATCH` | Mudar o status de um item |
-| **D**elete (apagar) | `DELETE` | Cancelar a inspeção |
-
----
-
-## POST: criando um item
-```bash
-curl -i -X POST \
-  https://jsonplaceholder.typicode.com/todos \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Freios", "completed": false}'
-```
-
-`-X` = método, `-H` = cabeçalho, `-d` = o JSON enviado. Rode no terminal do **Codespace**: no PowerShell do Windows as aspas se perdem.
-
----
-
-## PATCH e DELETE
-```bash
-curl -i -X PATCH \
-  https://jsonplaceholder.typicode.com/todos/1 \
-  -H "Content-Type: application/json" \
-  -d '{"completed": true}'
-
-curl -i -X DELETE \
-  https://jsonplaceholder.typicode.com/todos/1
-```
-
----
-
-## Mão na massa: investigue a API
-Anote o **status** e a **resposta** de cada um:
-
-1. `POST` de um item seu: qual `id` voltou?
-2. Busque esse `id` com `GET`: `curl -i` + o endereço `/todos/201`. Existe?
-3. `PATCH` e `DELETE` no item 1
-4. `GET` no `/todos/1` de novo: ele mudou? Sumiu?
-
-> Tudo no terminal do **Codespace**. Sem `-X`, o `curl` faz `GET`.
-
----
-
-## Deu certo... ou não?
-+ O `POST` respondeu `201 Created`, com o `id` 201
-+ Mas o `GET` do 201 responde `404`: **nada foi salvo**
-+ Depois do `DELETE`, o item 1 **continua lá**
-+ É uma API de **treino**: ela finge que salvou
-+ Lição: o status diz o que a API **respondeu**, não o que **aconteceu**
-
----
-
-## E se o JSON vier quebrado?
-```bash
-curl -i -X POST \
-  https://jsonplaceholder.typicode.com/todos \
-  -H "Content-Type: application/json" \
-  -d '{title: "Freios",}'
-```
-
-Teste! Que status voltou? Por que ela não aceitou?
-
----
-
-## Regras que quebram tudo
-- Chave **sem aspas** ou com aspas simples: `turno: "A"` ✗
-- **Vírgula sobrando** no último item ✗
-- **Comentários** não existem em JSON ✗
-- Número **entre aspas** vira texto: `"7"` não é `7`
-
-> A API respondeu `500`: erro no servidor. Uma API bem feita responderia `400`, "você mandou errado".
-
----
-
-## Qual JSON é válido?
-Três destes têm erro. Qual está certo?
-
-- [ ] `{ turno: "A" }`
-- [ ] `{ 'turno': 'A' }`
-- [x] `{ "turno": "A" }`
-- [ ] `{ "turno": "A", }`
-
----
-
-## Qual método?
-O operador marcou "Luzes: ok" por engano na inspeção 7 e precisa corrigir para reprovado.
-
-- [ ] `GET /inspecoes/7`
-- [ ] `POST /inspecoes`
-- [x] `PATCH /inspecoes/7`
-- [ ] `DELETE /inspecoes/7`
-
----
-
-## Agora é a sua vez: a inspeção
-```json
-{
-  "equipamento": "CAM-07",
-  "operador": "Ana",
-  "itens": [
-    { "nome": "Freios", "status": "ok" },
-    { "nome": "Pneus", "status": "reprovado" }
-  ]
-}
-```
-
----
-
-## Validando no terminal
-```bash
-python3 -m json.tool inspecao.json
-```
-
-Se estiver certo, o JSON aparece organizado. Se tiver erro, ele mostra a **linha**.
-
----
-
-## Mão na massa: inspecao.json
-1. No Codespace, crie o arquivo `inspecao.json` **à mão**
-2. Coloque um equipamento seu e pelo menos **4 itens**
-3. **Valide** no terminal e corrija o que estiver errado
-4. Quebre de propósito (tire uma aspa) e valide de novo: que linha ele aponta?
-5. Tudo certo? `git add`, `git commit` e `git push`
-
----
-
-## REST: CRUD virando rotas
-| Ação | Método | Rota |
-|---|---|---|
-| Registrar inspeção | `POST` | `/inspecoes` |
-| Listar inspeções | `GET` | `/inspecoes` |
-| Atualizar item | `PATCH` | `/inspecoes/7` |
-| Cancelar inspeção | `DELETE` | `/inspecoes/7` |
-
-O **recurso** fica no endereço, a **ação** fica no método. Igual ao `/todos`!
-
----
-
-## Mão na massa: rotas no README
-No `README.md`, crie **à mão** a seção **Rotas REST** com as **4 ações**:
-
-```markdown
-## Rotas REST
-| Ação | Método | Rota |
-|---|---|---|
-| Registrar inspeção | POST | /inspecoes |
-```
-
-Confira a tabela no **Preview** (ícone no canto superior direito do editor). Depois, commit e push.
-
----
-
-# Parte 3 — Além do pedido e resposta
+# Parte 2 — Além do pedido e resposta
 Webhook, upload e streaming
 
 ---
@@ -438,7 +249,7 @@ Webhook, upload e streaming
 ---
 
 ## Por dentro de um webhook
-+ É só um **POST**, igual ao da Parte 2
++ É só um **POST**, o método de enviar dados da Aula 1
 + Quem **envia**: o sistema onde algo aconteceu (o checklist)
 + Quem **recebe**: o sistema que precisa saber (o da manutenção)
 + A manutenção cadastra o endereço dela **uma vez** no checklist
@@ -516,12 +327,7 @@ O relatório de turno aparece palavra por palavra enquanto a IA escreve.
 
 ---
 
-# ☕ Intervalo: 20 min
-Na volta: a **tela** do checklist
-
----
-
-# Parte 4 — JavaScript: a lógica da inspeção
+# Parte 3 — JavaScript: a lógica da inspeção
 O seu primeiro contato com programação
 
 ---
@@ -561,7 +367,7 @@ O botão **Finalizar** ficou grande e laranja, fácil de tocar com luva. Quem fe
 + **HTML**: as peças da tela: `<select>`, `<input type="radio">`, `<button>`
 + Cada peça pode ter um `id`: o **nome** que o JavaScript usa para achá-la
 + **CSS**: cor, tamanho e espaço; o `@media` ajeita a tela no celular
-+ Na Parte 5, a IA escreve os dois. Você só precisa **reconhecer**
++ Na Parte 4, a IA escreve os dois. Você só precisa **reconhecer**
 + O que decide **apto ou inapto** é o JavaScript: é nele que a gente mergulha
 
 ---
@@ -584,19 +390,20 @@ O `index.html` chama os outros dois. O script fica no **fim**: só roda depois q
 ## O que é programar?
 + Lembra do **algoritmo** da Aula 1? Passos claros, em ordem
 + Programar é escrever esses passos numa **linguagem** que o computador entende
-+ O JavaScript roda no **navegador** e também no **terminal** (com o Node)
++ O JavaScript roda no **navegador** e também **direto no Codespace**
 + Hoje: a regra da inspeção, **passo a passo**, no Codespace
 + Errar faz parte: o computador **avisa** onde errou
 
 ---
 
 ## Seu laboratório: treino.js
-```bash
-touch treino.js   # cria o arquivo
-node treino.js    # roda o arquivo
-```
+1. Na barra lateral do Codespace: **Novo arquivo** (📄+) → `treino.js`
+2. Escreva o código e salve com `Ctrl + S`
+3. Barra lateral: **Executar e Depurar** (▶ com um inseto) → botão **Executar e Depurar**
+4. Se ele perguntar, escolha **Node.js**
+5. O resultado aparece embaixo, no **Console de Depuração**
 
-Você escreve no `treino.js`, salva com `Ctrl + S` e roda no terminal. O **Node** já vem no Codespace.
+> Em inglês: **Run and Debug** e **Debug Console**. Para rodar de novo: o ▶ verde no topo.
 
 ---
 
@@ -607,7 +414,7 @@ console.log('CAM-07')
 console.log(3 + 2)
 ```
 
-`console.log` mostra no terminal o que está entre parênteses. **Texto** vai entre aspas; **número**, não.
+`console.log` mostra no **Console de Depuração** o que está entre parênteses. **Texto** vai entre aspas; **número**, não.
 
 ---
 
@@ -617,7 +424,7 @@ Contexto: toda folha de inspeção começa com um cabeçalho.
 1. Crie o `treino.js` e mostre: `Checklist de Inspeção`
 2. Na linha de baixo, mostre a data de hoje
 3. Mostre o total de itens: 3 críticos **mais** 2 comuns, calculado pelo JS
-4. Rode com `node treino.js`: saíram as 3 linhas?
+4. Rode com o ▶: saíram as 3 linhas no Console de Depuração?
 
 ---
 
@@ -663,7 +470,7 @@ Contexto: o supervisor quer ver quem inspecionou o quê.
 1. Crie variáveis para o operador, o equipamento e o turno
 2. Mostre a frase: `Ana inspecionou o CAM-07 no turno A`
 3. Crie `let horimetro = 1250` e some as **8 horas** do turno
-4. Tente mudar uma `const`: o que o terminal diz?
+4. Tente mudar uma `const`: o que o Console de Depuração diz?
 
 ---
 
@@ -785,6 +592,11 @@ Freios e Pneus conformes, **Limpeza da cabine** não conforme. Qual o resultado?
 
 ---
 
+# ☕ Intervalo: 20 min
+Na volta: as **listas** e a **função** da inspeção
+
+---
+
 ## Lista: vários valores em ordem
 ### Contexto: o checklist não tem um item, tem **vários**.
 
@@ -824,7 +636,7 @@ Contexto: o checklist do CAM-07 tem 5 itens.
 ---
 
 ## Lista de objetos: o item completo
-### Contexto: como no JSON da Parte 2, cada item tem detalhes.
+### Contexto: como no JSON da Aula 2, cada item tem detalhes.
 
 ```js
 const itens = [
@@ -922,7 +734,7 @@ botao.addEventListener('click', () => {
 + `addEventListener('click', ...)`: "**quando clicar**, faça isto"
 + `saida.textContent = ...`: escreve o resultado no parágrafo
 + Sem clique, **nada** acontece: o código fica esperando
-+ O evento só existe no **navegador**: você vai vê-lo na Parte 5
++ O evento só existe no **navegador**: você vai vê-lo na Parte 4
 
 ---
 
@@ -937,7 +749,7 @@ O que faz a função `avaliarInspecao()` rodar na tela do operador?
 ---
 
 ## Quando dá erro
-| O terminal diz | O que aconteceu |
+| O Console de Depuração diz | O que aconteceu |
 |---|---|
 | `resultdo is not defined` | Nome escrito **diferente** |
 | `Assignment to constant variable` | Tentou mudar uma `const` |
@@ -951,7 +763,7 @@ O erro mostra **arquivo:linha**: comece a procurar por ali.
 Contexto: na mina, quem conserta precisa saber **ler** o defeito.
 
 1. Na função, escreva `itns` em vez de `itens`: que erro? Qual linha?
-2. Conserte. Agora apague uma `}`: o que o terminal diz?
+2. Conserte. Agora apague uma `}`: o que o Console diz?
 3. Conserte. Tire uma aspa de um texto
 4. Tudo consertado? `git add treino.js`, commit e push
 
@@ -999,7 +811,7 @@ Contexto: amanhã outro técnico vai abrir o seu `treino.js`.
 
 ---
 
-# Parte 5 — A tela do checklist
+# Parte 4 — A tela do checklist
 Com o Copilot, um arquivo por vez
 
 ---
@@ -1058,7 +870,7 @@ Abra **no computador**, numa aba ao lado do Codespace. Cada prompt tem o seu bot
 
 ## Mão na massa: index.html
 1. Cole o **prompt 1** no chat do Copilot
-2. Repare: a resposta aparece **aos poucos**. É o **streaming** da Parte 3!
+2. Repare: a resposta aparece **aos poucos**. É o **streaming** da Parte 2!
 3. Leia o arquivo antes de clicar em **Manter** (*Keep*)
 4. Ache o `select`, os rádios e o `id` do botão e do resultado
 5. Os `name` estão **sem acento**? Tem o link do CSS e do JS?
@@ -1174,8 +986,7 @@ Errou algum? Ainda não está pronto.
 ## Antes de entregar
 Abra o seu repositório **no site do GitHub** e confira:
 
-- ✅ `README.md` com o mapa, os requisitos e as rotas
-- ✅ `inspecao.json` válido
+- ✅ `README.md` com o mapa e os requisitos
 - ✅ `index.html`, `style.css` e `script.js` **comentados**
 - ✅ A tela no ar pelo **GitHub Pages**
 
@@ -1211,20 +1022,9 @@ Qual linha **compara** se os freios estão conformes?
 
 ---
 
-## Termômetro de novo
-Levante os dedos outra vez e compare com o começo.
-
-+ Terminal e git (commit, push, pull)
-+ JSON e métodos HTTP
-+ HTML e CSS
-+ Variável e condição (if)
-+ Lista, laço (for) e função
-
----
-
 ## O que vimos hoje
 + GitHub guarda, Codespace roda, git leva e o **Pages** publica
-+ Método é a ação, rota é o recurso; **webhook** é um POST que avisa
++ **Webhook** é um POST que avisa sozinho, na hora
 + **HTML** estrutura, **CSS** apresenta, **JavaScript** dá comportamento
 + Variável, lista, função, condição e evento: a lógica do **apto ou inapto**
 + O **Console** mostra o erro; o comentário mostra que você **entendeu**
