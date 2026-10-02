@@ -33,7 +33,7 @@ Aula 3: o checklist ganha estrutura, aparência e comportamento
 - **Abertura**: a tela do checklist (5 min)
 - **Parte 1**: o nosso repositório: Codespace, terminal e git (30 min)
 - **Parte 2**: além do pedido e resposta: webhook, upload, streaming (10 min)
-- **Parte 3**: JavaScript, 1ª metade: variável e condição (45 min)
+- **Parte 3**: JavaScript no PixelCode, um tema por vez + desafio final (75 min)
 - ☕ **Intervalo** (20 min)
 
 As Partes 1 e 2 são o que ficou da **Aula 2**.
@@ -41,8 +41,7 @@ As Partes 1 e 2 são o que ficou da **Aula 2**.
 ---
 
 ## Roteiro de hoje (2/2)
-- **Parte 3**: JavaScript, 2ª metade: lista, laço, função e evento (45 min)
-- **Parte 4**: a tela do checklist com o Copilot (75 min)
+- **Parte 4**: o checklist no Codespace e a tela com o Copilot (90 min)
 - **Fechamento**: revisão (10 min)
 
 JavaScript no **PixelCode** (só o navegador); depois, tudo vai para o **Codespace**.
@@ -343,7 +342,7 @@ Hoje o foco é o **JavaScript**. HTML e CSS: só o básico para reconhecer.
 
 ---
 
-## Demonstração: desmontando a tela
+## A tela sem roupa
 1. Abra o checklist da Aula 1 e aperte **F12**
 2. Aba **Elementos**: apague a linha `<link rel="stylesheet">`
 3. O que sobrou? A estrutura **sem roupa**
@@ -364,11 +363,11 @@ O botão **Finalizar** ficou grande e laranja, fácil de tocar com luva. Quem fe
 ---
 
 ## HTML e CSS em 1 minuto
-+ **HTML**: as peças da tela: `<select>`, `<input type="radio">`, `<button>`
-+ Cada peça pode ter um `id`: o **nome** que o JavaScript usa para achá-la
-+ **CSS**: cor, tamanho e espaço; o `@media` ajeita a tela no celular
-+ Na Parte 4, a IA escreve os dois. Você só precisa **reconhecer**
-+ O que decide **apto ou inapto** é o JavaScript: é nele que a gente mergulha
++ **HTML**: as peças: `<select>`, `<input>`, `<button>`
++ O `id` é o **nome** que o JavaScript usa para achar a peça
++ **CSS**: cor, tamanho e espaço; o `@media` ajeita o celular
++ Na Parte 4, a IA escreve os dois: você só **reconhece**
++ Quem decide **apto ou inapto** é o JavaScript
 
 ---
 
@@ -383,7 +382,7 @@ O botão **Finalizar** ficou grande e laranja, fácil de tocar com luva. Quem fe
 </body>
 ```
 
-O `index.html` chama os outros dois. O script fica no **fim**: só roda depois que a tela existe.
+O script fica no **fim**: só roda depois que a tela existe.
 
 ---
 
@@ -391,7 +390,7 @@ O `index.html` chama os outros dois. O script fica no **fim**: só roda depois q
 + Lembra do **algoritmo** da Aula 1? Passos claros, em ordem
 + Programar é escrever esses passos numa **linguagem** que o computador entende
 + O JavaScript roda no **navegador**, sem instalar nada
-+ Hoje: a regra da inspeção, **passo a passo**, no PixelCode
++ Hoje: a regra da inspeção, **um tema por vez**, no PixelCode
 + Errar faz parte: o computador **avisa** onde errou
 
 ---
@@ -401,125 +400,85 @@ O `index.html` chama os outros dois. O script fica no **fim**: só roda depois q
 
 ---
 
-## Criando o treino.js
+## Um arquivo por tema
 1. No topo, clique em **Só JavaScript**
-2. Em **Arquivos**, clique no **＋**, digite `treino` e **Enter**
-3. Escreva o código: as **sugestões** ajudam
-4. **Ctrl + Enter** (ou **▶ Executar**) roda o código
+2. Em **Arquivos**, clique no **＋**, digite o nome e **Enter**
+3. Digite o exemplo do slide; as **sugestões** ajudam
+4. **Ctrl + Enter** (ou **▶ Executar**) roda o arquivo aberto
 5. O resultado aparece no **Console**, à direita
 
-> Salva **sozinho**, neste navegador.
-
----
-
-## Um arquivo, vários desafios
-+ Cada desafio vai **embaixo** do anterior, no mesmo `treino.js`
-+ Repetiu um nome? `Identifier 'itens' has already been declared`
-+ Selecione o desafio anterior e aperte **Ctrl + /** (ou **Ctrl + ;**)
-+ As linhas viram **comentário** (`//`): ficam lá, mas **não rodam**
+> Cada exemplo diz o nome do arquivo. Tudo salva **sozinho**.
 
 ---
 
 ## console.log: o programa fala
++ `console.log(...)` mostra no **Console** o que está entre parênteses
++ **Texto** vai entre aspas: `'CAM-07'`
++ **Número** vai sem aspas, e dá para fazer conta: `3 + 2`
++ Cada `console.log` vira **uma linha** no Console
+
+---
+
+## Exemplo: console.log
 ```js
 console.log('Inspeção iniciada')
 console.log('CAM-07')
 console.log(3 + 2)
 ```
 
-`console.log` mostra no **Console** o que está entre parênteses. **Texto** vai entre aspas; **número**, não.
+Arquivo `saida.js`. Rode e confira: saíram **3 linhas**?
 
 ---
 
-## 🎯 Desafio: o cabeçalho da inspeção
+## 🎯 Desafio: o cabeçalho
 Contexto: toda folha de inspeção começa com um cabeçalho.
 
-1. No `treino.js`, mostre: `Checklist de Inspeção`
-2. Na linha de baixo, mostre a data de hoje
-3. Mostre o total de itens: 3 críticos **mais** 2 comuns, calculado pelo JS
-4. Rode com **Ctrl + Enter**: saíram as 3 linhas no Console?
-
----
-
-## 🧩 Referência: o cabeçalho
-```js
-console.log('Checklist de Inspeção')
-console.log('02/10/2026')
-console.log(3 + 2)
-```
-
-Digite **linha por linha** e rode com **Ctrl + Enter**.
+1. Embaixo, mostre `Checklist de Inspeção`
+2. Mostre a data de hoje, entre aspas
+3. Mostre o total de itens: **3** críticos **+ 2** comuns
 
 ---
 
 ## Variável: uma caixa com nome
-### Contexto: a inspeção tem dados que o programa precisa **lembrar**.
-
-```js
-const equipamento = 'CAM-07'
-const operador = 'Ana'
-console.log(operador + ' inspecionou o ' + equipamento)
-```
-
-A variável guarda um valor e você usa pelo **nome**. O `+` junta textos.
++ Guarda um valor para usar depois, pelo **nome**
++ `const`: o valor **não muda** · `let`: o valor **pode mudar**
++ O `=` **guarda** o valor na caixa
++ O `+` **junta** textos e variáveis
 
 ---
 
-## Tipos de valor
+## Os tipos de valor
 | Tipo | Exemplo | Na inspeção |
 |---|---|---|
-| Texto | `'Freios'` | O nome do item |
-| Número | `1250` | O horímetro do caminhão |
-| Booleano | `true` ou `false` | O item é crítico? Está conforme? |
+| Texto | `const operador = 'Ana'` | O nome de quem inspeciona |
+| Número | `let horimetro = 1250` | As horas do caminhão |
+| Booleano | `const critico = true` | O item é crítico? |
 
 Lembra do JSON? `'7'` com aspas é **texto**; `7` sem aspas é **número**.
 
 ---
 
-## const ou let?
+## Exemplo: variáveis
 ```js
-const equipamento = 'CAM-07'   // não muda
-let resultado = 'APTO'         // pode mudar
+const equipamento = 'CAM-07'
+const operador = 'Ana'
+let resultado = 'APTO'
 resultado = 'INAPTO'
+console.log(operador + ' inspecionou o ' + equipamento)
 console.log(resultado)
 ```
 
-O `=` **guarda** um valor. O equipamento da inspeção não troca no meio dela: `const`. O resultado pode virar: `let`.
+Arquivo `variaveis.js`. O `resultado` mudou porque é `let`.
 
 ---
 
 ## 🎯 Desafio: a ficha do turno
-Contexto: o supervisor quer ver quem inspecionou o quê.
+Contexto: o supervisor quer saber o **turno** e as **horas** do caminhão.
 
-1. Crie variáveis para o operador, o equipamento e o turno
-2. Mostre a frase: `Ana inspecionou o CAM-07 no turno A`
-3. Crie `let horimetro = 1250` e some as **8 horas** do turno
-4. Tente mudar uma `const`: o que o Console diz? Em qual linha?
-
----
-
-## 🧩 Referência: a ficha (1/2)
-```js
-const operador = 'Ana'
-const equipamento = 'CAM-07'
-const turno = 'A'
-console.log(operador + ' inspecionou o ' + equipamento +
-  ' no turno ' + turno)
-```
-
-O `+` junta os textos com as variáveis.
-
----
-
-## 🧩 Referência: a ficha (2/2)
-```js
-let horimetro = 1250
-horimetro = horimetro + 8
-console.log(horimetro)
-equipamento = 'CAM-08'   // passo 4: vai dar erro!
-```
-
-O erro é **de propósito**: uma `const` não muda.
+1. Crie `const turno = 'A'`, logo abaixo do `operador`
+2. Mude a frase para: `Ana inspecionou o CAM-07 no turno A`
+3. No fim, crie `let horimetro = 1250`
+4. Some as 8 horas: `horimetro = horimetro + 8` e mostre
 
 ---
 
@@ -534,16 +493,15 @@ O resultado começa **APTO** e pode virar **INAPTO** durante a avaliação.
 ---
 
 ## Condição: se... senão
-### Contexto: o freio não está conforme? Então o caminhão **não sai**.
-
 ```js
-const freios = 'não conforme'
-if (freios === 'não conforme') {
-  console.log('INAPTO: não pode operar')
+if (condição) {
+  // roda se for verdade
 } else {
-  console.log('APTO para o turno')
+  // roda se for mentira
 }
 ```
+
+O `else` é opcional. As chaves `{ }` marcam o que pertence a cada caminho.
 
 ---
 
@@ -558,48 +516,39 @@ if (freios === 'não conforme') {
 
 ---
 
-## 🎯 Desafio: o tanque
-Contexto: caminhão com pouco diesel não começa o turno.
-
-1. Crie `let combustivel = 18` (em %)
-2. Se estiver **abaixo de 25**, mostre: `Abastecer antes do turno`
-3. Senão, mostre: `Combustível ok`
-4. Teste com **18**, **25** e **90**: as 3 respostas fazem sentido?
-
----
-
-## 🧩 Referência: o tanque
+## Exemplo: condição
 ```js
-let combustivel = 18
-if (combustivel < 25) {
-  console.log('Abastecer antes do turno')
+const freios = 'não conforme'
+if (freios === 'não conforme') {
+  console.log('INAPTO: não pode operar')
 } else {
-  console.log('Combustível ok')
+  console.log('APTO para o turno')
 }
 ```
 
-Depois troque o **18** por **25** e por **90** e rode de novo.
+Arquivo `condicao.js`. Troque para `'conforme'` e rode de novo.
+
+---
+
+## 🎯 Desafio: o tanque
+Contexto: caminhão com pouco diesel **não começa** o turno.
+
+1. Embaixo, crie `let combustivel = 18`
+2. Se `combustivel < 25`, mostre `Abastecer antes do turno`
+3. Senão, mostre `Combustível ok`
+4. Teste com **18** e com **90**
 
 ---
 
 ## E e OU: duas condições
-### Contexto: só bloqueia se o item for **crítico** **e** estiver não conforme.
-
-```js
-const critico = true
-const conforme = false
-if (critico && conforme === false) {
-  console.log('INAPTO')
-}
-```
-
-`&&` = **e**: as duas precisam ser verdade. `||` = **ou**: basta uma.
++ `&&` = **e**: as **duas** precisam ser verdade
++ `||` = **ou**: basta **uma** ser verdade
++ Item crítico **e** não conforme → INAPTO
++ Noite **ou** neblina → conferir os faróis
 
 ---
 
 ## Tabela verdade do `&&`
-### Contexto: o item trava o caminhão?
-
 | Item crítico? | Não conforme? | `critico && naoConforme` |
 |---|---|---|
 | `true` | `true` | `true` → ⛔ **INAPTO** |
@@ -607,23 +556,13 @@ if (critico && conforme === false) {
 | `false` | `true` | `false` → APTO |
 | `false` | `false` | `false` → APTO |
 
-Todas as combinações possíveis. O `&&` só dá `true` numa linha: as **duas** verdadeiras.
+O `&&` só dá `true` numa linha: as **duas** verdadeiras.
 
 ---
 
-## 🎯 Desafio: crítico ou não?
-Contexto: limpeza suja não para o caminhão; freio ruim para.
-
-1. Rode o código do slide: apareceu INAPTO?
-2. Troque `critico` para `false`: o que mudou? Qual linha da tabela é essa?
-3. Acrescente um `else` que mostre `APTO`
-4. Crie: se for **noite** OU tiver **neblina**, mostre `Conferir faróis`
-
----
-
-## 🧩 Referência: crítico (1/2)
+## Exemplo: E e OU
 ```js
-const critico = false
+const critico = true
 const conforme = false
 if (critico && conforme === false) {
   console.log('INAPTO')
@@ -632,70 +571,16 @@ if (critico && conforme === false) {
 }
 ```
 
-Passos 2 e 3: o `critico` virou `false` e ganhou o `else`.
+Arquivo `e-ou.js`. Troque `critico` para `false`: virou APTO?
 
 ---
 
-## 🧩 Referência: crítico (2/2)
-```js
-const noite = true
-const neblina = false
-if (noite || neblina) {
-  console.log('Conferir faróis')
-}
-```
+## 🎯 Desafio: os faróis
+Contexto: à noite **ou** com neblina, os faróis precisam ser conferidos.
 
-Passo 4: o `||` (**ou**) basta um ser verdade.
-
----
-
-## 🎯 Desafio: a tabela do `||`
-Contexto: os faróis são conferidos se for **noite** OU tiver **neblina**.
-
-| `noite` | `neblina` | noite **OU** neblina |
-|---|---|---|
-| `true` | `true` | ? |
-| `true` | `false` | ? |
-| `false` | `true` | ? |
-| `false` | `false` | ? |
-
-Complete no caderno. Depois, confira as 4 linhas no `treino.js` com `console.log(noite || neblina)`.
-
----
-
-## 🧩 Referência: a tabela (1/2)
-```js
-let noite = true
-let neblina = true
-console.log(noite || neblina)   // linha 1
-neblina = false
-console.log(noite || neblina)   // linha 2
-```
-
-Continue **embaixo**, no mesmo arquivo.
-
----
-
-## 🧩 Referência: a tabela (2/2)
-```js
-noite = false
-neblina = true
-console.log(noite || neblina)   // linha 3
-neblina = false
-console.log(noite || neblina)   // linha 4
-```
-
-Confira as 4 respostas com o seu caderno.
-
----
-
-## Qual linha da tabela?
-A **Limpeza** é não crítica (`false`) e está não conforme (`true`). O `critico && naoConforme` dá...
-
-- [ ] `true`: um dos dois é verdade
-- [x] `false`: o `&&` precisa dos dois
-- [ ] `true`: ela está não conforme
-- [ ] Erro: não dá para misturar
+1. Embaixo, crie `const noite = true` e `const neblina = false`
+2. Se `noite || neblina`, mostre `Conferir faróis`
+3. Troque os dois para `false`: a mensagem sumiu?
 
 ---
 
@@ -709,78 +594,77 @@ Freios e Pneus conformes, **Limpeza da cabine** não conforme. Qual o resultado?
 
 ---
 
-# ☕ Intervalo: 20 min
-Na volta: as **listas** e a **função** da inspeção
+## Lista: vários valores juntos
++ Entre **colchetes**, separados por vírgula: `['Freios', 'Pneus']`
++ `itens[0]`: o **1º** item (a contagem começa em **0**)
++ `itens.length`: **quantos** itens a lista tem
++ `itens.push('Extintor')`: acrescenta no **fim**
 
 ---
 
-## Lista: vários valores em ordem
-### Contexto: o checklist não tem um item, tem **vários**.
-
+## Exemplo: lista
 ```js
 const itens = ['Freios', 'Pneus', 'Cinto']
-console.log(itens[0])      // o 1º item
-console.log(itens.length)  // quantos itens
-itens.push('Extintor')     // acrescenta no fim
+console.log(itens[0])
+console.log(itens.length)
+itens.push('Extintor')
+console.log(itens.length)
 ```
 
-A contagem começa em **0**: o 1º item é o `itens[0]`.
+Arquivo `listas.js`. Antes do `push`, 3 itens; depois, 4.
 
 ---
 
-## Laço: um por um
-### Contexto: o operador confere **cada** item da lista, do primeiro ao último.
+## 🎯 Desafio: a lista do caminhão
+Contexto: o checklist do CAM-07 tem **5** itens.
 
+1. Troque a lista por: Freios, Pneus, Cinto, Limpeza e Combustível
+2. Apague as linhas do `push`
+3. Mostre o último item: `itens[4]`
+
+---
+
+## Laço for...of: um por um
 ```js
+for (const item of lista) {
+  // roda uma vez para cada item
+}
+```
+
+3 itens = **3 voltas**. A cada volta, `item` é o item da vez.
+
+---
+
+## Exemplo: laço
+```js
+const itens = ['Freios', 'Pneus', 'Cinto']
 for (const item of itens) {
   console.log('Conferir: ' + item)
 }
 ```
 
-O `for...of` repete o bloco **para cada** item. 3 itens = 3 voltas.
+Arquivo `laco.js`. Saíram 3 linhas, uma por item?
 
 ---
 
-## 🎯 Desafio: a lista do caminhão
-Contexto: o checklist do CAM-07 tem 5 itens.
+## 🎯 Desafio: conferido!
+Contexto: depois de conferir, o operador marca **OK** em cada item.
 
-1. Crie a lista: Freios, Pneus, Cinto, Limpeza e Combustível
-2. Mostre **quantos** itens ela tem
-3. Mostre o **primeiro** e o **último** item
-4. Com o `for`, mostre cada item com `✔` na frente
-5. Acrescente o `Extintor`: o total mudou?
+1. Troque a lista pelos **5** itens do CAM-07
+2. Em vez de `'Conferir: '`, mostre `'OK '` na frente
+3. Rode: saíram **5** linhas?
 
 ---
 
-## 🧩 Referência: a lista (1/2)
-```js
-const itens = ['Freios', 'Pneus', 'Cinto',
-  'Limpeza', 'Combustível']
-console.log(itens.length)              // quantos
-console.log(itens[0])                  // o primeiro
-console.log(itens[itens.length - 1])   // o último
-```
-
-O último é o `length - 1`, porque a contagem começa em **0**.
+## Objeto: o item com detalhes
++ As chaves `{ }` juntam vários dados de **uma** coisa
++ Como no JSON da Aula 2: `nome: valor`
++ `item.nome`, `item.critico`: pega um dado pelo **ponto**
++ Uma lista de objetos é o **checklist inteiro**
 
 ---
 
-## 🧩 Referência: a lista (2/2)
-```js
-for (const item of itens) {
-  console.log('✔ ' + item)
-}
-itens.push('Extintor')
-console.log(itens.length)
-```
-
-Agora são **6** itens.
-
----
-
-## Lista de objetos: o item completo
-### Contexto: como no JSON da Aula 2, cada item tem detalhes.
-
+## Exemplo: lista de objetos
 ```js
 const itens = [
   { nome: 'Freios', critico: true, conforme: true },
@@ -791,67 +675,32 @@ for (const item of itens) {
 }
 ```
 
+Arquivo `objetos.js`.
+
 ---
 
 ## 🎯 Desafio: só os críticos
 Contexto: o supervisor quer ver primeiro o que pode **parar** o caminhão.
 
-1. Monte a lista de objetos com os **5 itens** (3 críticos)
-2. Com o `for`, mostre **só** os itens críticos
-3. Deixe um item crítico com `conforme: false`
-4. Mostre `⛔` ao lado do item que falhou
-
-> Dica: um `if` dentro do `for`.
-
----
-
-## 🧩 Referência: os críticos (1/2)
-```js
-const itens = [
-  { nome: 'Freios', critico: true, conforme: false },
-  { nome: 'Pneus', critico: true, conforme: true },
-  { nome: 'Cinto', critico: true, conforme: true },
-  { nome: 'Limpeza', critico: false, conforme: true },
-  { nome: 'Combustível', critico: false, conforme: true },
-]
-```
-
-Os **Freios** estão com `conforme: false` (passo 3).
-
----
-
-## 🧩 Referência: os críticos (2/2)
-```js
-for (const item of itens) {
-  if (item.critico && item.conforme === false) {
-    console.log(item.nome + ' ⛔')
-  } else if (item.critico) {
-    console.log(item.nome)
-  }
-}
-```
-
-`else if` = **senão, se**... Os não críticos não aparecem.
+1. Acrescente os **Pneus** na lista: crítico e conforme
+2. Dentro do `for`, ponha a linha do `console.log` dentro de um `if (item.critico)`
+3. Rode: só Freios e Pneus aparecem?
 
 ---
 
 ## Função: a receita com nome
-### Contexto: avaliar é algo que se faz **toda vez**, em todo equipamento.
-
 ```js
-function avaliarInspecao(itens) {
-  let resultado = 'APTO'
-  // ...confere cada item...
-  return resultado
+function nome(oQueRecebe) {
+  // faz o trabalho
+  return oQueDevolve
 }
-console.log(avaliarInspecao(itens))
 ```
 
-Entre parênteses, o que ela **recebe**. O `return` é o que ela **devolve**.
+Cria **uma vez** e chama quantas vezes quiser: `nome(valor)`.
 
 ---
 
-## Juntando tudo
+## Exemplo: função (1/2)
 ```js
 function avaliarInspecao(itens) {
   for (const item of itens) {
@@ -863,7 +712,18 @@ function avaliarInspecao(itens) {
 }
 ```
 
-Achou um crítico não conforme? O `return` devolve INAPTO e a função **para ali**.
+---
+
+## Exemplo: função (2/2)
+```js
+const itens = [
+  { nome: 'Freios', critico: true, conforme: false },
+  { nome: 'Limpeza', critico: false, conforme: true },
+]
+console.log(avaliarInspecao(itens))
+```
+
+Arquivo `funcao.js`: os dois slides, nesta ordem. Deu INAPTO?
 
 ---
 
@@ -877,133 +737,61 @@ Achou um crítico não conforme? O `return` devolve INAPTO e a função **para a
 
 ---
 
-## 🎯 Desafio: a função da inspeção
-Contexto: essa é a regra que vai rodar na tela do operador.
+## 🎯 Desafio: a mensagem
+Contexto: o operador quer uma **frase clara**, não só "INAPTO".
 
-1. **Digite** (sem copiar) a função no `treino.js`
-2. Chame com todos conformes: deu APTO?
-3. Deixe um item **crítico** não conforme: deu INAPTO?
-4. E se só a **Limpeza** falhar?
-5. Crie `mensagem(resultado)`: `Liberado para o turno` ou `Procure a manutenção`
-
----
-
-## 🧩 Referência: função (1/2)
-```js
-function mensagem(resultado) {
-  if (resultado === 'APTO') {
-    return 'Liberado para o turno'
-  } else {
-    return 'Procure a manutenção'
-  }
-}
-```
-
-A `avaliarInspecao` vem do **Juntando tudo**.
-
----
-
-## 🧩 Referência: função (2/2)
-```js
-const itens = [
-  { nome: 'Freios', critico: true, conforme: false },
-  { nome: 'Limpeza', critico: false, conforme: true },
-]
-const resultado = avaliarInspecao(itens)
-console.log(resultado)
-console.log(mensagem(resultado))
-```
-
-Freios com `true`: deve dar APTO.
+1. Embaixo, crie `function mensagem(resultado) { }`
+2. Dentro: se `resultado === 'APTO'`, `return 'Liberado para o turno'`
+3. Senão, `return 'Procure a manutenção'`
+4. Mostre: `console.log(mensagem(avaliarInspecao(itens)))`
 
 ---
 
 ## Evento: quando o operador toca
-### Contexto: na tela, a função roda quando o operador **toca** em Finalizar.
-
-```js
-const botao = document.querySelector('#finalizar')
-const saida = document.querySelector('#resultado')
-
-botao.addEventListener('click', () => {
-  saida.textContent = avaliarInspecao(itens)
-})
-```
-
----
-
-## Entendendo o evento
 + `document.querySelector('#finalizar')`: acha na tela a peça com esse `id`
 + `addEventListener('click', ...)`: "**quando clicar**, faça isto"
-+ `saida.textContent = ...`: escreve o resultado no parágrafo
++ `saida.textContent = ...`: escreve no parágrafo
 + Sem clique, **nada** acontece: o código fica esperando
-+ O evento só existe no **navegador**: no PixelCode, é o modo **Página web**
++ No PixelCode, é o modo **Página web**
 
 ---
 
-## A mini tela: index.html
+## Exemplo: evento (1/2)
 ```html
 <h1>Inspeção do CAM-07</h1>
 <button id="finalizar">Finalizar</button>
 <p id="resultado"></p>
 ```
 
-Vai **dentro** do `<body>`. O `<script src="script.js">` do fim continua lá: é ele que liga o JS.
+Modo **Página web**, `index.html`: troque o miolo do `<body>` por isto.
 
 ---
 
-## 🎯 Desafio: o botão Finalizar
-Contexto: a primeira versão da tela, ainda **sem roupa**.
-
-1. Clique em **Página web** e abra o `index.html`
-2. No `<body>`, troque o exemplo pela mini tela
-3. No `script.js`: apague tudo e digite lista, função e evento
-4. Freios `conforme: false` → **Finalizar**: deu INAPTO?
-5. Troque para `true` e clique de novo: deu APTO?
-
----
-
-## 🧩 Referência: a mini tela (1/3)
-```js
-const itens = [
-  { nome: 'Freios', critico: true, conforme: false },
-  { nome: 'Limpeza', critico: false, conforme: true },
-]
-```
-
-No `script.js` da Página web, nesta ordem: lista, função, evento.
-
----
-
-## 🧩 Referência: a mini tela (2/3)
-```js
-function avaliarInspecao(itens) {
-  for (const item of itens) {
-    if (item.critico && item.conforme === false) {
-      return 'INAPTO'
-    }
-  }
-  return 'APTO'
-}
-```
-
----
-
-## 🧩 Referência: a mini tela (3/3)
+## Exemplo: evento (2/2)
 ```js
 const botao = document.querySelector('#finalizar')
 const saida = document.querySelector('#resultado')
 botao.addEventListener('click', () => {
-  saida.textContent = avaliarInspecao(itens)
+  saida.textContent = 'Inspeção finalizada!'
 })
 ```
 
-Rode e clique em **Finalizar**.
+No `script.js`: apague tudo e digite isto. Clique em **Finalizar**.
+
+---
+
+## 🎯 Desafio: o botão Limpar
+Contexto: o operador errou e quer **recomeçar**.
+
+1. No `index.html`, crie `<button id="limpar">Limpar</button>`
+2. No `script.js`, pegue o botão: `querySelector('#limpar')`
+3. No clique dele, escreva `''` (nada) na `saida`
+4. Teste: Finalizar escreve, Limpar apaga?
 
 ---
 
 ## Qual peça?
-O que faz a função `avaliarInspecao()` rodar na tela do operador?
+O que faz o código rodar quando o operador **toca** em Finalizar?
 
 - [ ] A variável `resultado`
 - [ ] A lista `itens`
@@ -1025,36 +813,14 @@ O erro mostra **(arquivo, linha)**: clique nele e o PixelCode leva até lá.
 
 ---
 
-## 🎯 Desafio: quebre de propósito
-Contexto: na mina, quem conserta precisa saber **ler** o defeito.
-
-1. Na função, escreva `itns` em vez de `itens`: que erro? Qual linha?
-2. Conserte. Agora apague uma `}`: o que o Console diz?
-3. Conserte. Tire uma aspa de um texto
-4. Na mini tela, troque `#finalizar` por `#finalizr`: que erro?
-
----
-
-## As 5 peças da lógica
-| Peça | No checklist |
-|---|---|
-| **Variável** | `resultado`: guarda APTO ou INAPTO |
-| **Lista** | `itens`: os itens do checklist |
-| **Função** | `avaliarInspecao()`: avalia a inspeção |
-| **Condição** | Item crítico não conforme → **INAPTO** |
-
-E a 5ª: o **evento**, o clique em **Finalizar** que põe tudo para rodar.
-
----
-
-## Comentário: explicando o código
+## Comentários no código
 ```text
 <!-- HTML: a lista de itens da inspeção -->
 /* CSS: botão largo para tocar com luva */
 // JS: confere cada item da lista
 ```
 
-O computador **ignora** os comentários: eles são para **pessoas**. Cada linguagem tem o seu jeito de escrever.
+O computador **ignora** os comentários: eles são para **pessoas**.
 
 ---
 
@@ -1068,28 +834,104 @@ O computador **ignora** os comentários: eles são para **pessoas**. Cada lingua
 
 ---
 
-## 🎯 Desafio: comente o treino
-Contexto: amanhã outro técnico vai abrir o seu `treino.js`.
+## As 5 peças da lógica
+| Peça | No checklist |
+|---|---|
+| **Variável** | `resultado`: guarda APTO ou INAPTO |
+| **Lista** | `itens`: os itens do checklist |
+| **Condição** | Item crítico não conforme → **INAPTO** |
+| **Função** | `avaliarInspecao()`: avalia a inspeção |
 
-1. Escreva um comentário acima de **cada desafio** dizendo o que ele faz
-2. Na função, comente o `for`, o `if` e os dois `return`
-3. Leia para um colega: ele entendeu **sem** ver o código?
+E a 5ª: o **evento**, o clique em **Finalizar** que põe tudo para rodar.
 
 ---
 
-## Do PixelCode para o Codespace
-1. No PixelCode, no `treino.js`: **Ctrl + A** e **Ctrl + C**
-2. No Codespace: **Novo arquivo** (📄+) → `treino.js`
-3. Cole com **Ctrl + V** e salve com **Ctrl + S**
-4. No terminal: `node treino.js`. Mesma saída?
-5. `git add treino.js`, commit e push
+## 🏁 Desafio final: o checklist
+Contexto: tudo num programa só, no arquivo `checklist.js`.
 
-> O PixelCode guarda só **neste navegador**; o GitHub guarda de verdade.
+1. Monte a lista `itens` com os 5 itens (3 críticos)
+2. Com o `for`, mostre `OK` ou `FALHOU` antes de cada nome
+3. Crie a função `avaliarInspecao(itens)`
+4. Crie `equipamento` e `operador` e mostre o resultado
+5. Teste: tudo ok, Limpeza falhando, Freios falhando
+
+> Por fim, **comente** cada parte com as suas palavras.
+
+---
+
+## 🧩 Referência: final (1/4)
+```js
+const itens = [
+  { nome: 'Freios', critico: true, conforme: true },
+  { nome: 'Pneus', critico: true, conforme: true },
+  { nome: 'Cinto', critico: true, conforme: true },
+  { nome: 'Limpeza', critico: false, conforme: false },
+  { nome: 'Combustível', critico: false, conforme: true },
+]
+```
+
+Só a **Limpeza** está falhando. Depois, faça os Freios falharem.
+
+---
+
+## 🧩 Referência: final (2/4)
+```js
+for (const item of itens) {
+  if (item.conforme) {
+    console.log('OK ' + item.nome)
+  } else {
+    console.log('FALHOU ' + item.nome)
+  }
+}
+```
+
+---
+
+## 🧩 Referência: final (3/4)
+```js
+function avaliarInspecao(itens) {
+  for (const item of itens) {
+    if (item.critico && item.conforme === false) {
+      return 'INAPTO'
+    }
+  }
+  return 'APTO'
+}
+```
+
+---
+
+## 🧩 Referência: final (4/4)
+```js
+const equipamento = 'CAM-07'
+const operador = 'Ana'
+const resultado = avaliarInspecao(itens)
+console.log(operador + ' inspecionou o ' + equipamento)
+console.log('Resultado: ' + resultado)
+```
+
+Limpeza falhando: **APTO**. Freios falhando: **INAPTO**.
+
+---
+
+# ☕ Intervalo: 20 min
+Na volta: o checklist vai para o **Codespace** e ganha tela com o **Copilot**
 
 ---
 
 # Parte 4 — A tela do checklist
 Com o Copilot, um arquivo por vez
+
+---
+
+## Do PixelCode para o Codespace
+1. No PixelCode, no `checklist.js`: **Ctrl + A** e **Ctrl + C**
+2. No Codespace: **Novo arquivo** (📄+) → `checklist.js`
+3. Cole com **Ctrl + V** e salve com **Ctrl + S**
+4. No terminal: `node checklist.js`. Mesma saída?
+5. `git add checklist.js`, commit e push
+
+> O PixelCode guarda só **neste navegador**; o GitHub guarda de verdade.
 
 ---
 
@@ -1178,7 +1020,7 @@ python3 -m http.server 8000
 ## Mão na massa: script.js
 1. Cole o **prompt 3** no chat e revise antes de **Manter**
 2. Ache as **5 peças**: variável, lista, função, condição e evento
-3. Compare com o **seu** `treino.js`: o que ficou parecido? O que é novo?
+3. Compare com o **seu** `checklist.js`: o que ficou parecido? O que é novo?
 4. Os nomes da lista batem com os `name` dos rádios do HTML?
 5. **F5**, **F12** → **Console** aberto, e faça os testes do próximo slide
 
