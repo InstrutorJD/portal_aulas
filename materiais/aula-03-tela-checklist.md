@@ -441,6 +441,17 @@ Contexto: toda folha de inspeção começa com um cabeçalho.
 
 ---
 
+## 🧩 Referência: o cabeçalho
+```js
+console.log('Checklist de Inspeção')
+console.log('02/10/2026')
+console.log(3 + 2)
+```
+
+Digite **linha por linha** e rode com **Ctrl + Enter**.
+
+---
+
 ## Variável: uma caixa com nome
 ### Contexto: a inspeção tem dados que o programa precisa **lembrar**.
 
@@ -484,6 +495,31 @@ Contexto: o supervisor quer ver quem inspecionou o quê.
 2. Mostre a frase: `Ana inspecionou o CAM-07 no turno A`
 3. Crie `let horimetro = 1250` e some as **8 horas** do turno
 4. Tente mudar uma `const`: o que o Console diz? Em qual linha?
+
+---
+
+## 🧩 Referência: a ficha (1/2)
+```js
+const operador = 'Ana'
+const equipamento = 'CAM-07'
+const turno = 'A'
+console.log(operador + ' inspecionou o ' + equipamento +
+  ' no turno ' + turno)
+```
+
+O `+` junta os textos com as variáveis.
+
+---
+
+## 🧩 Referência: a ficha (2/2)
+```js
+let horimetro = 1250
+horimetro = horimetro + 8
+console.log(horimetro)
+equipamento = 'CAM-08'   // passo 4: vai dar erro!
+```
+
+O erro é **de propósito**: uma `const` não muda.
 
 ---
 
@@ -532,6 +568,20 @@ Contexto: caminhão com pouco diesel não começa o turno.
 
 ---
 
+## 🧩 Referência: o tanque
+```js
+let combustivel = 18
+if (combustivel < 25) {
+  console.log('Abastecer antes do turno')
+} else {
+  console.log('Combustível ok')
+}
+```
+
+Depois troque o **18** por **25** e por **90** e rode de novo.
+
+---
+
 ## E e OU: duas condições
 ### Contexto: só bloqueia se o item for **crítico** **e** estiver não conforme.
 
@@ -571,6 +621,34 @@ Contexto: limpeza suja não para o caminhão; freio ruim para.
 
 ---
 
+## 🧩 Referência: crítico (1/2)
+```js
+const critico = false
+const conforme = false
+if (critico && conforme === false) {
+  console.log('INAPTO')
+} else {
+  console.log('APTO')
+}
+```
+
+Passos 2 e 3: o `critico` virou `false` e ganhou o `else`.
+
+---
+
+## 🧩 Referência: crítico (2/2)
+```js
+const noite = true
+const neblina = false
+if (noite || neblina) {
+  console.log('Conferir faróis')
+}
+```
+
+Passo 4: o `||` (**ou**) basta um ser verdade.
+
+---
+
 ## 🎯 Desafio: a tabela do `||`
 Contexto: os faróis são conferidos se for **noite** OU tiver **neblina**.
 
@@ -582,6 +660,32 @@ Contexto: os faróis são conferidos se for **noite** OU tiver **neblina**.
 | `false` | `false` | ? |
 
 Complete no caderno. Depois, confira as 4 linhas no `treino.js` com `console.log(noite || neblina)`.
+
+---
+
+## 🧩 Referência: a tabela (1/2)
+```js
+let noite = true
+let neblina = true
+console.log(noite || neblina)   // linha 1
+neblina = false
+console.log(noite || neblina)   // linha 2
+```
+
+Continue **embaixo**, no mesmo arquivo.
+
+---
+
+## 🧩 Referência: a tabela (2/2)
+```js
+noite = false
+neblina = true
+console.log(noite || neblina)   // linha 3
+neblina = false
+console.log(noite || neblina)   // linha 4
+```
+
+Confira as 4 respostas com o seu caderno.
 
 ---
 
@@ -648,6 +752,32 @@ Contexto: o checklist do CAM-07 tem 5 itens.
 
 ---
 
+## 🧩 Referência: a lista (1/2)
+```js
+const itens = ['Freios', 'Pneus', 'Cinto',
+  'Limpeza', 'Combustível']
+console.log(itens.length)              // quantos
+console.log(itens[0])                  // o primeiro
+console.log(itens[itens.length - 1])   // o último
+```
+
+O último é o `length - 1`, porque a contagem começa em **0**.
+
+---
+
+## 🧩 Referência: a lista (2/2)
+```js
+for (const item of itens) {
+  console.log('✔ ' + item)
+}
+itens.push('Extintor')
+console.log(itens.length)
+```
+
+Agora são **6** itens.
+
+---
+
 ## Lista de objetos: o item completo
 ### Contexto: como no JSON da Aula 2, cada item tem detalhes.
 
@@ -672,6 +802,36 @@ Contexto: o supervisor quer ver primeiro o que pode **parar** o caminhão.
 4. Mostre `⛔` ao lado do item que falhou
 
 > Dica: um `if` dentro do `for`.
+
+---
+
+## 🧩 Referência: os críticos (1/2)
+```js
+const itens = [
+  { nome: 'Freios', critico: true, conforme: false },
+  { nome: 'Pneus', critico: true, conforme: true },
+  { nome: 'Cinto', critico: true, conforme: true },
+  { nome: 'Limpeza', critico: false, conforme: true },
+  { nome: 'Combustível', critico: false, conforme: true },
+]
+```
+
+Os **Freios** estão com `conforme: false` (passo 3).
+
+---
+
+## 🧩 Referência: os críticos (2/2)
+```js
+for (const item of itens) {
+  if (item.critico && item.conforme === false) {
+    console.log(item.nome + ' ⛔')
+  } else if (item.critico) {
+    console.log(item.nome)
+  }
+}
+```
+
+`else if` = **senão, se**... Os não críticos não aparecem.
 
 ---
 
@@ -728,6 +888,36 @@ Contexto: essa é a regra que vai rodar na tela do operador.
 
 ---
 
+## 🧩 Referência: função (1/2)
+```js
+function mensagem(resultado) {
+  if (resultado === 'APTO') {
+    return 'Liberado para o turno'
+  } else {
+    return 'Procure a manutenção'
+  }
+}
+```
+
+A `avaliarInspecao` vem do **Juntando tudo**.
+
+---
+
+## 🧩 Referência: função (2/2)
+```js
+const itens = [
+  { nome: 'Freios', critico: true, conforme: false },
+  { nome: 'Limpeza', critico: false, conforme: true },
+]
+const resultado = avaliarInspecao(itens)
+console.log(resultado)
+console.log(mensagem(resultado))
+```
+
+Freios com `true`: deve dar APTO.
+
+---
+
 ## Evento: quando o operador toca
 ### Contexto: na tela, a função roda quando o operador **toca** em Finalizar.
 
@@ -770,6 +960,45 @@ Contexto: a primeira versão da tela, ainda **sem roupa**.
 3. No `script.js`: apague tudo e digite lista, função e evento
 4. Freios `conforme: false` → **Finalizar**: deu INAPTO?
 5. Troque para `true` e clique de novo: deu APTO?
+
+---
+
+## 🧩 Referência: a mini tela (1/3)
+```js
+const itens = [
+  { nome: 'Freios', critico: true, conforme: false },
+  { nome: 'Limpeza', critico: false, conforme: true },
+]
+```
+
+No `script.js` da Página web, nesta ordem: lista, função, evento.
+
+---
+
+## 🧩 Referência: a mini tela (2/3)
+```js
+function avaliarInspecao(itens) {
+  for (const item of itens) {
+    if (item.critico && item.conforme === false) {
+      return 'INAPTO'
+    }
+  }
+  return 'APTO'
+}
+```
+
+---
+
+## 🧩 Referência: a mini tela (3/3)
+```js
+const botao = document.querySelector('#finalizar')
+const saida = document.querySelector('#resultado')
+botao.addEventListener('click', () => {
+  saida.textContent = avaliarInspecao(itens)
+})
+```
+
+Rode e clique em **Finalizar**.
 
 ---
 
@@ -1067,6 +1296,16 @@ Qual linha **compara** se os freios estão conformes?
 - [x] `freios === 'conforme'`
 - [ ] `'freios' + 'conforme'`
 - [ ] `const freios = 'conforme'`
+
+---
+
+## Tudo o que vimos até aqui
+![Aulas 1, 2 e 3: os temas em volta do projeto](mapa-do-curso.svg)
+
+---
+
+## O caminho da inspeção
+![Como as Aulas 1, 2 e 3 se encaixam no sistema](aula-03-mapa-inspecao.svg)
 
 ---
 

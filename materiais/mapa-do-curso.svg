@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 470" width="1080" height="470" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+  <!-- Mapa do curso até a Aula 03: o projeto no centro e os temas em volta.
+       Cada item tem o número da aula em que apareceu. Aula nova: acrescente
+       os itens dela (e, se precisar, um ramo) e troque o título do slide. -->
+  <rect x="0" y="0" width="1080" height="470" rx="18" fill="#0f1623"/>
+  <path d="M375,110 C362.5,110 362.5,120 350,120" fill="none" stroke="#3a4a63" stroke-width="2.5"/>
+  <path d="M375,110 C362.5,110 362.5,330 350,330" fill="none" stroke="#3a4a63" stroke-width="2.5"/>
+  <path d="M705,110 C717.5,110 717.5,120 730,120" fill="none" stroke="#3a4a63" stroke-width="2.5"/>
+  <path d="M705,110 C717.5,110 717.5,330 730,330" fill="none" stroke="#3a4a63" stroke-width="2.5"/>
+  <line x1="540" y1="165" x2="540" y2="240" stroke="#3a4a63" stroke-width="2.5"/>
+  <rect x="375" y="55" width="330" height="110" rx="55" fill="#142133" stroke="#4fd1c5" stroke-width="2.5"/>
+  <text x="540" y="100" text-anchor="middle" font-size="21" font-weight="800" fill="#eef2f8">Checklist Digital</text>
+  <text x="540" y="126" text-anchor="middle" font-size="21" font-weight="800" fill="#eef2f8">de Inspeção</text>
+  <text x="540" y="148" text-anchor="middle" font-size="14" fill="#9aa6ba">o projeto que liga tudo</text>
+  <circle cx="411" cy="200" r="11" fill="#4fd1c5"/>
+  <text x="411" y="205" text-anchor="middle" font-size="13" font-weight="800" fill="#0f1623">1</text>
+  <text x="428" y="205" font-size="14" fill="#9aa6ba">Aula 1</text>
+  <circle cx="506" cy="200" r="11" fill="#7c9cff"/>
+  <text x="506" y="205" text-anchor="middle" font-size="13" font-weight="800" fill="#0f1623">2</text>
+  <text x="523" y="205" font-size="14" fill="#9aa6ba">Aula 2</text>
+  <circle cx="601" cy="200" r="11" fill="#ff9466"/>
+  <text x="601" y="205" text-anchor="middle" font-size="13" font-weight="800" fill="#0f1623">3</text>
+  <text x="618" y="205" font-size="14" fill="#9aa6ba">Aula 3</text>
+  <rect x="20" y="15" width="330" height="215" rx="14" fill="#142133" stroke="#2a3548" stroke-width="1.5"/>
+  <rect x="20" y="29" width="5" height="26" rx="2" fill="#4fd1c5"/>
+  <text x="40" y="49" font-size="18" font-weight="800" fill="#4fd1c5">Computador e lógica</text>
+  <circle cx="50" cy="80" r="10" fill="#4fd1c5"/>
+  <text x="50" y="84.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="68" y="85" font-size="15" fill="#eef2f8">Tudo vira 0 e 1 (binário)</text>
+  <circle cx="50" cy="112" r="10" fill="#4fd1c5"/>
+  <text x="50" y="116.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="68" y="117" font-size="15" fill="#eef2f8">Entrada → processamento → saída</text>
+  <circle cx="50" cy="144" r="10" fill="#4fd1c5"/>
+  <text x="50" y="148.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="68" y="149" font-size="15" fill="#eef2f8">Algoritmo: passos em ordem</text>
+  <circle cx="50" cy="176" r="10" fill="#4fd1c5"/>
+  <text x="50" y="180.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="68" y="181" font-size="15" fill="#eef2f8">Compilado x interpretado</text>
+  <circle cx="50" cy="208" r="10" fill="#ff9466"/>
+  <text x="50" y="212.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="68" y="213" font-size="15" fill="#eef2f8">JS: variável, if, for, função</text>
+  <rect x="20" y="240" width="330" height="215" rx="14" fill="#142133" stroke="#2a3548" stroke-width="1.5"/>
+  <rect x="20" y="254" width="5" height="26" rx="2" fill="#7c9cff"/>
+  <text x="40" y="274" font-size="18" font-weight="800" fill="#7c9cff">Web: cliente e servidor</text>
+  <circle cx="50" cy="305" r="10" fill="#4fd1c5"/>
+  <text x="50" y="309.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="68" y="310" font-size="15" fill="#eef2f8">4 peças: tela → API → back → banco</text>
+  <circle cx="50" cy="337" r="10" fill="#4fd1c5"/>
+  <text x="50" y="341.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="68" y="342" font-size="15" fill="#eef2f8">HTTP: GET/POST, status 200/404</text>
+  <circle cx="50" cy="369" r="10" fill="#7c9cff"/>
+  <text x="50" y="373.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="68" y="374" font-size="15" fill="#eef2f8">F12 Rede, fetch e JSON</text>
+  <circle cx="50" cy="401" r="10" fill="#7c9cff"/>
+  <text x="50" y="405.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="68" y="406" font-size="15" fill="#eef2f8">CORS: o navegador protege</text>
+  <circle cx="50" cy="433" r="10" fill="#ff9466"/>
+  <text x="50" y="437.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="68" y="438" font-size="15" fill="#eef2f8">Webhook, upload e streaming</text>
+  <rect x="730" y="15" width="330" height="215" rx="14" fill="#142133" stroke="#2a3548" stroke-width="1.5"/>
+  <rect x="730" y="29" width="5" height="26" rx="2" fill="#ff9466"/>
+  <text x="750" y="49" font-size="18" font-weight="800" fill="#ff9466">Inteligência artificial</text>
+  <circle cx="760" cy="80" r="10" fill="#4fd1c5"/>
+  <text x="760" y="84.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="778" y="85" font-size="15" fill="#eef2f8">Prevê a próxima palavra (tokens)</text>
+  <circle cx="760" cy="112" r="10" fill="#4fd1c5"/>
+  <text x="760" y="116.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="778" y="117" font-size="15" fill="#eef2f8">Alucina: revise tudo</text>
+  <circle cx="760" cy="144" r="10" fill="#4fd1c5"/>
+  <text x="760" y="148.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="778" y="149" font-size="15" fill="#eef2f8">Assistente x agente</text>
+  <circle cx="760" cy="176" r="10" fill="#7c9cff"/>
+  <text x="760" y="180.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="778" y="181" font-size="15" fill="#eef2f8">Agente que levanta requisitos</text>
+  <circle cx="760" cy="208" r="10" fill="#ff9466"/>
+  <text x="760" y="212.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="778" y="213" font-size="15" fill="#eef2f8">Copilot escreve, você revisa</text>
+  <rect x="730" y="240" width="330" height="215" rx="14" fill="#142133" stroke="#2a3548" stroke-width="1.5"/>
+  <rect x="730" y="254" width="5" height="26" rx="2" fill="#f0d050"/>
+  <text x="750" y="274" font-size="18" font-weight="800" fill="#f0d050">Planejar o sistema</text>
+  <circle cx="760" cy="305" r="10" fill="#4fd1c5"/>
+  <text x="760" y="309.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="778" y="310" font-size="15" fill="#eef2f8">O problema: o checklist em papel</text>
+  <circle cx="760" cy="337" r="10" fill="#4fd1c5"/>
+  <text x="760" y="341.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">1</text>
+  <text x="778" y="342" font-size="15" fill="#eef2f8">Segurança: os buracos comuns</text>
+  <circle cx="760" cy="369" r="10" fill="#7c9cff"/>
+  <text x="760" y="373.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="778" y="374" font-size="15" fill="#eef2f8">Design Thinking: quem sofre?</text>
+  <circle cx="760" cy="401" r="10" fill="#7c9cff"/>
+  <text x="760" y="405.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="778" y="406" font-size="15" fill="#eef2f8">Requisitos: RF x RNF</text>
+  <circle cx="760" cy="433" r="10" fill="#7c9cff"/>
+  <text x="760" y="437.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="778" y="438" font-size="15" fill="#eef2f8">README: mapa + requisitos</text>
+  <rect x="375" y="240" width="330" height="215" rx="14" fill="#142133" stroke="#2a3548" stroke-width="1.5"/>
+  <rect x="375" y="254" width="5" height="26" rx="2" fill="#4fd1c5"/>
+  <text x="395" y="274" font-size="18" font-weight="800" fill="#4fd1c5">Construir e publicar</text>
+  <circle cx="405" cy="305" r="10" fill="#7c9cff"/>
+  <text x="405" y="309.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">2</text>
+  <text x="423" y="310" font-size="15" fill="#eef2f8">GitHub: o seu currículo</text>
+  <circle cx="405" cy="337" r="10" fill="#ff9466"/>
+  <text x="405" y="341.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="423" y="342" font-size="15" fill="#eef2f8">Codespace, terminal e git</text>
+  <circle cx="405" cy="369" r="10" fill="#ff9466"/>
+  <text x="405" y="373.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="423" y="374" font-size="15" fill="#eef2f8">HTML, CSS e JS: a tela</text>
+  <circle cx="405" cy="401" r="10" fill="#ff9466"/>
+  <text x="405" y="405.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="423" y="406" font-size="15" fill="#eef2f8">PixelCode → GitHub → Pages</text>
+  <circle cx="405" cy="433" r="10" fill="#ff9466"/>
+  <text x="405" y="437.5" text-anchor="middle" font-size="12" font-weight="800" fill="#0f1623">3</text>
+  <text x="423" y="438" font-size="15" fill="#eef2f8">O checklist no celular</text>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 460" width="1080" height="460" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
+  <!-- Aula 03, fechamento: o caminho da inspeção pelo sistema (as 4 peças da
+       Aula 1, o HTTP/JSON da Aula 2, as 3 linguagens e o webhook da Aula 3). -->
+  <defs>
+    <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9aa6ba"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1080" height="460" rx="18" fill="#0f1623"/>
+
+  <!-- Faixa "as 4 peças" -->
+  <rect x="30" y="18" width="1020" height="34" rx="17" fill="#7c9cff" fill-opacity="0.12" stroke="#7c9cff" stroke-opacity="0.5"/>
+  <text x="540" y="41" text-anchor="middle" font-size="16" font-weight="700" fill="#aebfff">As 4 peças do sistema (Aula 1): frontend → API → backend → banco de dados</text>
+
+  <!-- Celular / frontend -->
+  <rect x="30" y="72" width="310" height="300" rx="16" fill="#142133" stroke="#4fd1c5" stroke-width="2"/>
+  <text x="50" y="104" font-size="20" font-weight="800" fill="#eef2f8">Celular do operador</text>
+  <text x="50" y="127" font-size="14" fill="#9aa6ba">frontend: a tela</text>
+  <rect x="256" y="110" width="70" height="24" rx="12" fill="#4fd1c5" fill-opacity="0.18"/>
+  <text x="291" y="127" text-anchor="middle" font-size="14" font-weight="700" fill="#4fd1c5">Aula 3</text>
+
+  <rect x="50" y="142" width="270" height="50" rx="10" fill="#ff8a4c" fill-opacity="0.12" stroke="#ff8a4c" stroke-opacity="0.7"/>
+  <text x="66" y="173" font-size="18" font-weight="800" fill="#ff8a4c">HTML</text>
+  <text x="130" y="173" font-size="15" fill="#eef2f8">o que existe</text>
+
+  <rect x="50" y="202" width="270" height="50" rx="10" fill="#4ca8ff" fill-opacity="0.12" stroke="#4ca8ff" stroke-opacity="0.7"/>
+  <text x="66" y="233" font-size="18" font-weight="800" fill="#4ca8ff">CSS</text>
+  <text x="130" y="233" font-size="15" fill="#eef2f8">como parece</text>
+
+  <rect x="50" y="262" width="270" height="50" rx="10" fill="#f0d050" fill-opacity="0.12" stroke="#f0d050" stroke-opacity="0.7"/>
+  <text x="66" y="293" font-size="18" font-weight="800" fill="#f0d050">JS</text>
+  <text x="130" y="293" font-size="15" fill="#eef2f8">decide: APTO ou INAPTO</text>
+
+  <text x="185" y="342" text-anchor="middle" font-size="15" fill="#9aa6ba">variável · lista · condição</text>
+  <text x="185" y="360" text-anchor="middle" font-size="15" fill="#9aa6ba">função · evento (o clique)</text>
+
+  <!-- Celular → API -->
+  <line x1="342" y1="222" x2="438" y2="222" stroke="#9aa6ba" stroke-width="2.5" marker-end="url(#seta)"/>
+  <text x="390" y="205" text-anchor="middle" font-size="15" font-weight="700" fill="#eef2f8">HTTP</text>
+  <text x="390" y="246" text-anchor="middle" font-size="14" fill="#ff9466">JSON</text>
+  <text x="390" y="264" text-anchor="middle" font-size="14" fill="#9aa6ba">Aula 2</text>
+
+  <!-- API -->
+  <rect x="440" y="182" width="150" height="80" rx="14" fill="#142133" stroke="#7c9cff" stroke-width="2"/>
+  <text x="515" y="218" text-anchor="middle" font-size="20" font-weight="800" fill="#eef2f8">API</text>
+  <text x="515" y="240" text-anchor="middle" font-size="15" fill="#9aa6ba">a porta de entrada</text>
+
+  <line x1="592" y1="222" x2="636" y2="222" stroke="#9aa6ba" stroke-width="2.5" marker-end="url(#seta)"/>
+
+  <!-- Backend -->
+  <rect x="638" y="182" width="170" height="80" rx="14" fill="#142133" stroke="#7c9cff" stroke-width="2"/>
+  <text x="723" y="218" text-anchor="middle" font-size="20" font-weight="800" fill="#eef2f8">Backend</text>
+  <text x="723" y="240" text-anchor="middle" font-size="15" fill="#9aa6ba">regras e decisões</text>
+
+  <line x1="810" y1="222" x2="854" y2="222" stroke="#9aa6ba" stroke-width="2.5" marker-end="url(#seta)"/>
+
+  <!-- Banco -->
+  <rect x="856" y="182" width="194" height="80" rx="14" fill="#142133" stroke="#7c9cff" stroke-width="2"/>
+  <text x="953" y="218" text-anchor="middle" font-size="20" font-weight="800" fill="#eef2f8">Banco de dados</text>
+  <text x="953" y="240" text-anchor="middle" font-size="15" fill="#9aa6ba">guarda as inspeções</text>
+
+  <!-- Webhook → Manutenção -->
+  <line x1="723" y1="264" x2="723" y2="338" stroke="#ff9466" stroke-width="2.5" stroke-dasharray="7 5" marker-end="url(#seta)"/>
+  <text x="737" y="296" font-size="15" font-weight="700" fill="#ff9466">webhook</text>
+  <text x="737" y="316" font-size="14" fill="#9aa6ba">um POST que avisa sozinho · Aula 3</text>
+
+  <rect x="613" y="340" width="220" height="70" rx="14" fill="#142133" stroke="#ff9466" stroke-width="2"/>
+  <text x="723" y="371" text-anchor="middle" font-size="18" font-weight="800" fill="#eef2f8">Manutenção</text>
+  <text x="723" y="392" text-anchor="middle" font-size="15" fill="#9aa6ba">freio reprovado? na hora</text>
+
+  <!-- Rodapé: o que já sai do papel -->
+  <text x="30" y="442" font-size="15" fill="#9aa6ba">Hoje o celular já decide sozinho. API, backend e banco (o histórico) vêm nas próximas etapas.</text>
+</svg>
