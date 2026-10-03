@@ -135,6 +135,7 @@
       <button type="button" data-modo="web" id="modoWeb">Página web</button>
       <button type="button" data-modo="js" id="modoJs">Só JavaScript</button>
     </div>
+    <label class="auto" title="Sugestões enquanto você digita (atalhos, ids, classes, arquivos). Desligado, só aparecem com Ctrl+Espaço"><input type="checkbox" id="chkSugestoes"> Autocompletar</label>
     <label class="auto" id="autoWrap" title="Atualiza o navegador sozinho, meio segundo depois de você parar de digitar"><input type="checkbox" id="chkAuto"> Atualizar sozinho</label>
     <button class="btn-secondary btn" id="btnBaixar" title="Baixar a página (com CSS e JS juntos num arquivo só)">⬇ Baixar</button>
     <button class="btn" id="btnRun">▶ Executar (Ctrl+Enter)</button>
@@ -307,6 +308,7 @@
   const estado = {
     modo: salvo.modo === 'js' ? 'js' : 'web',
     auto: salvo.auto !== false,
+    sugestoes: salvo.sugestoes !== false, // autocompletar enquanto digita
     pagina: salvo.pagina || '',     // .html que o navegador mostra
     scriptJs: salvo.scriptJs || '', // .js que o modo "Só JavaScript" roda
     explorador: typeof salvo.explorador === 'boolean' ? salvo.explorador : window.innerWidth > 800,
@@ -479,6 +481,22 @@
       Promise.all([js, new Promise(r => setTimeout(r, 1500))]).then(() => window.PixelCodeDocs.registrar(monaco));
     }
 
+    // Autocompletar (checkbox da barra de cima, salvo no projeto). Ligado:
+    // sugestões aparecem sozinhas, inclusive dentro de aspas (ids, classes,
+    // arquivos), e Tab completa os atalhos. Desligado: nada aparece enquanto
+    // digita — só se a pessoa pedir com Ctrl+Espaço. A documentação ao passar
+    // o mouse continua nos dois casos.
+    function opcoesSugestoes(ligado) {
+      return {
+        quickSuggestions: ligado ? { other: true, comments: false, strings: true } : false,
+        suggestOnTriggerCharacters: ligado,
+        acceptSuggestionOnEnter: ligado ? 'on' : 'off',
+        tabCompletion: ligado ? 'on' : 'off',
+        wordBasedSuggestions: ligado ? 'allDocuments' : 'off',
+        parameterHints: { enabled: ligado, cycle: true },
+      };
+    }
+
     const editor = monaco.editor.create(document.getElementById('editor'), {
       model: modelos.get(ativo),
       theme: 'vs-dark',
@@ -488,16 +506,10 @@
       automaticLayout: true,
       scrollBeyondLastLine: false,
       tabSize: 2,
-      // Sugestões aparecem sozinhas, inclusive dentro de aspas (ids, classes, arquivos).
-      quickSuggestions: { other: true, comments: false, strings: true },
       quickSuggestionsDelay: 10,
-      suggestOnTriggerCharacters: true,
-      acceptSuggestionOnEnter: 'on',
-      tabCompletion: 'on',
       suggestSelection: 'recentlyUsedByPrefix',
-      wordBasedSuggestions: 'allDocuments',
       suggest: { preview: true, localityBonus: true, shareSuggestSelections: true, showStatusBar: true },
-      parameterHints: { enabled: true, cycle: true },
+      ...opcoesSugestoes(estado.sugestoes),
       linkedEditing: true,
       bracketPairColorization: { enabled: true },
       guides: { bracketPairs: 'active' },
@@ -520,7 +532,7 @@
       nomes().forEach(n => { arquivos[n] = conteudo(n); });
       try {
         localStorage.setItem(CHAVE, JSON.stringify({
-          modo: estado.modo, auto: estado.auto, pagina: estado.pagina, scriptJs: estado.scriptJs,
+          modo: estado.modo, auto: estado.auto, sugestoes: estado.sugestoes, pagina: estado.pagina, scriptJs: estado.scriptJs,
           explorador: estado.explorador, ativo, abertos, arquivos,
         }));
         statusSalvo.textContent = '✓ salvo';
@@ -933,6 +945,15 @@
     const chkAuto = document.getElementById('chkAuto');
     chkAuto.checked = estado.auto;
     chkAuto.addEventListener('change', () => { estado.auto = chkAuto.checked; salvar(); });
+    const chkSugestoes = document.getElementById('chkSugestoes');
+    chkSugestoes.checked = estado.sugestoes;
+    chkSugestoes.addEventListener('change', () => {
+      estado.sugestoes = chkSugestoes.checked;
+      editor.updateOptions(opcoesSugestoes(estado.sugestoes));
+      editor.trigger('pixelcode', 'hideSuggestWidget', {});
+      salvar();
+      editor.focus();
+    });
     document.getElementById('btnRun').addEventListener('click', executar);
     document.getElementById('btnAtualizar').addEventListener('click', executar);
     document.getElementById('btnNovaAba').addEventListener('click', novaAba);
