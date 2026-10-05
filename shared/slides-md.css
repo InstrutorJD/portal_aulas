@@ -88,6 +88,7 @@
 .sm-title h2::after{ left:50%; transform:translateX(-50%); }
 /* "Inst.: Jairon" no pé da abertura (fora do fluxo pra não descentralizar o título). */
 .sm-autor{ position:absolute; left:0; right:0; bottom:40px; text-align:center; font-size:24px; font-weight:600; letter-spacing:.5px; color:var(--sm-dim); }
+.sm-autor-nome{ font-size:32px; font-weight:800; letter-spacing:1px; color:var(--sm-accent2); text-shadow:0 0 18px color-mix(in srgb, var(--sm-accent2) 45%, transparent); }
 
 /* Etiqueta "Aula 03 · qua., 30/09/2026 · turma" do slide de abertura
    (cabeçalho do .md, ver lerMeta). */
