@@ -12,36 +12,8 @@ Aula 4: o checklist ganha tela, e você lê um projeto feito por IA
 
 ---
 
-## O botão que não faz nada
-+ O operador marca os 5 itens do **CAM-07**
-+ Os **Freios** ficaram não conforme
-+ Ele toca em **Finalizar**...
-+ ... e **nada** acontece. Nenhum INAPTO, nenhum aviso
-+ A função `avaliarInspecao` está pronta. O que falta?
-
----
-
-## O que está faltando?
-A função existe, o botão existe. Por que nada acontece no toque?
-
-- [ ] Falta o CSS do botão
-- [ ] Falta internet no celular
-- [x] Falta o código que **espera o clique**
-- [ ] Falta um `console.log`
-
----
-
-## E depois do clique...
-+ Peça um app a uma IA: ela devolve **dezenas** de arquivos
-+ Pastas `app`, `components`, arquivos `.tsx`...
-+ Você saberia achar **onde** está o apto ou inapto?
-+ No fim de hoje, você vai saber
-
----
-
 ## Roteiro de hoje
-- **Abertura** (5 min)
-- **Parte 1**: ler e escrever JavaScript, com contas (65 min)
+- **Parte 1**: ler e escrever JavaScript, com contas (70 min)
 - **Parte 2**: a tela com o Copilot, começo (20 min)
 - ☕ **Intervalo** (15 min)
 - **Parte 2**: estilo, script, testes e Pages (40 min)
