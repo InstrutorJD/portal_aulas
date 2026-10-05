@@ -12,7 +12,7 @@
      Canal de broadcast do Supabase Realtime 'luta_<sala>': daqui saem 'j'
      ({ x, y } de -1 a 1, só quando muda; toda mensagem leva o id do
      celular, que no X1 define quem é o jogador 1 e o 2), 'b' (botão apertado, inclusive
-     'reiniciar') e 'ola';
+     'reiniciar' e as provocações 'risada', 'carranca' e 'chamar') e 'ola';
      de lá vem 'estado' (vida, energia, fase) e 'vib' (vibrar). -->
 <style>
   :root{ --bg:#0b0f17; --bg2:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,.12); --accent:#4fd1c5; --erro:#ff5c5c; }
@@ -44,6 +44,10 @@
   .j-en div{ background:#38bdf8; }
   .j-fase{ font-weight:800; color:var(--ink); white-space:nowrap; }
   .j-topo button{ font:inherit; font-size:18px; width:42px; height:38px; border-radius:12px; border:1px solid var(--line); background:var(--bg2); color:var(--ink); }
+  /* Provocações: pequenas, na barra de cima, longe dos botões de luta. */
+  .j-provocar{ display:flex; gap:4px; padding-left:8px; border-left:1px solid var(--line); }
+  .j-topo .jp{ width:38px; font-size:20px; }
+  .j-topo .jp.on{ transform:scale(.9); background:#334155; }
   .j-topo .j-reiniciar.confirmar{ width:auto; padding:0 12px; font-size:13px; font-weight:800; background:#b91c1c; border-color:#b91c1c; }
 
   .j-area{ flex:1; display:flex; min-height:0; }
@@ -91,6 +95,11 @@
     <div class="j-barras">
       <div class="j-barra j-hp"><div id="jHp"></div></div>
       <div class="j-barra j-en"><div id="jEn"></div></div>
+    </div>
+    <div class="j-provocar" title="Provocar o adversário">
+      <button type="button" class="jp" data-b="risada" title="Risadinha">😂</button>
+      <button type="button" class="jp" data-b="carranca" title="Cara feia">😠</button>
+      <button type="button" class="jp" data-b="chamar" title="Vem!">👋</button>
     </div>
     <button type="button" id="jReiniciar" class="j-reiniciar" title="Reiniciar o jogo">↺</button>
     <button type="button" id="jPausa" title="Pausa">⏸</button>
@@ -246,6 +255,16 @@
     btn.addEventListener('pointerleave', solta);
   });
   $('jPausa').addEventListener('click', () => enviar('b', { b: 'pausa' }));
+  // Provocações: o lutador faz a pose e aparece o balão no telão.
+  document.querySelectorAll('.jp').forEach(btn => {
+    btn.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      btn.classList.add('on');
+      setTimeout(() => btn.classList.remove('on'), 150);
+      enviar('b', { b: btn.dataset.b });
+      if (navigator.vibrate) navigator.vibrate(15);
+    });
+  });
   // Reiniciar (aluno desistiu): o jogo pede confirmação, então o botão
   // avisa "toque de novo" por 3 s.
   let confirmaEm = 0;

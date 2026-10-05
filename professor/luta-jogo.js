@@ -8,17 +8,19 @@
 //   - celular como joystick (professor/joystick.html), pareado por QR Code:
 //     canal de broadcast do Supabase Realtime 'luta_<sala>', sem tabela e
 //     sem SQL. O celular manda 'j' ({ x, y } de -1 a 1), 'b' ({ b: 'soco' |
-//     'chute' | 'esp' | 'pulo' | 'pausa' }) e 'ola'; o jogo responde
+//     'chute' | 'esp' | 'pulo' | 'pausa' | 'risada' | 'carranca' |
+//     'chamar' }) e 'ola'; o jogo responde
 //     'estado' (vida, energia, fase) e 'vib' (vibrar quando apanha).
 //   - teclado: setas/WASD, Z soco, X chute, C especial, espaço pulo,
-//     Enter começa, P pausa, R reinicia, M som, F tela cheia.
+//     Enter começa, P pausa, R reinicia, M som, F tela cheia,
+//     Q/E/V provocações (risadinha, cara feia, "vem!").
 //
 // Modo X1 (um aluno contra o outro): melhor de 3 rounds de 99 s, Kaito
 // (jogador 1, azul) contra Raiju (jogador 2, vermelho). Cada celular manda
 // um id próprio; o 1º celular a falar vira o jogador 1 e o 2º, o jogador 2
 // (no modo de 1 jogador, qualquer celular controla o Kaito). No teclado:
 // jogador 1 = WASD + Z/X/C/espaço, jogador 2 = setas + K/L/Ç/0 (ou 1/2/3/0
-// do teclado numérico).
+// do teclado numérico). Provocações: J1 = Q/E/V, J2 = U/I/O (ou 7/8/9).
 window.LutaJogo = (function () {
   'use strict';
   const W = 960, H = 540, CHAO = 478, GRAV = 0.75, RAD = Math.PI / 180;
@@ -161,6 +163,12 @@ window.LutaJogo = (function () {
         ruido(0.6, { freq: 700, vol: 0.5, atraso: 0.55, eco: true });
       },
       ko() { tom(110, 0.8, { ate: 28, vol: 0.95, eco: true }); ruido(0.7, { freq: 650, vol: 0.55, eco: true }); },
+      // Provocações: só efeitos (nada de voz, pedido do professor).
+      provoca(tipo) {
+        if (tipo === 'risada') [0, 1, 2, 3].forEach(i => tom(720 + i * 70, 0.07, { tipo: 'square', vol: 0.05, atraso: i * 0.09 }));
+        else if (tipo === 'carranca') tom(130, 0.4, { tipo: 'sawtooth', vol: 0.07, ate: 75, corte: 900 });
+        else { tom(600, 0.12, { vol: 0.09, ate: 1200 }); tom(800, 0.16, { vol: 0.09, ate: 1500, atraso: 0.16 }); }
+      },
       menu() { tom(880, 0.08, { tipo: 'square', vol: 0.07 }); tom(1320, 0.12, { tipo: 'square', vol: 0.07, atraso: 0.07 }); },
       fase() { [523, 659, 784, 1047].forEach((f, i) => tom(f, 0.16, { tipo: 'square', vol: 0.08, atraso: i * 0.11, eco: true })); },
     };
@@ -172,11 +180,12 @@ window.LutaJogo = (function () {
   // no X1 cada jogador tem a sua metade do teclado.
   const Tecla = {};
   const MAPA_SOLO = { esq: ['ArrowLeft', 'KeyA'], dir: ['ArrowRight', 'KeyD'], cima: ['ArrowUp', 'KeyW'], baixo: ['ArrowDown', 'KeyS'],
-    botoes: { KeyZ: 'soco', KeyJ: 'soco', KeyX: 'chute', KeyK: 'chute', KeyC: 'esp', KeyL: 'esp', Space: 'pulo' } };
+    botoes: { KeyZ: 'soco', KeyJ: 'soco', KeyX: 'chute', KeyK: 'chute', KeyC: 'esp', KeyL: 'esp', Space: 'pulo', KeyQ: 'risada', KeyE: 'carranca', KeyV: 'chamar' } };
   const MAPAS_X1 = [
-    { esq: ['KeyA'], dir: ['KeyD'], cima: ['KeyW'], baixo: ['KeyS'], botoes: { KeyZ: 'soco', KeyX: 'chute', KeyC: 'esp', Space: 'pulo' } },
+    { esq: ['KeyA'], dir: ['KeyD'], cima: ['KeyW'], baixo: ['KeyS'], botoes: { KeyZ: 'soco', KeyX: 'chute', KeyC: 'esp', Space: 'pulo', KeyQ: 'risada', KeyE: 'carranca', KeyV: 'chamar' } },
     { esq: ['ArrowLeft'], dir: ['ArrowRight'], cima: ['ArrowUp'], baixo: ['ArrowDown'],
-      botoes: { KeyK: 'soco', Numpad1: 'soco', KeyL: 'chute', Numpad2: 'chute', Semicolon: 'esp', Numpad3: 'esp', Numpad0: 'pulo' } },
+      botoes: { KeyK: 'soco', Numpad1: 'soco', KeyL: 'chute', Numpad2: 'chute', Semicolon: 'esp', Numpad3: 'esp', Numpad0: 'pulo',
+        KeyU: 'risada', Numpad7: 'risada', KeyI: 'carranca', Numpad8: 'carranca', KeyO: 'chamar', Numpad9: 'chamar' } },
   ];
   const TECLAS_GERAIS = { KeyR: 'reiniciar', Enter: 'start', NumpadEnter: 'start', KeyP: 'pausa', Escape: 'pausa', Digit1: 'modo1', Digit2: 'modo2' };
   const algum = cods => cods.some(c => Tecla[c]);
@@ -263,6 +272,16 @@ window.LutaJogo = (function () {
     { nome: 'MERCADO NOTURNO', ondas: [['brigao', 'ninja'], ['capanga', 'capanga', 'ninja', 'brigao'], ['ninja', 'ninja', 'brigao', 'brigao', 'capanga']] },
     { nome: 'TELHADO DA TORRE', ondas: [['brutamontes', 'ninja', 'capanga'], ['brutamontes', 'brigao', 'ninja', 'ninja', 'brigao'], ['chefe']] },
   ];
+
+  // Provocações (botões pequenos do celular, ou Q/E/V e U/I/O no teclado):
+  // pose curta + balão em cima da cabeça. Só saem com o lutador parado no
+  // chão e deixam ele aberto por ~0,75 s: provocar tem risco.
+  const PROVOCACOES = {
+    risada: { emoji: '😂', fala: 'HAHA!' },
+    carranca: { emoji: '😠', fala: 'GRRR!' },
+    chamar: { emoji: '👋', fala: 'VEM!' },
+  };
+  const PROVOCA_QUADROS = 45, BALAO_QUADROS = 80;
 
   // ---------- Estado do jogo ----------
   const J = {
@@ -481,6 +500,7 @@ window.LutaJogo = (function () {
   function atualizarCorpo(f) {
     if (f.invul > 0) f.invul--;
     if (f.branco > 0) f.branco--;
+    if (f.balao && --f.balao.vida <= 0) f.balao = null;
     if (f.armadura < (f.T.armadura || 0) && ++f.semApanhar > 120) f.armadura = f.T.armadura;
     if (f.z > 0 || f.vz > 0) {
       f.vz -= GRAV; f.z += f.vz;
@@ -493,6 +513,7 @@ window.LutaJogo = (function () {
       case 'levantar': f.vx = 0; if (++f.et >= 18) { f.estado = 'parado'; f.invul = f.controle ? 45 : 10; } break;
       case 'ko': if (noChao(f)) { f.vx *= 0.8; f.et++; } break;
       case 'golpe': atualizarGolpe(f); break;
+      case 'provoca': f.vx = 0; if (++f.et >= PROVOCA_QUADROS) f.estado = 'parado'; break;
     }
   }
 
@@ -614,6 +635,8 @@ window.LutaJogo = (function () {
     if (cmd) { iniciarGolpe(p, cmd); return; }
     if (b === 'soco') { iniciarGolpe(p, dy > 0.5 ? 'socoBaixo' : 'soco1'); return; }
     if (b === 'chute') { iniciarGolpe(p, dy > 0.5 ? 'rasteira' : 'chute'); return; }
+    const prov = en.pegar('risada', 'carranca', 'chamar');
+    if (prov) { provocar(p, prov); return; }
     if (dy > 0.5) { p.estado = 'agachar'; p.vx = 0; return; }
     if (Math.abs(dx) > 0.2) {
       p.estado = 'andar';
@@ -622,6 +645,12 @@ window.LutaJogo = (function () {
       p.passo += Math.abs(p.vx) * 0.09;
       if (Math.floor(p.passo / Math.PI) !== antes) Som.passo();
     } else { p.estado = 'parado'; p.vx = 0; }
+  }
+
+  function provocar(p, tipo) {
+    p.estado = 'provoca'; p.prov = tipo; p.et = 0; p.vx = 0; p.guarda = false;
+    p.balao = { tipo, vida: BALAO_QUADROS };
+    Som.provoca(tipo);
   }
 
   // ---------- Inimigos ----------
@@ -1050,6 +1079,13 @@ window.LutaJogo = (function () {
       case 'dor': P.lean = -22; P.cab = -15; P.bF = [30, 50]; P.bT = [-25, 40]; P.pF = [14, -12]; P.pT = [-28, -8]; break;
       case 'caido': case 'ko': P.bF = [160, 10]; P.bT = [150, 20]; P.pF = [4, 0]; P.pT = [-4, 0]; P.cab = -10; break;
       case 'vitoria': P.bF = [178, -5]; P.bT = [25, 125]; P.lean = -4; break;
+      case 'provoca': {
+        const o = Math.sin(f.et * 0.7);
+        if (f.prov === 'risada') { P.lean = -14 + o * 4; P.cab = -16; P.bF = [15, 75]; P.bT = [-10, 100]; } // mão na barriga, sacudindo
+        else if (f.prov === 'carranca') { P.lean = 14 + o; P.cab = 12; P.bF = [-15, 30]; P.bT = [-25, 30]; } // peito estufado, punhos para trás
+        else { P.lean = -4; P.bF = [85, 60 + o * 35]; P.bT = [22, 125]; } // braço esticado chamando com a mão
+        break;
+      }
       case 'golpe': {
         const g = f.golpe;
         if (!g) break;
@@ -1526,6 +1562,26 @@ window.LutaJogo = (function () {
     ctx.globalAlpha = 1;
   }
 
+  // Balão da provocação: estoura ao aparecer e some aos poucos.
+  function desenharBalao(f) {
+    if (!f.balao) return;
+    const P = PROVOCACOES[f.balao.tipo], idade = BALAO_QUADROS - f.balao.vida;
+    const k = 0.6 + 0.4 * clamp(idade / 6, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = clamp(f.balao.vida / 15, 0, 1);
+    ctx.translate(f.x, CHAO - f.z - 215 * f.s - Math.min(idade, 20) * 0.4);
+    ctx.scale(k, k);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = CONTORNO; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-10, 20); ctx.lineTo(0, 38); ctx.lineTo(10, 20); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-66, -28, 132, 52, 20); ctx.fill(); ctx.stroke();
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+    ctx.font = '30px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+    ctx.fillText(P.emoji, -36, 0);
+    ctx.font = '900 22px "Arial Black", Impact, sans-serif';
+    ctx.fillStyle = CONTORNO; ctx.fillText(P.fala, 18, 1);
+    ctx.restore();
+  }
+
   function txt(s, x, y, tam, cor, alinha, borda) {
     ctx.font = `900 ${tam}px "Arial Black", Impact, sans-serif`;
     ctx.textAlign = alinha || 'left'; ctx.textBaseline = 'middle';
@@ -1636,7 +1692,7 @@ window.LutaJogo = (function () {
       '⌨ Setas: mover · ↑ ou ESPAÇO: pular (2x = pulo duplo) · ↓: agachar',
       'Z soco (3x = combo) · X chute · ↓ + X rasteira · C especial · energia cheia = SUPER · trás defende',
       'Combos: ↓↘→ + Soco = bola · →↓↘ + Soco = Punho do Dragão · ↓↙← + Chute = Furacão · Soco, Soco, Chute',
-      'X1 no teclado: J1 = WASD + Z/X/C/espaço · J2 = setas + K/L/Ç/0',
+      'X1 no teclado: J1 = WASD + Z/X/C/espaço · J2 = setas + K/L/Ç/0 · provocar: Q/E/V e U/I/O',
       'X1 no celular: os dois leem o mesmo QR (📱) · P: pausa · R: reiniciar · M: som · F: tela cheia',
     ];
     linhas.forEach((l, i) => txt(l, W / 2, 396 + i * 24, 14, '#cbd5e1', 'center'));
@@ -1660,6 +1716,7 @@ window.LutaJogo = (function () {
     if (J.superT > 0) { ctx.fillStyle = 'rgba(0,0,30,.65)'; ctx.fillRect(-20, -20, W + 40, H + 40); }
     const ordem = [...J.inis, J.jog].sort((a, b) => (a.controle ? 1 : 0) - (b.controle ? 1 : 0));
     ordem.forEach(desenharLutador);
+    ordem.forEach(desenharBalao);
     desenharProjeteis();
     desenharParticulas();
     ctx.restore();
@@ -1775,7 +1832,7 @@ window.LutaJogo = (function () {
         .on('broadcast', { event: 'b' }, ({ payload }) => {
           const slot = slotDe(payload && payload.id);
           const b = payload && payload.b;
-          if (slot && ['soco', 'chute', 'esp', 'pulo', 'pausa', 'reiniciar'].includes(b)) entradaDe(slot).apertar(b);
+          if (slot && ['soco', 'chute', 'esp', 'pulo', 'pausa', 'reiniciar', 'risada', 'carranca', 'chamar'].includes(b)) entradaDe(slot).apertar(b);
         })
         .on('broadcast', { event: 'ola' }, ({ payload }) => { slotDe(payload && payload.id); enviarEstado(true); })
         .subscribe(st => { pronto = st === 'SUBSCRIBED'; });
