@@ -180,38 +180,84 @@ console.log(conformes / total * 100)
 
 ---
 
-## 🎯 Pedidos rápidos (1/2)
-Arquivo `contas.js`. Crie as variáveis e mostre o resultado com `console.log`.
+## 🎯 Pedido 1: guardar e mostrar
+Contexto: o horímetro do **CAM-07** marca **1250** horas.
 
-1. **Soma**: o CAM-07 tem 3 itens críticos e 4 comuns. Quantos itens ao todo?
-2. **Subtração**: o tanque leva 500 litros e tem 180. Quanto falta para encher?
-3. **Multiplicação**: o caminhão gasta 25 litros por hora. Quanto gasta num turno de 12 horas?
-
----
-
-## 🎯 Pedidos rápidos (2/2)
-1. **Divisão**: 6 caminhões dividem 900 litros de diesel por igual. Quanto vai para cada um?
-2. **Porcentagem**: 7 de 8 itens estão conformes. Qual a % de conformidade?
-3. **Parênteses**: a média de horas de 3 turnos: 8, 10 e 6 horas
-
-> Mostre com texto: `console.log('Faltam ' + falta + ' litros')`
+1. Crie o arquivo `contas.js`
+2. Crie uma variável com o horímetro
+3. Mostre o valor dela no Console
 
 ---
 
-## 🔍 Leia e preveja: laço
-```js
-const horas = [8, 10, 6]
-let total = 0
-for (const h of horas) {
-  total = total + h
-}
-console.log(total)
-```
+## 🎯 Pedido 2: somar dois números
+Contexto: o CAM-07 tem **3** itens críticos e **4** itens comuns.
 
-- [ ] `3`
-- [ ] `8106`
-- [x] `24`
-- [ ] `6`
+1. Crie uma variável para cada número
+2. Crie uma terceira variável com a **soma** das duas
+3. Mostre o total no Console
+
+---
+
+## 🎯 Pedido 3: subtrair
+Contexto: o tanque leva **500** litros e o marcador mostra **180**.
+
+1. Crie as duas variáveis
+2. Calcule quanto **falta** para encher
+3. Mostre o resultado
+
+---
+
+## 🎯 Pedido 4: multiplicar
+Contexto: o caminhão gasta **25** litros por hora, e o turno tem **12** horas.
+
+1. Crie as duas variáveis
+2. Calcule quantos litros ele gasta **no turno**
+3. Mostre o resultado
+
+---
+
+## 🎯 Pedido 5: dividir
+Contexto: **900** litros de diesel vão ser divididos por igual entre **6** caminhões.
+
+1. Crie as duas variáveis
+2. Calcule quanto vai para **cada** caminhão
+3. Mostre o resultado
+
+---
+
+## 🎯 Pedido 6: somar e dividir
+Contexto: o operador trabalhou **8**, **10** e **6** horas em 3 turnos.
+
+1. Crie uma variável para cada turno
+2. Calcule a **média**: some os três e divida por 3
+3. Mostre o resultado. Deu certo? Lembre dos **parênteses**
+
+---
+
+## 🎯 Pedido 7: porcentagem
+Contexto: na inspeção, **7** de **8** itens ficaram conformes.
+
+1. Crie as duas variáveis
+2. Calcule a **% de conformidade**
+3. Mostre o resultado
+
+---
+
+## 🎯 Pedido 8: texto com número
+Contexto: o operador não entende só um número solto no Console.
+
+1. Volte ao Pedido 3, do tanque
+2. Mostre uma frase: `Faltam ... litros para encher`
+3. Use o `+` para juntar o texto e a variável
+
+---
+
+## 🎯 Pedido 9: o valor que muda
+Contexto: a cada turno de **8** horas, o horímetro aumenta.
+
+1. Crie o horímetro com `let`, valendo **1250**
+2. Some 8 horas a ele, **três vezes**, uma linha para cada turno
+3. Mostre o valor no fim. Por que tem que ser `let`?
 
 ---
 
@@ -230,13 +276,30 @@ console.log(consumo(240, 8))
 
 ---
 
-## 🎯 Pedidos: contas com função
-Contexto: o supervisor quer as contas prontas, para usar todo dia.
+## 🎯 Pedido 10: a primeira função
+Contexto: o supervisor faz a mesma soma o dia inteiro.
 
-1. Crie `function falta(capacidade, atual)`: devolve quanto falta no tanque
-2. Crie `function percentual(conformes, total)`: devolve a % de conformidade
-3. Mostre: `falta(500, 180)` e `percentual(7, 8)`
-4. **Extra**: com um `for`, some o diesel do dia: `[120, 80, 150]`
+1. Crie a função `somar(a, b)` que **devolve** `a + b`
+2. Mostre `somar(3, 4)` no Console
+3. Agora mostre `somar(1250, 8)`: a mesma função, outros números
+
+---
+
+## 🎯 Pedido 11: função do tanque
+Contexto: todo caminhão tem um tanque diferente.
+
+1. Crie a função `falta(capacidade, atual)`
+2. Ela devolve quanto falta para encher
+3. Teste com `falta(500, 180)` e `falta(800, 650)`
+
+---
+
+## 🎯 Pedido 12: função da conformidade
+Contexto: cada equipamento tem um número diferente de itens.
+
+1. Crie a função `percentual(conformes, total)`
+2. Ela devolve a % de conformidade
+3. Teste com `percentual(7, 8)` e `percentual(5, 5)`
 
 ---
 

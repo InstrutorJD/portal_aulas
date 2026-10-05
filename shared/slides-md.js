@@ -269,7 +269,7 @@ window.SlidesMD = (function () {
       // A abertura ganha a etiqueta "Aula 03 · data" acima do título.
       const chip = i === 0 && kind === 'title' && rotulo ? `<div class="sm-anim sm-meta-chip" style="--d:0">${esc(rotulo)}</div>` : '';
       // E o nome do instrutor no rodapé (troca com "instrutor: Fulano" no cabeçalho).
-      const autor = i === 0 && kind === 'title' ? `<div class="sm-anim sm-autor" style="--d:4">Inst.: <span class="sm-autor-nome">${esc(meta.instrutor || 'Jairon')}</span></div>` : '';
+      const autor = i === 0 && kind === 'title' ? `<div class="sm-anim sm-autor" style="--d:4">Inst.: ${esc(meta.instrutor || 'Jairon')}</div>` : '';
       return { kind, html: chip + renderBlocks(blocks) + autor, temMidia };
     });
     const h1 = corpo.match(/^#\s+(.+)$/m);
