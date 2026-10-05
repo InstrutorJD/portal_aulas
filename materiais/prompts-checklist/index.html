@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0b0f17">
-<title>Prompts do checklist — Aula 03</title>
-<!-- Prompts do Copilot da Aula 03 (Parte 5, a tela do checklist). Aberta
+<title>Prompts do checklist — Aula 04</title>
+<!-- Prompts do Copilot da Aula 04 (Parte 4, a tela do checklist). Aberta
      pelo QR Code do slide "Copie os prompts": o aluno não copia nada do slide
      projetado, copia daqui (botão Copiar) e cola no chat do Copilot, dentro
-     do Codespace. Um arquivo por vez: #html, #css, #js e, se der erro, #erro.
+     do Codespace. O Copilot cria só #html e #css; o script.js o aluno escreve
+     sozinho, então #dica e #erro pedem explicação, nunca o código pronto.
      Página estática, sem login. O texto precisa bater com o dos slides. -->
 <style>
   :root{ --bg:#0b0f17; --card:#121a28; --ink:#eef2f8; --dim:#9aa6ba; --line:rgba(255,255,255,.14); --accent:#4fd1c5; }
@@ -34,12 +35,13 @@
 <body>
 <main>
   <h1>🧰 Prompts da tela do checklist</h1>
-  <p class="sub">Aula 03 · Copilot no Codespace · <strong>um arquivo por vez</strong></p>
+  <p class="sub">Aula 04 · Copilot no Codespace · <strong>um arquivo por vez</strong></p>
   <ol>
     <li>Abra este endereço <strong>no computador</strong>, numa aba ao lado do Codespace.</li>
     <li>Toque em <strong>Copiar</strong> e cole no chat do Copilot.</li>
     <li>Leia o que ele fez antes de clicar em <strong>Manter</strong> (<em>Keep</em>).</li>
     <li>Rode a página, teste e só depois passe para o próximo arquivo.</li>
+    <li>O <code>script.js</code> é <strong>seu</strong>: para ele, só os prompts de dica e de erro.</li>
   </ol>
 
   <h2 id="html">1️⃣ index.html: a estrutura</h2>
@@ -48,9 +50,10 @@
     <pre id="txtHtml">Estou criando a tela de um checklist de inspeção de equipamentos de mineração, para usar no celular.
 Crie SÓ o arquivo index.html, sem CSS e sem JavaScript dentro dele.
 A tela deve ter:
-- um select com id equipamento: "Escolha o equipamento", CAM-07 Caminhão, ESC-02 Escavadeira e PC-03 Pá carregadeira;
+- um select com id equipamento: "Escolha o equipamento" (com value vazio), CAM-07 Caminhão, ESC-02 Escavadeira e PC-03 Pá carregadeira, com o value igual ao código (CAM-07, ESC-02, PC-03);
 - 5 itens, cada um com dois botões de rádio, Conforme e Não conforme: Freios, Pneus, Cinto de segurança, Limpeza da cabine e Nível de combustível;
 - o rádio de cada item com o name igual ao nome do item, sem acento e minúsculo (freios, pneus, cinto, limpeza, combustivel);
+- o value dos rádios: conforme e nao-conforme;
 - um botão Finalizar com id finalizar e um parágrafo vazio com id resultado;
 - o link para style.css no head e o script.js no fim do body.
 Não coloque comentários: eu mesmo vou comentar.</pre>
@@ -61,34 +64,34 @@ Não coloque comentários: eu mesmo vou comentar.</pre>
     <div class="barra"><span>Prompt do CSS</span><button type="button" data-copiar="txtCss">📋 Copiar</button></div>
     <pre id="txtCss">No meu checklist (#index.html), crie SÓ o arquivo style.css.
 Pense primeiro no celular: letra grande, um item embaixo do outro, botões e opções fáceis de tocar com luva.
+Deixe a tela bonita e moderna: cores combinando, cantos arredondados e espaço entre os itens.
 Em telas a partir de 700px, centralize o conteúdo com largura máxima de 600px.
 Destaque o resultado: verde para a classe apto e vermelho para a classe inapto.
 Não mude o index.html. Não coloque comentários: eu mesmo vou comentar.</pre>
   </div>
 
-  <h2 id="js">3️⃣ script.js: o comportamento</h2>
+  <h2 id="dica">💡 script.js: peça uma dica, não o código</h2>
+  <p class="sub">O <code>script.js</code> você escreve sozinho. Travou numa etapa? Troque o que está entre &lt; &gt;.</p>
   <div class="caixa">
-    <div class="barra"><span>Prompt do JavaScript</span><button type="button" data-copiar="txtJs">📋 Copiar</button></div>
-    <pre id="txtJs">No meu checklist (#index.html), crie SÓ o arquivo script.js, em JavaScript simples, para iniciante.
-Use:
-- uma lista itens com o name de cada item e se ele é crítico (freios, pneus e cinto são críticos);
-- uma função avaliarInspecao() que confere cada item e devolve o resultado;
-- a regra: se um item crítico estiver Não conforme, o equipamento fica INAPTO; senão, fica APTO;
-- se faltar escolher o equipamento ou marcar algum item, mostre um aviso em vez do resultado;
-- o evento de clique no botão finalizar, que mostra o resultado no parágrafo resultado, com a classe apto ou inapto.
-Não mude os outros arquivos. Não coloque comentários: eu mesmo vou comentar.</pre>
+    <div class="barra"><span>Prompt de dica</span><button type="button" data-copiar="txtDica">📋 Copiar</button></div>
+    <pre id="txtDica">Estou aprendendo JavaScript e escrevendo sozinho o script.js do meu checklist (#index.html #script.js).
+Estou na etapa: &lt;o que você quer fazer, ex.: ler o rádio marcado dos Freios&gt;.
+O que eu tentei: &lt;o que você fez e o que aconteceu&gt;.
+NÃO escreva o código nem mude os meus arquivos.
+Me dê só uma dica curta, em até 3 linhas, do próximo passo.</pre>
   </div>
 
-  <h2 id="erro">🩺 Deu erro? Peça a correção assim</h2>
+  <h2 id="erro">🩺 Deu erro? Peça a explicação assim</h2>
   <p class="sub">Antes, leia o erro no <strong>Console</strong> (F12) e tente achar a linha. Troque o que está entre &lt; &gt;.</p>
   <div class="caixa">
-    <div class="barra"><span>Prompt de correção</span><button type="button" data-copiar="txtErro">📋 Copiar</button></div>
+    <div class="barra"><span>Prompt de erro</span><button type="button" data-copiar="txtErro">📋 Copiar</button></div>
     <pre id="txtErro">No meu checklist, o Console mostra este erro:
 &lt;cole aqui a frase vermelha do Console&gt;
 Ele aparece quando eu &lt;o que você fez: abri a página, cliquei em Finalizar...&gt;.
-Explique a causa em até 2 linhas e corrija só o necessário.</pre>
+Explique a causa em até 2 linhas e diga em qual linha está.
+NÃO corrija o código: eu mesmo corrijo.</pre>
   </div>
-  <p class="dica">O Copilot Free tem <strong>50 mensagens de chat por mês</strong>. Estes 3 prompts gastam 3: guarde o resto para as correções.</p>
+  <p class="dica">O Copilot Free tem <strong>50 mensagens de chat por mês</strong>. O HTML e o CSS gastam 2 ou 3: guarde o resto para as dicas.</p>
 </main>
 <script>
 (function () {
