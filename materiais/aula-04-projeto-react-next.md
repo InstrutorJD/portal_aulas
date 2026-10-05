@@ -41,16 +41,16 @@ A função existe, o botão existe. Por que nada acontece no toque?
 
 ## Roteiro de hoje
 - **Abertura** (5 min)
-- **Parte 1**: o que faltou do JavaScript (50 min)
-- **Parte 2**: a tela com o Copilot, começo (35 min)
+- **Parte 1**: ler e escrever JavaScript, com contas (65 min)
+- **Parte 2**: a tela com o Copilot, começo (20 min)
 - ☕ **Intervalo** (15 min)
-- **Parte 2**: script, testes e Pages (35 min)
-- **Parte 3**: por dentro de um projeto React/Next.js (35 min)
+- **Parte 2**: estilo, script, testes e Pages (40 min)
+- **Parte 3**: por dentro de um projeto React/Next.js (30 min)
 
 ---
 
 # Parte 1 — O que faltou do JavaScript
-Função, evento, erros e o desafio final
+Ler, prever, contar e só depois codificar
 
 ---
 
@@ -82,6 +82,177 @@ Os **Freios** (crítico) estão conformes e o **Cinto** (crítico) não. O que a
 - [x] `'INAPTO'`: um crítico falhou
 - [ ] Nada: falta o `console.log`
 - [ ] Um erro: são dois críticos
+
+---
+
+## 🔍 Antes de digitar, leia
++ Na vida real, você vai **ler** muito mais código do que escrever
++ Principalmente o código que a **IA** gerou
++ Leia **linha por linha**, de cima para baixo
++ **Preveja** o que vai aparecer no Console
++ Só depois **rode** e confira: acertou?
+
+---
+
+## Contas no JavaScript
+| Sinal | Conta | Exemplo | Resultado |
+|---|---|---|---|
+| `+` | Soma | `3 + 2` | 5 |
+| `-` | Subtração | `500 - 180` | 320 |
+| `*` | Multiplicação | `25 * 12` | 300 |
+| `/` | Divisão | `300 / 12` | 25 |
+
+Como na matemática: `*` e `/` vêm **antes** de `+` e `-`. Os **parênteses** mudam a ordem.
+
+---
+
+## 🔍 Leia e preveja (1/5)
+```js
+const criticos = 3
+const comuns = 2
+console.log(criticos + comuns)
+```
+
+- [x] `5`
+- [ ] `32`
+- [ ] `criticos + comuns`
+- [ ] `1`
+
+---
+
+## 🔍 Leia e preveja (2/5)
+```js
+const horas = '8'
+console.log(horas + 2)
+```
+
+- [ ] `10`
+- [x] `82`
+- [ ] Um erro
+- [ ] `6`
+
+> Por quê: `'8'` com aspas é **texto**. Texto `+` número **junta**, não soma.
+
+---
+
+## 🔍 Leia e preveja (3/5)
+```js
+const litros = 300
+const horas = 12
+console.log(litros / horas)
+```
+
+- [ ] `3600`
+- [ ] `288`
+- [x] `25`
+- [ ] `312`
+
+---
+
+## 🔍 Leia e preveja (4/5)
+```js
+let horimetro = 1250
+horimetro = horimetro + 8
+horimetro = horimetro + 8
+console.log(horimetro)
+```
+
+- [ ] `1258`
+- [x] `1266`
+- [ ] `1250`
+- [ ] `16`
+
+---
+
+## 🔍 Leia e preveja (5/5)
+```js
+const conformes = 4
+const total = 5
+console.log(conformes / total * 100)
+```
+
+- [x] `80`
+- [ ] `0.008`
+- [ ] `20`
+- [ ] `400`
+
+> Por quê: da esquerda para a direita: `4 / 5` = 0.8, e `0.8 * 100` = 80.
+
+---
+
+## 🎯 Pedidos rápidos (1/2)
+Arquivo `contas.js`. Crie as variáveis e mostre o resultado com `console.log`.
+
+1. **Soma**: o CAM-07 tem 3 itens críticos e 4 comuns. Quantos itens ao todo?
+2. **Subtração**: o tanque leva 500 litros e tem 180. Quanto falta para encher?
+3. **Multiplicação**: o caminhão gasta 25 litros por hora. Quanto gasta num turno de 12 horas?
+
+---
+
+## 🎯 Pedidos rápidos (2/2)
+1. **Divisão**: 6 caminhões dividem 900 litros de diesel por igual. Quanto vai para cada um?
+2. **Porcentagem**: 7 de 8 itens estão conformes. Qual a % de conformidade?
+3. **Parênteses**: a média de horas de 3 turnos: 8, 10 e 6 horas
+
+> Mostre com texto: `console.log('Faltam ' + falta + ' litros')`
+
+---
+
+## 🔍 Leia e preveja: laço
+```js
+const horas = [8, 10, 6]
+let total = 0
+for (const h of horas) {
+  total = total + h
+}
+console.log(total)
+```
+
+- [ ] `3`
+- [ ] `8106`
+- [x] `24`
+- [ ] `6`
+
+---
+
+## 🔍 Leia e preveja: função
+```js
+function consumo(litros, horas) {
+  return litros / horas
+}
+console.log(consumo(240, 8))
+```
+
+- [x] `30`
+- [ ] `1920`
+- [ ] `248`
+- [ ] `consumo`
+
+---
+
+## 🎯 Pedidos: contas com função
+Contexto: o supervisor quer as contas prontas, para usar todo dia.
+
+1. Crie `function falta(capacidade, atual)`: devolve quanto falta no tanque
+2. Crie `function percentual(conformes, total)`: devolve a % de conformidade
+3. Mostre: `falta(500, 180)` e `percentual(7, 8)`
+4. **Extra**: com um `for`, some o diesel do dia: `[120, 80, 150]`
+
+---
+
+## 🔍 Leia e preveja: evento
+```js
+botao.addEventListener('click', () => {
+  saida.textContent = 'Inspeção finalizada!'
+})
+```
+
+Quando a frase aparece na tela?
+
+- [ ] Assim que a página abre
+- [x] Quando o operador clica no botão
+- [ ] Nunca: falta o `console.log`
+- [ ] A cada segundo
 
 ---
 
@@ -135,6 +306,16 @@ Contexto: o clique tem que **decidir**, não só avisar.
 2. No clique do Finalizar, chame a função
 3. Escreva na `saida`: `Resultado: ` + o que ela devolveu
 4. Faça os **Freios** falharem: apareceu INAPTO?
+
+---
+
+## 🎯 Pedido: o botão Calcular
+Contexto: o supervisor quer ver a **% de conformidade** na tela.
+
+1. No `index.html`, crie um botão com `id="calcular"`
+2. No `script.js`, pegue o botão com `querySelector`
+3. No clique, faça a conta com `4` conformes de `5` itens
+4. Escreva na `saida`: `Conformidade: ` + o resultado + `%`
 
 ---
 
@@ -354,17 +535,17 @@ python3 -m http.server 8000
 
 ---
 
+# ☕ Intervalo: 15 min
+Na volta: a tela ganha **roupa** com o `style.css` e **cérebro** com o `script.js`
+
+---
+
 ## Mão na massa: style.css
 1. Cole o **prompt 2** no chat e revise antes de **Manter**
 2. Dê **F5** na página: ela ganhou roupa?
 3. **F12** → **Ctrl + Shift + M**: escolha um celular
 4. Dá para tocar nas opções sem errar? A letra está legível?
 5. `git add .`, `git commit -m "Tela e estilo"` e `git push`
-
----
-
-# ☕ Intervalo: 15 min
-Na volta: a tela ganha **cérebro** com o `script.js`
 
 ---
 
@@ -606,7 +787,7 @@ O resultado aparece na tela logo depois do `setResultado`. Por quê?
 ---
 
 ## O que vimos hoje
-+ O **evento** liga o clique à função que decide
++ **Ler e prever** antes de rodar; o **evento** liga o clique à função
 + A tela do checklist: Copilot, testes, comentários e **Pages**
 + React: **componentes** recebem **props** e guardam **estado**
 + **TypeScript** dá formato aos dados; no **Next.js**, pasta é página
