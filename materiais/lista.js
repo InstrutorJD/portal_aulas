@@ -14,4 +14,5 @@ window.MATERIAIS = [
   'aula-02-json-rest-copilot.md',
   'aula-03-tela-checklist.md',
   'aula-04-projeto-react-next.md',
+  'aula-05-ciclo-publicacao-git.md',
 ];
