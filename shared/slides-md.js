@@ -338,6 +338,7 @@ window.SlidesMD = (function () {
       stage.style.height = `${h}px`;
       stage.style.setProperty('--sm-h', `${h}px`);
       stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+      ajustarCodigo(atual);
     }
 
     function realcarCodigo(el) {
@@ -364,6 +365,36 @@ window.SlidesMD = (function () {
       });
     }
 
+    // Código que não cabe (linha comprida, bloco alto ou slide com texto
+    // demais em volta) diminui a letra até caber, em vez de ficar cortado
+    // ou com barra de rolagem no projetor. Mínimo de 14px: abaixo disso
+    // ninguém lê do fundo da sala — aí o jeito é dividir o slide no .md.
+    // Roda ao montar o slide, ao redimensionar e quando as fontes chegam.
+    const CODIGO_MIN = 14;
+    function ajustarCodigo(el) {
+      if (!el) return;
+      const codigos = [...el.querySelectorAll('.sm-code code')];
+      if (!codigos.length) return;
+      const inner = el.querySelector('.sm-slide-inner');
+      codigos.forEach(c => { c.style.fontSize = ''; });
+      // Pela posição do último elemento, e não por scrollHeight: o
+      // translateY da animação de entrada (.sm-anim) conta no scrollHeight
+      // e fazia todo slide parecer transbordar.
+      const ultimo = inner.lastElementChild;
+      const transborda = () => ultimo.offsetTop + ultimo.offsetHeight > inner.offsetTop + inner.clientHeight + 1 ||
+        codigos.some(c => {
+          // A caixa (.sm-code) também conta: o flex do slide a espreme e o
+          // overflow:hidden dela esconde o fim do pre sem ele "transbordar".
+          const pre = c.parentElement, caixa = pre.parentElement;
+          return pre.scrollWidth > pre.clientWidth + 1 || pre.scrollHeight > pre.clientHeight + 1 || caixa.scrollHeight > caixa.clientHeight + 1;
+        });
+      let px = parseFloat(getComputedStyle(codigos[0]).fontSize) || 24;
+      while (transborda() && px > CODIGO_MIN) {
+        px -= 1;
+        codigos.forEach(c => { c.style.fontSize = `${px}px`; });
+      }
+    }
+
     function montarSlide(i) {
       const s = deck.slides[i];
       const el = document.createElement('section');
@@ -387,6 +418,7 @@ window.SlidesMD = (function () {
       atual = montarSlide(i);
       atual.classList.add(dir < 0 ? 'sm-in-prev' : 'sm-in-next');
       stage.appendChild(atual);
+      ajustarCodigo(atual);
       if (antigo) {
         antigo.classList.add(dir < 0 ? 'sm-out-prev' : 'sm-out-next');
         setTimeout(() => antigo.remove(), 300);
@@ -766,6 +798,8 @@ window.SlidesMD = (function () {
       fecharOverview();
       fit();
       window.addEventListener('resize', fit);
+      // JetBrains Mono chega depois e é mais larga que o Consolas do começo.
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ajustarCodigo(atual));
       document.removeEventListener('keydown', onKey);
       document.addEventListener('keydown', onKey);
       // Recarregou a página com um celular já pareado: reconecta sozinho.

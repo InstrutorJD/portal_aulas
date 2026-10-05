@@ -193,14 +193,12 @@ Vários desafios curtos, um tema por vez
 ---
 
 ## Seu laboratório: o PixelCode
-[qrcode https://tinyurl.com/pixelcode-jd tinyurl.com/pixelcode-jd]
+Abra **tinyurl.com/pixelcode-jd** no **computador**.
 
 ---
 
 ## Sua IA de apoio
-[qrcode https://claude.ai/artifact/5iH131aR6Pt7RArxueKmS2 A IA da turma]
-
-Abra no **computador**, numa aba ao lado do PixelCode.
+Abra **tinyurl.com/ia-turma-jd** no **computador**, numa aba ao lado do PixelCode.
 
 ---
 
