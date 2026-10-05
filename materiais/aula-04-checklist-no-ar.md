@@ -215,9 +215,6 @@ Abra **tinyurl.com/ia-turma-jd** no **computador**, numa aba ao lado do PixelCod
 1. Um arquivo por desafio: `d1.js`, `d2.js`...
 2. Leia o contexto e faça os passos, **em ordem**
 3. Rode e confira antes de passar para o próximo
-4. Terminou todos? Faça o **bônus**
-
-[cronômetro 40]
 
 ---
 
@@ -287,35 +284,6 @@ Contexto: o operador quer uma **frase**, não só a palavra.
 
 ---
 
-## 🎯 D8: o botão
-Contexto: agora no modo **Página web**.
-
-1. No `index.html`: um botão `id="finalizar"` e um `<p id="resultado">`
-2. No `script.js`: pegue os dois com `querySelector`
-3. No clique, escreva `Inspeção finalizada!` no parágrafo
-
----
-
-## ⭐ Bônus: o rádio marcado
-```html
-<input type="radio" name="freios" value="conforme"> Conforme
-<input type="radio" name="freios" value="nao-conforme"> Não conforme
-```
-
-No clique do D8, pegue `document.querySelector('[name=freios]:checked')`. Ninguém marcado? Vem `null`. Senão, escreva o `.value` dele.
-
----
-
-## Desafios: como foi?
-No bônus, ninguém marcou os Freios. O que o `querySelector` devolve?
-
-- [ ] `'conforme'`
-- [ ] `''`, um texto vazio
-- [x] `null`, nada encontrado
-- [ ] Um erro no Console
-
----
-
 # ☕ Intervalo: 15 min
 Na volta: o projeto no **Codespace** ganha tela, cor e lógica
 
@@ -364,8 +332,6 @@ README, HTML e CSS com o Copilot
 3. Abra a **visualização** (*Preview*): **Ctrl + Shift + V**
 4. As duas tabelas aparecem certinhas?
 
-[cronômetro 10]
-
 ---
 
 ## O plano: um arquivo por vez
@@ -389,23 +355,26 @@ README, HTML e CSS com o Copilot
 ## Prompt claro: 3 partes
 | Parte | Pergunta | Exemplo |
 |---|---|---|
-| **Contexto** | Onde estou? | Checklist de inspeção, no celular |
+| **Contexto** | Onde estou? | Leia o `#README.md`: é o meu projeto |
 | **Tarefa** | O que eu quero? | Crie **só** o `index.html` |
 | **Formato** | Como quero? | Sem comentários: eu comento |
 
-No chat, `#index.html` mostra ao Copilot o arquivo que já existe.
+No chat, `#` + nome do arquivo faz o Copilot **ler** o arquivo antes de responder.
 
 ---
 
-## Copie os prompts
-[qrcode https://instrutorjd.github.io/portal_aulas/materiais/prompts-checklist/ instrutorjd.github.io/portal_aulas/materiais/prompts-checklist]
+## Monte o seu prompt
+Isto é só um **exemplo**: escreva o **seu**, nas 3 partes.
 
-Abra **no computador**, numa aba ao lado do Codespace.
+> "Leia o #README.md, que descreve o meu checklist. Crie só o index.html com a tela que atende aos RF e RNF de lá. Sem comentários."
+
+- Peça os `id`: `equipamento`, `finalizar` e `resultado`
+- `name` sem acento; `value`: `conforme` e `nao-conforme`
 
 ---
 
 ## Mão na massa: index.html
-1. Cole o **prompt 1** no chat do Copilot
+1. Envie o **seu** prompt no chat do Copilot
 2. Leia o arquivo antes de clicar em **Manter** (*Keep*)
 3. Ache o `select`, os rádios e os `id` do botão e do resultado
 4. Os `name` estão **sem acento**? Os `value` são `conforme` e `nao-conforme`?
@@ -425,12 +394,10 @@ python3 -m http.server 8000
 ---
 
 ## Mão na massa: style.css
-1. Cole o **prompt 2** no chat e revise antes de **Manter**
-2. Dê **F5** na página: ela ganhou roupa?
+1. Escreva o prompt: **só** o `style.css`, pelos RNF do `#README.md`; `apto` verde e `inapto` vermelho
+2. Revise, **Manter** e **F5**: a página ganhou roupa?
 3. **F12** → **Ctrl + Shift + M**: escolha um celular
 4. Dá para tocar nas opções sem errar? A letra está legível?
-
-[cronômetro 10]
 
 ---
 
@@ -473,8 +440,6 @@ Agora é com você
 3. No clique, escreva `Clicou!` no parágrafo
 4. **F5** e clique: apareceu?
 
-> É o **D8** dos desafios. Abra o PixelCode e compare.
-
 ---
 
 ## Etapa 2: o equipamento
@@ -490,8 +455,6 @@ Agora é com você
 2. Se vier `null`, escreva `Marque os Freios`
 3. Senão, escreva o `.value` dele
 4. Teste: sem marcar, conforme e não conforme
-
-> É o **bônus** dos desafios.
 
 ---
 
@@ -527,11 +490,9 @@ Errou algum? Ainda não está pronto.
 ## Pedindo dica sem pedir a resposta
 1. Leia o erro e clique em **arquivo:linha** no Console
 2. Tente **sozinho** primeiro: é nome? É `id`? Faltou `}`?
-3. Não achou? Use o **prompt de dica** da página dos prompts
+3. Não achou? Peça ao Copilot uma **dica**, sem o código
 4. Cole a frase **exata** do erro e diga em que etapa está
 5. A IA explica; quem **corrige** é você
-
-[cronômetro 40]
 
 ---
 
@@ -608,24 +569,13 @@ Commit, Pages e o olhar do colega
 ---
 
 ## Commit e push com o Copilot
-1. Barra lateral: **Controle do Código-Fonte**, ou **Ctrl + Shift + G**
-2. Confira a lista: README, `index.html`, `style.css`, `script.js`
-3. Clique no ✨ da caixa de mensagem: o Copilot **escreve** a mensagem
-4. Leia: ela diz **o que** mudou? Ajuste se precisar
-5. **Commit** → se perguntar, **Sim** para incluir tudo
-6. **Sincronizar alterações** (*Sync Changes*): é o push
+No chat, modo **Agente**, escreva o **seu** pedido. Um exemplo:
 
----
+> "Faça o commit de tudo, com uma mensagem que diga o que mudou, e depois o push."
 
-## A mensagem do Copilot
-Qual mensagem de commit você **mantém**?
-
-- [ ] `update`
-- [ ] `arquivos`
-- [x] `Cria a tela do checklist com HTML, CSS e a regra de APTO/INAPTO`
-- [ ] `final agora vai`
-
-> A IA escreveu, mas quem **assina** o commit é você: leia antes.
+- Use as **3 partes**: contexto, tarefa e formato
+- Ele pede para rodar comandos: **leia** antes de aceitar
+- A mensagem do commit diz **o que** mudou? Quem assina é você
 
 ---
 
@@ -665,8 +615,6 @@ Qual mensagem de commit você **mantém**?
 3. No GitHub do colega: aba **Issues** → **New issue**
 4. Título: `Feedback de <seu nome>`
 5. Escreva os testes que você fez e as **3 partes** do feedback
-
-[cronômetro 15]
 
 ---
 
