@@ -10,6 +10,7 @@
 window.MATERIAIS = [
   'guia-do-formato.md',
   'aula-teste-passador.md',
+  'aula-teste-marca-ia.md',
   'aula-01-componentes-aplicacao-web.md',
   'aula-02-json-rest-copilot.md',
   'aula-03-tela-checklist.md',
