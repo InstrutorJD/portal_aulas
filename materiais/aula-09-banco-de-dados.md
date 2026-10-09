@@ -1,6 +1,6 @@
 ---
-aula: 7
-data: 2026-10-08
+aula: 9
+data: 2026-10-09
 titulo: Banco de dados: o seu sistema com memória
 turma: IA
 descricao: Container, VPS e Nginx; tabelas, chaves, SQL no DB Fiddle, o DER do seu projeto e o Supabase com segurança
@@ -8,7 +8,7 @@ fonte: grande
 ---
 
 # O seu sistema tem memória?
-Aula 7: o primeiro banco de dados
+Aula 9: o primeiro banco de dados
 
 ---
 
@@ -523,7 +523,7 @@ O `id` e o `criado_em` não aparecem: o banco preenche.
 ---
 
 ## O DER do delivery
-![Diagrama Entidade-Relacionamento: uma caixa por tabela, com colunas, tipos, PK, FK e as ligações 1:N](aula-07-der-delivery.svg)
+![Diagrama Entidade-Relacionamento: uma caixa por tabela, com colunas, tipos, PK, FK e as ligações 1:N](aula-09-der-delivery.svg)
 
 ---
 

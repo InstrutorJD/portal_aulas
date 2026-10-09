@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400" width="1100" height="400" font-family="Inter, 'Segoe UI', system-ui, sans-serif">
-  <!-- Aula 07, Parte 4: DER de exemplo do app de delivery (clientes 1:N
+  <!-- Aula 09, Parte 4: DER de exemplo do app de delivery (clientes 1:N
        pedidos 1:N itens_pedido N:1 produtos). -->
   <rect x="0" y="0" width="1100" height="400" rx="18" fill="#0f1623"/>
 

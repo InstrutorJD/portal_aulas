@@ -16,5 +16,5 @@ window.MATERIAIS = [
   'aula-03-tela-checklist.md',
   'aula-04-checklist-no-ar.md',
   'aula-05-ciclo-publicacao-git.md',
-  'aula-07-banco-de-dados.md',
+  'aula-09-banco-de-dados.md',
 ];
