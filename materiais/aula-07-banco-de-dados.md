@@ -35,8 +35,8 @@ O usuário salva um cadastro e outra pessoa precisa ver, em outro computador.
 - **Parte 1**: onde o sistema roda: container, VPS e Nginx (20 min)
 - **Parte 2**: o que é um banco de dados (25 min)
 - **Parte 3**: os primeiros comandos SQL no DB Fiddle (35 min)
-- **Parte 4**: o DER e o banco do **seu** projeto no DB Fiddle (65 min)
-- **Parte 5**: o **seu** banco no Supabase, com segurança (95 min)
+- **Parte 4**: relacionamentos e o DER do **seu** projeto (55 min)
+- **Parte 5**: o **seu** banco no Supabase, com segurança (105 min)
 
 ---
 
@@ -272,10 +272,11 @@ O primeiro banco, sem instalar nada
 ---
 
 ## Abra o DB Fiddle
-1. No navegador: **dbfiddle.uk**
-2. No topo, escolha o **PostgreSQL** (a versão mais nova)
-3. Escreva o SQL no quadro da esquerda
-4. Clique em **Run**: o resultado aparece embaixo
+1. No navegador: **db-fiddle.com**
+2. No topo, em **Database**, escolha o **PostgreSQL**
+3. **Schema SQL** (esquerda): `create table` e `insert`
+4. **Query SQL** (direita): os `select`
+5. Clique em **Run**: o resultado aparece embaixo
 
 > Não precisa de conta. A cada **Run**, ele cria o banco do zero e roda **tudo** de novo.
 
@@ -345,7 +346,7 @@ select * from clientes;
 ## Mão na massa 1: a primeira tabela
 1. **Digite** (não copie) o `create table clientes`
 2. Insira **4** clientes, de pelo menos **2** cidades
-3. No fim, o `select * from clientes;`
+3. No **Query SQL**: `select * from clientes;`
 4. **Run**: apareceram 4 linhas, com `id` de 1 a 4?
 
 > Deu erro? Leia a mensagem: ela diz a **linha** e a **palavra** do problema.
@@ -513,7 +514,7 @@ O `id` e o `criado_em` não aparecem: o banco preenche.
 ---
 
 ## Mão na massa 4: os pedidos
-1. No DB Fiddle, **abaixo** dos clientes, crie `pedidos`
+1. No **Schema SQL**, **abaixo** dos clientes, crie `pedidos`
 2. Insira 4 pedidos, de clientes **diferentes**
 3. Um pedido do cliente `99`: leia o **erro**
 4. Um pedido com status `'entrege'`: leia o **erro**
@@ -521,13 +522,8 @@ O `id` e o `criado_em` não aparecem: o banco preenche.
 
 ---
 
-## No quadro: o DER do delivery
-Vamos desenhar juntos o **Diagrama Entidade-Relacionamento**:
-
-1. Uma **caixa** por tabela: `clientes`, `pedidos`, `produtos`, `itens_pedido`
-2. As **colunas** e o **tipo** de cada uma
-3. Marque **PK** e **FK**
-4. Ligue as caixas: **1** de um lado, **N** do outro
+## O DER do delivery
+![Diagrama Entidade-Relacionamento: uma caixa por tabela, com colunas, tipos, PK, FK e as ligações 1:N](aula-07-der-delivery.svg)
 
 ---
 
@@ -540,46 +536,44 @@ Vamos desenhar juntos o **Diagrama Entidade-Relacionamento**:
 
 ---
 
-## Mão na massa: o DER no papel
-**Sem código.** Sozinho, numa folha, a **biblioteca** da escola:
-
-- Cada livro tem **título**, **autor** e **ano**
-- Cada leitor tem **nome** e **turma**
-- Cada empréstimo tem **data de retirada** e se já foi **devolvido**
-- Um leitor pega **vários** livros; um livro é emprestado **várias** vezes
-
-> Desenhe as tabelas, as colunas com o **tipo**, a **PK**, as **FKs** e o **1:N**.
+## Antes do banco: o seu sistema
++ O banco guarda o que o sistema **coleta** e **mostra**
++ Coluna sem campo na tela? **Ninguém** vai preencher
++ Campo na tela sem coluna? O dado **se perde**
++ Cada formulário costuma virar uma **tabela**
++ Cada lista de opções (`select`) pode virar uma **FK**
 
 ---
 
-## Confira o seu DER
-| Tabela | Colunas | PK | FK |
-|---|---|---|---|
-| `livros` | `titulo` text, `autor` text, `ano` int | `id` | — |
-| `leitores` | `nome` text, `turma` text | `id` | — |
-| `emprestimos` | `retirada` timestamptz, `devolvido` boolean | `id` | `livro_id`, `leitor_id` |
+## Mão na massa 5: avalie o seu projeto
+1. Abra o seu projeto no Codespace e no navegador
+2. Liste as **telas** e os **formulários**
+3. Em cada formulário, anote os **campos** (`input`, `select`, rádio)
+4. O que aparece em **lista** na tela? De onde viria?
+5. Falta algum campo? Anote: ele precisa existir **antes** da coluna
 
-> `emprestimos` é a tabela do meio: **duas** FKs.
+> Dica: peça ao Copilot para listar os formulários e os campos do projeto. Depois **confira** no código.
 
 ---
 
-## Agora é o seu sistema
-Escreva **uma frase** sobre o que o seu sistema faz e procure:
+## Agora: do sistema às tabelas
+Com a sua lista de campos em mãos, procure:
 
 + Os **substantivos**: cada um pode virar uma **tabela**
-+ O que se sabe de cada um: as **colunas**
++ Os **campos** de cada um: as **colunas**
 + "Um ... tem **vários** ...": um relacionamento **1:N**
 + Ex.: "A oficina atende **carros**; cada carro tem vários **serviços**"
 
 ---
 
-## Mão na massa 5: o DER do seu projeto
+## Mão na massa 6: o DER do seu projeto
 1. No papel, as tabelas do **seu** sistema (no mínimo **3**)
 2. Colunas, **tipos**, **PK** e **FKs**
-3. Nomes em **minúsculas**, sem acento e sem espaço
-4. Status, tipo, categoria? Pense num `check`
+3. Toda coluna tem um **campo** no sistema?
+4. Nomes em **minúsculas**, sem acento e sem espaço
+5. Status, tipo, categoria? Pense num `check`
 
-> Fotografe o DER: ele é o **gabarito** do DB Fiddle e do Supabase.
+> Fotografe o DER: ele é o **gabarito** do Supabase.
 
 ---
 
@@ -587,8 +581,8 @@ Escreva **uma frase** sobre o que o seu sistema faz e procure:
 + Você **descreve** o seu DER ao **Copilot** ou ao **Codex**
 + A IA responde com o **SQL** das tabelas
 + Você **confere** com o DER do papel
-+ **Testa** no DB Fiddle, onde errar não custa nada
-+ Só então leva para o **Supabase**
++ **Copia** e **cola** no SQL Editor do Supabase
++ Se a IA errou, o erro vai para o banco: **você** é o filtro
 
 ---
 
@@ -610,7 +604,7 @@ Continue com **as suas** palavras: as tabelas, as colunas, os tipos e as chaves 
 
 ---
 
-## Confira antes de testar
+## Confira antes de colar
 - ✅ Os nomes das tabelas e colunas são os do **seu DER**
 - ✅ Toda tabela tem **primary key**
 - ✅ Cada FK tem `references` e o **mesmo tipo** do `id` de lá
@@ -636,17 +630,6 @@ Continue com **as suas** palavras: as tabelas, as colunas, os tipos e as chaves 
 + **Coerentes** com as regras do **seu** sistema
 + **Fictícios**: nada de nome, CPF ou telefone de gente real
 + Confira: os `id` das FKs **existem**?
-
----
-
-## Mão na massa 6: o seu banco no DB Fiddle
-1. Num DB Fiddle **novo**, cole o SQL das tabelas
-2. Embaixo, cole os `insert` dos dados de teste
-3. **Run**: deu erro? Leia, corrija e rode de novo
-4. Um `select * from` em **cada** tabela: os dados estão lá?
-5. Um `select` com `where` que faça sentido no **seu** sistema
-
-> Tudo rodando aqui? Guarde esse SQL: ele vai **inteiro** para o Supabase.
 
 ---
 
@@ -725,11 +708,11 @@ PostgreSQL de verdade, na nuvem
 ---
 
 ## Mão na massa 11: as tabelas no ar
-1. Copie o SQL que **funcionou** no DB Fiddle
-2. No Supabase: **SQL Editor** → **New query**
-3. Cole e clique em **Run** (ou Ctrl+Enter)
-4. **Success**: deu certo!
-5. Cole o mesmo SQL num `schema.sql` no seu repositório
+1. **SQL Editor** → **New query**: cole o SQL das **tabelas** e **Run**
+2. **Success**? Numa nova query, os `insert` dos dados de teste
+3. Deu erro? Leia a mensagem, corrija e rode de novo
+4. Um `select` com `where` que faça sentido no **seu** sistema
+5. Cole o SQL das tabelas num `schema.sql` no seu repositório
 
 > Rodou de novo e deu `already exists`? A tabela já está lá, não precisa criar outra vez.
 
@@ -752,7 +735,7 @@ drop table if exists nome_da_tabela;
 
 + Apaga a tabela, **com os dados**
 + Tem FK apontando para ela? Apague **antes** a tabela da FK
-+ Corrija o SQL no DB Fiddle, teste e rode de novo aqui
++ Corrija o SQL (ou o pedido à IA) e rode de novo
 
 ---
 
@@ -905,7 +888,7 @@ A página usa a chave **publishable** e a tabela tem RLS sem nenhuma política. 
 ---
 
 ## Checklist de conformidade (1/2)
-- ✅ O DER da **biblioteca** e o do **seu** projeto, no papel
+- ✅ O DER do **seu** projeto, no papel
 - ✅ No Supabase, as tabelas do **seu DER** (no mínimo 3)
 - ✅ **Chave primária** em todas as tabelas
 - ✅ **Chaves estrangeiras** com o mesmo tipo do `id`
